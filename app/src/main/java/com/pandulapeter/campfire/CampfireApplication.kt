@@ -11,7 +11,7 @@ import dagger.android.AndroidInjector
 import dagger.android.support.DaggerApplication
 
 /**
- * Custom Application class for initializing dependency injection.
+ * Custom Application class for initializing dependency injection and setting up a global lifecycle listener.
  */
 class CampfireApplication : DaggerApplication() {
 

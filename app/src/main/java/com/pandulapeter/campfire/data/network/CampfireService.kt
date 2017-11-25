@@ -11,9 +11,17 @@ import retrofit2.http.Query
  */
 interface CampfireService {
 
+    /**
+     * Returns the list of all the songs in the database.
+     */
     @GET("/library")
     fun getLibrary(): Call<List<SongInfo>>
 
+    /**
+     * Returns the full, detailed object related to a single song.
+     *
+     * @param id - The ID of the song.
+     */
     @GET("/song")
     fun getSong(@Query("id") id: String): Call<SongDetail>
 }

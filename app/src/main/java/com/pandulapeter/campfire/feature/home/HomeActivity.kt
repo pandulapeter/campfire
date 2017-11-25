@@ -52,7 +52,7 @@ class HomeActivity : DaggerAppCompatActivity() {
      * Checks if the user actually changed the current selection and if so, persists it and replaces the Fragment.
      */
     private fun replaceActiveFragment(navigationItem: NavigationItem) {
-        if (selectedItem != navigationItem) {
+        if (selectedItem != navigationItem || supportFragmentManager.findFragmentById(R.id.fragment_container) == null) {
             storageManager.lastSelectedNavigationItem = navigationItem
             selectedItem = navigationItem
             supportFragmentManager.beginTransaction().replace(R.id.fragment_container, when (navigationItem) {

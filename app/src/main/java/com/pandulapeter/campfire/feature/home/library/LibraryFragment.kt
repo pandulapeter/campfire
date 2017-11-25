@@ -2,12 +2,15 @@ package com.pandulapeter.campfire.feature.home.library
 
 import android.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.network.NetworkManager
+import com.pandulapeter.campfire.data.storage.StorageManager
+import dagger.android.support.DaggerFragment
+import javax.inject.Inject
 
 /**
  * Displays the list of all available songs from the backend. The list is searchable and filterable
@@ -16,8 +19,10 @@ import com.pandulapeter.campfire.R
  *
  * Controlled by [LibraryViewModel].
  */
-class LibraryFragment : Fragment() {
+class LibraryFragment : DaggerFragment() {
 
+    @Inject lateinit var storageManager: StorageManager
+    @Inject lateinit var networkManager: NetworkManager
     private lateinit var binding: LibraryBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -26,6 +31,6 @@ class LibraryFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.viewModel = LibraryViewModel()
+        binding.viewModel = LibraryViewModel(storageManager, networkManager)
     }
 }
