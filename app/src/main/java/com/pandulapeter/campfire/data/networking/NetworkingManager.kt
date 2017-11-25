@@ -14,7 +14,7 @@ class NetworkingManager {
 
     @Suppress("ConstantConditionIf")
     private val retrofit = Retrofit.Builder()
-        .baseUrl("http://localhost:8080")
+        .baseUrl("https://campfire-test1.herokuapp.com")
         .client(OkHttpClient.Builder()
             .apply {
                 if (BuildConfig.DEBUG) {
@@ -25,5 +25,5 @@ class NetworkingManager {
         .addConverterFactory(GsonConverterFactory.create(GsonBuilder().create()))
         .build()
 
-    fun getService() = retrofit.create(CampfireService::class.java)
+    fun getService(): CampfireService = retrofit.create(CampfireService::class.java)
 }

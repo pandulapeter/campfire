@@ -13,7 +13,11 @@ class HomeViewModel(networkingManager: NetworkingManager) {
 
     init {
         networkingManager.getService().getLibrary().enqueue(
-            onSuccess = { text.set("Success") },
+            onSuccess = {
+                var string = "Success\n"
+                it.forEach { string += "\n${it.title} from ${it.artist}" }
+                text.set(string)
+            },
             onFailure = { text.set("Error") })
     }
 }
