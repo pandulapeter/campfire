@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
+import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.dimension
 import dagger.android.support.DaggerFragment
 import javax.inject.Inject
@@ -51,11 +52,16 @@ class FavoritesFragment : DaggerFragment() {
                 }
             }
             // Setup swipe-to-dismiss functionality.
-            ItemTouchHelper(object : ItemTouchHelper.Callback() {
-                override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =
-                    makeFlag(ItemTouchHelper.ACTION_STATE_SWIPE, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT)
-
-                override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = false
+            ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+                ItemTouchHelper.START or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT or ItemTouchHelper.END) {
+                override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = consume {
+                    viewHolder?.adapterPosition?.let { originalPosition ->
+                        target?.adapterPosition?.let { targetPosition ->
+                            viewModel.swapSongPositions(originalPosition, targetPosition)
+                        }
+                    }
+                }
 
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
                     viewHolder?.adapterPosition?.let { position ->

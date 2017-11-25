@@ -4,6 +4,7 @@ import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.storage.StorageManager
 import com.pandulapeter.campfire.util.enqueueCall
+import java.util.Collections
 
 /**
  * Wraps caching and updating of [SongInfo] objects.
@@ -61,6 +62,22 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
 
     fun removeSongFromFavorites(songInfo: SongInfo) {
         storageManager.favorites = storageManager.favorites.toMutableList().apply { if (contains(songInfo.id)) remove(songInfo.id) }
+    }
+
+    fun swapSongFavoritesPositions(originalPosition: Int, targetPosition: Int) {
+        if (originalPosition != targetPosition) {
+            storageManager.favorites = storageManager.favorites.toMutableList().apply {
+                if (originalPosition < targetPosition) {
+                    for (i in originalPosition until targetPosition) {
+                        Collections.swap(this, i, i + 1)
+                    }
+                } else {
+                    for (i in originalPosition downTo targetPosition + 1) {
+                        Collections.swap(this, i, i - 1)
+                    }
+                }
+            }
+        }
     }
 
     companion object {
