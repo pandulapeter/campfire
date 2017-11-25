@@ -1,9 +1,7 @@
 package com.pandulapeter.campfire.data.networking
 
 import com.google.gson.GsonBuilder
-import com.pandulapeter.campfire.BuildConfig
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -15,13 +13,7 @@ class NetworkingManager {
     @Suppress("ConstantConditionIf")
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://campfire-test1.herokuapp.com")
-        .client(OkHttpClient.Builder()
-            .apply {
-                if (BuildConfig.DEBUG) {
-                    addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY })
-                }
-            }
-            .build())
+        .client(OkHttpClient.Builder().build())
         .addConverterFactory(GsonConverterFactory.create(GsonBuilder().create()))
         .build()
 

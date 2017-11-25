@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.home
 
 import android.databinding.ObservableField
+import android.util.Log
 import com.pandulapeter.campfire.data.networking.NetworkingManager
 import com.pandulapeter.campfire.util.enqueue
 
@@ -13,9 +14,20 @@ class HomeViewModel(networkingManager: NetworkingManager) {
 
     init {
         networkingManager.getService().getLibrary().enqueue(
-            onSuccess = {
+            onSuccess = { songs ->
                 var string = "Success\n"
-                it.forEach { string += "\n${it.title} from ${it.artist}" }
+                songs.forEach { song ->
+                    string += "\n${song.title} from ${song.artist}"
+                    networkingManager.getService().getSong(song.id).enqueue(
+                        {
+                            Log.d("DEBUG","Song ${it.id} downloaded: ${it.song}}")
+                        },
+                        {
+                          Log.d("DEBUG","Couldn't download song ${song.id}")
+                        }
+                    )
+
+                }
                 text.set(string)
             },
             onFailure = { text.set("Error") })
