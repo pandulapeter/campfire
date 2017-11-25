@@ -1,0 +1,5 @@
+# Generated files
+/build
+
+# Release keystore
+release.keystore

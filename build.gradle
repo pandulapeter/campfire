@@ -1,0 +1,12 @@
+buildscript {
+    ext.kotlinVersion = '1.1.60'
+    ext.buildToolsVersion = '3.0.1'
+    repositories {
+        jcenter()
+        google()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$buildToolsVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+    }
+}

@@ -1,0 +1,67 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion 27
+    defaultConfig {
+        applicationId "com.pandulapeter.campfire"
+        minSdkVersion 18
+        targetSdkVersion 27
+        versionCode 1
+        versionName "0.0.1"
+        vectorDrawables.useSupportLibrary = true
+    }
+    dataBinding {
+        enabled = true
+    }
+    signingConfigs {
+        internal {
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+            storeFile file("internal.keystore")
+            storePassword "android"
+        }
+    }
+    buildTypes {
+        debug {
+            minifyEnabled false
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+        internal {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.internal
+            applicationIdSuffix '.internal'
+            versionNameSuffix '-internal'
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            //TODO: Create a separate signing configuration for Release builds.
+            signingConfig signingConfigs.internal
+        }
+    }
+}
+repositories {
+    mavenCentral()
+    jcenter()
+    maven {
+        url "https://maven.google.com"
+    }
+}
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Support library
+    final supportLibraryVersion = '27.0.1'
+    compile "com.android.support:appcompat-v7:$supportLibraryVersion"
+    compile "com.android.support:support-v4:$supportLibraryVersion"
+    compile "com.android.support:design:$supportLibraryVersion"
+    compile "com.android.support:cardview-v7:$supportLibraryVersion"
+
+    // Kotlin
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$rootProject.kotlinVersion"
+    kapt "com.android.databinding:compiler:$rootProject.buildToolsVersion"
+}
