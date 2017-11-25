@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- General -->
+    <dimen name="content_padding">8dp</dimen>
+
+    <!-- Song info cards -->
+    <dimen name="card_text_margin">2dp</dimen>
+
+</resources>

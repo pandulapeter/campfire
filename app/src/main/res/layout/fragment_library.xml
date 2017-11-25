@@ -28,12 +28,19 @@
 
         </android.support.design.widget.AppBarLayout>
 
-        <TextView
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/swipe_refresh_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="@string/home_navigation_library"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:adapter="@{viewModel.adapter}" />
+
+        </android.support.v4.widget.SwipeRefreshLayout>
 
     </android.support.design.widget.CoordinatorLayout>
 

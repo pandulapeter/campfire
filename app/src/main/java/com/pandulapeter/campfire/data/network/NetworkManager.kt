@@ -10,11 +10,10 @@ import retrofit2.converter.gson.GsonConverterFactory
  */
 class NetworkManager {
 
-    private val retrofit = Retrofit.Builder()
+    val service: CampfireService = Retrofit.Builder()
         .baseUrl("https://campfire-test1.herokuapp.com")
         .client(OkHttpClient.Builder().build())
         .addConverterFactory(GsonConverterFactory.create(GsonBuilder().create()))
         .build()
-
-    fun getService(): CampfireService = retrofit.create(CampfireService::class.java)
+        .create(CampfireService::class.java)
 }

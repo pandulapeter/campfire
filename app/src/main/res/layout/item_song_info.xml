@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".feature.home.HomeActivity">
+
+    <!--suppress AndroidUnknownAttribute -->
+    <data class=".SongInfoBinding">
+
+        <variable
+            name="songInfo"
+            type="com.pandulapeter.campfire.data.model.SongInfo" />
+
+    </data>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:foreground="?attr/selectableItemBackground"
+        app:contentPadding="@dimen/content_padding">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="3"
+                android:text="@{songInfo.title}"
+                tools:text="Song title" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/card_text_margin"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-thin"
+                android:maxLines="2"
+                android:text="@{songInfo.artist}"
+                tools:text="Artist" />
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+</layout>
