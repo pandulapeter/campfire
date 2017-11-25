@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.home.favorites
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v7.app.AppCompatActivity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,5 +28,6 @@ class FavoritesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.viewModel = FavoritesViewModel()
+        (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
     }
 }

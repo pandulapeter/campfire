@@ -26,6 +26,10 @@
 
         </activity>
 
+        <activity
+            android:name=".feature.detail.DetailActivity"
+            android:parentActivityName=".feature.home.HomeActivity" />
+
     </application>
 
 </manifest>

@@ -21,7 +21,7 @@ class LibraryViewModel(private val songInfoRepository: SongInfoRepository) {
     fun update(isForceRefresh: Boolean) {
         if (!isLoading.get()) {
             isLoading.set(true)
-            songInfoRepository.getDataSet(ChangeListener(
+            songInfoRepository.getLibrary(ChangeListener(
                 onNext = {
                     adapter.songInfoList = it
                 },

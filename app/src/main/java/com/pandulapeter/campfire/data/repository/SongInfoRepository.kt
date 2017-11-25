@@ -14,7 +14,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
 
     private fun isCacheInvalid() = System.currentTimeMillis() - storageManager.lastLibraryUpdate > CACHE_VALIDITY_LIMIT_IN_MILLIS
 
-    fun getDataSet(changeListener: ChangeListener<List<SongInfo>>, forceRefresh: Boolean) {
+    fun getLibrary(changeListener: ChangeListener<List<SongInfo>>, forceRefresh: Boolean) {
         changeListener.onNext(dataSet)
         if (forceRefresh || isCacheInvalid()) {
             networkManager.service.getLibrary().enqueueCall(

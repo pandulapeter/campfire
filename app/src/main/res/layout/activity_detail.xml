@@ -4,18 +4,18 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--suppress AndroidUnknownAttribute -->
-    <data class=".DownloadedBinding">
+    <data class=".DetailBinding">
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.downloaded.DownloadedViewModel" />
+            type="com.pandulapeter.campfire.feature.detail.DetailViewModel" />
 
     </data>
 
     <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".feature.home.HomeActivity">
+        tools:context=".feature.detail.DetailActivity">
 
         <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
@@ -25,16 +25,12 @@
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:title="@string/home_navigation_downloaded" />
+                app:subtitle="@{viewModel.artist}"
+                app:title="@{viewModel.title}"
+                tools:subtitle="Artist"
+                tools:title="Song" />
 
         </android.support.design.widget.AppBarLayout>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="@string/home_navigation_downloaded"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     </android.support.design.widget.CoordinatorLayout>
 

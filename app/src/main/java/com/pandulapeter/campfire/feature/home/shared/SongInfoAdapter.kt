@@ -32,8 +32,13 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder<
             }).dispatchUpdatesTo(this)
             field = newItems
         }
+    var itemClickListener: (position: Int) -> Unit = { _ -> }
 
-    override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): SongInfoViewHolder<SongInfoBinding> = SongInfoViewHolder.create(parent)
+    override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): SongInfoViewHolder<SongInfoBinding> {
+        val viewHolder = SongInfoViewHolder.create<SongInfoBinding>(parent)
+        viewHolder.setItemClickListener(itemClickListener)
+        return viewHolder
+    }
 
     override fun onBindViewHolder(holder: SongInfoViewHolder<SongInfoBinding>?, position: Int) = Unit
 
@@ -45,6 +50,14 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder<
     override fun getItemCount() = songInfoList.size
 
     class SongInfoViewHolder<out T : ViewDataBinding> private constructor(val binding: T) : RecyclerView.ViewHolder(binding.root) {
+
+        fun setItemClickListener(itemClickListener: (position: Int) -> Unit) {
+            binding.root.setOnClickListener {
+                if (adapterPosition != RecyclerView.NO_POSITION) {
+                    itemClickListener(adapterPosition)
+                }
+            }
+        }
 
         companion object {
             fun <T : ViewDataBinding> create(parent: ViewGroup): SongInfoViewHolder<T> =
