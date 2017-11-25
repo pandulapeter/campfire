@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.feature.home.downloaded
 
-import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.SongInfoAdapter
@@ -12,7 +11,6 @@ import com.pandulapeter.campfire.util.sort
  */
 class DownloadedViewModel(private val songInfoRepository: SongInfoRepository) {
     val adapter = SongInfoAdapter()
-    val isLoading = ObservableBoolean(false)
 
     init {
         refreshAdapterItems()
