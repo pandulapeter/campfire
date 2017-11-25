@@ -15,4 +15,7 @@
     <!-- Downloaded screen -->
     <string name="downloaded_song_deleted">Song deleted.</string>
 
+    <!-- Favorites screen -->
+    <string name="favorites_song_removed">Song removed from favorites.</string>
+
 </resources>

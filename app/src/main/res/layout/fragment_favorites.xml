@@ -29,11 +29,11 @@
 
         </android.support.design.widget.AppBarLayout>
 
-        <TextView
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="@string/home_navigation_favorites"
+            app:adapter="@{viewModel.adapter}"
             app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     </android.support.design.widget.CoordinatorLayout>
