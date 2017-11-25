@@ -3,6 +3,11 @@
 
     <!-- General -->
     <dimen name="content_padding">8dp</dimen>
+    <dimen name="first_keyline">16dp</dimen>
+    <dimen name="second_keyline">72dp</dimen>
+
+    <!-- Home screen -->
+    <dimen name="drawer_width">192dp</dimen>
 
     <!-- Song info cards -->
     <dimen name="card_text_margin">2dp</dimen>

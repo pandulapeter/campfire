@@ -16,6 +16,8 @@ import javax.inject.Inject
  * Displays the home screen of the app which contains the three main pages the user can access
  * ([LibraryFragment], [DownloadedFragment] and [FavoritesFragment]) and the bottom navigation view.
  * The last selected item is persisted.
+ *
+ * Controlled by [HomeViewModel].
  */
 class HomeActivity : DaggerAppCompatActivity() {
 
@@ -26,6 +28,7 @@ class HomeActivity : DaggerAppCompatActivity() {
         super.onCreate(savedInstanceState)
         // Inflate the layout and set up the navigation listener.
         val binding = DataBindingUtil.setContentView<HomeBinding>(this, R.layout.activity_home).apply {
+            viewModel = HomeViewModel()
             bottomNavigation.setOnNavigationItemSelectedListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.library -> consume { replaceActiveFragment(NavigationItem.LIBRARY) }

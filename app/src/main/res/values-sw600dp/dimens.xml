@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- General -->
+    <dimen name="first_keyline">24dp</dimen>
+    <dimen name="second_keyline">80dp</dimen>
+
+    <!-- Home screen -->
+    <dimen name="drawer_width">240dp</dimen>
+
+</resources>

@@ -4,29 +4,107 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--suppress AndroidUnknownAttribute -->
-    <data class=".HomeBinding" />
+    <data class=".HomeBinding">
 
-    <RelativeLayout
+        <variable
+            name="viewModel"
+            type="com.pandulapeter.campfire.feature.home.HomeViewModel" />
+
+    </data>
+
+    <android.support.v4.widget.DrawerLayout
+        android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fitsSystemWindows="true"
         tools:context=".feature.home.HomeActivity">
 
-        <FrameLayout
-            android:id="@+id/fragment_container"
+        <RelativeLayout
             android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <FrameLayout
+                android:id="@+id/fragment_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/bottom_navigation" />
+
+            <android.support.design.widget.BottomNavigationView
+                android:id="@id/bottom_navigation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:background="@color/primary"
+                app:itemIconTint="@color/selector_home_navigation"
+                app:itemTextColor="@android:color/white"
+                app:menu="@menu/home_navigation" />
+
+        </RelativeLayout>
+
+        <android.support.v7.widget.CardView
+            android:layout_width="@dimen/drawer_width"
             android:layout_height="match_parent"
-            android:layout_above="@+id/bottom_navigation" />
+            android:layout_gravity="end"
+            android:fitsSystemWindows="true">
 
-        <android.support.design.widget.BottomNavigationView
-            android:id="@id/bottom_navigation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:background="@color/primary"
-            app:itemIconTint="@color/selector_home_navigation"
-            app:itemTextColor="@android:color/white"
-            app:menu="@menu/home_navigation" />
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="@dimen/content_padding"
+                android:paddingEnd="@dimen/first_keyline"
+                android:paddingStart="@dimen/first_keyline"
+                android:paddingTop="@dimen/content_padding"
+                android:scrollbars="none">
 
-    </RelativeLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/home_sort_by" />
+
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/content_padding"
+                        android:checked="@={viewModel.isSortedByTitle}"
+                        android:text="@string/home_sort_by_title" />
+
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/content_padding"
+                        android:checked="@={!viewModel.isSortedByTitle}"
+                        android:text="@string/home_sort_by_artist" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/content_padding"
+                        android:text="@string/home_filter_by_language" />
+
+                    <CheckBox
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/content_padding"
+                        android:text="@string/language_english" />
+
+                    <CheckBox
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/content_padding"
+                        android:text="@string/language_hungarian" />
+
+                </LinearLayout>
+
+            </ScrollView>
+
+        </android.support.v7.widget.CardView>
+
+    </android.support.v4.widget.DrawerLayout>
 
 </layout>
