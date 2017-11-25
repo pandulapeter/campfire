@@ -9,6 +9,7 @@ import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
 import android.support.v4.content.ContextCompat
 import android.support.v4.graphics.drawable.DrawableCompat
+import com.pandulapeter.campfire.data.model.SongInfo
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -22,6 +23,9 @@ fun Drawable?.tint(@ColorInt tintColor: Int) = this?.let {
     DrawableCompat.setTint(drawable.mutate(), tintColor)
     DrawableCompat.unwrap<Drawable>(drawable)
 }
+
+//TODO: Handle special characters
+fun List<SongInfo>.sort() = sortedBy { it.title }
 
 inline fun ObservableBoolean.onEventTriggered(crossinline callback: () -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {

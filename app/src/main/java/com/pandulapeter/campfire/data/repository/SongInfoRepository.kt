@@ -21,7 +21,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
                 onSuccess = {
                     libraryDataSet.clear()
                     libraryDataSet.addAll(it)
-                    storageManager.library = it
+                    storageManager.library = libraryDataSet
                     storageManager.lastLibraryUpdate = System.currentTimeMillis()
                     changeListener.onNext(libraryDataSet)
                     changeListener.onComplete()
@@ -37,12 +37,12 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     fun getDownloaded() = storageManager.downloaded
 
     fun addSongToDownloaded(songInfo: SongInfo) {
-        storageManager.downloaded = storageManager.downloaded.toMutableList().apply { if (!contains(songInfo)) add(songInfo) }
+        storageManager.downloaded = getDownloaded().toMutableList().apply { if (!contains(songInfo)) add(songInfo) }
     }
 
     fun removeSongFromDownloaded(songInfo: SongInfo) {
         removeSongFromFavorites(songInfo)
-        storageManager.downloaded = storageManager.downloaded.toMutableList().apply { if (contains(songInfo)) remove(songInfo) }
+        storageManager.downloaded = getDownloaded().toMutableList().apply { if (contains(songInfo)) remove(songInfo) }
     }
 
     fun getFavorites() = storageManager.favorites

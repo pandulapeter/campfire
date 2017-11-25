@@ -3,12 +3,16 @@
 
     <!-- General -->
     <string name="campfire">Campfire</string>
-    <string name="something_went_wrong">Something went wrong</string>
+    <string name="something_went_wrong">Something went wrong.</string>
     <string name="try_again">Try again</string>
+    <string name="undo">Undo</string>
 
     <!-- Home screen -->
     <string name="home_navigation_library">Library</string>
     <string name="home_navigation_downloaded">Downloaded</string>
     <string name="home_navigation_favorites">Favorites</string>
+
+    <!-- Downloaded screen -->
+    <string name="downloaded_song_deleted">Song deleted.</string>
 
 </resources>

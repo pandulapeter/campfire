@@ -6,6 +6,7 @@ import com.pandulapeter.campfire.data.repository.ChangeListener
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
+import com.pandulapeter.campfire.util.sort
 
 /**
  * Handles events and logic for [LibraryFragment].
@@ -46,6 +47,6 @@ class LibraryViewModel(private val songInfoRepository: SongInfoRepository) {
 
     private fun refreshAdapterItems(newData: List<SongInfo>) {
         val downloadedItems = songInfoRepository.getDownloaded()
-        adapter.items = newData.map { SongInfoViewModel(it, downloadedItems.contains(it)) }
+        adapter.items = newData.sort().map { SongInfoViewModel(it, downloadedItems.contains(it)) }
     }
 }

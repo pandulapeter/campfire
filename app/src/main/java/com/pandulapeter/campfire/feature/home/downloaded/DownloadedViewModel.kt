@@ -5,6 +5,7 @@ import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
+import com.pandulapeter.campfire.util.sort
 
 /**
  * Handles events and logic for [DownloadedFragment].
@@ -26,6 +27,11 @@ class DownloadedViewModel(private val songInfoRepository: SongInfoRepository) {
         refreshAdapterItems()
     }
 
+    fun addSongToDownloaded(songInfo: SongInfo) {
+        songInfoRepository.addSongToDownloaded(songInfo)
+        refreshAdapterItems()
+    }
+
     fun removeSongFromDownloaded(songInfo: SongInfo) {
         songInfoRepository.removeSongFromDownloaded(songInfo)
         refreshAdapterItems()
@@ -33,6 +39,6 @@ class DownloadedViewModel(private val songInfoRepository: SongInfoRepository) {
 
     private fun refreshAdapterItems() {
         val favorites = songInfoRepository.getFavorites()
-        adapter.items = songInfoRepository.getDownloaded().map { SongInfoViewModel(it, favorites.contains(it.id), true) }
+        adapter.items = songInfoRepository.getDownloaded().sort().map { SongInfoViewModel(it, favorites.contains(it.id), true) }
     }
 }
