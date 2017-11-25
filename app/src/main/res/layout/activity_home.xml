@@ -6,7 +6,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.HomeViewModel" />
+            type="com.pandulapeter.campfire.feature.home.HomeViewModel" />
 
     </data>
 

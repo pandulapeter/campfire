@@ -1,8 +1,10 @@
-package com.pandulapeter.campfire
+package com.pandulapeter.campfire.feature.home
 
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import com.pandulapeter.campfire.HomeBinding
+import com.pandulapeter.campfire.R
 
 /**
  * Displays the main screen of the app which contains the app bar, the three possible Fragments that

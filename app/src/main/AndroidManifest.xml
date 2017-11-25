@@ -4,6 +4,7 @@
     package="com.pandulapeter.campfire">
 
     <application
+        android:name=".CampfireApplication"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/campfire"
@@ -13,7 +14,7 @@
         tools:ignore="GoogleAppIndexingWarning">
 
         <activity
-            android:name=".HomeActivity"
+            android:name=".feature.home.HomeActivity"
             android:launchMode="singleTop">
 
             <intent-filter>
