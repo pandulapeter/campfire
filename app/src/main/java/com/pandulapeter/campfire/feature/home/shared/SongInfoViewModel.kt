@@ -7,5 +7,6 @@ import com.pandulapeter.campfire.data.model.SongInfo
  */
 data class SongInfoViewModel(
     val songInfo: SongInfo,
-    val isActionTinted: Boolean
-)
+    val isActionTinted: Boolean,
+    val shouldDisplayFavoriteIcon: Boolean = false,
+    val shouldDisplayAction: Boolean = true)

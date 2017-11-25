@@ -12,7 +12,7 @@ import com.pandulapeter.campfire.feature.home.NavigationItem
 /**
  * Wrapper for locally storing simple key-value pairs.
  */
-class StorageManager(context: Context) {
+class StorageManager(context: Context, private val gson: Gson) {
 
     private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
 
@@ -49,25 +49,38 @@ class StorageManager(context: Context) {
      */
     var library: List<SongInfo>
         get() = try {
-            Gson().fromJson(sharedPreferences.getString(LIBRARY, "[]"), object : TypeToken<List<SongInfo>>() {}.type)
+            gson.fromJson(sharedPreferences.getString(LIBRARY, "[]"), object : TypeToken<List<SongInfo>>() {}.type)
         } catch (_: JsonSyntaxException) {
             listOf()
         }
         set(value) {
-            sharedPreferences.edit().putString(LIBRARY, Gson().toJson(value)).apply()
+            sharedPreferences.edit().putString(LIBRARY, gson.toJson(value)).apply()
         }
 
     /**
-     * The list of downloaded song ID-s.
+     * The list of downloaded songs.
      */
     var downloaded: List<SongInfo>
         get() = try {
-            Gson().fromJson(sharedPreferences.getString(DOWNLOADED, "[]"), object : TypeToken<List<SongInfo>>() {}.type)
+            gson.fromJson(sharedPreferences.getString(DOWNLOADED, "[]"), object : TypeToken<List<SongInfo>>() {}.type)
         } catch (_: JsonSyntaxException) {
             listOf()
         }
         set(value) {
-            sharedPreferences.edit().putString(DOWNLOADED, Gson().toJson(value)).apply()
+            sharedPreferences.edit().putString(DOWNLOADED, gson.toJson(value)).apply()
+        }
+
+    /**
+     * The list of song ID-s that the user marked as favorites.
+     */
+    var favorites: List<String>
+        get() = try {
+            gson.fromJson(sharedPreferences.getString(FAVORITES, "[]"), object : TypeToken<List<String>>() {}.type)
+        } catch (_: JsonSyntaxException) {
+            listOf()
+        }
+        set(value) {
+            sharedPreferences.edit().putString(FAVORITES, gson.toJson(value)).apply()
         }
 
     companion object {
@@ -75,5 +88,6 @@ class StorageManager(context: Context) {
         private const val LAST_LIBRARY_UPDATE = "last_library_update"
         private const val LIBRARY = "library"
         private const val DOWNLOADED = "downloaded"
+        private const val FAVORITES = "favorites"
     }
 }

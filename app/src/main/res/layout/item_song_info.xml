@@ -11,6 +11,8 @@
             name="viewModel"
             type="com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel" />
 
+        <import type="android.view.View" />
+
     </data>
 
     <android.support.v7.widget.CardView
@@ -30,9 +32,11 @@
                 android:layout_alignParentEnd="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:padding="@dimen/content_padding"
+                android:src="@{viewModel.shouldDisplayFavoriteIcon ? @drawable/ic_favorites_24dp : @drawable/ic_downloaded_24dp}"
                 android:tint="@{viewModel.isActionTinted ? @color/accent : @android:color/white}"
-                app:srcCompat="@drawable/ic_downloaded_24dp"
-                tools:ignore="ContentDescription" />
+                android:visibility="@{viewModel.shouldDisplayAction ? View.VISIBLE : View.GONE}"
+                tools:ignore="ContentDescription"
+                tools:src="@drawable/ic_downloaded_24dp" />
 
             <TextView
                 android:id="@+id/title"

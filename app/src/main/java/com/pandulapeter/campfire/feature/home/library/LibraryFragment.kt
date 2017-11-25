@@ -58,7 +58,7 @@ class LibraryFragment : DaggerFragment() {
             // Setup error handling.
             viewModel.shouldShowErrorSnackbar.onEventTriggered {
                 Snackbar
-                    .make(binding.coordinatorLayout, R.string.something_went_wrong, Snackbar.LENGTH_LONG)
+                    .make(binding.root, R.string.something_went_wrong, Snackbar.LENGTH_LONG)
                     .setAction(R.string.try_again, { viewModel.update(true) })
                     .show()
             }
