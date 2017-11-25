@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--suppress AndroidUnknownAttribute -->
+    <data class=".FavoritesBinding">
+
+        <variable
+            name="viewModel"
+            type="com.pandulapeter.campfire.feature.home.favorites.FavoritesViewModel" />
+
+    </data>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="@string/home_navigation_favorites"
+        tools:context=".feature.home.HomeActivity" />
+
+</layout>
