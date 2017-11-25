@@ -36,12 +36,22 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
 
     fun getDownloaded() = storageManager.downloaded
 
-    fun downloadSong(songInfo: SongInfo) {
+    fun addSongToDownloaded(songInfo: SongInfo) {
         storageManager.downloaded = storageManager.downloaded.toMutableList().apply { if (!contains(songInfo)) add(songInfo) }
     }
 
-    fun deleteDownloadedSong(songInfo: SongInfo) {
+    fun removeSongFromDownloaded(songInfo: SongInfo) {
         storageManager.downloaded = storageManager.downloaded.toMutableList().apply { if (contains(songInfo)) remove(songInfo) }
+    }
+
+    fun getFavorites() = storageManager.favorites
+
+    fun addSongToFavorites(songInfo: SongInfo) {
+        storageManager.favorites = storageManager.favorites.toMutableList().apply { if (!contains(songInfo.id)) add(songInfo.id) }
+    }
+
+    fun removeSongFromFavorites(songInfo: SongInfo) {
+        storageManager.favorites = storageManager.favorites.toMutableList().apply { if (contains(songInfo.id)) remove(songInfo.id) }
     }
 
     companion object {

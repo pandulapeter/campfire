@@ -35,11 +35,11 @@ class LibraryViewModel(private val songInfoRepository: SongInfoRepository) {
         }
     }
 
-    fun downloadOrDeleteSong(songInfo: SongInfo) {
+    fun addOrRemoveSongFromDownloaded(songInfo: SongInfo) {
         if (songInfoRepository.getDownloaded().contains(songInfo)) {
-            songInfoRepository.deleteDownloadedSong(songInfo)
+            songInfoRepository.removeSongFromDownloaded(songInfo)
         } else {
-            songInfoRepository.downloadSong(songInfo)
+            songInfoRepository.addSongToDownloaded(songInfo)
         }
         refreshAdapterItems(adapter.items.map { it.songInfo })
     }

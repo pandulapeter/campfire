@@ -56,9 +56,7 @@ class DownloadedFragment : DaggerFragment() {
                 }
             }
             viewModel.adapter.itemActionClickListener = { position ->
-                Snackbar
-                    .make(binding.root, "Work in progress", Snackbar.LENGTH_SHORT)
-                    .show()
+                viewModel.addOrRemoveSongFromFavorites(viewModel.adapter.items[position].songInfo)
             }
         }
     }

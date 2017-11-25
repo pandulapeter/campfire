@@ -53,7 +53,7 @@ class LibraryFragment : DaggerFragment() {
                 }
             }
             viewModel.adapter.itemActionClickListener = { position ->
-                viewModel.adapter.items[position].let { viewModel.downloadOrDeleteSong(it.songInfo) }
+                viewModel.adapter.items[position].let { viewModel.addOrRemoveSongFromDownloaded(it.songInfo) }
             }
             // Setup error handling.
             viewModel.shouldShowErrorSnackbar.onEventTriggered {
