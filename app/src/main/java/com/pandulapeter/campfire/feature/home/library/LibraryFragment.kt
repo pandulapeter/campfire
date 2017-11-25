@@ -46,10 +46,17 @@ class LibraryFragment : DaggerFragment() {
             binding.recyclerView.addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
             binding.swipeRefreshLayout.setOnRefreshListener { viewModel.update(true) }
             viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
-            // Setup list item click listener.
+            // Setup list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
                 viewModel.adapter.songInfoList[position].let { songInfo ->
                     startActivity(DetailActivity.getStartIntent(context, songInfo.title, songInfo.artist))
+                }
+            }
+            viewModel.adapter.itemActionClickListener = { position ->
+                viewModel.adapter.songInfoList[position].let { songInfo ->
+                    Snackbar
+                        .make(binding.coordinatorLayout, "Downloading ${songInfo.title}", Snackbar.LENGTH_LONG)
+                        .show()
                 }
             }
             // Setup error handling.
