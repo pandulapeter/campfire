@@ -9,8 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.network.NetworkManager
-import com.pandulapeter.campfire.data.storage.StorageManager
+import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.onEventTriggered
@@ -27,10 +26,9 @@ import javax.inject.Inject
  */
 class LibraryFragment : DaggerFragment() {
 
-    @Inject lateinit var storageManager: StorageManager
-    @Inject lateinit var networkManager: NetworkManager
+    @Inject lateinit var songInfoRepository: SongInfoRepository
     private lateinit var binding: LibraryBinding
-    private val viewModel by lazy { LibraryViewModel(storageManager, networkManager) }
+    private val viewModel by lazy { LibraryViewModel(songInfoRepository) }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_library, container, false)
@@ -43,13 +41,13 @@ class LibraryFragment : DaggerFragment() {
             // Initialize the list and pull-to-refresh functionality.
             binding.recyclerView.layoutManager = LinearLayoutManager(context)
             binding.recyclerView.addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
-            binding.swipeRefreshLayout.setOnRefreshListener { viewModel.update() }
+            binding.swipeRefreshLayout.setOnRefreshListener { viewModel.update(true) }
             viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
             // Setup error handling.
             viewModel.shouldShowErrorSnackbar.onEventTriggered {
                 Snackbar
                     .make(binding.coordinatorLayout, R.string.something_went_wrong, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.try_again, { viewModel.update() })
+                    .setAction(R.string.try_again, { viewModel.update(true) })
                     .show()
             }
         }
