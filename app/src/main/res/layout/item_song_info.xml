@@ -8,8 +8,8 @@
     <data class=".SongInfoBinding">
 
         <variable
-            name="songInfo"
-            type="com.pandulapeter.campfire.data.model.SongInfo" />
+            name="viewModel"
+            type="com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel" />
 
     </data>
 
@@ -30,19 +30,19 @@
                 android:layout_alignParentEnd="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:padding="@dimen/content_padding"
+                android:tint="@{viewModel.isActionTinted ? @color/accent : @android:color/white}"
                 app:srcCompat="@drawable/ic_downloaded_24dp"
                 tools:ignore="ContentDescription" />
 
             <TextView
                 android:id="@+id/title"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
                 android:layout_toStartOf="@id/action"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:maxLines="3"
-                android:text="@{songInfo.title}"
+                android:text="@{viewModel.songInfo.title}"
                 tools:text="Song title" />
 
             <TextView
@@ -54,7 +54,7 @@
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-thin"
                 android:maxLines="2"
-                android:text="@{songInfo.artist}"
+                android:text="@{viewModel.songInfo.artist}"
                 tools:text="Artist" />
 
         </RelativeLayout>

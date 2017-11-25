@@ -48,16 +48,12 @@ class LibraryFragment : DaggerFragment() {
             viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
             // Setup list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
-                viewModel.adapter.songInfoList[position].let { songInfo ->
-                    startActivity(DetailActivity.getStartIntent(context, songInfo.title, songInfo.artist))
+                viewModel.adapter.items[position].let { songInfoViewModel ->
+                    startActivity(DetailActivity.getStartIntent(context, songInfoViewModel.songInfo.title, songInfoViewModel.songInfo.artist))
                 }
             }
             viewModel.adapter.itemActionClickListener = { position ->
-                viewModel.adapter.songInfoList[position].let { songInfo ->
-                    Snackbar
-                        .make(binding.coordinatorLayout, "Downloading ${songInfo.title}", Snackbar.LENGTH_LONG)
-                        .show()
-                }
+                viewModel.adapter.items[position].let { viewModel.downloadOrDeleteSong(it.songInfo) }
             }
             // Setup error handling.
             viewModel.shouldShowErrorSnackbar.onEventTriggered {

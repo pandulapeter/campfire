@@ -10,20 +10,20 @@ import com.pandulapeter.campfire.util.enqueueCall
  */
 class SongInfoRepository(private val storageManager: StorageManager, private val networkManager: NetworkManager) {
 
-    private val dataSet = storageManager.library.toMutableList()
+    private val libraryDataSet = storageManager.library.toMutableList()
 
-    private fun isCacheInvalid() = System.currentTimeMillis() - storageManager.lastLibraryUpdate > CACHE_VALIDITY_LIMIT_IN_MILLIS
+    private fun isCacheInvalid() = System.currentTimeMillis() - storageManager.lastLibraryUpdate > LIBRARY_CACHE_VALIDITY_LIMIT
 
     fun getLibrary(changeListener: ChangeListener<List<SongInfo>>, forceRefresh: Boolean) {
-        changeListener.onNext(dataSet)
+        changeListener.onNext(libraryDataSet)
         if (forceRefresh || isCacheInvalid()) {
             networkManager.service.getLibrary().enqueueCall(
                 onSuccess = {
-                    dataSet.clear()
-                    dataSet.addAll(it)
+                    libraryDataSet.clear()
+                    libraryDataSet.addAll(it)
                     storageManager.library = it
                     storageManager.lastLibraryUpdate = System.currentTimeMillis()
-                    changeListener.onNext(dataSet)
+                    changeListener.onNext(libraryDataSet)
                     changeListener.onComplete()
                 },
                 onFailure = {
@@ -34,7 +34,17 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
         }
     }
 
+    fun getDownloaded() = storageManager.downloaded
+
+    fun downloadSong(songInfo: SongInfo) {
+        storageManager.downloaded = storageManager.downloaded.toMutableList().apply { if (!contains(songInfo)) add(songInfo) }
+    }
+
+    fun deleteDownloadedSong(songInfo: SongInfo) {
+        storageManager.downloaded = storageManager.downloaded.toMutableList().apply { if (contains(songInfo)) remove(songInfo) }
+    }
+
     companion object {
-        private const val CACHE_VALIDITY_LIMIT_IN_MILLIS = 1000 * 60 * 60 * 24
+        private const val LIBRARY_CACHE_VALIDITY_LIMIT = 1000 * 60 * 60 * 24
     }
 }

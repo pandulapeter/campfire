@@ -15,16 +15,16 @@ import com.pandulapeter.campfire.data.model.SongInfo
  */
 class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>() {
 
-    var songInfoList = listOf<SongInfo>()
+    var items = listOf<SongInfoViewModel>()
         set(newItems) {
-            val oldItems = songInfoList
+            val oldItems = items
             DiffUtil.calculateDiff(object : DiffUtil.Callback() {
                 override fun getOldListSize() = oldItems.size
 
                 override fun getNewListSize() = newItems.size
 
                 override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int)
-                    = oldItems[oldItemPosition].id == newItems[newItemPosition].id
+                    = oldItems[oldItemPosition].songInfo.id == newItems[newItemPosition].songInfo.id
 
                 override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int)
                     = oldItems[oldItemPosition] == newItems[newItemPosition]
@@ -44,11 +44,11 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
     override fun onBindViewHolder(holder: SongInfoViewHolder?, position: Int) = Unit
 
     override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int, payloads: List<Any>?) {
-        holder.binding.songInfo = songInfoList[position]
+        holder.binding.viewModel = items[position]
         holder.binding.executePendingBindings()
     }
 
-    override fun getItemCount() = songInfoList.size
+    override fun getItemCount() = items.size
 
     class SongInfoViewHolder(val binding: SongInfoBinding) : RecyclerView.ViewHolder(binding.root) {
 

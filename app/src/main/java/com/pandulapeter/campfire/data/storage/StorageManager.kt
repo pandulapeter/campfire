@@ -57,9 +57,23 @@ class StorageManager(context: Context) {
             sharedPreferences.edit().putString(LIBRARY, Gson().toJson(value)).apply()
         }
 
+    /**
+     * The list of downloaded song ID-s.
+     */
+    var downloaded: List<SongInfo>
+        get() = try {
+            Gson().fromJson(sharedPreferences.getString(DOWNLOADED, "[]"), object : TypeToken<List<SongInfo>>() {}.type)
+        } catch (_: JsonSyntaxException) {
+            listOf()
+        }
+        set(value) {
+            sharedPreferences.edit().putString(DOWNLOADED, Gson().toJson(value)).apply()
+        }
+
     companion object {
         private const val LAST_SELECTED_NAVIGATION_ITEM = "last_selected_navigation_item"
         private const val LAST_LIBRARY_UPDATE = "last_library_update"
         private const val LIBRARY = "library"
+        private const val DOWNLOADED = "downloaded"
     }
 }

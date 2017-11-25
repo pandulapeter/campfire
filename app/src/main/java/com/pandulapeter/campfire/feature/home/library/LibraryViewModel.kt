@@ -1,9 +1,11 @@
 package com.pandulapeter.campfire.feature.home.library
 
 import android.databinding.ObservableBoolean
+import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.ChangeListener
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.SongInfoAdapter
+import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
 
 /**
  * Handles events and logic for [LibraryFragment].
@@ -22,9 +24,7 @@ class LibraryViewModel(private val songInfoRepository: SongInfoRepository) {
         if (!isLoading.get()) {
             isLoading.set(true)
             songInfoRepository.getLibrary(ChangeListener(
-                onNext = {
-                    adapter.songInfoList = it
-                },
+                onNext = { refreshAdapterItems(it) },
                 onComplete = {
                     isLoading.set(false)
                 },
@@ -33,5 +33,19 @@ class LibraryViewModel(private val songInfoRepository: SongInfoRepository) {
                     isLoading.set(false)
                 }), isForceRefresh)
         }
+    }
+
+    fun downloadOrDeleteSong(songInfo: SongInfo) {
+        if (songInfoRepository.getDownloaded().contains(songInfo)) {
+            songInfoRepository.deleteDownloadedSong(songInfo)
+        } else {
+            songInfoRepository.downloadSong(songInfo)
+        }
+        refreshAdapterItems(adapter.items.map { it.songInfo })
+    }
+
+    private fun refreshAdapterItems(newData: List<SongInfo>) {
+        val downloadedItems = songInfoRepository.getDownloaded()
+        adapter.items = newData.map { SongInfoViewModel(it, downloadedItems.contains(it)) }
     }
 }
