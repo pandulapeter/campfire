@@ -14,7 +14,7 @@ class NetworkingManager {
 
     @Suppress("ConstantConditionIf")
     private val retrofit = Retrofit.Builder()
-        .baseUrl("TODO")
+        .baseUrl("http://localhost:8080")
         .client(OkHttpClient.Builder()
             .apply {
                 if (BuildConfig.DEBUG) {
@@ -24,4 +24,6 @@ class NetworkingManager {
             .build())
         .addConverterFactory(GsonConverterFactory.create(GsonBuilder().create()))
         .build()
+
+    fun getService() = retrofit.create(CampfireService::class.java)
 }

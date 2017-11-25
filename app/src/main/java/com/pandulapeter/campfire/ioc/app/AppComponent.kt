@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.ioc.app
 
 import com.pandulapeter.campfire.CampfireApplication
 import com.pandulapeter.campfire.ioc.activity.ActivityModule
+import com.pandulapeter.campfire.ioc.module.NetworkingModule
 import com.pandulapeter.campfire.ioc.module.StorageModule
 import dagger.Component
 import dagger.android.AndroidInjector
@@ -13,7 +14,8 @@ import javax.inject.Singleton
     AndroidSupportInjectionModule::class,
     AppModule::class,
     ActivityModule::class,
-    StorageModule::class))
+    StorageModule::class,
+    NetworkingModule::class))
 interface AppComponent : AndroidInjector<CampfireApplication> {
 
     @Component.Builder

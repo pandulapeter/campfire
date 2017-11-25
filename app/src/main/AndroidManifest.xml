@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.pandulapeter.campfire">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".CampfireApplication"
         android:allowBackup="false"
