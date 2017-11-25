@@ -2,60 +2,64 @@ package com.pandulapeter.campfire.feature.home
 
 import android.databinding.DataBindingUtil
 import android.os.Bundle
-import android.os.PersistableBundle
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.network.NetworkManager
+import com.pandulapeter.campfire.data.storage.StorageManager
 import com.pandulapeter.campfire.feature.home.downloaded.DownloadedFragment
 import com.pandulapeter.campfire.feature.home.favorites.FavoritesFragment
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
+import com.pandulapeter.campfire.util.consume
 import dagger.android.support.DaggerAppCompatActivity
 import javax.inject.Inject
 
 /**
- * Displays the main screen of the app which contains the app bar, the three possible Fragments that
- * can be selected and the bottom navigation.
- *
- * Controlled by [HomeViewModel].
+ * Displays the home screen of the app which contains the three main pages the user can access
+ * ([LibraryFragment], [DownloadedFragment] and [FavoritesFragment]) and the bottom navigation view.
+ * The last selected item is persisted.
  */
 class HomeActivity : DaggerAppCompatActivity() {
 
-    @Inject lateinit var networkManager: NetworkManager
+    @Inject lateinit var storageManager: StorageManager
+    private var selectedItem: NavigationItem = NavigationItem.LIBRARY
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        DataBindingUtil.setContentView<HomeBinding>(this, R.layout.activity_home).apply {
-            viewModel = HomeViewModel(networkManager)
-            bottomNavigation.setOnNavigationItemReselectedListener { menuItem ->
+        // Inflate the layout and set up the navigation listener.
+        val binding = DataBindingUtil.setContentView<HomeBinding>(this, R.layout.activity_home).apply {
+            bottomNavigation.setOnNavigationItemSelectedListener { menuItem ->
                 when (menuItem.itemId) {
-                    R.id.library -> NavigationItem.LIBRARY
-                    R.id.downloaded -> NavigationItem.DOWNLOADED
-                    R.id.favorites -> NavigationItem.FAVORITES
-                    else -> null
-                }?.let { replaceActiveFragment(it) }
+                    R.id.library -> consume { replaceActiveFragment(NavigationItem.LIBRARY) }
+                    R.id.downloaded -> consume { replaceActiveFragment(NavigationItem.DOWNLOADED) }
+                    R.id.favorites -> consume { replaceActiveFragment(NavigationItem.FAVORITES) }
+                    else -> false
+                }
             }
         }
-        replaceActiveFragment(savedInstanceState?.getSerializable(NAVIGATION_ITEM) as? NavigationItem ?: NavigationItem.LIBRARY)
+        // Restore the state if needed. After app start we need to manually set the selected item, otherwise
+        // the View takes care of it and we only need to update the displayed Fragment.
+        if (savedInstanceState == null) {
+            binding.bottomNavigation.selectedItemId = when (storageManager.lastSelectedNavigationItem) {
+                NavigationItem.LIBRARY -> R.id.library
+                NavigationItem.DOWNLOADED -> R.id.downloaded
+                NavigationItem.FAVORITES -> R.id.favorites
+            }
+        } else {
+            replaceActiveFragment(storageManager.lastSelectedNavigationItem)
+        }
     }
 
-    override fun onSaveInstanceState(outState: Bundle?, outPersistentState: PersistableBundle?) {
-        super.onSaveInstanceState(outState, outPersistentState)
-        outState?.putSerializable(NAVIGATION_ITEM, NavigationItem.LIBRARY)
-    }
-
+    /**
+     * Checks if the user actually changed the current selection and if so, persists it and replaces the Fragment.
+     */
     private fun replaceActiveFragment(navigationItem: NavigationItem) {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container, when (navigationItem) {
-            HomeActivity.NavigationItem.LIBRARY -> LibraryFragment()
-            HomeActivity.NavigationItem.DOWNLOADED -> DownloadedFragment()
-            HomeActivity.NavigationItem.FAVORITES -> FavoritesFragment()
-        }).commit()
-    }
-
-    private enum class NavigationItem {
-        LIBRARY, DOWNLOADED, FAVORITES
-    }
-
-    companion object {
-        private const val NAVIGATION_ITEM = "navigation_item"
+        if (selectedItem != navigationItem) {
+            storageManager.lastSelectedNavigationItem = navigationItem
+            selectedItem = navigationItem
+            supportFragmentManager.beginTransaction().replace(R.id.fragment_container, when (navigationItem) {
+                NavigationItem.LIBRARY -> LibraryFragment()
+                NavigationItem.DOWNLOADED -> DownloadedFragment()
+                NavigationItem.FAVORITES -> FavoritesFragment()
+            }).commit()
+        }
     }
 }

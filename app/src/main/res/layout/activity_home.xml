@@ -4,13 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--suppress AndroidUnknownAttribute -->
-    <data class=".HomeBinding">
-
-        <variable
-            name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.HomeViewModel" />
-
-    </data>
+    <data class=".HomeBinding" />
 
     <RelativeLayout
         android:layout_width="match_parent"
