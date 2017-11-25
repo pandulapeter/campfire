@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home
+package com.pandulapeter.campfire.feature.home.shared
 
 import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
@@ -10,6 +10,9 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SongInfoBinding
 import com.pandulapeter.campfire.data.model.SongInfo
 
+/**
+ * Custom [RecyclerView.Adapter] that handles a a list of [SongInfo] objects.
+ */
 class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder<SongInfoBinding>>() {
 
     var songInfoList = listOf<SongInfo>()

@@ -3,7 +3,7 @@ package com.pandulapeter.campfire.feature.home.library
 import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.storage.StorageManager
-import com.pandulapeter.campfire.feature.home.SongInfoAdapter
+import com.pandulapeter.campfire.feature.home.shared.SongInfoAdapter
 import com.pandulapeter.campfire.util.enqueueCall
 
 /**

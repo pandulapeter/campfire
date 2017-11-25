@@ -11,6 +11,8 @@ import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.storage.StorageManager
+import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
+import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import dagger.android.support.DaggerFragment
@@ -37,16 +39,19 @@ class LibraryFragment : DaggerFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        // Initialize the list and pull-to-refresh functionality.
-        binding.recyclerView.layoutManager = LinearLayoutManager(context)
-        binding.swipeRefreshLayout.setOnRefreshListener { viewModel.update() }
-        viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
-        // Setup error handling.
-        viewModel.shouldShowErrorSnackbar.onEventTriggered {
-            Snackbar
-                .make(binding.coordinatorLayout, R.string.something_went_wrong, Snackbar.LENGTH_LONG)
-                .setAction(R.string.try_again, { viewModel.update() })
-                .show()
+        context?.let { context ->
+            // Initialize the list and pull-to-refresh functionality.
+            binding.recyclerView.layoutManager = LinearLayoutManager(context)
+            binding.recyclerView.addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
+            binding.swipeRefreshLayout.setOnRefreshListener { viewModel.update() }
+            viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
+            // Setup error handling.
+            viewModel.shouldShowErrorSnackbar.onEventTriggered {
+                Snackbar
+                    .make(binding.coordinatorLayout, R.string.something_went_wrong, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.try_again, { viewModel.update() })
+                    .show()
+            }
         }
     }
 }
