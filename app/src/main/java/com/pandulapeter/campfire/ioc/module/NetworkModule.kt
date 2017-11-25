@@ -1,15 +1,15 @@
 package com.pandulapeter.campfire.ioc.module
 
-import com.pandulapeter.campfire.data.networking.NetworkingManager
+import com.pandulapeter.campfire.data.network.NetworkManager
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
 
 @Module
-object NetworkingModule {
+object NetworkModule {
 
     @Provides
     @Singleton
     @JvmStatic
-    fun provideNetworkingManager() = NetworkingManager()
+    fun provideNetworkManager() = NetworkManager()
 }

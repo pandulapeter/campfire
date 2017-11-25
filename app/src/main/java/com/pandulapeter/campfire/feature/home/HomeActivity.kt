@@ -4,7 +4,7 @@ import android.databinding.DataBindingUtil
 import android.os.Bundle
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.networking.NetworkingManager
+import com.pandulapeter.campfire.data.network.NetworkManager
 import dagger.android.support.DaggerAppCompatActivity
 import javax.inject.Inject
 
@@ -16,10 +16,10 @@ import javax.inject.Inject
  */
 class HomeActivity : DaggerAppCompatActivity() {
 
-    @Inject lateinit var networkingManager: NetworkingManager
+    @Inject lateinit var networkManager: NetworkManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        DataBindingUtil.setContentView<HomeBinding>(this, R.layout.activity_home).viewModel = HomeViewModel(networkingManager)
+        DataBindingUtil.setContentView<HomeBinding>(this, R.layout.activity_home).viewModel = HomeViewModel(networkManager)
     }
 }

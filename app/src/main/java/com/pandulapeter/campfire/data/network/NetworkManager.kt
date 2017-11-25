@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.data.networking
+package com.pandulapeter.campfire.data.network
 
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
@@ -8,9 +8,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 /**
  * Wrapper for communicating with the server.
  */
-class NetworkingManager {
+class NetworkManager {
 
-    @Suppress("ConstantConditionIf")
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://campfire-test1.herokuapp.com")
         .client(OkHttpClient.Builder().build())

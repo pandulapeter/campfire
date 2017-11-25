@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- General -->
     <string name="campfire">Campfire</string>
+
+    <!-- Home screen -->
+    <string name="home_navigation_library">Library</string>
+    <string name="home_navigation_downloaded">Downloaded</string>
+    <string name="home_navigation_favorites">Favorites</string>
 
 </resources>
