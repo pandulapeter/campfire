@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.helper.ItemTouchHelper
+import android.support.v7.widget.helper.ItemTouchHelper.*
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -47,6 +50,7 @@ class DownloadedFragment : DaggerFragment() {
                 Snackbar
                     .make(binding.root, "Work in progress", Snackbar.LENGTH_SHORT)
                     .show()
+                viewModel.isLoading.set(false)
             }
             viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
             // Setup list item click listeners.
@@ -58,6 +62,20 @@ class DownloadedFragment : DaggerFragment() {
             viewModel.adapter.itemActionClickListener = { position ->
                 viewModel.addOrRemoveSongFromFavorites(viewModel.adapter.items[position].songInfo)
             }
+            // Setup swipe-to-dismiss functionality.
+            ItemTouchHelper(object : ItemTouchHelper.Callback() {
+                override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =
+                    makeFlag(ACTION_STATE_SWIPE, LEFT or RIGHT)
+
+                override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = false
+
+                override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
+                    viewHolder?.adapterPosition?.let { position ->
+                        viewModel.removeSongFromDownloaded(viewModel.adapter.items[position].songInfo)
+                    }
+                }
+
+            }).attachToRecyclerView(binding.recyclerView)
         }
     }
 }

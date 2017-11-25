@@ -14,7 +14,7 @@ class DownloadedViewModel(private val songInfoRepository: SongInfoRepository) {
     val isLoading = ObservableBoolean(false)
 
     init {
-        refreshAdapterItems(songInfoRepository.getDownloaded())
+        refreshAdapterItems()
     }
 
     fun addOrRemoveSongFromFavorites(songInfo: SongInfo) {
@@ -23,10 +23,15 @@ class DownloadedViewModel(private val songInfoRepository: SongInfoRepository) {
         } else {
             songInfoRepository.addSongToFavorites(songInfo)
         }
-        refreshAdapterItems(adapter.items.map { it.songInfo })
+        refreshAdapterItems()
     }
 
-    private fun refreshAdapterItems(newData: List<SongInfo>) {
+    fun removeSongFromDownloaded(songInfo: SongInfo) {
+        songInfoRepository.removeSongFromDownloaded(songInfo)
+        refreshAdapterItems()
+    }
+
+    private fun refreshAdapterItems() {
         val favorites = songInfoRepository.getFavorites()
         adapter.items = songInfoRepository.getDownloaded().map { SongInfoViewModel(it, favorites.contains(it.id), true) }
     }

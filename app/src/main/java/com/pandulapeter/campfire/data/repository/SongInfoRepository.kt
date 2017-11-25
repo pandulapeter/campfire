@@ -41,6 +41,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     }
 
     fun removeSongFromDownloaded(songInfo: SongInfo) {
+        removeSongFromFavorites(songInfo)
         storageManager.downloaded = storageManager.downloaded.toMutableList().apply { if (contains(songInfo)) remove(songInfo) }
     }
 
