@@ -55,8 +55,8 @@ class DownloadedFragment : DaggerFragment() {
             viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
             // Setup list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
-                viewModel.adapter.items[position].let { songInfoViewModel ->
-                    startActivity(DetailActivity.getStartIntent(context, songInfoViewModel.songInfo.title, songInfoViewModel.songInfo.artist))
+                viewModel.adapter.items[position].songInfo.let { songInfo ->
+                    startActivity(DetailActivity.getStartIntent(context, songInfo.id, songInfo.title, songInfo.artist))
                 }
             }
             viewModel.adapter.itemActionClickListener = { position ->

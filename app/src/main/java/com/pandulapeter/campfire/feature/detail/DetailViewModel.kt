@@ -1,12 +1,19 @@
 package com.pandulapeter.campfire.feature.detail
 
-import android.databinding.ObservableField
+import com.pandulapeter.campfire.data.repository.ChangeListener
+import com.pandulapeter.campfire.data.repository.SongInfoRepository
 
 /**
  * Handles events and logic for [DetailActivity].
  */
-class DetailViewModel(title: String, artist: String) {
-
-    val title = ObservableField(title)
-    val artist = ObservableField(artist)
+class DetailViewModel(songInfoRepository: SongInfoRepository, id: String, val title: String, val artist: String) {
+    init {
+        songInfoRepository.getLibrary(ChangeListener(
+            onNext = {
+                it.find { it.id == id }?.let { songInfoRepository.addSongToDownloaded(it) }
+            },
+            onComplete = {},
+            onError = {}
+        ))
+    }
 }

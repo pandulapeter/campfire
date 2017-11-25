@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.library
 
+import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
@@ -48,8 +49,8 @@ class LibraryFragment : DaggerFragment() {
             viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
             // Setup list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
-                viewModel.adapter.items[position].let { songInfoViewModel ->
-                    startActivity(DetailActivity.getStartIntent(context, songInfoViewModel.songInfo.title, songInfoViewModel.songInfo.artist))
+                viewModel.adapter.items[position].songInfo.let { songInfo ->
+                    startActivityForResult(DetailActivity.getStartIntent(context, songInfo.id, songInfo.title, songInfo.artist), DETAIL_REQUEST)
                 }
             }
             viewModel.adapter.itemActionClickListener = { position ->
@@ -63,5 +64,14 @@ class LibraryFragment : DaggerFragment() {
                     .show()
             }
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) = when (requestCode) {
+        DETAIL_REQUEST -> viewModel.update(false)
+        else -> super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    companion object {
+        private const val DETAIL_REQUEST = 100
     }
 }
