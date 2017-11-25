@@ -74,7 +74,7 @@ class DownloadedFragment : DaggerFragment() {
                         val songInfo = viewModel.adapter.items[position].songInfo
                         viewModel.removeSongFromDownloaded(songInfo)
                         Snackbar
-                            .make(binding.root, R.string.downloaded_song_deleted, Snackbar.LENGTH_LONG)
+                            .make(binding.root, getString(R.string.downloaded_song_deleted, songInfo.title), Snackbar.LENGTH_LONG)
                             .setAction(R.string.undo, { viewModel.addSongToDownloaded(songInfo) })
                             .show()
                     }

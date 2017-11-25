@@ -13,9 +13,9 @@
     <string name="home_navigation_favorites">Favorites</string>
 
     <!-- Downloaded screen -->
-    <string name="downloaded_song_deleted">Song deleted.</string>
+    <string name="downloaded_song_deleted">%s deleted from downloaded songs.</string>
 
     <!-- Favorites screen -->
-    <string name="favorites_song_removed">Song removed from favorites.</string>
+    <string name="favorites_song_removed">%s removed from favorites.</string>
 
 </resources>

@@ -62,7 +62,7 @@ class FavoritesFragment : DaggerFragment() {
                         val songInfo = viewModel.adapter.items[position].songInfo
                         viewModel.removeSongFromFavorites(songInfo)
                         Snackbar
-                            .make(binding.root, R.string.favorites_song_removed, Snackbar.LENGTH_LONG)
+                            .make(binding.root, getString(R.string.favorites_song_removed, songInfo.title), Snackbar.LENGTH_LONG)
                             .setAction(R.string.undo, { viewModel.addSongToFavorites(songInfo, position) })
                             .show()
                     }
