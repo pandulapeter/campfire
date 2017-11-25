@@ -2,16 +2,18 @@ package com.pandulapeter.campfire
 
 import android.app.Activity
 import android.app.ActivityManager
-import android.app.Application
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
+import com.pandulapeter.campfire.ioc.app.DaggerAppComponent
 import com.pandulapeter.campfire.util.color
+import dagger.android.AndroidInjector
+import dagger.android.support.DaggerApplication
 
 /**
  * Custom Application class for initializing dependency injection.
  */
-class CampfireApplication : Application() {
+class CampfireApplication : DaggerApplication() {
 
     override fun onCreate() {
         super.onCreate()
@@ -39,4 +41,6 @@ class CampfireApplication : Application() {
             override fun onActivitySaveInstanceState(activity: Activity?, savedInstanceState: Bundle?) = Unit
         })
     }
+
+    override fun applicationInjector(): AndroidInjector<out DaggerApplication> = DaggerAppComponent.builder().create(this)
 }

@@ -2,9 +2,9 @@ package com.pandulapeter.campfire.feature.home
 
 import android.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
+import dagger.android.support.DaggerAppCompatActivity
 
 /**
  * Displays the main screen of the app which contains the app bar, the three possible Fragments that
@@ -12,7 +12,7 @@ import com.pandulapeter.campfire.R
  *
  * Controlled by [HomeViewModel].
  */
-class HomeActivity : AppCompatActivity() {
+class HomeActivity : DaggerAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
