@@ -10,7 +10,7 @@ import com.pandulapeter.campfire.util.enqueueCall
  */
 class SongInfoRepository(private val storageManager: StorageManager, private val networkManager: NetworkManager) {
 
-    private val dataSet = mutableListOf<SongInfo>()
+    private val dataSet = storageManager.library.toMutableList()
 
     private fun isCacheInvalid() = System.currentTimeMillis() - storageManager.lastLibraryUpdate > CACHE_VALIDITY_LIMIT_IN_MILLIS
 
@@ -21,6 +21,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
                 onSuccess = {
                     dataSet.clear()
                     dataSet.addAll(it)
+                    storageManager.library = it
                     storageManager.lastLibraryUpdate = System.currentTimeMillis()
                     changeListener.onNext(dataSet)
                     changeListener.onComplete()
