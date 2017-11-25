@@ -63,7 +63,7 @@ class FavoritesFragment : DaggerFragment() {
                         viewModel.removeSongFromFavorites(songInfo)
                         Snackbar
                             .make(binding.root, R.string.favorites_song_removed, Snackbar.LENGTH_LONG)
-                            .setAction(R.string.undo, { viewModel.addSongToFavorites(songInfo) })
+                            .setAction(R.string.undo, { viewModel.addSongToFavorites(songInfo, position) })
                             .show()
                     }
                 }

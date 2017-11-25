@@ -47,8 +47,16 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
 
     fun getFavorites() = storageManager.favorites
 
-    fun addSongToFavorites(songInfo: SongInfo) {
-        storageManager.favorites = storageManager.favorites.toMutableList().apply { if (!contains(songInfo.id)) add(songInfo.id) }
+    fun addSongToFavorites(songInfo: SongInfo, position: Int? = null) {
+        storageManager.favorites = storageManager.favorites.toMutableList().apply {
+            if (!contains(songInfo.id)) {
+                if (position == null) {
+                    add(songInfo.id)
+                } else {
+                    add(position, songInfo.id)
+                }
+            }
+        }
     }
 
     fun removeSongFromFavorites(songInfo: SongInfo) {
