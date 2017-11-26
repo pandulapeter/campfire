@@ -25,6 +25,7 @@ class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.l
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Setup swipe-to-dismiss functionality.
+        //TODO: Change the elecation of the card that's being dragged.
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN,
             ItemTouchHelper.START or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT or ItemTouchHelper.END) {

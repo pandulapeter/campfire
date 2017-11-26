@@ -94,6 +94,8 @@ abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>
     abstract fun closeSearchInput()
 
     interface HomeCallbacks {
+        fun showMenu()
+
         fun showViewOptions()
     }
 }

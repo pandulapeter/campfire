@@ -2,11 +2,9 @@ package com.pandulapeter.campfire.feature.home
 
 import android.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.design.internal.BottomNavigationItemView
-import android.support.design.internal.BottomNavigationMenuView
-import android.support.design.widget.BottomNavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
+import android.view.Gravity
 import android.view.View
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
@@ -39,15 +37,13 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Inflate the layout and set up the bottom navigation listener.
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_home);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_home)
         binding.viewModel = viewModel
-        disableBottomNavigationScaleAnimation(binding.bottomNavigation)
         binding.bottomNavigation.setOnNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.cloud -> consume { replaceActiveFragment(HomeViewModel.NavigationItem.CLOUD) }
                 R.id.downloads -> consume { replaceActiveFragment(HomeViewModel.NavigationItem.DOWNLOADS) }
                 R.id.favorites -> consume { replaceActiveFragment(HomeViewModel.NavigationItem.FAVORITES) }
-                R.id.settings -> consume { replaceActiveFragment(HomeViewModel.NavigationItem.SETTINGS) }
                 else -> false
             }
         }
@@ -65,7 +61,8 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
         })
         viewModel.selectedItem.onPropertyChanged {
             binding.drawerLayout.setDrawerLockMode(
-                if (it == HomeViewModel.NavigationItem.SETTINGS) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNDEFINED)
+                if (it == HomeViewModel.NavigationItem.SETTINGS) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNDEFINED,
+                Gravity.END)
         }
         // Restore the state if needed. After app start we need to manually set the selected item, otherwise
         // the View takes care of it and we only need to update the displayed Fragment.
@@ -74,7 +71,7 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
                 HomeViewModel.NavigationItem.CLOUD -> R.id.cloud
                 HomeViewModel.NavigationItem.DOWNLOADS -> R.id.downloads
                 HomeViewModel.NavigationItem.FAVORITES -> R.id.favorites
-                HomeViewModel.NavigationItem.SETTINGS -> R.id.settings
+                HomeViewModel.NavigationItem.SETTINGS -> R.id.favorites
             }
         } else {
             replaceActiveFragment(storageManager.lastSelectedNavigationItem)
@@ -100,6 +97,11 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
         }
     }
 
+    override fun showMenu() {
+        binding.drawerLayout.openDrawer(GravityCompat.START)
+        hideKeyboard(currentFocus)
+    }
+
     override fun showViewOptions() {
         binding.drawerLayout.openDrawer(GravityCompat.END)
         hideKeyboard(currentFocus)
@@ -119,24 +121,6 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
                 HomeViewModel.NavigationItem.FAVORITES -> FavoritesFragment()
                 HomeViewModel.NavigationItem.SETTINGS -> SettingsFragment()
             }).commit()
-        }
-    }
-
-    //TODO: Don't use reflection, come up with a better solution.
-    private fun disableBottomNavigationScaleAnimation(view: BottomNavigationView) {
-        val menuView = view.getChildAt(0) as BottomNavigationMenuView
-        try {
-            val shiftingMode = menuView.javaClass.getDeclaredField("mShiftingMode")
-            shiftingMode.isAccessible = true
-            shiftingMode.setBoolean(menuView, false)
-            shiftingMode.isAccessible = false
-            for (i in 0 until menuView.childCount) {
-                val item = menuView.getChildAt(i) as BottomNavigationItemView
-                item.setShiftingMode(false)
-                item.setChecked(item.itemData.isChecked)
-            }
-        } catch (_: NoSuchFieldException) {
-        } catch (_: IllegalAccessException) {
         }
     }
 

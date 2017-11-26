@@ -77,8 +77,8 @@ class SearchTitleView @JvmOverloads constructor(context: Context, attrs: Attribu
             override fun onTextChanged(charSequence: CharSequence?, p1: Int, p2: Int, p3: Int) = Unit
         })
         post {
-            setInAnimation(context, android.R.anim.slide_in_left)
-            setOutAnimation(context, android.R.anim.slide_out_right)
+            setInAnimation(context, android.R.anim.fade_in)
+            setOutAnimation(context, android.R.anim.fade_out)
         }
     }
 

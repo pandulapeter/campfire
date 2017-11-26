@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- General -->
     <color name="primary">#212121</color>
     <color name="accent">#FFC107</color>
+
+    <!-- Home screen -->
+    <color name="home_navigation_inactive">#7FFFFFFF</color>
 
 </resources>

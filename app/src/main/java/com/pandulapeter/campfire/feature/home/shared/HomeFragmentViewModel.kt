@@ -26,6 +26,10 @@ abstract class HomeFragmentViewModel(
 
     fun forceRefresh() = songInfoRepository.updateDataSet { shouldShowErrorSnackbar.set(true) }
 
+    fun showMenu() {
+        homeCallbacks?.showMenu()
+    }
+
     fun showViewOptions() {
         homeCallbacks?.showViewOptions()
     }

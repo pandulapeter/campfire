@@ -10,6 +10,8 @@
     <!-- Home screen -->
     <dimen name="action_button_padding">2dp</dimen>
     <dimen name="action_button_margin">10dp</dimen>
+    <dimen name="menu_margin">-4dp</dimen>
+    <dimen name="title_margin">56dp</dimen>
     <dimen name="drawer_width">192dp</dimen>
     <dimen name="card_text_margin">2dp</dimen>
 
