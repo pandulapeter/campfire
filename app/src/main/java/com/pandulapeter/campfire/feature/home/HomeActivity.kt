@@ -47,9 +47,7 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
         // Set up the side navigation bar.
         binding.drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
             override fun onDrawerStateChanged(newState: Int) {
-                if (newState == DrawerLayout.STATE_DRAGGING) {
-                    hideKeyboard(currentFocus)
-                }
+                getCurrentFragment()?.closeSearchInput()
             }
 
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) = Unit

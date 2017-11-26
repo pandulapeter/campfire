@@ -12,7 +12,8 @@ import com.pandulapeter.campfire.data.repository.Subscriber
 abstract class HomeFragmentViewModel(
     private val homeCallbacks: HomeFragment.HomeCallbacks?,
     protected val songInfoRepository: SongInfoRepository) : Subscriber {
-    val isLoading = ObservableBoolean(false)
+    val isLoading = ObservableBoolean(songInfoRepository.isLoading)
+    //TODO: Error messages are not displayed to the user.
     val shouldShowErrorSnackbar = ObservableBoolean(false)
     val adapter = SongInfoAdapter()
 

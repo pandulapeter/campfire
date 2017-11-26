@@ -59,6 +59,7 @@ abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>
                 addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
             }
             getSwipeRefreshLayout().setOnRefreshListener { viewModel.forceRefresh() }
+            getSwipeRefreshLayout().isRefreshing = viewModel.isLoading.get()
             viewModel.isLoading.onPropertyChanged { getSwipeRefreshLayout().isRefreshing = it }
             // Setup list item click listeners.
             viewModel.adapter.itemClickListener = { position ->

@@ -28,13 +28,15 @@ class SearchTitleView @JvmOverloads constructor(context: Context, attrs: Attribu
     var searchInputVisible: Boolean
         get() = displayedChild == 1
         set(value) {
-            displayedChild = if (value) 1 else 0
-            binding.query.run {
-                if (value) {
-                    requestFocus()
-                    post { showKeyboard(this) }
-                } else {
-                    hideKeyboard(this)
+            if (value != searchInputVisible) {
+                displayedChild = if (value) 1 else 0
+                binding.query.run {
+                    if (value) {
+                        requestFocus()
+                        post { showKeyboard(this) }
+                    } else {
+                        hideKeyboard(this)
+                    }
                 }
             }
         }
@@ -48,5 +50,7 @@ class SearchTitleView @JvmOverloads constructor(context: Context, attrs: Attribu
         }
         binding.search.setOnClickListener { searchInputVisible = true }
         binding.close.setOnClickListener { searchInputVisible = false }
+        setInAnimation(context, android.R.anim.slide_in_left)
+        setOutAnimation(context, android.R.anim.slide_out_right)
     }
 }
