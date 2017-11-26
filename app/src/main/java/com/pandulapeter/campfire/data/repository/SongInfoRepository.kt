@@ -44,7 +44,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             field = value
             notifySubscribers()
         }
-    var downloadedQuery = ""
+    var downloadsQuery = ""
         set(value) {
             field = value
             notifySubscribers()
@@ -80,21 +80,21 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
 
     fun getCloudSongs() = dataSet.filterExplicit().sort().toList()
 
-    fun getDownloadedSongs() = storageManager.downloaded.mapNotNull { id -> dataSet.find { id == it.id } }.filterExplicit().sort()
+    fun getDownloadsSongs() = storageManager.downloads.mapNotNull { id -> dataSet.find { id == it.id } }.filterExplicit().sort()
 
-    fun isSongDownloaded(id: String) = storageManager.downloaded.contains(id)
+    fun isSongDownloads(id: String) = storageManager.downloads.contains(id)
 
-    fun addSongToDownloaded(id: String) {
-        if (!isSongDownloaded(id)) {
-            storageManager.downloaded = storageManager.downloaded.toMutableList().apply { add(id) }
+    fun addSongToDownloads(id: String) {
+        if (!isSongDownloads(id)) {
+            storageManager.downloads = storageManager.downloads.toMutableList().apply { add(id) }
             notifySubscribers()
         }
     }
 
-    fun removeSongFromDownloaded(id: String) {
+    fun removeSongFromDownloads(id: String) {
         removeSongFromFavorites(id)
-        if (isSongDownloaded(id)) {
-            storageManager.downloaded = storageManager.downloaded.toMutableList().apply { remove(id) }
+        if (isSongDownloads(id)) {
+            storageManager.downloads = storageManager.downloads.toMutableList().apply { remove(id) }
             notifySubscribers()
         }
     }

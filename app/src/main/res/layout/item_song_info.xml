@@ -35,7 +35,7 @@
                 android:padding="@dimen/content_padding"
                 android:src="@{viewModel.actionIcon}"
                 android:tint="@{viewModel.isActionTinted ? @color/accent : @android:color/white}"
-                tools:src="@drawable/ic_downloaded_24dp" />
+                tools:src="@drawable/ic_downloads_24dp" />
 
             <TextView
                 android:id="@+id/title"

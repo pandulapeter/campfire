@@ -21,15 +21,17 @@ class StorageManager(context: Context, private val gson: Gson) {
      */
     var lastSelectedNavigationItem: HomeViewModel.NavigationItem
         get() = when (sharedPreferences.getInt(LAST_SELECTED_NAVIGATION_ITEM, 0)) {
-            1 -> HomeViewModel.NavigationItem.DOWNLOADED
+            1 -> HomeViewModel.NavigationItem.DOWNLOADS
             2 -> HomeViewModel.NavigationItem.FAVORITES
+            3 -> HomeViewModel.NavigationItem.SETTINGS
             else -> HomeViewModel.NavigationItem.CLOUD
         }
         set(value) {
             sharedPreferences.edit().putInt(LAST_SELECTED_NAVIGATION_ITEM, when (value) {
                 HomeViewModel.NavigationItem.CLOUD -> 0
-                HomeViewModel.NavigationItem.DOWNLOADED -> 1
+                HomeViewModel.NavigationItem.DOWNLOADS -> 1
                 HomeViewModel.NavigationItem.FAVORITES -> 2
+                HomeViewModel.NavigationItem.SETTINGS -> 3
             }).apply()
         }
 
@@ -76,16 +78,16 @@ class StorageManager(context: Context, private val gson: Gson) {
         }
 
     /**
-     * The list of downloaded songs.
+     * The list of downloads songs.
      */
-    var downloaded: List<String>
+    var downloads: List<String>
         get() = try {
-            gson.fromJson(sharedPreferences.getString(DOWNLOADED, "[]"), object : TypeToken<List<String>>() {}.type)
+            gson.fromJson(sharedPreferences.getString(DOWNLOADS, "[]"), object : TypeToken<List<String>>() {}.type)
         } catch (_: JsonSyntaxException) {
             listOf()
         }
         set(value) {
-            sharedPreferences.edit().putString(DOWNLOADED, gson.toJson(value)).apply()
+            sharedPreferences.edit().putString(DOWNLOADS, gson.toJson(value)).apply()
         }
 
     /**
@@ -107,7 +109,7 @@ class StorageManager(context: Context, private val gson: Gson) {
         private const val IS_SORTED_BY_TITLE = "is_sorted_by_title"
         private const val SHOULD_HIDE_EXPLICIT = "should_hide_explicit"
         private const val CLOUD_CACHE = "cloud_cache"
-        private const val DOWNLOADED = "downloaded"
+        private const val DOWNLOADS = "downloads"
         private const val FAVORITES = "favorites"
     }
 }

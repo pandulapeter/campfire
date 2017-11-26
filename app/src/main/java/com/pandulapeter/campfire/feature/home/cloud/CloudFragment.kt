@@ -23,7 +23,7 @@ class CloudFragment : HomeFragment<CloudBinding, CloudViewModel>(R.layout.fragme
         super.onViewCreated(view, savedInstanceState)
         // Setup list item click listeners.
         viewModel.adapter.itemActionClickListener = { position ->
-            viewModel.adapter.items[position].let { viewModel.addOrRemoveSongFromDownloaded(it.songInfo.id) }
+            viewModel.adapter.items[position].let { viewModel.addOrRemoveSongFromDownloads(it.songInfo.id) }
         }
     }
 

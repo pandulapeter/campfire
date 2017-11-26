@@ -15,8 +15,9 @@
     <string name="home_search">Search</string>
     <string name="home_close">Close</string>
     <string name="home_navigation_cloud">Cloud</string>
-    <string name="home_navigation_downloaded">Downloaded</string>
+    <string name="home_navigation_downloads">Downloads</string>
     <string name="home_navigation_favorites">Favorites</string>
+    <string name="home_navigation_settings">Settings</string>
     <string name="home_view_options">View options</string>
     <string name="home_sort_by">Sort by</string>
     <string name="home_sort_by_title">Song title</string>
@@ -27,12 +28,12 @@
 
     <!-- Cloud screen -->
     <string name="cloud_download_song">Download song</string>
-    <string name="cloud_delete_from_downloaded_songs">Delete from Downloaded songs</string>
+    <string name="cloud_delete_from_downloads_songs">Remove from Downloads</string>
 
-    <!-- Downloaded screen -->
-    <string name="downloaded_add_to_favorites">Add to Favorites</string>
-    <string name="downloaded_remove_from_favorites">Remove from Favorites</string>
-    <string name="downloaded_song_deleted">%s deleted from Downloaded songs.</string>
+    <!-- Downloads screen -->
+    <string name="downloads_add_to_favorites">Add to Favorites</string>
+    <string name="downloads_remove_from_favorites">Remove from Favorites</string>
+    <string name="downloads_song_deleted">%s removed from Downloads.</string>
 
     <!-- Favorites screen -->
     <string name="favorites_shuffle">Shuffle</string>

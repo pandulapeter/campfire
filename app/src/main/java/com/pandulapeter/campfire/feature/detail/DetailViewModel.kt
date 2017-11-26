@@ -7,13 +7,18 @@ import com.pandulapeter.campfire.data.repository.SongInfoRepository
 /**
  * Handles events and logic for [DetailActivity].
  */
-class DetailViewModel(fragmentManager: FragmentManager, songInfoRepository: SongInfoRepository, currentId: String, ids: List<String>) {
+class DetailViewModel(fragmentManager: FragmentManager, private val songInfoRepository: SongInfoRepository, currentId: String, ids: List<String>) {
     val title = ObservableField("")
     val artist = ObservableField("")
     val adapter = SongPagerAdapter(fragmentManager, ids)
+
     init {
+        updateToolbar(currentId)
+    }
+
+    fun updateToolbar(currentId: String) {
         songInfoRepository.getCloudSongs().find { it.id == currentId }?.let {
-            songInfoRepository.addSongToDownloaded(it.id)
+            songInfoRepository.addSongToDownloads(it.id)
             title.set(it.title)
             artist.set(it.artist)
         }

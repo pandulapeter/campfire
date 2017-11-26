@@ -2,6 +2,9 @@ package com.pandulapeter.campfire.feature.home
 
 import android.databinding.DataBindingUtil
 import android.os.Bundle
+import android.support.design.internal.BottomNavigationItemView
+import android.support.design.internal.BottomNavigationMenuView
+import android.support.design.widget.BottomNavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.view.View
@@ -10,17 +13,19 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.storage.StorageManager
 import com.pandulapeter.campfire.feature.home.cloud.CloudFragment
-import com.pandulapeter.campfire.feature.home.downloaded.DownloadedFragment
+import com.pandulapeter.campfire.feature.home.downloads.DownloadsFragment
 import com.pandulapeter.campfire.feature.home.favorites.FavoritesFragment
+import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
 import com.pandulapeter.campfire.feature.home.shared.HomeFragment
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.onPropertyChanged
 import dagger.android.support.DaggerAppCompatActivity
 import javax.inject.Inject
 
 /**
  * Displays the home screen of the app which contains the three main pages the user can access
- * ([CloudFragment], [DownloadedFragment] and [FavoritesFragment]) and the bottom navigation view.
+ * ([CloudFragment], [DownloadsFragment] and [FavoritesFragment]) and the bottom navigation view.
  * The last selected item is persisted.
  *
  * Controlled by [HomeViewModel].
@@ -36,11 +41,13 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
         // Inflate the layout and set up the bottom navigation listener.
         binding = DataBindingUtil.setContentView(this, R.layout.activity_home);
         binding.viewModel = viewModel
+        disableBottomNavigationScaleAnimation(binding.bottomNavigation)
         binding.bottomNavigation.setOnNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.cloud -> consume { replaceActiveFragment(HomeViewModel.NavigationItem.CLOUD) }
-                R.id.downloaded -> consume { replaceActiveFragment(HomeViewModel.NavigationItem.DOWNLOADED) }
+                R.id.downloads -> consume { replaceActiveFragment(HomeViewModel.NavigationItem.DOWNLOADS) }
                 R.id.favorites -> consume { replaceActiveFragment(HomeViewModel.NavigationItem.FAVORITES) }
+                R.id.settings -> consume { replaceActiveFragment(HomeViewModel.NavigationItem.SETTINGS) }
                 else -> false
             }
         }
@@ -56,13 +63,18 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
 
             override fun onDrawerOpened(drawerView: View) = Unit
         })
+        viewModel.selectedItem.onPropertyChanged {
+            binding.drawerLayout.setDrawerLockMode(
+                if (it == HomeViewModel.NavigationItem.SETTINGS) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNDEFINED)
+        }
         // Restore the state if needed. After app start we need to manually set the selected item, otherwise
         // the View takes care of it and we only need to update the displayed Fragment.
         if (savedInstanceState == null) {
             binding.bottomNavigation.selectedItemId = when (storageManager.lastSelectedNavigationItem) {
                 HomeViewModel.NavigationItem.CLOUD -> R.id.cloud
-                HomeViewModel.NavigationItem.DOWNLOADED -> R.id.downloaded
+                HomeViewModel.NavigationItem.DOWNLOADS -> R.id.downloads
                 HomeViewModel.NavigationItem.FAVORITES -> R.id.favorites
+                HomeViewModel.NavigationItem.SETTINGS -> R.id.settings
             }
         } else {
             replaceActiveFragment(storageManager.lastSelectedNavigationItem)
@@ -103,9 +115,28 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
             viewModel.selectedItem.set(navigationItem)
             supportFragmentManager.beginTransaction().replace(R.id.fragment_container, when (navigationItem) {
                 HomeViewModel.NavigationItem.CLOUD -> CloudFragment()
-                HomeViewModel.NavigationItem.DOWNLOADED -> DownloadedFragment()
+                HomeViewModel.NavigationItem.DOWNLOADS -> DownloadsFragment()
                 HomeViewModel.NavigationItem.FAVORITES -> FavoritesFragment()
+                HomeViewModel.NavigationItem.SETTINGS -> SettingsFragment()
             }).commit()
+        }
+    }
+
+    //TODO: Don't use reflection, come up with a better solution.
+    private fun disableBottomNavigationScaleAnimation(view: BottomNavigationView) {
+        val menuView = view.getChildAt(0) as BottomNavigationMenuView
+        try {
+            val shiftingMode = menuView.javaClass.getDeclaredField("mShiftingMode")
+            shiftingMode.isAccessible = true
+            shiftingMode.setBoolean(menuView, false)
+            shiftingMode.isAccessible = false
+            for (i in 0 until menuView.childCount) {
+                val item = menuView.getChildAt(i) as BottomNavigationItemView
+                item.setShiftingMode(false)
+                item.setChecked(item.itemData.isChecked)
+            }
+        } catch (_: NoSuchFieldException) {
+        } catch (_: IllegalAccessException) {
         }
     }
 

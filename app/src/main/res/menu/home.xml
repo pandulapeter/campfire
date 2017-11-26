@@ -7,11 +7,15 @@
         android:icon="@drawable/ic_cloud_24dp"
         android:title="@string/home_navigation_cloud" />
     <item
-        android:id="@+id/downloaded"
-        android:icon="@drawable/ic_downloaded_24dp"
-        android:title="@string/home_navigation_downloaded" />
+        android:id="@+id/downloads"
+        android:icon="@drawable/ic_downloads_24dp"
+        android:title="@string/home_navigation_downloads" />
     <item
         android:id="@+id/favorites"
         android:icon="@drawable/ic_favorites_24dp"
         android:title="@string/home_navigation_favorites" />
+    <item
+        android:id="@+id/settings"
+        android:icon="@drawable/ic_settings_24dp"
+        android:title="@string/home_navigation_settings" />
 </menu>

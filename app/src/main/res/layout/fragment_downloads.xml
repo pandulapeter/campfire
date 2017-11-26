@@ -4,11 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--suppress AndroidUnknownAttribute -->
-    <data class=".DownloadedBinding">
+    <data class=".DownloadsBinding">
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.downloaded.DownloadedViewModel" />
+            type="com.pandulapeter.campfire.feature.home.downloads.DownloadsViewModel" />
 
     </data>
 
@@ -54,7 +54,7 @@
                         android:layout_toStartOf="@id/view_options_icon"
                         app:query="@={viewModel.query}"
                         app:searchInputVisible="@={viewModel.searchInputVisible}"
-                        app:title="@string/home_navigation_downloaded" />
+                        app:title="@string/home_navigation_downloads" />
 
                 </RelativeLayout>
 

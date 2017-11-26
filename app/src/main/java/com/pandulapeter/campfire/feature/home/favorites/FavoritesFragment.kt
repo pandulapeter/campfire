@@ -11,7 +11,7 @@ import com.pandulapeter.campfire.feature.home.shared.HomeFragment
 import com.pandulapeter.campfire.util.consume
 
 /**
- * Displays the list of all songs the user marked as favorite. All of these items are also downloaded.
+ * Displays the list of all songs the user marked as favorite. All of these items are also downloads.
  * They can be deleted from the list using the swipe-to-dismiss gesture. The list can also be re-
  * organized.
  *

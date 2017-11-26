@@ -22,18 +22,18 @@ class CloudViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoReposit
     }
 
     override fun getAdapterItems() = songInfoRepository.getCloudSongs().filter(query.get()).map { songInfo ->
-        val isTinted = songInfoRepository.isSongDownloaded(songInfo.id)
+        val isTinted = songInfoRepository.isSongDownloads(songInfo.id)
         SongInfoViewModel(
             songInfo = songInfo,
-            actionDescription = if (isTinted) R.string.cloud_delete_from_downloaded_songs else R.string.cloud_download_song,
-            actionIcon = R.drawable.ic_downloaded_24dp,
+            actionDescription = if (isTinted) R.string.cloud_delete_from_downloads_songs else R.string.cloud_download_song,
+            actionIcon = R.drawable.ic_downloads_24dp,
             isActionTinted = isTinted)
     }
 
-    fun addOrRemoveSongFromDownloaded(id: String) =
-        if (songInfoRepository.isSongDownloaded(id)) {
-            songInfoRepository.removeSongFromDownloaded(id)
+    fun addOrRemoveSongFromDownloads(id: String) =
+        if (songInfoRepository.isSongDownloads(id)) {
+            songInfoRepository.removeSongFromDownloads(id)
         } else {
-            songInfoRepository.addSongToDownloaded(id)
+            songInfoRepository.addSongToDownloads(id)
         }
 }

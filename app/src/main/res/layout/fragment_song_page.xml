@@ -3,11 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--suppress AndroidUnknownAttribute -->
-    <data class=".PageBinding">
+    <data class=".SongPageBinding">
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.detail.page.PageViewModel" />
+            type="com.pandulapeter.campfire.feature.detail.page.SongPageViewModel" />
 
     </data>
 

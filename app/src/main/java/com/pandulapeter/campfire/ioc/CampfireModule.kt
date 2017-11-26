@@ -1,11 +1,12 @@
 package com.pandulapeter.campfire.ioc
 
 import com.pandulapeter.campfire.feature.detail.DetailActivity
-import com.pandulapeter.campfire.feature.detail.page.PageFragment
+import com.pandulapeter.campfire.feature.detail.page.SongPageFragment
 import com.pandulapeter.campfire.feature.home.HomeActivity
-import com.pandulapeter.campfire.feature.home.downloaded.DownloadedFragment
-import com.pandulapeter.campfire.feature.home.favorites.FavoritesFragment
 import com.pandulapeter.campfire.feature.home.cloud.CloudFragment
+import com.pandulapeter.campfire.feature.home.downloads.DownloadsFragment
+import com.pandulapeter.campfire.feature.home.favorites.FavoritesFragment
+import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
 
@@ -16,17 +17,20 @@ abstract class CampfireModule {
     abstract fun contributeHomeActivity(): HomeActivity
 
     @ContributesAndroidInjector
-    abstract fun contributeDetailActivity(): DetailActivity
-
-    @ContributesAndroidInjector
     abstract fun contributeCloudFragment(): CloudFragment
 
     @ContributesAndroidInjector
-    abstract fun contributeDownloadedFragment(): DownloadedFragment
+    abstract fun contributeDownloadsFragment(): DownloadsFragment
 
     @ContributesAndroidInjector
     abstract fun contributeFavoritesFragment(): FavoritesFragment
 
     @ContributesAndroidInjector
-    abstract fun contributePageFragment(): PageFragment
+    abstract fun contributeSettingsFragment(): SettingsFragment
+
+    @ContributesAndroidInjector
+    abstract fun contributeDetailActivity(): DetailActivity
+
+    @ContributesAndroidInjector
+    abstract fun contributeSongPageFragment(): SongPageFragment
 }
