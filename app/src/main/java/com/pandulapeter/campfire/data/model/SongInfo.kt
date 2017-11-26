@@ -10,5 +10,5 @@ data class SongInfo(
     @SerializedName("title") val title: String,
     @SerializedName("artist") val artist: String,
     @SerializedName("language") val language: String = "en",
-    @SerializedName("version") val version: Int = 0,
+    @SerializedName("version") val version: Int = 0, //TODO: Notify users about updated songs.
     @SerializedName("isExplicit") val isExplicit: Boolean = false)

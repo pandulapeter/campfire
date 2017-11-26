@@ -11,6 +11,7 @@ import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
  */
 class CloudViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
 
+    //TODO: Implement filtering by query.
     override fun getAdapterItems() = songInfoRepository.getCloudSongs().map { songInfo ->
         val isTinted = songInfoRepository.isSongDownloaded(songInfo.id)
         SongInfoViewModel(

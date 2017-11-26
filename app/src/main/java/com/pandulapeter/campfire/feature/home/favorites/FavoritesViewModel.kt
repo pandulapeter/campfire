@@ -28,7 +28,7 @@ class FavoritesViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRep
 
     fun removeSongFromFavorites(id: String) = songInfoRepository.removeSongFromFavorites(id)
 
-    //TODO: Not working great.
+    //TODO: Fix this, it's not working great.
     fun swapSongsInFavorites(originalPosition: Int, targetPosition: Int) = songInfoRepository.swapSongFavoritesPositions(originalPosition, targetPosition)
 
     fun shuffleItems() = songInfoRepository.shuffleFavorites()

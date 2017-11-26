@@ -21,6 +21,7 @@ class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.l
 
     override val viewModel by lazy { FavoritesViewModel(callbacks, songInfoRepository) }
 
+    //TODO: Add empty state for not having any favorites (or everything being filtered out).
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Setup swipe-to-dismiss functionality.

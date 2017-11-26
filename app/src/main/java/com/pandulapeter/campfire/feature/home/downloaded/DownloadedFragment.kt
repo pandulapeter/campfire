@@ -22,6 +22,7 @@ class DownloadedFragment : HomeFragment<DownloadedBinding, DownloadedViewModel>(
 
     override val viewModel by lazy { DownloadedViewModel(callbacks, songInfoRepository) }
 
+    //TODO: Add empty state for not having any downloads (or everything being filtered out).
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Setup list item click listeners.

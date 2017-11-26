@@ -17,6 +17,8 @@ class CloudFragment : HomeFragment<CloudBinding, CloudViewModel>(R.layout.fragme
 
     override val viewModel by lazy { CloudViewModel(callbacks, songInfoRepository) }
 
+    //TODO: Add error state for incorrect downloads.
+    //TODO: Add no-results state for the case when everything is filtered out.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Setup list item click listeners.

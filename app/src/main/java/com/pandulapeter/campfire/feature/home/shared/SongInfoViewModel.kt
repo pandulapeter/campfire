@@ -10,5 +10,5 @@ import com.pandulapeter.campfire.data.model.SongInfo
 data class SongInfoViewModel(
     val songInfo: SongInfo,
     @StringRes val actionDescription: Int,
-    @DrawableRes val actionIcon: Int,
+    @DrawableRes val actionIcon: Int, //TODO: This will need a loading state.
     val isActionTinted: Boolean)
