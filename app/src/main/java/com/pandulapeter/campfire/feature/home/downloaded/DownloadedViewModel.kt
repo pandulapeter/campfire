@@ -20,4 +20,15 @@ class DownloadedViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRe
             actionIcon = R.drawable.ic_favorites_24dp,
             isActionTinted = isTinted)
     }
+
+    fun addSongToDownloaded(id: String) = songInfoRepository.addSongToDownloaded(id)
+
+    fun removeSongFromDownloaded(id: String) = songInfoRepository.removeSongFromDownloaded(id)
+
+    fun addOrRemoveSongFromFavorites(id: String) =
+        if (songInfoRepository.isSongFavorite(id)) {
+            songInfoRepository.removeSongFromFavorites(id)
+        } else {
+            songInfoRepository.addSongToFavorites(id)
+        }
 }

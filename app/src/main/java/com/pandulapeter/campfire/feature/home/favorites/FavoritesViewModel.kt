@@ -21,13 +21,14 @@ class FavoritesViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRep
             isActionTinted = false)
     }
 
-    override fun updateAdapter() {
-        super.updateAdapter()
+    override fun onUpdate() {
+        super.onUpdate()
         shouldShowShuffle.set(adapter.itemCount > SongInfoRepository.SHUFFLE_LIMIT)
     }
 
-    fun shuffleItems() {
-        songInfoRepository.shuffleFavorites()
-        updateAdapter()
-    }
+    fun removeSongFromFavorites(id: String) = songInfoRepository.removeSongFromFavorites(id)
+
+    fun swapSongsInFavorites(originalPosition: Int, targetPosition: Int) = songInfoRepository.swapSongFavoritesPositions(originalPosition, targetPosition)
+
+    fun shuffleItems() = songInfoRepository.shuffleFavorites()
 }

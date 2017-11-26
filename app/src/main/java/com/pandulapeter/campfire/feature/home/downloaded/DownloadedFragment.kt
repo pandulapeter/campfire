@@ -35,9 +35,7 @@ class DownloadedFragment : HomeFragment<DownloadedBinding, DownloadedViewModel>(
             binding.recyclerView.addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
             // Setup list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
-                viewModel.adapter.items[position].songInfo.let { songInfo ->
-                    startActivity(DetailActivity.getStartIntent(context, songInfo.id, songInfo.title, songInfo.artist))
-                }
+                startActivity(DetailActivity.getStartIntent(context, viewModel.adapter.items[position].songInfo.id))
             }
             viewModel.adapter.itemActionClickListener = { position ->
                 viewModel.addOrRemoveSongFromFavorites(viewModel.adapter.items[position].songInfo.id)

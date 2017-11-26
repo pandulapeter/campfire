@@ -35,8 +35,17 @@ abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)
         binding.setVariable(BR.viewModel, viewModel)
-        viewModel.updateAdapter()
         return binding.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        songInfoRepository.subscribe(viewModel)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        songInfoRepository.unsubscribe(viewModel)
     }
 
     abstract fun isSearchInputVisible(): Boolean

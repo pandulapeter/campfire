@@ -25,26 +25,16 @@ class DetailActivity : DaggerAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = DataBindingUtil.setContentView<DetailBinding>(this, R.layout.activity_detail)
-        binding.viewModel = DetailViewModel(songInfoRepository, intent.id, intent.title, intent.artist)
+        binding.viewModel = DetailViewModel(songInfoRepository, intent.id)
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     companion object {
         private const val ID = "id"
-        private const val TITLE = "title"
-        private const val ARTIST = "artist"
         private val Intent.id
             get() = getStringExtra(ID)
-        private val Intent.title
-            get() = getStringExtra(TITLE)
-        private val Intent.artist
-            get() = getStringExtra(ARTIST)
 
-        fun getStartIntent(context: Context, id: String, title: String, artist: String): Intent =
-            Intent(context, DetailActivity::class.java)
-                .putExtra(ID, id)
-                .putExtra(TITLE, title)
-                .putExtra(ARTIST, artist)
+        fun getStartIntent(context: Context, id: String): Intent = Intent(context, DetailActivity::class.java).putExtra(ID, id)
     }
 }

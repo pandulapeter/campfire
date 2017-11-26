@@ -20,4 +20,11 @@ class CloudViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoReposit
             actionIcon = R.drawable.ic_downloaded_24dp,
             isActionTinted = isTinted)
     }
+
+    fun addOrRemoveSongFromDownloaded(id: String) =
+        if (songInfoRepository.isSongDownloaded(id)) {
+            songInfoRepository.removeSongFromDownloaded(id)
+        } else {
+            songInfoRepository.addSongToDownloaded(id)
+        }
 }

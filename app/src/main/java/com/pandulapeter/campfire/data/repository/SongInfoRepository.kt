@@ -8,11 +8,9 @@ import java.util.Collections
 
 /**
  * Wraps caching and updating of [SongInfo] objects.
- *
- * TODO: Implement subscription model.
  */
 class SongInfoRepository(private val storageManager: StorageManager, private val networkManager: NetworkManager) {
-
+    private var subscribers = mutableSetOf<Subscriber>()
     private var dataSet = storageManager.cloudCache
         get() {
             if (System.currentTimeMillis() - storageManager.lastCacheUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
@@ -20,9 +18,28 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             }
             return field
         }
-
-    //TODO Make this observable.
+        set(value) {
+            field = value
+            notifySubscribers()
+        }
     var isLoading = false
+        set(value) {
+            field = value
+            notifySubscribers()
+        }
+
+    fun subscribe(subscriber: Subscriber) {
+        if (!subscribers.contains(subscriber)) {
+            subscribers.add(subscriber)
+        }
+        subscriber.onUpdate()
+    }
+
+    fun unsubscribe(subscriber: Subscriber) {
+        if (subscribers.contains(subscriber)) {
+            subscribers.remove(subscriber)
+        }
+    }
 
     fun updateDataSet() {
         isLoading = true
@@ -32,11 +49,10 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
                 dataSet = it
                 storageManager.cloudCache = dataSet
                 storageManager.lastCacheUpdateTimestamp = System.currentTimeMillis()
-                //TODO: Notify listeners.
             },
             onFailure = {
                 isLoading = false
-                //TODO: Notify listeners.
+                //TODO: Display error message.
             })
     }
 
@@ -49,6 +65,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     fun addSongToDownloaded(id: String) {
         if (!isSongDownloaded(id)) {
             storageManager.downloaded = storageManager.downloaded.toMutableList().apply { add(id) }
+            notifySubscribers()
         }
     }
 
@@ -56,6 +73,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
         removeSongFromFavorites(id)
         if (isSongDownloaded(id)) {
             storageManager.downloaded = storageManager.downloaded.toMutableList().apply { remove(id) }
+            notifySubscribers()
         }
     }
 
@@ -66,11 +84,8 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     fun addSongToFavorites(id: String, position: Int? = null) {
         if (!isSongFavorite(id)) {
             storageManager.favorites = storageManager.favorites.toMutableList().apply {
-                if (position == null) {
-                    add(id)
-                } else {
-                    add(position, id)
-                }
+                if (position == null) add(id) else add(position, id)
+                notifySubscribers()
             }
         }
     }
@@ -78,6 +93,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     fun removeSongFromFavorites(id: String) {
         if (isSongFavorite(id)) {
             storageManager.favorites = storageManager.favorites.toMutableList().apply { remove(id) }
+            notifySubscribers()
         }
     }
 
@@ -93,6 +109,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
                         Collections.swap(this, i, i - 1)
                     }
                 }
+                notifySubscribers()
             }
         }
     }
@@ -105,8 +122,11 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
                 Collections.shuffle(newList)
             }
             storageManager.favorites = newList
+            notifySubscribers()
         }
     }
+
+    private fun notifySubscribers() = subscribers.forEach { it.onUpdate() }
 
     companion object {
         const val SHUFFLE_LIMIT = 2

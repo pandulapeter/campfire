@@ -34,9 +34,7 @@ class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.l
             binding.recyclerView.addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
             // Setup list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
-                viewModel.adapter.items[position].songInfo.let { songInfo ->
-                    startActivity(DetailActivity.getStartIntent(context, songInfo.id, songInfo.title, songInfo.artist))
-                }
+                startActivity(DetailActivity.getStartIntent(context, viewModel.adapter.items[position].songInfo.id))
             }
             // Setup swipe-to-dismiss functionality.
             ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(

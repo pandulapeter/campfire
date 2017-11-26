@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.feature.home.cloud
 
-import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
@@ -37,9 +36,7 @@ class CloudFragment : HomeFragment<CloudBinding, CloudViewModel>(R.layout.fragme
             viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
             // Setup list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
-                viewModel.adapter.items[position].songInfo.let { songInfo ->
-                    startActivityForResult(DetailActivity.getStartIntent(context, songInfo.id, songInfo.title, songInfo.artist), DETAIL_REQUEST)
-                }
+                startActivity(DetailActivity.getStartIntent(context, viewModel.adapter.items[position].songInfo.id))
             }
             viewModel.adapter.itemActionClickListener = { position ->
                 viewModel.adapter.items[position].let { viewModel.addOrRemoveSongFromDownloaded(it.songInfo.id) }
@@ -54,19 +51,9 @@ class CloudFragment : HomeFragment<CloudBinding, CloudViewModel>(R.layout.fragme
         }
     }
 
-    //TODO: This can probably be removed after the repository will become observable.
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) = when (requestCode) {
-        DETAIL_REQUEST -> viewModel.updateAdapter()
-        else -> super.onActivityResult(requestCode, resultCode, data)
-    }
-
     override fun isSearchInputVisible() = binding.searchTitle.searchInputVisible
 
     override fun closeSearchInput() {
         binding.searchTitle.searchInputVisible = false
-    }
-
-    companion object {
-        private const val DETAIL_REQUEST = 100
     }
 }
