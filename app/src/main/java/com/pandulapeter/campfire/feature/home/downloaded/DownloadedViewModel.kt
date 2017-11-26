@@ -12,42 +12,12 @@ import com.pandulapeter.campfire.util.sort
  */
 class DownloadedViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
 
-    init {
-        refreshAdapterItems()
-    }
-
-    fun addOrRemoveSongFromFavorites(id: String) {
-        if (songInfoRepository.isSongFavorite(id)) {
-            songInfoRepository.removeSongFromFavorites(id)
-        } else {
-            songInfoRepository.addSongToFavorites(id)
-        }
-        refreshAdapterItems()
-    }
-
-    fun addSongToDownloaded(id: String) {
-        songInfoRepository.addSongToDownloaded(id)
-        refreshAdapterItems()
-    }
-
-    fun removeSongFromDownloaded(id: String) {
-        songInfoRepository.removeSongFromDownloaded(id)
-        refreshAdapterItems()
-    }
-
-    fun addSongToFavorites(id: String) {
-        songInfoRepository.addSongToFavorites(id)
-        refreshAdapterItems()
-    }
-
-    private fun refreshAdapterItems() {
-        adapter.items = songInfoRepository.getDownloadedSongs().sort().map { songInfo ->
-            val isTinted = songInfoRepository.isSongFavorite(songInfo.id)
-            SongInfoViewModel(
-                songInfo = songInfo,
-                actionDescription = if (isTinted) R.string.downloaded_remove_from_favorites else R.string.downloaded_add_to_favorites,
-                actionIcon = R.drawable.ic_favorites_24dp,
-                isActionTinted = isTinted)
-        }
+    override fun getAdapterItems() = songInfoRepository.getDownloadedSongs().sort().map { songInfo ->
+        val isTinted = songInfoRepository.isSongFavorite(songInfo.id)
+        SongInfoViewModel(
+            songInfo = songInfo,
+            actionDescription = if (isTinted) R.string.downloaded_remove_from_favorites else R.string.downloaded_add_to_favorites,
+            actionIcon = R.drawable.ic_favorites_24dp,
+            isActionTinted = isTinted)
     }
 }

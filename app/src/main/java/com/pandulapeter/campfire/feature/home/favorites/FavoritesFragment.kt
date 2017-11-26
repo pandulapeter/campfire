@@ -45,7 +45,7 @@ class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.l
                 override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = consume {
                     viewHolder?.adapterPosition?.let { originalPosition ->
                         target?.adapterPosition?.let { targetPosition ->
-                            viewModel.swapSongPositions(originalPosition, targetPosition)
+                            viewModel.swapSongsInFavorites(originalPosition, targetPosition)
                         }
                     }
                 }

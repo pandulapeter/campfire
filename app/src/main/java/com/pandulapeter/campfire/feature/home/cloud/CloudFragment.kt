@@ -33,7 +33,7 @@ class CloudFragment : HomeFragment<CloudBinding, CloudViewModel>(R.layout.fragme
             //TODO: Hide the keyboard on scroll events.
             binding.recyclerView.layoutManager = LinearLayoutManager(context)
             binding.recyclerView.addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
-            binding.swipeRefreshLayout.setOnRefreshListener { viewModel.update(true) }
+            binding.swipeRefreshLayout.setOnRefreshListener { viewModel.forceRefresh() }
             viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
             // Setup list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
@@ -48,14 +48,15 @@ class CloudFragment : HomeFragment<CloudBinding, CloudViewModel>(R.layout.fragme
             viewModel.shouldShowErrorSnackbar.onEventTriggered {
                 Snackbar
                     .make(binding.root, R.string.something_went_wrong, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.try_again, { viewModel.update(true) })
+                    .setAction(R.string.try_again, { viewModel.forceRefresh() })
                     .show()
             }
         }
     }
 
+    //TODO: This can probably be removed after the repository will become observable.
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) = when (requestCode) {
-        DETAIL_REQUEST -> viewModel.update(false)
+        DETAIL_REQUEST -> viewModel.updateAdapter()
         else -> super.onActivityResult(requestCode, resultCode, data)
     }
 

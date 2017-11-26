@@ -13,29 +13,34 @@ import java.util.Collections
  */
 class SongInfoRepository(private val storageManager: StorageManager, private val networkManager: NetworkManager) {
 
-    private val dataSet = storageManager.cloudCache.toMutableList()
-
-    private fun isCacheInvalid() = System.currentTimeMillis() - storageManager.lastCacheUpdateTimestamp > CACHE_VALIDITY_LIMIT
-
-    fun getCloudSongs(changeListener: ChangeListener<List<SongInfo>>, forceRefresh: Boolean = false) {
-        changeListener.onNext(dataSet)
-        if (forceRefresh || isCacheInvalid()) {
-            networkManager.service.getLibrary().enqueueCall(
-                onSuccess = {
-                    dataSet.clear()
-                    dataSet.addAll(it)
-                    storageManager.cloudCache = dataSet
-                    storageManager.lastCacheUpdateTimestamp = System.currentTimeMillis()
-                    changeListener.onNext(dataSet)
-                    changeListener.onComplete()
-                },
-                onFailure = {
-                    changeListener.onError()
-                })
-        } else {
-            changeListener.onComplete()
+    private var dataSet = storageManager.cloudCache
+        get() {
+            if (System.currentTimeMillis() - storageManager.lastCacheUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
+                updateDataSet()
+            }
+            return field
         }
+
+    //TODO Make this observable.
+    var isLoading = false
+
+    fun updateDataSet() {
+        isLoading = true
+        networkManager.service.getLibrary().enqueueCall(
+            onSuccess = {
+                isLoading = false
+                dataSet = it
+                storageManager.cloudCache = dataSet
+                storageManager.lastCacheUpdateTimestamp = System.currentTimeMillis()
+                //TODO: Notify listeners.
+            },
+            onFailure = {
+                isLoading = false
+                //TODO: Notify listeners.
+            })
     }
+
+    fun getCloudSongs() = dataSet.toList()
 
     fun getDownloadedSongs() = storageManager.downloaded.mapNotNull { id -> dataSet.find { id == it.id } }
 
@@ -94,11 +99,17 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
 
     fun shuffleFavorites() {
         val list = storageManager.favorites.toMutableList()
-        Collections.shuffle(list)
-        storageManager.favorites = list
+        if (list.size > SHUFFLE_LIMIT) {
+            val newList = list.toMutableList()
+            while (newList == list) {
+                Collections.shuffle(newList)
+            }
+            storageManager.favorites = newList
+        }
     }
 
     companion object {
+        const val SHUFFLE_LIMIT = 2
         private const val CACHE_VALIDITY_LIMIT = 1000 * 60 * 60 * 24
     }
 }

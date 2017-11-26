@@ -11,41 +11,23 @@ import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
  * Handles events and logic for [FavoritesFragment].
  */
 class FavoritesViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
-
     val shouldShowShuffle = ObservableBoolean(false)
 
-    init {
-        refreshAdapterItems()
+    override fun getAdapterItems() = songInfoRepository.getFavoriteSongs().map { songInfo ->
+        SongInfoViewModel(
+            songInfo = songInfo,
+            actionDescription = R.string.favorites_drag_item_to_rearrange,
+            actionIcon = R.drawable.ic_drag_handle_24dp,
+            isActionTinted = false)
     }
 
-    fun addSongToFavorites(id: String, position: Int) {
-        songInfoRepository.addSongToFavorites(id, position)
-        refreshAdapterItems()
-    }
-
-    fun removeSongFromFavorites(id: String) {
-        songInfoRepository.removeSongFromFavorites(id)
-        refreshAdapterItems()
-    }
-
-    fun swapSongPositions(originalPosition: Int, targetPosition: Int) {
-        songInfoRepository.swapSongFavoritesPositions(originalPosition, targetPosition)
-        refreshAdapterItems()
+    override fun updateAdapter() {
+        super.updateAdapter()
+        shouldShowShuffle.set(adapter.itemCount > SongInfoRepository.SHUFFLE_LIMIT)
     }
 
     fun shuffleItems() {
         songInfoRepository.shuffleFavorites()
-        refreshAdapterItems()
-    }
-
-    private fun refreshAdapterItems() {
-        adapter.items = songInfoRepository.getFavoriteSongs().map { songInfo ->
-            SongInfoViewModel(
-                songInfo = songInfo,
-                actionDescription = R.string.favorites_drag_item_to_rearrange,
-                actionIcon = R.drawable.ic_drag_handle_24dp,
-                isActionTinted = false)
-        }
-        shouldShowShuffle.set(adapter.itemCount > 2)
+        updateAdapter()
     }
 }
