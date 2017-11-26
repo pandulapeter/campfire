@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.home.library
 
 import android.databinding.ObservableBoolean
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.ChangeListener
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -47,6 +48,13 @@ class LibraryViewModel(private val songInfoRepository: SongInfoRepository) {
 
     private fun refreshAdapterItems(newData: List<SongInfo>) {
         val downloadedItems = songInfoRepository.getDownloaded()
-        adapter.items = newData.sort().map { SongInfoViewModel(it, downloadedItems.contains(it)) }
+        adapter.items = newData.sort().map { songInfo ->
+            val isTinted = downloadedItems.contains(songInfo)
+            SongInfoViewModel(
+                songInfo = songInfo,
+                actionDescription = if (isTinted) R.string.library_delete_from_downloaded_songs else R.string.library_download_song,
+                actionIcon = R.drawable.ic_downloaded_24dp,
+                isActionTinted = isTinted)
+        }
     }
 }

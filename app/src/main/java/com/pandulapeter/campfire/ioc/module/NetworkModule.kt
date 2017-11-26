@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.ioc.module
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.pandulapeter.campfire.data.network.AnalyticsManager
 import com.pandulapeter.campfire.data.network.NetworkManager
 import dagger.Module
 import dagger.Provides
@@ -13,7 +14,12 @@ object NetworkModule {
     @Provides
     @Singleton
     @JvmStatic
-    fun provideGson() = GsonBuilder().create()
+    fun provideGson(): Gson = GsonBuilder().create()
+
+    @Provides
+    @Singleton
+    @JvmStatic
+    fun provideAnalyticsManager() = AnalyticsManager()
 
     @Provides
     @Singleton

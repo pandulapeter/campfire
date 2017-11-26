@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.downloaded
 
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.SongInfoAdapter
@@ -37,6 +38,13 @@ class DownloadedViewModel(private val songInfoRepository: SongInfoRepository) {
 
     private fun refreshAdapterItems() {
         val favorites = songInfoRepository.getFavorites()
-        adapter.items = songInfoRepository.getDownloaded().sort().map { SongInfoViewModel(it, favorites.contains(it.id), true) }
+        adapter.items = songInfoRepository.getDownloaded().sort().map { songInfo ->
+            val isTinted = favorites.contains(songInfo.id)
+            SongInfoViewModel(
+                songInfo = songInfo,
+                actionDescription = if (isTinted) R.string.downloaded_remove_from_favorites else R.string.downloaded_add_to_favorites,
+                actionIcon = R.drawable.ic_favorites_24dp,
+                isActionTinted = isTinted)
+        }
     }
 }

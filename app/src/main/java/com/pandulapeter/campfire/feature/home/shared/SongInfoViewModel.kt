@@ -1,5 +1,7 @@
 package com.pandulapeter.campfire.feature.home.shared
 
+import android.support.annotation.DrawableRes
+import android.support.annotation.StringRes
 import com.pandulapeter.campfire.data.model.SongInfo
 
 /**
@@ -7,6 +9,6 @@ import com.pandulapeter.campfire.data.model.SongInfo
  */
 data class SongInfoViewModel(
     val songInfo: SongInfo,
-    val isActionTinted: Boolean,
-    val shouldDisplayFavoriteIcon: Boolean = false,
-    val shouldDisplayAction: Boolean = true)
+    @StringRes val actionDescription: Int,
+    @DrawableRes val actionIcon: Int,
+    val isActionTinted: Boolean)

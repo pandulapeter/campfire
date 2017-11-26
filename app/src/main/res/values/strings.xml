@@ -12,7 +12,7 @@
     <string name="language_hungarian">Hungarian</string>
 
     <!-- Home screen -->
-    <string name="home_navigation_library">Library</string>
+    <string name="home_navigation_library">Cloud</string>
     <string name="home_navigation_downloaded">Downloaded</string>
     <string name="home_navigation_favorites">Favorites</string>
     <string name="home_sort_by">Sort by</string>
@@ -20,10 +20,17 @@
     <string name="home_sort_by_artist">Artist</string>
     <string name="home_filter_by_language">Filter by language</string>
 
+    <!-- Library screen -->
+    <string name="library_download_song">Download song</string>
+    <string name="library_delete_from_downloaded_songs">Delete from Downloaded songs</string>
+
     <!-- Downloaded screen -->
+    <string name="downloaded_add_to_favorites">Add to Favorites</string>
+    <string name="downloaded_remove_from_favorites">Remove from Favorites</string>
     <string name="downloaded_song_deleted">%s deleted from Downloaded songs.</string>
 
     <!-- Favorites screen -->
+    <string name="favorites_drag_item_to_rearrange">Drag item to rearrange</string>
     <string name="favorites_song_removed">%s removed from Favorites.</string>
 
 </resources>

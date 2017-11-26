@@ -7,8 +7,10 @@ import android.graphics.drawable.Drawable
 import android.support.annotation.ColorInt
 import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
+import android.support.annotation.DrawableRes
 import android.support.v4.content.ContextCompat
 import android.support.v4.graphics.drawable.DrawableCompat
+import android.support.v7.content.res.AppCompatResources
 import com.pandulapeter.campfire.data.model.SongInfo
 import retrofit2.Call
 import retrofit2.Callback
@@ -17,6 +19,8 @@ import retrofit2.Response
 fun Context.color(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
 
 fun Context.dimension(@DimenRes dimensionId: Int) = resources.getDimensionPixelSize(dimensionId)
+
+fun Context.drawable(@DrawableRes drawableId: Int) = AppCompatResources.getDrawable(this, drawableId)
 
 fun Drawable?.tint(@ColorInt tintColor: Int) = this?.let {
     val drawable = DrawableCompat.wrap(this)

@@ -17,6 +17,7 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
 
     var items = listOf<SongInfoViewModel>()
         set(newItems) {
+            //TODO: Wrap this into a Kotlin coroutine.
             val oldItems = items
             DiffUtil.calculateDiff(object : DiffUtil.Callback() {
                 override fun getOldListSize() = oldItems.size
@@ -32,18 +33,19 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
             field = newItems
         }
     var itemClickListener: (position: Int) -> Unit = { _ -> }
-    var itemActionClickListener: (position: Int) -> Unit = { _ -> }
+    var itemActionClickListener: ((position: Int) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): SongInfoViewHolder {
         val viewHolder = SongInfoViewHolder.create(parent)
         viewHolder.setItemClickListener(itemClickListener)
-        viewHolder.setItemActionClickListener(itemActionClickListener)
+        itemActionClickListener?.let { viewHolder.setItemActionClickListener(it) }
         return viewHolder
     }
 
     override fun onBindViewHolder(holder: SongInfoViewHolder?, position: Int) = Unit
 
     override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int, payloads: List<Any>?) {
+        //TODO: Start using payloads, the entire item shouldn't be refreshed if only the tint of the action drawable changed.
         holder.binding.viewModel = items[position]
         holder.binding.executePendingBindings()
     }

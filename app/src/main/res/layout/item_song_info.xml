@@ -31,11 +31,10 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@{viewModel.actionDescription}"
                 android:padding="@dimen/content_padding"
-                android:src="@{viewModel.shouldDisplayFavoriteIcon ? @drawable/ic_favorites_24dp : @drawable/ic_downloaded_24dp}"
+                android:src="@{viewModel.actionIcon}"
                 android:tint="@{viewModel.isActionTinted ? @color/accent : @android:color/white}"
-                android:visibility="@{viewModel.shouldDisplayAction ? View.VISIBLE : View.GONE}"
-                tools:ignore="ContentDescription"
                 tools:src="@drawable/ic_downloaded_24dp" />
 
             <TextView
