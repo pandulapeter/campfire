@@ -5,21 +5,23 @@ import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.HomeFragmentViewModel
 import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
-import com.pandulapeter.campfire.util.sort
+import com.pandulapeter.campfire.util.sortAndFilter
 
 /**
  * Handles events and logic for [CloudFragment].
  */
 class CloudViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
 
-    override fun getAdapterItems() = songInfoRepository.getCloudSongs().sort(songInfoRepository.isSortedByTitle).map { songInfo ->
-        val isTinted = songInfoRepository.isSongDownloaded(songInfo.id)
-        SongInfoViewModel(
-            songInfo = songInfo,
-            actionDescription = if (isTinted) R.string.cloud_delete_from_downloaded_songs else R.string.cloud_download_song,
-            actionIcon = R.drawable.ic_downloaded_24dp,
-            isActionTinted = isTinted)
-    }
+    override fun getAdapterItems() = songInfoRepository.getCloudSongs()
+        .sortAndFilter(songInfoRepository.isSortedByTitle, songInfoRepository.shouldHideExplicit)
+        .map { songInfo ->
+            val isTinted = songInfoRepository.isSongDownloaded(songInfo.id)
+            SongInfoViewModel(
+                songInfo = songInfo,
+                actionDescription = if (isTinted) R.string.cloud_delete_from_downloaded_songs else R.string.cloud_download_song,
+                actionIcon = R.drawable.ic_downloaded_24dp,
+                isActionTinted = isTinted)
+        }
 
     fun addOrRemoveSongFromDownloaded(id: String) =
         if (songInfoRepository.isSongDownloaded(id)) {

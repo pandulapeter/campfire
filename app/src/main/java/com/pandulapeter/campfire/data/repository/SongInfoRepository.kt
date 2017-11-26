@@ -33,6 +33,12 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             storageManager.isSortedByTitle = value
             notifySubscribers()
         }
+    var shouldHideExplicit = storageManager.shouldHideExplicit
+        set(value) {
+            field = value
+            storageManager.shouldHideExplicit = value
+            notifySubscribers()
+        }
 
     fun subscribe(subscriber: Subscriber) {
         if (!subscribers.contains(subscriber)) {

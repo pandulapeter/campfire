@@ -127,6 +127,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/large_content_padding"
+                        android:checked="@={viewModel.shouldHideExplicit}"
                         android:paddingEnd="@dimen/content_padding"
                         android:paddingStart="@dimen/content_padding"
                         android:text="@string/home_hide_explicit_songs" />

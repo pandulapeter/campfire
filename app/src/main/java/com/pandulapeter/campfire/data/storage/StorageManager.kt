@@ -52,6 +52,15 @@ class StorageManager(context: Context, private val gson: Gson) {
         }
 
     /**
+     * Whether or not explicit songs should be filtered out.
+     */
+    var shouldHideExplicit: Boolean
+        get() = sharedPreferences.getBoolean(SHOULD_HIDE_EXPLICIT, true)
+        set(value) {
+            sharedPreferences.edit().putBoolean(SHOULD_HIDE_EXPLICIT, value).apply()
+        }
+
+    /**
      * The cached list of items from the cloud.
      *
      * TODO: This shouldn't be stored in Shared Preferences, replace it with a Room-based implementation.
@@ -96,6 +105,7 @@ class StorageManager(context: Context, private val gson: Gson) {
         private const val LAST_SELECTED_NAVIGATION_ITEM = "last_selected_navigation_item"
         private const val LAST_CACHE_UPDATE_TIMESTAMP = "last_cache_update_timestamp"
         private const val IS_SORTED_BY_TITLE = "is_sorted_by_title"
+        private const val SHOULD_HIDE_EXPLICIT = "should_hide_explicit"
         private const val CLOUD_CACHE = "cloud_cache"
         private const val DOWNLOADED = "downloaded"
         private const val FAVORITES = "favorites"

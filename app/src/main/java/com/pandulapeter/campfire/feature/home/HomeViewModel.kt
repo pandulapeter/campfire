@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.util.onPropertyChanged
 class HomeViewModel(private val songInfoRepository: SongInfoRepository) : Subscriber {
     val selectedItem: ObservableField<NavigationItem> = ObservableField(NavigationItem.CLOUD)
     val isSortedByTitle = ObservableBoolean(songInfoRepository.isSortedByTitle)
+    val shouldHideExplicit = ObservableBoolean(songInfoRepository.shouldHideExplicit)
 
     init {
         isSortedByTitle.onPropertyChanged { songInfoRepository.isSortedByTitle = it }
