@@ -31,6 +31,11 @@ class FavoritesViewModel(private val songInfoRepository: SongInfoRepository) {
         refreshAdapterItems()
     }
 
+    fun shuffleItems() {
+        songInfoRepository.shuffleFavorites()
+        refreshAdapterItems()
+    }
+
     private fun refreshAdapterItems() {
         val downloaded = songInfoRepository.getDownloadedSongs()
         adapter.items = songInfoRepository.getFavoriteIds().mapNotNull { id ->

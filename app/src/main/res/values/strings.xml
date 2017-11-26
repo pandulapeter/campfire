@@ -15,6 +15,7 @@
     <string name="home_navigation_cloud">Cloud</string>
     <string name="home_navigation_downloaded">Downloaded</string>
     <string name="home_navigation_favorites">Favorites</string>
+    <string name="home_view_options">View options</string>
     <string name="home_sort_by">Sort by</string>
     <string name="home_sort_by_title">Song title</string>
     <string name="home_sort_by_artist">Artist</string>
@@ -30,6 +31,7 @@
     <string name="downloaded_song_deleted">%s deleted from Downloaded songs.</string>
 
     <!-- Favorites screen -->
+    <string name="favorites_shuffle">Shuffle</string>
     <string name="favorites_drag_item_to_rearrange">Drag item to rearrange</string>
     <string name="favorites_song_removed">%s removed from Favorites.</string>
 

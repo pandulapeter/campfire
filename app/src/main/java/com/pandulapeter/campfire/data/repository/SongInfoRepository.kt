@@ -80,6 +80,12 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
         }
     }
 
+    fun shuffleFavorites() {
+        val list = storageManager.favorites.toMutableList()
+        Collections.shuffle(list)
+        storageManager.favorites = list
+    }
+
     companion object {
         private const val LIBRARY_CACHE_VALIDITY_LIMIT = 1000 * 60 * 60 * 24
     }

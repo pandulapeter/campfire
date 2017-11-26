@@ -37,7 +37,7 @@
                 android:background="@color/primary"
                 app:itemIconTint="@color/selector_home_navigation"
                 app:itemTextColor="@android:color/white"
-                app:menu="@menu/home_navigation" />
+                app:menu="@menu/home" />
 
         </RelativeLayout>
 
