@@ -76,8 +76,10 @@ class SearchTitleView @JvmOverloads constructor(context: Context, attrs: Attribu
 
             override fun onTextChanged(charSequence: CharSequence?, p1: Int, p2: Int, p3: Int) = Unit
         })
-        setInAnimation(context, android.R.anim.slide_in_left)
-        setOutAnimation(context, android.R.anim.slide_out_right)
+        post {
+            setInAnimation(context, android.R.anim.slide_in_left)
+            setOutAnimation(context, android.R.anim.slide_out_right)
+        }
     }
 
     fun setOnQueryChangeListener(listener: OnQueryChangedListener?) {

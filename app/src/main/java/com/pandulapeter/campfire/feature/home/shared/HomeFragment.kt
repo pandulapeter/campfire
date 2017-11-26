@@ -60,7 +60,10 @@ abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>
             viewModel.isLoading.onPropertyChanged { getSwipeRefreshLayout().isRefreshing = it }
             // Setup list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
-                startActivity(DetailActivity.getStartIntent(context, viewModel.adapter.items[position].songInfo.id))
+                startActivity(DetailActivity.getStartIntent(
+                    context = context,
+                    currentId = viewModel.adapter.items[position].songInfo.id,
+                    ids = viewModel.getAdapterItems().map { it.songInfo.id }))
             }
             // Setup error handling.
             viewModel.shouldShowErrorSnackbar.onEventTriggered {
