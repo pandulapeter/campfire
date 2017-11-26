@@ -20,6 +20,8 @@
     <string name="home_sort_by_title">Song title</string>
     <string name="home_sort_by_artist">Artist</string>
     <string name="home_filter_by_language">Filter by language</string>
+    <string name="home_other">Other</string>
+    <string name="home_hide_explicit_songs">Hide explicit songs</string>
 
     <!-- Cloud screen -->
     <string name="cloud_download_song">Download song</string>

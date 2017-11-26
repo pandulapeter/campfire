@@ -3,14 +3,14 @@ package com.pandulapeter.campfire.feature.home.favorites
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.feature.home.shared.SongInfoAdapter
+import com.pandulapeter.campfire.feature.home.shared.HomeFragment
+import com.pandulapeter.campfire.feature.home.shared.HomeFragmentViewModel
 import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
 
 /**
  * Handles events and logic for [FavoritesFragment].
  */
-class FavoritesViewModel(private val songInfoRepository: SongInfoRepository) {
-    val adapter = SongInfoAdapter()
+class FavoritesViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
 
     init {
         refreshAdapterItems()

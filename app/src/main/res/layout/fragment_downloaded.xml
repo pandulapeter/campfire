@@ -31,8 +31,6 @@
                     android:layout_height="wrap_content"
                     android:clipChildren="false">
 
-                    <!--TODO: Open side navigation -->
-
                     <ImageView
                         android:id="@+id/view_options_icon"
                         android:layout_width="wrap_content"
@@ -42,6 +40,7 @@
                         android:layout_marginEnd="@dimen/action_button_margin"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:contentDescription="@string/home_view_options"
+                        android:onClick="@{() -> viewModel.showViewOptions()}"
                         android:padding="@dimen/action_button_padding"
                         app:srcCompat="@drawable/ic_view_options_24dp" />
 

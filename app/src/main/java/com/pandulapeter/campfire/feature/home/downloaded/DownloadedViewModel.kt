@@ -3,15 +3,15 @@ package com.pandulapeter.campfire.feature.home.downloaded
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.feature.home.shared.SongInfoAdapter
+import com.pandulapeter.campfire.feature.home.shared.HomeFragment
+import com.pandulapeter.campfire.feature.home.shared.HomeFragmentViewModel
 import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
 import com.pandulapeter.campfire.util.sort
 
 /**
  * Handles events and logic for [DownloadedFragment].
  */
-class DownloadedViewModel(private val songInfoRepository: SongInfoRepository) {
-    val adapter = SongInfoAdapter()
+class DownloadedViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
 
     init {
         refreshAdapterItems()

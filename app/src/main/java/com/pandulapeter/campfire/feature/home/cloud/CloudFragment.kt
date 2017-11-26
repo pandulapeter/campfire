@@ -1,24 +1,19 @@
 package com.pandulapeter.campfire.feature.home.cloud
 
 import android.content.Intent
-import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import com.pandulapeter.campfire.CloudBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
+import com.pandulapeter.campfire.feature.home.shared.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
-import dagger.android.support.DaggerFragment
-import javax.inject.Inject
 
 /**
  * Displays the list of all available songs from the backend. The list is searchable and filterable
@@ -27,17 +22,9 @@ import javax.inject.Inject
  *
  * Controlled by [CloudViewModel].
  */
-class CloudFragment : DaggerFragment() {
+class CloudFragment : HomeFragment<CloudBinding, CloudViewModel>(R.layout.fragment_cloud) {
 
-    @Inject lateinit var songInfoRepository: SongInfoRepository
-    private lateinit var binding: CloudBinding
-    private val viewModel by lazy { CloudViewModel(songInfoRepository) }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_cloud, container, false)
-        binding.viewModel = viewModel
-        return binding.root
-    }
+    override val viewModel by lazy { CloudViewModel(callbacks, songInfoRepository) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)

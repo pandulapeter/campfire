@@ -1,24 +1,19 @@
 package com.pandulapeter.campfire.feature.home.favorites
 
-import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import com.pandulapeter.campfire.FavoritesBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
+import com.pandulapeter.campfire.feature.home.shared.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.dimension
-import dagger.android.support.DaggerFragment
-import javax.inject.Inject
 
 /**
  * Displays the list of all songs the user marked as favorite. All of these items are also downloaded.
@@ -27,17 +22,9 @@ import javax.inject.Inject
  *
  * Controlled by [FavoritesViewModel].
  */
-class FavoritesFragment : DaggerFragment() {
+class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.layout.fragment_favorites) {
 
-    @Inject lateinit var songInfoRepository: SongInfoRepository
-    private lateinit var binding: FavoritesBinding
-    private val viewModel by lazy { FavoritesViewModel(songInfoRepository) }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_favorites, container, false)
-        binding.viewModel = viewModel
-        return binding.root
-    }
+    override val viewModel by lazy { FavoritesViewModel(callbacks, songInfoRepository) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)

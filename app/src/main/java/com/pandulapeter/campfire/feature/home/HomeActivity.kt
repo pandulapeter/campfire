@@ -2,12 +2,14 @@ package com.pandulapeter.campfire.feature.home
 
 import android.databinding.DataBindingUtil
 import android.os.Bundle
+import android.support.v4.view.GravityCompat
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.storage.StorageManager
 import com.pandulapeter.campfire.feature.home.cloud.CloudFragment
 import com.pandulapeter.campfire.feature.home.downloaded.DownloadedFragment
 import com.pandulapeter.campfire.feature.home.favorites.FavoritesFragment
+import com.pandulapeter.campfire.feature.home.shared.HomeFragment
 import com.pandulapeter.campfire.util.consume
 import dagger.android.support.DaggerAppCompatActivity
 import javax.inject.Inject
@@ -19,15 +21,15 @@ import javax.inject.Inject
  *
  * Controlled by [HomeViewModel].
  */
-class HomeActivity : DaggerAppCompatActivity() {
-
+class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
     @Inject lateinit var storageManager: StorageManager
+    private lateinit var binding: HomeBinding
     private val viewModel = HomeViewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Inflate the layout and set up the navigation listener.
-        val binding = DataBindingUtil.setContentView<HomeBinding>(this, R.layout.activity_home);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_home);
         binding.viewModel = viewModel
         binding.bottomNavigation.setOnNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
@@ -49,6 +51,8 @@ class HomeActivity : DaggerAppCompatActivity() {
             replaceActiveFragment(storageManager.lastSelectedNavigationItem)
         }
     }
+
+    override fun showViewOptions() = binding.drawerLayout.openDrawer(GravityCompat.END)
 
     /**
      * Checks if the user actually changed the current selection and if so, persists it. Replaces the Fragment if

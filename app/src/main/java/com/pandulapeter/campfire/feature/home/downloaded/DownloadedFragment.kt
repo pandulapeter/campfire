@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.feature.home.downloaded
 
-import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
@@ -8,17 +7,13 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.support.v7.widget.helper.ItemTouchHelper.*
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import com.pandulapeter.campfire.DownloadedBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
+import com.pandulapeter.campfire.feature.home.shared.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.util.dimension
-import dagger.android.support.DaggerFragment
-import javax.inject.Inject
 
 /**
  * Displays the list of all downloaded songs. The list is searchable and filterable and contains
@@ -27,17 +22,9 @@ import javax.inject.Inject
  *
  * Controlled by [DownloadedViewModel].
  */
-class DownloadedFragment : DaggerFragment() {
+class DownloadedFragment : HomeFragment<DownloadedBinding, DownloadedViewModel>(R.layout.fragment_downloaded) {
 
-    @Inject lateinit var songInfoRepository: SongInfoRepository
-    private lateinit var binding: DownloadedBinding
-    private val viewModel by lazy { DownloadedViewModel(songInfoRepository) }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_downloaded, container, false)
-        binding.viewModel = viewModel
-        return binding.root
-    }
+    override val viewModel by lazy { DownloadedViewModel(callbacks, songInfoRepository) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)

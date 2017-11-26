@@ -5,16 +5,15 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.ChangeListener
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.feature.home.shared.SongInfoAdapter
+import com.pandulapeter.campfire.feature.home.shared.HomeFragment
+import com.pandulapeter.campfire.feature.home.shared.HomeFragmentViewModel
 import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
 import com.pandulapeter.campfire.util.sort
 
 /**
  * Handles events and logic for [CloudFragment].
  */
-class CloudViewModel(private val songInfoRepository: SongInfoRepository) {
-
-    val adapter = SongInfoAdapter()
+class CloudViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
     val shouldShowErrorSnackbar = ObservableBoolean(false)
     val isLoading = ObservableBoolean(false)
 
