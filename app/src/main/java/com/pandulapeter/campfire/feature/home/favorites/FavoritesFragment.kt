@@ -25,9 +25,10 @@ class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.l
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Setup swipe-to-dismiss functionality.
-        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+        val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN,
             ItemTouchHelper.START or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT or ItemTouchHelper.END) {
+
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = consume {
                 viewHolder?.adapterPosition?.let { originalPosition ->
                     target?.adapterPosition?.let { targetPosition ->
@@ -47,7 +48,12 @@ class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.l
                 }
             }
 
-        }).attachToRecyclerView(binding.recyclerView)
+        })
+        itemTouchHelper.attachToRecyclerView(binding.recyclerView)
+        // Setup list item click listeners.
+        viewModel.adapter.itemActionTouchListener = { position ->
+            itemTouchHelper.startDrag(getRecyclerView().findViewHolderForAdapterPosition(position))
+        }
     }
 
     override fun getRecyclerView() = binding.recyclerView

@@ -6,6 +6,7 @@ import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.HomeFragmentViewModel
 import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
+import java.util.Collections
 
 /**
  * Handles events and logic for [FavoritesFragment].
@@ -28,8 +29,19 @@ class FavoritesViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRep
 
     fun removeSongFromFavorites(id: String) = songInfoRepository.removeSongFromFavorites(id)
 
-    //TODO: Fix this, it's not working great.
-    fun swapSongsInFavorites(originalPosition: Int, targetPosition: Int) = songInfoRepository.swapSongFavoritesPositions(originalPosition, targetPosition)
+    fun swapSongsInFavorites(originalPosition: Int, targetPosition: Int) {
+        val list = adapter.items.map { it.songInfo.id }.toMutableList()
+        if (originalPosition < targetPosition) {
+            for (i in originalPosition until targetPosition) {
+                Collections.swap(list, i, i + 1)
+            }
+        } else {
+            for (i in originalPosition downTo targetPosition + 1) {
+                Collections.swap(list, i, i - 1)
+            }
+        }
+        songInfoRepository.setFavorites(list)
+    }
 
     fun shuffleItems() = songInfoRepository.shuffleFavorites()
 }

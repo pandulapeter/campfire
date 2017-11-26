@@ -1,10 +1,12 @@
 package com.pandulapeter.campfire.feature.home.shared
 
+import android.annotation.SuppressLint
 import android.databinding.DataBindingUtil
 import android.support.annotation.LayoutRes
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SongInfoBinding
@@ -34,11 +36,13 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
         }
     var itemClickListener: (position: Int) -> Unit = { _ -> }
     var itemActionClickListener: ((position: Int) -> Unit)? = null
+    var itemActionTouchListener: ((position: Int) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): SongInfoViewHolder {
         val viewHolder = SongInfoViewHolder.create(parent)
         viewHolder.setItemClickListener(itemClickListener)
         viewHolder.setItemActionClickListener(itemActionClickListener)
+        viewHolder.setItemActionTouchListener(itemActionTouchListener)
         return viewHolder
     }
 
@@ -71,6 +75,18 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
                     if (adapterPosition != RecyclerView.NO_POSITION) {
                         itemClickListener(adapterPosition)
                     }
+                }
+            }
+        }
+
+        fun setItemActionTouchListener(itemTouchListener: ((position: Int) -> Unit)?) {
+            if (itemTouchListener != null) {
+                //TODO: Fix Lint warning.
+                binding.action.setOnTouchListener { _, event ->
+                    if (event.actionMasked == MotionEvent.ACTION_DOWN && adapterPosition != RecyclerView.NO_POSITION) {
+                        itemTouchListener(adapterPosition)
+                    }
+                    false
                 }
             }
         }

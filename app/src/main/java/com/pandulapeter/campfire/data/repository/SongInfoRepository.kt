@@ -119,21 +119,9 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
         }
     }
 
-    fun swapSongFavoritesPositions(originalPosition: Int, targetPosition: Int) {
-        if (originalPosition != targetPosition) {
-            storageManager.favorites = storageManager.favorites.toMutableList().apply {
-                if (originalPosition < targetPosition) {
-                    for (i in originalPosition until targetPosition) {
-                        Collections.swap(this, i, i + 1)
-                    }
-                } else {
-                    for (i in originalPosition downTo targetPosition + 1) {
-                        Collections.swap(this, i, i - 1)
-                    }
-                }
-            }
-            notifySubscribers()
-        }
+    fun setFavorites(songIds: List<String>) {
+        storageManager.favorites = songIds
+        notifySubscribers()
     }
 
     fun shuffleFavorites() {
