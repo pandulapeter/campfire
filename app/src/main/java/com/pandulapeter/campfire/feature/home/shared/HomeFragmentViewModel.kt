@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.home.shared
 
 import android.databinding.ObservableBoolean
+import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.Subscriber
 
@@ -30,4 +31,7 @@ abstract class HomeFragmentViewModel(
     }
 
     fun addSongToFavorites(id: String, position: Int? = null) = songInfoRepository.addSongToFavorites(id, position)
+
+    //TODO: Handle special characters, prioritize results that begin with the query.
+    protected fun List<SongInfo>.filter(query: String) = filter { it.title.contains(query, true) || it.artist.contains(query, true) }
 }

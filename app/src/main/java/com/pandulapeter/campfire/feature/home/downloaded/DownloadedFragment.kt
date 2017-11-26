@@ -8,7 +8,6 @@ import android.support.v7.widget.helper.ItemTouchHelper.*
 import android.view.View
 import com.pandulapeter.campfire.DownloadedBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.shared.HomeFragment
 
 /**
@@ -55,8 +54,6 @@ class DownloadedFragment : HomeFragment<DownloadedBinding, DownloadedViewModel>(
 
         }).attachToRecyclerView(binding.recyclerView)
     }
-
-    override fun getToolbar() = binding.toolbar
 
     override fun getRecyclerView() = binding.recyclerView
 

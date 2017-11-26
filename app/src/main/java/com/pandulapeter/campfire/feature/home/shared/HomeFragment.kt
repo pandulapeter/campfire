@@ -7,10 +7,8 @@ import android.os.Bundle
 import android.support.annotation.LayoutRes
 import android.support.design.widget.Snackbar
 import android.support.v4.widget.SwipeRefreshLayout
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.Toolbar
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -50,7 +48,6 @@ abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        (activity as? AppCompatActivity)?.setSupportActionBar(getToolbar())
         context?.let { context ->
             // Initialize the list and pull-to-refresh functionality.
             //TODO: Hide the keyboard on scroll events.
@@ -84,8 +81,6 @@ abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>
         super.onPause()
         songInfoRepository.unsubscribe(viewModel)
     }
-
-    abstract fun getToolbar(): Toolbar
 
     abstract fun getRecyclerView(): RecyclerView
 

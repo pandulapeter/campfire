@@ -50,8 +50,6 @@ class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.l
         }).attachToRecyclerView(binding.recyclerView)
     }
 
-    override fun getToolbar() = binding.toolbar
-
     override fun getRecyclerView() = binding.recyclerView
 
     override fun getSwipeRefreshLayout() = binding.swipeRefreshLayout

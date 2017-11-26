@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.util
 import android.content.Context
 import android.databinding.Observable
 import android.databinding.ObservableBoolean
+import android.databinding.ObservableField
 import android.graphics.drawable.Drawable
 import android.support.annotation.ColorInt
 import android.support.annotation.ColorRes
@@ -46,6 +47,13 @@ inline fun ObservableBoolean.onPropertyChanged(crossinline callback: (Boolean) -
     })
 }
 
+inline fun <T> ObservableField<T>.onPropertyChanged(crossinline callback: (T) -> Unit) {
+    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+            callback(get())
+        }
+    })
+}
 
 fun <T> Call<T>.enqueueCall(onSuccess: (T) -> Unit, onFailure: () -> Unit) {
     enqueue(object : Callback<T> {

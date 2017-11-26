@@ -27,8 +27,6 @@ class CloudFragment : HomeFragment<CloudBinding, CloudViewModel>(R.layout.fragme
         }
     }
 
-    override fun getToolbar() = binding.toolbar
-
     override fun getRecyclerView() = binding.recyclerView
 
     override fun getSwipeRefreshLayout() = binding.swipeRefreshLayout
