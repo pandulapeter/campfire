@@ -53,7 +53,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
         }
     }
 
-    fun updateDataSet() {
+    fun updateDataSet(onError: () -> Unit = {}) {
         isLoading = true
         networkManager.service.getLibrary().enqueueCall(
             onSuccess = {
@@ -64,7 +64,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             },
             onFailure = {
                 isLoading = false
-                //TODO: Display error message.
+                onError()
             })
     }
 

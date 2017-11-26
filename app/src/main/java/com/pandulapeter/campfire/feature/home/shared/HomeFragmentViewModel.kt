@@ -13,7 +13,6 @@ abstract class HomeFragmentViewModel(
     private val homeCallbacks: HomeFragment.HomeCallbacks?,
     protected val songInfoRepository: SongInfoRepository) : Subscriber {
     val isLoading = ObservableBoolean(songInfoRepository.isLoading)
-    //TODO: Error messages are not displayed to the user.
     val shouldShowErrorSnackbar = ObservableBoolean(false)
     val adapter = SongInfoAdapter()
 
@@ -24,7 +23,7 @@ abstract class HomeFragmentViewModel(
 
     abstract protected fun getAdapterItems(): List<SongInfoViewModel>
 
-    fun forceRefresh() = songInfoRepository.updateDataSet()
+    fun forceRefresh() = songInfoRepository.updateDataSet { shouldShowErrorSnackbar.set(true) }
 
     fun showViewOptions() {
         homeCallbacks?.showViewOptions()
