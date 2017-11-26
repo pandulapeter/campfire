@@ -45,6 +45,7 @@
                         app:srcCompat="@drawable/ic_view_options_24dp" />
 
                     <com.pandulapeter.campfire.feature.home.shared.SearchTitleView
+                        android:id="@+id/search_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"

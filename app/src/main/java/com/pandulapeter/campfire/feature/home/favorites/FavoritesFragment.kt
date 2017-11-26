@@ -64,4 +64,8 @@ class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.l
             }).attachToRecyclerView(binding.recyclerView)
         }
     }
+
+    override fun isSearchInputVisible() = false
+
+    override fun closeSearchInput() = Unit
 }

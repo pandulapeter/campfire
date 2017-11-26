@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.favorites
 
+import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -11,6 +12,8 @@ import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
  * Handles events and logic for [FavoritesFragment].
  */
 class FavoritesViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
+
+    val shouldShowShuffle = ObservableBoolean(false)
 
     init {
         refreshAdapterItems()
@@ -47,5 +50,6 @@ class FavoritesViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRep
                     isActionTinted = false)
             }
         }
+        shouldShowShuffle.set(adapter.itemCount > 2)
     }
 }

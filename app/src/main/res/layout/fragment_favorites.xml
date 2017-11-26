@@ -10,6 +10,8 @@
             name="viewModel"
             type="com.pandulapeter.campfire.feature.home.favorites.FavoritesViewModel" />
 
+        <import type="android.view.View" />
+
     </data>
 
     <android.support.design.widget.CoordinatorLayout
@@ -55,6 +57,7 @@
                         android:contentDescription="@string/favorites_shuffle"
                         android:onClick="@{() -> viewModel.shuffleItems()}"
                         android:padding="@dimen/action_button_padding"
+                        android:visibility="@{viewModel.shouldShowShuffle ? View.VISIBLE: View.GONE}"
                         app:srcCompat="@drawable/ic_shuffle_24dp" />
 
                     <TextView

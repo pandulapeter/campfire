@@ -3,6 +3,8 @@ package com.pandulapeter.campfire.feature.home
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
+import android.support.v4.widget.DrawerLayout
+import android.view.View
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.storage.StorageManager
@@ -11,6 +13,7 @@ import com.pandulapeter.campfire.feature.home.downloaded.DownloadedFragment
 import com.pandulapeter.campfire.feature.home.favorites.FavoritesFragment
 import com.pandulapeter.campfire.feature.home.shared.HomeFragment
 import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.hideKeyboard
 import dagger.android.support.DaggerAppCompatActivity
 import javax.inject.Inject
 
@@ -28,7 +31,7 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Inflate the layout and set up the navigation listener.
+        // Inflate the layout and set up the bottom navigation listener.
         binding = DataBindingUtil.setContentView(this, R.layout.activity_home);
         binding.viewModel = viewModel
         binding.bottomNavigation.setOnNavigationItemSelectedListener { menuItem ->
@@ -39,6 +42,20 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
                 else -> false
             }
         }
+        // Set up the side navigation bar.
+        binding.drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
+            override fun onDrawerStateChanged(newState: Int) {
+                if (newState == DrawerLayout.STATE_DRAGGING) {
+                    hideKeyboard(currentFocus)
+                }
+            }
+
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) = Unit
+
+            override fun onDrawerClosed(drawerView: View) = Unit
+
+            override fun onDrawerOpened(drawerView: View) = Unit
+        })
         // Restore the state if needed. After app start we need to manually set the selected item, otherwise
         // the View takes care of it and we only need to update the displayed Fragment.
         if (savedInstanceState == null) {
@@ -52,14 +69,26 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
         }
     }
 
-    override fun showViewOptions() = binding.drawerLayout.openDrawer(GravityCompat.END)
+    override fun onBackPressed() {
+        val currentFragment = getCurrentFragment()
+        if (currentFragment?.isSearchInputVisible() == true) {
+            currentFragment.closeSearchInput()
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    override fun showViewOptions() {
+        binding.drawerLayout.openDrawer(GravityCompat.END)
+        hideKeyboard(currentFocus)
+    }
 
     /**
      * Checks if the user actually changed the current selection and if so, persists it. Replaces the Fragment if
      * the selection changed or the container was empty.
      */
     private fun replaceActiveFragment(navigationItem: HomeViewModel.NavigationItem) {
-        if (viewModel.selectedItem.get() != navigationItem || supportFragmentManager.findFragmentById(R.id.fragment_container) == null) {
+        if (viewModel.selectedItem.get() != navigationItem || getCurrentFragment() == null) {
             storageManager.lastSelectedNavigationItem = navigationItem
             viewModel.selectedItem.set(navigationItem)
             supportFragmentManager.beginTransaction().replace(R.id.fragment_container, when (navigationItem) {
@@ -69,4 +98,6 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
             }).commit()
         }
     }
+
+    private fun getCurrentFragment() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? HomeFragment<*, *>
 }

@@ -38,6 +38,10 @@ abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>
         return binding.root
     }
 
+    abstract fun isSearchInputVisible(): Boolean
+
+    abstract fun closeSearchInput()
+
     interface HomeCallbacks {
         fun showViewOptions()
     }

@@ -30,6 +30,7 @@ class CloudFragment : HomeFragment<CloudBinding, CloudViewModel>(R.layout.fragme
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
         context?.let { context ->
             // Initialize the list and pull-to-refresh functionality.
+            //TODO: Hide the keyboard on scroll events.
             binding.recyclerView.layoutManager = LinearLayoutManager(context)
             binding.recyclerView.addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
             binding.swipeRefreshLayout.setOnRefreshListener { viewModel.update(true) }
@@ -56,6 +57,12 @@ class CloudFragment : HomeFragment<CloudBinding, CloudViewModel>(R.layout.fragme
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) = when (requestCode) {
         DETAIL_REQUEST -> viewModel.update(false)
         else -> super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    override fun isSearchInputVisible() = binding.searchTitle.searchInputVisible
+
+    override fun closeSearchInput() {
+        binding.searchTitle.searchInputVisible = false
     }
 
     companion object {

@@ -30,6 +30,7 @@ class DownloadedFragment : HomeFragment<DownloadedBinding, DownloadedViewModel>(
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
         context?.let { context ->
             // Initialize the list and pull-to-refresh functionality.
+            //TODO: Hide the keyboard on scroll events.
             binding.recyclerView.layoutManager = LinearLayoutManager(context)
             binding.recyclerView.addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
             // Setup list item click listeners.
@@ -61,5 +62,11 @@ class DownloadedFragment : HomeFragment<DownloadedBinding, DownloadedViewModel>(
 
             }).attachToRecyclerView(binding.recyclerView)
         }
+    }
+
+    override fun isSearchInputVisible() = binding.searchTitle.searchInputVisible
+
+    override fun closeSearchInput() {
+        binding.searchTitle.searchInputVisible = false
     }
 }
