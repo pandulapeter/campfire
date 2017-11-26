@@ -11,7 +11,6 @@ import android.support.annotation.DrawableRes
 import android.support.v4.content.ContextCompat
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.content.res.AppCompatResources
-import com.pandulapeter.campfire.data.model.SongInfo
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -27,10 +26,6 @@ fun Drawable?.tint(@ColorInt tintColor: Int) = this?.let {
     DrawableCompat.setTint(drawable.mutate(), tintColor)
     DrawableCompat.unwrap<Drawable>(drawable)
 }
-
-//TODO: Handle special characters
-fun List<SongInfo>.sortAndFilter(isSortedByTitle: Boolean, shouldHideExplicit: Boolean) = filter { !shouldHideExplicit || !it.isExplicit }
-    .sortedBy { if (isSortedByTitle) it.title else it.artist }
 
 inline fun ObservableBoolean.onEventTriggered(crossinline callback: () -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {

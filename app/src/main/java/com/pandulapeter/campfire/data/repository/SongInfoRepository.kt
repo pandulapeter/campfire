@@ -68,9 +68,9 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             })
     }
 
-    fun getCloudSongs() = dataSet.toList()
+    fun getCloudSongs() = dataSet.filterExplicit().sort().toList()
 
-    fun getDownloadedSongs() = storageManager.downloaded.mapNotNull { id -> dataSet.find { id == it.id } }
+    fun getDownloadedSongs() = storageManager.downloaded.mapNotNull { id -> dataSet.find { id == it.id } }.filterExplicit().sort()
 
     fun isSongDownloaded(id: String) = storageManager.downloaded.contains(id)
 
@@ -89,7 +89,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
         }
     }
 
-    fun getFavoriteSongs() = storageManager.favorites.mapNotNull { id -> dataSet.find { id == it.id } }
+    fun getFavoriteSongs() = storageManager.favorites.mapNotNull { id -> dataSet.find { id == it.id } }.filterExplicit()
 
     fun isSongFavorite(id: String) = storageManager.favorites.contains(id)
 
@@ -139,6 +139,11 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     }
 
     private fun notifySubscribers() = subscribers.forEach { it.onUpdate() }
+
+    private fun List<SongInfo>.filterExplicit() = if (shouldHideExplicit) filter { !it.isExplicit } else this
+
+    //TODO: Handle special characters
+    private fun List<SongInfo>.sort() = sortedBy { if (isSortedByTitle) it.title else it.artist }
 
     companion object {
         const val SHUFFLE_LIMIT = 2

@@ -16,6 +16,7 @@ class HomeViewModel(private val songInfoRepository: SongInfoRepository) : Subscr
 
     init {
         isSortedByTitle.onPropertyChanged { songInfoRepository.isSortedByTitle = it }
+        shouldHideExplicit.onPropertyChanged { songInfoRepository.shouldHideExplicit = it }
     }
 
     override fun onUpdate() {
