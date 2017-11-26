@@ -53,10 +53,10 @@ class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.l
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
                     viewHolder?.adapterPosition?.let { position ->
                         val songInfo = viewModel.adapter.items[position].songInfo
-                        viewModel.removeSongFromFavorites(songInfo)
+                        viewModel.removeSongFromFavorites(songInfo.id)
                         Snackbar
                             .make(binding.root, getString(R.string.favorites_song_removed, songInfo.title), Snackbar.LENGTH_LONG)
-                            .setAction(R.string.undo, { viewModel.addSongToFavorites(songInfo, position) })
+                            .setAction(R.string.undo, { viewModel.addSongToFavorites(songInfo.id, position) })
                             .show()
                     }
                 }

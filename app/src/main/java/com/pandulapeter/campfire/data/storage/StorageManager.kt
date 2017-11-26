@@ -36,35 +36,33 @@ class StorageManager(context: Context, private val gson: Gson) {
     /**
      * The timestamp of the most recent update that helps to determine how old is the local cache.
      */
-    var lastLibraryUpdate: Long
-        get() = sharedPreferences.getLong(LAST_LIBRARY_UPDATE, 0)
+    var lastCacheUpdateTimestamp: Long
+        get() = sharedPreferences.getLong(LAST_CACHE_UPDATE_TIMESTAMP, 0)
         set(value) {
-            sharedPreferences.edit().putLong(LAST_LIBRARY_UPDATE, value).apply()
+            sharedPreferences.edit().putLong(LAST_CACHE_UPDATE_TIMESTAMP, value).apply()
         }
 
     /**
-     * The cached list of library items.
+     * The cached list of items from the cloud.
      *
      * TODO: This shouldn't be stored in Shared Preferences, replace it with a Room-based implementation.
      */
-    var library: List<SongInfo>
+    var cloudCache: List<SongInfo>
         get() = try {
-            gson.fromJson(sharedPreferences.getString(LIBRARY, "[]"), object : TypeToken<List<SongInfo>>() {}.type)
+            gson.fromJson(sharedPreferences.getString(CLOUD_CACHE, "[]"), object : TypeToken<List<SongInfo>>() {}.type)
         } catch (_: JsonSyntaxException) {
             listOf()
         }
         set(value) {
-            sharedPreferences.edit().putString(LIBRARY, gson.toJson(value)).apply()
+            sharedPreferences.edit().putString(CLOUD_CACHE, gson.toJson(value)).apply()
         }
 
     /**
      * The list of downloaded songs.
-     *
-     * //TODO: Only store the list of ID-s.
      */
-    var downloaded: List<SongInfo>
+    var downloaded: List<String>
         get() = try {
-            gson.fromJson(sharedPreferences.getString(DOWNLOADED, "[]"), object : TypeToken<List<SongInfo>>() {}.type)
+            gson.fromJson(sharedPreferences.getString(DOWNLOADED, "[]"), object : TypeToken<List<String>>() {}.type)
         } catch (_: JsonSyntaxException) {
             listOf()
         }
@@ -87,8 +85,8 @@ class StorageManager(context: Context, private val gson: Gson) {
 
     companion object {
         private const val LAST_SELECTED_NAVIGATION_ITEM = "last_selected_navigation_item"
-        private const val LAST_LIBRARY_UPDATE = "last_library_update"
-        private const val LIBRARY = "library"
+        private const val LAST_CACHE_UPDATE_TIMESTAMP = "last_cache_update_timestamp"
+        private const val CLOUD_CACHE = "cloud_cache"
         private const val DOWNLOADED = "downloaded"
         private const val FAVORITES = "favorites"
     }

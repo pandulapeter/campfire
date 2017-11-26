@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature.home.downloaded
 
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.HomeFragmentViewModel
@@ -17,29 +16,33 @@ class DownloadedViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRe
         refreshAdapterItems()
     }
 
-    fun addOrRemoveSongFromFavorites(songInfo: SongInfo) {
-        if (songInfoRepository.getFavoriteIds().contains(songInfo.id)) {
-            songInfoRepository.removeSongFromFavorites(songInfo)
+    fun addOrRemoveSongFromFavorites(id: String) {
+        if (songInfoRepository.isSongFavorite(id)) {
+            songInfoRepository.removeSongFromFavorites(id)
         } else {
-            songInfoRepository.addSongToFavorites(songInfo)
+            songInfoRepository.addSongToFavorites(id)
         }
         refreshAdapterItems()
     }
 
-    fun addSongToDownloaded(songInfo: SongInfo) {
-        songInfoRepository.addSongToDownloaded(songInfo)
+    fun addSongToDownloaded(id: String) {
+        songInfoRepository.addSongToDownloaded(id)
         refreshAdapterItems()
     }
 
-    fun removeSongFromDownloaded(songInfo: SongInfo) {
-        songInfoRepository.removeSongFromDownloaded(songInfo)
+    fun removeSongFromDownloaded(id: String) {
+        songInfoRepository.removeSongFromDownloaded(id)
+        refreshAdapterItems()
+    }
+
+    fun addSongToFavorites(id: String) {
+        songInfoRepository.addSongToFavorites(id)
         refreshAdapterItems()
     }
 
     private fun refreshAdapterItems() {
-        val favorites = songInfoRepository.getFavoriteIds()
         adapter.items = songInfoRepository.getDownloadedSongs().sort().map { songInfo ->
-            val isTinted = favorites.contains(songInfo.id)
+            val isTinted = songInfoRepository.isSongFavorite(songInfo.id)
             SongInfoViewModel(
                 songInfo = songInfo,
                 actionDescription = if (isTinted) R.string.downloaded_remove_from_favorites else R.string.downloaded_add_to_favorites,

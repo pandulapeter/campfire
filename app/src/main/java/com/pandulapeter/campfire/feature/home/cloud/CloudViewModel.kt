@@ -36,11 +36,11 @@ class CloudViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoReposit
         }
     }
 
-    fun addOrRemoveSongFromDownloaded(songInfo: SongInfo) {
-        if (songInfoRepository.getDownloadedSongs().contains(songInfo)) {
-            songInfoRepository.removeSongFromDownloaded(songInfo)
+    fun addOrRemoveSongFromDownloaded(id: String) {
+        if (songInfoRepository.isSongDownloaded(id)) {
+            songInfoRepository.removeSongFromDownloaded(id)
         } else {
-            songInfoRepository.addSongToDownloaded(songInfo)
+            songInfoRepository.addSongToDownloaded(id)
         }
         refreshAdapterItems(adapter.items.map { it.songInfo })
     }

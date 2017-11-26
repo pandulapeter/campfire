@@ -10,7 +10,7 @@ class DetailViewModel(songInfoRepository: SongInfoRepository, id: String, val ti
     init {
         songInfoRepository.getCloudSongs(ChangeListener(
             onNext = {
-                it.find { it.id == id }?.let { songInfoRepository.addSongToDownloaded(it) }
+                it.find { it.id == id }?.let { songInfoRepository.addSongToDownloaded(it.id) }
             },
             onComplete = {},
             onError = {}

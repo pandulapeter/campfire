@@ -8,23 +8,25 @@ import java.util.Collections
 
 /**
  * Wraps caching and updating of [SongInfo] objects.
+ *
+ * TODO: Implement subscription model.
  */
 class SongInfoRepository(private val storageManager: StorageManager, private val networkManager: NetworkManager) {
 
-    private val libraryDataSet = storageManager.library.toMutableList()
+    private val dataSet = storageManager.cloudCache.toMutableList()
 
-    private fun isCacheInvalid() = System.currentTimeMillis() - storageManager.lastLibraryUpdate > LIBRARY_CACHE_VALIDITY_LIMIT
+    private fun isCacheInvalid() = System.currentTimeMillis() - storageManager.lastCacheUpdateTimestamp > CACHE_VALIDITY_LIMIT
 
     fun getCloudSongs(changeListener: ChangeListener<List<SongInfo>>, forceRefresh: Boolean = false) {
-        changeListener.onNext(libraryDataSet)
+        changeListener.onNext(dataSet)
         if (forceRefresh || isCacheInvalid()) {
             networkManager.service.getLibrary().enqueueCall(
                 onSuccess = {
-                    libraryDataSet.clear()
-                    libraryDataSet.addAll(it)
-                    storageManager.library = libraryDataSet
-                    storageManager.lastLibraryUpdate = System.currentTimeMillis()
-                    changeListener.onNext(libraryDataSet)
+                    dataSet.clear()
+                    dataSet.addAll(it)
+                    storageManager.cloudCache = dataSet
+                    storageManager.lastCacheUpdateTimestamp = System.currentTimeMillis()
+                    changeListener.onNext(dataSet)
                     changeListener.onComplete()
                 },
                 onFailure = {
@@ -35,33 +37,43 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
         }
     }
 
-    fun getDownloadedSongs() = storageManager.downloaded
+    fun getDownloadedSongs() = storageManager.downloaded.mapNotNull { id -> dataSet.find { id == it.id } }
 
-    fun addSongToDownloaded(songInfo: SongInfo) {
-        storageManager.downloaded = getDownloadedSongs().toMutableList().apply { if (!contains(songInfo)) add(songInfo) }
+    fun isSongDownloaded(id: String) = storageManager.downloaded.contains(id)
+
+    fun addSongToDownloaded(id: String) {
+        if (!isSongDownloaded(id)) {
+            storageManager.downloaded = storageManager.downloaded.toMutableList().apply { add(id) }
+        }
     }
 
-    fun removeSongFromDownloaded(songInfo: SongInfo) {
-        removeSongFromFavorites(songInfo)
-        storageManager.downloaded = getDownloadedSongs().toMutableList().apply { if (contains(songInfo)) remove(songInfo) }
+    fun removeSongFromDownloaded(id: String) {
+        removeSongFromFavorites(id)
+        if (isSongDownloaded(id)) {
+            storageManager.downloaded = storageManager.downloaded.toMutableList().apply { remove(id) }
+        }
     }
 
-    fun getFavoriteIds() = storageManager.favorites
+    fun getFavoriteSongs() = storageManager.favorites.mapNotNull { id -> dataSet.find { id == it.id } }
 
-    fun addSongToFavorites(songInfo: SongInfo, position: Int? = null) {
-        storageManager.favorites = storageManager.favorites.toMutableList().apply {
-            if (!contains(songInfo.id)) {
+    fun isSongFavorite(id: String) = storageManager.favorites.contains(id)
+
+    fun addSongToFavorites(id: String, position: Int? = null) {
+        if (!isSongFavorite(id)) {
+            storageManager.favorites = storageManager.favorites.toMutableList().apply {
                 if (position == null) {
-                    add(songInfo.id)
+                    add(id)
                 } else {
-                    add(position, songInfo.id)
+                    add(position, id)
                 }
             }
         }
     }
 
-    fun removeSongFromFavorites(songInfo: SongInfo) {
-        storageManager.favorites = storageManager.favorites.toMutableList().apply { if (contains(songInfo.id)) remove(songInfo.id) }
+    fun removeSongFromFavorites(id: String) {
+        if (isSongFavorite(id)) {
+            storageManager.favorites = storageManager.favorites.toMutableList().apply { remove(id) }
+        }
     }
 
     fun swapSongFavoritesPositions(originalPosition: Int, targetPosition: Int) {
@@ -87,6 +99,6 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     }
 
     companion object {
-        private const val LIBRARY_CACHE_VALIDITY_LIMIT = 1000 * 60 * 60 * 24
+        private const val CACHE_VALIDITY_LIMIT = 1000 * 60 * 60 * 24
     }
 }

@@ -42,7 +42,7 @@ class CloudFragment : HomeFragment<CloudBinding, CloudViewModel>(R.layout.fragme
                 }
             }
             viewModel.adapter.itemActionClickListener = { position ->
-                viewModel.adapter.items[position].let { viewModel.addOrRemoveSongFromDownloaded(it.songInfo) }
+                viewModel.adapter.items[position].let { viewModel.addOrRemoveSongFromDownloaded(it.songInfo.id) }
             }
             // Setup error handling.
             viewModel.shouldShowErrorSnackbar.onEventTriggered {

@@ -40,7 +40,7 @@ class DownloadedFragment : HomeFragment<DownloadedBinding, DownloadedViewModel>(
                 }
             }
             viewModel.adapter.itemActionClickListener = { position ->
-                viewModel.addOrRemoveSongFromFavorites(viewModel.adapter.items[position].songInfo)
+                viewModel.addOrRemoveSongFromFavorites(viewModel.adapter.items[position].songInfo.id)
             }
             // Setup swipe-to-dismiss functionality.
             ItemTouchHelper(object : ItemTouchHelper.Callback() {
@@ -52,10 +52,16 @@ class DownloadedFragment : HomeFragment<DownloadedBinding, DownloadedViewModel>(
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
                     viewHolder?.adapterPosition?.let { position ->
                         val songInfo = viewModel.adapter.items[position].songInfo
-                        viewModel.removeSongFromDownloaded(songInfo)
+                        val wasSongFavorite = songInfoRepository.isSongFavorite(songInfo.id)
+                        viewModel.removeSongFromDownloaded(songInfo.id)
                         Snackbar
                             .make(binding.root, getString(R.string.downloaded_song_deleted, songInfo.title), Snackbar.LENGTH_LONG)
-                            .setAction(R.string.undo, { viewModel.addSongToDownloaded(songInfo) })
+                            .setAction(R.string.undo, {
+                                viewModel.addSongToDownloaded(songInfo.id)
+                                if (wasSongFavorite) {
+                                    viewModel.addSongToFavorites(songInfo.id)
+                                }
+                            })
                             .show()
                     }
                 }

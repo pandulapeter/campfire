@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.feature.home.favorites
 
 import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.HomeFragmentViewModel
@@ -19,13 +18,13 @@ class FavoritesViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRep
         refreshAdapterItems()
     }
 
-    fun addSongToFavorites(songInfo: SongInfo, position: Int) {
-        songInfoRepository.addSongToFavorites(songInfo, position)
+    fun addSongToFavorites(id: String, position: Int) {
+        songInfoRepository.addSongToFavorites(id, position)
         refreshAdapterItems()
     }
 
-    fun removeSongFromFavorites(songInfo: SongInfo) {
-        songInfoRepository.removeSongFromFavorites(songInfo)
+    fun removeSongFromFavorites(id: String) {
+        songInfoRepository.removeSongFromFavorites(id)
         refreshAdapterItems()
     }
 
@@ -40,15 +39,12 @@ class FavoritesViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRep
     }
 
     private fun refreshAdapterItems() {
-        val downloaded = songInfoRepository.getDownloadedSongs()
-        adapter.items = songInfoRepository.getFavoriteIds().mapNotNull { id ->
-            downloaded.find { it.id == id }?.let { songInfo ->
-                SongInfoViewModel(
-                    songInfo = songInfo,
-                    actionDescription = R.string.favorites_drag_item_to_rearrange,
-                    actionIcon = R.drawable.ic_drag_handle_24dp,
-                    isActionTinted = false)
-            }
+        adapter.items = songInfoRepository.getFavoriteSongs().map { songInfo ->
+            SongInfoViewModel(
+                songInfo = songInfo,
+                actionDescription = R.string.favorites_drag_item_to_rearrange,
+                actionIcon = R.drawable.ic_drag_handle_24dp,
+                isActionTinted = false)
         }
         shouldShowShuffle.set(adapter.itemCount > 2)
     }
