@@ -12,7 +12,7 @@ import com.pandulapeter.campfire.util.sort
  */
 class CloudViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
 
-    override fun getAdapterItems() = songInfoRepository.getCloudSongs().sort().map { songInfo ->
+    override fun getAdapterItems() = songInfoRepository.getCloudSongs().sort(songInfoRepository.isSortedByTitle).map { songInfo ->
         val isTinted = songInfoRepository.isSongDownloaded(songInfo.id)
         SongInfoViewModel(
             songInfo = songInfo,

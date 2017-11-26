@@ -29,7 +29,7 @@ fun Drawable?.tint(@ColorInt tintColor: Int) = this?.let {
 }
 
 //TODO: Handle special characters
-fun List<SongInfo>.sort() = sortedBy { it.title }
+fun List<SongInfo>.sort(isSortedByTitle: Boolean) = sortedBy { if (isSortedByTitle) it.title else it.artist }
 
 inline fun ObservableBoolean.onEventTriggered(crossinline callback: () -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {

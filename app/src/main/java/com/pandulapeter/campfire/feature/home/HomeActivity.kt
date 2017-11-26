@@ -7,6 +7,7 @@ import android.support.v4.widget.DrawerLayout
 import android.view.View
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.storage.StorageManager
 import com.pandulapeter.campfire.feature.home.cloud.CloudFragment
 import com.pandulapeter.campfire.feature.home.downloaded.DownloadedFragment
@@ -26,8 +27,9 @@ import javax.inject.Inject
  */
 class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
     @Inject lateinit var storageManager: StorageManager
+    @Inject lateinit var songInfoRepository: SongInfoRepository
     private lateinit var binding: HomeBinding
-    private val viewModel = HomeViewModel()
+    private val viewModel by lazy { HomeViewModel(songInfoRepository) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,6 +69,16 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
         } else {
             replaceActiveFragment(storageManager.lastSelectedNavigationItem)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        songInfoRepository.subscribe(viewModel)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        songInfoRepository.unsubscribe(viewModel)
     }
 
     override fun onBackPressed() {

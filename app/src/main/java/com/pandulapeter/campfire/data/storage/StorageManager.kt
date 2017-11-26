@@ -43,6 +43,15 @@ class StorageManager(context: Context, private val gson: Gson) {
         }
 
     /**
+     * Whether or not the user's last saved preference was to sort the songs by title.
+     */
+    var isSortedByTitle: Boolean
+        get() = sharedPreferences.getBoolean(IS_SORTED_BY_TITLE, true)
+        set(value) {
+            sharedPreferences.edit().putBoolean(IS_SORTED_BY_TITLE, value).apply()
+        }
+
+    /**
      * The cached list of items from the cloud.
      *
      * TODO: This shouldn't be stored in Shared Preferences, replace it with a Room-based implementation.
@@ -86,6 +95,7 @@ class StorageManager(context: Context, private val gson: Gson) {
     companion object {
         private const val LAST_SELECTED_NAVIGATION_ITEM = "last_selected_navigation_item"
         private const val LAST_CACHE_UPDATE_TIMESTAMP = "last_cache_update_timestamp"
+        private const val IS_SORTED_BY_TITLE = "is_sorted_by_title"
         private const val CLOUD_CACHE = "cloud_cache"
         private const val DOWNLOADED = "downloaded"
         private const val FAVORITES = "favorites"

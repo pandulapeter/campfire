@@ -27,6 +27,12 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             field = value
             notifySubscribers()
         }
+    var isSortedByTitle = storageManager.isSortedByTitle
+        set(value) {
+            field = value
+            storageManager.isSortedByTitle = value
+            notifySubscribers()
+        }
 
     fun subscribe(subscriber: Subscriber) {
         if (!subscribers.contains(subscriber)) {
@@ -85,8 +91,8 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
         if (!isSongFavorite(id)) {
             storageManager.favorites = storageManager.favorites.toMutableList().apply {
                 if (position == null) add(id) else add(position, id)
-                notifySubscribers()
             }
+            notifySubscribers()
         }
     }
 
@@ -109,8 +115,8 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
                         Collections.swap(this, i, i - 1)
                     }
                 }
-                notifySubscribers()
             }
+            notifySubscribers()
         }
     }
 

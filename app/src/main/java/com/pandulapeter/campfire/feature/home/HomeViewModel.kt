@@ -2,13 +2,24 @@ package com.pandulapeter.campfire.feature.home
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
+import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.repository.Subscriber
+import com.pandulapeter.campfire.util.onPropertyChanged
 
 /**
  * Handles events and logic for [HomeActivity].
  */
-class HomeViewModel {
+class HomeViewModel(private val songInfoRepository: SongInfoRepository) : Subscriber {
     val selectedItem: ObservableField<NavigationItem> = ObservableField(NavigationItem.CLOUD)
-    val isSortedByTitle = ObservableBoolean()
+    val isSortedByTitle = ObservableBoolean(songInfoRepository.isSortedByTitle)
+
+    init {
+        isSortedByTitle.onPropertyChanged { songInfoRepository.isSortedByTitle = it }
+    }
+
+    override fun onUpdate() {
+        isSortedByTitle.set(songInfoRepository.isSortedByTitle)
+    }
 
     /**
      * Marks the possible screens the user can reach using the bottom navigation of the home screen.
