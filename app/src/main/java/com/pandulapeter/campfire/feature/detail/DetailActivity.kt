@@ -11,7 +11,10 @@ import dagger.android.support.DaggerAppCompatActivity
 import javax.inject.Inject
 
 /**
- * Displays the chords and lyrics of a single song.
+ * Displays the chords and lyrics of a single song per screen. The user can cycle through all the
+ * songs in the category if they started this screen from Downloaded of Favorites.
+ *
+ * //TODO: Add option to add / remove song from Favorites.
  *
  * Controlled by [DetailViewModel].
  */

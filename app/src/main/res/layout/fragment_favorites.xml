@@ -31,6 +31,8 @@
                     android:layout_height="wrap_content"
                     android:clipChildren="false">
 
+                    <!--TODO: Open side navigation -->
+
                     <ImageView
                         android:id="@+id/view_options_icon"
                         android:layout_width="wrap_content"

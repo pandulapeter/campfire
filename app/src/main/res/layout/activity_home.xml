@@ -10,6 +10,10 @@
             name="viewModel"
             type="com.pandulapeter.campfire.feature.home.HomeViewModel" />
 
+        <import type="com.pandulapeter.campfire.feature.home.NavigationItem" />
+
+        <import type="android.view.View" />
+
     </data>
 
     <android.support.v4.widget.DrawerLayout
@@ -65,21 +69,29 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/home_sort_by" />
+                        android:layout_marginTop="@dimen/content_padding"
+                        android:text="@string/home_sort_by"
+                        android:visibility="@{viewModel.selectedItem == NavigationItem.FAVORITES ? View.GONE : View.VISIBLE}" />
 
                     <RadioButton
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/content_padding"
+                        android:layout_marginTop="@dimen/large_content_padding"
                         android:checked="@={viewModel.isSortedByTitle}"
-                        android:text="@string/home_sort_by_title" />
+                        android:paddingEnd="@dimen/content_padding"
+                        android:paddingStart="@dimen/content_padding"
+                        android:text="@string/home_sort_by_title"
+                        android:visibility="@{viewModel.selectedItem == NavigationItem.FAVORITES ? View.GONE : View.VISIBLE}" />
 
                     <RadioButton
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/content_padding"
                         android:checked="@={!viewModel.isSortedByTitle}"
-                        android:text="@string/home_sort_by_artist" />
+                        android:paddingEnd="@dimen/content_padding"
+                        android:paddingStart="@dimen/content_padding"
+                        android:text="@string/home_sort_by_artist"
+                        android:visibility="@{viewModel.selectedItem == NavigationItem.FAVORITES ? View.GONE : View.VISIBLE}" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -90,13 +102,17 @@
                     <CheckBox
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/content_padding"
+                        android:layout_marginTop="@dimen/large_content_padding"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:paddingStart="@dimen/content_padding"
                         android:text="@string/language_english" />
 
                     <CheckBox
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/content_padding"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:paddingStart="@dimen/content_padding"
                         android:text="@string/language_hungarian" />
 
                 </LinearLayout>
