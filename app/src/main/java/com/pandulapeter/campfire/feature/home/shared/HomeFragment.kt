@@ -5,11 +5,22 @@ import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
 import android.os.Bundle
 import android.support.annotation.LayoutRes
+import android.support.design.widget.Snackbar
+import android.support.v4.widget.SwipeRefreshLayout
+import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.Toolbar
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.BR
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.feature.detail.DetailActivity
+import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.util.onEventTriggered
+import com.pandulapeter.campfire.util.onPropertyChanged
 import dagger.android.support.DaggerFragment
 import javax.inject.Inject
 
@@ -38,6 +49,31 @@ abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>
         return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        (activity as? AppCompatActivity)?.setSupportActionBar(getToolbar())
+        context?.let { context ->
+            // Initialize the list and pull-to-refresh functionality.
+            //TODO: Hide the keyboard on scroll events.
+            getRecyclerView().run {
+                layoutManager = LinearLayoutManager(context)
+                addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
+            }
+            getSwipeRefreshLayout().setOnRefreshListener { viewModel.forceRefresh() }
+            viewModel.isLoading.onPropertyChanged { getSwipeRefreshLayout().isRefreshing = it }
+            // Setup list item click listeners.
+            viewModel.adapter.itemClickListener = { position ->
+                startActivity(DetailActivity.getStartIntent(context, viewModel.adapter.items[position].songInfo.id))
+            }
+            // Setup error handling.
+            viewModel.shouldShowErrorSnackbar.onEventTriggered {
+                Snackbar
+                    .make(binding.root, R.string.something_went_wrong, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.try_again, { viewModel.forceRefresh() })
+                    .show()
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         songInfoRepository.subscribe(viewModel)
@@ -47,6 +83,12 @@ abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>
         super.onPause()
         songInfoRepository.unsubscribe(viewModel)
     }
+
+    abstract fun getToolbar(): Toolbar
+
+    abstract fun getRecyclerView(): RecyclerView
+
+    abstract fun getSwipeRefreshLayout(): SwipeRefreshLayout
 
     abstract fun isSearchInputVisible(): Boolean
 
