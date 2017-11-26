@@ -34,7 +34,7 @@ class DetailActivity : DaggerAppCompatActivity() {
         private const val CURRENT_ID = "current_id"
         private const val IDS = "ids"
         private val Intent.currentId
-            get() = getStringExtra(IDS)
+            get() = getStringExtra(CURRENT_ID)
         private val Intent.ids
             get() = getStringArrayExtra(IDS).toList()
 

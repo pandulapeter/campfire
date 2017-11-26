@@ -24,16 +24,19 @@ fun setContentDescription(imageView: ImageView, @StringRes stringResourceId: Int
 }
 
 @BindingAdapter(value = *arrayOf("onQueryChanged", "queryAttrChanged"), requireAll = false)
-fun setListeners(view: SearchTitleView, listener: SearchTitleView.OnQueryChangedListener?, attrChange: InverseBindingListener?) {
-    if (attrChange == null) {
-        view.setOnQueryChangeListener(listener)
-    } else {
-        view.setOnQueryChangeListener(object : SearchTitleView.OnQueryChangedListener {
-            override fun onQueryChanged(newQuery: String) {
-                listener?.onQueryChanged(newQuery)
-                attrChange.onChange()
-            }
+fun setListeners(view: SearchTitleView, listener: SearchTitleView.OnQueryChangedListener?, attrChange: InverseBindingListener?) =
+    view.setOnQueryChangeListener(if (attrChange == null) listener else object : SearchTitleView.OnQueryChangedListener {
+        override fun onQueryChanged(query: String) {
+            listener?.onQueryChanged(query)
+            attrChange.onChange()
+        }
+    })
 
-        })
-    }
-}
+@BindingAdapter(value = *arrayOf("onSearchInputVisibilityChanged", "searchInputVisibleAttrChanged"), requireAll = false)
+fun setListeners(view: SearchTitleView, listener: SearchTitleView.OnSearchInputVisibilityChangedListener?, attrChange: InverseBindingListener?) =
+    view.setOnSearchInputVisibilityChangedListener(if (attrChange == null) listener else object : SearchTitleView.OnSearchInputVisibilityChangedListener {
+        override fun onSearchInputVisibilityChanged(visibility: Boolean) {
+            listener?.onSearchInputVisibilityChanged(visibility)
+            attrChange.onChange()
+        }
+    })

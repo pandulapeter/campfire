@@ -65,7 +65,8 @@
                 android:layout_centerVertical="true"
                 android:layout_marginStart="56dp"
                 android:hint="@string/home_search"
-                android:inputType="textCapWords|textFilter" />
+                android:inputType="textCapWords|textFilter"
+                android:maxLength="20" />
 
         </RelativeLayout>
 

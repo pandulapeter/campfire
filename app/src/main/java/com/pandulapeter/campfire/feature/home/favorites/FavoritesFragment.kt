@@ -54,7 +54,7 @@ class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.l
 
     override fun getSwipeRefreshLayout() = binding.swipeRefreshLayout
 
-    override fun isSearchInputVisible() = false
+    override fun searchInputVisible() = false
 
     override fun closeSearchInput() = Unit
 }

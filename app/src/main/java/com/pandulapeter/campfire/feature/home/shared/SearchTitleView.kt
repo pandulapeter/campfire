@@ -17,13 +17,17 @@ import com.pandulapeter.campfire.util.showKeyboard
  * Custom view that either displays the title of the screen or a text input field.
  *
  * TODO: Implement search-to-close and close-to-search vector animations.
- * TODO: Implement state saving and restoration.
  */
-@BindingMethods(BindingMethod(type = SearchTitleView::class, attribute = "onQueryChanged", method = "setOnQueryChangeListener"))
-@InverseBindingMethods(InverseBindingMethod(type = SearchTitleView::class, attribute = "query"))
+@BindingMethods(
+    BindingMethod(type = SearchTitleView::class, attribute = "onQueryChanged", method = "setOnQueryChangeListener"),
+    BindingMethod(type = SearchTitleView::class, attribute = "onSearchInputVisibilityChanged", method = "setOnSearchInputVisibilityChangedListener"))
+@InverseBindingMethods(
+    InverseBindingMethod(type = SearchTitleView::class, attribute = "query"),
+    InverseBindingMethod(type = SearchTitleView::class, attribute = "searchInputVisible"))
 class SearchTitleView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : ViewSwitcher(context, attrs) {
     private val binding = DataBindingUtil.inflate<SearchTitleBinding>(LayoutInflater.from(context), R.layout.view_search_title, this, true)
     private var onQueryChangedListener: OnQueryChangedListener? = null
+    private var onSearchInputVisibilityChangedListener: OnSearchInputVisibilityChangedListener? = null
     var title: String
         get() = binding.title.text.toString()
         set(value) {
@@ -34,6 +38,7 @@ class SearchTitleView @JvmOverloads constructor(context: Context, attrs: Attribu
         set(value) {
             if (value != query) {
                 binding.query.setText(value)
+                binding.query.setSelection(value.length)
             }
         }
     var searchInputVisible: Boolean
@@ -46,10 +51,10 @@ class SearchTitleView @JvmOverloads constructor(context: Context, attrs: Attribu
                         requestFocus()
                         post { showKeyboard(this) }
                     } else {
-                        query = ""
                         hideKeyboard(this)
                     }
                 }
+                onSearchInputVisibilityChangedListener?.onSearchInputVisibilityChanged(value)
             }
         }
 
@@ -63,7 +68,6 @@ class SearchTitleView @JvmOverloads constructor(context: Context, attrs: Attribu
         binding.search.setOnClickListener { searchInputVisible = true }
         binding.close.setOnClickListener { searchInputVisible = false }
         binding.query.addTextChangedListener(object : TextWatcher {
-
             override fun afterTextChanged(editable: Editable?) {
                 onQueryChangedListener?.onQueryChanged(editable.toString())
             }
@@ -80,7 +84,15 @@ class SearchTitleView @JvmOverloads constructor(context: Context, attrs: Attribu
         onQueryChangedListener = listener
     }
 
+    fun setOnSearchInputVisibilityChangedListener(listener: OnSearchInputVisibilityChangedListener?) {
+        onSearchInputVisibilityChangedListener = listener
+    }
+
     interface OnQueryChangedListener {
-        fun onQueryChanged(newQuery: String)
+        fun onQueryChanged(query: String)
+    }
+
+    interface OnSearchInputVisibilityChangedListener {
+        fun onSearchInputVisibilityChanged(visibility: Boolean)
     }
 }

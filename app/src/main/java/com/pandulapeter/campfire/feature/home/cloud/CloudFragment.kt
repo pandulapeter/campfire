@@ -31,7 +31,7 @@ class CloudFragment : HomeFragment<CloudBinding, CloudViewModel>(R.layout.fragme
 
     override fun getSwipeRefreshLayout() = binding.swipeRefreshLayout
 
-    override fun isSearchInputVisible() = binding.searchTitle.searchInputVisible
+    override fun searchInputVisible() = binding.searchTitle.searchInputVisible
 
     override fun closeSearchInput() {
         binding.searchTitle.searchInputVisible = false

@@ -86,7 +86,7 @@ abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>
 
     abstract fun getSwipeRefreshLayout(): SwipeRefreshLayout
 
-    abstract fun isSearchInputVisible(): Boolean
+    abstract fun searchInputVisible(): Boolean
 
     abstract fun closeSearchInput()
 

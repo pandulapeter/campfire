@@ -53,6 +53,7 @@
                         android:layout_centerVertical="true"
                         android:layout_toStartOf="@id/view_options_icon"
                         app:query="@={viewModel.query}"
+                        app:searchInputVisible="@={viewModel.searchInputVisible}"
                         app:title="@string/home_navigation_cloud" />
 
                 </RelativeLayout>
