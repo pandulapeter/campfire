@@ -12,6 +12,8 @@
     <string name="language_hungarian">Hungarian</string>
 
     <!-- Home screen -->
+    <string name="home_search">Search</string>
+    <string name="home_close">Close</string>
     <string name="home_navigation_cloud">Cloud</string>
     <string name="home_navigation_downloaded">Downloaded</string>
     <string name="home_navigation_favorites">Favorites</string>

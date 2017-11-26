@@ -10,7 +10,7 @@
             name="viewModel"
             type="com.pandulapeter.campfire.feature.home.HomeViewModel" />
 
-        <import type="com.pandulapeter.campfire.feature.home.NavigationItem" />
+        <import type="com.pandulapeter.campfire.feature.home.HomeViewModel.NavigationItem" />
 
         <import type="android.view.View" />
 

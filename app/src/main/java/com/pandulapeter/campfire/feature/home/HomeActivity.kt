@@ -33,9 +33,9 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
         binding.viewModel = viewModel
         binding.bottomNavigation.setOnNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.cloud -> consume { replaceActiveFragment(NavigationItem.CLOUD) }
-                R.id.downloaded -> consume { replaceActiveFragment(NavigationItem.DOWNLOADED) }
-                R.id.favorites -> consume { replaceActiveFragment(NavigationItem.FAVORITES) }
+                R.id.cloud -> consume { replaceActiveFragment(HomeViewModel.NavigationItem.CLOUD) }
+                R.id.downloaded -> consume { replaceActiveFragment(HomeViewModel.NavigationItem.DOWNLOADED) }
+                R.id.favorites -> consume { replaceActiveFragment(HomeViewModel.NavigationItem.FAVORITES) }
                 else -> false
             }
         }
@@ -43,9 +43,9 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
         // the View takes care of it and we only need to update the displayed Fragment.
         if (savedInstanceState == null) {
             binding.bottomNavigation.selectedItemId = when (storageManager.lastSelectedNavigationItem) {
-                NavigationItem.CLOUD -> R.id.cloud
-                NavigationItem.DOWNLOADED -> R.id.downloaded
-                NavigationItem.FAVORITES -> R.id.favorites
+                HomeViewModel.NavigationItem.CLOUD -> R.id.cloud
+                HomeViewModel.NavigationItem.DOWNLOADED -> R.id.downloaded
+                HomeViewModel.NavigationItem.FAVORITES -> R.id.favorites
             }
         } else {
             replaceActiveFragment(storageManager.lastSelectedNavigationItem)
@@ -58,14 +58,14 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
      * Checks if the user actually changed the current selection and if so, persists it. Replaces the Fragment if
      * the selection changed or the container was empty.
      */
-    private fun replaceActiveFragment(navigationItem: NavigationItem) {
+    private fun replaceActiveFragment(navigationItem: HomeViewModel.NavigationItem) {
         if (viewModel.selectedItem.get() != navigationItem || supportFragmentManager.findFragmentById(R.id.fragment_container) == null) {
             storageManager.lastSelectedNavigationItem = navigationItem
             viewModel.selectedItem.set(navigationItem)
             supportFragmentManager.beginTransaction().replace(R.id.fragment_container, when (navigationItem) {
-                NavigationItem.CLOUD -> CloudFragment()
-                NavigationItem.DOWNLOADED -> DownloadedFragment()
-                NavigationItem.FAVORITES -> FavoritesFragment()
+                HomeViewModel.NavigationItem.CLOUD -> CloudFragment()
+                HomeViewModel.NavigationItem.DOWNLOADED -> DownloadedFragment()
+                HomeViewModel.NavigationItem.FAVORITES -> FavoritesFragment()
             }).commit()
         }
     }

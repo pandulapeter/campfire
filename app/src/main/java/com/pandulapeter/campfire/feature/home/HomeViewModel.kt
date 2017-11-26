@@ -9,4 +9,11 @@ import android.databinding.ObservableField
 class HomeViewModel {
     val selectedItem: ObservableField<NavigationItem> = ObservableField(NavigationItem.CLOUD)
     val isSortedByTitle = ObservableBoolean()
+
+    /**
+     * Marks the possible screens the user can reach using the bottom navigation of the home screen.
+     */
+    enum class NavigationItem {
+        CLOUD, DOWNLOADED, FAVORITES
+    }
 }

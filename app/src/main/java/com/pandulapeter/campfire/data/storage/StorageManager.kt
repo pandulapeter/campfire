@@ -6,7 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import com.pandulapeter.campfire.data.model.SongInfo
-import com.pandulapeter.campfire.feature.home.NavigationItem
+import com.pandulapeter.campfire.feature.home.HomeViewModel
 
 
 /**
@@ -19,17 +19,17 @@ class StorageManager(context: Context, private val gson: Gson) {
     /**
      * The last selected item from the home screen's bottom navigation bar.
      */
-    var lastSelectedNavigationItem: NavigationItem
+    var lastSelectedNavigationItem: HomeViewModel.NavigationItem
         get() = when (sharedPreferences.getInt(LAST_SELECTED_NAVIGATION_ITEM, 0)) {
-            1 -> NavigationItem.DOWNLOADED
-            2 -> NavigationItem.FAVORITES
-            else -> NavigationItem.CLOUD
+            1 -> HomeViewModel.NavigationItem.DOWNLOADED
+            2 -> HomeViewModel.NavigationItem.FAVORITES
+            else -> HomeViewModel.NavigationItem.CLOUD
         }
         set(value) {
             sharedPreferences.edit().putInt(LAST_SELECTED_NAVIGATION_ITEM, when (value) {
-                NavigationItem.CLOUD -> 0
-                NavigationItem.DOWNLOADED -> 1
-                NavigationItem.FAVORITES -> 2
+                HomeViewModel.NavigationItem.CLOUD -> 0
+                HomeViewModel.NavigationItem.DOWNLOADED -> 1
+                HomeViewModel.NavigationItem.FAVORITES -> 2
             }).apply()
         }
 

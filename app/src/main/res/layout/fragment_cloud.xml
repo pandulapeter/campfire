@@ -44,14 +44,13 @@
                         android:padding="@dimen/action_button_padding"
                         app:srcCompat="@drawable/ic_view_options_24dp" />
 
-                    <TextView
+                    <com.pandulapeter.campfire.feature.home.shared.SearchTitleView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_alignEnd="@id/view_options_icon"
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
-                        android:text="@string/home_navigation_cloud"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+                        android:layout_toStartOf="@id/view_options_icon"
+                        app:title="@string/home_navigation_cloud" />
 
                 </RelativeLayout>
 
