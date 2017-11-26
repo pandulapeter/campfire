@@ -25,7 +25,7 @@ class DetailActivity : DaggerAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = DataBindingUtil.setContentView<DetailBinding>(this, R.layout.activity_detail)
-        binding.viewModel = DetailViewModel(songInfoRepository, intent.currentId, intent.ids)
+        binding.viewModel = DetailViewModel(supportFragmentManager, songInfoRepository, intent.currentId, intent.ids)
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
