@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.library
+package com.pandulapeter.campfire.feature.home.cloud
 
 import android.content.Intent
 import android.databinding.DataBindingUtil
@@ -9,7 +9,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.pandulapeter.campfire.LibraryBinding
+import com.pandulapeter.campfire.CloudBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
@@ -25,16 +25,16 @@ import javax.inject.Inject
  * and contains headers. The list is also cached locally and automatically updated after a period or
  * manually using the pull-to-refresh gesture.
  *
- * Controlled by [LibraryViewModel].
+ * Controlled by [CloudViewModel].
  */
-class LibraryFragment : DaggerFragment() {
+class CloudFragment : DaggerFragment() {
 
     @Inject lateinit var songInfoRepository: SongInfoRepository
-    private lateinit var binding: LibraryBinding
-    private val viewModel by lazy { LibraryViewModel(songInfoRepository) }
+    private lateinit var binding: CloudBinding
+    private val viewModel by lazy { CloudViewModel(songInfoRepository) }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_library, container, false)
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_cloud, container, false)
         binding.viewModel = viewModel
         return binding.root
     }

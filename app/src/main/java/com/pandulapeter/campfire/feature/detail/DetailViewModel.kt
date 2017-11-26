@@ -8,7 +8,7 @@ import com.pandulapeter.campfire.data.repository.SongInfoRepository
  */
 class DetailViewModel(songInfoRepository: SongInfoRepository, id: String, val title: String, val artist: String) {
     init {
-        songInfoRepository.getLibrary(ChangeListener(
+        songInfoRepository.getCloudSongs(ChangeListener(
             onNext = {
                 it.find { it.id == id }?.let { songInfoRepository.addSongToDownloaded(it) }
             },

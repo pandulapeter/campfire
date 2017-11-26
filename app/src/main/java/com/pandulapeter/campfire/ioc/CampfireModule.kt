@@ -4,7 +4,7 @@ import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.HomeActivity
 import com.pandulapeter.campfire.feature.home.downloaded.DownloadedFragment
 import com.pandulapeter.campfire.feature.home.favorites.FavoritesFragment
-import com.pandulapeter.campfire.feature.home.library.LibraryFragment
+import com.pandulapeter.campfire.feature.home.cloud.CloudFragment
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
 
@@ -18,7 +18,7 @@ abstract class CampfireModule {
     abstract fun contributeDetailActivity(): DetailActivity
 
     @ContributesAndroidInjector
-    abstract fun contributeLibraryFragment(): LibraryFragment
+    abstract fun contributeCloudFragment(): CloudFragment
 
     @ContributesAndroidInjector
     abstract fun contributeDownloadedFragment(): DownloadedFragment

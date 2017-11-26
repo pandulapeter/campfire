@@ -3,9 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".feature.home.HomeActivity">
     <item
-        android:id="@+id/library"
-        android:icon="@drawable/ic_library_24dp"
-        android:title="@string/home_navigation_library" />
+        android:id="@+id/cloud"
+        android:icon="@drawable/ic_cloud_24dp"
+        android:title="@string/home_navigation_cloud" />
     <item
         android:id="@+id/downloaded"
         android:icon="@drawable/ic_downloaded_24dp"

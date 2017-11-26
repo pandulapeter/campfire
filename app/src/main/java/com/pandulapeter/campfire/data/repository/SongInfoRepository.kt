@@ -15,7 +15,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
 
     private fun isCacheInvalid() = System.currentTimeMillis() - storageManager.lastLibraryUpdate > LIBRARY_CACHE_VALIDITY_LIMIT
 
-    fun getLibrary(changeListener: ChangeListener<List<SongInfo>>, forceRefresh: Boolean = false) {
+    fun getCloudSongs(changeListener: ChangeListener<List<SongInfo>>, forceRefresh: Boolean = false) {
         changeListener.onNext(libraryDataSet)
         if (forceRefresh || isCacheInvalid()) {
             networkManager.service.getLibrary().enqueueCall(
@@ -35,18 +35,18 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
         }
     }
 
-    fun getDownloaded() = storageManager.downloaded
+    fun getDownloadedSongs() = storageManager.downloaded
 
     fun addSongToDownloaded(songInfo: SongInfo) {
-        storageManager.downloaded = getDownloaded().toMutableList().apply { if (!contains(songInfo)) add(songInfo) }
+        storageManager.downloaded = getDownloadedSongs().toMutableList().apply { if (!contains(songInfo)) add(songInfo) }
     }
 
     fun removeSongFromDownloaded(songInfo: SongInfo) {
         removeSongFromFavorites(songInfo)
-        storageManager.downloaded = getDownloaded().toMutableList().apply { if (contains(songInfo)) remove(songInfo) }
+        storageManager.downloaded = getDownloadedSongs().toMutableList().apply { if (contains(songInfo)) remove(songInfo) }
     }
 
-    fun getFavorites() = storageManager.favorites
+    fun getFavoriteIds() = storageManager.favorites
 
     fun addSongToFavorites(songInfo: SongInfo, position: Int? = null) {
         storageManager.favorites = storageManager.favorites.toMutableList().apply {

@@ -18,7 +18,7 @@ class DownloadedViewModel(private val songInfoRepository: SongInfoRepository) {
     }
 
     fun addOrRemoveSongFromFavorites(songInfo: SongInfo) {
-        if (songInfoRepository.getFavorites().contains(songInfo.id)) {
+        if (songInfoRepository.getFavoriteIds().contains(songInfo.id)) {
             songInfoRepository.removeSongFromFavorites(songInfo)
         } else {
             songInfoRepository.addSongToFavorites(songInfo)
@@ -37,8 +37,8 @@ class DownloadedViewModel(private val songInfoRepository: SongInfoRepository) {
     }
 
     private fun refreshAdapterItems() {
-        val favorites = songInfoRepository.getFavorites()
-        adapter.items = songInfoRepository.getDownloaded().sort().map { songInfo ->
+        val favorites = songInfoRepository.getFavoriteIds()
+        adapter.items = songInfoRepository.getDownloadedSongs().sort().map { songInfo ->
             val isTinted = favorites.contains(songInfo.id)
             SongInfoViewModel(
                 songInfo = songInfo,

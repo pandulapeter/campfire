@@ -8,8 +8,6 @@
 
     <!-- Home screen -->
     <dimen name="drawer_width">192dp</dimen>
-
-    <!-- Song info cards -->
     <dimen name="card_text_margin">2dp</dimen>
 
 </resources>

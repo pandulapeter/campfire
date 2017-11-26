@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.library
+package com.pandulapeter.campfire.feature.home.cloud
 
 import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
@@ -10,9 +10,9 @@ import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
 import com.pandulapeter.campfire.util.sort
 
 /**
- * Handles events and logic for [LibraryFragment].
+ * Handles events and logic for [CloudFragment].
  */
-class LibraryViewModel(private val songInfoRepository: SongInfoRepository) {
+class CloudViewModel(private val songInfoRepository: SongInfoRepository) {
 
     val adapter = SongInfoAdapter()
     val shouldShowErrorSnackbar = ObservableBoolean(false)
@@ -25,7 +25,7 @@ class LibraryViewModel(private val songInfoRepository: SongInfoRepository) {
     fun update(isForceRefresh: Boolean) {
         if (!isLoading.get()) {
             isLoading.set(true)
-            songInfoRepository.getLibrary(ChangeListener(
+            songInfoRepository.getCloudSongs(ChangeListener(
                 onNext = { refreshAdapterItems(it) },
                 onComplete = {
                     isLoading.set(false)
@@ -38,7 +38,7 @@ class LibraryViewModel(private val songInfoRepository: SongInfoRepository) {
     }
 
     fun addOrRemoveSongFromDownloaded(songInfo: SongInfo) {
-        if (songInfoRepository.getDownloaded().contains(songInfo)) {
+        if (songInfoRepository.getDownloadedSongs().contains(songInfo)) {
             songInfoRepository.removeSongFromDownloaded(songInfo)
         } else {
             songInfoRepository.addSongToDownloaded(songInfo)
@@ -47,12 +47,12 @@ class LibraryViewModel(private val songInfoRepository: SongInfoRepository) {
     }
 
     private fun refreshAdapterItems(newData: List<SongInfo>) {
-        val downloadedItems = songInfoRepository.getDownloaded()
+        val downloadedItems = songInfoRepository.getDownloadedSongs()
         adapter.items = newData.sort().map { songInfo ->
             val isTinted = downloadedItems.contains(songInfo)
             SongInfoViewModel(
                 songInfo = songInfo,
-                actionDescription = if (isTinted) R.string.library_delete_from_downloaded_songs else R.string.library_download_song,
+                actionDescription = if (isTinted) R.string.cloud_delete_from_downloaded_songs else R.string.cloud_download_song,
                 actionIcon = R.drawable.ic_downloaded_24dp,
                 isActionTinted = isTinted)
         }

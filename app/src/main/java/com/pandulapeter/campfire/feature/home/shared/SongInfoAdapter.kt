@@ -17,7 +17,7 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
 
     var items = listOf<SongInfoViewModel>()
         set(newItems) {
-            //TODO: Wrap this into a Kotlin coroutine.
+            //TODO: Wrap this into a Kotlin coroutine to improve performance.
             val oldItems = items
             DiffUtil.calculateDiff(object : DiffUtil.Callback() {
                 override fun getOldListSize() = oldItems.size
@@ -38,7 +38,7 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
     override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): SongInfoViewHolder {
         val viewHolder = SongInfoViewHolder.create(parent)
         viewHolder.setItemClickListener(itemClickListener)
-        itemActionClickListener?.let { viewHolder.setItemActionClickListener(it) }
+        viewHolder.setItemActionClickListener(itemActionClickListener)
         return viewHolder
     }
 
@@ -62,10 +62,15 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
             }
         }
 
-        fun setItemActionClickListener(itemClickListener: (position: Int) -> Unit) {
-            binding.action.setOnClickListener {
-                if (adapterPosition != RecyclerView.NO_POSITION) {
-                    itemClickListener(adapterPosition)
+        fun setItemActionClickListener(itemClickListener: ((position: Int) -> Unit)?) {
+            if (itemClickListener == null) {
+                binding.action.isClickable = false
+                binding.action.background = null
+            } else {
+                binding.action.setOnClickListener {
+                    if (adapterPosition != RecyclerView.NO_POSITION) {
+                        itemClickListener(adapterPosition)
+                    }
                 }
             }
         }

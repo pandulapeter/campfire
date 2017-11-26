@@ -32,8 +32,8 @@ class FavoritesViewModel(private val songInfoRepository: SongInfoRepository) {
     }
 
     private fun refreshAdapterItems() {
-        val downloaded = songInfoRepository.getDownloaded()
-        adapter.items = songInfoRepository.getFavorites().mapNotNull { id ->
+        val downloaded = songInfoRepository.getDownloadedSongs()
+        adapter.items = songInfoRepository.getFavoriteIds().mapNotNull { id ->
             downloaded.find { it.id == id }?.let { songInfo ->
                 SongInfoViewModel(
                     songInfo = songInfo,

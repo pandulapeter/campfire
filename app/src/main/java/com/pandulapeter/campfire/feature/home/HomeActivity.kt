@@ -7,14 +7,14 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.storage.StorageManager
 import com.pandulapeter.campfire.feature.home.downloaded.DownloadedFragment
 import com.pandulapeter.campfire.feature.home.favorites.FavoritesFragment
-import com.pandulapeter.campfire.feature.home.library.LibraryFragment
+import com.pandulapeter.campfire.feature.home.cloud.CloudFragment
 import com.pandulapeter.campfire.util.consume
 import dagger.android.support.DaggerAppCompatActivity
 import javax.inject.Inject
 
 /**
  * Displays the home screen of the app which contains the three main pages the user can access
- * ([LibraryFragment], [DownloadedFragment] and [FavoritesFragment]) and the bottom navigation view.
+ * ([CloudFragment], [DownloadedFragment] and [FavoritesFragment]) and the bottom navigation view.
  * The last selected item is persisted.
  *
  * Controlled by [HomeViewModel].
@@ -22,7 +22,7 @@ import javax.inject.Inject
 class HomeActivity : DaggerAppCompatActivity() {
 
     @Inject lateinit var storageManager: StorageManager
-    private var selectedItem: NavigationItem = NavigationItem.LIBRARY
+    private var selectedItem: NavigationItem = NavigationItem.CLOUD
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,7 +31,7 @@ class HomeActivity : DaggerAppCompatActivity() {
             viewModel = HomeViewModel()
             bottomNavigation.setOnNavigationItemSelectedListener { menuItem ->
                 when (menuItem.itemId) {
-                    R.id.library -> consume { replaceActiveFragment(NavigationItem.LIBRARY) }
+                    R.id.cloud -> consume { replaceActiveFragment(NavigationItem.CLOUD) }
                     R.id.downloaded -> consume { replaceActiveFragment(NavigationItem.DOWNLOADED) }
                     R.id.favorites -> consume { replaceActiveFragment(NavigationItem.FAVORITES) }
                     else -> false
@@ -42,7 +42,7 @@ class HomeActivity : DaggerAppCompatActivity() {
         // the View takes care of it and we only need to update the displayed Fragment.
         if (savedInstanceState == null) {
             binding.bottomNavigation.selectedItemId = when (storageManager.lastSelectedNavigationItem) {
-                NavigationItem.LIBRARY -> R.id.library
+                NavigationItem.CLOUD -> R.id.cloud
                 NavigationItem.DOWNLOADED -> R.id.downloaded
                 NavigationItem.FAVORITES -> R.id.favorites
             }
@@ -60,7 +60,7 @@ class HomeActivity : DaggerAppCompatActivity() {
             storageManager.lastSelectedNavigationItem = navigationItem
             selectedItem = navigationItem
             supportFragmentManager.beginTransaction().replace(R.id.fragment_container, when (navigationItem) {
-                NavigationItem.LIBRARY -> LibraryFragment()
+                NavigationItem.CLOUD -> CloudFragment()
                 NavigationItem.DOWNLOADED -> DownloadedFragment()
                 NavigationItem.FAVORITES -> FavoritesFragment()
             }).commit()
