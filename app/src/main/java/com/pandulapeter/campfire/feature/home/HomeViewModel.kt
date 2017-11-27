@@ -4,12 +4,13 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.Subscriber
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.util.onPropertyChanged
 
 /**
  * Handles events and logic for [HomeActivity].
  */
-class HomeViewModel(private val songInfoRepository: SongInfoRepository) : Subscriber {
+class HomeViewModel(private val songInfoRepository: SongInfoRepository) : CampfireViewModel(), Subscriber {
     val selectedItem: ObservableField<NavigationItem> = ObservableField(NavigationItem.CLOUD)
     val isSortedByTitle = ObservableBoolean(songInfoRepository.isSortedByTitle)
     val shouldHideExplicit = ObservableBoolean(songInfoRepository.shouldHideExplicit)
@@ -27,6 +28,6 @@ class HomeViewModel(private val songInfoRepository: SongInfoRepository) : Subscr
      * Marks the possible screens the user can reach using the bottom navigation of the home screen.
      */
     enum class NavigationItem {
-        CLOUD, DOWNLOADS, FAVORITES, SETTINGS
+        CLOUD, DOWNLOADS, FAVORITES
     }
 }

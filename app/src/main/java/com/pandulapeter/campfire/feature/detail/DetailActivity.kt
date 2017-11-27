@@ -2,13 +2,12 @@ package com.pandulapeter.campfire.feature.detail
 
 import android.content.Context
 import android.content.Intent
-import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v4.view.ViewPager
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import dagger.android.support.DaggerAppCompatActivity
+import com.pandulapeter.campfire.feature.shared.CampfireActivity
 import javax.inject.Inject
 
 /**
@@ -19,16 +18,16 @@ import javax.inject.Inject
  *
  * Controlled by [DetailViewModel].
  */
-class DetailActivity : DaggerAppCompatActivity() {
-
+class DetailActivity : CampfireActivity<DetailBinding, DetailViewModel>(R.layout.activity_detail) {
     @Inject lateinit var songInfoRepository: SongInfoRepository
+    override val viewModel by lazy { DetailViewModel(supportFragmentManager, songInfoRepository, intent.currentId, intent.ids) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val binding = DataBindingUtil.setContentView<DetailBinding>(this, R.layout.activity_detail)
-        binding.viewModel = DetailViewModel(supportFragmentManager, songInfoRepository, intent.currentId, intent.ids)
+        // Setup the toolbar.
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        // Setup the view pager.
         //TODO: Replace with a better solution, pay attention to state saving.
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) = Unit

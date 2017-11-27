@@ -23,7 +23,6 @@ class StorageManager(context: Context, private val gson: Gson) {
         get() = when (sharedPreferences.getInt(LAST_SELECTED_NAVIGATION_ITEM, 0)) {
             1 -> HomeViewModel.NavigationItem.DOWNLOADS
             2 -> HomeViewModel.NavigationItem.FAVORITES
-            3 -> HomeViewModel.NavigationItem.SETTINGS
             else -> HomeViewModel.NavigationItem.CLOUD
         }
         set(value) {
@@ -31,7 +30,6 @@ class StorageManager(context: Context, private val gson: Gson) {
                 HomeViewModel.NavigationItem.CLOUD -> 0
                 HomeViewModel.NavigationItem.DOWNLOADS -> 1
                 HomeViewModel.NavigationItem.FAVORITES -> 2
-                HomeViewModel.NavigationItem.SETTINGS -> 3
             }).apply()
         }
 

@@ -4,6 +4,7 @@ import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.Subscriber
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 
 /**
  * Parent class for view models that handle the Fragments that can be seen on the main screen.
@@ -12,7 +13,7 @@ import com.pandulapeter.campfire.data.repository.Subscriber
  */
 abstract class HomeFragmentViewModel(
     private val homeCallbacks: HomeFragment.HomeCallbacks?,
-    protected val songInfoRepository: SongInfoRepository) : Subscriber {
+    protected val songInfoRepository: SongInfoRepository) : CampfireViewModel(), Subscriber {
     val isLoading = ObservableBoolean(songInfoRepository.isLoading)
     val shouldShowErrorSnackbar = ObservableBoolean(false)
     val adapter = SongInfoAdapter()

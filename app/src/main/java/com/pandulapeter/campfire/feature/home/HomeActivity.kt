@@ -1,10 +1,8 @@
 package com.pandulapeter.campfire.feature.home
 
-import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
-import android.view.Gravity
 import android.view.View
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
@@ -13,12 +11,10 @@ import com.pandulapeter.campfire.data.storage.StorageManager
 import com.pandulapeter.campfire.feature.home.cloud.CloudFragment
 import com.pandulapeter.campfire.feature.home.downloads.DownloadsFragment
 import com.pandulapeter.campfire.feature.home.favorites.FavoritesFragment
-import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
 import com.pandulapeter.campfire.feature.home.shared.HomeFragment
+import com.pandulapeter.campfire.feature.shared.CampfireActivity
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.util.onPropertyChanged
-import dagger.android.support.DaggerAppCompatActivity
 import javax.inject.Inject
 
 /**
@@ -28,17 +24,14 @@ import javax.inject.Inject
  *
  * Controlled by [HomeViewModel].
  */
-class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
+class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activity_home), HomeFragment.HomeCallbacks {
     @Inject lateinit var storageManager: StorageManager
     @Inject lateinit var songInfoRepository: SongInfoRepository
-    private lateinit var binding: HomeBinding
-    private val viewModel by lazy { HomeViewModel(songInfoRepository) }
+    override val viewModel by lazy { HomeViewModel(songInfoRepository) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Inflate the layout and set up the bottom navigation listener.
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_home)
-        binding.viewModel = viewModel
+        // Set up the bottom navigation listener.
         binding.bottomNavigation.setOnNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.cloud -> consume { replaceActiveFragment(HomeViewModel.NavigationItem.CLOUD) }
@@ -59,11 +52,12 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
 
             override fun onDrawerOpened(drawerView: View) = Unit
         })
-        viewModel.selectedItem.onPropertyChanged {
-            binding.drawerLayout.setDrawerLockMode(
-                if (it == HomeViewModel.NavigationItem.SETTINGS) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNDEFINED,
-                Gravity.END)
-        }
+//TODO: Only enable view options for the home screen.
+//        viewModel.selectedItem.onPropertyChanged {
+//            binding.drawerLayout.setDrawerLockMode(
+//                if (it == HomeViewModel.NavigationItem.SETTINGS) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNDEFINED,
+//                Gravity.END)
+//        }
         // Restore the state if needed. After app start we need to manually set the selected item, otherwise
         // the View takes care of it and we only need to update the displayed Fragment.
         if (savedInstanceState == null) {
@@ -71,7 +65,6 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
                 HomeViewModel.NavigationItem.CLOUD -> R.id.cloud
                 HomeViewModel.NavigationItem.DOWNLOADS -> R.id.downloads
                 HomeViewModel.NavigationItem.FAVORITES -> R.id.favorites
-                HomeViewModel.NavigationItem.SETTINGS -> R.id.favorites
             }
         } else {
             replaceActiveFragment(storageManager.lastSelectedNavigationItem)
@@ -119,7 +112,6 @@ class HomeActivity : DaggerAppCompatActivity(), HomeFragment.HomeCallbacks {
                 HomeViewModel.NavigationItem.CLOUD -> CloudFragment()
                 HomeViewModel.NavigationItem.DOWNLOADS -> DownloadsFragment()
                 HomeViewModel.NavigationItem.FAVORITES -> FavoritesFragment()
-                HomeViewModel.NavigationItem.SETTINGS -> SettingsFragment()
             }).commit()
         }
     }
