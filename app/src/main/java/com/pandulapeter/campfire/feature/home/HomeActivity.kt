@@ -1,8 +1,10 @@
 package com.pandulapeter.campfire.feature.home
 
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
+import android.view.Gravity
 import android.view.View
 import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
@@ -44,6 +46,15 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
         }
         // Set up the side navigation drawers.
         binding.navigationView.getHeaderView(0).findViewById<TextView>(R.id.version)?.text = getString(R.string.main_version_pattern, BuildConfig.VERSION_NAME)
+        binding.navigationView.setNavigationItemSelectedListener { menuItem ->
+            //TODO: Implement a secondary layer of Fragment-based navigation.
+            when (menuItem.itemId) {
+                R.id.home -> consumeAndCloseDrawer { }
+                R.id.edit_favorites -> consumeAndCloseDrawer { Snackbar.make(getCurrentFragment()!!.view!!, "Work in progress", Snackbar.LENGTH_SHORT).show() }
+                R.id.settings -> consumeAndCloseDrawer { Snackbar.make(getCurrentFragment()!!.view!!, "Work in progress", Snackbar.LENGTH_SHORT).show() }
+                else -> false
+            }
+        }
         binding.drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
             override fun onDrawerStateChanged(newState: Int) {
                 hideKeyboard(currentFocus)
@@ -120,4 +131,10 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     }
 
     private fun getCurrentFragment() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? HomeFragment<*, *>
+
+    private fun consumeAndCloseDrawer(action: () -> Unit): Boolean {
+        action()
+        binding.drawerLayout.closeDrawer(Gravity.START)
+        return true
+    }
 }
