@@ -43,7 +43,7 @@
                 android:background="@color/primary"
                 app:itemIconTint="@color/selector_home_navigation"
                 app:itemTextColor="@color/selector_home_navigation"
-                app:menu="@menu/home" />
+                app:menu="@menu/home_bottom_navigation" />
 
         </RelativeLayout>
 
@@ -141,11 +141,14 @@
 
         </android.support.v7.widget.CardView>
 
-        <android.support.v7.widget.CardView
-            android:layout_width="@dimen/drawer_width"
+        <android.support.design.widget.NavigationView
+            android:id="@+id/navigation_view"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:fitsSystemWindows="true" />
+            android:fitsSystemWindows="true"
+            app:headerLayout="@layout/view_menu_header"
+            app:menu="@menu/home_side_navigation" />
 
     </android.support.v4.widget.DrawerLayout>
 

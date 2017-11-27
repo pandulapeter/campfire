@@ -11,6 +11,9 @@
     <string name="language_english">English</string>
     <string name="language_hungarian">Hungarian</string>
 
+    <!-- Main screen -->
+    <string name="main_version_pattern">v%s</string>
+
     <!-- Home screen -->
     <string name="home_search">Search</string>
     <string name="home_close">Close</string>

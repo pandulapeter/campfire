@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.feature.home.shared
 
-import android.annotation.SuppressLint
 import android.databinding.DataBindingUtil
 import android.support.annotation.LayoutRes
 import android.support.v7.util.DiffUtil

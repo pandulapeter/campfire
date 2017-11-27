@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.view.View
+import android.widget.TextView
+import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -40,7 +42,8 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                 else -> false
             }
         }
-        // Set up the side navigation bar.
+        // Set up the side navigation drawers.
+        binding.navigationView.getHeaderView(0).findViewById<TextView>(R.id.version)?.text = getString(R.string.main_version_pattern, BuildConfig.VERSION_NAME)
         binding.drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
             override fun onDrawerStateChanged(newState: Int) {
                 hideKeyboard(currentFocus)

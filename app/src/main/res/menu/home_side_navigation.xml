@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".feature.home.HomeActivity">
+
+    <item
+        android:id="@+id/cloud"
+        android:icon="@drawable/ic_cloud_24dp"
+        android:title="@string/home_navigation_cloud" />
+
+    <item
+        android:id="@+id/downloads"
+        android:icon="@drawable/ic_downloads_24dp"
+        android:title="@string/home_navigation_downloads" />
+
+    <item
+        android:id="@+id/favorites"
+        android:icon="@drawable/ic_favorites_24dp"
+        android:title="@string/home_navigation_favorites" />
+
+</menu>
