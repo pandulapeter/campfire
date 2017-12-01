@@ -10,6 +10,7 @@ import android.widget.CompoundButton
 import android.widget.RadioButton
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.*
 
@@ -21,7 +22,7 @@ import com.pandulapeter.campfire.util.*
  *
  * Controlled by [LibraryViewModel].
  */
-class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library) {
+class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library), SongOptionsFragment.SongActionListener {
 
     override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository, {
         binding.drawerLayout.openDrawer(GravityCompat.END)
@@ -75,17 +76,6 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         viewModel.adapter.itemActionClickListener = { position ->
             viewModel.adapter.items[position].songInfo.let { songInfo ->
                 val fragment = SongOptionsFragment.newInstance(songInfo)
-                fragment.inputChoiceListener = {
-                    when (it) {
-                        SongOptionsFragment.SongAction.RemoveFromDownloads -> viewModel.addOrRemoveSongFromDownloads(songInfo)
-                        SongOptionsFragment.SongAction.NewPlaylist -> {
-                            Snackbar.make(binding.root, R.string.work_in_progress, Snackbar.LENGTH_LONG).show()
-                        }
-                        is SongOptionsFragment.SongAction.AddToPlaylist -> {
-                            //TODO: Add / remove Playlist
-                        }
-                    }
-                }
                 fragment.show(childFragmentManager, fragment.tag)
             }
         }
@@ -101,6 +91,16 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
             return true
         }
         return false
+    }
+
+    override fun onSongAction(songInfo: SongInfo, songAction: SongOptionsFragment.SongAction) = when (songAction) {
+        SongOptionsFragment.SongAction.RemoveFromDownloads -> viewModel.addOrRemoveSongFromDownloads(songInfo)
+        SongOptionsFragment.SongAction.NewPlaylist -> {
+            Snackbar.make(binding.root, R.string.work_in_progress, Snackbar.LENGTH_LONG).show()
+        }
+        is SongOptionsFragment.SongAction.AddToPlaylist -> {
+            //TODO: Add / remove Playlist
+        }
     }
 
     private fun CompoundButton.setupWithBackingField(backingField: ObservableBoolean, shouldNegate: Boolean = false) {

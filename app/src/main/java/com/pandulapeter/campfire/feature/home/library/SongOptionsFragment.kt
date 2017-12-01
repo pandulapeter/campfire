@@ -17,25 +17,34 @@ import com.pandulapeter.campfire.data.model.SongInfo
  * A bottom sheet that allows the user to set the positionSource of the avatar image (gallery or camera).
  */
 class SongOptionsFragment : BottomSheetDialogFragment() {
-
-    var inputChoiceListener: ((SongAction) -> Unit) = {}
+    private var songActionListener: SongActionListener? = null
+    private val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
+    private val songInfo by lazy { arguments?.get(SONG_INFO) as SongInfo }
     private lateinit var binding: SongOptionsBinding
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
         binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_song_options, null, false)
-        arguments?.get(SONG_INFO)?.let { binding.songInfo = it as SongInfo }
+        binding.songInfo = songInfo
         dialog.setContentView(binding.root)
-        val params = (binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams
-        val behavior = params.behavior
-        if (behavior != null && behavior is BottomSheetBehavior<*>) {
-            binding.removeDownload.setOnClickListener {
-                inputChoiceListener(SongAction.RemoveFromDownloads)
-                behavior.state = BottomSheetBehavior.STATE_HIDDEN
+        parentFragment.let {
+            if (it is SongActionListener) {
+                songActionListener = it
             }
-            binding.newPlaylist.setOnClickListener {}
         }
+        binding.removeDownload.setOnClickListener { invokeAndClose { songActionListener?.onSongAction(songInfo, SongAction.RemoveFromDownloads) } }
+        binding.newPlaylist.setOnClickListener { invokeAndClose { songActionListener?.onSongAction(songInfo, SongAction.NewPlaylist) } }
         return dialog
+    }
+
+    private fun invokeAndClose(action: () -> Unit) {
+        action()
+        behavior.state = BottomSheetBehavior.STATE_HIDDEN
+    }
+
+    interface SongActionListener {
+
+        fun onSongAction(songInfo: SongInfo, songAction: SongAction)
     }
 
     /**
