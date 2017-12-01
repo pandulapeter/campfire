@@ -24,17 +24,17 @@ class StorageManager(context: Context, private val gson: Gson) {
         get() {
             sharedPreferences.getString(KEY_NAVIGATION_ITEM, VALUE_LIBRARY).let {
                 return when (it) {
-                    VALUE_LIBRARY -> HomeViewModel.NavigationItem.LIBRARY
-                    VALUE_SETTINGS -> HomeViewModel.NavigationItem.SETTINGS
-                    else -> HomeViewModel.NavigationItem.PLAYLIST(it.removePrefix(VALUE_PLAYLIST))
+                    VALUE_LIBRARY -> HomeViewModel.NavigationItem.Library
+                    VALUE_SETTINGS -> HomeViewModel.NavigationItem.Settings
+                    else -> HomeViewModel.NavigationItem.Playlist(it.removePrefix(VALUE_PLAYLIST))
                 }
             }
         }
         set(value) {
             sharedPreferences.edit().putString(KEY_NAVIGATION_ITEM, when (value) {
-                HomeViewModel.NavigationItem.LIBRARY -> VALUE_LIBRARY
-                HomeViewModel.NavigationItem.SETTINGS -> VALUE_SETTINGS
-                is HomeViewModel.NavigationItem.PLAYLIST -> VALUE_PLAYLIST + value.id
+                HomeViewModel.NavigationItem.Library -> VALUE_LIBRARY
+                HomeViewModel.NavigationItem.Settings -> VALUE_SETTINGS
+                is HomeViewModel.NavigationItem.Playlist -> VALUE_PLAYLIST + value.id
             }).apply()
         }
 

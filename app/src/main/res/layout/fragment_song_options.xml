@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--suppress AndroidUnknownAttribute -->
@@ -8,9 +9,12 @@
         <variable
             name="songInfo"
             type="com.pandulapeter.campfire.data.model.SongInfo" />
+
+        <import type="com.pandulapeter.campfire.R" />
+
     </data>
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/background"
@@ -18,37 +22,49 @@
         android:paddingBottom="@dimen/large_content_padding"
         android:paddingTop="@dimen/large_content_padding">
 
+        <ImageView
+            android:id="@+id/remove_download"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="@dimen/content_padding"
+            android:layout_marginStart="@dimen/content_padding"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/home_remove_download"
+            android:padding="@dimen/content_padding"
+            app:srcCompat="@drawable/ic_delete_24dp" />
+
         <TextView
+            android:id="@+id/title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/large_content_padding"
+            android:layout_alignParentStart="true"
             android:layout_marginStart="@dimen/first_keyline"
+            android:layout_toStartOf="@id/remove_download"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:text="@{songInfo.title}"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Title"
             tools:text="Title" />
 
         <TextView
+            android:id="@+id/artist"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_alignEnd="@id/title"
+            android:layout_alignStart="@id/title"
+            android:layout_below="@id/title"
             android:layout_marginBottom="@dimen/content_padding"
-            android:layout_marginEnd="@dimen/large_content_padding"
-            android:layout_marginStart="@dimen/first_keyline"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:text="@{songInfo.artist}"
             tools:text="Artist" />
 
         <TextView
-            android:id="@+id/remove_download"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/touch_target"
-            android:background="?attr/selectableItemBackground"
-            android:gravity="center_vertical"
-            android:paddingEnd="@dimen/first_keyline"
-            android:paddingStart="@dimen/first_keyline"
-            android:text="@string/home_remove_download" />
-
-        <TextView
+            android:id="@+id/header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_below="@id/artist"
             android:layout_marginBottom="@dimen/content_padding"
             android:layout_marginEnd="@dimen/large_content_padding"
             android:layout_marginStart="@dimen/first_keyline"
@@ -56,14 +72,37 @@
             android:text="@string/home_playlists"
             android:textColor="@color/accent" />
 
-        <CheckBox
+        <LinearLayout
+            android:id="@+id/playlist_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/header"
+            android:paddingEnd="@dimen/first_keyline"
+            android:paddingStart="@dimen/action_button_margin">
+
+            <CheckBox
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/touch_target"
+                android:gravity="center_vertical"
+                android:padding="@dimen/content_padding"
+                android:text="Favorites" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/new_playlist"
             android:layout_width="match_parent"
             android:layout_height="@dimen/touch_target"
-            android:layout_marginStart="@dimen/first_keyline"
+            android:layout_below="@id/playlist_container"
+            android:background="?attr/selectableItemBackground"
+            android:drawablePadding="@dimen/content_padding"
+            android:drawableStart="@{R.drawable.ic_new_playlist_24dp}"
             android:gravity="center_vertical"
-            android:padding="@dimen/content_padding"
-            android:text="Favorites" />
+            android:paddingEnd="@dimen/first_keyline"
+            android:paddingStart="@dimen/first_keyline"
+            android:text="@string/home_new_playlist"
+            tools:drawableStart="@drawable/ic_new_playlist_24dp" />
 
-    </LinearLayout>
+    </RelativeLayout>
 
 </layout>

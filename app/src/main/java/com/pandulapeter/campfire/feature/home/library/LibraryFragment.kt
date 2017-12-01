@@ -77,8 +77,11 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
                 val fragment = SongOptionsFragment.newInstance(songInfo)
                 fragment.inputChoiceListener = {
                     when (it) {
-                        SongOptionsFragment.SongAction.REMOVE_FROM_DOWNLOADS -> viewModel.addOrRemoveSongFromDownloads(songInfo)
-                        is SongOptionsFragment.SongAction.ADD_TO_PLAYLIST -> {
+                        SongOptionsFragment.SongAction.RemoveFromDownloads -> viewModel.addOrRemoveSongFromDownloads(songInfo)
+                        SongOptionsFragment.SongAction.NewPlaylist -> {
+                            Snackbar.make(binding.root, R.string.work_in_progress, Snackbar.LENGTH_LONG).show()
+                        }
+                        is SongOptionsFragment.SongAction.AddToPlaylist -> {
                             //TODO: Add / remove Playlist
                         }
                     }

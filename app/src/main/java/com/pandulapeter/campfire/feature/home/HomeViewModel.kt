@@ -19,8 +19,8 @@ class HomeViewModel(private val storageManager: StorageManager) : CampfireViewMo
      * Marks the possible screens the user can reach using the side navigation on the home screen.
      */
     sealed class NavigationItem {
-        object LIBRARY : NavigationItem()
-        object SETTINGS : NavigationItem()
-        class PLAYLIST(val id: String) : NavigationItem()
+        object Library : NavigationItem()
+        object Settings : NavigationItem()
+        class Playlist(val id: String) : NavigationItem()
     }
 }

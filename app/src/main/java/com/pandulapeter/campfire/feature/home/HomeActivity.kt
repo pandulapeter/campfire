@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.home
 
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
 import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
@@ -32,11 +33,14 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
         binding.navigationView.getHeaderView(0).findViewById<TextView>(R.id.version)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.library -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.LIBRARY) }
-                R.id.settings -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.SETTINGS) }
+                R.id.library -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Library) }
+                R.id.settings -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Settings) }
                 R.id.playlist -> consumeAndCloseDrawer {
                     //TODO: Add option to select more playlists.
-                    replaceActiveFragment(HomeViewModel.NavigationItem.PLAYLIST("favorites"))
+                    replaceActiveFragment(HomeViewModel.NavigationItem.Playlist("favorites"))
+                }
+                R.id.new_playlist -> consumeAndCloseDrawer {
+                    getCurrentFragment()?.view?.let { Snackbar.make(it, R.string.work_in_progress, Snackbar.LENGTH_SHORT).show() }
                 }
                 else -> false
             }
@@ -44,9 +48,9 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { hideKeyboard(currentFocus) })
         replaceActiveFragment(viewModel.navigationItem)
         binding.navigationView.setCheckedItem(when (viewModel.navigationItem) {
-            HomeViewModel.NavigationItem.LIBRARY -> R.id.library
-            HomeViewModel.NavigationItem.SETTINGS -> R.id.settings
-            is HomeViewModel.NavigationItem.PLAYLIST -> R.id.playlist //TODO: Add option to select more playlists.
+            HomeViewModel.NavigationItem.Library -> R.id.library
+            HomeViewModel.NavigationItem.Settings -> R.id.settings
+            is HomeViewModel.NavigationItem.Playlist -> R.id.playlist //TODO: Add option to select more playlists.
         })
     }
 
@@ -74,9 +78,9 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
         if (viewModel.navigationItem != navigationItem || getCurrentFragment() == null) {
             viewModel.navigationItem = navigationItem
             supportFragmentManager.beginTransaction().replace(R.id.fragment_container, when (navigationItem) {
-                HomeViewModel.NavigationItem.LIBRARY -> LibraryFragment()
-                HomeViewModel.NavigationItem.SETTINGS -> SettingsFragment()
-                is HomeViewModel.NavigationItem.PLAYLIST -> PlaylistFragment()
+                HomeViewModel.NavigationItem.Library -> LibraryFragment()
+                HomeViewModel.NavigationItem.Settings -> SettingsFragment()
+                is HomeViewModel.NavigationItem.Playlist -> PlaylistFragment()
             }).commit()
         }
     }

@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: "org.jetbrains.kotlin.android.extensions"
 
 android {
     compileSdkVersion 27
@@ -43,6 +44,9 @@ android {
             signingConfig signingConfigs.internal
         }
     }
+}
+androidExtensions {
+    experimental = true
 }
 repositories {
     mavenCentral()

@@ -18,22 +18,22 @@ import com.pandulapeter.campfire.data.model.SongInfo
  */
 class SongOptionsFragment : BottomSheetDialogFragment() {
 
-    private lateinit var binding: SongOptionsBinding
     var inputChoiceListener: ((SongAction) -> Unit) = {}
-    var data: SongInfo? = null
+    private lateinit var binding: SongOptionsBinding
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
         binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_song_options, null, false)
-        binding.songInfo = data
+        arguments?.get(SONG_INFO)?.let { binding.songInfo = it as SongInfo }
         dialog.setContentView(binding.root)
         val params = (binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams
         val behavior = params.behavior
         if (behavior != null && behavior is BottomSheetBehavior<*>) {
             binding.removeDownload.setOnClickListener {
-                inputChoiceListener(SongAction.REMOVE_FROM_DOWNLOADS)
+                inputChoiceListener(SongAction.RemoveFromDownloads)
                 behavior.state = BottomSheetBehavior.STATE_HIDDEN
             }
+            binding.newPlaylist.setOnClickListener {}
         }
         return dialog
     }
@@ -42,11 +42,14 @@ class SongOptionsFragment : BottomSheetDialogFragment() {
      * Marks the possible actions the user can do with a song.
      */
     sealed class SongAction {
-        object REMOVE_FROM_DOWNLOADS : SongAction()
-        class ADD_TO_PLAYLIST(val playlistId: String) : SongAction()
+        object RemoveFromDownloads : SongAction()
+        object NewPlaylist : SongAction()
+        class AddToPlaylist(val id: String) : SongAction()
     }
 
     companion object {
-        fun newInstance(songInfo: SongInfo) = SongOptionsFragment().apply { data = songInfo }
+        private const val SONG_INFO = "song_info"
+
+        fun newInstance(songInfo: SongInfo) = SongOptionsFragment().apply { arguments = Bundle().apply { putParcelable(SONG_INFO, songInfo) } }
     }
 }

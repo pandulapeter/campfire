@@ -33,9 +33,9 @@
                     android:title="Favorites" />
 
                 <item
-                    android:id="@+id/add_playlist"
-                    android:icon="@drawable/ic_add_24dp"
-                    android:title="@string/home_add_playlist" />
+                    android:id="@+id/new_playlist"
+                    android:icon="@drawable/ic_new_playlist_24dp"
+                    android:title="@string/home_new_playlist" />
 
             </group>
 
