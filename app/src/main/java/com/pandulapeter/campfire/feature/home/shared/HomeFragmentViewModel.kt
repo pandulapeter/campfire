@@ -31,10 +31,6 @@ abstract class HomeFragmentViewModel(
         homeCallbacks?.showMenu()
     }
 
-    fun showViewOptions() {
-        homeCallbacks?.showViewOptions()
-    }
-
     fun addSongToFavorites(id: String, position: Int? = null) = songInfoRepository.addSongToFavorites(id, position)
 
     //TODO: Handle special characters, prioritize results that begin with the query.

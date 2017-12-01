@@ -14,10 +14,12 @@ import com.pandulapeter.campfire.util.onPropertyChanged
  */
 class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
     val searchInputVisible = ObservableBoolean(songInfoRepository.cloudQuery.isNotEmpty())
+    val isSortedByTitle = ObservableBoolean(songInfoRepository.isSortedByTitle)
     val query = ObservableField(songInfoRepository.cloudQuery)
 
     init {
         searchInputVisible.onPropertyChanged { query.set("") }
+        isSortedByTitle.onPropertyChanged { songInfoRepository.isSortedByTitle = it }
         query.onPropertyChanged { songInfoRepository.cloudQuery = it }
     }
 
@@ -25,7 +27,6 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepos
         val isTinted = songInfoRepository.isSongDownloads(songInfo.id)
         SongInfoViewModel(
             songInfo = songInfo,
-            actionDescription = if (isTinted) R.string.cloud_delete_from_downloads_songs else R.string.cloud_download_song,
             actionIcon = R.drawable.ic_downloads_24dp,
             isActionTinted = isTinted)
     }

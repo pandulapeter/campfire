@@ -17,7 +17,6 @@ class PlaylistViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepo
     override fun getAdapterItems() = songInfoRepository.getFavoriteSongs().map { songInfo ->
         SongInfoViewModel(
             songInfo = songInfo,
-            actionDescription = R.string.favorites_drag_item_to_rearrange,
             actionIcon = R.drawable.ic_drag_handle_24dp,
             isActionTinted = false)
     }

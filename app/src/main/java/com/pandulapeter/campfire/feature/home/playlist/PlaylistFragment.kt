@@ -42,10 +42,6 @@ class PlaylistFragment : HomeFragment<PlaylistBinding, PlaylistViewModel>(R.layo
                 viewHolder?.adapterPosition?.let { position ->
                     val songInfo = viewModel.adapter.items[position].songInfo
                     viewModel.removeSongFromFavorites(songInfo.id)
-                    Snackbar
-                        .make(binding.root, getString(R.string.favorites_song_removed, songInfo.title), Snackbar.LENGTH_LONG)
-                        .setAction(R.string.undo, { viewModel.addSongToFavorites(songInfo.id, position) })
-                        .show()
                 }
             }
 
@@ -60,8 +56,4 @@ class PlaylistFragment : HomeFragment<PlaylistBinding, PlaylistViewModel>(R.layo
     override fun getRecyclerView() = binding.recyclerView
 
     override fun getSwipeRefreshLayout() = binding.swipeRefreshLayout
-
-    override fun onBackPressed() = false
-
-    override fun closeSearchInput() = Unit
 }

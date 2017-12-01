@@ -31,9 +31,11 @@ class LibraryFragment : HomeFragment<LibraryBinding, LibraryViewModel>(R.layout.
 
     override fun getSwipeRefreshLayout() = binding.swipeRefreshLayout
 
-    override fun onBackPressed() = binding.searchTitle.searchInputVisible
-
-    override fun closeSearchInput() {
-        binding.searchTitle.searchInputVisible = false
+    override fun onBackPressed(): Boolean {
+        if (viewModel.searchInputVisible.get()) {
+            viewModel.searchInputVisible.set(false)
+            return true
+        }
+        return false
     }
 }
