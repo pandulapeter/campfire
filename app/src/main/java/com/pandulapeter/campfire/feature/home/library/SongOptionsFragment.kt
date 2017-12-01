@@ -17,14 +17,15 @@ import com.pandulapeter.campfire.data.model.SongInfo
  * A bottom sheet that allows the user to set the positionSource of the avatar image (gallery or camera).
  */
 class SongOptionsFragment : BottomSheetDialogFragment() {
-    private var songActionListener: SongActionListener? = null
-    private val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
-    private val songInfo by lazy { arguments?.get(SONG_INFO) as SongInfo }
     private lateinit var binding: SongOptionsBinding
+    private lateinit var songInfo: SongInfo
+    private val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
+    private var songActionListener: SongActionListener? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
         binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_song_options, null, false)
+        songInfo = savedInstanceState?.let { savedInstanceState.getParcelable(SONG_INFO) as SongInfo } ?: arguments?.getParcelable(SONG_INFO) as SongInfo
         binding.songInfo = songInfo
         dialog.setContentView(binding.root)
         parentFragment.let {
@@ -35,6 +36,11 @@ class SongOptionsFragment : BottomSheetDialogFragment() {
         binding.removeDownload.setOnClickListener { invokeAndClose { songActionListener?.onSongAction(songInfo, SongAction.RemoveFromDownloads) } }
         binding.newPlaylist.setOnClickListener { invokeAndClose { songActionListener?.onSongAction(songInfo, SongAction.NewPlaylist) } }
         return dialog
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putParcelable(SONG_INFO, songInfo)
     }
 
     private fun invokeAndClose(action: () -> Unit) {

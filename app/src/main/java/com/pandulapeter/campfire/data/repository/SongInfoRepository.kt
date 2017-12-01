@@ -88,7 +88,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
 
     //TODO: Also save the SongDetail object.
     fun addSongToDownloads(songInfo: SongInfo) {
-        storageManager.downloads = storageManager.downloads.filter { it.id != songInfo.id }.toMutableList().apply { add(DownloadedSong(songInfo.id, songInfo.version)) }
+        storageManager.downloads = storageManager.downloads.filter { it.id != songInfo.id }.toMutableList().apply { add(DownloadedSong(songInfo.id, songInfo.version ?: 0)) }
         notifySubscribers()
     }
 
@@ -139,7 +139,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
 
     private fun notifySubscribers() = subscribers.forEach { it.onUpdate() }
 
-    private fun List<SongInfo>.filterExplicit() = if (shouldHideExplicit) filter { !it.isExplicit } else this
+    private fun List<SongInfo>.filterExplicit() = if (shouldHideExplicit) filter { it.isExplicit != true } else this
 
     private fun List<SongInfo>.filterDownloaded() = if (shouldShowDownloadedOnly) filter { isSongDownloaded(it.id) } else this
 

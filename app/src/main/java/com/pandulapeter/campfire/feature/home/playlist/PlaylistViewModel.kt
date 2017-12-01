@@ -20,7 +20,7 @@ class PlaylistViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepo
             SongInfoViewModel(
                 songInfo,
                 downloadedSongIds.contains(songInfo.id),
-                downloadedSongs.firstOrNull { songInfo.id == it.id }?.version?.compareTo(songInfo.version) ?: 0 < 0)
+                downloadedSongs.firstOrNull { songInfo.id == it.id }?.version?.compareTo(songInfo.version ?: 0) ?: 0 < 0)
         }
     }
 

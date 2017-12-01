@@ -101,6 +101,7 @@
             android:paddingEnd="@dimen/first_keyline"
             android:paddingStart="@dimen/first_keyline"
             android:text="@string/home_new_playlist"
+            android:textColor="@android:color/white"
             tools:drawableStart="@drawable/ic_new_playlist_24dp" />
 
     </RelativeLayout>
