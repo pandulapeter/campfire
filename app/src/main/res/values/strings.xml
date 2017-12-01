@@ -28,5 +28,6 @@
     <string name="home_sort_by_artist">Artist</string>
     <string name="home_filter_by_language">Filter by language</string>
     <string name="home_more">More</string>
+    <string name="home_new_version_available">New version available</string>
 
 </resources>

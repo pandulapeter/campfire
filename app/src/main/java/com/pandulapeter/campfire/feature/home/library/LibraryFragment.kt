@@ -50,7 +50,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         }
         // Set up list item action listeners.
         viewModel.adapter.itemActionClickListener = { position ->
-            viewModel.adapter.items[position].let { viewModel.addOrRemoveSongFromDownloads(it.songInfo.id) }
+            viewModel.adapter.items[position].let { viewModel.addOrRemoveSongFromDownloads(it.songInfo) }
         }
     }
 

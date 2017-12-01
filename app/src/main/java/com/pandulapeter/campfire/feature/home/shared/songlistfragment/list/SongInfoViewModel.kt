@@ -7,5 +7,5 @@ import com.pandulapeter.campfire.data.model.SongInfo
  */
 data class SongInfoViewModel(
     val songInfo: SongInfo,
-    val isDownloaded: Boolean = true,
-    val shouldBeUpdated: Boolean = false)
+    val isDownloaded: Boolean,
+    val shouldBeUpdated: Boolean)

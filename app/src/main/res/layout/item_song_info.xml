@@ -53,6 +53,7 @@
                 tools:text="Song title" />
 
             <TextView
+                android:id="@+id/artist"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/title"
@@ -64,6 +65,20 @@
                 android:maxLines="2"
                 android:text="@{viewModel.songInfo.artist}"
                 tools:text="Artist" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/artist"
+                android:layout_marginTop="@dimen/card_text_margin"
+                android:ellipsize="end"
+                android:gravity="end"
+                android:maxLines="2"
+                android:text="@string/home_new_version_available"
+                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                android:textColor="@color/accent"
+                android:visibility="@{viewModel.isDownloaded &amp;&amp; viewModel.shouldBeUpdated ? View.VISIBLE : View.GONE}"
+                tools:visibility="visible" />
 
         </RelativeLayout>
 

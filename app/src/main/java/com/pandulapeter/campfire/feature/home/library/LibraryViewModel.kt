@@ -15,21 +15,27 @@ import com.pandulapeter.campfire.util.onPropertyChanged
 class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                        songInfoRepository: SongInfoRepository,
                        private val showViewOptionsCallback: () -> Unit) : SongListViewModel(homeCallbacks, songInfoRepository) {
-    val searchInputVisible = ObservableBoolean(songInfoRepository.cloudQuery.isNotEmpty())
+    val searchInputVisible = ObservableBoolean(songInfoRepository.query.isNotEmpty())
     val isLoading = ObservableBoolean(songInfoRepository.isLoading)
     val isSortedByTitle = ObservableBoolean(songInfoRepository.isSortedByTitle)
-    val query = ObservableField(songInfoRepository.cloudQuery)
+    val query = ObservableField(songInfoRepository.query)
     val shouldShowErrorSnackbar = ObservableBoolean(false)
 
     init {
         searchInputVisible.onPropertyChanged { query.set("") }
         isSortedByTitle.onPropertyChanged { songInfoRepository.isSortedByTitle = it }
-        query.onPropertyChanged { songInfoRepository.cloudQuery = it }
+        query.onPropertyChanged { songInfoRepository.query = it }
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
-        val downloadedSongIds = songInfoRepository.getDownloadsSongs().map { it.id }
-        return songInfoRepository.getCloudSongs().filter(query.get()).map { SongInfoViewModel(it, downloadedSongIds.contains(it.id)) }
+        val downloadedSongs = songInfoRepository.getDownloadedSongs()
+        val downloadedSongIds = downloadedSongs.map { it.id }
+        return songInfoRepository.getLibrarySongs().filter(query.get()).map { songInfo ->
+            SongInfoViewModel(
+                songInfo,
+                downloadedSongIds.contains(songInfo.id),
+                downloadedSongs.firstOrNull { songInfo.id == it.id }?.version?.compareTo(songInfo.version) ?: 0 < 0)
+        }
     }
 
     override fun onUpdate() {
@@ -41,11 +47,11 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
 
     fun addSongToFavorites(id: String, position: Int? = null) = songInfoRepository.addSongToFavorites(id, position)
 
-    fun addOrRemoveSongFromDownloads(id: String) =
-        if (songInfoRepository.isSongDownloads(id)) {
-            songInfoRepository.removeSongFromDownloads(id)
+    fun addOrRemoveSongFromDownloads(songInfo: SongInfo) =
+        if (songInfoRepository.isSongDownloaded(songInfo.id)) {
+            songInfoRepository.removeSongFromDownloads(songInfo.id)
         } else {
-            songInfoRepository.addSongToDownloads(id)
+            songInfoRepository.addSongToDownloads(songInfo)
         }
 
     fun showViewOptions() = showViewOptionsCallback()

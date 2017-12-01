@@ -13,7 +13,16 @@ import java.util.Collections
 class PlaylistViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : SongListViewModel(homeCallbacks, songInfoRepository) {
     val shouldShowShuffle = ObservableBoolean(false)
 
-    override fun getAdapterItems() = songInfoRepository.getFavoriteSongs().map { SongInfoViewModel(it) }
+    override fun getAdapterItems(): List<SongInfoViewModel> {
+        val downloadedSongs = songInfoRepository.getDownloadedSongs()
+        val downloadedSongIds = downloadedSongs.map { it.id }
+        return songInfoRepository.getFavoriteSongs().map { songInfo ->
+            SongInfoViewModel(
+                songInfo,
+                downloadedSongIds.contains(songInfo.id),
+                downloadedSongs.firstOrNull { songInfo.id == it.id }?.version?.compareTo(songInfo.version) ?: 0 < 0)
+        }
+    }
 
     override fun onUpdate() {
         super.onUpdate()
