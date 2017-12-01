@@ -18,12 +18,14 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
     val searchInputVisible = ObservableBoolean(songInfoRepository.query.isNotEmpty())
     val isLoading = ObservableBoolean(songInfoRepository.isLoading)
     val isSortedByTitle = ObservableBoolean(songInfoRepository.isSortedByTitle)
+    val shouldShowDownloadedOnly = ObservableBoolean(songInfoRepository.shouldShowDownloadedOnly)
     val query = ObservableField(songInfoRepository.query)
     val shouldShowErrorSnackbar = ObservableBoolean(false)
 
     init {
         searchInputVisible.onPropertyChanged { query.set("") }
         isSortedByTitle.onPropertyChanged { songInfoRepository.isSortedByTitle = it }
+        shouldShowDownloadedOnly.onPropertyChanged { songInfoRepository.shouldShowDownloadedOnly = it }
         query.onPropertyChanged { songInfoRepository.query = it }
     }
 

@@ -34,6 +34,12 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             storageManager.isSortedByTitle = value
             notifySubscribers()
         }
+    var shouldShowDownloadedOnly = storageManager.shouldShowDownloadedOnly
+        set(value) {
+            field = value
+            storageManager.shouldShowDownloadedOnly = value
+            notifySubscribers()
+        }
     var shouldHideExplicit = storageManager.shouldHideExplicit
         set(value) {
             field = value
@@ -74,7 +80,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             })
     }
 
-    fun getLibrarySongs() = dataSet.filterExplicit().sort().toList()
+    fun getLibrarySongs() = dataSet.filterExplicit().filterDownloaded().sort().toList()
 
     fun getDownloadedSongs() = storageManager.downloads
 
@@ -94,7 +100,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
         }
     }
 
-    fun getFavoriteSongs() = storageManager.favorites.mapNotNull { id -> dataSet.find { id == it.id } }.filterExplicit()
+    fun getFavoriteSongs() = storageManager.favorites.mapNotNull { id -> dataSet.find { id == it.id } }.filterExplicit().filterDownloaded()
 
     fun isSongFavorite(id: String) = storageManager.favorites.contains(id)
 
@@ -134,6 +140,8 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     private fun notifySubscribers() = subscribers.forEach { it.onUpdate() }
 
     private fun List<SongInfo>.filterExplicit() = if (shouldHideExplicit) filter { !it.isExplicit } else this
+
+    private fun List<SongInfo>.filterDownloaded() = if (shouldShowDownloadedOnly) filter { isSongDownloaded(it.id) } else this
 
     //TODO: Handle special characters
     private fun List<SongInfo>.sort() = sortedBy { if (isSortedByTitle) it.title else it.artist }

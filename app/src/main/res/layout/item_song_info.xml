@@ -67,12 +67,13 @@
                 tools:text="Artist" />
 
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
                 android:layout_below="@id/artist"
+                android:layout_marginEnd="@dimen/content_padding"
                 android:layout_marginTop="@dimen/card_text_margin"
                 android:ellipsize="end"
-                android:gravity="end"
                 android:maxLines="2"
                 android:text="@string/home_new_version_available"
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"

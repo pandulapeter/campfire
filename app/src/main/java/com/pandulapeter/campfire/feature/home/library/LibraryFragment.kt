@@ -1,16 +1,17 @@
 package com.pandulapeter.campfire.feature.home.library
 
+import android.databinding.ObservableBoolean
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
+import android.support.v7.widget.SwitchCompat
 import android.view.View
+import android.widget.CompoundButton
+import android.widget.RadioButton
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
-import com.pandulapeter.campfire.util.addDrawerListener
-import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.util.onEventTriggered
-import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.*
 
 /**
  * Displays the list of all available songs from the backend. The list is searchable and filterable
@@ -35,6 +36,17 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         super.onViewCreated(view, savedInstanceState)
         // Set up the side navigation drawer.
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { hideKeyboard(activity?.currentFocus) })
+        binding.navigationView.setNavigationItemSelectedListener {
+            when (it.itemId) {
+                R.id.downloaded_only -> consume { viewModel.shouldShowDownloadedOnly.set(!viewModel.shouldShowDownloadedOnly.get()) }
+                R.id.sort_by_title -> consume { if (!viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(true) }
+                R.id.sort_by_artist -> consume { if (viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(false) }
+                else -> false
+            }
+        }
+        (binding.navigationView.menu.findItem(R.id.downloaded_only).actionView as SwitchCompat).setupWithBackingField(viewModel.shouldShowDownloadedOnly)
+        (binding.navigationView.menu.findItem(R.id.sort_by_title).actionView as RadioButton).setupWithBackingField(viewModel.isSortedByTitle)
+        (binding.navigationView.menu.findItem(R.id.sort_by_artist).actionView as RadioButton).setupWithBackingField(viewModel.isSortedByTitle, true)
         // Initialize the pull-to-refresh functionality.
         binding.swipeRefreshLayout.run {
             setOnRefreshListener { viewModel.forceRefresh() }
@@ -64,5 +76,18 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
             return true
         }
         return false
+    }
+
+    private fun CompoundButton.setupWithBackingField(backingField: ObservableBoolean, shouldNegate: Boolean = false) {
+        //TODO: There is a shorter solution using logical operators, don't be lazy.
+        if (shouldNegate) {
+            isChecked = !backingField.get()
+            setOnCheckedChangeListener { _, isChecked -> backingField.set(!isChecked) }
+            backingField.onPropertyChanged { isChecked = !it }
+        } else {
+            isChecked = backingField.get()
+            setOnCheckedChangeListener { _, isChecked -> backingField.set(isChecked) }
+            backingField.onPropertyChanged { isChecked = it }
+        }
     }
 }

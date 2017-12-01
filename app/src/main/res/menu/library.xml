@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/downloaded_only"
         android:title="@string/home_downloaded_only"
         app:actionLayout="@layout/widget_switch" />
 
@@ -11,10 +12,12 @@
         <menu>
 
             <item
+                android:id="@+id/sort_by_title"
                 android:title="@string/home_sort_by_title"
                 app:actionLayout="@layout/widget_radio_button" />
 
             <item
+                android:id="@+id/sort_by_artist"
                 android:title="@string/home_sort_by_artist"
                 app:actionLayout="@layout/widget_radio_button" />
 

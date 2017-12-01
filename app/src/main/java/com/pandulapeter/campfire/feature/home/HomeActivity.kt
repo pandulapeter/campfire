@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.feature.home
 
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
-import android.view.Gravity
 import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
@@ -86,6 +85,6 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
 
     private fun consumeAndCloseDrawer(action: () -> Unit) = consume {
         action()
-        binding.drawerLayout.closeDrawer(Gravity.START)
+        binding.drawerLayout.closeDrawer(GravityCompat.START)
     }
 }
