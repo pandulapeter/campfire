@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--suppress AndroidUnknownAttribute -->
+    <data class=".SongOptionsBinding">
+
+        <variable
+            name="songInfo"
+            type="com.pandulapeter.campfire.data.model.SongInfo" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/large_content_padding"
+        android:paddingTop="@dimen/large_content_padding">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/large_content_padding"
+            android:layout_marginStart="@dimen/first_keyline"
+            android:text="@{songInfo.title}"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Title"
+            tools:text="Title" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/content_padding"
+            android:layout_marginEnd="@dimen/large_content_padding"
+            android:layout_marginStart="@dimen/first_keyline"
+            android:text="@{songInfo.artist}"
+            tools:text="Artist" />
+
+        <TextView
+            android:id="@+id/remove_download"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/touch_target"
+            android:background="?attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:paddingEnd="@dimen/first_keyline"
+            android:paddingStart="@dimen/first_keyline"
+            android:text="@string/home_remove_download" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/content_padding"
+            android:layout_marginEnd="@dimen/large_content_padding"
+            android:layout_marginStart="@dimen/first_keyline"
+            android:layout_marginTop="@dimen/content_padding"
+            android:text="@string/home_playlists"
+            android:textColor="@color/accent" />
+
+        <CheckBox
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/touch_target"
+            android:layout_marginStart="@dimen/first_keyline"
+            android:gravity="center_vertical"
+            android:padding="@dimen/content_padding"
+            android:text="Favorites" />
+
+    </LinearLayout>
+
+</layout>

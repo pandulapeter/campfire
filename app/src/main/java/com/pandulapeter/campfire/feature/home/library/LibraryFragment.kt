@@ -73,7 +73,18 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         }
         // Set up list item action listeners.
         viewModel.adapter.itemActionClickListener = { position ->
-            viewModel.adapter.items[position].let { viewModel.addOrRemoveSongFromDownloads(it.songInfo) }
+            viewModel.adapter.items[position].songInfo.let { songInfo ->
+                val fragment = SongOptionsFragment.newInstance(songInfo)
+                fragment.inputChoiceListener = {
+                    when (it) {
+                        SongOptionsFragment.SongAction.REMOVE_FROM_DOWNLOADS -> viewModel.addOrRemoveSongFromDownloads(songInfo)
+                        is SongOptionsFragment.SongAction.ADD_TO_PLAYLIST -> {
+                            //TODO: Add / remove Playlist
+                        }
+                    }
+                }
+                fragment.show(childFragmentManager, fragment.tag)
+            }
         }
     }
 

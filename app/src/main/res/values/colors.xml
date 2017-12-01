@@ -3,9 +3,10 @@
 
     <!-- General -->
     <color name="accent">#FFC107</color>
+    <color name="background">#303030</color>
 
     <!-- Library -->
     <color name="card_song_downloaded">#424242</color>
-    <color name="card_song_not_downloaded">#303030</color>
+    <color name="card_song_not_downloaded">@color/background</color>
 
 </resources>

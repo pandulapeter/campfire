@@ -4,6 +4,7 @@
     <!-- General -->
     <dimen name="content_padding">8dp</dimen>
     <dimen name="large_content_padding">16dp</dimen>
+    <dimen name="touch_target">48dp</dimen>
     <dimen name="first_keyline">16dp</dimen>
     <dimen name="second_keyline">72dp</dimen>
 
@@ -13,7 +14,7 @@
     <dimen name="menu_margin">-4dp</dimen>
     <dimen name="title_margin">56dp</dimen>
     <dimen name="drawer_header_height">156dp</dimen>
-    <dimen name="drawer_width">192dp</dimen>
+    <dimen name="drawer_width">240dp</dimen>
     <dimen name="card_text_margin">2dp</dimen>
 
 </resources>

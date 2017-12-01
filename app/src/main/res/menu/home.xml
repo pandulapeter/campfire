@@ -7,7 +7,6 @@
         android:id="@+id/main"
         android:checkableBehavior="single">
 
-
         <item
             android:id="@+id/library"
             android:icon="@drawable/ic_library_24dp"
@@ -32,6 +31,11 @@
                     android:id="@+id/playlist"
                     android:icon="@drawable/ic_playlist_24dp"
                     android:title="Favorites" />
+
+                <item
+                    android:id="@+id/add_playlist"
+                    android:icon="@drawable/ic_add_24dp"
+                    android:title="@string/home_add_playlist" />
 
             </group>
 
