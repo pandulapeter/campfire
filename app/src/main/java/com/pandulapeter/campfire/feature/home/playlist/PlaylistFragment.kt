@@ -1,13 +1,12 @@
 package com.pandulapeter.campfire.feature.home.playlist
 
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.home.shared.HomeFragment
+import com.pandulapeter.campfire.feature.home.shared.homefragment.list.SongListFragment
 import com.pandulapeter.campfire.util.consume
 
 /**
@@ -17,15 +16,16 @@ import com.pandulapeter.campfire.util.consume
  *
  * Controlled by [PlaylistViewModel].
  */
-class PlaylistFragment : HomeFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist) {
+class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist) {
 
-    override val viewModel by lazy { PlaylistViewModel(callbacks, songInfoRepository) }
+    override fun createViewModel() = PlaylistViewModel(callbacks, songInfoRepository)
+
+    override fun getRecyclerView() = binding.recyclerView
 
     //TODO: Add empty state for not having any favorites (or everything being filtered out).
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
         // Setup swipe-to-dismiss functionality.
-        //TODO: Change the elecation of the card that's being dragged.
+        //TODO: Change the elevation of the card that's being dragged.
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN,
             ItemTouchHelper.START or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT or ItemTouchHelper.END) {
@@ -49,11 +49,7 @@ class PlaylistFragment : HomeFragment<PlaylistBinding, PlaylistViewModel>(R.layo
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Setup list item click listeners.
         viewModel.adapter.itemActionTouchListener = { position ->
-            itemTouchHelper.startDrag(getRecyclerView().findViewHolderForAdapterPosition(position))
+            itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
         }
     }
-
-    override fun getRecyclerView() = binding.recyclerView
-
-    override fun getSwipeRefreshLayout() = binding.swipeRefreshLayout
 }

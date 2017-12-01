@@ -3,26 +3,24 @@ package com.pandulapeter.campfire.feature.home.playlist
 import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.feature.home.shared.HomeFragment
-import com.pandulapeter.campfire.feature.home.shared.HomeFragmentViewModel
-import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
+import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
+import com.pandulapeter.campfire.feature.home.shared.homefragment.list.SongInfoViewModel
+import com.pandulapeter.campfire.feature.home.shared.homefragment.list.SongListViewModel
 import java.util.Collections
 
 /**
  * Handles events and logic for [PlaylistFragment].
  */
-class PlaylistViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
+class PlaylistViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : SongListViewModel(homeCallbacks, songInfoRepository) {
     val shouldShowShuffle = ObservableBoolean(false)
 
-    override fun getAdapterItems() = songInfoRepository.getFavoriteSongs().map { songInfo ->
-        SongInfoViewModel(
-            songInfo = songInfo,
-            actionIcon = R.drawable.ic_drag_handle_24dp,
-            isActionTinted = false)
-    }
-
     override fun onUpdate() {
-        super.onUpdate()
+        adapter.items = songInfoRepository.getFavoriteSongs().map { songInfo ->
+            SongInfoViewModel(
+                songInfo = songInfo,
+                actionIcon = R.drawable.ic_drag_handle_24dp,
+                isActionTinted = false)
+        }
         shouldShowShuffle.set(adapter.itemCount > SongInfoRepository.SHUFFLE_LIMIT)
     }
 
