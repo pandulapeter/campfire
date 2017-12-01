@@ -12,7 +12,9 @@ import com.pandulapeter.campfire.util.onPropertyChanged
 /**
  * Handles events and logic for [LibraryFragment].
  */
-class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
+class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
+                       songInfoRepository: SongInfoRepository,
+                       private val showViewOptionsCallback: () -> Unit) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
     val searchInputVisible = ObservableBoolean(songInfoRepository.cloudQuery.isNotEmpty())
     val isSortedByTitle = ObservableBoolean(songInfoRepository.isSortedByTitle)
     val query = ObservableField(songInfoRepository.cloudQuery)
@@ -37,4 +39,6 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepos
         } else {
             songInfoRepository.addSongToDownloads(id)
         }
+
+    fun showViewOptions() = showViewOptionsCallback()
 }

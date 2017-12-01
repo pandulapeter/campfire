@@ -3,7 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".feature.home.HomeActivity">
 
-    <group android:checkableBehavior="single">
+    <group
+        android:id="@+id/main"
+        android:checkableBehavior="single">
+
 
         <item
             android:id="@+id/library"
@@ -15,11 +18,25 @@
             android:icon="@drawable/ic_settings_24dp"
             android:title="@string/home_settings" />
 
-        <item
-            android:id="@+id/playlist"
-            android:icon="@drawable/ic_playlist_24dp"
-            android:title="@string/home_playlist" />
-
     </group>
+
+    <item android:title="@string/home_playlist">
+
+        <menu>
+
+            <group
+                android:id="@+id/playlists"
+                android:checkableBehavior="single">
+
+                <item
+                    android:id="@+id/playlist"
+                    android:icon="@drawable/ic_playlist_24dp"
+                    android:title="Favorites" />
+
+            </group>
+
+        </menu>
+
+    </item>
 
 </menu>

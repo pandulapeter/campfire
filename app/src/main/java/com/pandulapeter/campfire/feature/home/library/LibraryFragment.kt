@@ -1,10 +1,12 @@
 package com.pandulapeter.campfire.feature.home.library
 
 import android.os.Bundle
+import android.support.v4.view.GravityCompat
 import android.view.View
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.home.shared.HomeFragment
+import com.pandulapeter.campfire.util.hideKeyboard
 
 /**
  * Displays the list of all available songs from the backend. The list is searchable and filterable
@@ -15,7 +17,12 @@ import com.pandulapeter.campfire.feature.home.shared.HomeFragment
  */
 class LibraryFragment : HomeFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library) {
 
-    override val viewModel by lazy { LibraryViewModel(callbacks, songInfoRepository) }
+    override val viewModel by lazy {
+        LibraryViewModel(callbacks, songInfoRepository, {
+            binding.drawerLayout.openDrawer(GravityCompat.END)
+            hideKeyboard(activity?.currentFocus)
+        })
+    }
 
     //TODO: Add error state for incorrect downloads.
     //TODO: Add no-results state for the case when everything is filtered out.

@@ -44,17 +44,12 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
             }
         }
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { hideKeyboard(currentFocus) })
-        // Restore the state if needed. After app start we need to manually set the selected item, otherwise
-        // the View takes care of it and we only need to update the displayed Fragment.
-        if (savedInstanceState == null) {
-            binding.navigationView.setCheckedItem(when (viewModel.navigationItem) {
-                HomeViewModel.NavigationItem.LIBRARY -> R.id.library
-                HomeViewModel.NavigationItem.SETTINGS -> R.id.settings
-                is HomeViewModel.NavigationItem.PLAYLIST -> R.id.playlist //TODO: Add option to select more playlists.
-            })
-        } else {
-            replaceActiveFragment(viewModel.navigationItem)
-        }
+        replaceActiveFragment(viewModel.navigationItem)
+        binding.navigationView.setCheckedItem(when (viewModel.navigationItem) {
+            HomeViewModel.NavigationItem.LIBRARY -> R.id.library
+            HomeViewModel.NavigationItem.SETTINGS -> R.id.settings
+            is HomeViewModel.NavigationItem.PLAYLIST -> R.id.playlist //TODO: Add option to select more playlists.
+        })
     }
 
 

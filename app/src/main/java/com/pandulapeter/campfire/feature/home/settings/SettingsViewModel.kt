@@ -5,4 +5,8 @@ import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 /**
  * Handles events and logic for [SettingsFragment].
  */
-class SettingsViewModel : CampfireViewModel()
+class SettingsViewModel : CampfireViewModel() {
+    fun showMenu() {
+        //TODO
+    }
+}
