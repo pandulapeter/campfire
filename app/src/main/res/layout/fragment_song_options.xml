@@ -95,11 +95,11 @@
             android:layout_height="@dimen/touch_target"
             android:layout_below="@id/playlist_container"
             android:background="?attr/selectableItemBackground"
-            android:drawablePadding="@dimen/content_padding"
+            android:drawablePadding="12dp"
             android:drawableStart="@{R.drawable.ic_new_playlist_24dp}"
             android:gravity="center_vertical"
             android:paddingEnd="@dimen/first_keyline"
-            android:paddingStart="@dimen/first_keyline"
+            android:paddingStart="14dp"
             android:text="@string/home_new_playlist"
             android:textColor="@android:color/white"
             tools:drawableStart="@drawable/ic_new_playlist_24dp" />
