@@ -75,7 +75,9 @@
                             android:layout_marginStart="@dimen/title_margin"
                             android:layout_toStartOf="@id/view_options"
                             android:clipChildren="false"
-                            app:displayedChild="@{viewModel.searchInputVisible ? 1 : 0}">
+                            android:inAnimation="@android:anim/fade_in"
+                            android:outAnimation="@android:anim/fade_out"
+                            app:displayedChild="@{viewModel.isSearchInputVisible ? 1 : 0}">
 
                             <RelativeLayout
                                 android:layout_width="match_parent"
@@ -91,6 +93,7 @@
                                     android:layout_centerVertical="true"
                                     android:background="?attr/selectableItemBackgroundBorderless"
                                     android:contentDescription="@string/home_search"
+                                    android:onClick="@{() -> viewModel.showOrHideSearchInput()}"
                                     android:padding="@dimen/action_button_padding"
                                     app:srcCompat="@drawable/ic_search_24dp" />
 
@@ -121,6 +124,7 @@
                                     android:layout_centerVertical="true"
                                     android:background="?attr/selectableItemBackgroundBorderless"
                                     android:contentDescription="@string/home_close"
+                                    android:onClick="@{() -> viewModel.showOrHideSearchInput()}"
                                     android:padding="@dimen/action_button_padding"
                                     app:srcCompat="@drawable/ic_close_24dp" />
 

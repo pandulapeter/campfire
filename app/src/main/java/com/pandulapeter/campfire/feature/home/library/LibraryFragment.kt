@@ -46,6 +46,14 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         }
         (binding.navigationView.menu.findItem(R.id.downloaded_only).actionView as SwitchCompat).setupWithBackingField(viewModel.shouldShowDownloadedOnly)
         (binding.navigationView.menu.findItem(R.id.sort_by_title).actionView as RadioButton).setupWithBackingField(viewModel.isSortedByTitle)
+        // Set up keyboard handling for the search view.
+        viewModel.isSearchInputVisible.onPropertyChanged {
+            if (it) {
+                binding.query.post { binding.query.requestFocus() }
+            } else {
+                hideKeyboard(activity?.currentFocus)
+            }
+        }
         (binding.navigationView.menu.findItem(R.id.sort_by_artist).actionView as RadioButton).setupWithBackingField(viewModel.isSortedByTitle, true)
         // Initialize the pull-to-refresh functionality.
         binding.swipeRefreshLayout.run {
@@ -71,8 +79,8 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
             binding.drawerLayout.closeDrawers()
             return true
         }
-        if (viewModel.searchInputVisible.get()) {
-            viewModel.searchInputVisible.set(false)
+        if (viewModel.isSearchInputVisible.get()) {
+            viewModel.isSearchInputVisible.set(false)
             return true
         }
         return false

@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.util.onPropertyChanged
 class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                        songInfoRepository: SongInfoRepository,
                        private val showViewOptionsCallback: () -> Unit) : SongListViewModel(homeCallbacks, songInfoRepository) {
-    val searchInputVisible = ObservableBoolean(songInfoRepository.query.isNotEmpty())
+    val isSearchInputVisible = ObservableBoolean(songInfoRepository.query.isNotEmpty())
     val isLoading = ObservableBoolean(songInfoRepository.isLoading)
     val isSortedByTitle = ObservableBoolean(songInfoRepository.isSortedByTitle)
     val shouldShowDownloadedOnly = ObservableBoolean(songInfoRepository.shouldShowDownloadedOnly)
@@ -23,7 +23,7 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
     val shouldShowErrorSnackbar = ObservableBoolean(false)
 
     init {
-        searchInputVisible.onPropertyChanged { query.set("") }
+        isSearchInputVisible.onPropertyChanged { query.set("") }
         isSortedByTitle.onPropertyChanged { songInfoRepository.isSortedByTitle = it }
         shouldShowDownloadedOnly.onPropertyChanged { songInfoRepository.shouldShowDownloadedOnly = it }
         query.onPropertyChanged { songInfoRepository.query = it }
@@ -46,6 +46,10 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
     }
 
     fun forceRefresh() = songInfoRepository.updateDataSet { shouldShowErrorSnackbar.set(true) }
+
+    fun showOrHideSearchInput() {
+        isSearchInputVisible.set(!isSearchInputVisible.get())
+    }
 
     fun addSongToFavorites(id: String, position: Int? = null) = songInfoRepository.addSongToFavorites(id, position)
 
