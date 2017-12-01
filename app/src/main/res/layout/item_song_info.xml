@@ -45,7 +45,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_toStartOf="@id/action"
-                android:alpha="@{viewModel.isDownloaded ? 1f : 0.5f }"
+                android:alpha="@{viewModel.isDownloaded ? 1f : 0.8f }"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:maxLines="3"

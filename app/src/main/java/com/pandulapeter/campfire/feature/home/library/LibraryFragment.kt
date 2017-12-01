@@ -49,7 +49,10 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         // Set up keyboard handling for the search view.
         viewModel.isSearchInputVisible.onPropertyChanged {
             if (it) {
-                binding.query.post { binding.query.requestFocus() }
+                binding.query.post {
+                    binding.query.requestFocus()
+                    showKeyboard(binding.query)
+                }
             } else {
                 hideKeyboard(activity?.currentFocus)
             }

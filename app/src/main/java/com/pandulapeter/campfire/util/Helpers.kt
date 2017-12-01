@@ -24,6 +24,10 @@ fun DrawerLayout.addDrawerListener(
     override fun onDrawerOpened(drawerView: View) = onDrawerOpened()
 })
 
+fun showKeyboard(focusedView: View?) = focusedView?.let {
+    (it.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(it, 0)
+}
+
 fun hideKeyboard(focusedView: View?) = focusedView?.let {
     (it.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(it.windowToken, 0)
 }
