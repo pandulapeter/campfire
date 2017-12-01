@@ -13,7 +13,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     private var subscribers = mutableSetOf<Subscriber>()
     private var dataSet = storageManager.cloudCache
         get() {
-            if (System.currentTimeMillis() - storageManager.lastCacheUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
+            if (!isLoading && System.currentTimeMillis() - storageManager.lastCacheUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
                 updateDataSet()
             }
             return field
