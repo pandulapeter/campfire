@@ -1,11 +1,11 @@
-package com.pandulapeter.campfire.feature.home.favorites
+package com.pandulapeter.campfire.feature.home.playlist
 
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
-import com.pandulapeter.campfire.FavoritesBinding
+import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.home.shared.HomeFragment
 import com.pandulapeter.campfire.util.consume
@@ -15,11 +15,11 @@ import com.pandulapeter.campfire.util.consume
  * They can be deleted from the list using the swipe-to-dismiss gesture. The list can also be re-
  * organized.
  *
- * Controlled by [FavoritesViewModel].
+ * Controlled by [PlaylistViewModel].
  */
-class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.layout.fragment_favorites) {
+class PlaylistFragment : HomeFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist) {
 
-    override val viewModel by lazy { FavoritesViewModel(callbacks, songInfoRepository) }
+    override val viewModel by lazy { PlaylistViewModel(callbacks, songInfoRepository) }
 
     //TODO: Add empty state for not having any favorites (or everything being filtered out).
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -61,7 +61,7 @@ class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.l
 
     override fun getSwipeRefreshLayout() = binding.swipeRefreshLayout
 
-    override fun searchInputVisible() = false
+    override fun onBackPressed() = false
 
     override fun closeSearchInput() = Unit
 }

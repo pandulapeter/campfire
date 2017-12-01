@@ -1,33 +1,26 @@
 package com.pandulapeter.campfire.feature.home
 
-import android.databinding.ObservableBoolean
-import android.databinding.ObservableField
-import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.data.repository.Subscriber
+import com.pandulapeter.campfire.data.storage.StorageManager
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
-import com.pandulapeter.campfire.util.onPropertyChanged
 
 /**
  * Handles events and logic for [HomeActivity].
  */
-class HomeViewModel(private val songInfoRepository: SongInfoRepository) : CampfireViewModel(), Subscriber {
-    val selectedItem: ObservableField<NavigationItem> = ObservableField(NavigationItem.CLOUD)
-    val isSortedByTitle = ObservableBoolean(songInfoRepository.isSortedByTitle)
-    val shouldHideExplicit = ObservableBoolean(songInfoRepository.shouldHideExplicit)
-
-    init {
-        isSortedByTitle.onPropertyChanged { songInfoRepository.isSortedByTitle = it }
-        shouldHideExplicit.onPropertyChanged { songInfoRepository.shouldHideExplicit = it }
-    }
-
-    override fun onUpdate() {
-        isSortedByTitle.set(songInfoRepository.isSortedByTitle)
-    }
+class HomeViewModel(private val storageManager: StorageManager) : CampfireViewModel() {
+    var navigationItem: NavigationItem = storageManager.navigationItem
+        set(value) {
+            if (field != value) {
+                field = value
+                storageManager.navigationItem = value
+            }
+        }
 
     /**
-     * Marks the possible screens the user can reach using the bottom navigation of the home screen.
+     * Marks the possible screens the user can reach using the side navigation on the home screen.
      */
-    enum class NavigationItem {
-        CLOUD, DOWNLOADS, FAVORITES
+    sealed class NavigationItem {
+        object LIBRARY : NavigationItem()
+        object SETTINGS : NavigationItem()
+        class PLAYLIST(val id: String) : NavigationItem()
     }
 }

@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.favorites
+package com.pandulapeter.campfire.feature.home.playlist
 
 import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
@@ -9,9 +9,9 @@ import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
 import java.util.Collections
 
 /**
- * Handles events and logic for [FavoritesFragment].
+ * Handles events and logic for [PlaylistFragment].
  */
-class FavoritesViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
+class PlaylistViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
     val shouldShowShuffle = ObservableBoolean(false)
 
     override fun getAdapterItems() = songInfoRepository.getFavoriteSongs().map { songInfo ->

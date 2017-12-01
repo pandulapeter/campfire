@@ -24,7 +24,7 @@
             <android.support.v7.widget.Toolbar
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:title="@string/main_navigation_settings" />
+                app:title="@string/home_settings" />
 
         </android.support.design.widget.AppBarLayout>
 

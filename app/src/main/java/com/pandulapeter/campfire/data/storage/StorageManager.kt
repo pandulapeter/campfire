@@ -17,19 +17,23 @@ class StorageManager(context: Context, private val gson: Gson) {
     private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
 
     /**
-     * The last selected item from the home screen's bottom navigation bar.
+     * The last selected item from the home screen's side navigation.
      */
-    var lastSelectedNavigationItem: HomeViewModel.NavigationItem
-        get() = when (sharedPreferences.getInt(LAST_SELECTED_NAVIGATION_ITEM, 0)) {
-            1 -> HomeViewModel.NavigationItem.DOWNLOADS
-            2 -> HomeViewModel.NavigationItem.FAVORITES
-            else -> HomeViewModel.NavigationItem.CLOUD
+    var navigationItem: HomeViewModel.NavigationItem
+        get() {
+            sharedPreferences.getString(KEY_NAVIGATION_ITEM, VALUE_LIBRARY).let {
+                return when (it) {
+                    VALUE_LIBRARY -> HomeViewModel.NavigationItem.LIBRARY
+                    VALUE_SETTINGS -> HomeViewModel.NavigationItem.SETTINGS
+                    else -> HomeViewModel.NavigationItem.PLAYLIST(it.removePrefix(VALUE_PLAYLIST))
+                }
+            }
         }
         set(value) {
-            sharedPreferences.edit().putInt(LAST_SELECTED_NAVIGATION_ITEM, when (value) {
-                HomeViewModel.NavigationItem.CLOUD -> 0
-                HomeViewModel.NavigationItem.DOWNLOADS -> 1
-                HomeViewModel.NavigationItem.FAVORITES -> 2
+            sharedPreferences.edit().putString(KEY_NAVIGATION_ITEM, when (value) {
+                HomeViewModel.NavigationItem.LIBRARY -> VALUE_LIBRARY
+                HomeViewModel.NavigationItem.SETTINGS -> VALUE_SETTINGS
+                is HomeViewModel.NavigationItem.PLAYLIST -> VALUE_PLAYLIST + value.id
             }).apply()
         }
 
@@ -49,6 +53,15 @@ class StorageManager(context: Context, private val gson: Gson) {
         get() = sharedPreferences.getBoolean(IS_SORTED_BY_TITLE, true)
         set(value) {
             sharedPreferences.edit().putBoolean(IS_SORTED_BY_TITLE, value).apply()
+        }
+
+    /**
+     * Whether or not to hide songs from the cloud.
+     */
+    var shouldShowDownloadedOnly: Boolean
+        get() = sharedPreferences.getBoolean(SHOULD_SHOW_DOWNLOADED_ONLY, false)
+        set(value) {
+            sharedPreferences.edit().putBoolean(SHOULD_SHOW_DOWNLOADED_ONLY, value).apply()
         }
 
     /**
@@ -102,9 +115,13 @@ class StorageManager(context: Context, private val gson: Gson) {
         }
 
     companion object {
-        private const val LAST_SELECTED_NAVIGATION_ITEM = "last_selected_navigation_item"
+        private const val KEY_NAVIGATION_ITEM = "navigation_item"
+        private const val VALUE_LIBRARY = "library"
+        private const val VALUE_SETTINGS = "settings"
+        private const val VALUE_PLAYLIST = "playlist_"
         private const val LAST_CACHE_UPDATE_TIMESTAMP = "last_cache_update_timestamp"
         private const val IS_SORTED_BY_TITLE = "is_sorted_by_title"
+        private const val SHOULD_SHOW_DOWNLOADED_ONLY = "should_show_downloaded_only"
         private const val SHOULD_HIDE_EXPLICIT = "should_hide_explicit"
         private const val CLOUD_CACHE = "cloud_cache"
         private const val DOWNLOADS = "downloads"

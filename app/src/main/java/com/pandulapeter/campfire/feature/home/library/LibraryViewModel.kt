@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.cloud
+package com.pandulapeter.campfire.feature.home.library
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
@@ -10,9 +10,9 @@ import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
 import com.pandulapeter.campfire.util.onPropertyChanged
 
 /**
- * Handles events and logic for [CloudFragment].
+ * Handles events and logic for [LibraryFragment].
  */
-class CloudViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
+class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
     val searchInputVisible = ObservableBoolean(songInfoRepository.cloudQuery.isNotEmpty())
     val query = ObservableField(songInfoRepository.cloudQuery)
 

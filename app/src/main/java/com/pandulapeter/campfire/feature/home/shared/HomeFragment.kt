@@ -77,13 +77,10 @@ abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>
 
     abstract fun getSwipeRefreshLayout(): SwipeRefreshLayout
 
-    abstract fun searchInputVisible(): Boolean
-
-    abstract fun closeSearchInput()
+    open fun onBackPressed() = false
 
     interface HomeCallbacks {
-        fun showMenu()
 
-        fun showViewOptions()
+        fun showMenu()
     }
 }

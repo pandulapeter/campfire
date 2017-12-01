@@ -6,7 +6,6 @@ import android.support.annotation.ColorInt
 import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
 import android.widget.ImageView
-import com.pandulapeter.campfire.feature.home.shared.SearchTitleView
 import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.tint
 

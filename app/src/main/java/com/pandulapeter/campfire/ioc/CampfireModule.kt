@@ -3,9 +3,8 @@ package com.pandulapeter.campfire.ioc
 import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.detail.page.SongPageFragment
 import com.pandulapeter.campfire.feature.home.HomeActivity
-import com.pandulapeter.campfire.feature.home.cloud.CloudFragment
-import com.pandulapeter.campfire.feature.home.downloads.DownloadsFragment
-import com.pandulapeter.campfire.feature.home.favorites.FavoritesFragment
+import com.pandulapeter.campfire.feature.home.library.LibraryFragment
+import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
@@ -17,13 +16,10 @@ abstract class CampfireModule {
     abstract fun contributeHomeActivity(): HomeActivity
 
     @ContributesAndroidInjector
-    abstract fun contributeCloudFragment(): CloudFragment
+    abstract fun contributeLibraryFragment(): LibraryFragment
 
     @ContributesAndroidInjector
-    abstract fun contributeDownloadsFragment(): DownloadsFragment
-
-    @ContributesAndroidInjector
-    abstract fun contributeFavoritesFragment(): FavoritesFragment
+    abstract fun contributePlaylistFragment(): PlaylistFragment
 
     @ContributesAndroidInjector
     abstract fun contributeSettingsFragment(): SettingsFragment
