@@ -39,6 +39,10 @@ class LibraryFragment : HomeFragment<LibraryBinding, LibraryViewModel>(R.layout.
     override fun getSwipeRefreshLayout() = binding.swipeRefreshLayout
 
     override fun onBackPressed(): Boolean {
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.END)) {
+            binding.drawerLayout.closeDrawers()
+            return true
+        }
         if (viewModel.searchInputVisible.get()) {
             viewModel.searchInputVisible.set(false)
             return true

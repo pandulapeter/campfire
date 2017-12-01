@@ -54,8 +54,12 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
 
 
     override fun onBackPressed() {
-        if (getCurrentFragment()?.onBackPressed() != true) {
-            super.onBackPressed()
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawers()
+        } else {
+            if (getCurrentFragment()?.onBackPressed() != true) {
+                super.onBackPressed()
+            }
         }
     }
 
