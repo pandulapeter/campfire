@@ -6,7 +6,7 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.home.shared.homefragment.list.SongListFragment
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.consume
 
 /**
@@ -24,6 +24,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
 
     //TODO: Add empty state for not having any favorites (or everything being filtered out).
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         // Setup swipe-to-dismiss functionality.
         //TODO: Change the elevation of the card that's being dragged.
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(

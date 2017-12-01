@@ -44,11 +44,6 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             field = value
             notifySubscribers()
         }
-    var downloadsQuery = ""
-        set(value) {
-            field = value
-            notifySubscribers()
-        }
 
     fun subscribe(subscriber: Subscriber) {
         if (!subscribers.contains(subscriber)) {

@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.shared.homefragment.list
+package com.pandulapeter.campfire.feature.home.shared.songlistfragment.list
 
 import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes

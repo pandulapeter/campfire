@@ -22,6 +22,7 @@
         android:layout_above="@id/version"
         android:layout_marginStart="@dimen/first_keyline"
         android:text="@string/campfire"
-        android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        android:textColor="@color/accent" />
 
 </RelativeLayout>

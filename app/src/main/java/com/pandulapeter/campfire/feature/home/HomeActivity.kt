@@ -19,8 +19,7 @@ import com.pandulapeter.campfire.util.hideKeyboard
 import javax.inject.Inject
 
 /**
- * Displays the home screen of the app which contains the three main pages the user can access and
- * the side navigation. The last selected item is persisted.
+ * Displays the home screen of the app which contains the side navigation. The last selected item is persisted.
  *
  * Controlled by [HomeViewModel].
  */
@@ -30,7 +29,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Set up the side navigation drawers.
+        // Set up the side navigation drawer.
         binding.navigationView.getHeaderView(0).findViewById<TextView>(R.id.version)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {

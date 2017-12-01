@@ -11,10 +11,8 @@ import com.pandulapeter.campfire.feature.shared.CampfireActivity
 import javax.inject.Inject
 
 /**
- * Displays the chords and lyrics of a single song per screen. The user can cycle through all the
- * songs in the category if they started this screen from Downloads of Favorites.
- *
- * //TODO: Add option to add / remove song from Favorites.
+ * Displays a horizontal pager with the songs that are in the currently selected playlist (or a
+ * single song if no playlist is available).
  *
  * Controlled by [DetailViewModel].
  */

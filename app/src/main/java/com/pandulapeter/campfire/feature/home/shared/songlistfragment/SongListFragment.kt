@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.shared.homefragment.list
+package com.pandulapeter.campfire.feature.home.shared.songlistfragment
 
 import android.databinding.ViewDataBinding
 import android.os.Bundle
@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.util.dimension
  * and contains headers. The list is also cached locally and automatically updated after a period or
  * manually using the pull-to-refresh gesture.
  *
- * Controlled by [SongListFragment].
+ * Controlled by subclasses of [SongListViewModel].
  */
 abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>(@LayoutRes layoutResourceId: Int) : HomeFragment<B, VM>(layoutResourceId) {
 
@@ -27,13 +27,14 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
     //TODO: Add no-results state for the case when everything is filtered out.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         context?.let { context ->
-            // Initialize the list and pull-to-refresh functionality.
+            // Initialize the list.
             //TODO: Hide the keyboard on scroll events.
             getRecyclerView().run {
+                adapter = viewModel.adapter
                 layoutManager = LinearLayoutManager(context)
                 addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
             }
-            // Setup list item click listeners.
+            // Set up list item click listeners.
             //TODO: Only send the list of song id-s from Playlists.
             viewModel.adapter.itemClickListener = { position ->
                 startActivity(DetailActivity.getStartIntent(

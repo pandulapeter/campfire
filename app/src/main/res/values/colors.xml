@@ -2,7 +2,6 @@
 <resources>
 
     <!-- General -->
-    <color name="primary">#212121</color>
     <color name="accent">#FFC107</color>
 
 </resources>

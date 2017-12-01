@@ -4,8 +4,8 @@ import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
-import com.pandulapeter.campfire.feature.home.shared.homefragment.list.SongInfoViewModel
-import com.pandulapeter.campfire.feature.home.shared.homefragment.list.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import java.util.Collections
 
 /**
