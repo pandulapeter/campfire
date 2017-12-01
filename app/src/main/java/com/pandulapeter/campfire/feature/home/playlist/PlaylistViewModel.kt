@@ -1,11 +1,10 @@
 package com.pandulapeter.campfire.feature.home.playlist
 
 import android.databinding.ObservableBoolean
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
-import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import java.util.Collections
 
 /**
@@ -14,13 +13,10 @@ import java.util.Collections
 class PlaylistViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : SongListViewModel(homeCallbacks, songInfoRepository) {
     val shouldShowShuffle = ObservableBoolean(false)
 
+    override fun getAdapterItems() = songInfoRepository.getFavoriteSongs().map { SongInfoViewModel(it) }
+
     override fun onUpdate() {
-        adapter.items = songInfoRepository.getFavoriteSongs().map { songInfo ->
-            SongInfoViewModel(
-                songInfo = songInfo,
-                actionIcon = R.drawable.ic_drag_handle_24dp,
-                isActionTinted = false)
-        }
+        super.onUpdate()
         shouldShowShuffle.set(adapter.itemCount > SongInfoRepository.SHUFFLE_LIMIT)
     }
 

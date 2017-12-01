@@ -18,30 +18,34 @@
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:clipChildren="false"
         android:foreground="?attr/selectableItemBackground"
+        app:cardBackgroundColor="@{viewModel.isDownloaded ? @color/card_song_downloaded : @color/card_song_not_downloaded}"
         app:contentPadding="@dimen/content_padding">
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:clipChildren="false">
 
             <ImageView
                 android:id="@+id/action"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
+                android:layout_marginEnd="-8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@{viewModel.actionDescription}"
+                android:contentDescription="@string/home_more"
                 android:padding="@dimen/content_padding"
-                android:src="@{viewModel.actionIcon}"
-                android:tint="@{viewModel.isActionTinted ? @color/accent : @android:color/white}"
-                tools:src="@drawable/ic_downloads_24dp" />
+                android:visibility="@{viewModel.isDownloaded ? View.VISIBLE : View.GONE}"
+                app:srcCompat="@drawable/ic_more_24dp" />
 
             <TextView
                 android:id="@+id/title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_toStartOf="@id/action"
+                android:alpha="@{viewModel.isDownloaded ? 1f : 0.5f }"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:maxLines="3"
@@ -54,6 +58,7 @@
                 android:layout_below="@id/title"
                 android:layout_marginTop="@dimen/card_text_margin"
                 android:layout_toStartOf="@id/action"
+                android:alpha="@{viewModel.isDownloaded ? 1f : 0.5f }"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-thin"
                 android:maxLines="2"

@@ -5,6 +5,7 @@ import com.pandulapeter.campfire.data.repository.Subscriber
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragmentViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 
 /**
  * Parent class for view models that display lists of songs.
@@ -14,4 +15,10 @@ import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongI
 abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                                  protected val songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks), Subscriber {
     val adapter = SongInfoAdapter()
+
+    abstract fun getAdapterItems(): List<SongInfoViewModel>
+
+    override fun onUpdate() {
+        adapter.items = getAdapterItems()
+    }
 }

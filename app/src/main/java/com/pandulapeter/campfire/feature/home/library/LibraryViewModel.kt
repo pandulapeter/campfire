@@ -2,12 +2,11 @@ package com.pandulapeter.campfire.feature.home.library
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
-import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import com.pandulapeter.campfire.util.onPropertyChanged
 
 /**
@@ -28,16 +27,13 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
         query.onPropertyChanged { songInfoRepository.cloudQuery = it }
     }
 
-    fun getAdapterItems() = songInfoRepository.getCloudSongs().filter(query.get()).map { songInfo ->
-        val isTinted = songInfoRepository.isSongDownloads(songInfo.id)
-        SongInfoViewModel(
-            songInfo = songInfo,
-            actionIcon = R.drawable.ic_downloads_24dp,
-            isActionTinted = isTinted)
+    override fun getAdapterItems(): List<SongInfoViewModel> {
+        val downloadedSongIds = songInfoRepository.getDownloadsSongs().map { it.id }
+        return songInfoRepository.getCloudSongs().filter(query.get()).map { SongInfoViewModel(it, downloadedSongIds.contains(it.id)) }
     }
 
     override fun onUpdate() {
-        adapter.items = getAdapterItems()
+        super.onUpdate()
         isLoading.set(songInfoRepository.isLoading)
     }
 

@@ -20,7 +20,7 @@
 
     </group>
 
-    <item android:title="@string/home_playlist">
+    <item android:title="@string/home_playlists">
 
         <menu>
 

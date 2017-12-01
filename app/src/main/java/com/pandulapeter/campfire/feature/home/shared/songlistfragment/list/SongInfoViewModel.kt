@@ -1,8 +1,5 @@
 package com.pandulapeter.campfire.feature.home.shared.songlistfragment.list
 
-import android.support.annotation.DrawableRes
-import android.support.annotation.StringRes
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 
 /**
@@ -10,6 +7,5 @@ import com.pandulapeter.campfire.data.model.SongInfo
  */
 data class SongInfoViewModel(
     val songInfo: SongInfo,
-    @StringRes val actionDescription: Int = R.string.something_went_wrong,
-    @DrawableRes val actionIcon: Int, //TODO: This will need a loading state.
-    val isActionTinted: Boolean)
+    val isDownloaded: Boolean = true,
+    val shouldBeUpdated: Boolean = false)
