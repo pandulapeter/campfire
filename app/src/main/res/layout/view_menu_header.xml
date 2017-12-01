@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/drawer_header_height"
-    android:background="@color/accent"
     tools:context=".feature.home.HomeActivity">
 
     <TextView
@@ -14,7 +13,6 @@
         android:layout_marginBottom="@dimen/content_padding"
         android:layout_marginStart="@dimen/first_keyline"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        android:textColor="@color/primary"
         tools:text="v1.0.0" />
 
     <TextView
@@ -25,6 +23,6 @@
         android:layout_marginStart="@dimen/first_keyline"
         android:text="@string/campfire"
         android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-        android:textColor="@color/primary" />
+        android:textColor="@color/accent" />
 
 </RelativeLayout>

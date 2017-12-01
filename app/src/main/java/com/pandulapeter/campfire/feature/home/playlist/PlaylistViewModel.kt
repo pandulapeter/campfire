@@ -1,25 +1,27 @@
-package com.pandulapeter.campfire.feature.home.favorites
+package com.pandulapeter.campfire.feature.home.playlist
 
 import android.databinding.ObservableBoolean
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.feature.home.shared.HomeFragment
-import com.pandulapeter.campfire.feature.home.shared.HomeFragmentViewModel
-import com.pandulapeter.campfire.feature.home.shared.SongInfoViewModel
+import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import java.util.Collections
 
 /**
- * Handles events and logic for [FavoritesFragment].
+ * Handles events and logic for [PlaylistFragment].
  */
-class FavoritesViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks, songInfoRepository) {
+class PlaylistViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : SongListViewModel(homeCallbacks, songInfoRepository) {
     val shouldShowShuffle = ObservableBoolean(false)
 
-    override fun getAdapterItems() = songInfoRepository.getFavoriteSongs().map { songInfo ->
-        SongInfoViewModel(
-            songInfo = songInfo,
-            actionDescription = R.string.favorites_drag_item_to_rearrange,
-            actionIcon = R.drawable.ic_drag_handle_24dp,
-            isActionTinted = false)
+    override fun getAdapterItems(): List<SongInfoViewModel> {
+        val downloadedSongs = songInfoRepository.getDownloadedSongs()
+        val downloadedSongIds = downloadedSongs.map { it.id }
+        return songInfoRepository.getFavoriteSongs().map { songInfo ->
+            SongInfoViewModel(
+                songInfo,
+                downloadedSongIds.contains(songInfo.id),
+                downloadedSongs.firstOrNull { songInfo.id == it.id }?.version?.compareTo(songInfo.version) ?: 0 < 0)
+        }
     }
 
     override fun onUpdate() {

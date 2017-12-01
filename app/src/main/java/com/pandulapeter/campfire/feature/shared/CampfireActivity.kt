@@ -13,8 +13,8 @@ import dagger.android.support.DaggerAppCompatActivity
  * Controlled by subclasses of [CampfireViewModel].
  */
 abstract class CampfireActivity<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private val layoutResourceId: Int) : DaggerAppCompatActivity() {
-    abstract protected val viewModel: VM
     protected lateinit var binding: B
+    abstract protected val viewModel: VM
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -4,11 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--suppress AndroidUnknownAttribute -->
-    <data class=".CloudBinding">
+    <data class=".PlaylistBinding">
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.cloud.CloudViewModel" />
+            type="com.pandulapeter.campfire.feature.home.playlist.PlaylistViewModel" />
+
+        <import type="android.view.View" />
 
     </data>
 
@@ -19,13 +21,12 @@
 
         <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clipChildren="false">
+            android:layout_height="wrap_content">
 
             <android.support.v7.widget.Toolbar
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clipChildren="false">
+                app:layout_scrollFlags="scroll|enterAlways|snap">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -43,30 +44,14 @@
                         android:padding="@dimen/action_button_padding"
                         app:srcCompat="@drawable/ic_menu_24dp" />
 
-                    <ImageView
-                        android:id="@+id/view_options_icon"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:layout_marginEnd="@dimen/action_button_margin"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="@string/home_view_options"
-                        android:onClick="@{() -> viewModel.showViewOptions()}"
-                        android:padding="@dimen/action_button_padding"
-                        app:srcCompat="@drawable/ic_view_options_24dp" />
-
-                    <com.pandulapeter.campfire.feature.home.shared.SearchTitleView
-                        android:id="@+id/search_title"
+                    <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
                         android:layout_marginStart="@dimen/title_margin"
-                        android:layout_toStartOf="@id/view_options_icon"
-                        app:query="@={viewModel.query}"
-                        app:searchInputVisible="@={viewModel.searchInputVisible}"
-                        app:title="@string/home_navigation_cloud" />
+                        android:text="Favorites"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
 
                 </RelativeLayout>
 
@@ -74,20 +59,14 @@
 
         </android.support.design.widget.AppBarLayout>
 
-        <android.support.v4.widget.SwipeRefreshLayout
-            android:id="@+id/swipe_refresh_layout"
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+            app:adapter="@{viewModel.adapter}"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            tools:listitem="@layout/item_song_info" />
 
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/recycler_view"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:adapter="@{viewModel.adapter}"
-                tools:listitem="@layout/item_song_info" />
-
-        </android.support.v4.widget.SwipeRefreshLayout>
 
     </android.support.design.widget.CoordinatorLayout>
 

@@ -2,10 +2,10 @@
 <resources>
 
     <!-- General -->
-    <color name="primary">#212121</color>
     <color name="accent">#FFC107</color>
 
-    <!-- Home screen -->
-    <color name="home_navigation_inactive">#7FFFFFFF</color>
+    <!-- Library -->
+    <color name="card_song_downloaded">#424242</color>
+    <color name="card_song_not_downloaded">#303030</color>
 
 </resources>

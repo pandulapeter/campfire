@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.data.repository
 
+import com.pandulapeter.campfire.data.model.DownloadedSong
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.storage.StorageManager
@@ -13,7 +14,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     private var subscribers = mutableSetOf<Subscriber>()
     private var dataSet = storageManager.cloudCache
         get() {
-            if (!isLoading && System.currentTimeMillis() - storageManager.lastCacheUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
+            if (!isLoading && System.currentTimeMillis() - storageManager.lastUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
                 updateDataSet()
             }
             return field
@@ -39,12 +40,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             storageManager.shouldHideExplicit = value
             notifySubscribers()
         }
-    var cloudQuery = ""
-        set(value) {
-            field = value
-            notifySubscribers()
-        }
-    var downloadsQuery = ""
+    var query = ""
         set(value) {
             field = value
             notifySubscribers()
@@ -70,7 +66,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
                 isLoading = false
                 dataSet = it
                 storageManager.cloudCache = dataSet
-                storageManager.lastCacheUpdateTimestamp = System.currentTimeMillis()
+                storageManager.lastUpdateTimestamp = System.currentTimeMillis()
             },
             onFailure = {
                 isLoading = false
@@ -78,23 +74,22 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             })
     }
 
-    fun getCloudSongs() = dataSet.filterExplicit().sort().toList()
+    fun getLibrarySongs() = dataSet.filterExplicit().sort().toList()
 
-    fun getDownloadsSongs() = storageManager.downloads.mapNotNull { id -> dataSet.find { id == it.id } }.filterExplicit().sort()
+    fun getDownloadedSongs() = storageManager.downloads
 
-    fun isSongDownloads(id: String) = storageManager.downloads.contains(id)
+    fun isSongDownloaded(id: String) = storageManager.downloads.map { it.id }.contains(id)
 
-    fun addSongToDownloads(id: String) {
-        if (!isSongDownloads(id)) {
-            storageManager.downloads = storageManager.downloads.toMutableList().apply { add(id) }
-            notifySubscribers()
-        }
+    //TODO: Also save the SongDetail object.
+    fun addSongToDownloads(songInfo: SongInfo) {
+        storageManager.downloads = storageManager.downloads.filter { it.id != songInfo.id }.toMutableList().apply { add(DownloadedSong(songInfo.id, songInfo.version)) }
+        notifySubscribers()
     }
 
     fun removeSongFromDownloads(id: String) {
         removeSongFromFavorites(id)
-        if (isSongDownloads(id)) {
-            storageManager.downloads = storageManager.downloads.toMutableList().apply { remove(id) }
+        if (isSongDownloaded(id)) {
+            storageManager.downloads = storageManager.downloads.filter { it.id != id }
             notifySubscribers()
         }
     }

@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.shared
+package com.pandulapeter.campfire.feature.home.shared.songlistfragment.list
 
 import android.databinding.DataBindingUtil
 import android.support.annotation.LayoutRes

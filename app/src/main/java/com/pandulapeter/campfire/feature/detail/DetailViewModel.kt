@@ -18,8 +18,8 @@ class DetailViewModel(fragmentManager: FragmentManager, private val songInfoRepo
     }
 
     fun updateToolbar(currentId: String) {
-        songInfoRepository.getCloudSongs().find { it.id == currentId }?.let {
-            songInfoRepository.addSongToDownloads(it.id)
+        songInfoRepository.getLibrarySongs().find { it.id == currentId }?.let {
+            songInfoRepository.addSongToDownloads(it)
             title.set(it.title)
             artist.set(it.artist)
         }

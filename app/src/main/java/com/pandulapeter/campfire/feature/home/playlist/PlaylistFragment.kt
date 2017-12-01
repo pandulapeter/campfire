@@ -1,13 +1,12 @@
-package com.pandulapeter.campfire.feature.home.favorites
+package com.pandulapeter.campfire.feature.home.playlist
 
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
-import com.pandulapeter.campfire.FavoritesBinding
+import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.home.shared.HomeFragment
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.consume
 
 /**
@@ -15,17 +14,19 @@ import com.pandulapeter.campfire.util.consume
  * They can be deleted from the list using the swipe-to-dismiss gesture. The list can also be re-
  * organized.
  *
- * Controlled by [FavoritesViewModel].
+ * Controlled by [PlaylistViewModel].
  */
-class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.layout.fragment_favorites) {
+class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist) {
 
-    override val viewModel by lazy { FavoritesViewModel(callbacks, songInfoRepository) }
+    override fun createViewModel() = PlaylistViewModel(callbacks, songInfoRepository)
+
+    override fun getRecyclerView() = binding.recyclerView
 
     //TODO: Add empty state for not having any favorites (or everything being filtered out).
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Setup swipe-to-dismiss functionality.
-        //TODO: Change the elecation of the card that's being dragged.
+        //TODO: Change the elevation of the card that's being dragged.
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN,
             ItemTouchHelper.START or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT or ItemTouchHelper.END) {
@@ -42,10 +43,6 @@ class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.l
                 viewHolder?.adapterPosition?.let { position ->
                     val songInfo = viewModel.adapter.items[position].songInfo
                     viewModel.removeSongFromFavorites(songInfo.id)
-                    Snackbar
-                        .make(binding.root, getString(R.string.favorites_song_removed, songInfo.title), Snackbar.LENGTH_LONG)
-                        .setAction(R.string.undo, { viewModel.addSongToFavorites(songInfo.id, position) })
-                        .show()
                 }
             }
 
@@ -53,15 +50,7 @@ class FavoritesFragment : HomeFragment<FavoritesBinding, FavoritesViewModel>(R.l
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Setup list item click listeners.
         viewModel.adapter.itemActionTouchListener = { position ->
-            itemTouchHelper.startDrag(getRecyclerView().findViewHolderForAdapterPosition(position))
+            itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
         }
     }
-
-    override fun getRecyclerView() = binding.recyclerView
-
-    override fun getSwipeRefreshLayout() = binding.swipeRefreshLayout
-
-    override fun searchInputVisible() = false
-
-    override fun closeSearchInput() = Unit
 }
