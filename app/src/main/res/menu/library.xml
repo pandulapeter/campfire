@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:title="@string/home_downloaded_only"
+        app:actionLayout="@layout/widget_switch" />
+
+    <item android:title="@string/home_sort_by">
+
+        <menu>
+
+            <item
+                android:title="@string/home_sort_by_title"
+                app:actionLayout="@layout/widget_radio_button" />
+
+            <item
+                android:title="@string/home_sort_by_artist"
+                app:actionLayout="@layout/widget_radio_button" />
+
+        </menu>
+
+    </item>
+
+    <item android:title="@string/home_filter_by_language">
+
+        <menu>
+
+            <item
+                android:title="@string/language_english"
+                app:actionLayout="@layout/widget_checkbox" />
+
+            <item
+                android:title="@string/language_hungarian"
+                app:actionLayout="@layout/widget_checkbox" />
+
+        </menu>
+
+    </item>
+
+</menu>
