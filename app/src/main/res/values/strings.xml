@@ -32,5 +32,9 @@
     <string name="home_more">More</string>
     <string name="home_new_version_available">New version available</string>
     <string name="home_remove_download">Remove download</string>
+    <string name="home_remove_download_confirmation_title">Are you sure?</string>
+    <string name="home_remove_download_confirmation_message">Removing the download will also delete the song from your playlists.</string>
+    <string name="home_remove_download_confirmation_remove">Remove</string>
+    <string name="home_remove_download_confirmation_cancel">Cancel</string>
 
 </resources>

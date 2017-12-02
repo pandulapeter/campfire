@@ -72,12 +72,9 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
                 .setAction(R.string.try_again, { viewModel.forceRefresh() })
                 .show()
         }
-        // Set up list item action listeners.
+        // Set up list item "More" action listener.
         viewModel.adapter.itemActionClickListener = { position ->
-            viewModel.adapter.items[position].songInfo.let { songInfo ->
-                val fragment = SongOptionsFragment.newInstance(songInfo)
-                fragment.show(childFragmentManager, fragment.tag)
-            }
+            viewModel.adapter.items[position].songInfo.let { songInfo -> SongOptionsFragment.show(childFragmentManager, songInfo) }
         }
     }
 
