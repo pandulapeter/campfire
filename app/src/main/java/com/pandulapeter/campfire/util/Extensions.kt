@@ -4,13 +4,10 @@ import android.content.Context
 import android.databinding.Observable
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
-import android.graphics.drawable.Drawable
-import android.support.annotation.ColorInt
 import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
 import android.support.annotation.DrawableRes
 import android.support.v4.content.ContextCompat
-import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.content.res.AppCompatResources
 import com.pandulapeter.campfire.data.model.Language
 import retrofit2.Call
@@ -23,11 +20,7 @@ fun Context.dimension(@DimenRes dimensionId: Int) = resources.getDimensionPixelS
 
 fun Context.drawable(@DrawableRes drawableId: Int) = AppCompatResources.getDrawable(this, drawableId)
 
-fun Drawable?.tint(@ColorInt tintColor: Int) = this?.let {
-    val drawable = DrawableCompat.wrap(this)
-    DrawableCompat.setTint(drawable.mutate(), tintColor)
-    DrawableCompat.unwrap<Drawable>(drawable)
-}
+fun ObservableBoolean.toggle() = set(!get())
 
 inline fun ObservableBoolean.onEventTriggered(crossinline callback: () -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {

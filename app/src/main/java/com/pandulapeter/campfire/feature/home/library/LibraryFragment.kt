@@ -114,8 +114,6 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         }
     }
 
-    private fun ObservableBoolean.toggle() = set(!get())
-
     private fun CompoundButton.setupWithBackingField(backingField: ObservableBoolean, shouldNegate: Boolean = false) {
         //TODO: There is a shorter solution using logical operators, don't be lazy.
         if (shouldNegate) {

@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListVi
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import com.pandulapeter.campfire.util.mapToLanguage
 import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.toggle
 
 /**
  * Handles events and logic for [LibraryFragment].
@@ -17,19 +18,19 @@ import com.pandulapeter.campfire.util.onPropertyChanged
 class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                        songInfoRepository: SongInfoRepository) : SongListViewModel(homeCallbacks, songInfoRepository) {
     val isSearchInputVisible = ObservableBoolean(songInfoRepository.query.isNotEmpty())
-    val isLoading = ObservableBoolean(songInfoRepository.isLoading)
-    val isSortedByTitle = ObservableBoolean(songInfoRepository.isSortedByTitle)
-    val shouldShowDownloadedOnly = ObservableBoolean(songInfoRepository.shouldShowDownloadedOnly)
     val query = ObservableField(songInfoRepository.query)
-    val shouldShowErrorSnackbar = ObservableBoolean(false)
     val shouldShowViewOptions = ObservableBoolean(false)
+    val isLoading = ObservableBoolean(songInfoRepository.isLoading)
+    val shouldShowErrorSnackbar = ObservableBoolean(false)
+    val shouldShowDownloadedOnly = ObservableBoolean(songInfoRepository.shouldShowDownloadedOnly)
+    val isSortedByTitle = ObservableBoolean(songInfoRepository.isSortedByTitle)
     val languageFilters = ObservableField(HashMap<Language, ObservableBoolean>())
 
     init {
         isSearchInputVisible.onPropertyChanged { query.set("") }
-        isSortedByTitle.onPropertyChanged { songInfoRepository.isSortedByTitle = it }
-        shouldShowDownloadedOnly.onPropertyChanged { songInfoRepository.shouldShowDownloadedOnly = it }
         query.onPropertyChanged { songInfoRepository.query = it }
+        shouldShowDownloadedOnly.onPropertyChanged { songInfoRepository.shouldShowDownloadedOnly = it }
+        isSortedByTitle.onPropertyChanged { songInfoRepository.isSortedByTitle = it }
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
@@ -44,7 +45,6 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
     }
 
     override fun onUpdate() {
-        super.onUpdate()
         isLoading.set(songInfoRepository.isLoading)
         songInfoRepository.getLanguages().let { languages ->
             if (languages != languageFilters.get().keys.toList()) {
@@ -59,13 +59,12 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                 languageFilters.notifyChange()
             }
         }
+        super.onUpdate()
     }
 
     fun forceRefresh() = songInfoRepository.updateDataSet { shouldShowErrorSnackbar.set(true) }
 
-    fun showOrHideSearchInput() {
-        isSearchInputVisible.set(!isSearchInputVisible.get())
-    }
+    fun showOrHideSearchInput() = isSearchInputVisible.toggle()
 
     fun addSongToFavorites(id: String, position: Int? = null) = songInfoRepository.addSongToFavorites(id, position)
 

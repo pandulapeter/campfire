@@ -35,10 +35,8 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
                         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int)
                             = oldItems[oldItemPosition] == newItems[newItemPosition]
                     })
-                }.await().let {
-                    it.dispatchUpdatesTo(this@SongInfoAdapter)
-                    field = newItems
-                }
+                }.await().dispatchUpdatesTo(this@SongInfoAdapter)
+                field = newItems
             }
         }
     var itemClickListener: (position: Int) -> Unit = { _ -> }

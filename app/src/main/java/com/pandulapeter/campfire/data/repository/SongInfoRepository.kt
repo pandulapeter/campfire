@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.data.repository
 
-import android.util.Log
 import com.pandulapeter.campfire.data.model.DownloadedSong
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
@@ -23,37 +22,49 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             return field
         }
         set(value) {
-            field = value
-            updateLanguages()
-            notifySubscribers()
+            if (field != value) {
+                field = value
+                updateLanguages()
+                notifySubscribers()
+            }
         }
     var isLoading = false
         set(value) {
-            field = value
-            notifySubscribers()
+            if (field != value) {
+                field = value
+                notifySubscribers()
+            }
         }
     var isSortedByTitle = storageManager.isSortedByTitle
         set(value) {
-            field = value
-            storageManager.isSortedByTitle = value
-            notifySubscribers()
+            if (field != value) {
+                field = value
+                storageManager.isSortedByTitle = value
+                notifySubscribers()
+            }
         }
     var shouldShowDownloadedOnly = storageManager.shouldShowDownloadedOnly
         set(value) {
-            field = value
-            storageManager.shouldShowDownloadedOnly = value
-            notifySubscribers()
+            if (field != value) {
+                field = value
+                storageManager.shouldShowDownloadedOnly = value
+                notifySubscribers()
+            }
         }
     var shouldHideExplicit = storageManager.shouldHideExplicit
         set(value) {
-            field = value
-            storageManager.shouldHideExplicit = value
-            notifySubscribers()
+            if (field != value) {
+                field = value
+                storageManager.shouldHideExplicit = value
+                notifySubscribers()
+            }
         }
     var query = ""
         set(value) {
-            field = value
-            notifySubscribers()
+            if (field != value) {
+                field = value
+                notifySubscribers()
+            }
         }
     private val languageFilters = HashMap<Language, Boolean>()
 
@@ -78,8 +89,8 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
         isLoading = true
         networkManager.service.getLibrary().enqueueCall(
             onSuccess = {
-                isLoading = false
                 dataSet = it
+                isLoading = false
                 storageManager.cloudCache = dataSet
                 storageManager.lastUpdateTimestamp = System.currentTimeMillis()
             },
@@ -104,9 +115,11 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     }
 
     fun setLanguageFilterEnabled(language: Language, isEnabled: Boolean) {
-        languageFilters[language] = isEnabled
-        storageManager.setLanguageFilterEnabled(language, isEnabled)
-        notifySubscribers()
+        if (isLanguageFilterEnabled(language) != isEnabled) {
+            languageFilters[language] = isEnabled
+            storageManager.setLanguageFilterEnabled(language, isEnabled)
+            notifySubscribers()
+        }
     }
 
     fun isSongDownloaded(id: String) = storageManager.downloads.map { it.id }.contains(id)
@@ -165,14 +178,8 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     private fun notifySubscribers() = subscribers.forEach { it.onUpdate() }
 
     private fun updateLanguages() {
-        Log.d("DEBUGS", "Updating languages")
         languageFilters.clear()
-        dataSet.map {
-            val result = it.language.mapToLanguage()
-            Log.d("DEBUGS", "language ${it.language} is ${result}")
-            result
-        }.distinct().sortedBy { it.nameResource }.forEach {
-            Log.d("DEBUGS", "new language: $it")
+        dataSet.map { it.language.mapToLanguage() }.distinct().sortedBy { it.nameResource }.forEach {
             languageFilters.put(it, isLanguageFilterEnabled(it))
         }
     }
