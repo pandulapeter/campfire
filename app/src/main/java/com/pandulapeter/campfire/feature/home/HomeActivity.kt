@@ -16,6 +16,9 @@ import com.pandulapeter.campfire.feature.shared.CampfireActivity
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
 import javax.inject.Inject
 
 /**
@@ -39,8 +42,10 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                     //TODO: Add option to select more playlists.
                     replaceActiveFragment(HomeViewModel.NavigationItem.Playlist("favorites"))
                 }
-                R.id.new_playlist -> consumeAndCloseDrawer {
+                R.id.new_playlist -> {
                     getCurrentFragment()?.view?.let { Snackbar.make(it, R.string.work_in_progress, Snackbar.LENGTH_SHORT).show() }
+                    binding.drawerLayout.closeDrawer(GravityCompat.START)
+                    false
                 }
                 else -> false
             }
@@ -77,11 +82,15 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     private fun replaceActiveFragment(navigationItem: HomeViewModel.NavigationItem) {
         if (viewModel.navigationItem != navigationItem || getCurrentFragment() == null) {
             viewModel.navigationItem = navigationItem
-            supportFragmentManager.beginTransaction().replace(R.id.fragment_container, when (navigationItem) {
-                HomeViewModel.NavigationItem.Library -> LibraryFragment()
-                HomeViewModel.NavigationItem.Settings -> SettingsFragment()
-                is HomeViewModel.NavigationItem.Playlist -> PlaylistFragment()
-            }).commit()
+            async(UI) {
+                async(CommonPool) {
+                    when (navigationItem) {
+                        HomeViewModel.NavigationItem.Library -> LibraryFragment()
+                        HomeViewModel.NavigationItem.Settings -> SettingsFragment()
+                        is HomeViewModel.NavigationItem.Playlist -> PlaylistFragment()
+                    }
+                }.await().let { supportFragmentManager.beginTransaction().replace(R.id.fragment_container, it).commit() }
+            }
         }
     }
 
