@@ -40,18 +40,16 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
                 R.id.downloaded_only -> consume { viewModel.shouldShowDownloadedOnly.toggle() }
                 R.id.sort_by_title -> consume { if (!viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(true) }
                 R.id.sort_by_artist -> consume { if (viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(false) }
-                else -> consume { viewModel.languageFilters.get()[it.itemId]?.toggle() }
+                else -> consume { viewModel.languageFilters.get().filterKeys { language -> language.nameResource == it.itemId }.values.first().toggle() }
             }
         }
         viewModel.languageFilters.onPropertyChanged {
             binding.navigationView.menu.findItem(R.id.filter_by_language).subMenu.run {
                 clear()
-                it.keys.toList().forEachIndexed { index, languageNameResource ->
-                    add(R.id.language_container, languageNameResource, index, languageNameResource).apply {
+                it.keys.toList().forEachIndexed { index, language ->
+                    add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
                         setActionView(R.layout.widget_checkbox)
-                        viewModel.languageFilters.get()[languageNameResource]?.let {
-                            (actionView as CheckBox).setupWithBackingField(it)
-                        }
+                        viewModel.languageFilters.get()[language]?.let { (actionView as CheckBox).setupWithBackingField(it) }
                     }
                 }
             }

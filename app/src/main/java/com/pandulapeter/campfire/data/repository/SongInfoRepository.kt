@@ -1,11 +1,13 @@
 package com.pandulapeter.campfire.data.repository
 
+import android.util.Log
 import com.pandulapeter.campfire.data.model.DownloadedSong
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.storage.StorageManager
 import com.pandulapeter.campfire.util.enqueueCall
+import com.pandulapeter.campfire.util.mapToLanguage
 import java.util.Collections
 
 /**
@@ -91,19 +93,19 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
 
     fun getDownloadedSongs() = storageManager.downloads
 
-    fun getLanguages() = languageFilters.keys.toList().sortedBy { it.id }
+    fun getLanguages() = languageFilters.keys.toList()
 
-    fun isLanguageFilterEnabled(languageId: String): Boolean {
-        return if (languageFilters.containsKey(Language(languageId))) {
-            languageFilters[Language(languageId)] == true
+    fun isLanguageFilterEnabled(language: Language): Boolean {
+        return if (languageFilters.containsKey(language)) {
+            languageFilters[language] == true
         } else {
-            storageManager.isLanguageFilterEnabled(languageId)
+            storageManager.isLanguageFilterEnabled(language)
         }
     }
 
-    fun setLanguageFilterEnabled(languageId: String, isEnabled: Boolean) {
-        languageFilters[Language(languageId)] = isEnabled
-        storageManager.setLanguageFilterEnabled(languageId, isEnabled)
+    fun setLanguageFilterEnabled(language: Language, isEnabled: Boolean) {
+        languageFilters[language] = isEnabled
+        storageManager.setLanguageFilterEnabled(language, isEnabled)
         notifySubscribers()
     }
 
@@ -163,9 +165,15 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     private fun notifySubscribers() = subscribers.forEach { it.onUpdate() }
 
     private fun updateLanguages() {
+        Log.d("DEBUGS", "Updating languages")
         languageFilters.clear()
-        dataSet.map { it.language ?: Language.Language.ENGLISH.id }.distinct().map { Language(it) }.forEach {
-            languageFilters.put(it, isLanguageFilterEnabled(it.id))
+        dataSet.map {
+            val result = it.language.mapToLanguage()
+            Log.d("DEBUGS", "language ${it.language} is ${result}")
+            result
+        }.distinct().sortedBy { it.nameResource }.forEach {
+            Log.d("DEBUGS", "new language: $it")
+            languageFilters.put(it, isLanguageFilterEnabled(it))
         }
     }
 

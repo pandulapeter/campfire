@@ -2,13 +2,13 @@ package com.pandulapeter.campfire.feature.home.library
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
-import android.support.annotation.StringRes
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
+import com.pandulapeter.campfire.util.mapToLanguage
 import com.pandulapeter.campfire.util.onPropertyChanged
 
 /**
@@ -23,7 +23,7 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
     val query = ObservableField(songInfoRepository.query)
     val shouldShowErrorSnackbar = ObservableBoolean(false)
     val shouldShowViewOptions = ObservableBoolean(false)
-    val languageFilters = ObservableField(HashMap<@StringRes Int, ObservableBoolean>())
+    val languageFilters = ObservableField(HashMap<Language, ObservableBoolean>())
 
     init {
         isSearchInputVisible.onPropertyChanged { query.set("") }
@@ -51,9 +51,9 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                 languageFilters.get().clear()
                 languages.forEach { language ->
                     languageFilters.get().put(
-                        language.nameResource,
-                        ObservableBoolean(songInfoRepository.isLanguageFilterEnabled(language.id)).apply {
-                            onPropertyChanged { songInfoRepository.setLanguageFilterEnabled(language.id, it) }
+                        language,
+                        ObservableBoolean(songInfoRepository.isLanguageFilterEnabled(language)).apply {
+                            onPropertyChanged { songInfoRepository.setLanguageFilterEnabled(language, it) }
                         })
                 }
                 languageFilters.notifyChange()
@@ -84,6 +84,6 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
     }
 
     private fun List<SongInfo>.filterByLanguages() = filter {
-        songInfoRepository.isLanguageFilterEnabled(it.language ?: Language.Language.ENGLISH.id)
+        songInfoRepository.isLanguageFilterEnabled(it.language.mapToLanguage())
     }
 }

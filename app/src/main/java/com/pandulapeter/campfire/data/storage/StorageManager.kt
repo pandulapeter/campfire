@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import com.pandulapeter.campfire.data.model.DownloadedSong
+import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 
@@ -115,9 +116,15 @@ class StorageManager(context: Context, private val gson: Gson) {
             sharedPreferences.edit().putString(FAVORITES, gson.toJson(value)).apply()
         }
 
-    fun isLanguageFilterEnabled(languageId: String) = sharedPreferences.getBoolean(KEY_LANGUAGE_FILTER + languageId, true)
+    fun isLanguageFilterEnabled(language: Language) = when (language) {
+        is Language.Known -> sharedPreferences.getBoolean(KEY_LANGUAGE_FILTER + language.id, true)
+        is Language.Unknown -> sharedPreferences.getBoolean(KEY_UNKNOWN_LANGUAGE_FILTER, true)
+    }
 
-    fun setLanguageFilterEnabled(languageId: String, isEnabled: Boolean) = sharedPreferences.edit().putBoolean(KEY_LANGUAGE_FILTER + languageId, isEnabled).apply()
+    fun setLanguageFilterEnabled(language: Language, isEnabled: Boolean) = sharedPreferences.edit().putBoolean(when (language) {
+        is Language.Known -> KEY_LANGUAGE_FILTER + language.id
+        is Language.Unknown -> KEY_UNKNOWN_LANGUAGE_FILTER
+    }, isEnabled).apply()
 
     companion object {
         private const val KEY_NAVIGATION_ITEM = "navigation_item"
@@ -131,6 +138,7 @@ class StorageManager(context: Context, private val gson: Gson) {
         private const val KEY_CACHE = "cache"
         private const val KEY_DOWNLOADED_SONGS = "downloaded_songs"
         private const val KEY_LANGUAGE_FILTER = "language_filter_"
+        private const val KEY_UNKNOWN_LANGUAGE_FILTER = "unknown_language_filter_"
         private const val FAVORITES = "favorites" //TODO: Generalize to support multiple lists.
     }
 }

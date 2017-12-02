@@ -12,6 +12,7 @@ import android.support.annotation.DrawableRes
 import android.support.v4.content.ContextCompat
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.content.res.AppCompatResources
+import com.pandulapeter.campfire.data.model.Language
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -63,4 +64,10 @@ fun <T> Call<T>.enqueueCall(onSuccess: (T) -> Unit, onFailure: () -> Unit) {
 
         override fun onFailure(call: Call<T>?, t: Throwable?) = onFailure()
     })
+}
+
+fun String?.mapToLanguage() = when (this) {
+    Language.SupportedLanguages.ENGLISH.id -> Language.Known.English
+    Language.SupportedLanguages.HUNGARIAN.id -> Language.Known.Hungarian
+    else -> Language.Unknown
 }
