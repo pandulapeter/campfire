@@ -25,17 +25,13 @@
 
     </item>
 
-    <item android:title="@string/home_filter_by_language">
+    <item
+        android:id="@+id/filter_by_language"
+        android:title="@string/home_filter_by_language">
 
         <menu>
 
-            <item
-                android:title="@string/language_english"
-                app:actionLayout="@layout/widget_checkbox" />
-
-            <item
-                android:title="@string/language_hungarian"
-                app:actionLayout="@layout/widget_checkbox" />
+            <group android:id="@+id/language_container" />
 
         </menu>
 

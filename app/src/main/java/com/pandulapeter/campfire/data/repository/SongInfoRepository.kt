@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.DownloadedSong
+import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.storage.StorageManager
@@ -21,6 +22,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
         }
         set(value) {
             field = value
+            updateLanguages()
             notifySubscribers()
         }
     var isLoading = false
@@ -51,6 +53,11 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             field = value
             notifySubscribers()
         }
+    private val languageFilters = HashMap<Language, Boolean>()
+
+    init {
+        updateLanguages()
+    }
 
     fun subscribe(subscriber: Subscriber) {
         if (!subscribers.contains(subscriber)) {
@@ -83,6 +90,22 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     fun getLibrarySongs() = dataSet.filterExplicit().filterDownloaded().sort().toList()
 
     fun getDownloadedSongs() = storageManager.downloads
+
+    fun getLanguages() = languageFilters.keys.toList().sortedBy { it.id }
+
+    fun isLanguageFilterEnabled(languageId: String): Boolean {
+        return if (languageFilters.containsKey(Language(languageId))) {
+            languageFilters[Language(languageId)] == true
+        } else {
+            storageManager.isLanguageFilterEnabled(languageId)
+        }
+    }
+
+    fun setLanguageFilterEnabled(languageId: String, isEnabled: Boolean) {
+        languageFilters[Language(languageId)] = isEnabled
+        storageManager.setLanguageFilterEnabled(languageId, isEnabled)
+        notifySubscribers()
+    }
 
     fun isSongDownloaded(id: String) = storageManager.downloads.map { it.id }.contains(id)
 
@@ -138,6 +161,13 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     }
 
     private fun notifySubscribers() = subscribers.forEach { it.onUpdate() }
+
+    private fun updateLanguages() {
+        languageFilters.clear()
+        dataSet.map { it.language ?: Language.Language.ENGLISH.id }.distinct().map { Language(it) }.forEach {
+            languageFilters.put(it, isLanguageFilterEnabled(it.id))
+        }
+    }
 
     private fun List<SongInfo>.filterExplicit() = if (shouldHideExplicit) filter { it.isExplicit != true } else this
 

@@ -115,6 +115,10 @@ class StorageManager(context: Context, private val gson: Gson) {
             sharedPreferences.edit().putString(FAVORITES, gson.toJson(value)).apply()
         }
 
+    fun isLanguageFilterEnabled(languageId: String) = sharedPreferences.getBoolean(KEY_LANGUAGE_FILTER + languageId, true)
+
+    fun setLanguageFilterEnabled(languageId: String, isEnabled: Boolean) = sharedPreferences.edit().putBoolean(KEY_LANGUAGE_FILTER + languageId, isEnabled).apply()
+
     companion object {
         private const val KEY_NAVIGATION_ITEM = "navigation_item"
         private const val VALUE_LIBRARY = "library"
@@ -126,6 +130,7 @@ class StorageManager(context: Context, private val gson: Gson) {
         private const val KEY_SHOULD_HIDE_EXPLICIT = "should_hide_explicit"
         private const val KEY_CACHE = "cache"
         private const val KEY_DOWNLOADED_SONGS = "downloaded_songs"
+        private const val KEY_LANGUAGE_FILTER = "language_filter_"
         private const val FAVORITES = "favorites" //TODO: Generalize to support multiple lists.
     }
 }

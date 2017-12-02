@@ -11,6 +11,7 @@
     <!-- Supported languages -->
     <string name="language_english">English</string>
     <string name="language_hungarian">Hungarian</string>
+    <string name="language_unknown">Unknown</string>
 
     <!-- Home screen -->
     <string name="home_version_pattern">v%s</string>

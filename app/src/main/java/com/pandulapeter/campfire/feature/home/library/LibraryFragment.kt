@@ -6,6 +6,7 @@ import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
 import android.support.v7.widget.SwitchCompat
 import android.view.View
+import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.RadioButton
 import com.pandulapeter.campfire.LibraryBinding
@@ -24,10 +25,7 @@ import com.pandulapeter.campfire.util.*
  */
 class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library), SongOptionsFragment.SongActionListener {
 
-    override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository, {
-        binding.drawerLayout.openDrawer(GravityCompat.END)
-        hideKeyboard(activity?.currentFocus)
-    })
+    override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository)
 
     override fun getRecyclerView() = binding.recyclerView
 
@@ -39,10 +37,23 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { hideKeyboard(activity?.currentFocus) })
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
-                R.id.downloaded_only -> consume { viewModel.shouldShowDownloadedOnly.set(!viewModel.shouldShowDownloadedOnly.get()) }
+                R.id.downloaded_only -> consume { viewModel.shouldShowDownloadedOnly.toggle() }
                 R.id.sort_by_title -> consume { if (!viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(true) }
                 R.id.sort_by_artist -> consume { if (viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(false) }
-                else -> false
+                else -> consume { viewModel.languageFilters.get()[it.itemId]?.toggle() }
+            }
+        }
+        viewModel.languageFilters.onPropertyChanged {
+            binding.navigationView.menu.findItem(R.id.filter_by_language).subMenu.run {
+                clear()
+                it.keys.toList().forEachIndexed { index, languageNameResource ->
+                    add(R.id.language_container, languageNameResource, index, languageNameResource).apply {
+                        setActionView(R.layout.widget_checkbox)
+                        viewModel.languageFilters.get()[languageNameResource]?.let {
+                            (actionView as CheckBox).setupWithBackingField(it)
+                        }
+                    }
+                }
             }
         }
         (binding.navigationView.menu.findItem(R.id.downloaded_only).actionView as SwitchCompat).setupWithBackingField(viewModel.shouldShowDownloadedOnly)
@@ -76,6 +87,11 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         viewModel.adapter.itemActionClickListener = { position ->
             viewModel.adapter.items[position].songInfo.let { songInfo -> SongOptionsFragment.show(childFragmentManager, songInfo) }
         }
+        // Set up view options toggle.
+        viewModel.shouldShowViewOptions.onEventTriggered {
+            binding.drawerLayout.openDrawer(GravityCompat.END)
+            hideKeyboard(activity?.currentFocus)
+        }
     }
 
     override fun onBackPressed(): Boolean {
@@ -99,6 +115,8 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
             //TODO: Add / remove Playlist
         }
     }
+
+    private fun ObservableBoolean.toggle() = set(!get())
 
     private fun CompoundButton.setupWithBackingField(backingField: ObservableBoolean, shouldNegate: Boolean = false) {
         //TODO: There is a shorter solution using logical operators, don't be lazy.
