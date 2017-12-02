@@ -17,4 +17,8 @@
     <dimen name="view_options_width">240dp</dimen>
     <dimen name="card_text_margin">2dp</dimen>
 
+    <!-- Library screen -->
+    <dimen name="header_height">36dp</dimen>
+    <dimen name="header_elevation">4dp</dimen>
+
 </resources>

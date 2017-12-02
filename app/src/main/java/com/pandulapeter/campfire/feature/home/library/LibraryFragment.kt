@@ -81,6 +81,15 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
                 .setAction(R.string.try_again, { viewModel.forceRefresh() })
                 .show()
         }
+        // Set up the sticky item headers.
+        context?.let {
+            binding.recyclerView.addItemDecoration(object : StickyHeaderItemDecoration(it) {
+
+                override fun isHeader(position: Int) = position >= 0 && viewModel.isHeader(position)
+
+                override fun getHeaderTitle(position: Int) = if (position >= 0) viewModel.getHeaderTitle(position) else ""
+            })
+        }
         // Set up list item "More" action listener.
         viewModel.adapter.itemActionClickListener = { position ->
             viewModel.adapter.items[position].songInfo.let { songInfo -> SongOptionsFragment.show(childFragmentManager, songInfo) }

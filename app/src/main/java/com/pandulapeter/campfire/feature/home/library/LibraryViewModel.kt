@@ -77,6 +77,16 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
 
     fun showViewOptions() = shouldShowViewOptions.set(true)
 
+    fun isHeader(position: Int) = position == 0 ||
+        if (isSortedByTitle.get()) {
+            adapter.items[position].songInfo.title[0] != adapter.items[position - 1].songInfo.title[0]
+        } else {
+            adapter.items[position].songInfo.artist[0] != adapter.items[position - 1].songInfo.artist[0]
+        }
+
+    fun getHeaderTitle(position: Int) = (if (isSortedByTitle.get()) adapter.items[position].songInfo.title[0] else adapter.items[position].songInfo.artist[0]).toString()
+
+
     //TODO: Handle special characters, prioritize results that begin with the query.
     private fun List<SongInfo>.filterByQuery(query: String) = filter {
         it.title.contains(query, true) || it.artist.contains(query, true)
