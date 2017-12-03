@@ -20,7 +20,7 @@ class HomeViewModel(private val userPreferenceRepository: UserPreferenceReposito
             userPreferenceRepository.navigationItem = value
         }
 
-    override fun onUpdate() {
+    override fun onUpdate(updateType: Repository.UpdateType) {
         playlists.set(playlistRepository.getPlaylists())
     }
 

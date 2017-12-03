@@ -97,7 +97,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         }
         // Set up list item "More" action listener.
         viewModel.adapter.itemActionClickListener = { position ->
-            viewModel.adapter.items[position].songInfo.let { songInfo -> SongOptionsBottomSheetFragment.show(childFragmentManager, songInfo) }
+            viewModel.adapter.items[position].songInfo.let { songInfo -> SongOptionsBottomSheetFragment.show(childFragmentManager, songInfo.id) }
         }
         // Set up view options toggle.
         viewModel.shouldShowViewOptions.onEventTriggered {
@@ -128,8 +128,8 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         return false
     }
 
-    override fun onSongAction(songInfo: SongInfo, songAction: SongOptionsBottomSheetFragment.SongAction) = when (songAction) {
-        SongOptionsBottomSheetFragment.SongAction.RemoveFromDownloads -> viewModel.addOrRemoveSongFromDownloads(songInfo)
+    override fun onSongAction(songId: String, songAction: SongOptionsBottomSheetFragment.SongAction) = when (songAction) {
+        SongOptionsBottomSheetFragment.SongAction.RemoveFromDownloads -> viewModel.removeSongFromDownloads(songId)
         SongOptionsBottomSheetFragment.SongAction.NewPlaylist -> {
             Snackbar.make(binding.root, R.string.work_in_progress, Snackbar.LENGTH_LONG).show()
         }

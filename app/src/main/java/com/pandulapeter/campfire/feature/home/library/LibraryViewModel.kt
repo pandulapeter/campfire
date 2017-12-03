@@ -5,6 +5,7 @@ import android.databinding.ObservableField
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.LanguageRepository
+import com.pandulapeter.campfire.data.repository.Repository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
@@ -61,7 +62,7 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
         return filteredItems
     }
 
-    override fun onUpdate() {
+    override fun onUpdate(updateType: Repository.UpdateType) {
         isLoading.set(songInfoRepository.isLoading)
         languageRepository.getLanguages().let { languages ->
             if (languages != languageFilters.get().keys.toList()) {
@@ -76,12 +77,14 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                 languageFilters.notifyChange()
             }
         }
-        super.onUpdate()
+        super.onUpdate(updateType)
     }
 
     fun forceRefresh() = songInfoRepository.updateDataSet { shouldShowErrorSnackbar.set(true) }
 
     fun showOrHideSearchInput() = isSearchInputVisible.toggle()
+
+    fun removeSongFromDownloads(songId: String) = songInfoRepository.removeSongFromDownloads(songId)
 
     fun addOrRemoveSongFromDownloads(songInfo: SongInfo) =
         if (songInfoRepository.isSongDownloaded(songInfo.id)) {

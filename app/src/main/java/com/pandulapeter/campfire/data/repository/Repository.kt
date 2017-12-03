@@ -10,7 +10,7 @@ abstract class Repository {
         if (!subscribers.contains(subscriber)) {
             subscribers.add(subscriber)
         }
-        subscriber.onUpdate()
+        subscriber.onUpdate(UpdateType.InitialUpdate(this.javaClass))
     }
 
     fun unsubscribe(subscriber: Subscriber) {
@@ -19,14 +19,33 @@ abstract class Repository {
         }
     }
 
-    protected fun notifySubscribers() = subscribers.forEach { it.onUpdate() }
+    protected fun notifySubscribers(updateType: UpdateType = UpdateType.Unspecified) = subscribers.forEach { it.onUpdate(updateType) }
 
     /**
      * Implemented by classes who want to observe changes in a repository.
      */
     interface Subscriber {
 
-        //TODO: Add a parameter to specify the type of the update, right now too many unnecessary updates are triggered.
-        fun onUpdate()
+        fun onUpdate(updateType: UpdateType)
+    }
+
+    /**
+     * Represents all the possible update events.
+     *
+     * TODO: Add more events to avoid unnecessary updates.
+     */
+    sealed class UpdateType {
+        // General
+        object Unspecified : UpdateType()
+
+        class InitialUpdate(from : Class<Repository>) : UpdateType()
+
+        // Language
+
+        // Playlist
+
+        // SongInfo
+
+        // UserPreference
     }
 }
