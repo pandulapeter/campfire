@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.util.consume
  */
 class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist) {
 
-    override fun createViewModel() = PlaylistViewModel(callbacks, songInfoRepository, playlistRepository)
+    override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, playlistRepository)
 
     override fun getRecyclerView() = binding.recyclerView
 

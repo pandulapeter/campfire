@@ -21,8 +21,8 @@ import com.pandulapeter.campfire.util.toggle
 class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                        songInfoRepository: SongInfoRepository,
                        playlistRepository: PlaylistRepository,
-                       private val userPreferenceRepository: UserPreferenceRepository,
-                       private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, songInfoRepository, playlistRepository) {
+                       userPreferenceRepository: UserPreferenceRepository,
+                       private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, playlistRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.query.isNotEmpty())
     val query = ObservableField(userPreferenceRepository.query)
     val shouldShowViewOptions = ObservableBoolean(false)
@@ -97,10 +97,6 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
         }
 
     fun getHeaderTitle(position: Int) = (if (isSortedByTitle.get()) adapter.items[position].songInfo.title[0] else adapter.items[position].songInfo.artist[0]).toString()
-
-    private fun List<SongInfo>.filterWorkInProgress() = if (userPreferenceRepository.shouldHideWorkInProgress) filter { it.version ?: 0 >= 0 } else this
-
-    private fun List<SongInfo>.filterExplicit() = if (userPreferenceRepository.shouldHideExplicit) filter { it.isExplicit != true } else this
 
     private fun List<SongInfo>.filterByLanguages() = filter { languageRepository.isLanguageFilterEnabled(it.language.mapToLanguage()) }
 

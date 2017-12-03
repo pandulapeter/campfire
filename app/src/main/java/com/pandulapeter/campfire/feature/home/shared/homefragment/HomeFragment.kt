@@ -3,9 +3,7 @@ package com.pandulapeter.campfire.feature.home.shared.homefragment
 import android.content.Context
 import android.databinding.ViewDataBinding
 import android.support.annotation.LayoutRes
-import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
-import javax.inject.Inject
 
 /**
  * Parent class for Fragments that can be seen on the main screen.
@@ -13,7 +11,6 @@ import javax.inject.Inject
  * Controlled by subclasses of [HomeFragmentViewModel].
  */
 abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>(@LayoutRes layoutResourceId: Int) : CampfireFragment<B, VM>(layoutResourceId) {
-
     override val viewModel by lazy { createViewModel() }
     protected var callbacks: HomeCallbacks? = null
 

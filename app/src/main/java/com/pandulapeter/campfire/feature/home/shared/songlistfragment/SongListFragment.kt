@@ -9,6 +9,7 @@ import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
@@ -24,6 +25,7 @@ import javax.inject.Inject
  * Controlled by subclasses of [SongListViewModel].
  */
 abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>(@LayoutRes layoutResourceId: Int) : HomeFragment<B, VM>(layoutResourceId) {
+    @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
     @Inject lateinit var songInfoRepository: SongInfoRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
 
@@ -58,12 +60,14 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
 
     override fun onStart() {
         super.onStart()
+        userPreferenceRepository.subscribe(viewModel)
         songInfoRepository.subscribe(viewModel)
         playlistRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
+        userPreferenceRepository.unsubscribe(viewModel)
         songInfoRepository.unsubscribe(viewModel)
         playlistRepository.unsubscribe(viewModel)
     }

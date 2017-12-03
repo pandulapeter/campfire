@@ -11,13 +11,13 @@ import dagger.android.support.AndroidSupportInjectionModule
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = arrayOf(
+@Component(modules = [
     AndroidSupportInjectionModule::class,
     AppModule::class,
     CampfireModule::class,
     StorageModule::class,
     NetworkModule::class,
-    RepositoryModule::class))
+    RepositoryModule::class])
 interface AppComponent : AndroidInjector<CampfireApplication> {
 
     @Component.Builder

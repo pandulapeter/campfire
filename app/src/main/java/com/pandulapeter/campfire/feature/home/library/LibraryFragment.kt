@@ -10,7 +10,6 @@ import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.LanguageRepository
-import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
@@ -31,7 +30,6 @@ import javax.inject.Inject
  */
 class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library), SongOptionsFragment.SongActionListener {
     @Inject lateinit var languageRepository: LanguageRepository
-    @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
 
     override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository, playlistRepository, userPreferenceRepository, languageRepository)
 
@@ -111,13 +109,11 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
     override fun onStart() {
         super.onStart()
         languageRepository.subscribe(viewModel)
-        userPreferenceRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
         languageRepository.unsubscribe(viewModel)
-        userPreferenceRepository.unsubscribe(viewModel)
     }
 
     override fun onBackPressed(): Boolean {

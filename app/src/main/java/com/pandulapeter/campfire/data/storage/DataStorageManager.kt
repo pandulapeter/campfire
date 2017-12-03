@@ -6,9 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import com.pandulapeter.campfire.data.model.DownloadedSong
-import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
-import com.pandulapeter.campfire.feature.home.HomeViewModel
 
 
 /**

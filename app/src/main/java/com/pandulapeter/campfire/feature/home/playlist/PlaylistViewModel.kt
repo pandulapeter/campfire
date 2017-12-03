@@ -1,8 +1,8 @@
 package com.pandulapeter.campfire.feature.home.playlist
 
-import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
@@ -13,24 +13,20 @@ import java.util.Collections
  */
 class PlaylistViewModel(
     homeCallbacks: HomeFragment.HomeCallbacks?,
+    userPreferenceRepository: UserPreferenceRepository,
     songInfoRepository: SongInfoRepository,
-    playlistRepository: PlaylistRepository) : SongListViewModel(homeCallbacks, songInfoRepository, playlistRepository) {
-    val shouldShowShuffle = ObservableBoolean(false)
+    playlistRepository: PlaylistRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, playlistRepository) {
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
-        val downloadedSongs = songInfoRepository.getDownloadedSongs()
-        val downloadedSongIds = downloadedSongs.map { it.id }
-        return playlistRepository.getFavoriteSongs().map { songInfo ->
-            SongInfoViewModel(
-                songInfo,
-                true,
-                downloadedSongs.firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0)
-        }
-    }
-
-    override fun onUpdate() {
-        super.onUpdate()
-        shouldShowShuffle.set(adapter.itemCount > SongInfoRepository.SHUFFLE_LIMIT)
+        return playlistRepository.getFavoriteSongs()
+            .filterWorkInProgress()
+            .filterExplicit()
+            .map { songInfo ->
+                SongInfoViewModel(
+                    songInfo,
+                    true,
+                    songInfoRepository.getDownloadedSongs().firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0)
+            }
     }
 
     fun removeSongFromFavorites(id: String) = playlistRepository.removeSongFromFavorites(id)
@@ -48,6 +44,4 @@ class PlaylistViewModel(
         }
         playlistRepository.setFavorites(list)
     }
-
-    fun shuffleItems() = playlistRepository.shuffleFavorites()
 }
