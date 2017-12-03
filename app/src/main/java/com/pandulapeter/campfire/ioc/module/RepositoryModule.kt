@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.ioc.module
 
 import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.repository.LanguageRepository
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.storage.StorageManager
 import dagger.Module
@@ -20,4 +21,9 @@ object RepositoryModule {
     @Singleton
     @JvmStatic
     fun provideLanguageRepository(storageManager: StorageManager) = LanguageRepository(storageManager)
+
+    @Provides
+    @Singleton
+    @JvmStatic
+    fun providePlaylistRepository(storageManager: StorageManager) = PlaylistRepository(storageManager)
 }

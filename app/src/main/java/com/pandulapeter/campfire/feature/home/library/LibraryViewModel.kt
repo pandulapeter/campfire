@@ -29,7 +29,7 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
     val languageFilters = ObservableField(HashMap<Language, ObservableBoolean>())
 
     init {
-        isSearchInputVisible.onPropertyChanged { query.set("") }
+        isSearchInputVisible.onPropertyChanged { if (it) query.set("") else songInfoRepository.query = "" }
         query.onPropertyChanged { songInfoRepository.query = it }
         shouldShowDownloadedOnly.onPropertyChanged { songInfoRepository.shouldShowDownloadedOnly = it }
         isSortedByTitle.onPropertyChanged { songInfoRepository.isSortedByTitle = it }
@@ -90,8 +90,12 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
 
 
     //TODO: Handle special characters, prioritize results that begin with the query.
-    private fun List<SongInfo>.filterByQuery(query: String) = filter {
-        it.title.contains(query, true) || it.artist.contains(query, true)
+    private fun List<SongInfo>.filterByQuery(query: String) = if (isSearchInputVisible.get()) {
+        filter {
+            it.title.contains(query, true) || it.artist.contains(query, true)
+        }
+    } else {
+        this
     }
 
     private fun List<SongInfo>.filterByLanguages() = filter {
