@@ -7,7 +7,7 @@ import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
@@ -24,8 +24,8 @@ import javax.inject.Inject
  * Controlled by [HomeViewModel].
  */
 class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activity_home), HomeFragment.HomeCallbacks {
-    @Inject lateinit var preferenceStorageManager: PreferenceStorageManager
-    override val viewModel by lazy { HomeViewModel(preferenceStorageManager) }
+    @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
+    override val viewModel by lazy { HomeViewModel(userPreferenceRepository) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

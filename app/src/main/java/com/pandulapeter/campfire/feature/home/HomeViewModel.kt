@@ -1,18 +1,16 @@
 package com.pandulapeter.campfire.feature.home
 
-import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 
 /**
  * Handles events and logic for [HomeActivity].
  */
-class HomeViewModel(private val preferenceStorageManager: PreferenceStorageManager) : CampfireViewModel() {
-    var navigationItem: NavigationItem = preferenceStorageManager.navigationItem
+class HomeViewModel(private val userPreferenceRepository: UserPreferenceRepository) : CampfireViewModel() {
+    var navigationItem: NavigationItem = userPreferenceRepository.navigationItem
         set(value) {
-            if (field != value) {
-                field = value
-                preferenceStorageManager.navigationItem = value
-            }
+            field = value
+            userPreferenceRepository.navigationItem = value
         }
 
     /**

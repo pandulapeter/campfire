@@ -7,6 +7,14 @@ import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
  */
 class UserPreferenceRepository(
     private val preferenceStorageManager: PreferenceStorageManager) : Repository() {
+    var navigationItem = preferenceStorageManager.navigationItem
+        set(value) {
+            if (field != value) {
+                field = value
+                preferenceStorageManager.navigationItem = value
+                notifySubscribers()
+            }
+        }
     var isSortedByTitle = preferenceStorageManager.isSortedByTitle
         set(value) {
             if (field != value) {
