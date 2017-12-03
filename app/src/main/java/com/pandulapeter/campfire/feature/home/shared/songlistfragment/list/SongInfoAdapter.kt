@@ -13,6 +13,8 @@ import com.pandulapeter.campfire.data.model.SongInfo
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.cancel
+import kotlin.coroutines.experimental.CoroutineContext
 
 /**
  * Custom [RecyclerView.Adapter] that handles a a list of [SongInfo] objects.
@@ -21,7 +23,8 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
 
     var items = listOf<SongInfoViewModel>()
         set(newItems) {
-            async(UI) {
+            coroutine?.cancel()
+            coroutine = async(UI) {
                 val oldItems = items
                 async(CommonPool) {
                     DiffUtil.calculateDiff(object : DiffUtil.Callback() {
@@ -42,6 +45,7 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
     var itemClickListener: (position: Int) -> Unit = { _ -> }
     var itemActionClickListener: ((position: Int) -> Unit)? = null
     var itemActionTouchListener: ((position: Int) -> Unit)? = null
+    private var coroutine: CoroutineContext? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): SongInfoViewHolder {
         val viewHolder = SongInfoViewHolder.create(parent)
