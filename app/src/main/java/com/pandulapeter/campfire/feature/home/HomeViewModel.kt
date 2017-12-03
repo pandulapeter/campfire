@@ -21,7 +21,7 @@ class HomeViewModel(private val userPreferenceRepository: UserPreferenceReposito
         }
 
     override fun onUpdate() {
-        playlists.set(playlistRepository.getPlaylistst())
+        playlists.set(playlistRepository.getPlaylists())
     }
 
     /**

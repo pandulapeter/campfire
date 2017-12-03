@@ -28,7 +28,7 @@ import javax.inject.Inject
  *
  * Controlled by [LibraryViewModel].
  */
-class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library), SongOptionsFragment.SongActionListener {
+class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library), SongOptionsBottomSheetFragment.SongActionListener {
     @Inject lateinit var languageRepository: LanguageRepository
 
     override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository, playlistRepository, userPreferenceRepository, languageRepository)
@@ -97,7 +97,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         }
         // Set up list item "More" action listener.
         viewModel.adapter.itemActionClickListener = { position ->
-            viewModel.adapter.items[position].songInfo.let { songInfo -> SongOptionsFragment.show(childFragmentManager, songInfo) }
+            viewModel.adapter.items[position].songInfo.let { songInfo -> SongOptionsBottomSheetFragment.show(childFragmentManager, songInfo) }
         }
         // Set up view options toggle.
         viewModel.shouldShowViewOptions.onEventTriggered {
@@ -128,12 +128,12 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         return false
     }
 
-    override fun onSongAction(songInfo: SongInfo, songAction: SongOptionsFragment.SongAction) = when (songAction) {
-        SongOptionsFragment.SongAction.RemoveFromDownloads -> viewModel.addOrRemoveSongFromDownloads(songInfo)
-        SongOptionsFragment.SongAction.NewPlaylist -> {
+    override fun onSongAction(songInfo: SongInfo, songAction: SongOptionsBottomSheetFragment.SongAction) = when (songAction) {
+        SongOptionsBottomSheetFragment.SongAction.RemoveFromDownloads -> viewModel.addOrRemoveSongFromDownloads(songInfo)
+        SongOptionsBottomSheetFragment.SongAction.NewPlaylist -> {
             Snackbar.make(binding.root, R.string.work_in_progress, Snackbar.LENGTH_LONG).show()
         }
-        is SongOptionsFragment.SongAction.AddToPlaylist -> {
+        is SongOptionsBottomSheetFragment.SongAction.AddToPlaylist -> {
             //TODO: Add / remove Playlist
         }
     }

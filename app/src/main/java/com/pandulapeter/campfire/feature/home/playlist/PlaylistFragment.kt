@@ -6,6 +6,7 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.consume
 
@@ -18,7 +19,7 @@ import com.pandulapeter.campfire.util.consume
  */
 class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist) {
 
-    override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, playlistRepository)
+    override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, playlistRepository, context, arguments.playlistId)
 
     override fun getRecyclerView() = binding.recyclerView
 
@@ -52,5 +53,13 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         viewModel.adapter.itemActionTouchListener = { position ->
             itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
         }
+    }
+
+    companion object {
+        private const val PLAYLIST_ID = "playlist_id"
+        private val Bundle?.playlistId
+            get() = this?.getInt(PLAYLIST_ID) ?: Playlist.FAVORITES_ID
+
+        fun newInstance(playlistId: Int) = PlaylistFragment().apply { arguments = Bundle().apply { putInt(PLAYLIST_ID, playlistId) } }
     }
 }

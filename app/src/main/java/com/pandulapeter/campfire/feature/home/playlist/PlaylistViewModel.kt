@@ -1,5 +1,9 @@
 package com.pandulapeter.campfire.feature.home.playlist
 
+import android.content.Context
+import android.databinding.ObservableField
+import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
@@ -15,7 +19,14 @@ class PlaylistViewModel(
     homeCallbacks: HomeFragment.HomeCallbacks?,
     userPreferenceRepository: UserPreferenceRepository,
     songInfoRepository: SongInfoRepository,
-    playlistRepository: PlaylistRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, playlistRepository) {
+    playlistRepository: PlaylistRepository,
+    context: Context?,
+    private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, playlistRepository) {
+    val title = ObservableField(context?.getString(R.string.home_favorites))
+
+    init {
+        (playlistRepository.getPlaylist(playlistId) as? Playlist.Custom)?.let { title.set(it.name) }
+    }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
         return playlistRepository.getFavoriteSongs()

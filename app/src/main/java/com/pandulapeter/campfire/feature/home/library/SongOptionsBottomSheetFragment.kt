@@ -12,7 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.SongOptionsBinding
+import com.pandulapeter.campfire.SongOptionsBottomSheetBinding
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
@@ -25,15 +25,15 @@ import javax.inject.Inject
 /**
  * A bottom sheet that allows the user to set the positionSource of the avatar image (gallery or camera).
  */
-class SongOptionsFragment : DaggerAppCompatDialogFragment(), AlertDialogFragment.OnDialogItemsSelectedListener, Repository.Subscriber {
+class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDialogFragment.OnDialogItemsSelectedListener, Repository.Subscriber {
     @Inject lateinit var playlistRepository: PlaylistRepository
-    private lateinit var binding: SongOptionsBinding
+    private lateinit var binding: SongOptionsBottomSheetBinding
     private lateinit var songInfo: SongInfo
     private val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let {
         val dialog = BottomSheetDialog(it, theme)
-        binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_song_options, null, false)
+        binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_song_options_bottom_sheet, null, false)
         songInfo = savedInstanceState?.let { savedInstanceState.getParcelable(SONG_INFO) as SongInfo } ?: arguments?.getParcelable(SONG_INFO) as SongInfo
         binding.songInfo = songInfo
         dialog.setContentView(binding.root)
@@ -63,14 +63,14 @@ class SongOptionsFragment : DaggerAppCompatDialogFragment(), AlertDialogFragment
         outState.putParcelable(SONG_INFO, songInfo)
     }
 
-    override fun onPositiveButtonSelected() = invokeAndClose { getSongActionListener()?.onSongAction(songInfo, SongOptionsFragment.SongAction.RemoveFromDownloads) }
+    override fun onPositiveButtonSelected() = invokeAndClose { getSongActionListener()?.onSongAction(songInfo, SongOptionsBottomSheetFragment.SongAction.RemoveFromDownloads) }
 
     override fun onUpdate() {
         context?.let { context ->
             binding.playlistContainer.removeAllViews()
             val height = context.dimension(R.dimen.touch_target)
             val padding = context.dimension(R.dimen.content_padding)
-            playlistRepository.getPlaylistst().forEach { playlist ->
+            playlistRepository.getPlaylists().forEach { playlist ->
                 binding.playlistContainer.addView(AppCompatCheckBox(context).apply {
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(padding, padding, padding, padding)
@@ -113,7 +113,7 @@ class SongOptionsFragment : DaggerAppCompatDialogFragment(), AlertDialogFragment
         private const val SONG_INFO = "song_info"
 
         fun show(fragmentManager: FragmentManager, songInfo: SongInfo) {
-            SongOptionsFragment().apply { arguments = Bundle().apply { putParcelable(SONG_INFO, songInfo) } }.let { it.show(fragmentManager, it.tag) }
+            SongOptionsBottomSheetFragment().apply { arguments = Bundle().apply { putParcelable(SONG_INFO, songInfo) } }.let { it.show(fragmentManager, it.tag) }
         }
     }
 }

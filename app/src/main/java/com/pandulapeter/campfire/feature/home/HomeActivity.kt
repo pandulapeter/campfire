@@ -121,7 +121,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
             supportFragmentManager.beginTransaction().replace(R.id.fragment_container, when (navigationItem) {
                 HomeViewModel.NavigationItem.Library -> LibraryFragment()
                 HomeViewModel.NavigationItem.Settings -> SettingsFragment()
-                is HomeViewModel.NavigationItem.Playlist -> PlaylistFragment()
+                is HomeViewModel.NavigationItem.Playlist -> PlaylistFragment.newInstance(navigationItem.id)
             }).commit()
         }
     }

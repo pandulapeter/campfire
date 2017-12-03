@@ -10,7 +10,9 @@ import java.util.Collections
 class PlaylistRepository(private val dataStorageManager: DataStorageManager,
                          private val songInfoRepository: SongInfoRepository) : Repository() {
 
-    fun getPlaylistst() = dataStorageManager.playlists
+    fun getPlaylists() = dataStorageManager.playlists
+
+    fun getPlaylist(id: Int) = getPlaylists().first { it.id == id }
 
     fun getFavoriteSongs() = dataStorageManager.favorites.mapNotNull { id -> songInfoRepository.getLibrarySongs().find { id == it.id } }
 
