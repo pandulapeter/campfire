@@ -23,7 +23,7 @@ class DataStorageManager(context: Context, private val gson: Gson) {
      */
     var cloudCache: List<SongInfo>
         get() = try {
-            gson.fromJson(sharedPreferences.getString(KEY_CACHE, "[]"), object : TypeToken<List<SongInfo>>() {}.type)
+            gson.fromJson(sharedPreferences.getString(KEY_CACHE, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<SongInfo>>() {}.type)
         } catch (_: JsonSyntaxException) {
             listOf()
         }
@@ -36,7 +36,7 @@ class DataStorageManager(context: Context, private val gson: Gson) {
      */
     var downloads: List<DownloadedSong>
         get() = try {
-            gson.fromJson(sharedPreferences.getString(KEY_DOWNLOADED_SONGS, "[]"), object : TypeToken<List<DownloadedSong>>() {}.type)
+            gson.fromJson(sharedPreferences.getString(KEY_DOWNLOADED_SONGS, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<DownloadedSong>>() {}.type)
         } catch (_: JsonSyntaxException) {
             listOf()
         }
@@ -49,7 +49,7 @@ class DataStorageManager(context: Context, private val gson: Gson) {
      */
     var favorites: List<String>
         get() = try {
-            gson.fromJson(sharedPreferences.getString(KEY_FAVORITES, "[]"), object : TypeToken<List<String>>() {}.type)
+            gson.fromJson(sharedPreferences.getString(KEY_FAVORITES, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<String>>() {}.type)
         } catch (_: JsonSyntaxException) {
             listOf()
         }
@@ -58,6 +58,7 @@ class DataStorageManager(context: Context, private val gson: Gson) {
         }
 
     companion object {
+        private const val VALUE_EMPTY_JSON_ARRAY = "[]"
         private const val KEY_CACHE = "cache"
         private const val KEY_DOWNLOADED_SONGS = "downloaded_songs"
         private const val KEY_FAVORITES = "favorites"

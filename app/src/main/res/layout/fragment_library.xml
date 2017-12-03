@@ -97,15 +97,17 @@
                                     android:padding="@dimen/action_button_padding"
                                     app:srcCompat="@drawable/ic_search_24dp" />
 
-                                <TextView
+                                <android.support.v7.widget.Toolbar
                                     android:id="@+id/title"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_alignParentStart="true"
                                     android:layout_centerVertical="true"
+                                    android:layout_marginStart="-16dp"
                                     android:layout_toStartOf="@id/search"
-                                    android:text="@string/home_library"
-                                    android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+                                    app:subtitle="@{viewModel.shouldDisplaySubtitle ? @string/library_song_count(viewModel.filteredItemCount, viewModel.totalItemCount) : null}"
+                                    app:title="@string/home_library"
+                                    tools:subtitle="50 / 100 songs" />
 
                             </RelativeLayout>
 
