@@ -47,6 +47,14 @@ class UserPreferenceRepository(
                 notifySubscribers()
             }
         }
+    var shouldShowSongCount = preferenceStorageManager.shouldShowSongCount
+        set(value) {
+            if (field != value) {
+                field = value
+                preferenceStorageManager.shouldShowSongCount = value
+                notifySubscribers()
+            }
+        }
     var query = ""
         set(value) {
             if (field != value) {

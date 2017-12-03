@@ -105,7 +105,7 @@
                                     android:layout_centerVertical="true"
                                     android:layout_marginStart="-16dp"
                                     android:layout_toStartOf="@id/search"
-                                    app:subtitle="@{viewModel.shouldDisplaySubtitle ? @string/library_song_count(viewModel.filteredItemCount, viewModel.totalItemCount) : null}"
+                                    app:subtitle="@{viewModel.shouldDisplaySubtitle ? @string/library_song_count(viewModel.filteredItemCount) : null}"
                                     app:title="@string/home_library"
                                     tools:subtitle="50 / 100 songs" />
 

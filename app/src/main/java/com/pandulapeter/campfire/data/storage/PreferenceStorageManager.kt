@@ -80,6 +80,15 @@ class PreferenceStorageManager(context: Context) {
             sharedPreferences.edit().putBoolean(KEY_SHOULD_HIDE_WORK_IN_PROGRESS, value).apply()
         }
 
+    /**
+     * Whether or not work-in-progress songs should be filtered out.
+     */
+    var shouldShowSongCount: Boolean
+        get() = sharedPreferences.getBoolean(KEY_SHOULD_SHOW_SONG_COUNT, BuildConfig.DEBUG)
+        set(value) {
+            sharedPreferences.edit().putBoolean(KEY_SHOULD_SHOW_SONG_COUNT, value).apply()
+        }
+
     fun isLanguageFilterEnabled(language: Language) = when (language) {
         is Language.Known -> sharedPreferences.getBoolean(KEY_LANGUAGE_FILTER + language.id, true)
         is Language.Unknown -> sharedPreferences.getBoolean(KEY_UNKNOWN_LANGUAGE_FILTER, true)
@@ -102,5 +111,6 @@ class PreferenceStorageManager(context: Context) {
         private const val KEY_SHOULD_HIDE_WORK_IN_PROGRESS = "should_hide_work_in_progress"
         private const val KEY_LANGUAGE_FILTER = "language_filter_"
         private const val KEY_UNKNOWN_LANGUAGE_FILTER = "unknown_language_filter_"
+        private const val KEY_SHOULD_SHOW_SONG_COUNT = "should_show_song_count"
     }
 }
