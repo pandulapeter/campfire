@@ -179,7 +179,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
 
     private fun updateLanguages() {
         languageFilters.clear()
-        dataSet.map { it.language.mapToLanguage() }.distinct().sortedBy { it.nameResource }.forEach {
+        dataSet.map { it.language.mapToLanguage() }.distinct().forEach {
             languageFilters.put(it, isLanguageFilterEnabled(it))
         }
     }

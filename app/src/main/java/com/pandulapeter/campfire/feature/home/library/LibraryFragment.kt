@@ -4,11 +4,8 @@ import android.databinding.ObservableBoolean
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
-import android.support.v7.widget.SwitchCompat
 import android.view.View
-import android.widget.CheckBox
 import android.widget.CompoundButton
-import android.widget.RadioButton
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
@@ -46,16 +43,16 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         viewModel.languageFilters.onPropertyChanged {
             binding.navigationView.menu.findItem(R.id.filter_by_language).subMenu.run {
                 clear()
-                it.keys.toList().forEachIndexed { index, language ->
+                it.keys.toList().sortedBy { it.nameResource }.forEachIndexed { index, language ->
                     add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
                         setActionView(R.layout.widget_checkbox)
-                        viewModel.languageFilters.get()[language]?.let { (actionView as CheckBox).setupWithBackingField(it) }
+                        viewModel.languageFilters.get()[language]?.let { (actionView as CompoundButton).setupWithBackingField(it) }
                     }
                 }
             }
         }
-        (binding.navigationView.menu.findItem(R.id.downloaded_only).actionView as SwitchCompat).setupWithBackingField(viewModel.shouldShowDownloadedOnly)
-        (binding.navigationView.menu.findItem(R.id.sort_by_title).actionView as RadioButton).setupWithBackingField(viewModel.isSortedByTitle)
+        (binding.navigationView.menu.findItem(R.id.downloaded_only).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowDownloadedOnly)
+        (binding.navigationView.menu.findItem(R.id.sort_by_title).actionView as CompoundButton).setupWithBackingField(viewModel.isSortedByTitle)
         // Set up keyboard handling for the search view.
         viewModel.isSearchInputVisible.onPropertyChanged {
             if (it) {
@@ -67,7 +64,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
                 hideKeyboard(activity?.currentFocus)
             }
         }
-        (binding.navigationView.menu.findItem(R.id.sort_by_artist).actionView as RadioButton).setupWithBackingField(viewModel.isSortedByTitle, true)
+        (binding.navigationView.menu.findItem(R.id.sort_by_artist).actionView as CompoundButton).setupWithBackingField(viewModel.isSortedByTitle, true)
         // Initialize the pull-to-refresh functionality.
         binding.swipeRefreshLayout.run {
             setOnRefreshListener { viewModel.forceRefresh() }
