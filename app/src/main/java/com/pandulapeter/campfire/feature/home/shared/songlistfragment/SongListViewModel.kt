@@ -19,6 +19,10 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
     abstract fun getAdapterItems(): List<SongInfoViewModel>
 
     override fun onUpdate() {
-        adapter.items = getAdapterItems()
+        getAdapterItems().let {
+            if (it != adapter.items) {
+                adapter.items = getAdapterItems()
+            }
+        }
     }
 }
