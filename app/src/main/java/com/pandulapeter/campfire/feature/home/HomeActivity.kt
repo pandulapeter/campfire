@@ -61,7 +61,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                         R.id.playlist_container,
                         playlist.id,
                         playlist.id,
-                        if (playlist is Playlist.Favorites) getString(R.string.home_favorites) else (playlist as Playlist.Custom).name).apply {
+                        (playlist as? Playlist.Custom)?.name ?: getString(R.string.home_favorites)).apply {
                         setIcon(R.drawable.ic_playlist_24dp)
                     }
                 }

@@ -77,17 +77,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/header"
+            android:orientation="vertical"
             android:paddingEnd="@dimen/first_keyline"
-            android:paddingStart="@dimen/action_button_margin">
-
-            <CheckBox
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/touch_target"
-                android:gravity="center_vertical"
-                android:padding="@dimen/content_padding"
-                android:text="Favorites" />
-
-        </LinearLayout>
+            android:paddingStart="@dimen/action_button_margin" />
 
         <TextView
             android:id="@+id/new_playlist"

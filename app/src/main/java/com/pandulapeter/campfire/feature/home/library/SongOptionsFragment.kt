@@ -1,29 +1,38 @@
 package com.pandulapeter.campfire.feature.home.library
 
-import android.app.Dialog
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
-import android.support.design.widget.BottomSheetDialogFragment
+import android.support.design.widget.BottomSheetDialog
 import android.support.design.widget.CoordinatorLayout
 import android.support.v4.app.FragmentManager
+import android.support.v7.widget.AppCompatCheckBox
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SongOptionsBinding
+import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.model.SongInfo
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.Repository
+import com.pandulapeter.campfire.util.dimension
+import dagger.android.support.DaggerAppCompatDialogFragment
+import javax.inject.Inject
 
 
 /**
  * A bottom sheet that allows the user to set the positionSource of the avatar image (gallery or camera).
  */
-class SongOptionsFragment : BottomSheetDialogFragment(), AlertDialogFragment.OnDialogItemsSelectedListener {
+class SongOptionsFragment : DaggerAppCompatDialogFragment(), AlertDialogFragment.OnDialogItemsSelectedListener, Repository.Subscriber {
+    @Inject lateinit var playlistRepository: PlaylistRepository
     private lateinit var binding: SongOptionsBinding
     private lateinit var songInfo: SongInfo
     private val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val dialog = super.onCreateDialog(savedInstanceState)
+    override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let {
+        val dialog = BottomSheetDialog(it, theme)
         binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_song_options, null, false)
         songInfo = savedInstanceState?.let { savedInstanceState.getParcelable(SONG_INFO) as SongInfo } ?: arguments?.getParcelable(SONG_INFO) as SongInfo
         binding.songInfo = songInfo
@@ -36,7 +45,17 @@ class SongOptionsFragment : BottomSheetDialogFragment(), AlertDialogFragment.OnD
                 R.string.remove_download_confirmation_cancel)
         }
         binding.newPlaylist.setOnClickListener { invokeAndClose { invokeAndClose { getSongActionListener()?.onSongAction(songInfo, SongAction.NewPlaylist) } } }
-        return dialog
+        dialog
+    } ?: super.onCreateDialog(savedInstanceState)
+
+    override fun onStart() {
+        super.onStart()
+        playlistRepository.subscribe(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        playlistRepository.unsubscribe(this)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -45,6 +64,22 @@ class SongOptionsFragment : BottomSheetDialogFragment(), AlertDialogFragment.OnD
     }
 
     override fun onPositiveButtonSelected() = invokeAndClose { getSongActionListener()?.onSongAction(songInfo, SongOptionsFragment.SongAction.RemoveFromDownloads) }
+
+    override fun onUpdate() {
+        context?.let { context ->
+            binding.playlistContainer.removeAllViews()
+            val height = context.dimension(R.dimen.touch_target)
+            val padding = context.dimension(R.dimen.content_padding)
+            playlistRepository.getPlaylistst().forEach { playlist ->
+                binding.playlistContainer.addView(AppCompatCheckBox(context).apply {
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(padding, padding, padding, padding)
+                    text = (playlist as? Playlist.Custom)?.name ?: getString(R.string.home_favorites)
+                    //TODO: isChecked =
+                }, ViewGroup.LayoutParams.MATCH_PARENT, height)
+            }
+        }
+    }
 
     private fun invokeAndClose(action: () -> Unit) {
         action()

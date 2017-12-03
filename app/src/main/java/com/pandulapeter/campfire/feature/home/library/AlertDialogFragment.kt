@@ -3,14 +3,14 @@ package com.pandulapeter.campfire.feature.home.library
 import android.app.Dialog
 import android.os.Bundle
 import android.support.annotation.StringRes
-import android.support.v4.app.DialogFragment
 import android.support.v4.app.FragmentManager
 import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatDialogFragment
 
 /**
  * Wrapper for [AlertDialog] with that handles state saving.
  */
-class AlertDialogFragment : DialogFragment() {
+class AlertDialogFragment : AppCompatDialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         context?.let { context ->
