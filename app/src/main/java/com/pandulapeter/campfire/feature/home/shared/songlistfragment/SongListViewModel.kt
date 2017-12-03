@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.feature.home.shared.songlistfragment
 
+import com.pandulapeter.campfire.data.repository.Repository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.data.repository.Subscriber
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragmentViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongI
  * Handles events and logic for subclasses of [SongListFragment].
  */
 abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
-                                 protected val songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks), Subscriber {
+                                 protected val songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks), Repository.Subscriber {
     val adapter = SongInfoAdapter()
 
     abstract fun getAdapterItems(): List<SongInfoViewModel>

@@ -1,19 +1,19 @@
 package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.DownloadedSong
-import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.storage.StorageManager
 import com.pandulapeter.campfire.util.enqueueCall
-import com.pandulapeter.campfire.util.mapToLanguage
 import java.util.Collections
 
 /**
  * Wraps caching and updating of [SongInfo] objects.
  */
-class SongInfoRepository(private val storageManager: StorageManager, private val networkManager: NetworkManager) {
-    private var subscribers = mutableSetOf<Subscriber>()
+class SongInfoRepository(
+    private val storageManager: StorageManager,
+    private val networkManager: NetworkManager,
+    private val languageRepository: LanguageRepository) : Repository() {
     private var dataSet = storageManager.cloudCache
         get() {
             if (!isLoading && System.currentTimeMillis() - storageManager.lastUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
@@ -24,7 +24,7 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
         set(value) {
             if (field != value) {
                 field = value
-                updateLanguages()
+                languageRepository.updateLanguages(value)
                 notifySubscribers()
             }
         }
@@ -66,23 +66,9 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
                 notifySubscribers()
             }
         }
-    private val languageFilters = HashMap<Language, Boolean>()
 
     init {
-        updateLanguages()
-    }
-
-    fun subscribe(subscriber: Subscriber) {
-        if (!subscribers.contains(subscriber)) {
-            subscribers.add(subscriber)
-        }
-        subscriber.onUpdate()
-    }
-
-    fun unsubscribe(subscriber: Subscriber) {
-        if (subscribers.contains(subscriber)) {
-            subscribers.remove(subscriber)
-        }
+        languageRepository.updateLanguages(dataSet)
     }
 
     fun updateDataSet(onError: () -> Unit = {}) {
@@ -103,24 +89,6 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
     fun getLibrarySongs() = dataSet.filterExplicit().filterDownloaded().sort().toList()
 
     fun getDownloadedSongs() = storageManager.downloads
-
-    fun getLanguages() = languageFilters.keys.toList()
-
-    fun isLanguageFilterEnabled(language: Language): Boolean {
-        return if (languageFilters.containsKey(language)) {
-            languageFilters[language] == true
-        } else {
-            storageManager.isLanguageFilterEnabled(language)
-        }
-    }
-
-    fun setLanguageFilterEnabled(language: Language, isEnabled: Boolean) {
-        if (isLanguageFilterEnabled(language) != isEnabled) {
-            languageFilters[language] = isEnabled
-            storageManager.setLanguageFilterEnabled(language, isEnabled)
-            notifySubscribers()
-        }
-    }
 
     fun isSongDownloaded(id: String) = storageManager.downloads.map { it.id }.contains(id)
 
@@ -172,15 +140,6 @@ class SongInfoRepository(private val storageManager: StorageManager, private val
             }
             storageManager.favorites = newList
             notifySubscribers()
-        }
-    }
-
-    private fun notifySubscribers() = subscribers.forEach { it.onUpdate() }
-
-    private fun updateLanguages() {
-        languageFilters.clear()
-        dataSet.map { it.language.mapToLanguage() }.distinct().forEach {
-            languageFilters.put(it, isLanguageFilterEnabled(it))
         }
     }
 

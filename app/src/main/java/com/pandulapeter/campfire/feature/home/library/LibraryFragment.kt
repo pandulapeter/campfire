@@ -9,8 +9,16 @@ import android.widget.CompoundButton
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
+import com.pandulapeter.campfire.data.repository.LanguageRepository
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.addDrawerListener
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.onEventTriggered
+import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.showKeyboard
+import com.pandulapeter.campfire.util.toggle
+import javax.inject.Inject
 
 /**
  * Displays the list of all available songs from the backend. The list is searchable and filterable
@@ -21,8 +29,9 @@ import com.pandulapeter.campfire.util.*
  * Controlled by [LibraryViewModel].
  */
 class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library), SongOptionsFragment.SongActionListener {
+    @Inject lateinit var languageRepository: LanguageRepository
 
-    override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository)
+    override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository, languageRepository)
 
     override fun getRecyclerView() = binding.recyclerView
 
@@ -96,6 +105,16 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
             binding.drawerLayout.openDrawer(GravityCompat.END)
             hideKeyboard(activity?.currentFocus)
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        languageRepository.subscribe(viewModel)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        languageRepository.unsubscribe(viewModel)
     }
 
     override fun onBackPressed(): Boolean {
