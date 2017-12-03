@@ -14,6 +14,11 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
 
     fun getPlaylist(playlistId: Int) = dataStorageManager.getPlaylist(playlistId)
 
+    fun newPlaylist(name: String) {
+        dataStorageManager.newPlaylist(name)
+        notifySubscribers(UpdateType.PlaylistAddedOrRemoved)
+    }
+
     fun getPlaylistSongs(playlistId: Int) = getPlaylist(playlistId).songIds
         .mapNotNull { songId ->
             songInfoRepository.getLibrarySongs()

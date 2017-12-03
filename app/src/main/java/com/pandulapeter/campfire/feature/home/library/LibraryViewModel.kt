@@ -84,15 +84,6 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
 
     fun showOrHideSearchInput() = isSearchInputVisible.toggle()
 
-    fun removeSongFromDownloads(songId: String) = songInfoRepository.removeSongFromDownloads(songId)
-
-    fun addOrRemoveSongFromDownloads(songInfo: SongInfo) =
-        if (songInfoRepository.isSongDownloaded(songInfo.id)) {
-            songInfoRepository.removeSongFromDownloads(songInfo.id)
-        } else {
-            songInfoRepository.addSongToDownloads(songInfo)
-        }
-
     fun showViewOptions() = shouldShowViewOptions.set(true)
 
     fun isHeader(position: Int) = position == 0 ||

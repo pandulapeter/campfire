@@ -37,6 +37,8 @@ class PreferenceStorageManager(context: Context) {
 
     /**
      * The timestamp of the most recent update that helps to determine how old is the local cache.
+     *
+     * TODO: Remove duplicated code using delegation.
      */
     var lastUpdateTimestamp: Long
         get() = sharedPreferences.getLong(KEY_LAST_UPDATE_TIMESTAMP, 0)

@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.Repository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.util.dimension
 import dagger.android.support.DaggerAppCompatDialogFragment
 import javax.inject.Inject
@@ -44,7 +45,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                 R.string.remove_download_confirmation_remove,
                 R.string.remove_download_confirmation_cancel)
         }
-        binding.newPlaylist.setOnClickListener { invokeAndClose { invokeAndClose { getSongActionListener()?.onSongAction(songId, SongAction.NewPlaylist) } } }
+        binding.newPlaylist.setOnClickListener { NewPlaylistDialogFragment.show(childFragmentManager) }
         dialog
     } ?: super.onCreateDialog(savedInstanceState)
 
@@ -65,7 +66,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
         outState.songId = songId
     }
 
-    override fun onPositiveButtonSelected() = invokeAndClose { getSongActionListener()?.onSongAction(songId, SongOptionsBottomSheetFragment.SongAction.RemoveFromDownloads) }
+    override fun onPositiveButtonSelected() = invokeAndClose { songInfoRepository.removeSongFromDownloads(songId) }
 
     override fun onUpdate(updateType: Repository.UpdateType) {
         when (updateType) {
@@ -78,6 +79,9 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                         refreshPlaylistCheckboxes()
                     }
                 }
+            }
+            is Repository.UpdateType.PlaylistAddedOrRemoved -> {
+                refreshPlaylistCheckboxes()
             }
         }
     }
@@ -108,29 +112,6 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
     private fun invokeAndClose(action: () -> Unit) {
         action()
         behavior.state = BottomSheetBehavior.STATE_HIDDEN
-    }
-
-    private fun getSongActionListener(): SongActionListener? {
-        parentFragment?.let {
-            if (it is SongActionListener) {
-                return it
-            }
-        }
-        return null
-    }
-
-    interface SongActionListener {
-
-        fun onSongAction(songId: String, songAction: SongAction)
-    }
-
-    /**
-     * Marks the possible actions the user can do with a song.
-     */
-    sealed class SongAction {
-        object RemoveFromDownloads : SongAction()
-        object NewPlaylist : SongAction()
-        class AddToPlaylist(val id: String) : SongAction()
     }
 
     companion object {

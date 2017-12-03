@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature.home
 
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
 import android.view.View
 import android.widget.TextView
@@ -16,6 +15,7 @@ import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.shared.CampfireActivity
+import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
@@ -41,7 +41,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                 R.id.library -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Library) }
                 R.id.settings -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Settings) }
                 R.drawable.ic_new_playlist_24dp -> {
-                    getCurrentFragment()?.view?.let { Snackbar.make(it, R.string.work_in_progress, Snackbar.LENGTH_SHORT).show() }
+                    NewPlaylistDialogFragment.show(supportFragmentManager)
                     binding.drawerLayout.closeDrawer(GravityCompat.START)
                     false
                 }
@@ -57,11 +57,11 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
         viewModel.playlists.onPropertyChanged {
             binding.navigationView.menu.findItem(R.id.playlists).subMenu.run {
                 clear()
-                it.sortedBy { it.id }.forEach { playlist ->
+                it.sortedBy { it.id }.forEachIndexed { index, playlist ->
                     add(
                         R.id.playlist_container,
                         playlist.id,
-                        playlist.id,
+                        index,
                         (playlist as? Playlist.Custom)?.name ?: getString(R.string.home_favorites)).apply {
                         setIcon(R.drawable.ic_playlist_24dp)
                     }

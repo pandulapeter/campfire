@@ -8,7 +8,6 @@ import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.LanguageRepository
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.addDrawerListener
@@ -28,7 +27,7 @@ import javax.inject.Inject
  *
  * Controlled by [LibraryViewModel].
  */
-class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library), SongOptionsBottomSheetFragment.SongActionListener {
+class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library) {
     @Inject lateinit var languageRepository: LanguageRepository
 
     override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository, userPreferenceRepository, languageRepository)
@@ -126,16 +125,6 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
             return true
         }
         return false
-    }
-
-    override fun onSongAction(songId: String, songAction: SongOptionsBottomSheetFragment.SongAction) = when (songAction) {
-        SongOptionsBottomSheetFragment.SongAction.RemoveFromDownloads -> viewModel.removeSongFromDownloads(songId)
-        SongOptionsBottomSheetFragment.SongAction.NewPlaylist -> {
-            Snackbar.make(binding.root, R.string.work_in_progress, Snackbar.LENGTH_LONG).show()
-        }
-        is SongOptionsBottomSheetFragment.SongAction.AddToPlaylist -> {
-            //TODO: Add / remove Playlist
-        }
     }
 
     private fun CompoundButton.setupWithBackingField(backingField: ObservableBoolean, shouldNegate: Boolean = false) {
