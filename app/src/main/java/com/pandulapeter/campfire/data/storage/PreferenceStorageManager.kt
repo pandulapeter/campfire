@@ -23,7 +23,7 @@ class PreferenceStorageManager(context: Context) {
                 return when (it) {
                     VALUE_LIBRARY -> HomeViewModel.NavigationItem.Library
                     VALUE_SETTINGS -> HomeViewModel.NavigationItem.Settings
-                    else -> HomeViewModel.NavigationItem.Playlist(it.removePrefix(VALUE_PLAYLIST))
+                    else -> HomeViewModel.NavigationItem.Playlist(Integer.parseInt(it.removePrefix(VALUE_PLAYLIST)))
                 }
             }
         }

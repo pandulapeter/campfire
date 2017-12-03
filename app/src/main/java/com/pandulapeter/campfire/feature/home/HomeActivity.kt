@@ -7,6 +7,8 @@ import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.Playlist
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
@@ -16,6 +18,7 @@ import com.pandulapeter.campfire.feature.shared.CampfireActivity
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.onPropertyChanged
 import javax.inject.Inject
 
 /**
@@ -25,7 +28,8 @@ import javax.inject.Inject
  */
 class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activity_home), HomeFragment.HomeCallbacks {
     @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
-    override val viewModel by lazy { HomeViewModel(userPreferenceRepository) }
+    @Inject lateinit var playlistRepository: PlaylistRepository
+    override val viewModel by lazy { HomeViewModel(userPreferenceRepository, playlistRepository) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,25 +39,53 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
             when (menuItem.itemId) {
                 R.id.library -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Library) }
                 R.id.settings -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Settings) }
-                R.id.playlist -> consumeAndCloseDrawer {
-                    //TODO: Add option to select more playlists.
-                    replaceActiveFragment(HomeViewModel.NavigationItem.Playlist("favorites"))
-                }
-                R.id.new_playlist -> {
+                R.drawable.ic_new_playlist_24dp -> {
                     getCurrentFragment()?.view?.let { Snackbar.make(it, R.string.work_in_progress, Snackbar.LENGTH_SHORT).show() }
                     binding.drawerLayout.closeDrawer(GravityCompat.START)
                     false
                 }
-                else -> false
+                else -> consumeAndCloseDrawer {
+                    binding.navigationView.setCheckedItem(menuItem.itemId)
+                    replaceActiveFragment(HomeViewModel.NavigationItem.Playlist(menuItem.itemId))
+                }
             }
         }
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { hideKeyboard(currentFocus) })
+        updateCheckedItem()
         replaceActiveFragment(viewModel.navigationItem)
-        binding.navigationView.setCheckedItem(when (viewModel.navigationItem) {
-            HomeViewModel.NavigationItem.Library -> R.id.library
-            HomeViewModel.NavigationItem.Settings -> R.id.settings
-            is HomeViewModel.NavigationItem.Playlist -> R.id.playlist //TODO: Add option to select more playlists.
-        })
+        viewModel.playlists.onPropertyChanged {
+            binding.navigationView.menu.findItem(R.id.playlists).subMenu.run {
+                clear()
+                it.sortedBy { it.id }.forEachIndexed { index, playlist ->
+                    add(
+                        R.id.playlist_container,
+                        playlist.id,
+                        playlist.id,
+                        if (playlist is Playlist.Favorites) getString(R.string.home_favorites) else (playlist as Playlist.Custom).name).apply {
+                        setIcon(R.drawable.ic_playlist_24dp)
+                    }
+                }
+                add(
+                    R.id.playlist_container,
+                    R.drawable.ic_new_playlist_24dp,
+                    it.size,
+                    R.string.home_new_playlist).apply {
+                    setIcon(R.drawable.ic_new_playlist_24dp)
+                }
+                setGroupCheckable(R.id.playlist_container, true, true)
+                updateCheckedItem()
+            }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        playlistRepository.subscribe(viewModel)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        playlistRepository.unsubscribe(viewModel)
     }
 
     override fun onBackPressed() {
@@ -69,6 +101,14 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     override fun showMenu() {
         binding.drawerLayout.openDrawer(GravityCompat.START)
         hideKeyboard(currentFocus)
+    }
+
+    private fun updateCheckedItem() = viewModel.navigationItem.let {
+        binding.navigationView.setCheckedItem(when (it) {
+            HomeViewModel.NavigationItem.Library -> R.id.library
+            HomeViewModel.NavigationItem.Settings -> R.id.settings
+            is HomeViewModel.NavigationItem.Playlist -> it.id
+        })
     }
 
     /**
