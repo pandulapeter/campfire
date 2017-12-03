@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.storage.DataStorageManager
+import com.pandulapeter.campfire.util.swap
 
 /**
  * Wraps caching and updating of [Playlist] objects.
@@ -25,10 +26,7 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
     fun addSongToPlaylist(playlistId: Int, songId: String, position: Int? = null) {
         if (!isSongInPlaylist(playlistId, songId)) {
             dataStorageManager.savePlaylist(getPlaylist(playlistId).apply {
-                songIds.toMutableList().apply {
-                    //TODO: This might not work.
-                    if (position == null) add(songId) else add(position, songId)
-                }
+                songIds.apply { if (position == null) add(songId) else add(position, songId) }
             })
             notifySubscribers()
         }
@@ -37,10 +35,7 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
     fun removeSongFromPlaylist(playlistId: Int, songId: String) {
         if (isSongInPlaylist(playlistId, songId)) {
             dataStorageManager.savePlaylist(getPlaylist(playlistId).apply {
-                songIds.toMutableList().apply {
-                    //TODO: This might not work.
-                    remove(songId)
-                }
+                songIds.apply { remove(songId) }
             })
             notifySubscribers()
         }
@@ -48,11 +43,7 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
 
     fun setPlaylist(playlistId: Int, songIds: List<String>) {
         dataStorageManager.savePlaylist(getPlaylist(playlistId).apply {
-            this.songIds.toMutableList().apply {
-                //TODO: Might not work.
-                clear()
-                addAll(songIds)
-            }
+            this.songIds.apply { swap(songIds) }
         })
         notifySubscribers()
     }

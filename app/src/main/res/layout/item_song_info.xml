@@ -37,7 +37,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/library_more"
                 android:padding="@dimen/content_padding"
-                android:visibility="@{viewModel.isDownloaded ? View.VISIBLE : View.GONE}"
+                android:visibility="@{viewModel.shouldShowAction &amp;&amp; viewModel.isDownloaded ? View.VISIBLE : View.GONE}"
                 app:srcCompat="@drawable/ic_more_24dp" />
 
             <TextView

@@ -7,10 +7,10 @@ import com.google.gson.annotations.SerializedName
  */
 sealed class Playlist(
     @SerializedName("id") val id: Int,
-    @SerializedName("songIds") val songIds: List<String>) {
+    @SerializedName("songIds") val songIds: MutableList<String>) {
 
-    class Favorites(songIds: List<String>) : Playlist(FAVORITES_ID, songIds)
-    class Custom(id: Int, @SerializedName("name") val name: String, songIds: List<String>) : Playlist(id, songIds)
+    class Favorites(songIds: MutableList<String>) : Playlist(FAVORITES_ID, songIds)
+    class Custom(id: Int, @SerializedName("name") val name: String, songIds: MutableList<String>) : Playlist(id, songIds)
 
     companion object {
         const val FAVORITES_ID = 0

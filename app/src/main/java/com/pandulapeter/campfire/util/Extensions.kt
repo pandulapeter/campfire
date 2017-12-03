@@ -23,6 +23,11 @@ fun Context.drawable(@DrawableRes drawableId: Int) = AppCompatResources.getDrawa
 
 fun ObservableBoolean.toggle() = set(!get())
 
+fun <T> MutableCollection<T>.swap(newItems: Collection<T>) {
+    clear()
+    addAll(newItems)
+}
+
 inline fun ObservableBoolean.onEventTriggered(crossinline callback: () -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {

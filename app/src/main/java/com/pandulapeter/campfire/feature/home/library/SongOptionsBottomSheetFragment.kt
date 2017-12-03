@@ -76,6 +76,13 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                     setPadding(padding, padding, padding, padding)
                     text = (playlist as? Playlist.Custom)?.name ?: getString(R.string.home_favorites)
                     isChecked = playlistRepository.isSongInPlaylist(playlist.id, songInfo.id)
+                    setOnCheckedChangeListener { _, isChecked ->
+                        if (isChecked) {
+                            playlistRepository.addSongToPlaylist(playlist.id, songInfo.id)
+                        } else {
+                            playlistRepository.removeSongFromPlaylist(playlist.id, songInfo.id)
+                        }
+                    }
                 }, ViewGroup.LayoutParams.MATCH_PARENT, height)
             }
         }

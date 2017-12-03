@@ -35,6 +35,7 @@ class PlaylistViewModel(
             .map { songInfo ->
                 SongInfoViewModel(
                     songInfo,
+                    false,
                     true,
                     songInfoRepository.getDownloadedSongs().firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0)
             }

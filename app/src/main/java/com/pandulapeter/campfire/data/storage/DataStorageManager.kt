@@ -50,17 +50,17 @@ class DataStorageManager(context: Context, private val gson: Gson) {
     }.toList()
 
     fun getPlaylist(playlistId: Int) = if (playlistId == Playlist.FAVORITES_ID) {
-        val ids: List<String> = try {
+        val ids: MutableList<String> = try {
             gson.fromJson(sharedPreferences.getString(KEY_PLAYLIST + Playlist.FAVORITES_ID, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<String>>() {}.type)
         } catch (_: JsonSyntaxException) {
-            listOf()
+            mutableListOf<String>()
         }
         Playlist.Favorites(ids)
     } else {
         val playlist: Playlist.Custom = try {
             gson.fromJson(sharedPreferences.getString(KEY_PLAYLIST + playlistId, ""), object : TypeToken<Playlist.Custom>() {}.type)
         } catch (_: JsonSyntaxException) {
-            Playlist.Custom(playlistId, "", listOf())
+            Playlist.Custom(playlistId, "", mutableListOf())
         }
         playlist
     }

@@ -53,6 +53,7 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
             .map { songInfo ->
                 SongInfoViewModel(
                     songInfo,
+                    true,
                     downloadedSongIds.contains(songInfo.id),
                     downloadedSongs.firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0)
             }
