@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.home.playlist
 
 import android.databinding.ObservableBoolean
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
@@ -10,17 +11,20 @@ import java.util.Collections
 /**
  * Handles events and logic for [PlaylistFragment].
  */
-class PlaylistViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepository: SongInfoRepository) : SongListViewModel(homeCallbacks, songInfoRepository) {
+class PlaylistViewModel(
+    homeCallbacks: HomeFragment.HomeCallbacks?,
+    songInfoRepository: SongInfoRepository,
+    playlistRepository: PlaylistRepository) : SongListViewModel(homeCallbacks, songInfoRepository, playlistRepository) {
     val shouldShowShuffle = ObservableBoolean(false)
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
         val downloadedSongs = songInfoRepository.getDownloadedSongs()
         val downloadedSongIds = downloadedSongs.map { it.id }
-        return songInfoRepository.getFavoriteSongs().map { songInfo ->
+        return playlistRepository.getFavoriteSongs().map { songInfo ->
             SongInfoViewModel(
                 songInfo,
-                downloadedSongIds.contains(songInfo.id),
-                downloadedSongs.firstOrNull { songInfo.id == it.id }?.version?.compareTo(songInfo.version ?: 0) ?: 0 < 0)
+                true,
+                downloadedSongs.firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0)
         }
     }
 
@@ -29,7 +33,7 @@ class PlaylistViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepo
         shouldShowShuffle.set(adapter.itemCount > SongInfoRepository.SHUFFLE_LIMIT)
     }
 
-    fun removeSongFromFavorites(id: String) = songInfoRepository.removeSongFromFavorites(id)
+    fun removeSongFromFavorites(id: String) = playlistRepository.removeSongFromFavorites(id)
 
     fun swapSongsInFavorites(originalPosition: Int, targetPosition: Int) {
         val list = adapter.items.map { it.songInfo.id }.toMutableList()
@@ -42,8 +46,8 @@ class PlaylistViewModel(homeCallbacks: HomeFragment.HomeCallbacks?, songInfoRepo
                 Collections.swap(list, i, i - 1)
             }
         }
-        songInfoRepository.setFavorites(list)
+        playlistRepository.setFavorites(list)
     }
 
-    fun shuffleItems() = songInfoRepository.shuffleFavorites()
+    fun shuffleItems() = playlistRepository.shuffleFavorites()
 }

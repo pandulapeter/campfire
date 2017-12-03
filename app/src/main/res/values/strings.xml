@@ -4,9 +4,12 @@
     <!-- General -->
     <string name="campfire">Campfire</string>
     <string name="work_in_progress">Work in progress</string>
-    <string name="something_went_wrong">Something went wrong.</string>
-    <string name="try_again">Try again</string>
-    <string name="undo">Undo</string>
+    <string name="new_version_available">New version available</string>
+    <string name="remove_download">Remove download</string>
+    <string name="remove_download_confirmation_title">Are you sure?</string>
+    <string name="remove_download_confirmation_message">Removing the download will also delete the song from your playlists.</string>
+    <string name="remove_download_confirmation_remove">Remove</string>
+    <string name="remove_download_confirmation_cancel">Cancel</string>
 
     <!-- Supported languages -->
     <string name="language_english">English</string>
@@ -14,6 +17,7 @@
     <string name="language_unknown">Unknown</string>
 
     <!-- Home screen -->
+    <string name="home_menu">Menu</string>
     <string name="home_version_pattern">v%s</string>
     <string name="home_library">Library</string>
     <string name="home_settings">Settings</string>
@@ -21,21 +25,16 @@
     <string name="home_new_playlist">New playlist</string>
 
     <!-- Library screen -->
-    <string name="home_search">Search</string>
-    <string name="home_close">Close</string>
-    <string name="home_menu">Menu</string>
-    <string name="home_view_options">View options</string>
-    <string name="home_downloaded_only">Downloaded only</string>
-    <string name="home_sort_by">Sort by</string>
-    <string name="home_sort_by_title">Song title</string>
-    <string name="home_sort_by_artist">Artist</string>
-    <string name="home_filter_by_language">Filter by language</string>
-    <string name="home_more">More</string>
-    <string name="home_new_version_available">New version available</string>
-    <string name="home_remove_download">Remove download</string>
-    <string name="home_remove_download_confirmation_title">Are you sure?</string>
-    <string name="home_remove_download_confirmation_message">Removing the download will also delete the song from your playlists.</string>
-    <string name="home_remove_download_confirmation_remove">Remove</string>
-    <string name="home_remove_download_confirmation_cancel">Cancel</string>
+    <string name="library_update_error">Error updating library.</string>
+    <string name="library_try_again">Try again</string>
+    <string name="library_search">Search</string>
+    <string name="library_close">Close</string>
+    <string name="library_view_options">View options</string>
+    <string name="library_downloaded_only">Downloaded only</string>
+    <string name="library_sort_by">Sort by</string>
+    <string name="library_sort_by_title">Song title</string>
+    <string name="library_sort_by_artist">Artist</string>
+    <string name="library_filter_by_language">Filter by language</string>
+    <string name="library_more">More</string>
 
 </resources>

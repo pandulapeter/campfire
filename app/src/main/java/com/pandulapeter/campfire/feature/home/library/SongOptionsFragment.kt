@@ -30,10 +30,10 @@ class SongOptionsFragment : BottomSheetDialogFragment(), AlertDialogFragment.OnD
         dialog.setContentView(binding.root)
         binding.removeDownload.setOnClickListener {
             AlertDialogFragment.show(childFragmentManager,
-                R.string.home_remove_download_confirmation_title,
-                R.string.home_remove_download_confirmation_message,
-                R.string.home_remove_download_confirmation_remove,
-                R.string.home_remove_download_confirmation_cancel)
+                R.string.remove_download_confirmation_title,
+                R.string.remove_download_confirmation_message,
+                R.string.remove_download_confirmation_remove,
+                R.string.remove_download_confirmation_cancel)
         }
         binding.newPlaylist.setOnClickListener { invokeAndClose { invokeAndClose { getSongActionListener()?.onSongAction(songInfo, SongAction.NewPlaylist) } } }
         return dialog

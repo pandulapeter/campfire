@@ -4,21 +4,21 @@
 
     <item
         android:id="@+id/downloaded_only"
-        android:title="@string/home_downloaded_only"
+        android:title="@string/library_downloaded_only"
         app:actionLayout="@layout/widget_switch" />
 
-    <item android:title="@string/home_sort_by">
+    <item android:title="@string/library_sort_by">
 
         <menu>
 
             <item
                 android:id="@+id/sort_by_title"
-                android:title="@string/home_sort_by_title"
+                android:title="@string/library_sort_by_title"
                 app:actionLayout="@layout/widget_radio_button" />
 
             <item
                 android:id="@+id/sort_by_artist"
-                android:title="@string/home_sort_by_artist"
+                android:title="@string/library_sort_by_artist"
                 app:actionLayout="@layout/widget_radio_button" />
 
         </menu>
@@ -27,7 +27,7 @@
 
     <item
         android:id="@+id/filter_by_language"
-        android:title="@string/home_filter_by_language">
+        android:title="@string/library_filter_by_language">
 
         <menu>
 

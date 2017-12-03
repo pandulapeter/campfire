@@ -8,14 +8,13 @@ import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import javax.inject.Inject
 
 /**
- * Parent class for Fragments that can be seen on the main screen. Handles common operations related to a song list.
+ * Parent class for Fragments that can be seen on the main screen.
  *
  * Controlled by subclasses of [HomeFragmentViewModel].
  */
 abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>(@LayoutRes layoutResourceId: Int) : CampfireFragment<B, VM>(layoutResourceId) {
 
     override val viewModel by lazy { createViewModel() }
-    @Inject lateinit var songInfoRepository: SongInfoRepository
     protected var callbacks: HomeCallbacks? = null
 
     abstract fun createViewModel(): VM

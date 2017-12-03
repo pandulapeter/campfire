@@ -18,11 +18,11 @@ import com.pandulapeter.campfire.util.consume
  */
 class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist) {
 
-    override fun createViewModel() = PlaylistViewModel(callbacks, songInfoRepository)
+    override fun createViewModel() = PlaylistViewModel(callbacks, songInfoRepository, playlistRepository)
 
     override fun getRecyclerView() = binding.recyclerView
 
-    //TODO: Add empty state for not having any favorites (or everything being filtered out).
+    //TODO: Add empty state placeholder.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Setup swipe-to-dismiss functionality.

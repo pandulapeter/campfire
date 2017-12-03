@@ -39,6 +39,6 @@ object RepositoryModule {
     @Singleton
     @JvmStatic
     fun providePlaylistRepository(
-        preferenceStorageManager: PreferenceStorageManager,
-        songInfoRepository: SongInfoRepository) = PlaylistRepository(preferenceStorageManager, songInfoRepository)
+        dataStorageManager: DataStorageManager,
+        songInfoRepository: SongInfoRepository) = PlaylistRepository(dataStorageManager, songInfoRepository)
 }

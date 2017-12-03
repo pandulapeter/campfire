@@ -60,7 +60,6 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
     override fun onBindViewHolder(holder: SongInfoViewHolder?, position: Int) = Unit
 
     override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int, payloads: List<Any>?) {
-        //TODO: Start using payloads, the entire item shouldn't be refreshed if only the tint of the action drawable changed.
         holder.binding.viewModel = items[position]
         holder.binding.executePendingBindings()
     }

@@ -23,7 +23,7 @@ abstract class HeaderItemDecoration(context: Context) : RecyclerView.ItemDecorat
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State?) {
         super.getItemOffsets(outRect, view, parent, state)
         val position = parent.getChildAdapterPosition(view)
-        //TODO: headers get removed during the "remove" animation causeing a glitch.
+        //TODO: Headers are removed during the "remove" animation causing a glitch.
         if (isHeader(position)) {
             outRect.top = headerHeight
         }

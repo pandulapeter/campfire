@@ -60,7 +60,7 @@
                             android:layout_centerVertical="true"
                             android:layout_marginEnd="@dimen/action_button_margin"
                             android:background="?attr/selectableItemBackgroundBorderless"
-                            android:contentDescription="@string/home_view_options"
+                            android:contentDescription="@string/library_view_options"
                             android:onClick="@{() -> viewModel.showViewOptions()}"
                             android:padding="@dimen/action_button_padding"
                             app:srcCompat="@drawable/ic_view_options_24dp" />
@@ -92,7 +92,7 @@
                                     android:layout_alignParentEnd="true"
                                     android:layout_centerVertical="true"
                                     android:background="?attr/selectableItemBackgroundBorderless"
-                                    android:contentDescription="@string/home_search"
+                                    android:contentDescription="@string/library_search"
                                     android:onClick="@{() -> viewModel.showOrHideSearchInput()}"
                                     android:padding="@dimen/action_button_padding"
                                     app:srcCompat="@drawable/ic_search_24dp" />
@@ -123,7 +123,7 @@
                                     android:layout_alignParentEnd="true"
                                     android:layout_centerVertical="true"
                                     android:background="?attr/selectableItemBackgroundBorderless"
-                                    android:contentDescription="@string/home_close"
+                                    android:contentDescription="@string/library_close"
                                     android:onClick="@{() -> viewModel.showOrHideSearchInput()}"
                                     android:padding="@dimen/action_button_padding"
                                     app:srcCompat="@drawable/ic_close_24dp" />
@@ -135,7 +135,7 @@
                                     android:layout_alignParentStart="true"
                                     android:layout_centerVertical="true"
                                     android:layout_toStartOf="@id/close"
-                                    android:hint="@string/home_search"
+                                    android:hint="@string/library_search"
                                     android:inputType="textCapWords|textFilter"
                                     android:maxLength="20"
                                     android:text="@={viewModel.query}" />

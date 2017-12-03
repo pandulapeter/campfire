@@ -33,12 +33,11 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
     @Inject lateinit var languageRepository: LanguageRepository
     @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
 
-    override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository, userPreferenceRepository, languageRepository)
+    override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository, playlistRepository, userPreferenceRepository, languageRepository)
 
     override fun getRecyclerView() = binding.recyclerView
 
-    //TODO: Add error state for incorrect downloads.
-    //TODO: Add no-results state for the case when everything is filtered out.
+    //TODO: Add error- and empty states.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Set up the side navigation drawer.
@@ -85,8 +84,8 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         // Set up error handling.
         viewModel.shouldShowErrorSnackbar.onEventTriggered {
             Snackbar
-                .make(binding.root, R.string.something_went_wrong, Snackbar.LENGTH_LONG)
-                .setAction(R.string.try_again, { viewModel.forceRefresh() })
+                .make(binding.root, R.string.library_update_error, Snackbar.LENGTH_LONG)
+                .setAction(R.string.library_try_again, { viewModel.forceRefresh() })
                 .show()
         }
         // Set up the item headers.
@@ -144,15 +143,8 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
     }
 
     private fun CompoundButton.setupWithBackingField(backingField: ObservableBoolean, shouldNegate: Boolean = false) {
-        //TODO: There is a shorter solution using logical operators, don't be lazy.
-        if (shouldNegate) {
-            isChecked = !backingField.get()
-            setOnCheckedChangeListener { _, isChecked -> backingField.set(!isChecked) }
-            backingField.onPropertyChanged { isChecked = !it }
-        } else {
-            isChecked = backingField.get()
-            setOnCheckedChangeListener { _, isChecked -> backingField.set(isChecked) }
-            backingField.onPropertyChanged { isChecked = it }
-        }
+        isChecked = backingField.get().let { if (shouldNegate) !it else it }
+        setOnCheckedChangeListener { _, isChecked -> backingField.set(if (shouldNegate) !isChecked else isChecked) }
+        backingField.onPropertyChanged { isChecked = if (shouldNegate) !it else it }
     }
 }

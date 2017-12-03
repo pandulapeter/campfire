@@ -14,5 +14,5 @@ import kotlinx.android.parcel.Parcelize
     @SerializedName("title") val title: String,
     @SerializedName("artist") val artist: String,
     @SerializedName("language") val language: String?,
-    @SerializedName("version") val version: Int?, //TODO: Notify users about updated songs.
+    @SerializedName("version") val version: Int?,
     @SerializedName("isExplicit") val isExplicit: Boolean?) : Parcelable

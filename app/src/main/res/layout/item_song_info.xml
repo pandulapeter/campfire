@@ -35,7 +35,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_marginEnd="-8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/home_more"
+                android:contentDescription="@string/library_more"
                 android:padding="@dimen/content_padding"
                 android:visibility="@{viewModel.isDownloaded ? View.VISIBLE : View.GONE}"
                 app:srcCompat="@drawable/ic_more_24dp" />
@@ -71,7 +71,7 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@id/artist"
                 android:layout_marginTop="@dimen/card_text_margin"
-                android:text="@string/home_new_version_available"
+                android:text="@string/new_version_available"
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
                 android:textColor="@color/accent"
                 android:visibility="@{viewModel.isDownloaded &amp;&amp; viewModel.shouldBeUpdated ? View.VISIBLE : View.GONE}"
