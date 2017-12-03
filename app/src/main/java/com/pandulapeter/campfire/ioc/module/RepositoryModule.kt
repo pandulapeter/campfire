@@ -4,7 +4,8 @@ import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.repository.LanguageRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.data.storage.StorageManager
+import com.pandulapeter.campfire.data.storage.DataStorageManager
+import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
@@ -15,15 +16,22 @@ object RepositoryModule {
     @Provides
     @Singleton
     @JvmStatic
-    fun provideSongInfoRepository(storageManager: StorageManager, networkManager: NetworkManager, languageRepository: LanguageRepository) = SongInfoRepository(storageManager, networkManager, languageRepository)
+    fun provideSongInfoRepository(
+        preferenceStorageManager: PreferenceStorageManager,
+        dataStorageManager: DataStorageManager,
+        networkManager: NetworkManager,
+        languageRepository: LanguageRepository) = SongInfoRepository(preferenceStorageManager, dataStorageManager, networkManager, languageRepository)
 
     @Provides
     @Singleton
     @JvmStatic
-    fun provideLanguageRepository(storageManager: StorageManager) = LanguageRepository(storageManager)
+    fun provideLanguageRepository(
+        preferenceStorageManager: PreferenceStorageManager) = LanguageRepository(preferenceStorageManager)
 
     @Provides
     @Singleton
     @JvmStatic
-    fun providePlaylistRepository(storageManager: StorageManager) = PlaylistRepository(storageManager)
+    fun providePlaylistRepository(
+        preferenceStorageManager: PreferenceStorageManager,
+        songInfoRepository: SongInfoRepository) = PlaylistRepository(preferenceStorageManager, songInfoRepository)
 }

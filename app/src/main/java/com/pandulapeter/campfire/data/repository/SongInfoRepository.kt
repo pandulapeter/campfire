@@ -3,7 +3,8 @@ package com.pandulapeter.campfire.data.repository
 import com.pandulapeter.campfire.data.model.DownloadedSong
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.network.NetworkManager
-import com.pandulapeter.campfire.data.storage.StorageManager
+import com.pandulapeter.campfire.data.storage.DataStorageManager
+import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
 import com.pandulapeter.campfire.util.enqueueCall
 import java.util.Collections
 
@@ -11,12 +12,13 @@ import java.util.Collections
  * Wraps caching and updating of [SongInfo] objects.
  */
 class SongInfoRepository(
-    private val storageManager: StorageManager,
+    private val preferenceStorageManager: PreferenceStorageManager,
+    private val dataStorageManager: DataStorageManager,
     private val networkManager: NetworkManager,
     private val languageRepository: LanguageRepository) : Repository() {
-    private var dataSet = storageManager.cloudCache
+    private var dataSet = dataStorageManager.cloudCache
         get() {
-            if (!isLoading && System.currentTimeMillis() - storageManager.lastUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
+            if (!isLoading && System.currentTimeMillis() - preferenceStorageManager.lastUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
                 updateDataSet()
             }
             return field
@@ -35,27 +37,27 @@ class SongInfoRepository(
                 notifySubscribers()
             }
         }
-    var isSortedByTitle = storageManager.isSortedByTitle
+    var isSortedByTitle = preferenceStorageManager.isSortedByTitle
         set(value) {
             if (field != value) {
                 field = value
-                storageManager.isSortedByTitle = value
+                preferenceStorageManager.isSortedByTitle = value
                 notifySubscribers()
             }
         }
-    var shouldShowDownloadedOnly = storageManager.shouldShowDownloadedOnly
+    var shouldShowDownloadedOnly = preferenceStorageManager.shouldShowDownloadedOnly
         set(value) {
             if (field != value) {
                 field = value
-                storageManager.shouldShowDownloadedOnly = value
+                preferenceStorageManager.shouldShowDownloadedOnly = value
                 notifySubscribers()
             }
         }
-    var shouldHideExplicit = storageManager.shouldHideExplicit
+    var shouldHideExplicit = preferenceStorageManager.shouldHideExplicit
         set(value) {
             if (field != value) {
                 field = value
-                storageManager.shouldHideExplicit = value
+                preferenceStorageManager.shouldHideExplicit = value
                 notifySubscribers()
             }
         }
@@ -77,8 +79,8 @@ class SongInfoRepository(
             onSuccess = {
                 dataSet = it
                 isLoading = false
-                storageManager.cloudCache = dataSet
-                storageManager.lastUpdateTimestamp = System.currentTimeMillis()
+                dataStorageManager.cloudCache = dataSet
+                preferenceStorageManager.lastUpdateTimestamp = System.currentTimeMillis()
             },
             onFailure = {
                 isLoading = false
@@ -88,66 +90,75 @@ class SongInfoRepository(
 
     fun getLibrarySongs() = dataSet.filterExplicit().filterDownloaded().sort().toList()
 
-    fun getDownloadedSongs() = storageManager.downloads
+    fun getDownloadedSongs() = dataStorageManager.downloads
 
-    fun isSongDownloaded(id: String) = storageManager.downloads.map { it.id }.contains(id)
+    fun isSongDownloaded(id: String) = dataStorageManager.downloads.map { it.id }.contains(id)
 
     //TODO: Also save the SongDetail object.
     fun addSongToDownloads(songInfo: SongInfo) {
-        storageManager.downloads = storageManager.downloads.filter { it.id != songInfo.id }.toMutableList().apply { add(DownloadedSong(songInfo.id, songInfo.version ?: 0)) }
+        dataStorageManager.downloads = dataStorageManager.downloads.filter { it.id != songInfo.id }.toMutableList().apply { add(DownloadedSong(songInfo.id, songInfo.version ?: 0)) }
         notifySubscribers()
     }
 
     fun removeSongFromDownloads(id: String) {
         removeSongFromFavorites(id)
         if (isSongDownloaded(id)) {
-            storageManager.downloads = storageManager.downloads.filter { it.id != id }
+            dataStorageManager.downloads = dataStorageManager.downloads.filter { it.id != id }
             notifySubscribers()
         }
     }
 
-    fun getFavoriteSongs() = storageManager.favorites.mapNotNull { id -> dataSet.find { id == it.id } }.filterExplicit().filterDownloaded()
+    //TODO: Move to PlaylistRepository.
+    fun getFavoriteSongs() = dataStorageManager.favorites.mapNotNull { id -> dataSet.find { id == it.id } }.filterExplicit().filterDownloaded()
 
-    fun isSongFavorite(id: String) = storageManager.favorites.contains(id)
+    //TODO: Move to PlaylistRepository.
+    fun isSongFavorite(id: String) = dataStorageManager.favorites.contains(id)
 
+    //TODO: Move to PlaylistRepository.
     fun addSongToFavorites(id: String, position: Int? = null) {
         if (!isSongFavorite(id)) {
-            storageManager.favorites = storageManager.favorites.toMutableList().apply {
+            dataStorageManager.favorites = dataStorageManager.favorites.toMutableList().apply {
                 if (position == null) add(id) else add(position, id)
             }
             notifySubscribers()
         }
     }
 
+    //TODO: Move to PlaylistRepository.
     fun removeSongFromFavorites(id: String) {
         if (isSongFavorite(id)) {
-            storageManager.favorites = storageManager.favorites.toMutableList().apply { remove(id) }
+            dataStorageManager.favorites = dataStorageManager.favorites.toMutableList().apply { remove(id) }
             notifySubscribers()
         }
     }
 
+    //TODO: Move to PlaylistRepository.
     fun setFavorites(songIds: List<String>) {
-        storageManager.favorites = songIds
+        dataStorageManager.favorites = songIds
         notifySubscribers()
     }
 
+    //TODO: Move to PlaylistRepository.
     fun shuffleFavorites() {
-        val list = storageManager.favorites.toMutableList()
+        val list = dataStorageManager.favorites.toMutableList()
         if (list.size > SHUFFLE_LIMIT) {
             val newList = list.toMutableList()
             while (newList == list) {
                 Collections.shuffle(newList)
             }
-            storageManager.favorites = newList
+            dataStorageManager.favorites = newList
             notifySubscribers()
         }
     }
 
+    //TODO: THis should be done in the viewModel, not in the repository.
     private fun List<SongInfo>.filterExplicit() = if (shouldHideExplicit) filter { it.isExplicit != true } else this
 
+    //TODO: THis should be done in the viewModel, not in the repository.
     private fun List<SongInfo>.filterDownloaded() = if (shouldShowDownloadedOnly) filter { isSongDownloaded(it.id) } else this
 
     //TODO: Handle special characters
+    //TODO: THis should be done in the viewModel, not in the repository.
     private fun List<SongInfo>.sort() = sortedBy { if (isSortedByTitle) it.title else it.artist }
 
     companion object {
