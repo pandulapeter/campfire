@@ -19,9 +19,9 @@ class PlaylistViewModel(
     homeCallbacks: HomeFragment.HomeCallbacks?,
     userPreferenceRepository: UserPreferenceRepository,
     songInfoRepository: SongInfoRepository,
-    playlistRepository: PlaylistRepository,
     context: Context?,
-    private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, playlistRepository) {
+    private val playlistRepository: PlaylistRepository,
+    private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository) {
     val title = ObservableField(context?.getString(R.string.home_favorites))
 
     init {
@@ -29,7 +29,7 @@ class PlaylistViewModel(
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
-        return playlistRepository.getFavoriteSongs()
+        return playlistRepository.getPlaylistSongs(playlistId)
             .filterWorkInProgress()
             .filterExplicit()
             .map { songInfo ->
@@ -40,9 +40,9 @@ class PlaylistViewModel(
             }
     }
 
-    fun removeSongFromFavorites(id: String) = playlistRepository.removeSongFromFavorites(id)
+    fun removeSongFromPlaylist(songId: String) = playlistRepository.removeSongFromPlaylist(playlistId, songId)
 
-    fun swapSongsInFavorites(originalPosition: Int, targetPosition: Int) {
+    fun swapSongsInPlaylist(originalPosition: Int, targetPosition: Int) {
         val list = adapter.items.map { it.songInfo.id }.toMutableList()
         if (originalPosition < targetPosition) {
             for (i in originalPosition until targetPosition) {
@@ -53,6 +53,6 @@ class PlaylistViewModel(
                 Collections.swap(list, i, i - 1)
             }
         }
-        playlistRepository.setFavorites(list)
+        playlistRepository.setPlaylist(playlistId, list)
     }
 }

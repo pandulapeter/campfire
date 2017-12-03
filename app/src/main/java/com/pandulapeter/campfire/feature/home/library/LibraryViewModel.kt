@@ -5,7 +5,6 @@ import android.databinding.ObservableField
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.LanguageRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
@@ -20,9 +19,8 @@ import com.pandulapeter.campfire.util.toggle
  */
 class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                        songInfoRepository: SongInfoRepository,
-                       playlistRepository: PlaylistRepository,
                        userPreferenceRepository: UserPreferenceRepository,
-                       private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, playlistRepository) {
+                       private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.query.isNotEmpty())
     val query = ObservableField(userPreferenceRepository.query)
     val shouldShowViewOptions = ObservableBoolean(false)
@@ -86,7 +84,6 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
 
     fun addOrRemoveSongFromDownloads(songInfo: SongInfo) =
         if (songInfoRepository.isSongDownloaded(songInfo.id)) {
-            playlistRepository.removeSongFromFavorites(songInfo.id)
             songInfoRepository.removeSongFromDownloads(songInfo.id)
         } else {
             songInfoRepository.addSongToDownloads(songInfo)

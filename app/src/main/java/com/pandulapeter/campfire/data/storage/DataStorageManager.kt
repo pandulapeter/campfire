@@ -45,32 +45,48 @@ class DataStorageManager(context: Context, private val gson: Gson) {
             sharedPreferences.edit().putString(KEY_DOWNLOADED_SONGS, gson.toJson(value)).apply()
         }
 
-    /**
-     * The list of song ID-s that belong to a playlist.
-     *
-     * TODO: Delete this.
-     */
-    var favorites: List<String>
-        get() = try {
-            gson.fromJson(sharedPreferences.getString(KEY_FAVORITES, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<String>>() {}.type)
+    fun getAllPlaylists() = mutableListOf<Playlist>().apply {
+        playlistIds.forEach { add(getPlaylist(it)) }
+    }.toList()
+
+    fun getPlaylist(playlistId: Int) = if (playlistId == Playlist.FAVORITES_ID) {
+        val ids: List<String> = try {
+            gson.fromJson(sharedPreferences.getString(KEY_PLAYLIST + Playlist.FAVORITES_ID, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<String>>() {}.type)
         } catch (_: JsonSyntaxException) {
             listOf()
         }
-        set(value) {
-            sharedPreferences.edit().putString(KEY_FAVORITES, gson.toJson(value)).apply()
+        Playlist.Favorites(ids)
+    } else {
+        val playlist: Playlist.Custom = try {
+            gson.fromJson(sharedPreferences.getString(KEY_PLAYLIST + playlistId, ""), object : TypeToken<Playlist.Custom>() {}.type)
+        } catch (_: JsonSyntaxException) {
+            Playlist.Custom(playlistId, "", listOf())
         }
+        playlist
+    }
 
-    var playlists: List<Playlist>
+    fun savePlaylist(playlist: Playlist) {
+        sharedPreferences.edit().putString(KEY_PLAYLIST + playlist.id, gson.toJson(if (playlist is Playlist.Favorites) playlist.songIds else playlist)).apply()
+    }
+
+    fun deletePlaylist(playlist: Playlist) {
+        if (playlist.id != Playlist.FAVORITES_ID) {
+            playlistIds = playlistIds.toMutableList().filter { it == playlist.id }
+            sharedPreferences.edit().remove(KEY_PLAYLIST + playlist.id).apply()
+        }
+    }
+
+    private var playlistIds: List<Int>
         get() {
-            val list: List<Playlist> = try {
-                gson.fromJson(sharedPreferences.getString(KEY_PLAYLISTS, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<String>>() {}.type)
+            val list: List<Int> = try {
+                gson.fromJson(sharedPreferences.getString(KEY_PLAYLIST_IDS, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<Int>>() {}.type)
             } catch (_: JsonSyntaxException) {
                 listOf()
             }
-            return if (list.isEmpty()) listOf(Playlist.Favorites(listOf())) else list
+            return if (list.isEmpty()) listOf(Playlist.FAVORITES_ID) else list
         }
         set(value) {
-            sharedPreferences.edit().putString(KEY_PLAYLISTS, gson.toJson(value)).apply()
+            sharedPreferences.edit().putString(KEY_PLAYLIST_IDS, gson.toJson(value)).apply()
         }
 
 
@@ -78,7 +94,7 @@ class DataStorageManager(context: Context, private val gson: Gson) {
         private const val VALUE_EMPTY_JSON_ARRAY = "[]"
         private const val KEY_CACHE = "cache"
         private const val KEY_DOWNLOADED_SONGS = "downloaded_songs"
-        private const val KEY_FAVORITES = "favorites"
-        private const val KEY_PLAYLISTS = "playlists"
+        private const val KEY_PLAYLIST_IDS = "playlist_ids"
+        private const val KEY_PLAYLIST = "playlist_"
     }
 }

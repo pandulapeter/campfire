@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.home
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
+import android.view.View
 import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
@@ -34,7 +35,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Set up the side navigation drawer.
-        binding.navigationView.getHeaderView(0).findViewById<TextView>(R.id.version)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
+        (binding.navigationView.getHeaderView(0).findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.library -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Library) }
@@ -56,7 +57,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
         viewModel.playlists.onPropertyChanged {
             binding.navigationView.menu.findItem(R.id.playlists).subMenu.run {
                 clear()
-                it.sortedBy { it.id }.forEachIndexed { index, playlist ->
+                it.sortedBy { it.id }.forEach { playlist ->
                     add(
                         R.id.playlist_container,
                         playlist.id,

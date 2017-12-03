@@ -7,8 +7,10 @@ import android.view.View
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.consume
+import javax.inject.Inject
 
 /**
  * Displays the list of all songs the user marked as favorite. All of these items are also downloads.
@@ -18,8 +20,9 @@ import com.pandulapeter.campfire.util.consume
  * Controlled by [PlaylistViewModel].
  */
 class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist) {
+    @Inject lateinit var playlistRepository: PlaylistRepository
 
-    override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, playlistRepository, context, arguments.playlistId)
+    override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, context, playlistRepository, arguments.playlistId)
 
     override fun getRecyclerView() = binding.recyclerView
 
@@ -35,7 +38,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = consume {
                 viewHolder?.adapterPosition?.let { originalPosition ->
                     target?.adapterPosition?.let { targetPosition ->
-                        viewModel.swapSongsInFavorites(originalPosition, targetPosition)
+                        viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
                     }
                 }
             }
@@ -43,7 +46,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
                 viewHolder?.adapterPosition?.let { position ->
                     val songInfo = viewModel.adapter.items[position].songInfo
-                    viewModel.removeSongFromFavorites(songInfo.id)
+                    viewModel.removeSongFromPlaylist(songInfo.id)
                 }
             }
 
@@ -53,6 +56,16 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         viewModel.adapter.itemActionTouchListener = { position ->
             itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        playlistRepository.subscribe(viewModel)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        playlistRepository.unsubscribe(viewModel)
     }
 
     companion object {

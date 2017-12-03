@@ -7,7 +7,6 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
@@ -27,7 +26,6 @@ import javax.inject.Inject
 abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>(@LayoutRes layoutResourceId: Int) : HomeFragment<B, VM>(layoutResourceId) {
     @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
     @Inject lateinit var songInfoRepository: SongInfoRepository
-    @Inject lateinit var playlistRepository: PlaylistRepository
 
     protected abstract fun getRecyclerView(): RecyclerView
 
@@ -62,13 +60,11 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
         super.onStart()
         userPreferenceRepository.subscribe(viewModel)
         songInfoRepository.subscribe(viewModel)
-        playlistRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
         userPreferenceRepository.unsubscribe(viewModel)
         songInfoRepository.unsubscribe(viewModel)
-        playlistRepository.unsubscribe(viewModel)
     }
 }

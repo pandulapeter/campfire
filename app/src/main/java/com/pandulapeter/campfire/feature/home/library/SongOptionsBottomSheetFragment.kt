@@ -75,7 +75,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(padding, padding, padding, padding)
                     text = (playlist as? Playlist.Custom)?.name ?: getString(R.string.home_favorites)
-                    //TODO: isChecked =
+                    isChecked = playlistRepository.isSongInPlaylist(playlist.id, songInfo.id)
                 }, ViewGroup.LayoutParams.MATCH_PARENT, height)
             }
         }

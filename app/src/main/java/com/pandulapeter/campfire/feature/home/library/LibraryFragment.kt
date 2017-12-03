@@ -31,7 +31,7 @@ import javax.inject.Inject
 class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library), SongOptionsBottomSheetFragment.SongActionListener {
     @Inject lateinit var languageRepository: LanguageRepository
 
-    override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository, playlistRepository, userPreferenceRepository, languageRepository)
+    override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository, userPreferenceRepository, languageRepository)
 
     override fun getRecyclerView() = binding.recyclerView
 

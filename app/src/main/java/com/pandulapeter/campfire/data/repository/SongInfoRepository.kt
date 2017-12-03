@@ -76,7 +76,6 @@ class SongInfoRepository(
     }
 
     companion object {
-        const val SHUFFLE_LIMIT = 2
         private const val CACHE_VALIDITY_LIMIT = 1000 * 60 * 60 * 24
     }
 }
