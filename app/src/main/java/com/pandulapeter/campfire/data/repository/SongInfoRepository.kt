@@ -37,37 +37,6 @@ class SongInfoRepository(
                 notifySubscribers()
             }
         }
-    var isSortedByTitle = preferenceStorageManager.isSortedByTitle
-        set(value) {
-            if (field != value) {
-                field = value
-                preferenceStorageManager.isSortedByTitle = value
-                notifySubscribers()
-            }
-        }
-    var shouldShowDownloadedOnly = preferenceStorageManager.shouldShowDownloadedOnly
-        set(value) {
-            if (field != value) {
-                field = value
-                preferenceStorageManager.shouldShowDownloadedOnly = value
-                notifySubscribers()
-            }
-        }
-    var shouldHideExplicit = preferenceStorageManager.shouldHideExplicit
-        set(value) {
-            if (field != value) {
-                field = value
-                preferenceStorageManager.shouldHideExplicit = value
-                notifySubscribers()
-            }
-        }
-    var query = ""
-        set(value) {
-            if (field != value) {
-                field = value
-                notifySubscribers()
-            }
-        }
 
     init {
         languageRepository.updateLanguages(dataSet)
@@ -88,28 +57,28 @@ class SongInfoRepository(
             })
     }
 
-    fun getLibrarySongs() = dataSet.filterExplicit().filterDownloaded().sort().toList()
+    fun getLibrarySongs() = dataSet
 
     fun getDownloadedSongs() = dataStorageManager.downloads
 
-    fun isSongDownloaded(id: String) = dataStorageManager.downloads.map { it.id }.contains(id)
+    fun isSongDownloaded(id: String) = getDownloadedSongs().map { it.id }.contains(id)
 
     //TODO: Also save the SongDetail object.
     fun addSongToDownloads(songInfo: SongInfo) {
-        dataStorageManager.downloads = dataStorageManager.downloads.filter { it.id != songInfo.id }.toMutableList().apply { add(DownloadedSong(songInfo.id, songInfo.version ?: 0)) }
+        dataStorageManager.downloads = getDownloadedSongs().filter { it.id != songInfo.id }.toMutableList().apply { add(DownloadedSong(songInfo.id, songInfo.version ?: 0)) }
         notifySubscribers()
     }
 
     fun removeSongFromDownloads(id: String) {
         removeSongFromFavorites(id)
         if (isSongDownloaded(id)) {
-            dataStorageManager.downloads = dataStorageManager.downloads.filter { it.id != id }
+            dataStorageManager.downloads = getDownloadedSongs().filter { it.id != id }
             notifySubscribers()
         }
     }
 
     //TODO: Move to PlaylistRepository.
-    fun getFavoriteSongs() = dataStorageManager.favorites.mapNotNull { id -> dataSet.find { id == it.id } }.filterExplicit().filterDownloaded()
+    fun getFavoriteSongs() = dataStorageManager.favorites.mapNotNull { id -> dataSet.find { id == it.id } }
 
     //TODO: Move to PlaylistRepository.
     fun isSongFavorite(id: String) = dataStorageManager.favorites.contains(id)
@@ -150,16 +119,6 @@ class SongInfoRepository(
             notifySubscribers()
         }
     }
-
-    //TODO: THis should be done in the viewModel, not in the repository.
-    private fun List<SongInfo>.filterExplicit() = if (shouldHideExplicit) filter { it.isExplicit != true } else this
-
-    //TODO: THis should be done in the viewModel, not in the repository.
-    private fun List<SongInfo>.filterDownloaded() = if (shouldShowDownloadedOnly) filter { isSongDownloaded(it.id) } else this
-
-    //TODO: Handle special characters
-    //TODO: THis should be done in the viewModel, not in the repository.
-    private fun List<SongInfo>.sort() = sortedBy { if (isSortedByTitle) it.title else it.artist }
 
     companion object {
         const val SHUFFLE_LIMIT = 2

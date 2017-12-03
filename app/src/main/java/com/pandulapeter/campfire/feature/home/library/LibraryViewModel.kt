@@ -6,6 +6,7 @@ import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.LanguageRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
@@ -18,32 +19,40 @@ import com.pandulapeter.campfire.util.toggle
  */
 class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                        songInfoRepository: SongInfoRepository,
+                       private val userPreferenceRepository: UserPreferenceRepository,
                        private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, songInfoRepository) {
-    val isSearchInputVisible = ObservableBoolean(songInfoRepository.query.isNotEmpty())
-    val query = ObservableField(songInfoRepository.query)
+    val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.query.isNotEmpty())
+    val query = ObservableField(userPreferenceRepository.query)
     val shouldShowViewOptions = ObservableBoolean(false)
     val isLoading = ObservableBoolean(songInfoRepository.isLoading)
     val shouldShowErrorSnackbar = ObservableBoolean(false)
-    val shouldShowDownloadedOnly = ObservableBoolean(songInfoRepository.shouldShowDownloadedOnly)
-    val isSortedByTitle = ObservableBoolean(songInfoRepository.isSortedByTitle)
+    val shouldShowDownloadedOnly = ObservableBoolean(userPreferenceRepository.shouldShowDownloadedOnly)
+    val isSortedByTitle = ObservableBoolean(userPreferenceRepository.isSortedByTitle)
     val languageFilters = ObservableField(HashMap<Language, ObservableBoolean>())
 
     init {
-        isSearchInputVisible.onPropertyChanged { if (it) query.set("") else songInfoRepository.query = "" }
-        query.onPropertyChanged { songInfoRepository.query = it }
-        shouldShowDownloadedOnly.onPropertyChanged { songInfoRepository.shouldShowDownloadedOnly = it }
-        isSortedByTitle.onPropertyChanged { songInfoRepository.isSortedByTitle = it }
+        isSearchInputVisible.onPropertyChanged { if (it) query.set("") else userPreferenceRepository.query = "" }
+        query.onPropertyChanged { userPreferenceRepository.query = it }
+        shouldShowDownloadedOnly.onPropertyChanged { userPreferenceRepository.shouldShowDownloadedOnly = it }
+        isSortedByTitle.onPropertyChanged { userPreferenceRepository.isSortedByTitle = it }
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
         val downloadedSongs = songInfoRepository.getDownloadedSongs()
         val downloadedSongIds = downloadedSongs.map { it.id }
-        return songInfoRepository.getLibrarySongs().filterByQuery(query.get().trim()).filterByLanguages().map { songInfo ->
-            SongInfoViewModel(
-                songInfo,
-                downloadedSongIds.contains(songInfo.id),
-                downloadedSongs.firstOrNull { songInfo.id == it.id }?.version?.compareTo(songInfo.version ?: 0) ?: 0 < 0)
-        }
+        return songInfoRepository.getLibrarySongs()
+            .filterWorkInProgress()
+            .filterExplicit()
+            .filterByLanguages()
+            .filterDownloaded()
+            .filterByQuery()
+            .sort()
+            .map { songInfo ->
+                SongInfoViewModel(
+                    songInfo,
+                    downloadedSongIds.contains(songInfo.id),
+                    downloadedSongs.firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0)
+            }
     }
 
     override fun onUpdate() {
@@ -88,17 +97,20 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
 
     fun getHeaderTitle(position: Int) = (if (isSortedByTitle.get()) adapter.items[position].songInfo.title[0] else adapter.items[position].songInfo.artist[0]).toString()
 
+    private fun List<SongInfo>.filterWorkInProgress() = if (userPreferenceRepository.shouldHideWorkInProgress) filter { it.version ?: 0 >= 0 } else this
+
+    private fun List<SongInfo>.filterExplicit() = if (userPreferenceRepository.shouldHideExplicit) filter { it.isExplicit != true } else this
+
+    private fun List<SongInfo>.filterByLanguages() = filter { languageRepository.isLanguageFilterEnabled(it.language.mapToLanguage()) }
+
+    private fun List<SongInfo>.filterDownloaded() = if (shouldShowDownloadedOnly.get()) filter { songInfoRepository.isSongDownloaded(it.id) } else this
 
     //TODO: Handle special characters, prioritize results that begin with the query.
-    private fun List<SongInfo>.filterByQuery(query: String) = if (isSearchInputVisible.get()) {
-        filter {
-            it.title.contains(query, true) || it.artist.contains(query, true)
-        }
-    } else {
-        this
-    }
+    private fun List<SongInfo>.filterByQuery() = if (isSearchInputVisible.get()) {
+        val query = query.get().trim()
+        filter { it.title.contains(query, true) || it.artist.contains(query, true) }
+    } else this
 
-    private fun List<SongInfo>.filterByLanguages() = filter {
-        languageRepository.isLanguageFilterEnabled(it.language.mapToLanguage())
-    }
+    //TODO: Handle special characters
+    private fun List<SongInfo>.sort() = sortedBy { if (isSortedByTitle.get()) it.title else it.artist }
 }

@@ -23,23 +23,25 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
 
     var items = listOf<SongInfoViewModel>()
         set(newItems) {
-            coroutine?.cancel()
-            coroutine = async(UI) {
-                val oldItems = items
-                async(CommonPool) {
-                    DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-                        override fun getOldListSize() = oldItems.size
+            if (field != newItems) {
+                coroutine?.cancel()
+                coroutine = async(UI) {
+                    val oldItems = items
+                    async(CommonPool) {
+                        DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+                            override fun getOldListSize() = oldItems.size
 
-                        override fun getNewListSize() = newItems.size
+                            override fun getNewListSize() = newItems.size
 
-                        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int)
-                            = oldItems[oldItemPosition].songInfo.id == newItems[newItemPosition].songInfo.id
+                            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int)
+                                = oldItems[oldItemPosition].songInfo.id == newItems[newItemPosition].songInfo.id
 
-                        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int)
-                            = oldItems[oldItemPosition] == newItems[newItemPosition]
-                    })
-                }.await().dispatchUpdatesTo(this@SongInfoAdapter)
-                field = newItems
+                            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int)
+                                = oldItems[oldItemPosition] == newItems[newItemPosition]
+                        })
+                    }.await().dispatchUpdatesTo(this@SongInfoAdapter)
+                    field = newItems
+                }
             }
         }
     var itemClickListener: (position: Int) -> Unit = { _ -> }

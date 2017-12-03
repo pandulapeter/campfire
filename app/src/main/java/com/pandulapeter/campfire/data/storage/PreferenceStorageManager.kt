@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.data.storage
 
 import android.content.Context
 import android.preference.PreferenceManager
+import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 
@@ -70,6 +71,15 @@ class PreferenceStorageManager(context: Context) {
             sharedPreferences.edit().putBoolean(KEY_SHOULD_HIDE_EXPLICIT, value).apply()
         }
 
+    /**
+     * Whether or not work-in-progress songs should be filtered out.
+     */
+    var shouldHideWorkInProgress: Boolean
+        get() = sharedPreferences.getBoolean(KEY_SHOULD_HIDE_WORK_IN_PROGRESS, !BuildConfig.DEBUG)
+        set(value) {
+            sharedPreferences.edit().putBoolean(KEY_SHOULD_HIDE_WORK_IN_PROGRESS, value).apply()
+        }
+
     fun isLanguageFilterEnabled(language: Language) = when (language) {
         is Language.Known -> sharedPreferences.getBoolean(KEY_LANGUAGE_FILTER + language.id, true)
         is Language.Unknown -> sharedPreferences.getBoolean(KEY_UNKNOWN_LANGUAGE_FILTER, true)
@@ -89,6 +99,7 @@ class PreferenceStorageManager(context: Context) {
         private const val KEY_IS_SORTED_BY_TITLE = "is_sorted_by_title"
         private const val KEY_SHOULD_SHOW_DOWNLOADED_ONLY = "should_show_downloaded_only"
         private const val KEY_SHOULD_HIDE_EXPLICIT = "should_hide_explicit"
+        private const val KEY_SHOULD_HIDE_WORK_IN_PROGRESS = "should_hide_work_in_progress"
         private const val KEY_LANGUAGE_FILTER = "language_filter_"
         private const val KEY_UNKNOWN_LANGUAGE_FILTER = "unknown_language_filter_"
     }
