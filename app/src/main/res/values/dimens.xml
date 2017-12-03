@@ -19,6 +19,5 @@
 
     <!-- Library screen -->
     <dimen name="header_height">36dp</dimen>
-    <dimen name="header_elevation">4dp</dimen>
 
 </resources>

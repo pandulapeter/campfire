@@ -16,9 +16,6 @@ import com.pandulapeter.campfire.feature.shared.CampfireActivity
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
 import javax.inject.Inject
 
 /**
@@ -81,15 +78,11 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     private fun replaceActiveFragment(navigationItem: HomeViewModel.NavigationItem) {
         if (viewModel.navigationItem != navigationItem || getCurrentFragment() == null) {
             viewModel.navigationItem = navigationItem
-            async(UI) {
-                async(CommonPool) {
-                    when (navigationItem) {
-                        HomeViewModel.NavigationItem.Library -> LibraryFragment()
-                        HomeViewModel.NavigationItem.Settings -> SettingsFragment()
-                        is HomeViewModel.NavigationItem.Playlist -> PlaylistFragment()
-                    }
-                }.await().let { supportFragmentManager.beginTransaction().replace(R.id.fragment_container, it).commit() }
-            }
+            supportFragmentManager.beginTransaction().replace(R.id.fragment_container, when (navigationItem) {
+                HomeViewModel.NavigationItem.Library -> LibraryFragment()
+                HomeViewModel.NavigationItem.Settings -> SettingsFragment()
+                is HomeViewModel.NavigationItem.Playlist -> PlaylistFragment()
+            }).commit()
         }
     }
 

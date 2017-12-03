@@ -81,9 +81,9 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
                 .setAction(R.string.try_again, { viewModel.forceRefresh() })
                 .show()
         }
-        // Set up the sticky item headers.
+        // Set up the item headers.
         context?.let {
-            binding.recyclerView.addItemDecoration(object : StickyHeaderItemDecoration(it) {
+            binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(it) {
 
                 override fun isHeader(position: Int) = position >= 0 && viewModel.isHeader(position)
 
