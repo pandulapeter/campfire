@@ -1,5 +1,7 @@
 package com.pandulapeter.campfire.data.repository
 
+import kotlin.reflect.KClass
+
 /**
  * Base class for all repositories.
  */
@@ -10,7 +12,7 @@ abstract class Repository {
         if (!subscribers.contains(subscriber)) {
             subscribers.add(subscriber)
         }
-        subscriber.onUpdate(UpdateType.InitialUpdate(this.javaClass))
+        subscriber.onUpdate(UpdateType.InitialUpdate(this::class))
     }
 
     fun unsubscribe(subscriber: Subscriber) {
@@ -38,7 +40,7 @@ abstract class Repository {
         // General
         object Unspecified : UpdateType()
 
-        class InitialUpdate(from : Class<Repository>) : UpdateType()
+        class InitialUpdate(val repositoryClass: KClass<out Repository>) : UpdateType()
 
         // Language
 

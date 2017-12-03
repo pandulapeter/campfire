@@ -68,9 +68,21 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
     override fun onPositiveButtonSelected() = invokeAndClose { getSongActionListener()?.onSongAction(songId, SongOptionsBottomSheetFragment.SongAction.RemoveFromDownloads) }
 
     override fun onUpdate(updateType: Repository.UpdateType) {
+        when (updateType) {
+            is Repository.UpdateType.InitialUpdate -> {
+                when (updateType.repositoryClass) {
+                    SongInfoRepository::class -> {
+                        binding.songInfo = songInfoRepository.getLibrarySongs().first { it.id == songId }
+                    }
+                    PlaylistRepository::class -> {
+                        refreshPlaylistCheckboxes()
+                    }
+                }
+            }
+        }
+    }
 
-        binding.songInfo = songInfoRepository.getLibrarySongs().first { it.id == songId }
-
+    private fun refreshPlaylistCheckboxes() {
         context?.let { context ->
             binding.playlistContainer.removeAllViews()
             val height = context.dimension(R.dimen.touch_target)
