@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.data.repository
 
-import com.pandulapeter.campfire.data.model.Playlist
 import kotlin.reflect.KClass
 
 /**

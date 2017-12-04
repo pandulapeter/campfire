@@ -38,6 +38,21 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
         binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_song_options_bottom_sheet, null, false)
         songId = savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId
         dialog.setContentView(binding.root)
+        binding.close.setOnClickListener { dismiss() }
+        behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
+
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                when (newState) {
+                    BottomSheetBehavior.STATE_EXPANDED -> {
+                        //TODO: Animate toolbar elevation and background color.
+                        binding.close.visibility = View.VISIBLE
+                    }
+                    BottomSheetBehavior.STATE_HIDDEN -> dismiss()
+                }
+            }
+        })
         binding.removeDownload.setOnClickListener {
             AlertDialogFragment.show(childFragmentManager,
                 R.string.remove_download_confirmation_title,
