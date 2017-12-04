@@ -7,6 +7,7 @@ import android.support.design.widget.BottomSheetDialog
 import android.support.design.widget.CoordinatorLayout
 import android.support.v4.app.FragmentManager
 import android.support.v4.view.ViewCompat
+import android.support.v4.widget.NestedScrollView
 import android.support.v7.widget.AppCompatCheckBox
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -35,6 +36,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
     private val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
     private val finalToolbarElevation by lazy { context?.dimension(R.dimen.bottom_sheet_toolbar_elevation) ?: 0 }
     private val finalToolbarMargin by lazy { context?.dimension(R.dimen.bottom_sheet_toolbar_margin) ?: 0 }
+    private var scrollViewOffset = 0
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->
         val dialog = BottomSheetDialog(context, theme)
@@ -60,6 +62,9 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                 }
             }
         })
+        binding.nestedScrollView.setOnScrollChangeListener { _: NestedScrollView?, _: Int, scrollY: Int, _: Int, _: Int ->
+            scrollViewOffset = scrollY
+        }
         updateSlideState(0f)
         dialog
     } ?: super.onCreateDialog(savedInstanceState)
@@ -101,13 +106,14 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
         }
     }
 
-    private fun updateSlideState(slideOffset: Float) {
-        val closenessToTop = Math.max(0f, 2 * slideOffset - 1)
-        ViewCompat.setElevation(binding.toolbarContainer, closenessToTop * finalToolbarElevation)
+    private fun updateSlideState(slideOffset: Float) = Math.max(0f, 2 * slideOffset - 1).let { closenessToTop ->
         binding.close.alpha = closenessToTop
         binding.close.translationX = -(1 - closenessToTop) * finalToolbarMargin / 4
-        binding.background.alpha = closenessToTop
         binding.toolbar.translationX = closenessToTop * finalToolbarMargin
+        if (scrollViewOffset == 0) {
+            ViewCompat.setElevation(binding.toolbarContainer, closenessToTop * finalToolbarElevation)
+            binding.background.alpha = closenessToTop
+        }
     }
 
     private fun refreshPlaylistCheckboxes() {
