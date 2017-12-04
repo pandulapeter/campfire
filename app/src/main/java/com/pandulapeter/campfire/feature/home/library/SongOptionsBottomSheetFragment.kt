@@ -36,6 +36,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
     private val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
     private val finalToolbarElevation by lazy { context?.dimension(R.dimen.bottom_sheet_toolbar_elevation) ?: 0 }
     private val finalToolbarMargin by lazy { context?.dimension(R.dimen.bottom_sheet_toolbar_margin) ?: 0 }
+    private val initialToolbarContainerPadding by lazy { context?.dimension(R.dimen.content_padding) ?: 0 }
     private var scrollViewOffset = 0
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->
@@ -111,8 +112,9 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
         binding.close.translationX = -(1 - closenessToTop) * finalToolbarMargin / 4
         binding.toolbar.translationX = closenessToTop * finalToolbarMargin
         if (scrollViewOffset == 0) {
-            ViewCompat.setElevation(binding.toolbarContainer, closenessToTop * finalToolbarElevation)
+            ViewCompat.setElevation(binding.fakeAppBar, closenessToTop * finalToolbarElevation)
             binding.background.alpha = closenessToTop
+            binding.toolbarContainer.setPadding(0, Math.round((1 - closenessToTop) * initialToolbarContainerPadding), 0, 0)
         }
     }
 
