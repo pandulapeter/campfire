@@ -14,88 +14,95 @@
 
     </data>
 
-    <RelativeLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/background"
-        android:orientation="vertical"
+        android:clipToPadding="false"
         android:paddingBottom="@dimen/large_content_padding"
-        android:paddingTop="@dimen/large_content_padding">
+        android:paddingTop="@dimen/large_content_padding"
+        android:scrollbars="none">
 
-        <ImageView
-            android:id="@+id/remove_download"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_marginEnd="@dimen/content_padding"
-            android:layout_marginStart="@dimen/content_padding"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/remove_download"
-            android:padding="@dimen/content_padding"
-            app:srcCompat="@drawable/ic_delete_24dp" />
-
-        <TextView
-            android:id="@+id/title"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_marginStart="@dimen/first_keyline"
-            android:layout_toStartOf="@id/remove_download"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="@{songInfo.title}"
-            android:textAppearance="@style/Base.TextAppearance.AppCompat.Title"
-            tools:text="Title" />
+            android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/artist"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignEnd="@id/title"
-            android:layout_alignStart="@id/title"
-            android:layout_below="@id/title"
-            android:layout_marginBottom="@dimen/content_padding"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="@{songInfo.artist}"
-            tools:text="Artist" />
+            <ImageView
+                android:id="@+id/remove_download"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="@dimen/content_padding"
+                android:layout_marginStart="@dimen/content_padding"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/remove_download"
+                android:padding="@dimen/content_padding"
+                app:srcCompat="@drawable/ic_delete_24dp" />
 
-        <TextView
-            android:id="@+id/header"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/artist"
-            android:layout_marginBottom="@dimen/content_padding"
-            android:layout_marginEnd="@dimen/large_content_padding"
-            android:layout_marginStart="@dimen/first_keyline"
-            android:layout_marginTop="@dimen/content_padding"
-            android:text="@string/home_playlists"
-            android:textColor="@color/accent" />
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="@dimen/first_keyline"
+                android:layout_toStartOf="@id/remove_download"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@{songInfo.title}"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Title"
+                tools:text="Title" />
 
-        <LinearLayout
-            android:id="@+id/playlist_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/header"
-            android:orientation="vertical"
-            android:paddingEnd="@dimen/first_keyline"
-            android:paddingStart="@dimen/action_button_margin" />
+            <TextView
+                android:id="@+id/artist"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignEnd="@id/title"
+                android:layout_alignStart="@id/title"
+                android:layout_below="@id/title"
+                android:layout_marginBottom="@dimen/content_padding"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@{songInfo.artist}"
+                tools:text="Artist" />
 
-        <TextView
-            android:id="@+id/new_playlist"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/touch_target"
-            android:layout_below="@id/playlist_container"
-            android:background="?attr/selectableItemBackground"
-            android:drawablePadding="12dp"
-            android:drawableStart="@{R.drawable.ic_new_playlist_24dp}"
-            android:gravity="center_vertical"
-            android:paddingEnd="@dimen/first_keyline"
-            android:paddingStart="14dp"
-            android:text="@string/home_new_playlist"
-            android:textColor="@android:color/white"
-            tools:drawableStart="@drawable/ic_new_playlist_24dp" />
+            <TextView
+                android:id="@+id/header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/artist"
+                android:layout_marginBottom="@dimen/content_padding"
+                android:layout_marginEnd="@dimen/large_content_padding"
+                android:layout_marginStart="@dimen/first_keyline"
+                android:layout_marginTop="@dimen/content_padding"
+                android:text="@string/home_playlists"
+                android:textColor="@color/accent" />
 
-    </RelativeLayout>
+            <LinearLayout
+                android:id="@+id/playlist_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/header"
+                android:orientation="vertical"
+                android:paddingEnd="@dimen/first_keyline"
+                android:paddingStart="@dimen/action_button_margin" />
+
+            <TextView
+                android:id="@+id/new_playlist"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/touch_target"
+                android:layout_below="@id/playlist_container"
+                android:background="?attr/selectableItemBackground"
+                android:drawablePadding="12dp"
+                android:drawableStart="@{R.drawable.ic_new_playlist_24dp}"
+                android:gravity="center_vertical"
+                android:paddingEnd="@dimen/first_keyline"
+                android:paddingStart="14dp"
+                android:text="@string/home_new_playlist"
+                android:textColor="@android:color/white"
+                tools:drawableStart="@drawable/ic_new_playlist_24dp" />
+
+        </RelativeLayout>
+
+    </ScrollView>
 
 </layout>

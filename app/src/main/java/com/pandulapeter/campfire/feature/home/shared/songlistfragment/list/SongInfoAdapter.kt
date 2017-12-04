@@ -71,6 +71,12 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
                 binding.action.isClickable = false
                 binding.action.background = null
             } else {
+                binding.root.setOnLongClickListener {
+                    if (adapterPosition != RecyclerView.NO_POSITION) {
+                        itemClickListener(adapterPosition)
+                        true
+                    } else false
+                }
                 binding.action.setOnClickListener {
                     if (adapterPosition != RecyclerView.NO_POSITION) {
                         itemClickListener(adapterPosition)

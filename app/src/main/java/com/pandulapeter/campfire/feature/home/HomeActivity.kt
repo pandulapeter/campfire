@@ -42,9 +42,8 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                 R.id.library -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Library) }
                 R.id.history -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.History) }
                 R.id.settings -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Settings) }
-                R.drawable.ic_new_playlist_24dp -> {
+                R.id.playlists -> {
                     NewPlaylistDialogFragment.show(supportFragmentManager)
-                    binding.drawerLayout.closeDrawer(GravityCompat.START)
                     false
                 }
                 else -> consumeAndCloseDrawer {
@@ -70,7 +69,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                 }
                 add(
                     R.id.playlist_container,
-                    R.drawable.ic_new_playlist_24dp,
+                    R.id.playlists,
                     it.size,
                     R.string.home_new_playlist).apply {
                     setIcon(R.drawable.ic_new_playlist_24dp)
