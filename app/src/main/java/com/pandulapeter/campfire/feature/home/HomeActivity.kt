@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.feature.home.history.HistoryFragment
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
@@ -39,6 +40,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.library -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Library) }
+                R.id.history -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.History) }
                 R.id.settings -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Settings) }
                 R.drawable.ic_new_playlist_24dp -> {
                     NewPlaylistDialogFragment.show(supportFragmentManager)
@@ -107,6 +109,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     private fun updateCheckedItem() = viewModel.navigationItem.let {
         binding.navigationView.setCheckedItem(when (it) {
             HomeViewModel.NavigationItem.Library -> R.id.library
+            HomeViewModel.NavigationItem.History -> R.id.history
             HomeViewModel.NavigationItem.Settings -> R.id.settings
             is HomeViewModel.NavigationItem.Playlist -> it.id
         })
@@ -121,6 +124,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
             viewModel.navigationItem = navigationItem
             supportFragmentManager.beginTransaction().replace(R.id.fragment_container, when (navigationItem) {
                 HomeViewModel.NavigationItem.Library -> LibraryFragment()
+                HomeViewModel.NavigationItem.History -> HistoryFragment()
                 HomeViewModel.NavigationItem.Settings -> SettingsFragment()
                 is HomeViewModel.NavigationItem.Playlist -> PlaylistFragment.newInstance(navigationItem.id)
             }).commit()

@@ -13,6 +13,11 @@
             android:title="@string/home_library" />
 
         <item
+            android:id="@+id/history"
+            android:icon="@drawable/ic_history_24dp"
+            android:title="@string/home_history" />
+
+        <item
             android:id="@+id/settings"
             android:icon="@drawable/ic_settings_24dp"
             android:title="@string/home_settings" />
