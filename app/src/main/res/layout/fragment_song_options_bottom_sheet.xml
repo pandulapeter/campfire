@@ -18,59 +18,59 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/background"
+        android:clipChildren="false"
         android:orientation="vertical">
 
-        <android.support.design.widget.AppBarLayout
-            android:id="@+id/app_bar_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        <!-- The overdraw is intentional, it's needed for animating the elevation. -->
 
-            <RelativeLayout
-                android:id="@+id/toolbar_container"
+        <RelativeLayout
+            android:id="@+id/toolbar_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/background">
+
+            <View
+                android:id="@+id/background"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignBottom="@+id/toolbar"
+                android:background="?attr/colorPrimary" />
+
+            <ImageView
+                android:id="@+id/close"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="@dimen/bottom_sheet_toolbar_close_margin"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/library_close"
+                android:padding="@dimen/action_button_padding"
+                app:srcCompat="@drawable/ic_close_24dp" />
+
+            <android.support.v7.widget.Toolbar
+                android:id="@id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:animateLayoutChanges="true">
+                android:paddingEnd="@dimen/bottom_sheet_toolbar_margin"
+                android:paddingStart="0dp"
+                app:subtitle="@{songInfo.artist}"
+                app:title="@{songInfo.title}"
+                tools:subtitle="Artist"
+                tools:title="Title" />
 
-                <ImageView
-                    android:id="@+id/close"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:layout_marginEnd="10dp"
-                    android:layout_marginStart="@dimen/first_keyline"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/library_close"
-                    android:padding="@dimen/action_button_padding"
-                    android:visibility="gone"
-                    app:srcCompat="@drawable/ic_close_24dp"
-                    tools:visibility="visible" />
+            <ImageView
+                android:id="@+id/remove_download"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="@dimen/bottom_sheet_toolbar_remove_margin"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/remove_download"
+                android:padding="@dimen/content_padding"
+                app:srcCompat="@drawable/ic_delete_24dp" />
 
-                <ImageView
-                    android:id="@+id/remove_download"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginEnd="@dimen/action_button_margin"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/remove_download"
-                    android:padding="@dimen/content_padding"
-                    app:srcCompat="@drawable/ic_delete_24dp" />
-
-                <android.support.v7.widget.Toolbar
-                    android:id="@+id/toolbar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_toEndOf="@id/close"
-                    android:layout_toStartOf="@id/remove_download"
-                    app:subtitle="@{songInfo.artist}"
-                    app:title="@{songInfo.title}"
-                    tools:subtitle="Artist"
-                    tools:title="Title" />
-
-            </RelativeLayout>
-
-        </android.support.design.widget.AppBarLayout>
+        </RelativeLayout>
 
         <android.support.v4.widget.NestedScrollView
             android:layout_width="match_parent"

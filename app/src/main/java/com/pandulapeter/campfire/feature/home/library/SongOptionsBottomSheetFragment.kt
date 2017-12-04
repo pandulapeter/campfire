@@ -6,6 +6,7 @@ import android.support.design.widget.BottomSheetBehavior
 import android.support.design.widget.BottomSheetDialog
 import android.support.design.widget.CoordinatorLayout
 import android.support.v4.app.FragmentManager
+import android.support.v4.view.ViewCompat
 import android.support.v7.widget.AppCompatCheckBox
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -32,27 +33,15 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
     private lateinit var binding: SongOptionsBottomSheetBinding
     private lateinit var songId: String
     private val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
+    private val finalToolbarElevation by lazy { context?.dimension(R.dimen.bottom_sheet_toolbar_elevation) ?: 0 }
+    private val finalToolbarMargin by lazy { context?.dimension(R.dimen.bottom_sheet_toolbar_margin) ?: 0 }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let {
-        val dialog = BottomSheetDialog(it, theme)
+    override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->
+        val dialog = BottomSheetDialog(context, theme)
         binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_song_options_bottom_sheet, null, false)
         songId = savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId
         dialog.setContentView(binding.root)
         binding.close.setOnClickListener { dismiss() }
-        behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-
-            override fun onSlide(bottomSheet: View, slideOffset: Float) = Unit
-
-            override fun onStateChanged(bottomSheet: View, newState: Int) {
-                when (newState) {
-                    BottomSheetBehavior.STATE_EXPANDED -> {
-                        //TODO: Animate toolbar elevation and background color.
-                        binding.close.visibility = View.VISIBLE
-                    }
-                    BottomSheetBehavior.STATE_HIDDEN -> dismiss()
-                }
-            }
-        })
         binding.removeDownload.setOnClickListener {
             AlertDialogFragment.show(childFragmentManager,
                 R.string.remove_download_confirmation_title,
@@ -61,6 +50,17 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                 R.string.remove_download_confirmation_cancel)
         }
         binding.newPlaylist.setOnClickListener { NewPlaylistDialogFragment.show(childFragmentManager) }
+        behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) = updateSlideState(slideOffset)
+
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+                    dismiss()
+                }
+            }
+        })
+        updateSlideState(0f)
         dialog
     } ?: super.onCreateDialog(savedInstanceState)
 
@@ -99,6 +99,15 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                 refreshPlaylistCheckboxes()
             }
         }
+    }
+
+    private fun updateSlideState(slideOffset: Float) {
+        val closenessToTop = Math.max(0f, 2 * slideOffset - 1)
+        ViewCompat.setElevation(binding.toolbarContainer, closenessToTop * finalToolbarElevation)
+        binding.close.alpha = closenessToTop
+        binding.close.translationX = -(1 - closenessToTop) * finalToolbarMargin / 4
+        binding.background.alpha = closenessToTop
+        binding.toolbar.translationX = closenessToTop * finalToolbarMargin
     }
 
     private fun refreshPlaylistCheckboxes() {

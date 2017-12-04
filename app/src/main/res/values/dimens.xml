@@ -11,7 +11,7 @@
     <!-- Home screen -->
     <dimen name="action_button_padding">2dp</dimen>
     <dimen name="action_button_margin">10dp</dimen>
-    <dimen name="menu_margin">-4dp</dimen>
+    <dimen name="menu_margin">-2dp</dimen>
     <dimen name="title_margin">56dp</dimen>
     <dimen name="drawer_header_height">156dp</dimen>
     <dimen name="view_options_width">240dp</dimen>
@@ -19,5 +19,9 @@
 
     <!-- Library screen -->
     <dimen name="header_height">36dp</dimen>
+    <dimen name="bottom_sheet_toolbar_close_margin">14dp</dimen>
+    <dimen name="bottom_sheet_toolbar_remove_margin">8dp</dimen>
+    <dimen name="bottom_sheet_toolbar_margin">56dp</dimen>
+    <dimen name="bottom_sheet_toolbar_elevation">4dp</dimen>
 
 </resources>
