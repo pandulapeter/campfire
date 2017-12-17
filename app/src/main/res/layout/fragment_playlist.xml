@@ -86,7 +86,8 @@
                             android:layout_marginStart="-4dp"
                             android:layout_toStartOf="@id/delete"
                             android:hint="@string/playlist_enter_title"
-                            android:inputType="textCapWords"
+                            android:inputType="textCapCharacters"
+                            android:maxLength="@integer/playlist_name_length_limit"
                             android:text="@={viewModel.editedTitle}"
                             android:textAppearance="@style/TextAppearance.AppCompat.Title"
                             tools:text="Favorites" />
@@ -117,7 +118,8 @@
                             android:layout_alignParentStart="true"
                             android:layout_centerVertical="true"
                             android:layout_toStartOf="@id/edit"
-                            android:maxLength="@integer/playlist_name_length_limit"
+                            android:ellipsize="end"
+                            android:maxLines="1"
                             android:text="@{viewModel.title}"
                             android:textAppearance="@style/TextAppearance.AppCompat.Title"
                             tools:text="Favorites" />
