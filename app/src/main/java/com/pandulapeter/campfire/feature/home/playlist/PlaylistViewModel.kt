@@ -50,7 +50,9 @@ class PlaylistViewModel(
     }
 
     fun onPlayButtonClicked() {
-        adapter.itemClickListener(0)
+        if (adapter.items.isNotEmpty()) {
+            adapter.itemClickListener(0)
+        }
     }
 
     fun removeSongFromPlaylist(songId: String) = playlistRepository.removeSongFromPlaylist(playlistId, songId)

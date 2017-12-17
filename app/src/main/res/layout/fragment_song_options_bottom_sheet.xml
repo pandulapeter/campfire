@@ -86,12 +86,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_alignBottom="@+id/toolbar_container"
+                android:alpha="0"
                 android:background="?attr/colorPrimary" />
 
             <RelativeLayout
                 android:id="@id/toolbar_container"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:paddingTop="@dimen/content_padding">
 
                 <ImageView
                     android:id="@+id/close"
@@ -99,11 +101,12 @@
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
                     android:layout_marginStart="@dimen/bottom_sheet_toolbar_close_margin"
+                    android:alpha="0"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/library_close"
                     android:padding="@dimen/action_button_padding"
                     app:srcCompat="@drawable/ic_close_24dp" />
-                
+
                 <android.support.v7.widget.Toolbar
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"

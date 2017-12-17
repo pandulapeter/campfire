@@ -38,6 +38,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
     private val finalToolbarMargin by lazy { context?.dimension(R.dimen.bottom_sheet_toolbar_margin) ?: 0 }
     private val initialToolbarContainerPadding by lazy { context?.dimension(R.dimen.content_padding) ?: 0 }
     private var scrollViewOffset = 0
+    private var shouldTransformTopToAppBar = false
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->
         val dialog = BottomSheetDialog(context, theme)
@@ -66,7 +67,6 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
         binding.nestedScrollView.setOnScrollChangeListener { _: NestedScrollView?, _: Int, scrollY: Int, _: Int, _: Int ->
             scrollViewOffset = scrollY
         }
-        updateSlideState(0f)
         dialog
     } ?: super.onCreateDialog(savedInstanceState)
 
@@ -74,6 +74,11 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
         super.onStart()
         songInfoRepository.subscribe(this)
         playlistRepository.subscribe(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        checkIfToolbarTransformationIsNeeded()
     }
 
     override fun onStop() {
@@ -108,13 +113,15 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
     }
 
     private fun updateSlideState(slideOffset: Float) = Math.max(0f, 2 * slideOffset - 1).let { closenessToTop ->
-        binding.close.alpha = closenessToTop
-        binding.close.translationX = -(1 - closenessToTop) * finalToolbarMargin / 4
-        binding.toolbar.translationX = closenessToTop * finalToolbarMargin
-        if (scrollViewOffset == 0) {
-            ViewCompat.setElevation(binding.fakeAppBar, closenessToTop * finalToolbarElevation)
-            binding.background.alpha = closenessToTop
-            binding.toolbarContainer.setPadding(0, Math.round((1 - closenessToTop) * initialToolbarContainerPadding), 0, 0)
+        if (shouldTransformTopToAppBar) {
+            binding.close.alpha = closenessToTop
+            binding.close.translationX = -(1 - closenessToTop) * finalToolbarMargin / 4
+            binding.toolbar.translationX = closenessToTop * finalToolbarMargin
+            if (scrollViewOffset == 0) {
+                ViewCompat.setElevation(binding.fakeAppBar, closenessToTop * finalToolbarElevation)
+                binding.background.alpha = closenessToTop
+                binding.toolbarContainer.setPadding(0, Math.round((1 - closenessToTop) * initialToolbarContainerPadding), 0, 0)
+            }
         }
     }
 
@@ -137,6 +144,20 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                         }
                     }
                 }, ViewGroup.LayoutParams.MATCH_PARENT, height)
+            }
+            checkIfToolbarTransformationIsNeeded()
+        }
+    }
+
+    private fun checkIfToolbarTransformationIsNeeded() {
+        binding.root.post {
+            val screenHeight = activity?.window?.decorView?.height ?: 0
+            if (binding.root.height.toFloat() > screenHeight * 0.8f) {
+                val layoutParams = binding.root.layoutParams
+                layoutParams.height = screenHeight
+                binding.root.layoutParams = layoutParams
+                shouldTransformTopToAppBar = true
+                updateSlideState(0f)
             }
         }
     }
