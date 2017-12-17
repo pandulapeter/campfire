@@ -10,6 +10,8 @@ import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.onPropertyChanged
 import javax.inject.Inject
 
 /**
@@ -29,11 +31,17 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
     //TODO: Add empty state placeholder.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // Setup swipe-to-dismiss functionality.
+        viewModel.isInEditMode.onPropertyChanged {
+            if (!it) {
+                hideKeyboard(activity?.currentFocus)
+            }
+        }
+        // Setup swipe-to-dismiss and drag-to-rearrange functionality.
         //TODO: Change the elevation of the card that's being dragged.
-        val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-            ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-            ItemTouchHelper.START or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT or ItemTouchHelper.END) {
+        val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
+
+            override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =
+                if (viewModel.isInEditMode.get()) makeMovementFlags(ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) else 0
 
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = consume {
                 viewHolder?.adapterPosition?.let { originalPosition ->

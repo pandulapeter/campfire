@@ -52,7 +52,10 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                 }
             }
         }
-        binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { hideKeyboard(currentFocus) })
+        binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
+            currentFocus?.clearFocus()
+            hideKeyboard(currentFocus)
+        })
         updateCheckedItem()
         replaceActiveFragment(viewModel.navigationItem)
         viewModel.playlists.onPropertyChanged {
@@ -63,7 +66,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                         R.id.playlist_container,
                         playlist.id,
                         index,
-                        (playlist as? Playlist.Custom)?.name ?: getString(R.string.home_favorites)).apply {
+                        (playlist as? Playlist.Custom)?.title ?: getString(R.string.home_favorites)).apply {
                         setIcon(R.drawable.ic_playlist_24dp)
                     }
                 }

@@ -33,7 +33,6 @@ class PlaylistViewModel(
 
     init {
         title.onPropertyChanged { editedTitle.set(it) }
-        (playlistRepository.getPlaylist(playlistId) as? Playlist.Custom)?.let { title.set(it.name) }
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
@@ -51,6 +50,7 @@ class PlaylistViewModel(
 
     override fun onUpdate(updateType: Repository.UpdateType) {
         super.onUpdate(updateType)
+        (playlistRepository.getPlaylist(playlistId) as? Playlist.Custom)?.let { title.set(it.title) }
         shouldShowPlayButton.set(adapter.items.isNotEmpty())
     }
 
@@ -60,6 +60,12 @@ class PlaylistViewModel(
 
     fun toggleEditMode() {
         if (shouldAllowEditMode) {
+            if (isInEditMode.get()) {
+                val newTitle = editedTitle.get()
+                if (newTitle != null && newTitle.trim().isNotEmpty()) {
+                    playlistRepository.updatePlaylistTitle(playlistId, newTitle.trim())
+                }
+            }
             isInEditMode.set(!isInEditMode.get())
         }
     }

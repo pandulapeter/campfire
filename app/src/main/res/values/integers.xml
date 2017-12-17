@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- General -->
+    <integer name="search_query_limit">20</integer>
+    <integer name="playlist_name_length_limit">20</integer>
+
+</resources>

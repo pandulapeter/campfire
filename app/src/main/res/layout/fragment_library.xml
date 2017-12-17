@@ -139,7 +139,7 @@
                                     android:layout_toStartOf="@id/close"
                                     android:hint="@string/library_search"
                                     android:inputType="textCapWords|textFilter"
-                                    android:maxLength="20"
+                                    android:maxLength="@integer/search_query_limit"
                                     android:text="@={viewModel.query}" />
 
                             </RelativeLayout>

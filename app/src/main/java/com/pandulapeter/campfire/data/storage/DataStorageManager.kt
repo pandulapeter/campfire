@@ -79,13 +79,13 @@ class DataStorageManager(context: Context, private val gson: Gson) {
         }
     }
 
-    fun newPlaylist(name: String) {
+    fun newPlaylist(title: String) {
         //TODO: Rewrite this.
         var id = 1
         while (playlistIds.contains(id)) {
             id++
         }
-        savePlaylist(Playlist.Custom(id, name, mutableListOf()))
+        savePlaylist(Playlist.Custom(id, title, mutableListOf()))
     }
 
     private var playlistIds: List<Int>

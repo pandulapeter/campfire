@@ -134,7 +134,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                 binding.playlistContainer.addView(AppCompatCheckBox(context).apply {
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(padding, padding, padding, padding)
-                    text = (playlist as? Playlist.Custom)?.name ?: getString(R.string.home_favorites)
+                    text = (playlist as? Playlist.Custom)?.title ?: getString(R.string.home_favorites)
                     isChecked = playlistRepository.isSongInPlaylist(playlist.id, songId)
                     setOnCheckedChangeListener { _, isChecked ->
                         if (isChecked) {

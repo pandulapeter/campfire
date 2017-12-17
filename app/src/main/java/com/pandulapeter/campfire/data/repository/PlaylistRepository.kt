@@ -37,6 +37,13 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
         }
     }
 
+    fun updatePlaylistTitle(playlistId: Int, title: String) {
+        if (playlistId != Playlist.FAVORITES_ID) {
+            dataStorageManager.savePlaylist(Playlist.Custom(playlistId, title, getPlaylist(playlistId).songIds))
+            notifySubscribers()
+        }
+    }
+
     fun removeSongFromPlaylist(playlistId: Int, songId: String) {
         if (isSongInPlaylist(playlistId, songId)) {
             dataStorageManager.savePlaylist(getPlaylist(playlistId).apply {
