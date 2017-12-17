@@ -59,7 +59,7 @@ class DataStorageManager(context: Context, private val gson: Gson) {
     } else {
         val playlist: Playlist.Custom = try {
             gson.fromJson(sharedPreferences.getString(KEY_PLAYLIST + playlistId, ""), object : TypeToken<Playlist.Custom>() {}.type)
-        } catch (_: JsonSyntaxException) {
+        } catch (_: RuntimeException) {
             Playlist.Custom(playlistId, "", mutableListOf())
         }
         playlist
@@ -72,16 +72,16 @@ class DataStorageManager(context: Context, private val gson: Gson) {
         sharedPreferences.edit().putString(KEY_PLAYLIST + playlist.id, gson.toJson((playlist as? Playlist.Favorites)?.songIds ?: playlist)).apply()
     }
 
-    fun deletePlaylist(playlist: Playlist) {
-        if (playlist.id != Playlist.FAVORITES_ID) {
-            playlistIds = playlistIds.toMutableList().filter { it == playlist.id }
-            sharedPreferences.edit().remove(KEY_PLAYLIST + playlist.id).apply()
+    fun deletePlaylist(playlistId: Int) {
+        if (playlistId != Playlist.FAVORITES_ID) {
+            playlistIds = playlistIds.toMutableList().apply { remove(playlistId) }
+            sharedPreferences.edit().remove(KEY_PLAYLIST + playlistId).apply()
         }
     }
 
     fun newPlaylist(title: String) {
         //TODO: Rewrite this.
-        var id = 1
+        var id = Playlist.FAVORITES_ID + 1
         while (playlistIds.contains(id)) {
             id++
         }

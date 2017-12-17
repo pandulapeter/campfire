@@ -48,5 +48,9 @@
     <string name="playlist_delete">Delete</string>
     <string name="playlist_enter_title">Enter playlist title</string>
     <string name="playlist_done">Done</string>
+    <string name="playlist_delete_confirmation_title">Are you sure?</string>
+    <string name="playlist_delete_confirmation_message">This cannot be undone.</string>
+    <string name="playlist_delete_confirmation_delete">Delete</string>
+    <string name="playlist_delete_confirmation_cancel">Cancel</string>
 
 </resources>

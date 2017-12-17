@@ -8,9 +8,13 @@ import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.feature.home.HomeActivity
+import com.pandulapeter.campfire.feature.home.HomeViewModel
+import com.pandulapeter.campfire.feature.home.library.AlertDialogFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import javax.inject.Inject
 
@@ -21,7 +25,7 @@ import javax.inject.Inject
  *
  * Controlled by [PlaylistViewModel].
  */
-class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist) {
+class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist), AlertDialogFragment.OnDialogItemsSelectedListener {
     @Inject lateinit var playlistRepository: PlaylistRepository
 
     override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, context, playlistRepository, arguments.playlistId)
@@ -35,6 +39,14 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
             if (!it) {
                 hideKeyboard(activity?.currentFocus)
             }
+        }
+        viewModel.shouldShowDeleteConfirmation.onEventTriggered {
+            AlertDialogFragment.show(
+                childFragmentManager,
+                R.string.playlist_delete_confirmation_title,
+                R.string.playlist_delete_confirmation_message,
+                R.string.playlist_delete_confirmation_delete,
+                R.string.playlist_delete_confirmation_cancel)
         }
         // Setup swipe-to-dismiss and drag-to-rearrange functionality.
         //TODO: Change the elevation of the card that's being dragged.
@@ -74,6 +86,11 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
     override fun onStop() {
         super.onStop()
         playlistRepository.unsubscribe(viewModel)
+    }
+
+    override fun onPositiveButtonSelected() {
+        (activity as HomeActivity).setCheckedItem(HomeViewModel.NavigationItem.Library)
+        viewModel.deletePlaylist()
     }
 
     companion object {

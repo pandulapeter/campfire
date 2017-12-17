@@ -53,7 +53,12 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
         }
     }
 
-    fun setPlaylist(playlistId: Int, songIds: List<String>) {
+    fun deletePlaylist(playlistId: Int) {
+        dataStorageManager.deletePlaylist(playlistId)
+        notifySubscribers()
+    }
+
+    fun updatePlaylist(playlistId: Int, songIds: List<String>) {
         dataStorageManager.savePlaylist(getPlaylist(playlistId).apply {
             this.songIds.apply { swap(songIds) }
         })

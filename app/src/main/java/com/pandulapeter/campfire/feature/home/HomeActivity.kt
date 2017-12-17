@@ -56,8 +56,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
             currentFocus?.clearFocus()
             hideKeyboard(currentFocus)
         })
-        updateCheckedItem()
-        replaceActiveFragment(viewModel.navigationItem)
+        setCheckedItem(viewModel.navigationItem)
         viewModel.playlists.onPropertyChanged {
             binding.navigationView.menu.findItem(R.id.playlists).subMenu.run {
                 clear()
@@ -106,6 +105,11 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     override fun showMenu() {
         binding.drawerLayout.openDrawer(GravityCompat.START)
         hideKeyboard(currentFocus)
+    }
+
+    fun setCheckedItem(navigationItem: HomeViewModel.NavigationItem) {
+        updateCheckedItem()
+        replaceActiveFragment(navigationItem)
     }
 
     private fun updateCheckedItem() = viewModel.navigationItem.let {
