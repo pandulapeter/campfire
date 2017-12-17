@@ -3,7 +3,9 @@ package com.pandulapeter.campfire.feature.shared
 import android.databinding.BindingAdapter
 import android.support.annotation.DrawableRes
 import android.support.design.widget.FloatingActionButton
+import android.text.TextUtils
 import android.view.View
+import android.widget.EditText
 import android.widget.TextView
 import com.pandulapeter.campfire.util.drawable
 
@@ -30,6 +32,16 @@ fun setVisibility(view: FloatingActionButton, isVisible: Boolean) {
             view.show()
         } else {
             view.hide()
+        }
+    }
+}
+
+@BindingAdapter("android:text")
+fun setText(view: EditText, text: String?) {
+    if (!TextUtils.equals(view.text, text)) {
+        view.setText(text)
+        if (text != null) {
+            view.setSelection(text.length)
         }
     }
 }

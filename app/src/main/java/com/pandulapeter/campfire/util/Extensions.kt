@@ -8,12 +8,15 @@ import android.databinding.ObservableInt
 import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
 import android.support.annotation.DrawableRes
+import android.support.design.internal.NavigationMenuView
+import android.support.design.widget.NavigationView
 import android.support.v4.content.ContextCompat
 import android.support.v7.content.res.AppCompatResources
 import com.pandulapeter.campfire.data.model.Language
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+
 
 fun Context.color(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
 
@@ -77,4 +80,8 @@ fun String?.mapToLanguage() = when (this) {
     Language.SupportedLanguages.ENGLISH.id -> Language.Known.English
     Language.SupportedLanguages.HUNGARIAN.id -> Language.Known.Hungarian
     else -> Language.Unknown
+}
+
+fun NavigationView.disableScrollbars() {
+    (getChildAt(0) as? NavigationMenuView)?.isVerticalScrollBarEnabled = false
 }

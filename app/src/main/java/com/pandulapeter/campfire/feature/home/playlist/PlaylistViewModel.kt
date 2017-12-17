@@ -30,7 +30,7 @@ class PlaylistViewModel(
     val shouldShowPlayButton = ObservableBoolean()
     val isInEditMode = ObservableBoolean()
     val shouldShowDeleteConfirmation = ObservableBoolean()
-    val shouldAllowEditMode = playlistId != Playlist.FAVORITES_ID
+    val shouldAllowDeleteButton = playlistId != Playlist.FAVORITES_ID
 
     init {
         title.onPropertyChanged { editedTitle.set(it) }
@@ -56,7 +56,9 @@ class PlaylistViewModel(
     }
 
     fun onDeleteButtonClicked() {
-        shouldShowDeleteConfirmation.set(true)
+        if (shouldAllowDeleteButton) {
+            shouldShowDeleteConfirmation.set(true)
+        }
     }
 
     fun deletePlaylist() {
@@ -65,15 +67,13 @@ class PlaylistViewModel(
     }
 
     fun toggleEditMode() {
-        if (shouldAllowEditMode) {
-            if (isInEditMode.get()) {
-                val newTitle = editedTitle.get()
-                if (newTitle != null && newTitle.trim().isNotEmpty()) {
-                    playlistRepository.updatePlaylistTitle(playlistId, newTitle.trim())
-                }
+        if (isInEditMode.get()) {
+            val newTitle = editedTitle.get()
+            if (newTitle != null && newTitle.trim().isNotEmpty()) {
+                playlistRepository.updatePlaylistTitle(playlistId, newTitle.trim())
             }
-            isInEditMode.set(!isInEditMode.get())
         }
+        isInEditMode.set(!isInEditMode.get())
     }
 
     fun onPlayButtonClicked() {

@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.feature.shared.CampfireActivity
 import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.disableScrollbars
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onPropertyChanged
 import javax.inject.Inject
@@ -36,6 +37,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Set up the side navigation drawer.
+        binding.navigationView.disableScrollbars()
         (binding.navigationView.getHeaderView(0).findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {

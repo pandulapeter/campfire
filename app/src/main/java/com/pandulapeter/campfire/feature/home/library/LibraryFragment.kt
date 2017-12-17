@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.data.repository.LanguageRepository
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.disableScrollbars
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
@@ -39,6 +40,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         super.onViewCreated(view, savedInstanceState)
         // Set up the side navigation drawer.
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { hideKeyboard(activity?.currentFocus) })
+        binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.downloaded_only -> consume { viewModel.shouldShowDownloadedOnly.toggle() }
