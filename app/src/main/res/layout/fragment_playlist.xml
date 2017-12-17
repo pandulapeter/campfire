@@ -10,8 +10,6 @@
             name="viewModel"
             type="com.pandulapeter.campfire.feature.home.playlist.PlaylistViewModel" />
 
-        <import type="android.view.View" />
-
     </data>
 
     <android.support.design.widget.CoordinatorLayout
@@ -64,10 +62,22 @@
             android:id="@+id/recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/playlist_content_bottom_margin"
             app:adapter="@{viewModel.adapter}"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             tools:listitem="@layout/item_song_info" />
 
+        <android.support.design.widget.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/large_content_padding"
+            android:onClick="@{() -> viewModel.onPlayButtonClicked()}"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_play_24dp"
+            app:visibility="@{viewModel.shouldShowPlayButton}"
+            tools:visibility="visible" />
 
     </android.support.design.widget.CoordinatorLayout>
 

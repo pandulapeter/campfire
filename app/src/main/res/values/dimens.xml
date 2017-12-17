@@ -24,4 +24,7 @@
     <dimen name="bottom_sheet_toolbar_margin">56dp</dimen>
     <dimen name="bottom_sheet_toolbar_elevation">4dp</dimen>
 
+    <!-- Playlist screen -->
+    <dimen name="playlist_content_bottom_margin">56dp</dimen>
+
 </resources>

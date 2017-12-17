@@ -1,10 +1,12 @@
 package com.pandulapeter.campfire.feature.home.playlist
 
 import android.content.Context
+import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.Repository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
@@ -23,6 +25,7 @@ class PlaylistViewModel(
     private val playlistRepository: PlaylistRepository,
     private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository) {
     val title = ObservableField(context?.getString(R.string.home_favorites))
+    val shouldShowPlayButton = ObservableBoolean()
 
     init {
         (playlistRepository.getPlaylist(playlistId) as? Playlist.Custom)?.let { title.set(it.name) }
@@ -39,6 +42,15 @@ class PlaylistViewModel(
                     true,
                     songInfoRepository.getDownloadedSongs().firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0)
             }
+    }
+
+    override fun onUpdate(updateType: Repository.UpdateType) {
+        super.onUpdate(updateType)
+        shouldShowPlayButton.set(adapter.items.isNotEmpty())
+    }
+
+    fun onPlayButtonClicked() {
+        adapter.itemClickListener(0)
     }
 
     fun removeSongFromPlaylist(songId: String) = playlistRepository.removeSongFromPlaylist(playlistId, songId)
