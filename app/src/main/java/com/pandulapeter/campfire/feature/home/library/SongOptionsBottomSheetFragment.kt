@@ -157,7 +157,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                 layoutParams.height = screenHeight
                 binding.root.layoutParams = layoutParams
                 shouldTransformTopToAppBar = true
-                updateSlideState(0f)
+                updateSlideState(if (behavior.state == BottomSheetBehavior.STATE_EXPANDED) 1f else 0f)
             }
         }
     }

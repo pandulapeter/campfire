@@ -88,7 +88,7 @@
                             android:layout_marginStart="-4dp"
                             android:layout_toStartOf="@id/delete"
                             android:hint="@string/playlist_enter_title"
-                            android:inputType="textCapCharacters"
+                            android:inputType="textCapSentences"
                             android:maxLength="@integer/playlist_name_length_limit"
                             android:maxLines="1"
                             android:text="@={viewModel.editedTitle}"
