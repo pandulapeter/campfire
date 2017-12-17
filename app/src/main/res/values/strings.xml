@@ -40,4 +40,13 @@
     <string name="library_song_count">%s songs</string>
     <string name="library_more">More</string>
 
+    <!-- History screen -->
+    <string name="history_clear">Clear</string>
+
+    <!-- Playlist screen -->
+    <string name="playlist_edit">Edit</string>
+    <string name="playlist_delete">Delete</string>
+    <string name="playlist_enter_title">Enter playlist title</string>
+    <string name="playlist_done">Done</string>
+
 </resources>

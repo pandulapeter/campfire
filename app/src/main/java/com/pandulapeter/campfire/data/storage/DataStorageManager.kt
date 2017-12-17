@@ -53,7 +53,7 @@ class DataStorageManager(context: Context, private val gson: Gson) {
         val ids: MutableList<String> = try {
             gson.fromJson(sharedPreferences.getString(KEY_PLAYLIST + Playlist.FAVORITES_ID, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<String>>() {}.type)
         } catch (_: JsonSyntaxException) {
-            mutableListOf<String>()
+            mutableListOf()
         }
         Playlist.Favorites(ids)
     } else {

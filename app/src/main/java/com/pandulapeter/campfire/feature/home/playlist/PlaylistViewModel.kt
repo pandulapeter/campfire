@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
+import com.pandulapeter.campfire.util.onPropertyChanged
 import java.util.Collections
 
 /**
@@ -25,9 +26,13 @@ class PlaylistViewModel(
     private val playlistRepository: PlaylistRepository,
     private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository) {
     val title = ObservableField(context?.getString(R.string.home_favorites))
+    val editedTitle = ObservableField(title.get())
     val shouldShowPlayButton = ObservableBoolean()
+    val isInEditMode = ObservableBoolean()
+    val shouldAllowEditMode = playlistId != Playlist.FAVORITES_ID
 
     init {
+        title.onPropertyChanged { editedTitle.set(it) }
         (playlistRepository.getPlaylist(playlistId) as? Playlist.Custom)?.let { title.set(it.name) }
     }
 
@@ -47,6 +52,16 @@ class PlaylistViewModel(
     override fun onUpdate(updateType: Repository.UpdateType) {
         super.onUpdate(updateType)
         shouldShowPlayButton.set(adapter.items.isNotEmpty())
+    }
+
+    fun onDeleteButtonClicked() {
+        //TODO
+    }
+
+    fun toggleEditMode() {
+        if (shouldAllowEditMode) {
+            isInEditMode.set(!isInEditMode.get())
+        }
     }
 
     fun onPlayButtonClicked() {

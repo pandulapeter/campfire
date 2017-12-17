@@ -6,4 +6,9 @@ import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragmentVi
 /**
  * Handles events and logic for [HistoryFragment].
  */
-class HistoryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?) : HomeFragmentViewModel(homeCallbacks)
+class HistoryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?) : HomeFragmentViewModel(homeCallbacks) {
+
+    fun onClearButtonClicked() {
+        //TODO
+    }
+}
