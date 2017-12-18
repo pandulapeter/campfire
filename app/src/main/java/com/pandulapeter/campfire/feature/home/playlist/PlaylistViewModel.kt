@@ -42,16 +42,18 @@ class PlaylistViewModel(
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
         val downloadedSongs = songInfoRepository.getDownloadedSongs()
-        return playlistRepository.getPlaylistSongs(playlistId)
+        val songIds = playlistRepository.getPlaylistSongs(playlistId)
+        return songIds
             .filterWorkInProgress()
             .filterExplicit()
             .map { songInfo ->
                 //TODO: Add update action if needed.
+                val shouldDisplayDragHandle = isInEditMode.get() && songIds.size > 1
                 SongInfoViewModel(
                     songInfo = songInfo,
                     isDownloaded = true,
-                    primaryActionDrawable = if (isInEditMode.get()) R.drawable.ic_drag_handle_24dp else null,
-                    primaryActionContentDescription = if (isInEditMode.get()) R.string.playlist_drag_to_rearrange else null,
+                    primaryActionDrawable = if (shouldDisplayDragHandle) R.drawable.ic_drag_handle_24dp else null,
+                    primaryActionContentDescription = if (shouldDisplayDragHandle) R.string.playlist_drag_to_rearrange else null,
                     alertText = if (downloadedSongs.firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null)
             }
     }

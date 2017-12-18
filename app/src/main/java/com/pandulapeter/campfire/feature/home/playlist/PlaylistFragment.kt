@@ -54,7 +54,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
 
             override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =
-                if (viewModel.isInEditMode.get()) makeMovementFlags(ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) else 0
+                if (viewModel.isInEditMode.get()) makeMovementFlags(if (viewModel.adapter.items.size > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) else 0
 
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = consume {
                 viewHolder?.adapterPosition?.let { originalPosition ->
@@ -70,7 +70,6 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
                     viewModel.removeSongFromPlaylist(songInfo.id)
                 }
             }
-
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Setup list item click listeners.
