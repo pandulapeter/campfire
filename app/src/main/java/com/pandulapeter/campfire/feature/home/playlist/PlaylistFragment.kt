@@ -95,11 +95,13 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
     override fun onStart() {
         super.onStart()
         playlistRepository.subscribe(viewModel)
+        downloadedSongRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
         playlistRepository.unsubscribe(viewModel)
+        downloadedSongRepository.unsubscribe(viewModel)
     }
 
     override fun onPositiveButtonSelected() {

@@ -147,12 +147,14 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         super.onStart()
         playlistRepository.subscribe(viewModel)
         languageRepository.subscribe(viewModel)
+        downloadedSongRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
         playlistRepository.unsubscribe(viewModel)
         languageRepository.unsubscribe(viewModel)
+        downloadedSongRepository.unsubscribe(viewModel)
     }
 
     override fun onBackPressed(): Boolean {
