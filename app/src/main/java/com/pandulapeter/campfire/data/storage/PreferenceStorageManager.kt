@@ -41,6 +41,7 @@ class PreferenceStorageManager(context: Context) {
      * The timestamp of the most recent update that helps to determine how old is the local cache.
      *
      * TODO: Remove duplicated code using delegation.
+     * TODO: Set auto-update frequency in Settings.
      */
     var lastUpdateTimestamp: Long
         get() = sharedPreferences.getLong(KEY_LAST_UPDATE_TIMESTAMP, 0)
@@ -68,6 +69,8 @@ class PreferenceStorageManager(context: Context) {
 
     /**
      * Whether or not explicit songs should be filtered out.
+     *
+     * TODO: Add toggle in Settings.
      */
     var shouldHideExplicit: Boolean
         get() = sharedPreferences.getBoolean(KEY_SHOULD_HIDE_EXPLICIT, true)
@@ -77,6 +80,8 @@ class PreferenceStorageManager(context: Context) {
 
     /**
      * Whether or not work-in-progress songs should be filtered out.
+     *
+     * TODO: Add toggle in Settings.
      */
     var shouldHideWorkInProgress: Boolean
         get() = sharedPreferences.getBoolean(KEY_SHOULD_HIDE_WORK_IN_PROGRESS, !BuildConfig.DEBUG)
@@ -85,7 +90,9 @@ class PreferenceStorageManager(context: Context) {
         }
 
     /**
-     * Whether or not work-in-progress songs should be filtered out.
+     * Whether or not the number of songs in library should be displayed.
+     *
+     * TODO: Add toggle in Settings.
      */
     var shouldShowSongCount: Boolean
         get() = sharedPreferences.getBoolean(KEY_SHOULD_SHOW_SONG_COUNT, BuildConfig.DEBUG)

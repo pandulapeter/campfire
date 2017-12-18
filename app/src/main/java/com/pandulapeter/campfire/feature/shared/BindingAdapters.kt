@@ -3,7 +3,9 @@ package com.pandulapeter.campfire.feature.shared
 import android.databinding.BindingAdapter
 import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
+import android.support.design.widget.AppBarLayout
 import android.support.design.widget.FloatingActionButton
+import android.support.v7.widget.Toolbar
 import android.text.TextUtils
 import android.view.View
 import android.widget.EditText
@@ -66,5 +68,15 @@ fun setVisibility(view: FloatingActionButton, isVisible: Boolean) {
         view.visibility = View.VISIBLE
     } else {
         view.hide()
+    }
+}
+
+
+@BindingAdapter("isScrollEnabled")
+fun setScrollEnabled(view: Toolbar, isScrollEnabled: Boolean) {
+    (view.layoutParams as AppBarLayout.LayoutParams).scrollFlags = if (isScrollEnabled) {
+        AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS or AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
+    } else {
+        0
     }
 }
