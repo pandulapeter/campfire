@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.ioc.module
 
 import com.pandulapeter.campfire.data.network.NetworkManager
+import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.LanguageRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -26,6 +27,13 @@ object RepositoryModule {
     @Provides
     @Singleton
     @JvmStatic
+    fun provideDownloadedSongRepository(
+        dataStorageManager: DataStorageManager,
+        networkManager: NetworkManager) = DownloadedSongRepository(dataStorageManager, networkManager)
+
+    @Provides
+    @Singleton
+    @JvmStatic
     fun provideUserPreferenceRepository(
         preferenceStorageManager: PreferenceStorageManager) = UserPreferenceRepository(preferenceStorageManager)
 
@@ -40,5 +48,6 @@ object RepositoryModule {
     @JvmStatic
     fun providePlaylistRepository(
         dataStorageManager: DataStorageManager,
-        songInfoRepository: SongInfoRepository) = PlaylistRepository(dataStorageManager, songInfoRepository)
+        songInfoRepository: SongInfoRepository,
+        downloadedSongRepository: DownloadedSongRepository) = PlaylistRepository(dataStorageManager, songInfoRepository, downloadedSongRepository)
 }

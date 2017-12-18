@@ -7,6 +7,7 @@ import android.view.View
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
+import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.HomeActivity
@@ -28,8 +29,9 @@ import javax.inject.Inject
  */
 class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist), AlertDialogFragment.OnDialogItemsSelectedListener {
     @Inject lateinit var playlistRepository: PlaylistRepository
+    @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
 
-    override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, context, playlistRepository, arguments.playlistId)
+    override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, context, downloadedSongRepository, playlistRepository, arguments.playlistId)
 
     override fun getRecyclerView() = binding.recyclerView
 

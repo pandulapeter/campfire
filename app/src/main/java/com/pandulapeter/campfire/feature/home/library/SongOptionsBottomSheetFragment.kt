@@ -16,6 +16,7 @@ import android.view.ViewGroup
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SongOptionsBottomSheetBinding
 import com.pandulapeter.campfire.data.model.Playlist
+import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.Repository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -30,6 +31,7 @@ import javax.inject.Inject
  */
 class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDialogFragment.OnDialogItemsSelectedListener, Repository.Subscriber {
     @Inject lateinit var songInfoRepository: SongInfoRepository
+    @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
     private lateinit var binding: SongOptionsBottomSheetBinding
     private lateinit var songId: String
@@ -92,7 +94,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
         outState.songId = songId
     }
 
-    override fun onPositiveButtonSelected() = invokeAndClose { songInfoRepository.removeSongFromDownloads(songId) }
+    override fun onPositiveButtonSelected() = invokeAndClose { downloadedSongRepository.removeSongFromDownloads(songId) }
 
     override fun onUpdate(updateType: Repository.UpdateType) {
         when (updateType) {

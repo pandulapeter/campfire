@@ -5,6 +5,7 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
+import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.Repository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -23,6 +24,7 @@ class PlaylistViewModel(
     userPreferenceRepository: UserPreferenceRepository,
     songInfoRepository: SongInfoRepository,
     context: Context?,
+    private val downloadedSongRepository: DownloadedSongRepository,
     private val playlistRepository: PlaylistRepository,
     private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository) {
     val title = ObservableField(context?.getString(R.string.home_favorites))
@@ -42,7 +44,7 @@ class PlaylistViewModel(
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
-        val downloadedSongs = songInfoRepository.getDownloadedSongs()
+        val downloadedSongs = downloadedSongRepository.getDownloadedSongs()
         val songIds = playlistRepository.getPlaylistSongs(playlistId)
         return songIds
             .filterWorkInProgress()

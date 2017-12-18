@@ -8,7 +8,8 @@ import com.pandulapeter.campfire.util.swap
  * Wraps caching and updating of [Playlist] objects.
  */
 class PlaylistRepository(private val dataStorageManager: DataStorageManager,
-                         private val songInfoRepository: SongInfoRepository) : Repository() {
+                         private val songInfoRepository: SongInfoRepository,
+                         private val downloadedSongRepository: DownloadedSongRepository) : Repository() {
 
     fun getPlaylists() = dataStorageManager.getAllPlaylists()
 
@@ -24,7 +25,7 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
             songInfoRepository.getLibrarySongs()
                 .find { songId == it.id }
         }
-        .filter { songInfoRepository.isSongDownloaded(it.id) }
+        .filter { downloadedSongRepository.isSongDownloaded(it.id) }
 
     fun isSongInPlaylist(songId: String): Boolean {
         getPlaylists().forEach {

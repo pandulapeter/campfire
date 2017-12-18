@@ -5,6 +5,7 @@ import android.databinding.ObservableField
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
+import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.LanguageRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.Repository
@@ -23,6 +24,7 @@ import com.pandulapeter.campfire.util.toggle
 class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                        songInfoRepository: SongInfoRepository,
                        userPreferenceRepository: UserPreferenceRepository,
+                       private val downloadedSongRepository: DownloadedSongRepository,
                        private val playlistRepository: PlaylistRepository,
                        private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.query.isNotEmpty())
@@ -44,7 +46,7 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
-        val downloadedSongs = songInfoRepository.getDownloadedSongs()
+        val downloadedSongs = downloadedSongRepository.getDownloadedSongs()
         val downloadedSongIds = downloadedSongs.map { it.id }
         val librarySongs = songInfoRepository.getLibrarySongs()
             .filterWorkInProgress()
@@ -110,7 +112,7 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
 
     private fun List<SongInfo>.filterByLanguages() = filter { languageRepository.isLanguageFilterEnabled(it.language.mapToLanguage()) }
 
-    private fun List<SongInfo>.filterDownloaded() = if (shouldShowDownloadedOnly.get()) filter { songInfoRepository.isSongDownloaded(it.id) } else this
+    private fun List<SongInfo>.filterDownloaded() = if (shouldShowDownloadedOnly.get()) filter { downloadedSongRepository.isSongDownloaded(it.id) } else this
 
     //TODO: Handle special characters, prioritize results that begin with the query.
     private fun List<SongInfo>.filterByQuery() = if (isSearchInputVisible.get()) {
