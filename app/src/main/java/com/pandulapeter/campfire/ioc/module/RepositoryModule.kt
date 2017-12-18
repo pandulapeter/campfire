@@ -7,6 +7,7 @@ import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.storage.DataStorageManager
+import com.pandulapeter.campfire.data.storage.FileStorageManager
 import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
 import dagger.Module
 import dagger.Provides
@@ -29,7 +30,8 @@ object RepositoryModule {
     @JvmStatic
     fun provideDownloadedSongRepository(
         dataStorageManager: DataStorageManager,
-        networkManager: NetworkManager) = DownloadedSongRepository(dataStorageManager, networkManager)
+        fileStorageManager: FileStorageManager,
+        networkManager: NetworkManager) = DownloadedSongRepository(dataStorageManager, fileStorageManager, networkManager)
 
     @Provides
     @Singleton

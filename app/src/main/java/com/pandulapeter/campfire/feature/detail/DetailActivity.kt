@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.support.v4.view.ViewPager
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.shared.CampfireActivity
 import javax.inject.Inject
@@ -19,8 +18,7 @@ import javax.inject.Inject
  */
 class DetailActivity : CampfireActivity<DetailBinding, DetailViewModel>(R.layout.activity_detail) {
     @Inject lateinit var songInfoRepository: SongInfoRepository
-    @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
-    override val viewModel by lazy { DetailViewModel(supportFragmentManager, intent.currentId, intent.ids, songInfoRepository, downloadedSongRepository) }
+    override val viewModel by lazy { DetailViewModel(supportFragmentManager, intent.currentId, intent.ids, songInfoRepository) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

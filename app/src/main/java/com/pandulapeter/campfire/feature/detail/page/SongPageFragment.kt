@@ -3,7 +3,10 @@ package com.pandulapeter.campfire.feature.detail.page
 import android.os.Bundle
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SongPageBinding
+import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
+import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import javax.inject.Inject
 
 /**
  * Displays lyrics and chords to a single song.
@@ -11,8 +14,9 @@ import com.pandulapeter.campfire.feature.shared.CampfireFragment
  * Controlled by [SongPageViewModel].
  */
 class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.layout.fragment_song_page) {
-
-    override val viewModel by lazy { SongPageViewModel(arguments.songId) }
+    @Inject lateinit var songInfoRepository: SongInfoRepository
+    @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
+    override val viewModel by lazy { SongPageViewModel(arguments.songId, songInfoRepository, downloadedSongRepository) }
 
     companion object {
         private const val SONG_ID = "song_id"
