@@ -55,5 +55,6 @@
     <string name="playlist_delete_confirmation_message">This cannot be undone.</string>
     <string name="playlist_delete_confirmation_delete">Delete</string>
     <string name="playlist_delete_confirmation_cancel">Cancel</string>
+    <string name="playlist_drag_to_rearrange">Drag to rearrange</string>
 
 </resources>

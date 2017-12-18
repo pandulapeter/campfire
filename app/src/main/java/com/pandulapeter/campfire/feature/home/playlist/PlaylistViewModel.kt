@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.feature.home.playlist
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
@@ -37,6 +36,7 @@ class PlaylistViewModel(
         title.onPropertyChanged { editedTitle.set(it) }
         isInEditMode.onPropertyChanged {
             shouldShowPlayButton.set(if (it) false else adapter.items.isNotEmpty())
+            onUpdate(Repository.UpdateType.Unspecified)
         }
     }
 
@@ -50,6 +50,8 @@ class PlaylistViewModel(
                 SongInfoViewModel(
                     songInfo = songInfo,
                     isDownloaded = true,
+                    primaryActionDrawable = if (isInEditMode.get()) R.drawable.ic_drag_handle_24dp else null,
+                    primaryActionContentDescription = if (isInEditMode.get()) R.string.playlist_drag_to_rearrange else null,
                     alertText = if (downloadedSongs.firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null)
             }
     }
