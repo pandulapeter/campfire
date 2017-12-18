@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.HomeActivity
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.home.library.AlertDialogFragment
@@ -73,8 +74,21 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Setup list item click listeners.
-        viewModel.adapter.itemActionTouchListener = { position ->
-            itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
+        //TODO: Duplicated code from parent.
+        context?.let {
+            viewModel.adapter.itemClickListener = { position ->
+                if (!viewModel.isInEditMode.get()) {
+                    startActivity(DetailActivity.getStartIntent(
+                        context = it,
+                        currentId = viewModel.adapter.items[position].songInfo.id,
+                        ids = viewModel.adapter.items.map { it.songInfo.id }))
+                }
+            }
+        }
+        viewModel.adapter.itemTouchListener = { position ->
+            if (viewModel.isInEditMode.get()) {
+                itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
+            }
         }
     }
 

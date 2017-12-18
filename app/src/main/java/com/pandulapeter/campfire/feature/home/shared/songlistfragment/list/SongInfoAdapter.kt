@@ -36,14 +36,14 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
         }
 
     var itemClickListener: (position: Int) -> Unit = { _ -> }
+    var itemTouchListener: ((position: Int) -> Unit)? = null
     var itemActionClickListener: ((position: Int) -> Unit)? = null
-    var itemActionTouchListener: ((position: Int) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): SongInfoViewHolder {
         val viewHolder = SongInfoViewHolder.create(parent)
         viewHolder.setItemClickListener(itemClickListener)
+        viewHolder.setItemTouchListener(itemTouchListener)
         viewHolder.setItemActionClickListener(itemActionClickListener)
-        viewHolder.setItemActionTouchListener(itemActionTouchListener)
         return viewHolder
     }
 
@@ -66,6 +66,17 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
             }
         }
 
+        fun setItemTouchListener(itemTouchListener: ((position: Int) -> Unit)?) {
+            if (itemTouchListener != null) {
+                binding.root.setOnTouchListener { _, event ->
+                    if (event.actionMasked == MotionEvent.ACTION_DOWN && adapterPosition != RecyclerView.NO_POSITION) {
+                        itemTouchListener(adapterPosition)
+                    }
+                    false
+                }
+            }
+        }
+
         fun setItemActionClickListener(itemClickListener: ((position: Int) -> Unit)?) {
             if (itemClickListener == null) {
                 binding.action.isClickable = false
@@ -81,18 +92,6 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
                     if (adapterPosition != RecyclerView.NO_POSITION) {
                         itemClickListener(adapterPosition)
                     }
-                }
-            }
-        }
-
-        fun setItemActionTouchListener(itemTouchListener: ((position: Int) -> Unit)?) {
-            if (itemTouchListener != null) {
-                //TODO: Fix Lint warning.
-                binding.action.setOnTouchListener { _, event ->
-                    if (event.actionMasked == MotionEvent.ACTION_DOWN && adapterPosition != RecyclerView.NO_POSITION) {
-                        itemTouchListener(adapterPosition)
-                    }
-                    false
                 }
             }
         }

@@ -34,6 +34,9 @@ class PlaylistViewModel(
 
     init {
         title.onPropertyChanged { editedTitle.set(it) }
+        isInEditMode.onPropertyChanged {
+            shouldShowPlayButton.set(if (it) false else adapter.items.isNotEmpty())
+        }
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
@@ -52,7 +55,9 @@ class PlaylistViewModel(
     override fun onUpdate(updateType: Repository.UpdateType) {
         super.onUpdate(updateType)
         (playlistRepository.getPlaylist(playlistId) as? Playlist.Custom)?.let { title.set(it.title) }
-        shouldShowPlayButton.set(adapter.items.isNotEmpty())
+        if (!isInEditMode.get()) {
+            shouldShowPlayButton.set(adapter.items.isNotEmpty())
+        }
     }
 
     fun onDeleteButtonClicked() {

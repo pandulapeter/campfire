@@ -25,14 +25,11 @@ fun setCompoundDrawables(view: TextView,
 
 @BindingAdapter("visibility")
 fun setVisibility(view: FloatingActionButton, isVisible: Boolean) {
-    if (view.visibility == View.GONE && isVisible) {
+    if (isVisible) {
+        view.show()
         view.visibility = View.VISIBLE
     } else {
-        if (isVisible) {
-            view.show()
-        } else {
-            view.hide()
-        }
+        view.hide()
     }
 }
 
