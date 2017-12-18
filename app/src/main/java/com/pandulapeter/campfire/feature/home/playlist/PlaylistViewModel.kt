@@ -30,6 +30,7 @@ class PlaylistViewModel(
     val shouldShowPlayButton = ObservableBoolean()
     val isInEditMode = ObservableBoolean()
     val shouldShowDeleteConfirmation = ObservableBoolean()
+    val shouldDisplayEditButton = ObservableBoolean()
     val shouldAllowDeleteButton = playlistId != Playlist.FAVORITES_ID
 
     init {
@@ -60,6 +61,7 @@ class PlaylistViewModel(
 
     override fun onUpdate(updateType: Repository.UpdateType) {
         super.onUpdate(updateType)
+        shouldDisplayEditButton.set(adapter.items.isNotEmpty() || playlistId != Playlist.FAVORITES_ID)
         (playlistRepository.getPlaylist(playlistId) as? Playlist.Custom)?.let { title.set(it.title) }
         if (!isInEditMode.get()) {
             shouldShowPlayButton.set(adapter.items.isNotEmpty())

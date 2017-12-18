@@ -113,7 +113,8 @@
 
                     <RelativeLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent">
+                        android:layout_height="match_parent"
+                        android:animateLayoutChanges="true">
 
                         <ImageView
                             android:id="@+id/edit"
@@ -126,6 +127,7 @@
                             android:contentDescription="@string/playlist_delete"
                             android:onClick="@{() -> viewModel.toggleEditMode()}"
                             android:padding="@dimen/action_button_padding"
+                            android:visibility="@{viewModel.shouldDisplayEditButton ? View.VISIBLE : View.GONE}"
                             app:srcCompat="@drawable/ic_edit_24dp" />
 
                         <TextView
