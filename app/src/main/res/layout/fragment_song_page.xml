@@ -11,11 +11,20 @@
 
     </data>
 
-    <TextView
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:text="@{viewModel.text}"
-        tools:context=".feature.detail.DetailActivity" />
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:padding="@dimen/large_content_padding">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@{viewModel.text}"
+            tools:context=".feature.detail.DetailActivity" />
+
+    </ScrollView>
 
 </layout>
