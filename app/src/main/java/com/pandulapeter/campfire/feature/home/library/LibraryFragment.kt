@@ -9,6 +9,7 @@ import android.widget.CompoundButton
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.LanguageRepository
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.addDrawerListener
@@ -30,9 +31,10 @@ import javax.inject.Inject
  * Controlled by [LibraryViewModel].
  */
 class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library) {
+    @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var languageRepository: LanguageRepository
 
-    override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository, userPreferenceRepository, languageRepository)
+    override fun createViewModel() = LibraryViewModel(callbacks, songInfoRepository, userPreferenceRepository, playlistRepository, languageRepository)
 
     override fun getRecyclerView() = binding.recyclerView
 
@@ -131,11 +133,13 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
 
     override fun onStart() {
         super.onStart()
+        playlistRepository.subscribe(viewModel)
         languageRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
+        playlistRepository.unsubscribe(viewModel)
         languageRepository.unsubscribe(viewModel)
     }
 

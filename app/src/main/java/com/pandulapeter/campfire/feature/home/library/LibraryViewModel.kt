@@ -6,6 +6,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.LanguageRepository
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.Repository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
@@ -22,6 +23,7 @@ import com.pandulapeter.campfire.util.toggle
 class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                        songInfoRepository: SongInfoRepository,
                        userPreferenceRepository: UserPreferenceRepository,
+                       private val playlistRepository: PlaylistRepository,
                        private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.query.isNotEmpty())
     val query = ObservableField(userPreferenceRepository.query)
@@ -58,7 +60,7 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                     songInfo = songInfo,
                     isDownloaded = isDownloaded,
                     primaryActionDrawable = if (isDownloaded) {
-                        R.drawable.ic_playlist_border_24dp //TODO: or "ic_playlist_24dp"
+                        if (playlistRepository.isSongInPlaylist(songInfo.id)) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp
                     } else {
                         R.drawable.ic_download_24dp
                     },

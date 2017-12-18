@@ -26,6 +26,15 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
         }
         .filter { songInfoRepository.isSongDownloaded(it.id) }
 
+    fun isSongInPlaylist(songId: String): Boolean {
+        getPlaylists().forEach {
+            if (it.songIds.contains(songId)) {
+                return true
+            }
+        }
+        return false
+    }
+
     fun isSongInPlaylist(playlistId: Int, songId: String) = getPlaylist(playlistId).songIds.contains(songId)
 
     fun addSongToPlaylist(playlistId: Int, songId: String, position: Int? = null) {
