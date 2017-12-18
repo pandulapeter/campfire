@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.LanguageRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
@@ -116,7 +117,16 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         viewModel.adapter.itemPrimaryActionClickListener = { position ->
             viewModel.adapter.items[position].let { songInfoViewModel ->
                 if (songInfoViewModel.isDownloaded) {
-                    SongOptionsBottomSheetFragment.show(childFragmentManager, songInfoViewModel.songInfo.id)
+                    val songId = songInfoViewModel.songInfo.id
+                    if (playlistRepository.getPlaylists().size == 1) {
+                        if (playlistRepository.isSongInPlaylist(Playlist.FAVORITES_ID, songId)) {
+                            playlistRepository.removeSongFromPlaylist(Playlist.FAVORITES_ID, songId)
+                        } else {
+                            playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, songId)
+                        }
+                    } else {
+                        SongOptionsBottomSheetFragment.show(childFragmentManager, songId)
+                    }
                 } else {
                     //TODO: Download song.
                 }

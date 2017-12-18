@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.playlist
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
@@ -45,13 +46,10 @@ class PlaylistViewModel(
             .filterWorkInProgress()
             .filterExplicit()
             .map { songInfo ->
+                //TODO: Add update action if needed.
                 SongInfoViewModel(
                     songInfo = songInfo,
                     isDownloaded = true,
-                    primaryActionDrawable = R.drawable.ic_playlist_border_24dp, //TODO: or "ic_playlist_24dp"
-                    primaryActionContentDescription = R.string.manage_playlists,
-                    secondaryActionDrawable = null,
-                    secondaryActionContentDescription = null,
                     alertText = if (downloadedSongs.firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null)
             }
     }
