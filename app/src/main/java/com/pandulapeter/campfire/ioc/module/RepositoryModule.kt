@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.ioc.module
 
 import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
+import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.LanguageRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -15,6 +16,12 @@ import javax.inject.Singleton
 
 @Module
 object RepositoryModule {
+
+    @Provides
+    @Singleton
+    @JvmStatic
+    fun provideUserPreferenceRepository(
+        preferenceStorageManager: PreferenceStorageManager) = UserPreferenceRepository(preferenceStorageManager)
 
     @Provides
     @Singleton
@@ -36,14 +43,14 @@ object RepositoryModule {
     @Provides
     @Singleton
     @JvmStatic
-    fun provideUserPreferenceRepository(
-        preferenceStorageManager: PreferenceStorageManager) = UserPreferenceRepository(preferenceStorageManager)
+    fun provideLanguageRepository(
+        preferenceStorageManager: PreferenceStorageManager) = LanguageRepository(preferenceStorageManager)
 
     @Provides
     @Singleton
     @JvmStatic
-    fun provideLanguageRepository(
-        preferenceStorageManager: PreferenceStorageManager) = LanguageRepository(preferenceStorageManager)
+    fun provideHistoryRepository(
+        dataStorageManager: DataStorageManager) = HistoryRepository(dataStorageManager)
 
     @Provides
     @Singleton
