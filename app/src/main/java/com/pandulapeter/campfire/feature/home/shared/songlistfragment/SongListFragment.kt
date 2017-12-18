@@ -9,7 +9,6 @@ import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
-import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.util.dimension
@@ -44,14 +43,6 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
                         }
                     }
                 })
-            }
-            // Set up list item click listeners.
-            //TODO: Only send the list of song id-s from Playlists.
-            viewModel.adapter.itemClickListener = { position ->
-                startActivity(DetailActivity.getStartIntent(
-                    context = context,
-                    currentId = viewModel.adapter.items[position].songInfo.id,
-                    ids = viewModel.adapter.items.map { it.songInfo.id }))
             }
         }
     }

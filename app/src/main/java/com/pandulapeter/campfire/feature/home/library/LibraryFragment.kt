@@ -9,6 +9,7 @@ import android.widget.CompoundButton
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.LanguageRepository
+import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
@@ -96,14 +97,35 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
                 override fun getHeaderTitle(position: Int) = if (position >= 0) viewModel.getHeaderTitle(position) else ""
             })
         }
-        // Set up list item "More" action listener.
-        viewModel.adapter.itemActionClickListener = { position ->
-            viewModel.adapter.items[position].songInfo.let { songInfo -> SongOptionsBottomSheetFragment.show(childFragmentManager, songInfo.id) }
-        }
         // Set up view options toggle.
         viewModel.shouldShowViewOptions.onEventTriggered {
             binding.drawerLayout.openDrawer(GravityCompat.END)
             hideKeyboard(activity?.currentFocus)
+        }
+        // Set up list item click listeners.
+        context?.let {
+            viewModel.adapter.itemClickListener = { position ->
+                startActivity(DetailActivity.getStartIntent(
+                    context = it,
+                    currentId = viewModel.adapter.items[position].songInfo.id,
+                    ids = viewModel.adapter.items.map { it.songInfo.id }))
+            }
+        }
+        viewModel.adapter.itemPrimaryActionClickListener = { position ->
+            viewModel.adapter.items[position].let { songInfoViewModel ->
+                if (songInfoViewModel.isDownloaded) {
+                    SongOptionsBottomSheetFragment.show(childFragmentManager, songInfoViewModel.songInfo.id)
+                } else {
+                    //TODO: Download song.
+                }
+            }
+        }
+        viewModel.adapter.itemSecondaryActionClickListener = { position ->
+            viewModel.adapter.items[position].let { songInfoViewModel ->
+                if (songInfoViewModel.alertText != null) {
+                    //TODO: Download song.
+                }
+            }
         }
     }
 

@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.home.library
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.LanguageRepository
@@ -52,11 +53,21 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
             .filterByQuery()
             .sort()
             .map { songInfo ->
+                val isDownloaded = downloadedSongIds.contains(songInfo.id)
                 SongInfoViewModel(
-                    songInfo,
-                    true,
-                    downloadedSongIds.contains(songInfo.id),
-                    downloadedSongs.firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0)
+                    songInfo = songInfo,
+                    isDownloaded = isDownloaded,
+                    primaryActionDrawable = if (isDownloaded) {
+                        R.drawable.ic_playlist_border_24dp //TODO: or "ic_playlist_24dp"
+                    } else {
+                        R.drawable.ic_download_24dp
+                    },
+                    primaryActionContentDescription = if (isDownloaded) R.string.manage_playlists else R.string.download,
+                    alertText = if (isDownloaded) {
+                        if (downloadedSongs.firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
+                    } else {
+                        null //TODO: or "new"
+                    })
             }
         filteredItemCount.set(if (filteredItems.size == librarySongs.size) "${filteredItems.size}" else "${filteredItems.size} / ${librarySongs.size}")
         return filteredItems
@@ -105,6 +116,6 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
         filter { it.title.contains(query, true) || it.artist.contains(query, true) }
     } else this
 
-    //TODO: Handle special characters
+    //TODO: Handle special characters.
     private fun List<SongInfo>.sort() = sortedBy { if (isSortedByTitle.get()) it.title else it.artist }
 }

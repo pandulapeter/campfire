@@ -36,14 +36,16 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
         }
 
     var itemClickListener: (position: Int) -> Unit = { _ -> }
-    var itemTouchListener: ((position: Int) -> Unit)? = null
-    var itemActionClickListener: ((position: Int) -> Unit)? = null
+    var itemPrimaryActionTouchListener: ((position: Int) -> Unit)? = null
+    var itemPrimaryActionClickListener: ((position: Int) -> Unit)? = null
+    var itemSecondaryActionClickListener: ((position: Int) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): SongInfoViewHolder {
         val viewHolder = SongInfoViewHolder.create(parent)
         viewHolder.setItemClickListener(itemClickListener)
-        viewHolder.setItemTouchListener(itemTouchListener)
-        viewHolder.setItemActionClickListener(itemActionClickListener)
+        viewHolder.setItemPrimaryActionTouchListener(itemPrimaryActionTouchListener)
+        viewHolder.setItemPrimaryActionClickListener(itemPrimaryActionClickListener)
+        viewHolder.setItemSecondaryActionClickListener(itemSecondaryActionClickListener)
         return viewHolder
     }
 
@@ -66,9 +68,10 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
             }
         }
 
-        fun setItemTouchListener(itemTouchListener: ((position: Int) -> Unit)?) {
+        fun setItemPrimaryActionTouchListener(itemTouchListener: ((position: Int) -> Unit)?) {
             if (itemTouchListener != null) {
-                binding.root.setOnTouchListener { _, event ->
+                //TODO: Fix Lint warning.
+                binding.primaryAction.setOnTouchListener { _, event ->
                     if (event.actionMasked == MotionEvent.ACTION_DOWN && adapterPosition != RecyclerView.NO_POSITION) {
                         itemTouchListener(adapterPosition)
                     }
@@ -77,18 +80,25 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
             }
         }
 
-        fun setItemActionClickListener(itemClickListener: ((position: Int) -> Unit)?) {
-            if (itemClickListener == null) {
-                binding.action.isClickable = false
-                binding.action.background = null
-            } else {
+        fun setItemPrimaryActionClickListener(itemClickListener: ((position: Int) -> Unit)?) {
+            if (itemClickListener != null) {
                 binding.root.setOnLongClickListener {
                     if (adapterPosition != RecyclerView.NO_POSITION) {
                         itemClickListener(adapterPosition)
                         true
                     } else false
                 }
-                binding.action.setOnClickListener {
+                binding.primaryAction.setOnClickListener {
+                    if (adapterPosition != RecyclerView.NO_POSITION) {
+                        itemClickListener(adapterPosition)
+                    }
+                }
+            }
+        }
+
+        fun setItemSecondaryActionClickListener(itemClickListener: ((position: Int) -> Unit)?) {
+            if (itemClickListener != null) {
+                binding.secondaryAction.setOnClickListener {
                     if (adapterPosition != RecyclerView.NO_POSITION) {
                         itemClickListener(adapterPosition)
                     }

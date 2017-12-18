@@ -29,22 +29,32 @@
             android:clipChildren="false">
 
             <ImageView
-                android:id="@+id/action"
+                android:id="@+id/primary_action"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
-                android:layout_marginEnd="-8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/library_more"
+                android:contentDescription="@{viewModel.primaryActionContentDescription}"
+                android:drawable="@{viewModel.primaryActionDrawable}"
                 android:padding="@dimen/content_padding"
-                android:visibility="@{viewModel.shouldShowAction &amp;&amp; viewModel.isDownloaded ? View.VISIBLE : View.GONE}"
-                app:srcCompat="@drawable/ic_more_24dp" />
+                tools:src="@drawable/ic_playlist_border_24dp" />
+
+            <ImageView
+                android:id="@+id/secondary_action"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toStartOf="@id/primary_action"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@{viewModel.secondaryActionContentDescription}"
+                android:drawable="@{viewModel.secondaryActionDrawable}"
+                android:padding="@dimen/content_padding"
+                tools:src="@drawable/ic_download_24dp" />
 
             <TextView
                 android:id="@+id/title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_toStartOf="@id/action"
+                android:layout_toStartOf="@id/secondary_action"
                 android:alpha="@{viewModel.isDownloaded ? 1f : 0.8f }"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
@@ -58,7 +68,7 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@id/title"
                 android:layout_marginTop="@dimen/card_text_margin"
-                android:layout_toStartOf="@id/action"
+                android:layout_toStartOf="@id/secondary_action"
                 android:alpha="@{viewModel.isDownloaded ? 1f : 0.5f }"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-thin"
@@ -71,11 +81,10 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@id/artist"
                 android:layout_marginTop="@dimen/card_text_margin"
-                android:text="@string/new_version_available"
+                android:text="@{viewModel.alertText}"
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
                 android:textColor="@color/accent"
-                android:visibility="@{viewModel.isDownloaded &amp;&amp; viewModel.shouldBeUpdated ? View.VISIBLE : View.GONE}"
-                tools:visibility="visible" />
+                tools:text="Alert" />
 
         </RelativeLayout>
 

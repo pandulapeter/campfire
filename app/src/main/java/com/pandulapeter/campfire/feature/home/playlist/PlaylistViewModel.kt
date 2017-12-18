@@ -40,15 +40,19 @@ class PlaylistViewModel(
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
+        val downloadedSongs = songInfoRepository.getDownloadedSongs()
         return playlistRepository.getPlaylistSongs(playlistId)
             .filterWorkInProgress()
             .filterExplicit()
             .map { songInfo ->
                 SongInfoViewModel(
-                    songInfo,
-                    false,
-                    true,
-                    songInfoRepository.getDownloadedSongs().firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0)
+                    songInfo = songInfo,
+                    isDownloaded = true,
+                    primaryActionDrawable = R.drawable.ic_playlist_border_24dp, //TODO: or "ic_playlist_24dp"
+                    primaryActionContentDescription = R.string.manage_playlists,
+                    secondaryActionDrawable = null,
+                    secondaryActionContentDescription = null,
+                    alertText = if (downloadedSongs.firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null)
             }
     }
 

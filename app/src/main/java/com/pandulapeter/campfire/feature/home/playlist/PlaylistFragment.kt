@@ -74,7 +74,6 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Setup list item click listeners.
-        //TODO: Duplicated code from parent.
         context?.let {
             viewModel.adapter.itemClickListener = { position ->
                 if (!viewModel.isInEditMode.get()) {
@@ -85,7 +84,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
                 }
             }
         }
-        viewModel.adapter.itemTouchListener = { position ->
+        viewModel.adapter.itemPrimaryActionTouchListener = { position ->
             if (viewModel.isInEditMode.get()) {
                 itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
             }

@@ -2,10 +2,12 @@ package com.pandulapeter.campfire.feature.shared
 
 import android.databinding.BindingAdapter
 import android.support.annotation.DrawableRes
+import android.support.annotation.StringRes
 import android.support.design.widget.FloatingActionButton
 import android.text.TextUtils
 import android.view.View
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import com.pandulapeter.campfire.util.drawable
 
@@ -23,16 +25,6 @@ fun setCompoundDrawables(view: TextView,
         if (drawableBottom == 0) drawables[3] else view.context.drawable(drawableBottom))
 }
 
-@BindingAdapter("visibility")
-fun setVisibility(view: FloatingActionButton, isVisible: Boolean) {
-    if (isVisible) {
-        view.show()
-        view.visibility = View.VISIBLE
-    } else {
-        view.hide()
-    }
-}
-
 @BindingAdapter("android:text")
 fun setText(view: EditText, text: String?) {
     if (!TextUtils.equals(view.text, text)) {
@@ -40,5 +32,39 @@ fun setText(view: EditText, text: String?) {
         if (text != null) {
             view.setSelection(text.length)
         }
+    }
+}
+
+@BindingAdapter("android:text")
+fun setText(view: TextView, @StringRes text: Int?) {
+    view.visibility = if (text == null) View.GONE else View.VISIBLE
+    text?.let {
+        view.setText(text)
+    }
+}
+
+
+@BindingAdapter("android:contentDescription")
+fun setContentDescription(view: ImageView, @StringRes contentDescription: Int?) {
+    contentDescription?.let {
+        view.contentDescription = view.context.getString(it)
+    }
+}
+
+@BindingAdapter("android:drawable")
+fun setDrawable(view: ImageView, @DrawableRes drawable: Int?) {
+    view.visibility = if (drawable == null) View.GONE else View.VISIBLE
+    drawable?.let {
+        view.setImageDrawable(view.context.drawable(it))
+    }
+}
+
+@BindingAdapter("visibility")
+fun setVisibility(view: FloatingActionButton, isVisible: Boolean) {
+    if (isVisible) {
+        view.show()
+        view.visibility = View.VISIBLE
+    } else {
+        view.hide()
     }
 }
