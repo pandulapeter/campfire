@@ -51,12 +51,18 @@ repositories {
         url "https://maven.google.com"
     }
 }
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
+}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$rootProject.kotlinVersion"
     kapt "com.android.databinding:compiler:$rootProject.buildToolsVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.19.2"
 
     // Dependency injection
     final daggerVersion = '2.13'
