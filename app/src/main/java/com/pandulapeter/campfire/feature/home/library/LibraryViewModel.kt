@@ -27,8 +27,8 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                        private val downloadedSongRepository: DownloadedSongRepository,
                        private val playlistRepository: PlaylistRepository,
                        private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository) {
-    val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.query.isNotEmpty())
-    val query = ObservableField(userPreferenceRepository.query)
+    val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.searchQuery.isNotEmpty())
+    val query = ObservableField(userPreferenceRepository.searchQuery)
     val shouldShowViewOptions = ObservableBoolean(false)
     val isLoading = ObservableBoolean(songInfoRepository.isLoading)
     val shouldShowErrorSnackbar = ObservableBoolean(false)
@@ -39,8 +39,8 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
     val shouldDisplaySubtitle = userPreferenceRepository.shouldShowSongCount
 
     init {
-        isSearchInputVisible.onPropertyChanged { if (it) query.set("") else userPreferenceRepository.query = "" }
-        query.onPropertyChanged { userPreferenceRepository.query = it }
+        isSearchInputVisible.onPropertyChanged { if (it) query.set("") else userPreferenceRepository.searchQuery = "" }
+        query.onPropertyChanged { userPreferenceRepository.searchQuery = it }
         shouldShowDownloadedOnly.onPropertyChanged { userPreferenceRepository.shouldShowDownloadedOnly = it }
         isSortedByTitle.onPropertyChanged { userPreferenceRepository.isSortedByTitle = it }
     }
@@ -114,7 +114,7 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
 
     private fun List<SongInfo>.filterDownloaded() = if (shouldShowDownloadedOnly.get()) filter { downloadedSongRepository.isSongDownloaded(it.id) } else this
 
-    //TODO: Handle special characters, prioritize results that begin with the query.
+    //TODO: Handle special characters, prioritize results that begin with the searchQuery.
     private fun List<SongInfo>.filterByQuery() = if (isSearchInputVisible.get()) {
         val query = query.get().trim()
         filter { it.title.contains(query, true) || it.artist.contains(query, true) }

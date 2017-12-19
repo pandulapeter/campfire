@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.data.repository
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.model.SongInfo
+import com.pandulapeter.campfire.feature.home.HomeViewModel
 import kotlin.reflect.KClass
 
 /**
@@ -37,8 +38,6 @@ abstract class Repository<T> {
 
     /**
      * Represents all the possible update events.
-     *
-     * TODO: Add more events to avoid unnecessary updates.
      */
     sealed class UpdateType {
         // General
@@ -63,6 +62,19 @@ abstract class Repository<T> {
 
         class LibraryCacheUpdated(val songInfos: List<SongInfo>) : UpdateType()
 
-        // UserPreference
+        // UserPreferenceRepository
+        class NavigationItemUpdated(val navigationItem: HomeViewModel.NavigationItem) : UpdateType()
+
+        class IsSortedByTitleUpdated(val isSortedByTitle: Boolean) : UpdateType()
+
+        class ShouldShowDownloadedOnlyUpdated(val shouldShowDownloadedOnly: Boolean) : UpdateType()
+
+        class ShouldHideExplicitUpdated(val shouldHideExplicit: Boolean) : UpdateType()
+
+        class ShouldHideWorkInProgressUpdated(val shouldHideWorkInProgress: Boolean) : UpdateType()
+
+        class ShouldShowSongCountUpdated(val shouldShowSongCount: Boolean) : UpdateType()
+
+        class SearchQueryUpdated(val searchQuery: String) : UpdateType()
     }
 }
