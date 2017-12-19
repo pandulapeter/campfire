@@ -14,7 +14,7 @@ class SongInfoRepository(
     private val dataStorageManager: DataStorageManager,
     private val networkManager: NetworkManager,
     private val languageRepository: LanguageRepository) : Repository() {
-    private var dataSet = dataStorageManager.cloudCache
+    private var dataSet = dataStorageManager.songInfoCache
         get() {
             if (!isLoading && System.currentTimeMillis() - preferenceStorageManager.lastUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
                 updateDataSet()
@@ -46,7 +46,7 @@ class SongInfoRepository(
             onSuccess = {
                 dataSet = it
                 isLoading = false
-                dataStorageManager.cloudCache = dataSet
+                dataStorageManager.songInfoCache = dataSet
                 preferenceStorageManager.lastUpdateTimestamp = System.currentTimeMillis()
             },
             onFailure = {

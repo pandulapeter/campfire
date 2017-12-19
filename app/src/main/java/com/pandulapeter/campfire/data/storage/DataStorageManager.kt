@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.data.storage
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.preference.PreferenceManager
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
@@ -8,6 +9,8 @@ import com.google.gson.reflect.TypeToken
 import com.pandulapeter.campfire.data.model.DownloadedSong
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.model.SongInfo
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 
 
 /**
@@ -15,98 +18,61 @@ import com.pandulapeter.campfire.data.model.SongInfo
  *
  * TODO: This data shouldn't be stored in Shared Preferences, replace with a Room-based implementation.
  */
-class DataStorageManager(context: Context, private val gson: Gson) {
+class DataStorageManager(context: Context, gson: Gson) {
 
     private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
 
-    /**
-     * The cached list of items from the cloud.
-     */
-    var cloudCache: List<SongInfo>
-        get() = try {
-            gson.fromJson(sharedPreferences.getString(KEY_CACHE, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<SongInfo>>() {}.type)
-        } catch (_: JsonSyntaxException) {
-            listOf()
-        }
-        set(value) {
-            sharedPreferences.edit().putString(KEY_CACHE, gson.toJson(value)).apply()
-        }
+    var songInfoCache by MapDelegate<SongInfo>(gson, sharedPreferences, KEY_SONG_INFO_IDS, KEY_SONG_INFO)
 
-    /**
-     * The list of downloads songs.
-     */
-    var downloads: List<DownloadedSong>
-        get() = try {
-            gson.fromJson(sharedPreferences.getString(KEY_DOWNLOADED_SONGS, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<DownloadedSong>>() {}.type)
-        } catch (_: JsonSyntaxException) {
-            listOf()
-        }
-        set(value) {
-            sharedPreferences.edit().putString(KEY_DOWNLOADED_SONGS, gson.toJson(value)).apply()
-        }
+    var downloadedSongCache by MapDelegate<DownloadedSong>(gson, sharedPreferences, KEY_DOWNLOADED_SONG_IDS, KEY_DOWNLOADED_SONG)
 
-    fun getAllPlaylists() = mutableListOf<Playlist>().apply {
-        playlistIds.forEach { add(getPlaylist(it)) }
-    }.toList()
+    var playlists by MapDelegate<Playlist>(gson, sharedPreferences, KEY_PLAYLIST_IDS, KEY_PLAYLIST)
 
-    fun getPlaylist(playlistId: Int) = if (playlistId == Playlist.FAVORITES_ID) {
-        val ids: MutableList<String> = try {
-            gson.fromJson(sharedPreferences.getString(KEY_PLAYLIST + Playlist.FAVORITES_ID, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<String>>() {}.type)
-        } catch (_: JsonSyntaxException) {
-            mutableListOf()
-        }
-        Playlist.Favorites(ids)
-    } else {
-        val playlist: Playlist.Custom = try {
-            gson.fromJson(sharedPreferences.getString(KEY_PLAYLIST + playlistId, ""), object : TypeToken<Playlist.Custom>() {}.type)
-        } catch (_: RuntimeException) {
-            Playlist.Custom(playlistId, "", mutableListOf())
-        }
-        playlist
-    }
+    private class MapDelegate<T>(
+        private val gson: Gson,
+        private val sharedPreferences: SharedPreferences,
+        private val idKey: String,
+        private val valueKeyPrefix: String) : ReadWriteProperty<Any, HashMap<String, T>> {
 
-    fun savePlaylist(playlist: Playlist) {
-        if (!playlistIds.contains(playlist.id)) {
-            playlistIds = playlistIds.toMutableList().apply { add(playlist.id) }
-        }
-        sharedPreferences.edit().putString(KEY_PLAYLIST + playlist.id, gson.toJson((playlist as? Playlist.Favorites)?.songIds ?: playlist)).apply()
-    }
-
-    fun deletePlaylist(playlistId: Int) {
-        if (playlistId != Playlist.FAVORITES_ID) {
-            playlistIds = playlistIds.toMutableList().apply { remove(playlistId) }
-            sharedPreferences.edit().remove(KEY_PLAYLIST + playlistId).apply()
-        }
-    }
-
-    fun newPlaylist(title: String) {
-        //TODO: Rewrite this.
-        var id = Playlist.FAVORITES_ID + 1
-        while (playlistIds.contains(id)) {
-            id++
-        }
-        savePlaylist(Playlist.Custom(id, title, mutableListOf()))
-    }
-
-    private var playlistIds: List<Int>
-        get() {
-            val list: List<Int> = try {
-                gson.fromJson(sharedPreferences.getString(KEY_PLAYLIST_IDS, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<Int>>() {}.type)
-            } catch (_: JsonSyntaxException) {
-                listOf()
+        override fun getValue(thisRef: Any, property: KProperty<*>): HashMap<String, T> {
+            val map = HashMap<String, T>()
+            getIds().forEach { id ->
+                val value: T? = try {
+                    gson.fromJson(sharedPreferences.getString(valueKeyPrefix + id, VALUE_EMPTY_OBJECT), object : TypeToken<T>() {}.type)
+                } catch (_: JsonSyntaxException) {
+                    null
+                }
+                value?.let { map[id] = it }
             }
-            return if (list.isEmpty()) listOf(Playlist.FAVORITES_ID) else list
-        }
-        set(value) {
-            sharedPreferences.edit().putString(KEY_PLAYLIST_IDS, gson.toJson(value)).apply()
+            return map
         }
 
+        override fun setValue(thisRef: Any, property: KProperty<*>, value: HashMap<String, T>) {
+            sharedPreferences.edit().putString(idKey, gson.toJson(value.keys)).apply()
+            value.keys.forEach { id ->
+                sharedPreferences.edit().putString(valueKeyPrefix + id, gson.toJson(value[id])).apply()
+            }
+        }
+
+        private fun getIds(): List<String> = try {
+            gson.fromJson(sharedPreferences.getString(idKey, VALUE_EMPTY_JSON_ARRAY), object : TypeToken<List<String>>() {}.type)
+        } catch (_: JsonSyntaxException) {
+            listOf()
+        }
+
+        companion object {
+            private const val VALUE_EMPTY_JSON_ARRAY = "[]"
+            private const val VALUE_EMPTY_OBJECT = "{}"
+        }
+    }
 
     companion object {
-        private const val VALUE_EMPTY_JSON_ARRAY = "[]"
-        private const val KEY_CACHE = "cache"
-        private const val KEY_DOWNLOADED_SONGS = "downloaded_songs"
+        private const val KEY_SONG_INFO_IDS = "song_info_ids"
+        private const val KEY_SONG_INFO = "song_info"
+        private const val KEY_DOWNLOADED_SONG_IDS = "downloaded_song_ids"
+        private const val KEY_DOWNLOADED_SONG = "downloaded_song_"
         private const val KEY_PLAYLIST_IDS = "playlist_ids"
         private const val KEY_PLAYLIST = "playlist_"
     }
+}
 }

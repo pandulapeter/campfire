@@ -14,11 +14,11 @@ class DownloadedSongRepository(
     private val dataStorageManager: DataStorageManager,
     private val fileStorageManager: FileStorageManager,
     private val networkManager: NetworkManager) : Repository() {
-    private var dataSet = dataStorageManager.downloads
+    private var dataSet = dataStorageManager.downloadedSongCache
         set(value) {
             if (field != value) {
                 field = value
-                dataStorageManager.downloads = value
+                dataStorageManager.downloadedSongCache = value
                 notifySubscribers()
             }
         }
