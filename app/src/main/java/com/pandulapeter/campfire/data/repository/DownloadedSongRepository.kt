@@ -28,7 +28,7 @@ class DownloadedSongRepository(
 
     fun getDownloadedSongs() = dataSet.values.toList()
 
-    fun isSongDownloaded(id: String) = dataSet[id] != null
+    fun isSongDownloaded(id: String) = dataSet.containsKey(id)
 
     fun removeSongFromDownloads(id: String) {
         if (isSongDownloaded(id)) {

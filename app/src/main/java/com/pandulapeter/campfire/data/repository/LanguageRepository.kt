@@ -8,29 +8,26 @@ import com.pandulapeter.campfire.util.mapToLanguage
 /**
  * Wraps caching and updating of [Language] objects.
  */
-class LanguageRepository(private val preferenceStorageManager: PreferenceStorageManager) : Repository() {
-    private val languageFilters = HashMap<Language, Boolean>()
+class LanguageRepository(private val preferenceStorageManager: PreferenceStorageManager) : Repository<Map<Language, Boolean>>() {
+    override var dataSet: Map<Language, Boolean> = HashMap()
 
     fun updateLanguages(songInfoList: List<SongInfo>) {
-        languageFilters.clear()
+        val languageFilters = HashMap<Language, Boolean>()
         songInfoList.map { it.language.mapToLanguage() }.distinct().forEach {
             languageFilters.put(it, isLanguageFilterEnabled(it))
         }
+        dataSet = languageFilters
     }
 
-    fun getLanguages() = languageFilters.keys.toList()
+    fun getLanguages() = dataSet.keys.toList()
 
-    fun isLanguageFilterEnabled(language: Language) = if (languageFilters.containsKey(language)) {
-        languageFilters[language] == true
-    } else {
-        preferenceStorageManager.isLanguageFilterEnabled(language)
-    }
+    fun isLanguageFilterEnabled(language: Language) = dataSet[language] ?: preferenceStorageManager.isLanguageFilterEnabled(language)
 
     fun setLanguageFilterEnabled(language: Language, isEnabled: Boolean) {
         if (isLanguageFilterEnabled(language) != isEnabled) {
-            languageFilters[language] = isEnabled
+            dataSet = dataSet.toMutableMap().apply { set(language, isEnabled) }
             preferenceStorageManager.setLanguageFilterEnabled(language, isEnabled)
-            notifySubscribers()
+            notifySubscribers(UpdateType.LanguageFilterChanged(language, isEnabled))
         }
     }
 }
