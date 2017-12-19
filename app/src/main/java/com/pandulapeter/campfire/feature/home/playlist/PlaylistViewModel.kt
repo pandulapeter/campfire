@@ -37,7 +37,7 @@ class PlaylistViewModel(
     init {
         title.onPropertyChanged { editedTitle.set(it) }
         isInEditMode.onPropertyChanged {
-            shouldShowPlayButton.set(if (it) false else adapter.items.isNotEmpty())
+            shouldShowPlayButton.set(if (it) false else isAdapterNotEmpty)
             onUpdate(UpdateType.Unspecified)
         }
     }
@@ -62,10 +62,10 @@ class PlaylistViewModel(
 
     override fun onUpdate(updateType: UpdateType) {
         super.onUpdate(updateType)
-        shouldDisplayEditButton.set(adapter.items.isNotEmpty() || playlistId != Playlist.FAVORITES_ID)
+        shouldDisplayEditButton.set(isAdapterNotEmpty || playlistId != Playlist.FAVORITES_ID)
         playlistRepository.getPlaylist(playlistId)?.let { title.set(it.title ?: favoritesTitle) }
         if (!isInEditMode.get()) {
-            shouldShowPlayButton.set(adapter.items.isNotEmpty())
+            shouldShowPlayButton.set(isAdapterNotEmpty)
         }
     }
 
@@ -91,7 +91,7 @@ class PlaylistViewModel(
     }
 
     fun onPlayButtonClicked() {
-        if (adapter.items.isNotEmpty()) {
+        if (isAdapterNotEmpty) {
             adapter.itemClickListener(0)
         }
     }

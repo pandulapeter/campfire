@@ -49,7 +49,7 @@ class HistoryViewModel(
 
     override fun onUpdate(updateType: UpdateType) {
         super.onUpdate(updateType)
-        shouldShowClearButton.set(adapter.items.isNotEmpty())
+        shouldShowClearButton.set(isAdapterNotEmpty)
     }
 
     fun removeSongFromHistory(songId: String) = historyRepository.removeFromHistory(songId)

@@ -23,11 +23,14 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                                  protected val downloadedSongRepository: DownloadedSongRepository,
                                  protected val playlistRepository: PlaylistRepository) : HomeFragmentViewModel(homeCallbacks), Subscriber {
     val adapter = SongInfoAdapter()
+    protected var isAdapterNotEmpty = false
 
     abstract fun getAdapterItems(): List<SongInfoViewModel>
 
     override fun onUpdate(updateType: UpdateType) {
-        adapter.items = getAdapterItems()
+        val items = getAdapterItems()
+        adapter.items = items
+        isAdapterNotEmpty = items.isNotEmpty()
     }
 
     protected fun List<SongInfo>.filterWorkInProgress() = if (userPreferenceRepository.shouldHideWorkInProgress) filter { it.version ?: 0 >= 0 } else this
