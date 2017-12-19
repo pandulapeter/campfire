@@ -57,6 +57,5 @@ object RepositoryModule {
     @JvmStatic
     fun providePlaylistRepository(
         dataStorageManager: DataStorageManager,
-        songInfoRepository: SongInfoRepository,
-        downloadedSongRepository: DownloadedSongRepository) = PlaylistRepository(dataStorageManager, songInfoRepository, downloadedSongRepository)
+        downloadedSongRepository: DownloadedSongRepository) = PlaylistRepository(dataStorageManager, downloadedSongRepository)
 }

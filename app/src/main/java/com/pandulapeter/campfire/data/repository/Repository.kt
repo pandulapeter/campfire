@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.Language
+import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.model.SongInfo
 import kotlin.reflect.KClass
 
@@ -55,7 +56,7 @@ abstract class Repository<T> {
         class LanguageFilterChanged(val language: Language, val isEnabled: Boolean) : UpdateType()
 
         // PlaylistRepository
-        object PlaylistAddedOrRemoved : UpdateType()
+        class PlaylistsUpdated(val playlists: List<Playlist>) : UpdateType()
 
         // SongInfoRepository
         class LoadingStateChanged(val isLoading: Boolean) : UpdateType()

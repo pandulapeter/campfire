@@ -62,7 +62,7 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                     songInfo = songInfo,
                     isDownloaded = isDownloaded,
                     primaryActionDrawable = if (isDownloaded) {
-                        if (playlistRepository.isSongInPlaylist(songInfo.id)) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp
+                        if (playlistRepository.isSongInAnyPlaylist(songInfo.id)) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp
                     } else {
                         R.drawable.ic_download_24dp
                     },

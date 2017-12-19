@@ -24,7 +24,7 @@ class DownloadedSongRepository(
         }
     }
 
-    private fun getDownloadedSongIds(): List<String> = dataSet.keys.toList()
+    fun getDownloadedSongIds(): List<String> = dataSet.keys.toList()
 
     fun getDownloadedSongs() = dataSet.values.toList()
 

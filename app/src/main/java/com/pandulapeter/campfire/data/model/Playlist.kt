@@ -10,7 +10,7 @@ sealed class Playlist(
     @SerializedName("songIds") val songIds: MutableList<String>) {
 
     class Favorites(songIds: MutableList<String>) : Playlist(FAVORITES_ID, songIds)
-    class Custom(id: Int, @SerializedName("title") val title: String, songIds: MutableList<String>) : Playlist(id, songIds)
+    class Custom(id: Int, @SerializedName("title") val title: String, songIds: MutableList<String> = mutableListOf()) : Playlist(id, songIds)
 
     companion object {
         const val FAVORITES_ID = 0

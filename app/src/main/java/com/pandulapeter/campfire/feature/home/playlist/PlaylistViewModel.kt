@@ -45,7 +45,7 @@ class PlaylistViewModel(
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
         val downloadedSongs = downloadedSongRepository.getDownloadedSongs()
-        val songIds = playlistRepository.getPlaylistSongs(playlistId)
+        val songIds = playlistRepository.getDownloadedSongIdsFromPlaylist(playlistId)
         return songIds
             .filterWorkInProgress()
             .filterExplicit()
@@ -85,7 +85,7 @@ class PlaylistViewModel(
         if (isInEditMode.get()) {
             val newTitle = editedTitle.get()
             if (newTitle != null && newTitle.trim().isNotEmpty()) {
-                playlistRepository.updatePlaylistTitle(playlistId, newTitle.trim())
+                playlistRepository.renamePlaylist(playlistId, newTitle.trim())
             }
         }
         isInEditMode.set(!isInEditMode.get())
