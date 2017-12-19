@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.data.repository
 
+import com.pandulapeter.campfire.data.model.SongInfo
 import kotlin.reflect.KClass
 
 /**
@@ -43,12 +44,18 @@ abstract class Repository<T> {
 
         class InitialUpdate(val repositoryClass: KClass<out Repository<*>>) : UpdateType()
 
-        // Language
+        // DownloadedSongRepository
+        class DownloadedSongsUpdated(val donloadedSongIds: List<String>) : UpdateType()
 
-        // Playlist
+        // LanguageRepository
+
+        // PlaylistRepository
         object PlaylistAddedOrRemoved : UpdateType()
 
-        // SongInfo
+        // SongInfoRepository
+        class LoadingStateChanged(val isLoading: Boolean) : UpdateType()
+
+        class LibraryCacheUpdated(val songInfos: List<SongInfo>) : UpdateType()
 
         // UserPreference
     }

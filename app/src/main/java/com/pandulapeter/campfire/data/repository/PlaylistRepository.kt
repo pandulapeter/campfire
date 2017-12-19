@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.storage.DataStorageManager
-import com.pandulapeter.campfire.util.swap
 
 /**
  * Wraps caching and updating of [Playlist] objects.
@@ -21,10 +20,7 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
     }
 
     fun getPlaylistSongs(playlistId: Int) = getPlaylist(playlistId).songIds
-        .mapNotNull { songId ->
-            songInfoRepository.getLibrarySongs()
-                .find { songId == it.id }
-        }
+        .mapNotNull { songInfoRepository.getSongInfo(it) }
         .filter { downloadedSongRepository.isSongDownloaded(it.id) }
 
     fun isSongInPlaylist(songId: String): Boolean {

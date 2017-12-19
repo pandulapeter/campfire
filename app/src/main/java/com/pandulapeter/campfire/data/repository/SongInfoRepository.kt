@@ -20,10 +20,12 @@ class SongInfoRepository(
     override var dataSet by Delegates.observable(dataStorageManager.songInfoCache) { _: KProperty<*>, old: Map<String, SongInfo>, new: Map<String, SongInfo> ->
         if (old != new) {
             languageRepository.updateLanguages(getLibrarySongs())
-            notifySubscribers()
+            notifySubscribers((UpdateType.LibraryCacheUpdated(getLibrarySongs())))
+            //TODO: If only a single line has been changed, we should not rewrite the entire map.
+            dataStorageManager.songInfoCache = new
         }
     }
-    var isLoading by Delegates.observable(false) { _: KProperty<*>, old: Boolean, new: Boolean -> if (old != new) notifySubscribers() }
+    var isLoading by Delegates.observable(false) { _: KProperty<*>, old: Boolean, new: Boolean -> if (old != new) notifySubscribers(UpdateType.LoadingStateChanged(new)) }
 
     init {
         if (!isLoading && System.currentTimeMillis() - preferenceStorageManager.lastUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
@@ -40,10 +42,9 @@ class SongInfoRepository(
         isLoading = true
         networkManager.service.getLibrary().enqueueCall(
             onSuccess = {
-                dataSet = it.associateBy { it.id }
-                dataStorageManager.songInfoCache = dataSet
-                preferenceStorageManager.lastUpdateTimestamp = System.currentTimeMillis()
                 isLoading = false
+                dataSet = it.associateBy { it.id }
+                preferenceStorageManager.lastUpdateTimestamp = System.currentTimeMillis()
             },
             onFailure = {
                 isLoading = false
