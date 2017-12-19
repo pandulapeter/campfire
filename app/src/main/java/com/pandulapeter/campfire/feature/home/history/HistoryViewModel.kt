@@ -7,6 +7,7 @@ import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
@@ -21,6 +22,7 @@ class HistoryViewModel(
     downloadedSongRepository: DownloadedSongRepository,
     playlistRepository: PlaylistRepository,
     private val historyRepository: HistoryRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository) {
+    val shouldShowClearButton = ObservableBoolean(historyRepository.getHistory().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
 
     override fun getAdapterItems() = historyRepository.getHistory()
@@ -44,6 +46,11 @@ class HistoryViewModel(
                     null //TODO: or "new"
                 })
         }
+
+    override fun onUpdate(updateType: UpdateType) {
+        super.onUpdate(updateType)
+        shouldShowClearButton.set(adapter.items.isNotEmpty())
+    }
 
     fun onClearButtonClicked() = shouldShowConfirmationDialog.set(true)
 

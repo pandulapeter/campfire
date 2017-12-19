@@ -12,8 +12,6 @@
 
         <import type="com.pandulapeter.campfire.feature.home.HomeViewModel.NavigationItem" />
 
-        <import type="android.view.View" />
-
     </data>
 
     <android.support.v4.widget.DrawerLayout

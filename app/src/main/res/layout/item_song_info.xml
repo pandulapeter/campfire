@@ -11,8 +11,6 @@
             name="viewModel"
             type="com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel" />
 
-        <import type="android.view.View" />
-
     </data>
 
     <android.support.v7.widget.CardView
