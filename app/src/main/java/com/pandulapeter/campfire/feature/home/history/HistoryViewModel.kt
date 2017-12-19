@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.history
 
+import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository
@@ -20,6 +21,7 @@ class HistoryViewModel(
     downloadedSongRepository: DownloadedSongRepository,
     playlistRepository: PlaylistRepository,
     private val historyRepository: HistoryRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository) {
+    val shouldShowConfirmationDialog = ObservableBoolean()
 
     override fun getAdapterItems() = historyRepository.getHistory()
         .mapNotNull { songInfoRepository.getSongInfo(it) }
@@ -43,7 +45,7 @@ class HistoryViewModel(
                 })
         }
 
-    fun onClearButtonClicked() {
-        historyRepository.clearHistory()
-    }
+    fun onClearButtonClicked() = shouldShowConfirmationDialog.set(true)
+
+    fun clearHistory() = historyRepository.clearHistory()
 }

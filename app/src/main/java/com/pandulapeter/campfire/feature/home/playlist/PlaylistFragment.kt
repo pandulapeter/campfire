@@ -39,8 +39,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
             }
         }
         viewModel.shouldShowDeleteConfirmation.onEventTriggered {
-            AlertDialogFragment.show(
-                childFragmentManager,
+            AlertDialogFragment.show(childFragmentManager,
                 R.string.playlist_delete_confirmation_title,
                 R.string.playlist_delete_confirmation_message,
                 R.string.playlist_delete_confirmation_delete,

@@ -45,6 +45,10 @@
 
     <!-- History screen -->
     <string name="history_clear">Clear</string>
+    <string name="history_clear_confirmation_title">Are you sure?</string>
+    <string name="history_clear_confirmation_message">This will remove all items from your history.</string>
+    <string name="history_clear_confirmation_clear">Clear</string>
+    <string name="history_clear_confirmation_cancel">Cancel</string>
 
     <!-- Playlist screen -->
     <string name="playlist_edit">Edit</string>
