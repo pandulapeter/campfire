@@ -10,19 +10,20 @@ import com.pandulapeter.campfire.feature.shared.CampfireViewModel
  */
 class DetailViewModel(
     fragmentManager: FragmentManager,
-    currentId: String,
-    ids: List<String>,
+    private val ids: List<String>,
     private val songInfoRepository: SongInfoRepository) : CampfireViewModel() {
     val title = ObservableField("")
     val artist = ObservableField("")
     val adapter = SongPagerAdapter(fragmentManager, ids)
 
     init {
-        updateToolbar(currentId)
+        updateToolbar(ids[0])
     }
 
-    fun updateToolbar(currentId: String) {
-        songInfoRepository.getSongInfo(currentId)?.let {
+    fun onPageSelected(position: Int) = updateToolbar(ids[position])
+
+    private fun updateToolbar(songId: String) {
+        songInfoRepository.getSongInfo(songId)?.let {
             title.set(it.title)
             artist.set(it.artist)
         }

@@ -1,6 +1,8 @@
 package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.Playlist
+import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.data.storage.DataStorageManager
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
@@ -14,7 +16,7 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
         if (old != new) {
             notifySubscribers(UpdateType.PlaylistsUpdated(getPlaylists()))
             //TODO: If only a single line has been changed, we should not rewrite the entire map.
-            //TODO: If only a single line has been changed, send a more specific not
+            //TODO: If only a single line has been changed, send a more specific notify event.
             dataStorageManager.playlists = new
         }
     }

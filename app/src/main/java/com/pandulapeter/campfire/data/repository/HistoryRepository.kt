@@ -1,5 +1,7 @@
 package com.pandulapeter.campfire.data.repository
 
+import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.data.storage.DataStorageManager
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty

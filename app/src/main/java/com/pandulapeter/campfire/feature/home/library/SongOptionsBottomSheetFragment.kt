@@ -17,8 +17,9 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SongOptionsBottomSheetBinding
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.data.repository.Repository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.repository.shared.Subscriber
+import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.util.dimension
@@ -29,7 +30,7 @@ import javax.inject.Inject
 /**
  * A bottom sheet that allows the user to set the positionSource of the avatar image (gallery or camera).
  */
-class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDialogFragment.OnDialogItemsSelectedListener, Repository.Subscriber {
+class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDialogFragment.OnDialogItemsSelectedListener, Subscriber {
     @Inject lateinit var songInfoRepository: SongInfoRepository
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
@@ -96,9 +97,9 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
 
     override fun onPositiveButtonSelected() = invokeAndClose { downloadedSongRepository.removeSongFromDownloads(songId) }
 
-    override fun onUpdate(updateType: Repository.UpdateType) {
+    override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
-            is Repository.UpdateType.InitialUpdate -> {
+            is UpdateType.InitialUpdate -> {
                 when (updateType.repositoryClass) {
                     SongInfoRepository::class -> {
                         binding.songInfo = songInfoRepository.getLibrarySongs().first { it.id == songId }
@@ -108,7 +109,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                     }
                 }
             }
-            is Repository.UpdateType.PlaylistsUpdated -> {
+            is UpdateType.PlaylistsUpdated -> {
                 refreshPlaylistCheckboxes()
             }
         }

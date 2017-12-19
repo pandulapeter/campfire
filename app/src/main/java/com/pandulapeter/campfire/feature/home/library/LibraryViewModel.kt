@@ -8,9 +8,9 @@ import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.LanguageRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.data.repository.Repository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
@@ -76,7 +76,7 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
         return filteredItems
     }
 
-    override fun onUpdate(updateType: Repository.UpdateType) {
+    override fun onUpdate(updateType: UpdateType) {
         isLoading.set(songInfoRepository.isLoading)
         languageRepository.getLanguages().let { languages ->
             if (languages != languageFilters.get().keys.toList()) {

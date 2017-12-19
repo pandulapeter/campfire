@@ -3,6 +3,8 @@ package com.pandulapeter.campfire.data.repository
 import com.pandulapeter.campfire.data.model.SongInfo
 
 import com.pandulapeter.campfire.data.network.NetworkManager
+import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.data.storage.DataStorageManager
 import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
 import com.pandulapeter.campfire.util.enqueueCall

@@ -110,10 +110,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         // Set up list item click listeners.
         context?.let {
             viewModel.adapter.itemClickListener = { position ->
-                startActivity(DetailActivity.getStartIntent(
-                    context = it,
-                    currentId = viewModel.adapter.items[position].songInfo.id,
-                    ids = viewModel.adapter.items.map { it.songInfo.id }))
+                startActivity(DetailActivity.getStartIntent(context = it, currentId = viewModel.adapter.items[position].songInfo.id))
             }
         }
         viewModel.adapter.itemPrimaryActionClickListener = { position ->

@@ -1,6 +1,8 @@
 package com.pandulapeter.campfire.data.repository
 
 import android.text.TextUtils
+import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import kotlin.properties.Delegates

@@ -18,7 +18,7 @@ import javax.inject.Inject
  */
 class DetailActivity : CampfireActivity<DetailBinding, DetailViewModel>(R.layout.activity_detail) {
     @Inject lateinit var songInfoRepository: SongInfoRepository
-    override val viewModel by lazy { DetailViewModel(supportFragmentManager, intent.currentId, intent.ids, songInfoRepository) }
+    override val viewModel by lazy { DetailViewModel(supportFragmentManager, intent.ids, songInfoRepository) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,17 +26,15 @@ class DetailActivity : CampfireActivity<DetailBinding, DetailViewModel>(R.layout
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         // Setup the view pager.
-        //TODO: Replace with a better solution, pay attention to state saving.
+        //TODO: Pay attention to instance state saving.
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) = Unit
 
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) = Unit
 
-            override fun onPageSelected(position: Int) {
-                binding.viewModel?.updateToolbar(intent.ids[position])
-            }
+            override fun onPageSelected(position: Int) = viewModel.onPageSelected(position)
         })
-        binding.viewPager.currentItem = intent.ids.indexOf(intent.currentId)
+        binding.viewPager.run { post { setCurrentItem(intent.ids.indexOf(intent.currentId), false) } }
     }
 
     companion object {
@@ -47,7 +45,7 @@ class DetailActivity : CampfireActivity<DetailBinding, DetailViewModel>(R.layout
         private val Intent.ids
             get() = getStringArrayExtra(IDS).toList()
 
-        fun getStartIntent(context: Context, currentId: String, ids: List<String> = listOf()): Intent = Intent(context, DetailActivity::class.java)
+        fun getStartIntent(context: Context, currentId: String, ids: List<String> = listOf(currentId)): Intent = Intent(context, DetailActivity::class.java)
             .putExtra(CURRENT_ID, currentId)
             .putExtra(IDS, ids.toTypedArray())
     }

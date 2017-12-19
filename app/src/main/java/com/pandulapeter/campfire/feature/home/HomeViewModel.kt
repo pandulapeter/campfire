@@ -4,15 +4,16 @@ import android.databinding.ObservableField
 import com.google.gson.annotations.SerializedName
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.data.repository.Repository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.data.repository.shared.Subscriber
+import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 
 /**
  * Handles events and logic for [HomeActivity].
  */
 class HomeViewModel(private val userPreferenceRepository: UserPreferenceRepository,
-                    private val playlistRepository: PlaylistRepository) : CampfireViewModel(), Repository.Subscriber {
+                    private val playlistRepository: PlaylistRepository) : CampfireViewModel(), Subscriber {
     val playlists = ObservableField<List<Playlist>>()
     var navigationItem: NavigationItem = userPreferenceRepository.navigationItem
         set(value) {
@@ -20,7 +21,7 @@ class HomeViewModel(private val userPreferenceRepository: UserPreferenceReposito
             userPreferenceRepository.navigationItem = value
         }
 
-    override fun onUpdate(updateType: Repository.UpdateType) {
+    override fun onUpdate(updateType: UpdateType) {
         playlists.set(playlistRepository.getPlaylists())
     }
 

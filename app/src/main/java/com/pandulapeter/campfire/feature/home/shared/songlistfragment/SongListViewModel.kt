@@ -1,9 +1,10 @@
 package com.pandulapeter.campfire.feature.home.shared.songlistfragment
 
 import com.pandulapeter.campfire.data.model.SongInfo
-import com.pandulapeter.campfire.data.repository.Repository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.data.repository.shared.Subscriber
+import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragmentViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
@@ -16,12 +17,12 @@ import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongI
  */
 abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                                  private val userPreferenceRepository: UserPreferenceRepository,
-                                 protected val songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks), Repository.Subscriber {
+                                 protected val songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks), Subscriber {
     val adapter = SongInfoAdapter()
 
     abstract fun getAdapterItems(): List<SongInfoViewModel>
 
-    override fun onUpdate(updateType: Repository.UpdateType) {
+    override fun onUpdate(updateType: UpdateType) {
         adapter.items = getAdapterItems()
     }
 
