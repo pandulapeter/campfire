@@ -52,6 +52,8 @@ class HistoryViewModel(
         shouldShowClearButton.set(adapter.items.isNotEmpty())
     }
 
+    fun removeSongFromHistory(songId: String) = historyRepository.removeFromHistory(songId)
+
     fun onClearButtonClicked() = shouldShowConfirmationDialog.set(true)
 
     fun clearHistory() = historyRepository.clearHistory()

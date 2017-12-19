@@ -1,6 +1,8 @@
 package com.pandulapeter.campfire.feature.home.history
 
 import android.os.Bundle
+import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.HistoryBinding
 import com.pandulapeter.campfire.R
@@ -32,6 +34,18 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
                 R.string.history_clear_confirmation_clear,
                 R.string.history_clear_confirmation_cancel)
         }
+        val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+
+            override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
+                viewHolder?.adapterPosition?.let { position ->
+                    val songInfo = viewModel.adapter.items[position].songInfo
+                    viewModel.removeSongFromHistory(songInfo.id)
+                }
+            }
+        })
+        itemTouchHelper.attachToRecyclerView(binding.recyclerView)
     }
 
     override fun onStart() {

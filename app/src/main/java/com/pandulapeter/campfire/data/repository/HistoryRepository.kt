@@ -19,8 +19,8 @@ class HistoryRepository(private val dataStorageManager: DataStorageManager) : Re
 
     fun getHistory() = List(dataSet.size) { dataSet[it] }
 
-    fun addToHistory(id: String) {
-        dataSet = dataSet.toMutableList().apply { add(0, id) }.distinct()
+    fun addToHistory(id: String, position: Int = 0) {
+        dataSet = dataSet.toMutableList().apply { add(position, id) }.distinct()
     }
 
     fun removeFromHistory(id: String) {
