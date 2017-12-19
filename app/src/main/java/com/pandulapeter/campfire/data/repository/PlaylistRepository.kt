@@ -53,9 +53,9 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
     fun addSongToPlaylist(playlistId: Int, songId: String, position: Int? = null) {
         if (!isSongInPlaylist(playlistId, songId)) {
             dataSet = dataSet.toMutableMap().apply {
-                getPlaylist(playlistId)?.apply {
-                    songIds.apply { if (!contains(songId)) if (position == null) add(songId) else add(position, songId) }
-                }?.let { put(playlistId.toString(), it) }
+                getPlaylist(playlistId)?.let {
+                    put(playlistId.toString(), Playlist(playlistId, it.title, it.songIds.toMutableList().apply { if (!contains(songId)) if (position == null) add(songId) else add(position, songId) }))
+                }
             }
         }
     }
@@ -63,9 +63,9 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
     fun removeSongFromPlaylist(playlistId: Int, songId: String) {
         if (isSongInPlaylist(playlistId, songId)) {
             dataSet = dataSet.toMutableMap().apply {
-                getPlaylist(playlistId)?.apply {
-                    songIds.apply { remove(songId) }
-                }?.let { put(playlistId.toString(), it) }
+                getPlaylist(playlistId)?.let {
+                    put(playlistId.toString(), Playlist(playlistId, it.title, it.songIds.toMutableList().apply { remove(songId) }))
+                }
             }
         }
     }
@@ -88,12 +88,12 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
 
     fun updatePlaylist(playlistId: Int, songIds: List<String>) {
         dataSet = dataSet.toMutableMap().apply {
-            getPlaylist(playlistId)?.apply {
-                this.songIds.apply {
+            getPlaylist(playlistId)?.let {
+                put(playlistId.toString(), Playlist(playlistId, it.title, it.songIds.toMutableList().apply {
                     clear()
                     addAll(songIds)
-                }
-            }?.let { put(playlistId.toString(), it) }
+                }))
+            }
         }
     }
 }
