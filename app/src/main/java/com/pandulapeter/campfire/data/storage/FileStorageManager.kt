@@ -1,6 +1,8 @@
 package com.pandulapeter.campfire.data.storage
 
 import android.content.Context
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
 import java.io.File
 
 /**
@@ -12,7 +14,7 @@ class FileStorageManager(private val context: Context) {
 
     fun loadDownloadedSongText(id: String) = getFile(id).readText()
 
-    fun deleteDownloadedSongText(id: String) = getFile(id).delete() //TODO: Move to background thread.
+    fun deleteDownloadedSongText(id: String) = async(CommonPool) { getFile(id).delete() }
 
     private fun getFile(id: String) = File(context.filesDir, "song_$id")
 }
