@@ -14,8 +14,14 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
         if (old != new) {
             notifySubscribers(UpdateType.PlaylistsUpdated(getPlaylists()))
             //TODO: If only a single line has been changed, we should not rewrite the entire map.
-            //TODO: If only a single line has been changed, send a more specific notify event.
+            //TODO: If only a single line has been changed, send a more specific not
             dataStorageManager.playlists = new
+        }
+    }
+
+    init {
+        if (!dataSet.keys.contains(Playlist.FAVORITES_ID.toString())) {
+            dataSet = dataSet.toMutableMap().apply { put(Playlist.FAVORITES_ID.toString(), Playlist(Playlist.FAVORITES_ID)) }
         }
     }
 
@@ -24,11 +30,11 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
     fun getPlaylist(playlistId: Int) = dataSet[playlistId.toString()]
 
     fun newPlaylist(title: String) {
-        var id = 0
+        var id = Playlist.FAVORITES_ID
         while (dataSet.containsKey(id.toString())) {
             id++
         }
-        dataSet = dataSet.toMutableMap().apply { put(id.toString(), Playlist.Custom(id, title)) }
+        dataSet = dataSet.toMutableMap().apply { put(id.toString(), Playlist(id, title)) }
     }
 
     fun getDownloadedSongIdsFromPlaylist(playlistId: Int) = getPlaylist(playlistId)?.songIds?.filter { downloadedSongRepository.isSongDownloaded(it) } ?: listOf()
@@ -37,7 +43,7 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
 
     fun isSongInAnyPlaylist(songId: String): Boolean {
         getPlaylists().forEach {
-            if (isSongInPlaylist(it.id, songId)) {
+            if (it.songIds.contains(songId)) {
                 return true
             }
         }
@@ -68,14 +74,14 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
         if (playlistId != Playlist.FAVORITES_ID) {
             dataSet = dataSet.toMutableMap().apply {
                 getPlaylist(playlistId)?.songIds?.let {
-                    put(playlistId.toString(), Playlist.Custom(playlistId, title, it))
+                    put(playlistId.toString(), Playlist(playlistId, title, it))
                 }
             }
         }
     }
 
     fun deletePlaylist(playlistId: Int) {
-        if (dataSet.containsKey(playlistId.toString())) {
+        if (playlistId != Playlist.FAVORITES_ID && dataSet.containsKey(playlistId.toString())) {
             dataSet = dataSet.toMutableMap().apply { remove(playlistId.toString()) }
         }
     }

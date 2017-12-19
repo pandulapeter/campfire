@@ -27,7 +27,8 @@ class PlaylistViewModel(
     private val downloadedSongRepository: DownloadedSongRepository,
     private val playlistRepository: PlaylistRepository,
     private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository) {
-    val title = ObservableField(context?.getString(R.string.home_favorites))
+    private val favoritesTitle = context?.getString(R.string.home_favorites)
+    val title = ObservableField(favoritesTitle)
     val editedTitle = ObservableField(title.get())
     val shouldShowPlayButton = ObservableBoolean()
     val isInEditMode = ObservableBoolean()
@@ -64,7 +65,7 @@ class PlaylistViewModel(
     override fun onUpdate(updateType: Repository.UpdateType) {
         super.onUpdate(updateType)
         shouldDisplayEditButton.set(adapter.items.isNotEmpty() || playlistId != Playlist.FAVORITES_ID)
-        (playlistRepository.getPlaylist(playlistId) as? Playlist.Custom)?.let { title.set(it.title) }
+        playlistRepository.getPlaylist(playlistId)?.let { title.set(it.title ?: favoritesTitle) }
         if (!isInEditMode.get()) {
             shouldShowPlayButton.set(adapter.items.isNotEmpty())
         }

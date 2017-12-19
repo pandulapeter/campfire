@@ -7,7 +7,6 @@ import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
@@ -67,7 +66,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                         R.id.playlist_container,
                         playlist.id,
                         index,
-                        (playlist as? Playlist.Custom)?.title ?: getString(R.string.home_favorites)).apply {
+                        playlist.title ?: getString(R.string.home_favorites)).apply {
                         setIcon(R.drawable.ic_playlist_24dp)
                     }
                 }
