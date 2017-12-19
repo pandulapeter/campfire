@@ -20,9 +20,7 @@ class HistoryRepository(private val dataStorageManager: DataStorageManager) : Re
     fun getHistory() = List(dataSet.size) { dataSet[it] }
 
     fun addToHistory(id: String) {
-        if (!dataSet.contains(id)) {
-            dataSet = dataSet.toMutableList().apply { add(id) }
-        }
+        dataSet = dataSet.toMutableList().apply { add(0, id) }.distinct()
     }
 
     fun removeFromHistory(id: String) {

@@ -1,14 +1,49 @@
 package com.pandulapeter.campfire.feature.home.history
 
+import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
+import com.pandulapeter.campfire.data.repository.HistoryRepository
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
-import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragmentViewModel
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 
 /**
  * Handles events and logic for [HistoryFragment].
  */
-class HistoryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?) : HomeFragmentViewModel(homeCallbacks) {
+class HistoryViewModel(
+    homeCallbacks: HomeFragment.HomeCallbacks?,
+    userPreferenceRepository: UserPreferenceRepository,
+    songInfoRepository: SongInfoRepository,
+    downloadedSongRepository: DownloadedSongRepository,
+    playlistRepository: PlaylistRepository,
+    private val historyRepository: HistoryRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository) {
+
+    override fun getAdapterItems() = historyRepository.getHistory()
+        .mapNotNull { songInfoRepository.getSongInfo(it) }
+        .filterWorkInProgress()
+        .filterExplicit()
+        .map { songInfo ->
+            val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
+            SongInfoViewModel(
+                songInfo = songInfo,
+                isDownloaded = isDownloaded,
+                primaryActionDrawable = if (isDownloaded) {
+                    if (playlistRepository.isSongInAnyPlaylist(songInfo.id)) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp
+                } else {
+                    R.drawable.ic_download_24dp
+                },
+                primaryActionContentDescription = if (isDownloaded) R.string.manage_playlists else R.string.download,
+                alertText = if (isDownloaded) {
+                    if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
+                } else {
+                    null //TODO: or "new"
+                })
+        }
 
     fun onClearButtonClicked() {
-        //TODO
+        historyRepository.clearHistory()
     }
 }

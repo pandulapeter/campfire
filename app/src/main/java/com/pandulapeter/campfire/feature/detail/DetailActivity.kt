@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.support.v4.view.ViewPager
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.shared.CampfireActivity
 import javax.inject.Inject
@@ -18,7 +19,8 @@ import javax.inject.Inject
  */
 class DetailActivity : CampfireActivity<DetailBinding, DetailViewModel>(R.layout.activity_detail) {
     @Inject lateinit var songInfoRepository: SongInfoRepository
-    override val viewModel by lazy { DetailViewModel(supportFragmentManager, intent.ids, songInfoRepository) }
+    @Inject lateinit var historyRepository: HistoryRepository
+    override val viewModel by lazy { DetailViewModel(supportFragmentManager, intent.ids, songInfoRepository, historyRepository) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +36,11 @@ class DetailActivity : CampfireActivity<DetailBinding, DetailViewModel>(R.layout
 
             override fun onPageSelected(position: Int) = viewModel.onPageSelected(position)
         })
-        binding.viewPager.run { post { setCurrentItem(intent.ids.indexOf(intent.currentId), false) } }
+        if (intent.ids.indexOf(intent.currentId) == 0) {
+            binding.viewModel?.onPageSelected(0)
+        } else {
+            binding.viewPager.run { post { setCurrentItem(intent.ids.indexOf(intent.currentId), false) } }
+        }
     }
 
     companion object {

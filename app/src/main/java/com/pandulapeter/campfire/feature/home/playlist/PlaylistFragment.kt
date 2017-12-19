@@ -7,18 +7,15 @@ import android.view.View
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
-import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.HomeActivity
 import com.pandulapeter.campfire.feature.home.HomeViewModel
-import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
+import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
-import javax.inject.Inject
 
 /**
  * Displays the list of all songs the user marked as favorite. All of these items are also downloads.
@@ -28,10 +25,8 @@ import javax.inject.Inject
  * Controlled by [PlaylistViewModel].
  */
 class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist), AlertDialogFragment.OnDialogItemsSelectedListener {
-    @Inject lateinit var playlistRepository: PlaylistRepository
-    @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
 
-    override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, context, downloadedSongRepository, playlistRepository, arguments.playlistId)
+    override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
 
     override fun getRecyclerView() = binding.recyclerView
 

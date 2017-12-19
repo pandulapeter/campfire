@@ -21,12 +21,13 @@ import com.pandulapeter.campfire.util.toggle
 /**
  * Handles events and logic for [LibraryFragment].
  */
-class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
-                       songInfoRepository: SongInfoRepository,
-                       userPreferenceRepository: UserPreferenceRepository,
-                       private val downloadedSongRepository: DownloadedSongRepository,
-                       private val playlistRepository: PlaylistRepository,
-                       private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository) {
+class LibraryViewModel(
+    homeCallbacks: HomeFragment.HomeCallbacks?,
+    userPreferenceRepository: UserPreferenceRepository,
+    songInfoRepository: SongInfoRepository,
+    downloadedSongRepository: DownloadedSongRepository,
+    playlistRepository: PlaylistRepository,
+    private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.searchQuery.isNotEmpty())
     val searchQuery = ObservableField(userPreferenceRepository.searchQuery)
     val shouldShowViewOptions = ObservableBoolean(false)
@@ -46,7 +47,6 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
-        val downloadedSongIds = downloadedSongRepository.getDownloadedSongIds()
         val librarySongs = songInfoRepository.getLibrarySongs()
             .filterWorkInProgress()
             .filterExplicit()
@@ -56,7 +56,7 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
             .filterByQuery()
             .sort()
             .map { songInfo ->
-                val isDownloaded = downloadedSongIds.contains(songInfo.id)
+                val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
                 SongInfoViewModel(
                     songInfo = songInfo,
                     isDownloaded = isDownloaded,

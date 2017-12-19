@@ -1,6 +1,8 @@
 package com.pandulapeter.campfire.feature.home.shared.songlistfragment
 
 import com.pandulapeter.campfire.data.model.SongInfo
+import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
@@ -17,7 +19,9 @@ import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongI
  */
 abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                                  private val userPreferenceRepository: UserPreferenceRepository,
-                                 protected val songInfoRepository: SongInfoRepository) : HomeFragmentViewModel(homeCallbacks), Subscriber {
+                                 protected val songInfoRepository: SongInfoRepository,
+                                 protected val downloadedSongRepository: DownloadedSongRepository,
+                                 protected val playlistRepository: PlaylistRepository) : HomeFragmentViewModel(homeCallbacks), Subscriber {
     val adapter = SongInfoAdapter()
 
     abstract fun getAdapterItems(): List<SongInfoViewModel>

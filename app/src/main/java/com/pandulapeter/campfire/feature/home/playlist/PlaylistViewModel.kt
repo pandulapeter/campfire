@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.feature.home.playlist
 
-import android.content.Context
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import com.pandulapeter.campfire.R
@@ -23,11 +22,10 @@ class PlaylistViewModel(
     homeCallbacks: HomeFragment.HomeCallbacks?,
     userPreferenceRepository: UserPreferenceRepository,
     songInfoRepository: SongInfoRepository,
-    context: Context?,
-    private val downloadedSongRepository: DownloadedSongRepository,
-    private val playlistRepository: PlaylistRepository,
-    private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository) {
-    private val favoritesTitle = context?.getString(R.string.home_favorites)
+    downloadedSongRepository: DownloadedSongRepository,
+    playlistRepository: PlaylistRepository,
+    private val favoritesTitle: String,
+    private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository) {
     val title = ObservableField(favoritesTitle)
     val editedTitle = ObservableField(title.get())
     val shouldShowPlayButton = ObservableBoolean()

@@ -71,17 +71,15 @@
 
         </android.support.design.widget.AppBarLayout>
 
-        <ScrollView
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
-
-        </ScrollView>
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/playlist_content_bottom_margin"
+            app:adapter="@{viewModel.adapter}"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            tools:listitem="@layout/item_song_info" />
 
     </android.support.design.widget.CoordinatorLayout>
 
