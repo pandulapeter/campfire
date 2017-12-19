@@ -42,10 +42,10 @@ class DataStorageManager(context: Context, gson: Gson) {
         private val gson: Gson,
         private val sharedPreferences: SharedPreferences,
         idKey: String,
-        private val valueKeyPrefix: String) : ReadWriteProperty<Any, HashMap<String, T>> {
+        private val valueKeyPrefix: String) : ReadWriteProperty<Any, Map<String, T>> {
         private var ids by ListDelegate<String>(gson, sharedPreferences, idKey)
 
-        override fun getValue(thisRef: Any, property: KProperty<*>): HashMap<String, T> {
+        override fun getValue(thisRef: Any, property: KProperty<*>): Map<String, T> {
             val map = HashMap<String, T>()
             ids.forEach { id ->
                 val value: T? = try {
@@ -58,7 +58,7 @@ class DataStorageManager(context: Context, gson: Gson) {
             return map
         }
 
-        override fun setValue(thisRef: Any, property: KProperty<*>, value: HashMap<String, T>) {
+        override fun setValue(thisRef: Any, property: KProperty<*>, value: Map<String, T>) {
             ids = value.keys.toList()
             value.keys.forEach { id ->
                 sharedPreferences.edit().putString(valueKeyPrefix + id, gson.toJson(value[id])).apply()

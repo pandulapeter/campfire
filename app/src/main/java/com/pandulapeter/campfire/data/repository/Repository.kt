@@ -5,7 +5,8 @@ import kotlin.reflect.KClass
 /**
  * Base class for all repositories.
  */
-abstract class Repository {
+abstract class Repository<T> {
+    protected abstract var dataSet: T
     private var subscribers = mutableSetOf<Subscriber>()
 
     fun subscribe(subscriber: Subscriber) {
@@ -40,7 +41,7 @@ abstract class Repository {
         // General
         object Unspecified : UpdateType()
 
-        class InitialUpdate(val repositoryClass: KClass<out Repository>) : UpdateType()
+        class InitialUpdate(val repositoryClass: KClass<out Repository<*>>) : UpdateType()
 
         // Language
 

@@ -1,10 +1,13 @@
 package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.SongInfo
+
 import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.storage.DataStorageManager
 import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
 import com.pandulapeter.campfire.util.enqueueCall
+import kotlin.properties.Delegates
+import kotlin.reflect.KProperty
 
 /**
  * Wraps caching and updating of [SongInfo] objects.
@@ -13,41 +16,34 @@ class SongInfoRepository(
     private val preferenceStorageManager: PreferenceStorageManager,
     private val dataStorageManager: DataStorageManager,
     private val networkManager: NetworkManager,
-    private val languageRepository: LanguageRepository) : Repository() {
-    private var dataSet = dataStorageManager.songInfoCache
-        get() {
-            if (!isLoading && System.currentTimeMillis() - preferenceStorageManager.lastUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
-                updateDataSet()
-            }
-            return field
+    private val languageRepository: LanguageRepository) : Repository<Map<String, SongInfo>>() {
+    override var dataSet by Delegates.observable(dataStorageManager.songInfoCache) { _: KProperty<*>, old: Map<String, SongInfo>, new: Map<String, SongInfo> ->
+        if (old != new) {
+            languageRepository.updateLanguages(getLibrarySongs())
+            notifySubscribers()
         }
-        set(value) {
-            if (field != value) {
-                field = value
-                languageRepository.updateLanguages(value)
-                notifySubscribers()
-            }
-        }
-    var isLoading = false
-        set(value) {
-            if (field != value) {
-                field = value
-                notifySubscribers()
-            }
-        }
+    }
+    var isLoading by Delegates.observable(false) { _: KProperty<*>, old: Boolean, new: Boolean -> if (old != new) notifySubscribers() }
 
     init {
-        languageRepository.updateLanguages(dataSet)
+        if (!isLoading && System.currentTimeMillis() - preferenceStorageManager.lastUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
+            updateDataSet()
+        }
+        languageRepository.updateLanguages(getLibrarySongs())
     }
+
+    fun getLibrarySongs(): List<SongInfo> = dataSet.values.toList()
+
+    fun getSongInfo(id: String) = dataSet[id]
 
     fun updateDataSet(onError: () -> Unit = {}) {
         isLoading = true
         networkManager.service.getLibrary().enqueueCall(
             onSuccess = {
-                dataSet = it
-                isLoading = false
+                dataSet = it.associateBy { it.id }
                 dataStorageManager.songInfoCache = dataSet
                 preferenceStorageManager.lastUpdateTimestamp = System.currentTimeMillis()
+                isLoading = false
             },
             onFailure = {
                 isLoading = false
@@ -55,9 +51,7 @@ class SongInfoRepository(
             })
     }
 
-    fun getLibrarySongs() = dataSet
-
-    companion object {
+    private companion object {
         private const val CACHE_VALIDITY_LIMIT = 1000 * 60 * 60 * 24
     }
 }
