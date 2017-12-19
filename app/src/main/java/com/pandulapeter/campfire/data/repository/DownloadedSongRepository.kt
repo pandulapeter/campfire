@@ -26,7 +26,7 @@ class DownloadedSongRepository(
 
     fun getDownloadedSongIds(): List<String> = dataSet.keys.toList()
 
-    fun getDownloadedSongs() = dataSet.values.toList()
+    fun getDownloadedSong(id: String) = dataSet[id]
 
     fun isSongDownloaded(id: String) = dataSet.containsKey(id)
 

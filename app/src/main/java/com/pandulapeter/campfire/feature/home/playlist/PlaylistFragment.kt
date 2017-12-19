@@ -12,7 +12,7 @@ import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.HomeActivity
 import com.pandulapeter.campfire.feature.home.HomeViewModel
-import com.pandulapeter.campfire.feature.home.library.AlertDialogFragment
+import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard

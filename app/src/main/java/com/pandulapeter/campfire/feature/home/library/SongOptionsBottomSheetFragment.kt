@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.Repository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.util.dimension
 import dagger.android.support.DaggerAppCompatDialogFragment
@@ -108,7 +109,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                     }
                 }
             }
-            is Repository.UpdateType.PlaylistAddedOrRemoved -> {
+            is Repository.UpdateType.PlaylistsUpdated -> {
                 refreshPlaylistCheckboxes()
             }
         }
