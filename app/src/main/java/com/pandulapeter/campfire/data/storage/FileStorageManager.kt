@@ -3,22 +3,16 @@ package com.pandulapeter.campfire.data.storage
 import android.content.Context
 import java.io.File
 
-
 /**
  * Wrapper for storing files in the internal storage.
  */
 class FileStorageManager(private val context: Context) {
 
-    fun saveDownloadedSongText(id: String, text: String) {
-        val file = File(context.filesDir, KEY_SONG + id)
-        file.writeText(text)
-    }
+    fun saveDownloadedSongText(id: String, text: String) = getFile(id).writeText(text)
 
-    fun loadDownloadedSongText(id: String) = File(context.filesDir, KEY_SONG + id).readText()
+    fun loadDownloadedSongText(id: String) = getFile(id).readText()
 
-    fun deleteDownloadedSongText(id: String) = File(context.filesDir, KEY_SONG + id).delete()
+    fun deleteDownloadedSongText(id: String) = getFile(id).delete() //TODO: Move to background thread.
 
-    companion object {
-        private const val KEY_SONG = "song_"
-    }
+    private fun getFile(id: String) = File(context.filesDir, "song_$id")
 }

@@ -13,9 +13,7 @@ import kotlin.reflect.KProperty
  * Wrapper for locally storing simple key-value pairs. Used for saving user preferences.
  */
 class PreferenceStorageManager(context: Context) {
-
     private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
-
     var lastUpdateTimestamp by LongPreferenceDelegate(sharedPreferences, "last_update_timestamp", 0)
     var isSortedByTitle by BooleanPreferenceDelegate(sharedPreferences, "is_sorted_by_title", true)
     var shouldShowDownloadedOnly by BooleanPreferenceDelegate(sharedPreferences, "should_show_downloaded_only", false)
@@ -72,13 +70,13 @@ class PreferenceStorageManager(context: Context) {
         override fun setValue(thisRef: Any, property: KProperty<*>, value: Long) = sharedPreferences.edit().putLong(key, value).apply()
     }
 
-    companion object {
+    private companion object {
         private const val KEY_NAVIGATION_ITEM = "navigation_item"
         private const val VALUE_LIBRARY = "library"
         private const val VALUE_HISTORY = "history"
         private const val VALUE_SETTINGS = "settings"
         private const val VALUE_PLAYLIST = "playlist_"
         private const val KEY_LANGUAGE_FILTER = "language_filter_"
-        private const val KEY_UNKNOWN_LANGUAGE_FILTER = "unknown_language_filter_"
+        private const val KEY_UNKNOWN_LANGUAGE_FILTER = "unknown_language_filter"
     }
 }
