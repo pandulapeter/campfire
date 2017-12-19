@@ -1,23 +1,35 @@
 package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.storage.DataStorageManager
+import kotlin.properties.Delegates
+import kotlin.reflect.KProperty
 
 /**
- * Wraps caching and updating [SongInfo] objects that make up the user's history.
+ * Wraps caching and updating of song ID-s that make up the user's history.
  */
-class HistoryRepository(private val dataStorageManager: DataStorageManager) : Repository() {
+class HistoryRepository(private val dataStorageManager: DataStorageManager) : Repository<List<String>>() {
+    override var dataSet by Delegates.observable(dataStorageManager.history) { _: KProperty<*>, old: List<String>, new: List<String> ->
+        if (old != new) {
+            notifySubscribers(UpdateType.HistoryUpdated(new))
+            dataStorageManager.history = new
+        }
+    }
 
-    fun getHistory(): List<String> = TODO()
+    fun getHistory() = List(dataSet.size) { dataSet[it] }
 
     fun addToHistory(id: String) {
-        TODO()
+        if (!dataSet.contains(id)) {
+            dataSet = dataSet.toMutableList().apply { add(id) }
+        }
     }
 
     fun removeFromHistory(id: String) {
-        TODO()
+        if (dataSet.contains(id)) {
+            dataSet = dataSet.toMutableList().apply { remove(id) }
+        }
     }
 
     fun clearHistory() {
-        TODO()
+        dataSet = listOf()
     }
 }

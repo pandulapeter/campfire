@@ -47,6 +47,9 @@ abstract class Repository<T> {
         // DownloadedSongRepository
         class DownloadedSongsUpdated(val donloadedSongIds: List<String>) : UpdateType()
 
+        // HistoryRepository
+        class HistoryUpdated(val historyIds: List<String>) : UpdateType()
+
         // LanguageRepository
 
         // PlaylistRepository
