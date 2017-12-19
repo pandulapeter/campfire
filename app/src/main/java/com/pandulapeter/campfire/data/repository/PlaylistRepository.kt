@@ -2,32 +2,46 @@ package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.storage.DataStorageManager
-import com.pandulapeter.campfire.util.swap
+import kotlin.properties.Delegates
+import kotlin.reflect.KProperty
 
 /**
  * Wraps caching and updating of [Playlist] objects.
  */
 class PlaylistRepository(private val dataStorageManager: DataStorageManager,
-                         private val songInfoRepository: SongInfoRepository,
-                         private val downloadedSongRepository: DownloadedSongRepository) : Repository() {
-
-    fun getPlaylists() = dataStorageManager.getAllPlaylists()
-
-    fun getPlaylist(playlistId: Int) = dataStorageManager.getPlaylist(playlistId)
-
-    fun newPlaylist(name: String) {
-        dataStorageManager.newPlaylist(name)
-        notifySubscribers(UpdateType.PlaylistAddedOrRemoved)
+                         private val downloadedSongRepository: DownloadedSongRepository) : Repository<Map<String, Playlist>>() {
+    override var dataSet by Delegates.observable(dataStorageManager.playlists) { _: KProperty<*>, old: Map<String, Playlist>, new: Map<String, Playlist> ->
+        if (old != new) {
+            notifySubscribers(UpdateType.PlaylistsUpdated(getPlaylists()))
+            //TODO: If only a single line has been changed, we should not rewrite the entire map.
+            //TODO: If only a single line has been changed, send a more specific not
+            dataStorageManager.playlists = new
+        }
     }
 
-    fun getPlaylistSongs(playlistId: Int) = getPlaylist(playlistId).songIds
-        .mapNotNull { songId ->
-            songInfoRepository.getLibrarySongs()
-                .find { songId == it.id }
+    init {
+        if (!dataSet.keys.contains(Playlist.FAVORITES_ID.toString())) {
+            dataSet = dataSet.toMutableMap().apply { put(Playlist.FAVORITES_ID.toString(), Playlist(Playlist.FAVORITES_ID)) }
         }
-        .filter { downloadedSongRepository.isSongDownloaded(it.id) }
+    }
 
-    fun isSongInPlaylist(songId: String): Boolean {
+    fun getPlaylists(): List<Playlist> = dataSet.values.toList()
+
+    fun getPlaylist(playlistId: Int) = dataSet[playlistId.toString()]
+
+    fun newPlaylist(title: String) {
+        var id = Playlist.FAVORITES_ID
+        while (dataSet.containsKey(id.toString())) {
+            id++
+        }
+        dataSet = dataSet.toMutableMap().apply { put(id.toString(), Playlist(id, title)) }
+    }
+
+    fun getDownloadedSongIdsFromPlaylist(playlistId: Int) = getPlaylist(playlistId)?.songIds?.filter { downloadedSongRepository.isSongDownloaded(it) } ?: listOf()
+
+    fun isSongInPlaylist(playlistId: Int, songId: String) = getPlaylist(playlistId)?.songIds?.contains(songId) == true
+
+    fun isSongInAnyPlaylist(songId: String): Boolean {
         getPlaylists().forEach {
             if (it.songIds.contains(songId)) {
                 return true
@@ -36,59 +50,50 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
         return false
     }
 
-    fun isSongInPlaylist(playlistId: Int, songId: String) = getPlaylist(playlistId).songIds.contains(songId)
-
     fun addSongToPlaylist(playlistId: Int, songId: String, position: Int? = null) {
         if (!isSongInPlaylist(playlistId, songId)) {
-            dataStorageManager.savePlaylist(getPlaylist(playlistId).apply {
-                songIds.apply { if (position == null) add(songId) else add(position, songId) }
-            })
-            notifySubscribers()
-        }
-    }
-
-    fun updatePlaylistTitle(playlistId: Int, title: String) {
-        if (playlistId != Playlist.FAVORITES_ID) {
-            dataStorageManager.savePlaylist(Playlist.Custom(playlistId, title, getPlaylist(playlistId).songIds))
-            notifySubscribers()
+            dataSet = dataSet.toMutableMap().apply {
+                getPlaylist(playlistId)?.let {
+                    put(playlistId.toString(), Playlist(playlistId, it.title, it.songIds.toMutableList().apply { if (!contains(songId)) if (position == null) add(songId) else add(position, songId) }))
+                }
+            }
         }
     }
 
     fun removeSongFromPlaylist(playlistId: Int, songId: String) {
         if (isSongInPlaylist(playlistId, songId)) {
-            dataStorageManager.savePlaylist(getPlaylist(playlistId).apply {
-                songIds.apply { remove(songId) }
-            })
-            notifySubscribers()
+            dataSet = dataSet.toMutableMap().apply {
+                getPlaylist(playlistId)?.let {
+                    put(playlistId.toString(), Playlist(playlistId, it.title, it.songIds.toMutableList().apply { remove(songId) }))
+                }
+            }
+        }
+    }
+
+    fun renamePlaylist(playlistId: Int, title: String) {
+        if (playlistId != Playlist.FAVORITES_ID) {
+            dataSet = dataSet.toMutableMap().apply {
+                getPlaylist(playlistId)?.songIds?.let {
+                    put(playlistId.toString(), Playlist(playlistId, title, it))
+                }
+            }
         }
     }
 
     fun deletePlaylist(playlistId: Int) {
-        dataStorageManager.deletePlaylist(playlistId)
-        notifySubscribers()
+        if (playlistId != Playlist.FAVORITES_ID && dataSet.containsKey(playlistId.toString())) {
+            dataSet = dataSet.toMutableMap().apply { remove(playlistId.toString()) }
+        }
     }
 
     fun updatePlaylist(playlistId: Int, songIds: List<String>) {
-        dataStorageManager.savePlaylist(getPlaylist(playlistId).apply {
-            this.songIds.apply { swap(songIds) }
-        })
-        notifySubscribers()
-    }
-
-    fun shuffleFavorites() {
-        //TODO: Re-implement this.
-//        val list = dataStorageManager.favorites.toMutableList()
-//        if (list.size > SHUFFLE_LIMIT) {
-//            val newList = list.toMutableList()
-//            while (newList == list) {
-//                Collections.shuffle(newList)
-//            }
-//            dataStorageManager.favorites = newList
-//            notifySubscribers()
-//        }
-    }
-
-    companion object {
-        private const val SHUFFLE_LIMIT = 2
+        dataSet = dataSet.toMutableMap().apply {
+            getPlaylist(playlistId)?.let {
+                put(playlistId.toString(), Playlist(playlistId, it.title, it.songIds.toMutableList().apply {
+                    clear()
+                    addAll(songIds)
+                }))
+            }
+        }
     }
 }

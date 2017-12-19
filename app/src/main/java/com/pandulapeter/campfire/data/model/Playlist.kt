@@ -5,12 +5,10 @@ import com.google.gson.annotations.SerializedName
 /**
  * Describes a single playlist that references an ordered list of songs.
  */
-sealed class Playlist(
+data class Playlist(
     @SerializedName("id") val id: Int,
-    @SerializedName("songIds") val songIds: MutableList<String>) {
-
-    class Favorites(songIds: MutableList<String>) : Playlist(FAVORITES_ID, songIds)
-    class Custom(id: Int, @SerializedName("title") val title: String, songIds: MutableList<String>) : Playlist(id, songIds)
+    @SerializedName("title") val title: String? = null,
+    @SerializedName("songIds") val songIds: List<String> = listOf()) {
 
     companion object {
         const val FAVORITES_ID = 0

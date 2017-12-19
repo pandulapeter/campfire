@@ -27,7 +27,8 @@ class PlaylistViewModel(
     private val downloadedSongRepository: DownloadedSongRepository,
     private val playlistRepository: PlaylistRepository,
     private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository) {
-    val title = ObservableField(context?.getString(R.string.home_favorites))
+    private val favoritesTitle = context?.getString(R.string.home_favorites)
+    val title = ObservableField(favoritesTitle)
     val editedTitle = ObservableField(title.get())
     val shouldShowPlayButton = ObservableBoolean()
     val isInEditMode = ObservableBoolean()
@@ -44,9 +45,9 @@ class PlaylistViewModel(
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
-        val downloadedSongs = downloadedSongRepository.getDownloadedSongs()
-        val songIds = playlistRepository.getPlaylistSongs(playlistId)
+        val songIds = playlistRepository.getDownloadedSongIdsFromPlaylist(playlistId)
         return songIds
+            .mapNotNull { songInfoRepository.getSongInfo(it) }
             .filterWorkInProgress()
             .filterExplicit()
             .map { songInfo ->
@@ -57,14 +58,14 @@ class PlaylistViewModel(
                     isDownloaded = true,
                     primaryActionDrawable = if (shouldDisplayDragHandle) R.drawable.ic_drag_handle_24dp else null,
                     primaryActionContentDescription = if (shouldDisplayDragHandle) R.string.playlist_drag_to_rearrange else null,
-                    alertText = if (downloadedSongs.firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null)
+                    alertText = if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null)
             }
     }
 
     override fun onUpdate(updateType: Repository.UpdateType) {
         super.onUpdate(updateType)
         shouldDisplayEditButton.set(adapter.items.isNotEmpty() || playlistId != Playlist.FAVORITES_ID)
-        (playlistRepository.getPlaylist(playlistId) as? Playlist.Custom)?.let { title.set(it.title) }
+        playlistRepository.getPlaylist(playlistId)?.let { title.set(it.title ?: favoritesTitle) }
         if (!isInEditMode.get()) {
             shouldShowPlayButton.set(adapter.items.isNotEmpty())
         }
@@ -85,7 +86,7 @@ class PlaylistViewModel(
         if (isInEditMode.get()) {
             val newTitle = editedTitle.get()
             if (newTitle != null && newTitle.trim().isNotEmpty()) {
-                playlistRepository.updatePlaylistTitle(playlistId, newTitle.trim())
+                playlistRepository.renamePlaylist(playlistId, newTitle.trim())
             }
         }
         isInEditMode.set(!isInEditMode.get())

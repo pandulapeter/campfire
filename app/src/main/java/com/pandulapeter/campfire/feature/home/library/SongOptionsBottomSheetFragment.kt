@@ -15,11 +15,11 @@ import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SongOptionsBottomSheetBinding
-import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.Repository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.util.dimension
 import dagger.android.support.DaggerAppCompatDialogFragment
@@ -108,7 +108,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                     }
                 }
             }
-            is Repository.UpdateType.PlaylistAddedOrRemoved -> {
+            is Repository.UpdateType.PlaylistsUpdated -> {
                 refreshPlaylistCheckboxes()
             }
         }
@@ -136,7 +136,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                 binding.playlistContainer.addView(AppCompatCheckBox(context).apply {
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(padding, padding, padding, padding)
-                    text = (playlist as? Playlist.Custom)?.title ?: getString(R.string.home_favorites)
+                    text = playlist.title ?: getString(R.string.home_favorites)
                     isChecked = playlistRepository.isSongInPlaylist(playlist.id, songId)
                     setOnCheckedChangeListener { _, isChecked ->
                         if (isChecked) {

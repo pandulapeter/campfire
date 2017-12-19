@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.library
+package com.pandulapeter.campfire.feature.shared
 
 import android.app.Dialog
 import android.os.Bundle

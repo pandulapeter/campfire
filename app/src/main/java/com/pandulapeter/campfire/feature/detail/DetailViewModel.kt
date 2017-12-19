@@ -22,7 +22,7 @@ class DetailViewModel(
     }
 
     fun updateToolbar(currentId: String) {
-        songInfoRepository.getLibrarySongs().find { it.id == currentId }?.let {
+        songInfoRepository.getSongInfo(currentId)?.let {
             title.set(it.title)
             artist.set(it.artist)
         }

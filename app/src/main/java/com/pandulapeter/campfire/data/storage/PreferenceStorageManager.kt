@@ -1,22 +1,25 @@
 package com.pandulapeter.campfire.data.storage
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.preference.PreferenceManager
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.feature.home.HomeViewModel
-
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 
 /**
  * Wrapper for locally storing simple key-value pairs. Used for saving user preferences.
  */
 class PreferenceStorageManager(context: Context) {
-
     private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
-
-    /**
-     * The last selected item from the home screen's side navigation.
-     */
+    var lastUpdateTimestamp by LongPreferenceDelegate(sharedPreferences, "last_update_timestamp", 0)
+    var isSortedByTitle by BooleanPreferenceDelegate(sharedPreferences, "is_sorted_by_title", true)
+    var shouldShowDownloadedOnly by BooleanPreferenceDelegate(sharedPreferences, "should_show_downloaded_only", false)
+    var shouldHideExplicit by BooleanPreferenceDelegate(sharedPreferences, "should_hide_explicit", true) //TODO: Add toggle in Settings.
+    var shouldHideWorkInProgress by BooleanPreferenceDelegate(sharedPreferences, "should_hide_work_in_progress", !BuildConfig.DEBUG)  //TODO: Add toggle in Settings.
+    var shouldShowSongCount by BooleanPreferenceDelegate(sharedPreferences, "should_show_song_count", BuildConfig.DEBUG) //TODO: Add toggle in Settings.
     var navigationItem: HomeViewModel.NavigationItem
         get() {
             sharedPreferences.getString(KEY_NAVIGATION_ITEM, VALUE_LIBRARY).let {
@@ -37,69 +40,6 @@ class PreferenceStorageManager(context: Context) {
             }).apply()
         }
 
-    /**
-     * The timestamp of the most recent update that helps to determine how old is the local cache.
-     *
-     * TODO: Remove duplicated code using delegation.
-     * TODO: Set auto-update frequency in Settings.
-     */
-    var lastUpdateTimestamp: Long
-        get() = sharedPreferences.getLong(KEY_LAST_UPDATE_TIMESTAMP, 0)
-        set(value) {
-            sharedPreferences.edit().putLong(KEY_LAST_UPDATE_TIMESTAMP, value).apply()
-        }
-
-    /**
-     * Whether or not the user's last saved preference was to sort the songs by title.
-     */
-    var isSortedByTitle: Boolean
-        get() = sharedPreferences.getBoolean(KEY_IS_SORTED_BY_TITLE, true)
-        set(value) {
-            sharedPreferences.edit().putBoolean(KEY_IS_SORTED_BY_TITLE, value).apply()
-        }
-
-    /**
-     * Whether or not to hide songs from the cloud.
-     */
-    var shouldShowDownloadedOnly: Boolean
-        get() = sharedPreferences.getBoolean(KEY_SHOULD_SHOW_DOWNLOADED_ONLY, false)
-        set(value) {
-            sharedPreferences.edit().putBoolean(KEY_SHOULD_SHOW_DOWNLOADED_ONLY, value).apply()
-        }
-
-    /**
-     * Whether or not explicit songs should be filtered out.
-     *
-     * TODO: Add toggle in Settings.
-     */
-    var shouldHideExplicit: Boolean
-        get() = sharedPreferences.getBoolean(KEY_SHOULD_HIDE_EXPLICIT, true)
-        set(value) {
-            sharedPreferences.edit().putBoolean(KEY_SHOULD_HIDE_EXPLICIT, value).apply()
-        }
-
-    /**
-     * Whether or not work-in-progress songs should be filtered out.
-     *
-     * TODO: Add toggle in Settings.
-     */
-    var shouldHideWorkInProgress: Boolean
-        get() = sharedPreferences.getBoolean(KEY_SHOULD_HIDE_WORK_IN_PROGRESS, !BuildConfig.DEBUG)
-        set(value) {
-            sharedPreferences.edit().putBoolean(KEY_SHOULD_HIDE_WORK_IN_PROGRESS, value).apply()
-        }
-
-    /**
-     * Whether or not the number of songs in library should be displayed.
-     *
-     * TODO: Add toggle in Settings.
-     */
-    var shouldShowSongCount: Boolean
-        get() = sharedPreferences.getBoolean(KEY_SHOULD_SHOW_SONG_COUNT, BuildConfig.DEBUG)
-        set(value) {
-            sharedPreferences.edit().putBoolean(KEY_SHOULD_SHOW_SONG_COUNT, value).apply()
-        }
-
     fun isLanguageFilterEnabled(language: Language) = when (language) {
         is Language.Known -> sharedPreferences.getBoolean(KEY_LANGUAGE_FILTER + language.id, true)
         is Language.Unknown -> sharedPreferences.getBoolean(KEY_UNKNOWN_LANGUAGE_FILTER, true)
@@ -110,19 +50,33 @@ class PreferenceStorageManager(context: Context) {
         is Language.Unknown -> KEY_UNKNOWN_LANGUAGE_FILTER
     }, isEnabled).apply()
 
-    companion object {
+    private class BooleanPreferenceDelegate(
+        private val sharedPreferences: SharedPreferences,
+        private val key: String,
+        private val defaultValue: Boolean) : ReadWriteProperty<Any, Boolean> {
+
+        override fun getValue(thisRef: Any, property: KProperty<*>) = sharedPreferences.getBoolean(key, defaultValue)
+
+        override fun setValue(thisRef: Any, property: KProperty<*>, value: Boolean) = sharedPreferences.edit().putBoolean(key, value).apply()
+    }
+
+    private class LongPreferenceDelegate(
+        private val sharedPreferences: SharedPreferences,
+        private val key: String,
+        private val defaultValue: Long) : ReadWriteProperty<Any, Long> {
+
+        override fun getValue(thisRef: Any, property: KProperty<*>) = sharedPreferences.getLong(key, defaultValue)
+
+        override fun setValue(thisRef: Any, property: KProperty<*>, value: Long) = sharedPreferences.edit().putLong(key, value).apply()
+    }
+
+    private companion object {
         private const val KEY_NAVIGATION_ITEM = "navigation_item"
         private const val VALUE_LIBRARY = "library"
         private const val VALUE_HISTORY = "history"
         private const val VALUE_SETTINGS = "settings"
         private const val VALUE_PLAYLIST = "playlist_"
-        private const val KEY_LAST_UPDATE_TIMESTAMP = "last_update_timestamp"
-        private const val KEY_IS_SORTED_BY_TITLE = "is_sorted_by_title"
-        private const val KEY_SHOULD_SHOW_DOWNLOADED_ONLY = "should_show_downloaded_only"
-        private const val KEY_SHOULD_HIDE_EXPLICIT = "should_hide_explicit"
-        private const val KEY_SHOULD_HIDE_WORK_IN_PROGRESS = "should_hide_work_in_progress"
         private const val KEY_LANGUAGE_FILTER = "language_filter_"
-        private const val KEY_UNKNOWN_LANGUAGE_FILTER = "unknown_language_filter_"
-        private const val KEY_SHOULD_SHOW_SONG_COUNT = "should_show_song_count"
+        private const val KEY_UNKNOWN_LANGUAGE_FILTER = "unknown_language_filter"
     }
 }

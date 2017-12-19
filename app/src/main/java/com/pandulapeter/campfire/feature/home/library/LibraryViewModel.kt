@@ -27,8 +27,8 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                        private val downloadedSongRepository: DownloadedSongRepository,
                        private val playlistRepository: PlaylistRepository,
                        private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository) {
-    val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.query.isNotEmpty())
-    val query = ObservableField(userPreferenceRepository.query)
+    val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.searchQuery.isNotEmpty())
+    val searchQuery = ObservableField(userPreferenceRepository.searchQuery)
     val shouldShowViewOptions = ObservableBoolean(false)
     val isLoading = ObservableBoolean(songInfoRepository.isLoading)
     val shouldShowErrorSnackbar = ObservableBoolean(false)
@@ -39,15 +39,14 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
     val shouldDisplaySubtitle = userPreferenceRepository.shouldShowSongCount
 
     init {
-        isSearchInputVisible.onPropertyChanged { if (it) query.set("") else userPreferenceRepository.query = "" }
-        query.onPropertyChanged { userPreferenceRepository.query = it }
+        isSearchInputVisible.onPropertyChanged { if (it) searchQuery.set("") else userPreferenceRepository.searchQuery = "" }
+        searchQuery.onPropertyChanged { userPreferenceRepository.searchQuery = it }
         shouldShowDownloadedOnly.onPropertyChanged { userPreferenceRepository.shouldShowDownloadedOnly = it }
         isSortedByTitle.onPropertyChanged { userPreferenceRepository.isSortedByTitle = it }
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
-        val downloadedSongs = downloadedSongRepository.getDownloadedSongs()
-        val downloadedSongIds = downloadedSongs.map { it.id }
+        val downloadedSongIds = downloadedSongRepository.getDownloadedSongIds()
         val librarySongs = songInfoRepository.getLibrarySongs()
             .filterWorkInProgress()
             .filterExplicit()
@@ -62,13 +61,13 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                     songInfo = songInfo,
                     isDownloaded = isDownloaded,
                     primaryActionDrawable = if (isDownloaded) {
-                        if (playlistRepository.isSongInPlaylist(songInfo.id)) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp
+                        if (playlistRepository.isSongInAnyPlaylist(songInfo.id)) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp
                     } else {
                         R.drawable.ic_download_24dp
                     },
                     primaryActionContentDescription = if (isDownloaded) R.string.manage_playlists else R.string.download,
                     alertText = if (isDownloaded) {
-                        if (downloadedSongs.firstOrNull { songInfo.id == it.id }?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
+                        if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
                     } else {
                         null //TODO: or "new"
                     })
@@ -114,9 +113,9 @@ class LibraryViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
 
     private fun List<SongInfo>.filterDownloaded() = if (shouldShowDownloadedOnly.get()) filter { downloadedSongRepository.isSongDownloaded(it.id) } else this
 
-    //TODO: Handle special characters, prioritize results that begin with the query.
+    //TODO: Handle special characters, prioritize results that begin with the searchQuery.
     private fun List<SongInfo>.filterByQuery() = if (isSearchInputVisible.get()) {
-        val query = query.get().trim()
+        val query = searchQuery.get().trim()
         filter { it.title.contains(query, true) || it.artist.contains(query, true) }
     } else this
 
