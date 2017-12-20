@@ -42,7 +42,7 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                 isSongOnAnyPlaylist = playlistRepository.isSongInAnyPlaylist(songInfo.id),
                 shouldShowDragHandle = shouldShowDragHandle,
                 shouldShowPlaylistButton = shouldShowPlaylistButton(),
-                shouldShowDownloadButton = !isDownloaded || isUpdateAvailable,
+                shouldShowDownloadButton = !shouldShowDragHandle && (!isDownloaded || isUpdateAvailable),
                 alertText = if (isDownloaded) {
                     if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
                 } else {
@@ -51,6 +51,9 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
         }
         isAdapterNotEmpty = items.isNotEmpty()
     }
+
+    //TODO: Display snackbars on success / failure (with Retry action).
+    fun downloadSong(songInfo: SongInfo) = downloadedSongRepository.downloadSong(songInfo)
 
     protected open fun shouldShowDragHandle(itemCount: Int) = false
 

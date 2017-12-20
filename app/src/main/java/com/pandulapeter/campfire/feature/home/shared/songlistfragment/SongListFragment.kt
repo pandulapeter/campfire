@@ -72,9 +72,7 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
                 }
             }
             viewModel.adapter.itemDownloadActionClickListener = { position ->
-                viewModel.adapter.items[position].let { songInfoViewModel ->
-                    //TODO: Download song.
-                }
+                viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }
             }
         }
     }

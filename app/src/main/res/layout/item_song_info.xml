@@ -35,9 +35,10 @@
                 android:contentDescription="@{viewModel.shouldShowDragHandle ? @string/playlist_drag_to_rearrange : @string/manage_playlists}"
                 android:padding="@dimen/content_padding"
                 android:src="@{viewModel.shouldShowDragHandle ? @drawable/ic_drag_handle_24dp : viewModel.isSongOnAnyPlaylist ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
-                android:visibility="@{viewModel.shouldShowPlaylistButton}"
+                android:visibility="@{viewModel.shouldShowPlaylistButton || viewModel.shouldShowDragHandle}"
                 tools:src="@drawable/ic_playlist_border_24dp" />
 
+            <!--TODO: Allignment is messed up if the primary action button disappears. -->
             <ViewSwitcher
                 android:id="@+id/download_action_container"
                 android:layout_width="wrap_content"

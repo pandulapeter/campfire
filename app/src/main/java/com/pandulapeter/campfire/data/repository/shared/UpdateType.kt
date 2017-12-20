@@ -19,6 +19,10 @@ sealed class UpdateType {
     // DownloadedSongRepository
     class DownloadedSongsUpdated(val donloadedSongIds: List<String>) : UpdateType()
 
+    class DownloadStarted(val songId: String) : UpdateType()
+
+    class DownloadFinished(val songId: String) : UpdateType()
+
     // HistoryRepository
     class HistoryUpdated(val historyIds: List<String>) : UpdateType()
 

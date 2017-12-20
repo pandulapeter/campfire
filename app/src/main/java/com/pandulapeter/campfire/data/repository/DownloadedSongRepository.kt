@@ -44,7 +44,7 @@ class DownloadedSongRepository(
     }
 
     //TODO: It's not great that we need to know the version of the song before downloading it, but this is a backend API limitation.
-    fun downloadSong(songInfo: SongInfo, onSuccess: (String) -> Unit, onFailure: () -> Unit) {
+    fun downloadSong(songInfo: SongInfo, onSuccess: (String) -> Unit = {}, onFailure: () -> Unit = {}) {
         dataSet[songInfo.id]?.let {
             getDownloadedSongText(songInfo.id)?.let {
                 onSuccess(it)
@@ -52,16 +52,19 @@ class DownloadedSongRepository(
             }
         }
         downloadQueue.add(songInfo.id)
+        notifySubscribers(UpdateType.DownloadStarted(songInfo.id))
         networkManager.service.getSong(songInfo.id).enqueueCall(
             onSuccess = {
                 downloadQueue.remove(songInfo.id)
                 fileStorageManager.saveDownloadedSongText(it.id, it.song)
                 dataSet = dataSet.toMutableMap().apply { put(it.id, DownloadedSong(it.id, songInfo.version ?: 0)) }
                 onSuccess(it.song)
+                notifySubscribers(UpdateType.DownloadFinished(songInfo.id))
             },
             onFailure = {
                 downloadQueue.remove(songInfo.id)
                 onFailure()
+                notifySubscribers(UpdateType.DownloadFinished(songInfo.id))
             }
         )
     }
