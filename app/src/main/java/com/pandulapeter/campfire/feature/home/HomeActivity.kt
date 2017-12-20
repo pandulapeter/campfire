@@ -7,6 +7,7 @@ import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
@@ -33,8 +34,9 @@ import javax.inject.Inject
  */
 class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activity_home), HomeFragment.HomeCallbacks {
     @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
+    @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
-    override val viewModel by lazy { HomeViewModel(userPreferenceRepository, playlistRepository) }
+    override val viewModel by lazy { HomeViewModel(userPreferenceRepository, downloadedSongRepository, playlistRepository) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,8 +78,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                         setIcon(R.drawable.ic_playlist_24dp)
                     }
                 }
-                add(
-                    R.id.playlist_container,
+                add(R.id.playlist_container,
                     R.id.playlists,
                     it.size,
                     R.string.home_new_playlist).apply {
@@ -86,17 +87,21 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                 setGroupCheckable(R.id.playlist_container, true, true)
                 updateCheckedItem()
             }
+            binding.navigationView.menu.findItem(R.id.manage_playlists).isVisible = it.size > 1
         }
+        viewModel.hasDownloads.onPropertyChanged { binding.navigationView.menu.findItem(R.id.manage_downloads).isVisible = it }
     }
 
     override fun onStart() {
         super.onStart()
         playlistRepository.subscribe(viewModel)
+        downloadedSongRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
         playlistRepository.unsubscribe(viewModel)
+        downloadedSongRepository.unsubscribe(viewModel)
     }
 
     override fun onBackPressed() {
