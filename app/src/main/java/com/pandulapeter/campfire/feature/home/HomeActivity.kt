@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.home
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.view.View
+import android.view.animation.AnimationUtils
 import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
@@ -25,7 +26,12 @@ import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.disableScrollbars
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onPropertyChanged
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.cancel
 import javax.inject.Inject
+import kotlin.coroutines.experimental.CoroutineContext
 
 /**
  * Displays the home screen of the app which contains the side navigation. The last selected item is persisted.
@@ -37,6 +43,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
     override val viewModel by lazy { HomeViewModel(userPreferenceRepository, downloadedSongRepository, playlistRepository) }
+    private var coroutine: CoroutineContext? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -141,17 +148,28 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
      * the selection changed or the container was empty.
      */
     private fun replaceActiveFragment(navigationItem: HomeViewModel.NavigationItem) {
-        if (viewModel.navigationItem != navigationItem || getCurrentFragment() == null) {
-            viewModel.navigationItem = navigationItem
-            supportFragmentManager.beginTransaction().replace(R.id.fragment_container, when (navigationItem) {
-                HomeViewModel.NavigationItem.Library -> LibraryFragment()
-                HomeViewModel.NavigationItem.Collections -> CollectionsFragment()
-                HomeViewModel.NavigationItem.History -> HistoryFragment()
-                HomeViewModel.NavigationItem.Settings -> SettingsFragment()
-                is HomeViewModel.NavigationItem.Playlist -> PlaylistFragment.newInstance(navigationItem.id)
-                HomeViewModel.NavigationItem.ManagePlaylists -> ManagePlaylistsFragment()
-                HomeViewModel.NavigationItem.ManageDownloads -> ManageDownloadsFragment()
-            }).commit()
+        val currentFragment = getCurrentFragment()
+        if (viewModel.navigationItem != navigationItem || currentFragment == null) {
+            coroutine?.cancel()
+            coroutine = async(UI) {
+                val nextFragment = async(CommonPool) {
+                    when (navigationItem) {
+                        HomeViewModel.NavigationItem.Library -> LibraryFragment()
+                        HomeViewModel.NavigationItem.Collections -> CollectionsFragment()
+                        HomeViewModel.NavigationItem.History -> HistoryFragment()
+                        HomeViewModel.NavigationItem.Settings -> SettingsFragment()
+                        is HomeViewModel.NavigationItem.Playlist -> PlaylistFragment.newInstance(navigationItem.id)
+                        HomeViewModel.NavigationItem.ManagePlaylists -> ManagePlaylistsFragment()
+                        HomeViewModel.NavigationItem.ManageDownloads -> ManageDownloadsFragment()
+                    }
+                }.await()
+                viewModel.navigationItem = navigationItem
+                currentFragment?.let {
+                    it.outAnimation = AnimationUtils.loadAnimation(this@HomeActivity, android.R.anim.fade_out)
+                    nextFragment.inAnimation = AnimationUtils.loadAnimation(this@HomeActivity, android.R.anim.fade_in)
+                }
+                supportFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commit()
+            }
         }
     }
 
