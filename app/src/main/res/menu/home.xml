@@ -45,4 +45,18 @@
 
     </item>
 
+    <group
+        android:id="@+id/management"
+        android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/manage_playlists"
+            android:title="@string/home_manage_playlists" />
+
+        <item
+            android:id="@+id/manage_downloads"
+            android:title="@string/home_manage_downloads" />
+
+    </group>
+
 </menu>

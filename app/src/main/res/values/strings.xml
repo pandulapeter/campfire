@@ -28,6 +28,8 @@
     <string name="home_playlists">Playlists</string>
     <string name="home_favorites">Favorites</string>
     <string name="home_new_playlist">New playlist</string>
+    <string name="home_manage_playlists">@string/manage_playlists</string>
+    <string name="home_manage_downloads">Manage downloads</string>
 
     <!-- Library screen -->
     <string name="library_update_error">Error updating library.</string>

@@ -27,6 +27,8 @@ class PreferenceStorageManager(context: Context) {
                     VALUE_COLLECTIONS -> HomeViewModel.NavigationItem.Collections
                     VALUE_HISTORY -> HomeViewModel.NavigationItem.History
                     VALUE_SETTINGS -> HomeViewModel.NavigationItem.Settings
+                    VALUE_MANAGE_PLAYLISTS -> HomeViewModel.NavigationItem.ManagePlaylists
+                    VALUE_MANAGE_DOWNLOADS -> HomeViewModel.NavigationItem.ManageDownloads
                     else -> HomeViewModel.NavigationItem.Playlist(Integer.parseInt(it.removePrefix(VALUE_PLAYLIST)))
                 }
             }
@@ -38,6 +40,8 @@ class PreferenceStorageManager(context: Context) {
                 HomeViewModel.NavigationItem.History -> VALUE_HISTORY
                 HomeViewModel.NavigationItem.Settings -> VALUE_SETTINGS
                 is HomeViewModel.NavigationItem.Playlist -> VALUE_PLAYLIST + value.id
+                HomeViewModel.NavigationItem.ManagePlaylists -> VALUE_MANAGE_PLAYLISTS
+                HomeViewModel.NavigationItem.ManageDownloads -> VALUE_MANAGE_DOWNLOADS
             }).apply()
         }
 
@@ -78,6 +82,8 @@ class PreferenceStorageManager(context: Context) {
         private const val VALUE_HISTORY = "history"
         private const val VALUE_SETTINGS = "settings"
         private const val VALUE_PLAYLIST = "playlist_"
+        private const val VALUE_MANAGE_PLAYLISTS = "manage_playlists"
+        private const val VALUE_MANAGE_DOWNLOADS = "manage_downloads"
         private const val KEY_LANGUAGE_FILTER = "language_filter_"
         private const val KEY_UNKNOWN_LANGUAGE_FILTER = "unknown_language_filter"
     }

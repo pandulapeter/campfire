@@ -34,5 +34,7 @@ class HomeViewModel(private val userPreferenceRepository: UserPreferenceReposito
         object History : NavigationItem()
         object Settings : NavigationItem()
         class Playlist(@SerializedName("id") val id: Int) : NavigationItem()
+        object ManagePlaylists: NavigationItem()
+        object ManageDownloads: NavigationItem()
     }
 }

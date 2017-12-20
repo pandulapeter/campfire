@@ -12,6 +12,8 @@ import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
+import com.pandulapeter.campfire.feature.home.managedownloads.ManageDownloadsFragment
+import com.pandulapeter.campfire.feature.home.manageplaylists.ManagePlaylistsFragment
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
@@ -49,6 +51,8 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                     NewPlaylistDialogFragment.show(supportFragmentManager)
                     false
                 }
+                R.id.manage_playlists -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.ManagePlaylists) }
+                R.id.manage_downloads -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.ManageDownloads) }
                 else -> consumeAndCloseDrawer {
                     binding.navigationView.setCheckedItem(menuItem.itemId)
                     replaceActiveFragment(HomeViewModel.NavigationItem.Playlist(menuItem.itemId))
@@ -122,6 +126,8 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
             HomeViewModel.NavigationItem.History -> R.id.history
             HomeViewModel.NavigationItem.Settings -> R.id.settings
             is HomeViewModel.NavigationItem.Playlist -> it.id
+            HomeViewModel.NavigationItem.ManagePlaylists -> R.id.manage_playlists
+            HomeViewModel.NavigationItem.ManageDownloads -> R.id.manage_downloads
         })
     }
 
@@ -138,6 +144,8 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                 HomeViewModel.NavigationItem.History -> HistoryFragment()
                 HomeViewModel.NavigationItem.Settings -> SettingsFragment()
                 is HomeViewModel.NavigationItem.Playlist -> PlaylistFragment.newInstance(navigationItem.id)
+                HomeViewModel.NavigationItem.ManagePlaylists -> ManagePlaylistsFragment()
+                HomeViewModel.NavigationItem.ManageDownloads -> ManageDownloadsFragment()
             }).commit()
         }
     }
