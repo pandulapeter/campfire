@@ -11,8 +11,8 @@ import kotlin.reflect.KProperty
  * Wraps caching and updating of [Playlist] objects.
  */
 class PlaylistRepository(private val dataStorageManager: DataStorageManager,
-                         private val downloadedSongRepository: DownloadedSongRepository) : Repository<Map<String, Playlist>>() {
-    override var dataSet by Delegates.observable(dataStorageManager.playlists) { _: KProperty<*>, old: Map<String, Playlist>, new: Map<String, Playlist> ->
+                         private val downloadedSongRepository: DownloadedSongRepository) : Repository() {
+    private var dataSet by Delegates.observable(dataStorageManager.playlists) { _: KProperty<*>, old: Map<String, Playlist>, new: Map<String, Playlist> ->
         if (old != new) {
             notifySubscribers(UpdateType.PlaylistsUpdated(getPlaylists()))
             //TODO: If only a single line has been changed, we should not rewrite the entire map.

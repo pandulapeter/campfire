@@ -18,8 +18,8 @@ class SongInfoRepository(
     private val preferenceStorageManager: PreferenceStorageManager,
     private val dataStorageManager: DataStorageManager,
     private val networkManager: NetworkManager,
-    private val languageRepository: LanguageRepository) : Repository<Map<String, SongInfo>>() {
-    override var dataSet by Delegates.observable(dataStorageManager.songInfoCache) { _: KProperty<*>, old: Map<String, SongInfo>, new: Map<String, SongInfo> ->
+    private val languageRepository: LanguageRepository) : Repository() {
+    private var dataSet by Delegates.observable(dataStorageManager.songInfoCache) { _: KProperty<*>, old: Map<String, SongInfo>, new: Map<String, SongInfo> ->
         if (old != new) {
             languageRepository.updateLanguages(getLibrarySongs())
             notifySubscribers((UpdateType.LibraryCacheUpdated(getLibrarySongs())))

@@ -3,8 +3,7 @@ package com.pandulapeter.campfire.data.repository.shared
 /**
  * Base class for all repositories that handles the subscription management.
  */
-abstract class Repository<T> {
-    protected abstract var dataSet: T
+abstract class Repository {
     private var subscribers = mutableSetOf<Subscriber>()
 
     fun subscribe(subscriber: Subscriber) {

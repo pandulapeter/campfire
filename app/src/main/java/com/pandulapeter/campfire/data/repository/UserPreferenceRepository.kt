@@ -12,8 +12,7 @@ import kotlin.reflect.KProperty
  * Wraps caching and updating of user preferences.
  */
 class UserPreferenceRepository(
-    private val preferenceStorageManager: PreferenceStorageManager) : Repository<Unit>() {
-    override var dataSet = Unit //TODO: Well...
+    private val preferenceStorageManager: PreferenceStorageManager) : Repository() {
     var navigationItem by Delegates.observable(preferenceStorageManager.navigationItem) { _: KProperty<*>, old: HomeViewModel.NavigationItem, new: HomeViewModel.NavigationItem ->
         if (old != new) {
             notifySubscribers(UpdateType.NavigationItemUpdated(new))

@@ -10,8 +10,8 @@ import com.pandulapeter.campfire.util.mapToLanguage
 /**
  * Wraps caching and updating of [Language] objects.
  */
-class LanguageRepository(private val preferenceStorageManager: PreferenceStorageManager) : Repository<Map<Language, Boolean>>() {
-    override var dataSet: Map<Language, Boolean> = HashMap()
+class LanguageRepository(private val preferenceStorageManager: PreferenceStorageManager) : Repository() {
+    private var dataSet: Map<Language, Boolean> = HashMap()
 
     fun updateLanguages(songInfoList: List<SongInfo>) {
         val languageFilters = HashMap<Language, Boolean>()

@@ -6,7 +6,10 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.HistoryBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.HistoryRepository
+import com.pandulapeter.campfire.feature.detail.DetailActivity
+import com.pandulapeter.campfire.feature.home.library.SongOptionsBottomSheetFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
@@ -34,6 +37,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
                 R.string.history_clear_confirmation_clear,
                 R.string.history_clear_confirmation_cancel)
         }
+        // Set up swipe-to-dismiss functionality.
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = false
@@ -46,6 +50,37 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
             }
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
+        // Set up list item click listeners.
+        context?.let {
+            viewModel.adapter.itemClickListener = { position ->
+                startActivity(DetailActivity.getStartIntent(context = it, currentId = viewModel.adapter.items[position].songInfo.id))
+            }
+        }
+        viewModel.adapter.itemPrimaryActionClickListener = { position ->
+            viewModel.adapter.items[position].let { songInfoViewModel ->
+                if (songInfoViewModel.isDownloaded) {
+                    val songId = songInfoViewModel.songInfo.id
+                    if (playlistRepository.getPlaylists().size == 1) {
+                        if (playlistRepository.isSongInPlaylist(Playlist.FAVORITES_ID, songId)) {
+                            playlistRepository.removeSongFromPlaylist(Playlist.FAVORITES_ID, songId)
+                        } else {
+                            playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, songId)
+                        }
+                    } else {
+                        SongOptionsBottomSheetFragment.show(childFragmentManager, songId)
+                    }
+                } else {
+                    //TODO: Download song.
+                }
+            }
+        }
+        viewModel.adapter.itemSecondaryActionClickListener = { position ->
+            viewModel.adapter.items[position].let { songInfoViewModel ->
+                if (songInfoViewModel.alertText != null) {
+                    //TODO: Download song.
+                }
+            }
+        }
     }
 
     override fun onStart() {

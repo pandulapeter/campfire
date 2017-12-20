@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.data.storage
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.preference.PreferenceManager
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
@@ -18,11 +17,14 @@ import kotlin.reflect.KProperty
  * TODO: This data shouldn't be stored in Shared Preferences, replace with a Room-based implementation.
  */
 class DataStorageManager(context: Context, gson: Gson) {
-    private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
-    var songInfoCache by MapDelegate(SongInfo::class.java, gson, sharedPreferences, "song_info_ids", "song_info_")
-    var downloadedSongCache by MapDelegate(DownloadedSong::class.java, gson, sharedPreferences, "downloaded_song_ids", "downloaded_song_")
-    var playlists by MapDelegate(Playlist::class.java, gson, sharedPreferences, "playlist_ids", "playlist_")
-    var history by StringListDelegate(gson, sharedPreferences, "history_ids")
+    private val songInfoPreferences = context.applicationContext.getSharedPreferences("song_info_storage", Context.MODE_PRIVATE)
+    private val downloadedSongPreferences = context.applicationContext.getSharedPreferences("downloaded_song_storage", Context.MODE_PRIVATE)
+    private val playlistPreferences = context.applicationContext.getSharedPreferences("playlist_storage", Context.MODE_PRIVATE)
+    private val historyPreferences = context.applicationContext.getSharedPreferences("history_storage", Context.MODE_PRIVATE)
+    var songInfoCache by MapDelegate(SongInfo::class.java, gson, songInfoPreferences, "ids", "song_")
+    var downloadedSongCache by MapDelegate(DownloadedSong::class.java, gson, downloadedSongPreferences, "ids", "song_")
+    var playlists by MapDelegate(Playlist::class.java, gson, playlistPreferences, "ids", "playlist_")
+    var history by StringListDelegate(gson, historyPreferences, "ids")
 
     private class StringListDelegate(
         private val gson: Gson,

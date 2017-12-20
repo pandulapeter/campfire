@@ -17,8 +17,8 @@ import kotlin.reflect.KProperty
 class DownloadedSongRepository(
     private val dataStorageManager: DataStorageManager,
     private val fileStorageManager: FileStorageManager,
-    private val networkManager: NetworkManager) : Repository<Map<String, DownloadedSong>>() {
-    override var dataSet by Delegates.observable(dataStorageManager.downloadedSongCache) { _: KProperty<*>, old: Map<String, DownloadedSong>, new: Map<String, DownloadedSong> ->
+    private val networkManager: NetworkManager) : Repository() {
+    private var dataSet by Delegates.observable(dataStorageManager.downloadedSongCache) { _: KProperty<*>, old: Map<String, DownloadedSong>, new: Map<String, DownloadedSong> ->
         if (old != new) {
             notifySubscribers(UpdateType.DownloadedSongsUpdated(getDownloadedSongIds()))
             //TODO: If only a single line has been changed, we should not rewrite the entire map.
