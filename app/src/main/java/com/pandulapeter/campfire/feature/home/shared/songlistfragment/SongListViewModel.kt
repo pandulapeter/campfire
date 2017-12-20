@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.shared.songlistfragment
 
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
@@ -25,13 +26,35 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
     val adapter = SongInfoAdapter()
     protected var isAdapterNotEmpty = false
 
-    abstract fun getAdapterItems(): List<SongInfoViewModel>
+    abstract fun getAdapterItems(): List<SongInfo>
 
     override fun onUpdate(updateType: UpdateType) {
+        //TODO: Move to background thread.
         val items = getAdapterItems()
-        adapter.items = items
+        val shouldShowDragHandle = shouldShowDragHandle(items.size)
+        adapter.items = items.map { songInfo ->
+            val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
+            val isUpdateAvailable = false //TODO: Check for updates.
+            SongInfoViewModel(
+                songInfo = songInfo,
+                isSongDownloaded = isDownloaded,
+                isSongLoading = downloadedSongRepository.isSongLoading(songInfo.id),
+                isSongOnAnyPlaylist = playlistRepository.isSongInAnyPlaylist(songInfo.id),
+                shouldShowDragHandle = shouldShowDragHandle,
+                shouldShowPlaylistButton = shouldShowPlaylistButton(),
+                shouldShowDownloadButton = !isDownloaded || isUpdateAvailable,
+                alertText = if (isDownloaded) {
+                    if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
+                } else {
+                    if (isUpdateAvailable) R.string.library_new else null
+                })
+        }
         isAdapterNotEmpty = items.isNotEmpty()
     }
+
+    protected open fun shouldShowDragHandle(itemCount: Int) = false
+
+    protected open fun shouldShowPlaylistButton() = true
 
     protected fun List<SongInfo>.filterWorkInProgress() = if (userPreferenceRepository.shouldHideWorkInProgress) filter { it.version ?: 0 >= 0 } else this
 

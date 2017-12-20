@@ -7,6 +7,7 @@
     <dimen name="touch_target">48dp</dimen>
     <dimen name="first_keyline">16dp</dimen>
     <dimen name="second_keyline">72dp</dimen>
+    <dimen name="loading_indicator_size">36dp</dimen>
 
     <!-- Home screen -->
     <dimen name="action_button_padding">2dp</dimen>

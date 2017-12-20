@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.feature.home.library
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
@@ -13,7 +12,6 @@ import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
-import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import com.pandulapeter.campfire.util.mapToLanguage
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.toggle
@@ -46,7 +44,7 @@ class LibraryViewModel(
         isSortedByTitle.onPropertyChanged { userPreferenceRepository.isSortedByTitle = it }
     }
 
-    override fun getAdapterItems(): List<SongInfoViewModel> {
+    override fun getAdapterItems(): List<SongInfo> {
         val librarySongs = songInfoRepository.getLibrarySongs()
             .filterWorkInProgress()
             .filterExplicit()
@@ -55,23 +53,6 @@ class LibraryViewModel(
             .filterDownloaded()
             .filterByQuery()
             .sort()
-            .map { songInfo ->
-                val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
-                SongInfoViewModel(
-                    songInfo = songInfo,
-                    isDownloaded = isDownloaded,
-                    primaryActionDrawable = if (isDownloaded) {
-                        if (playlistRepository.isSongInAnyPlaylist(songInfo.id)) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp
-                    } else {
-                        R.drawable.ic_download_24dp
-                    },
-                    primaryActionContentDescription = if (isDownloaded) R.string.manage_playlists else R.string.download,
-                    alertText = if (isDownloaded) {
-                        if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
-                    } else {
-                        null //TODO: or "new"
-                    })
-            }
         filteredItemCount.set(if (filteredItems.size == librarySongs.size) "${filteredItems.size}" else "${filteredItems.size} / ${librarySongs.size}")
         return filteredItems
     }

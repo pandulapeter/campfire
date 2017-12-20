@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:clipChildren="false"
         android:foreground="?attr/selectableItemBackground"
-        app:cardBackgroundColor="@{viewModel.isDownloaded ? @color/card_song_downloaded : @color/card_song_not_downloaded}"
+        app:cardBackgroundColor="@{viewModel.isSongDownloaded ? @color/card_song_downloaded : @color/card_song_not_downloaded}"
         app:contentPadding="@dimen/content_padding">
 
         <RelativeLayout
@@ -32,28 +32,47 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@{viewModel.primaryActionContentDescription}"
-                android:drawable="@{viewModel.primaryActionDrawable}"
+                android:contentDescription="@{viewModel.shouldShowDragHandle ? @string/playlist_drag_to_rearrange : @string/manage_playlists}"
                 android:padding="@dimen/content_padding"
+                android:src="@{viewModel.shouldShowDragHandle ? @drawable/ic_drag_handle_24dp : viewModel.isSongOnAnyPlaylist ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
+                android:visibility="@{viewModel.shouldShowPlaylistButton}"
                 tools:src="@drawable/ic_playlist_border_24dp" />
 
-            <ImageView
-                android:id="@+id/secondary_action"
+            <ViewSwitcher
+                android:id="@+id/download_action_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toStartOf="@id/primary_action"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@{viewModel.secondaryActionContentDescription}"
-                android:drawable="@{viewModel.secondaryActionDrawable}"
-                android:padding="@dimen/content_padding"
-                tools:src="@drawable/ic_download_24dp" />
+                android:visibility="@{viewModel.shouldShowDownloadButton}"
+                app:displayedChild="@{viewModel.isSongLoading ? 0 : 1}">
+
+                <!--TODO: Fix Lint warnings. -->
+                <ProgressBar
+                    android:layout_width="@dimen/loading_indicator_size"
+                    android:layout_height="@dimen/loading_indicator_size"
+                    android:layout_gravity="center"
+                    android:indeterminateTint="@android:color/white"
+                    android:indeterminateTintMode="src_in"
+                    android:padding="@dimen/content_padding" />
+
+                <ImageView
+                    android:id="@+id/download_action"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@{viewModel.isSongDownloaded ? @string/update : @string/download}"
+                    android:padding="@dimen/content_padding"
+                    app:srcCompat="@drawable/ic_download_24dp" />
+
+            </ViewSwitcher>
 
             <TextView
                 android:id="@+id/title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_toStartOf="@id/secondary_action"
-                android:alpha="@{viewModel.isDownloaded ? 1f : 0.8f }"
+                android:layout_toStartOf="@id/download_action_container"
+                android:alpha="@{viewModel.isSongDownloaded ? 1f : 0.8f }"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:maxLines="3"
@@ -66,8 +85,8 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@id/title"
                 android:layout_marginTop="@dimen/card_text_margin"
-                android:layout_toStartOf="@id/secondary_action"
-                android:alpha="@{viewModel.isDownloaded ? 1f : 0.5f }"
+                android:layout_toStartOf="@id/download_action_container"
+                android:alpha="@{viewModel.isSongDownloaded ? 1f : 0.5f }"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-thin"
                 android:maxLines="2"

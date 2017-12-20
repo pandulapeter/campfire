@@ -51,8 +51,8 @@ class DetailActivity : CampfireActivity<DetailBinding, DetailViewModel>(R.layout
         private val Intent.ids
             get() = getStringArrayExtra(IDS).toList()
 
-        fun getStartIntent(context: Context, currentId: String, ids: List<String> = listOf(currentId)): Intent = Intent(context, DetailActivity::class.java)
+        fun getStartIntent(context: Context, currentId: String, ids: List<String>?): Intent = Intent(context, DetailActivity::class.java)
             .putExtra(CURRENT_ID, currentId)
-            .putExtra(IDS, ids.toTypedArray())
+            .putExtra(IDS, (ids ?: listOf(currentId)).toTypedArray())
     }
 }

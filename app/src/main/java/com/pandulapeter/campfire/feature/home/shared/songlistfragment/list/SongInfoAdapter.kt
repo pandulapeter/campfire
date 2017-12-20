@@ -53,14 +53,14 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
     var itemClickListener: (position: Int) -> Unit = { _ -> }
     var itemPrimaryActionTouchListener: ((position: Int) -> Unit)? = null
     var itemPrimaryActionClickListener: ((position: Int) -> Unit)? = null
-    var itemSecondaryActionClickListener: ((position: Int) -> Unit)? = null
+    var itemDownloadActionClickListener: ((position: Int) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): SongInfoViewHolder {
         val viewHolder = SongInfoViewHolder.create(parent)
         viewHolder.setItemClickListener(itemClickListener)
         viewHolder.setItemPrimaryActionTouchListener(itemPrimaryActionTouchListener)
         viewHolder.setItemPrimaryActionClickListener(itemPrimaryActionClickListener)
-        viewHolder.setItemSecondaryActionClickListener(itemSecondaryActionClickListener)
+        viewHolder.setItemDownloadActionClickListener(itemDownloadActionClickListener)
         return viewHolder
     }
 
@@ -111,9 +111,9 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
             }
         }
 
-        fun setItemSecondaryActionClickListener(itemClickListener: ((position: Int) -> Unit)?) {
+        fun setItemDownloadActionClickListener(itemClickListener: ((position: Int) -> Unit)?) {
             if (itemClickListener != null) {
-                binding.secondaryAction.setOnClickListener {
+                binding.downloadAction.setOnClickListener {
                     if (adapterPosition != RecyclerView.NO_POSITION) {
                         itemClickListener(adapterPosition)
                     }

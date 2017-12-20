@@ -51,11 +51,13 @@
 
         <item
             android:id="@+id/manage_playlists"
-            android:title="@string/home_manage_playlists" />
+            android:title="@string/home_manage_playlists"
+            android:visible="false" />
 
         <item
             android:id="@+id/manage_downloads"
-            android:title="@string/home_manage_downloads" />
+            android:title="@string/home_manage_downloads"
+            android:visible="false" />
 
     </group>
 

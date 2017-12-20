@@ -31,6 +31,8 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
 
     fun getPlaylist(playlistId: Int) = dataSet[playlistId.toString()]
 
+    fun getPlaylistSongIds(playlistId: Int) = dataSet[playlistId.toString()]?.songIds ?: listOf()
+
     fun newPlaylist(title: String) {
         var id = Playlist.FAVORITES_ID
         while (dataSet.containsKey(id.toString())) {
@@ -38,8 +40,6 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
         }
         dataSet = dataSet.toMutableMap().apply { put(id.toString(), Playlist(id, title)) }
     }
-
-    fun getDownloadedSongIdsFromPlaylist(playlistId: Int) = getPlaylist(playlistId)?.songIds?.filter { downloadedSongRepository.isSongDownloaded(it) } ?: listOf()
 
     fun isSongInPlaylist(playlistId: Int, songId: String) = getPlaylist(playlistId)?.songIds?.contains(songId) == true
 

@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.feature.home.playlist
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
@@ -11,7 +10,6 @@ import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
-import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import com.pandulapeter.campfire.util.onPropertyChanged
 import java.util.Collections
 
@@ -42,23 +40,10 @@ class PlaylistViewModel(
         }
     }
 
-    override fun getAdapterItems(): List<SongInfoViewModel> {
-        val songIds = playlistRepository.getDownloadedSongIdsFromPlaylist(playlistId)
-        return songIds
-            .mapNotNull { songInfoRepository.getSongInfo(it) }
-            .filterWorkInProgress()
-            .filterExplicit()
-            .map { songInfo ->
-                //TODO: Add update action if needed.
-                val shouldDisplayDragHandle = isInEditMode.get() && songIds.size > 1
-                SongInfoViewModel(
-                    songInfo = songInfo,
-                    isDownloaded = true,
-                    primaryActionDrawable = if (shouldDisplayDragHandle) R.drawable.ic_drag_handle_24dp else null,
-                    primaryActionContentDescription = if (shouldDisplayDragHandle) R.string.playlist_drag_to_rearrange else null,
-                    alertText = if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null)
-            }
-    }
+    override fun getAdapterItems() = playlistRepository.getPlaylistSongIds(playlistId)
+        .mapNotNull { songInfoRepository.getSongInfo(it) }
+        .filterWorkInProgress()
+        .filterExplicit()
 
     override fun onUpdate(updateType: UpdateType) {
         super.onUpdate(updateType)
@@ -68,6 +53,10 @@ class PlaylistViewModel(
             shouldShowPlayButton.set(isAdapterNotEmpty)
         }
     }
+
+    override fun shouldShowDragHandle(itemCount: Int) = isInEditMode.get() && itemCount > 1
+
+    override fun shouldShowPlaylistButton() = false
 
     fun onDeleteButtonClicked() {
         if (shouldAllowDeleteButton) {

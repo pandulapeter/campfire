@@ -3,15 +3,18 @@
 
     <!-- General -->
     <string name="campfire">Campfire</string>
-    <string name="work_in_progress">Work in progress</string>
-    <string name="new_version_available">New version available</string>
-    <string name="manage_playlists">Manage playlists</string>
-    <string name="download">Download</string>
     <string name="remove_download">Remove download</string>
     <string name="remove_download_confirmation_title">Are you sure?</string>
     <string name="remove_download_confirmation_message">Removing the download will also delete the song from your playlists.</string>
     <string name="remove_download_confirmation_remove">Remove</string>
     <string name="remove_download_confirmation_cancel">Cancel</string>
+
+    <!-- Song items -->
+    <string name="download">Download</string>
+    <string name="update">Update</string>
+    <string name="manage_playlists">Manage playlists</string>
+    <string name="new_version_available">New version available</string>
+    <string name="library_new">New</string>
 
     <!-- Supported languages -->
     <string name="language_english">English</string>
@@ -44,7 +47,6 @@
     <string name="library_filter_by_language">Filter by language</string>
     <string name="library_song_count">%s songs</string>
     <string name="library_more">More</string>
-    <string name="library_new">New</string>
 
     <!-- History screen -->
     <string name="history_clear">Clear</string>

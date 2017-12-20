@@ -7,7 +7,6 @@ import android.view.View
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
-import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.HomeActivity
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
@@ -69,16 +68,6 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Setup list item click listeners.
-        context?.let {
-            viewModel.adapter.itemClickListener = { position ->
-                if (!viewModel.isInEditMode.get()) {
-                    startActivity(DetailActivity.getStartIntent(
-                        context = it,
-                        currentId = viewModel.adapter.items[position].songInfo.id,
-                        ids = viewModel.adapter.items.map { it.songInfo.id }))
-                }
-            }
-        }
         viewModel.adapter.itemPrimaryActionTouchListener = { position ->
             if (viewModel.isInEditMode.get()) {
                 itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
@@ -102,6 +91,8 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         (activity as HomeActivity).setCheckedItem(HomeViewModel.NavigationItem.Library)
         viewModel.deletePlaylist()
     }
+
+    override fun getRelatedSongIds() = viewModel.adapter.items.map { it.songInfo.id }
 
     companion object {
         private const val PLAYLIST_ID = "playlist_id"

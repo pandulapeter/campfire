@@ -57,6 +57,7 @@ abstract class HeaderItemDecoration(context: Context) : RecyclerView.ItemDecorat
     private fun drawHeader(canvas: Canvas, child: View, headerView: View) {
         canvas.save()
         canvas.translate(0f, child.y - headerView.height)
+        headerView.alpha = child.alpha
         headerView.draw(canvas)
         canvas.restore()
     }

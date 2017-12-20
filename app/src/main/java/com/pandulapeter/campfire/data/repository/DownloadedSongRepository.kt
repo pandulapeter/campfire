@@ -25,12 +25,15 @@ class DownloadedSongRepository(
             dataStorageManager.downloadedSongCache = new
         }
     }
+    private var downloadQueue = mutableListOf<String>()
 
     fun getDownloadedSongIds(): List<String> = dataSet.keys.toList()
 
     fun getDownloadedSong(id: String) = dataSet[id]
 
     fun isSongDownloaded(id: String) = dataSet.containsKey(id)
+
+    fun isSongLoading(id: String) = downloadQueue.contains(id)
 
     fun removeSongFromDownloads(id: String) {
         if (isSongDownloaded(id)) {
@@ -48,13 +51,18 @@ class DownloadedSongRepository(
                 return
             }
         }
+        downloadQueue.add(songInfo.id)
         networkManager.service.getSong(songInfo.id).enqueueCall(
             onSuccess = {
+                downloadQueue.remove(songInfo.id)
                 fileStorageManager.saveDownloadedSongText(it.id, it.song)
                 dataSet = dataSet.toMutableMap().apply { put(it.id, DownloadedSong(it.id, songInfo.version ?: 0)) }
                 onSuccess(it.song)
             },
-            onFailure = { onFailure() }
+            onFailure = {
+                downloadQueue.remove(songInfo.id)
+                onFailure()
+            }
         )
     }
 

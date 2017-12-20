@@ -62,6 +62,7 @@ class DataStorageManager(context: Context, gson: Gson) {
         }
 
         override fun setValue(thisRef: Any, property: KProperty<*>, value: Map<String, T>) {
+            //TODO: This code does not clean up after itself: once an ID is removed, the corresponding entry is still stored in the file.
             ids = value.keys.toList()
             value.keys.forEach { id ->
                 sharedPreferences.edit().putString(valueKeyPrefix + id, gson.toJson(value[id])).apply()
