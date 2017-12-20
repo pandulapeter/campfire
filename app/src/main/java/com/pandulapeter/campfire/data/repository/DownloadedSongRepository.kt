@@ -39,8 +39,11 @@ class DownloadedSongRepository(
         if (isSongDownloaded(id)) {
             fileStorageManager.deleteDownloadedSongText(id)
             dataSet = dataSet.toMutableMap().apply { remove(id) }
-            notifySubscribers()
         }
+    }
+
+    fun clearDownloads() {
+        dataSet = dataSet.toMutableMap().apply { clear() }
     }
 
     //TODO: It's not great that we need to know the version of the song before downloading it, but this is a backend API limitation.
@@ -51,7 +54,9 @@ class DownloadedSongRepository(
                 return
             }
         }
-        downloadQueue.add(songInfo.id)
+        if (!isSongLoading(songInfo.id)) {
+            downloadQueue.add(songInfo.id)
+        }
         notifySubscribers(UpdateType.DownloadStarted(songInfo.id))
         networkManager.service.getSong(songInfo.id).enqueueCall(
             onSuccess = {

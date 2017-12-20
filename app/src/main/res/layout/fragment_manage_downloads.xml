@@ -42,12 +42,27 @@
                         android:padding="@dimen/action_button_padding"
                         app:srcCompat="@drawable/ic_menu_24dp" />
 
+                    <ImageView
+                        android:id="@+id/delete_all"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="@dimen/action_button_margin"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/history_clear"
+                        android:onClick="@{() -> viewModel.onDeleteAllButtonClicked()}"
+                        android:padding="@dimen/action_button_padding"
+                        android:visibility="@{viewModel.shouldShowDeleteAllButton}"
+                        app:srcCompat="@drawable/ic_delete_24dp" />
+
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
                         android:layout_marginStart="@dimen/title_margin"
+                        android:layout_toStartOf="@id/delete_all"
                         android:text="@string/home_manage_downloads"
                         android:textAppearance="@style/TextAppearance.AppCompat.Title" />
 
@@ -57,17 +72,15 @@
 
         </android.support.design.widget.AppBarLayout>
 
-        <ScrollView
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
-
-        </ScrollView>
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/playlist_content_bottom_margin"
+            app:adapter="@{viewModel.adapter}"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            tools:listitem="@layout/item_song_info" />
 
     </android.support.design.widget.CoordinatorLayout>
 
