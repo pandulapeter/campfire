@@ -14,7 +14,7 @@ sealed class UpdateType {
     // General
     object Unspecified : UpdateType()
 
-    class InitialUpdate(val repositoryClass: KClass<out Repository<*>>) : UpdateType()
+    class InitialUpdate(val repositoryClass: KClass<out Repository>) : UpdateType()
 
     // DownloadedSongRepository
     class DownloadedSongsUpdated(val donloadedSongIds: List<String>) : UpdateType()

@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.ioc
 import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.detail.page.SongPageFragment
 import com.pandulapeter.campfire.feature.home.HomeActivity
+import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.home.library.SongOptionsBottomSheetFragment
@@ -22,10 +23,7 @@ abstract class CampfireModule {
     abstract fun contributeLibraryFragment(): LibraryFragment
 
     @ContributesAndroidInjector
-    abstract fun contributeSongOptionsBottomSheetFragment(): SongOptionsBottomSheetFragment
-
-    @ContributesAndroidInjector
-    abstract fun contributeNewPlaylistDialogFragment(): NewPlaylistDialogFragment
+    abstract fun contributeCollectionsFragment(): CollectionsFragment
 
     @ContributesAndroidInjector
     abstract fun contributeHistoryFragment(): HistoryFragment
@@ -41,4 +39,10 @@ abstract class CampfireModule {
 
     @ContributesAndroidInjector
     abstract fun contributeSongPageFragment(): SongPageFragment
+
+    @ContributesAndroidInjector
+    abstract fun contributeSongOptionsBottomSheetFragment(): SongOptionsBottomSheetFragment
+
+    @ContributesAndroidInjector
+    abstract fun contributeNewPlaylistDialogFragment(): NewPlaylistDialogFragment
 }

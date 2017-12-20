@@ -24,6 +24,7 @@ class PreferenceStorageManager(context: Context) {
             preferences.getString(KEY_NAVIGATION_ITEM, VALUE_LIBRARY).let {
                 return when (it) {
                     VALUE_LIBRARY -> HomeViewModel.NavigationItem.Library
+                    VALUE_COLLECTIONS -> HomeViewModel.NavigationItem.Collections
                     VALUE_HISTORY -> HomeViewModel.NavigationItem.History
                     VALUE_SETTINGS -> HomeViewModel.NavigationItem.Settings
                     else -> HomeViewModel.NavigationItem.Playlist(Integer.parseInt(it.removePrefix(VALUE_PLAYLIST)))
@@ -33,6 +34,7 @@ class PreferenceStorageManager(context: Context) {
         set(value) {
             preferences.edit().putString(KEY_NAVIGATION_ITEM, when (value) {
                 HomeViewModel.NavigationItem.Library -> VALUE_LIBRARY
+                HomeViewModel.NavigationItem.Collections -> VALUE_COLLECTIONS
                 HomeViewModel.NavigationItem.History -> VALUE_HISTORY
                 HomeViewModel.NavigationItem.Settings -> VALUE_SETTINGS
                 is HomeViewModel.NavigationItem.Playlist -> VALUE_PLAYLIST + value.id
@@ -72,6 +74,7 @@ class PreferenceStorageManager(context: Context) {
     private companion object {
         private const val KEY_NAVIGATION_ITEM = "navigation_item"
         private const val VALUE_LIBRARY = "library"
+        private const val VALUE_COLLECTIONS = "collections"
         private const val VALUE_HISTORY = "history"
         private const val VALUE_SETTINGS = "settings"
         private const val VALUE_PLAYLIST = "playlist_"
