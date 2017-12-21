@@ -65,9 +65,24 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
         return viewHolder
     }
 
-    override fun onBindViewHolder(holder: SongInfoViewHolder?, position: Int) = Unit
+    override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int) = onBindViewHolder(holder, position, null)
 
     override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int, payloads: List<Any>?) {
+        if (payloads?.isNotEmpty() == true) {
+            payloads.forEach {
+                items[position].run {
+                    when (it) {
+                        DOWNLOADING_STARTED -> {
+                            isSongLoading = true
+                        }
+                        DOWNLOADING_FINISHED -> {
+                            isSongLoading = false
+                            isSongDownloaded = true
+                        }
+                    }
+                }
+            }
+        }
         holder.binding.viewModel = items[position]
         holder.binding.executePendingBindings()
     }
@@ -125,5 +140,10 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
             fun create(parent: ViewGroup): SongInfoViewHolder =
                 SongInfoViewHolder(DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_song_info, parent, false))
         }
+    }
+
+    companion object {
+        const val DOWNLOADING_STARTED = "downloadingStarted"
+        const val DOWNLOADING_FINISHED = "downloadingFinished"
     }
 }

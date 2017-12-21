@@ -7,11 +7,11 @@ import com.pandulapeter.campfire.data.model.SongInfo
  * Wraps all information that needs to appear on a single list item.
  */
 data class SongInfoViewModel(
-    val songInfo: SongInfo,
-    val isSongDownloaded: Boolean,
-    val isSongLoading: Boolean,
-    val isSongOnAnyPlaylist: Boolean,
-    val shouldShowDragHandle: Boolean,
-    val shouldShowPlaylistButton: Boolean,
-    val shouldShowDownloadButton: Boolean,
-    @StringRes val alertText: Int? = null)
+    var songInfo: SongInfo,
+    var isSongDownloaded: Boolean,
+    var isSongLoading: Boolean,
+    var isSongOnAnyPlaylist: Boolean,
+    var shouldShowDragHandle: Boolean,
+    var shouldShowPlaylistButton: Boolean,
+    var shouldShowDownloadButton: Boolean,
+    @StringRes var alertText: Int? = null)

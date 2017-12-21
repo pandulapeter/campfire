@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import com.pandulapeter.campfire.util.mapToLanguage
 import com.pandulapeter.campfire.util.onPropertyChanged
@@ -77,19 +78,30 @@ class LibraryViewModel(
     }
 
     override fun onUpdate(updateType: UpdateType) {
-        isLoading.set(songInfoRepository.isLoading)
-        languageRepository.getLanguages().let { languages ->
-            if (languages != languageFilters.get().keys.toList()) {
-                languageFilters.get().clear()
-                languages.forEach { language ->
-                    languageFilters.get().put(language, ObservableBoolean(languageRepository.isLanguageFilterEnabled(language)).apply {
-                        onPropertyChanged { languageRepository.setLanguageFilterEnabled(language, it) }
-                    })
+        when (updateType) {
+            is UpdateType.LoadingStateChanged -> isLoading.set(updateType.isLoading)
+            is UpdateType.InitialUpdate -> when (updateType.repositoryClass) {
+                LanguageRepository::class -> languageRepository.getLanguages().let { languages ->
+                    if (languages != languageFilters.get().keys.toList()) {
+                        languageFilters.get().clear()
+                        languages.forEach { language ->
+                            languageFilters.get().put(language, ObservableBoolean(languageRepository.isLanguageFilterEnabled(language)).apply {
+                                onPropertyChanged { languageRepository.setLanguageFilterEnabled(language, it) }
+                            })
+                        }
+                        languageFilters.notifyChange()
+                    }
                 }
-                languageFilters.notifyChange()
+                PlaylistRepository::class -> super.onUpdate(updateType)
             }
+            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOADING_STARTED) }
+            is UpdateType.DownloadFinished -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOADING_FINISHED) }
+            is UpdateType.LanguageFilterChanged,
+            is UpdateType.PlaylistsUpdated,
+            is UpdateType.LibraryCacheUpdated,
+            is UpdateType.DownloadedSongsUpdated -> super.onUpdate(updateType)
+            else -> super.onUpdate(updateType)
         }
-        super.onUpdate(updateType)
     }
 
     fun forceRefresh() = songInfoRepository.updateDataSet { shouldShowErrorSnackbar.set(true) }
