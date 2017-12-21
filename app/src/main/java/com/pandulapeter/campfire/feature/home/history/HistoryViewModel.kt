@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature.home.history
 
 import android.databinding.ObservableBoolean
-import android.support.annotation.StringRes
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository
@@ -26,6 +25,7 @@ class HistoryViewModel(
     private val historyRepository: HistoryRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
     val shouldShowClearButton = ObservableBoolean(historyRepository.getHistory().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
+    val shouldInvalidateItemDecorations = ObservableBoolean()
     private val Calendar.year get() = get(Calendar.YEAR)
     private val Calendar.month get() = get(Calendar.MONTH)
     private val Calendar.week get() = get(Calendar.WEEK_OF_YEAR)
@@ -56,13 +56,16 @@ class HistoryViewModel(
     override fun onUpdateDone(items: List<SongInfoViewModel>) {
         super.onUpdateDone(items)
         shouldShowClearButton.set(items.isNotEmpty())
+        shouldInvalidateItemDecorations.set(true)
     }
 
     fun isHeader(position: Int) = position == 0 || getHeaderTitle(position) != getHeaderTitle(position - 1)
 
-    @StringRes
     fun getHeaderTitle(position: Int): Int {
         val timestamp = historyRepository.getHistoryForSong(adapter.items[position].songInfo.id)?.timestamp ?: 0
+        if (timestamp == 0L) {
+            return 0
+        }
         val now = Calendar.getInstance()
         val then = Calendar.getInstance().apply { timeInMillis = timestamp }
         if (abs(now.timeInMillis - then.timeInMillis) < 30 * 60 * 1000) {
@@ -90,6 +93,7 @@ class HistoryViewModel(
         }
     }
 
+    //TODO: Removing the
     fun removeSongFromHistory(songId: String) = historyRepository.removeFromHistory(songId)
 
     fun onClearButtonClicked() = shouldShowConfirmationDialog.set(true)

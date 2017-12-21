@@ -52,12 +52,14 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
             }
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
+        // Fix a bug with updating the item decorations.
+        viewModel.shouldInvalidateItemDecorations.onEventTriggered { binding.recyclerView.invalidateItemDecorations() }
         context?.let { context ->
             // Set up the item headers.
             binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(context) {
                 override fun isHeader(position: Int) = position >= 0 && viewModel.isHeader(position)
 
-                override fun getHeaderTitle(position: Int) = if (position >= 0) getString(viewModel.getHeaderTitle(position)) else ""
+                override fun getHeaderTitle(position: Int) = if (position >= 0) viewModel.getHeaderTitle(position).let { if (it == 0) "" else getString(it) } else ""
             })
 
             // Set up list item click listeners.
