@@ -48,7 +48,7 @@ class HistoryViewModel(
         val timestamp = historyRepository.getHistoryForSong(adapter.items[position].songInfo.id)?.timestamp ?: 0
         val now = Calendar.getInstance()
         val then = Calendar.getInstance().apply { timeInMillis = timestamp }
-        if (abs(now.timeInMillis - then.timeInMillis) < 60 * 60 * 1000) {
+        if (abs(now.timeInMillis - then.timeInMillis) < 30 * 60 * 1000) {
             return R.string.history_now
         }
         if (now.year == then.year && now.month == then.month && now.day == then.day) {

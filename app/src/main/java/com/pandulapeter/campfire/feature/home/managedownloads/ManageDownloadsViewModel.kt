@@ -47,6 +47,10 @@ class ManageDownloadsViewModel(
         shouldShowDeleteAllButton.set(items.isNotEmpty())
     }
 
+    override fun shouldShowPlaylistButton() = false
+
+    override fun shouldAllowDownloadButton() = false
+
     fun onDeleteAllButtonClicked() = shouldShowConfirmationDialog.set(true)
 
     fun removeSongFromDownloads(songId: String) = downloadedSongRepository.removeSongFromDownloads(songId)

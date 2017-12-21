@@ -55,24 +55,28 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
             viewModel.adapter.itemClickListener = { position ->
                 startActivity(DetailActivity.getStartIntent(context = context, currentId = viewModel.adapter.items[position].songInfo.id, ids = getRelatedSongIds()))
             }
-            viewModel.adapter.itemPrimaryActionClickListener = { position ->
-                viewModel.adapter.items[position].let { songInfoViewModel ->
-                    if (!songInfoViewModel.shouldShowDragHandle) {
-                        val songId = songInfoViewModel.songInfo.id
-                        if (playlistRepository.getPlaylists().size == 1) {
-                            if (playlistRepository.isSongInPlaylist(Playlist.FAVORITES_ID, songId)) {
-                                playlistRepository.removeSongFromPlaylist(Playlist.FAVORITES_ID, songId)
+            if (viewModel.shouldShowPlaylistButton()) {
+                viewModel.adapter.itemPrimaryActionClickListener = { position ->
+                    viewModel.adapter.items[position].let { songInfoViewModel ->
+                        if (!songInfoViewModel.shouldShowDragHandle) {
+                            val songId = songInfoViewModel.songInfo.id
+                            if (playlistRepository.getPlaylists().size == 1) {
+                                if (playlistRepository.isSongInPlaylist(Playlist.FAVORITES_ID, songId)) {
+                                    playlistRepository.removeSongFromPlaylist(Playlist.FAVORITES_ID, songId)
+                                } else {
+                                    playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, songId)
+                                }
                             } else {
-                                playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, songId)
+                                SongOptionsBottomSheetFragment.show(childFragmentManager, songId)
                             }
-                        } else {
-                            SongOptionsBottomSheetFragment.show(childFragmentManager, songId)
                         }
                     }
                 }
             }
-            viewModel.adapter.itemDownloadActionClickListener = { position ->
-                viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }
+            if (viewModel.shouldAllowDownloadButton()) {
+                viewModel.adapter.itemDownloadActionClickListener = { position ->
+                    viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }
+                }
             }
         }
     }

@@ -36,6 +36,8 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
         async(UI) {
             onUpdateDone(async(CommonPool) {
                 val items = getAdapterItems()
+                val shouldShowPlaylistButton = shouldShowPlaylistButton()
+                val shouldAllowDownloadButton = shouldAllowDownloadButton()
                 val shouldShowDragHandle = shouldShowDragHandle(items.size)
                 items.map { songInfo ->
                     val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
@@ -46,9 +48,9 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                         isSongLoading = downloadedSongRepository.isSongLoading(songInfo.id),
                         isSongOnAnyPlaylist = playlistRepository.isSongInAnyPlaylist(songInfo.id),
                         shouldShowDragHandle = shouldShowDragHandle,
-                        shouldShowPlaylistButton = shouldShowPlaylistButton(),
-                        shouldShowDownloadButton = !shouldShowDragHandle && (!isDownloaded || isSongNew),
-                        alertText = if (isDownloaded) {
+                        shouldShowPlaylistButton = shouldShowPlaylistButton,
+                        shouldShowDownloadButton = shouldAllowDownloadButton && !shouldShowDragHandle && (!isDownloaded || isSongNew),
+                        alertText = if (!shouldAllowDownloadButton) null else if (isDownloaded) {
                             if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
                         } else {
                             if (isSongNew) R.string.library_new else null
@@ -68,7 +70,9 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
 
     protected open fun shouldShowDragHandle(itemCount: Int) = false
 
-    protected open fun shouldShowPlaylistButton() = true
+    open fun shouldShowPlaylistButton() = true
+
+    open fun shouldAllowDownloadButton() = true
 
     protected fun List<SongInfo>.filterWorkInProgress() = if (userPreferenceRepository.shouldHideWorkInProgress) filter { it.version ?: 0 >= 0 } else this
 

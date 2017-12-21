@@ -61,6 +61,7 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
         viewHolder.setItemPrimaryActionTouchListener(itemPrimaryActionTouchListener)
         viewHolder.setItemPrimaryActionClickListener(itemPrimaryActionClickListener)
         viewHolder.setItemDownloadActionClickListener(itemDownloadActionClickListener)
+        viewHolder.setOnLongClickListener(itemPrimaryActionClickListener ?: itemDownloadActionClickListener)
         return viewHolder
     }
 
@@ -95,28 +96,27 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
             }
         }
 
-        fun setItemPrimaryActionClickListener(itemClickListener: ((position: Int) -> Unit)?) {
-            if (itemClickListener != null) {
-                binding.root.setOnLongClickListener {
-                    if (adapterPosition != RecyclerView.NO_POSITION) {
-                        itemClickListener(adapterPosition)
-                        true
-                    } else false
-                }
-                binding.primaryAction.setOnClickListener {
-                    if (adapterPosition != RecyclerView.NO_POSITION) {
-                        itemClickListener(adapterPosition)
-                    }
+        fun setOnLongClickListener(itemClickListener: ((position: Int) -> Unit)?) = itemClickListener?.let {
+            binding.root.setOnLongClickListener {
+                if (adapterPosition != RecyclerView.NO_POSITION) {
+                    it(adapterPosition)
+                    true
+                } else false
+            }
+        }
+
+        fun setItemPrimaryActionClickListener(itemClickListener: ((position: Int) -> Unit)?) = itemClickListener?.let {
+            binding.primaryAction.setOnClickListener {
+                if (adapterPosition != RecyclerView.NO_POSITION) {
+                    itemClickListener(adapterPosition)
                 }
             }
         }
 
-        fun setItemDownloadActionClickListener(itemClickListener: ((position: Int) -> Unit)?) {
-            if (itemClickListener != null) {
-                binding.downloadAction.setOnClickListener {
-                    if (adapterPosition != RecyclerView.NO_POSITION) {
-                        itemClickListener(adapterPosition)
-                    }
+        fun setItemDownloadActionClickListener(itemClickListener: ((position: Int) -> Unit)?) = itemClickListener?.let {
+            binding.downloadAction.setOnClickListener {
+                if (adapterPosition != RecyclerView.NO_POSITION) {
+                    itemClickListener(adapterPosition)
                 }
             }
         }
