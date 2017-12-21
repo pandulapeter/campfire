@@ -10,7 +10,7 @@ import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.shared.CampfireActivity
 import com.pandulapeter.campfire.util.IntentExtraDelegate
-import com.pandulapeter.campfire.util.getStartIntent
+import com.pandulapeter.campfire.util.getIntentFor
 import javax.inject.Inject
 
 /**
@@ -47,9 +47,9 @@ class DetailActivity : CampfireActivity<DetailBinding, DetailViewModel>(R.layout
 
     companion object {
         private var Intent.currentId by IntentExtraDelegate.String("current_id")
-        private var Intent.ids by IntentExtraDelegate.StringArray("ids")
+        private var Intent.ids by IntentExtraDelegate.StringList("ids")
 
-        fun getStartIntent(context: Context, currentId: String, ids: List<String>?) = context.getStartIntent(DetailActivity::class) {
+        fun getStartIntent(context: Context, currentId: String, ids: List<String>?) = context.getIntentFor(DetailActivity::class) {
             it.currentId = currentId
             it.ids = ids ?: listOf(currentId)
         }

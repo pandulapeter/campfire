@@ -96,4 +96,4 @@ fun Fragment.setArguments(bundleOperations: (Bundle) -> Unit): Fragment {
     return this
 }
 
-fun Context.getStartIntent(activityClass: KClass<out Activity>, extraOperations: (Intent) -> Unit = {}) = Intent(this, activityClass.java).apply { extraOperations(this) }
+fun Context.getIntentFor(activityClass: KClass<out Activity>, extraOperations: (Intent) -> Unit = {}) = Intent(this, activityClass.java).apply { extraOperations(this) }

@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.data.storage
 
 import android.content.Context
-import android.content.SharedPreferences
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.feature.home.HomeViewModel
@@ -13,12 +12,12 @@ import kotlin.reflect.KProperty
  */
 class PreferenceStorageManager(context: Context) {
     private val preferences = context.applicationContext.getSharedPreferences("preference_storage", Context.MODE_PRIVATE)
-    var lastUpdateTimestamp by LongPreferenceDelegate(preferences, "last_update_timestamp", 0)
-    var isSortedByTitle by BooleanPreferenceDelegate(preferences, "is_sorted_by_title", true)
-    var shouldShowDownloadedOnly by BooleanPreferenceDelegate(preferences, "should_show_downloaded_only", false)
-    var shouldHideExplicit by BooleanPreferenceDelegate(preferences, "should_hide_explicit", true) //TODO: Add toggle in Settings.
-    var shouldHideWorkInProgress by BooleanPreferenceDelegate(preferences, "should_hide_work_in_progress", !BuildConfig.DEBUG)  //TODO: Add toggle in Settings.
-    var shouldShowSongCount by BooleanPreferenceDelegate(preferences, "should_show_song_count", BuildConfig.DEBUG) //TODO: Add toggle in Settings.
+    var lastUpdateTimestamp by PreferenceFieldDelegate.Long("last_update_timestamp")
+    var isSortedByTitle by PreferenceFieldDelegate.Boolean("is_sorted_by_title", true)
+    var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("should_show_downloaded_only")
+    var shouldHideExplicit by PreferenceFieldDelegate.Boolean("should_hide_explicit", true) //TODO: Add toggle in Settings.
+    var shouldHideWorkInProgress by PreferenceFieldDelegate.Boolean("should_hide_work_in_progress", !BuildConfig.DEBUG)  //TODO: Add toggle in Settings.
+    var shouldShowSongCount by PreferenceFieldDelegate.Boolean("should_show_song_count", BuildConfig.DEBUG) //TODO: Add toggle in Settings.
     var navigationItem: HomeViewModel.NavigationItem
         get() {
             preferences.getString(KEY_NAVIGATION_ITEM, VALUE_LIBRARY).let {
@@ -55,24 +54,21 @@ class PreferenceStorageManager(context: Context) {
         is Language.Unknown -> KEY_UNKNOWN_LANGUAGE_FILTER
     }, isEnabled).apply()
 
-    private class BooleanPreferenceDelegate(
-        private val sharedPreferences: SharedPreferences,
-        private val key: String,
-        private val defaultValue: Boolean) : ReadWriteProperty<Any, Boolean> {
+    private sealed class PreferenceFieldDelegate<T>(protected val key: String, protected val defaultValue: T) : ReadWriteProperty<PreferenceStorageManager, T> {
 
-        override fun getValue(thisRef: Any, property: KProperty<*>) = sharedPreferences.getBoolean(key, defaultValue)
+        class Boolean(key: String, defaultValue: kotlin.Boolean = false) : PreferenceFieldDelegate<kotlin.Boolean>(key, defaultValue) {
 
-        override fun setValue(thisRef: Any, property: KProperty<*>, value: Boolean) = sharedPreferences.edit().putBoolean(key, value).apply()
-    }
+            override fun getValue(thisRef: PreferenceStorageManager, property: KProperty<*>) = thisRef.preferences.getBoolean(key, defaultValue)
 
-    private class LongPreferenceDelegate(
-        private val sharedPreferences: SharedPreferences,
-        private val key: String,
-        private val defaultValue: Long) : ReadWriteProperty<Any, Long> {
+            override fun setValue(thisRef: PreferenceStorageManager, property: KProperty<*>, value: kotlin.Boolean) = thisRef.preferences.edit().putBoolean(key, value).apply()
+        }
 
-        override fun getValue(thisRef: Any, property: KProperty<*>) = sharedPreferences.getLong(key, defaultValue)
+        class Long(key: String, defaultValue: kotlin.Long = 0) : PreferenceFieldDelegate<kotlin.Long>(key, defaultValue) {
 
-        override fun setValue(thisRef: Any, property: KProperty<*>, value: Long) = sharedPreferences.edit().putLong(key, value).apply()
+            override fun getValue(thisRef: PreferenceStorageManager, property: KProperty<*>) = thisRef.preferences.getLong(key, defaultValue)
+
+            override fun setValue(thisRef: PreferenceStorageManager, property: KProperty<*>, value: kotlin.Long) = thisRef.preferences.edit().putLong(key, value).apply()
+        }
     }
 
     private companion object {

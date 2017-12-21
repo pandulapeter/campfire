@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.util
 
 import android.content.Intent
 import android.os.Bundle
-import java.util.ArrayList
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -59,12 +58,12 @@ sealed class IntentExtraDelegate<T>(protected val key: kotlin.String, protected 
         }
     }
 
-    class StringArray(key: kotlin.String, defaultValue: List<kotlin.String> = listOf()) : IntentExtraDelegate<List<kotlin.String>>(key, defaultValue) {
+    class StringList(key: kotlin.String, defaultValue: List<kotlin.String> = listOf()) : IntentExtraDelegate<List<kotlin.String>>(key, defaultValue) {
 
         override fun getValue(thisRef: Intent?, property: KProperty<*>) = thisRef?.getStringArrayListExtra(key) ?: defaultValue
 
         override fun setValue(thisRef: Intent?, property: KProperty<*>, value: List<kotlin.String>) {
-            thisRef?.putStringArrayListExtra(key, value as ArrayList<kotlin.String>)
+            thisRef?.putStringArrayListExtra(key, ArrayList(value))
         }
     }
 }
