@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.data.repository.shared
 
+import com.pandulapeter.campfire.data.model.History
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.model.SongInfo
@@ -24,7 +25,7 @@ sealed class UpdateType {
     class DownloadFinished(val songId: String) : UpdateType()
 
     // HistoryRepository
-    class HistoryUpdated(val historyIds: List<String>) : UpdateType()
+    class HistoryUpdated(val historyIds: List<History>) : UpdateType()
 
     // LanguageRepository
     class LanguageFilterChanged(val language: Language, val isEnabled: Boolean) : UpdateType()

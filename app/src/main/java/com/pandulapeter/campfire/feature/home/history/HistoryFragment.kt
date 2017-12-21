@@ -7,6 +7,7 @@ import android.view.View
 import com.pandulapeter.campfire.HistoryBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.HistoryRepository
+import com.pandulapeter.campfire.feature.home.library.HeaderItemDecoration
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
@@ -47,6 +48,15 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
             }
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
+        // Set up the item headers.
+        context?.let {
+            binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(it) {
+
+                override fun isHeader(position: Int) = position >= 0 && viewModel.isHeader(position)
+
+                override fun getHeaderTitle(position: Int) = if (position >= 0) getString(viewModel.getHeaderTitle(position)) else ""
+            })
+        }
     }
 
     override fun onStart() {

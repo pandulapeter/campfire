@@ -54,6 +54,16 @@
     <string name="history_clear_confirmation_message">This will remove all items from your history.</string>
     <string name="history_clear_confirmation_clear">Clear</string>
     <string name="history_clear_confirmation_cancel">Cancel</string>
+    <string name="history_now">Now</string>
+    <string name="history_today">Today</string>
+    <string name="history_yesterday">Yesterday</string>
+    <string name="history_this_week">This week</string>
+    <string name="history_last_week">Last week</string>
+    <string name="history_this_month">This month</string>
+    <string name="history_last_month">Last month</string>
+    <string name="history_this_year">This year</string>
+    <string name="history_last_year">Last year</string>
+    <string name="history_a_long_time_ago">A long time ago</string>
 
     <!-- Playlist screen -->
     <string name="playlist_edit">Edit</string>
