@@ -20,7 +20,6 @@ import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
-import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.util.dimension
 import dagger.android.support.DaggerAppCompatDialogFragment
@@ -30,7 +29,7 @@ import javax.inject.Inject
 /**
  * A bottom sheet that allows the user to set the positionSource of the avatar image (gallery or camera).
  */
-class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDialogFragment.OnDialogItemsSelectedListener, Subscriber {
+class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), Subscriber {
     @Inject lateinit var songInfoRepository: SongInfoRepository
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
@@ -49,13 +48,6 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
         songId = savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId
         dialog.setContentView(binding.root)
         binding.close.setOnClickListener { dismiss() }
-        binding.removeDownload.setOnClickListener {
-            AlertDialogFragment.show(childFragmentManager,
-                R.string.remove_download_confirmation_title,
-                R.string.remove_download_confirmation_message,
-                R.string.remove_download_confirmation_remove,
-                R.string.remove_download_confirmation_cancel)
-        }
         binding.newPlaylist.setOnClickListener { NewPlaylistDialogFragment.show(childFragmentManager) }
         behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
 
@@ -94,8 +86,6 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
         super.onSaveInstanceState(outState)
         outState.songId = songId
     }
-
-    override fun onPositiveButtonSelected() = invokeAndClose { downloadedSongRepository.removeSongFromDownloads(songId) }
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
@@ -163,11 +153,6 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), AlertDia
                 updateSlideState(if (behavior.state == BottomSheetBehavior.STATE_EXPANDED) 1f else 0f)
             }
         }
-    }
-
-    private fun invokeAndClose(action: () -> Unit) {
-        action()
-        behavior.state = BottomSheetBehavior.STATE_HIDDEN
     }
 
     companion object {
