@@ -16,5 +16,7 @@ class FileStorageManager(private val context: Context) {
 
     fun deleteDownloadedSongText(id: String) = async(CommonPool) { getFile(id).delete() }
 
+    fun getFileSize(id: String) = getFile(id).length()
+
     private fun getFile(id: String) = File(context.filesDir, "song_$id")
 }

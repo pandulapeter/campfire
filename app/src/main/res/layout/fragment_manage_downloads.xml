@@ -56,15 +56,16 @@
                         android:visibility="@{viewModel.shouldShowDeleteAllButton}"
                         app:srcCompat="@drawable/ic_delete_24dp" />
 
-                    <TextView
+                    <android.support.v7.widget.Toolbar
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
-                        android:layout_marginStart="@dimen/title_margin"
+                        android:layout_marginStart="40dp"
                         android:layout_toStartOf="@id/delete_all"
-                        android:text="@string/home_manage_downloads"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+                        app:subtitle="@{@string/manage_downloads_total_size(viewModel.totalFileSize)}"
+                        app:title="@string/home_manage_downloads"
+                        tools:subtitle="Total size: 16 MB" />
 
                 </RelativeLayout>
 

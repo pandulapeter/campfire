@@ -27,6 +27,14 @@ class DownloadedSongRepository(
     }
     private var downloadQueue = mutableListOf<String>()
 
+    fun getDownloadCacheSize(): Long {
+        var totalSizeInBytes = 0L
+        dataSet.keys.forEach {
+            totalSizeInBytes += fileStorageManager.getFileSize(it)
+        }
+        return totalSizeInBytes
+    }
+
     fun getDownloadedSongIds(): List<String> = dataSet.keys.toList()
 
     fun getDownloadedSong(id: String) = dataSet[id]

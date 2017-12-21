@@ -77,6 +77,7 @@
     <string name="playlist_drag_to_rearrange">Drag to rearrange</string>
 
     <!-- Manage downloads screen -->
+    <string name="manage_downloads_total_size">Total size: %s</string>
     <string name="manage_downloads_delete_all">Delete all</string>
     <string name="manage_downloads_delete_all_confirmation_title">Are you sure?</string>
     <string name="manage_downloads_delete_all_confirmation_message">This will remove all downloaded songs.</string>
