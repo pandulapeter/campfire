@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.shared
 import android.app.Dialog
 import android.os.Bundle
 import android.support.annotation.StringRes
+import android.support.v4.app.DialogFragment
 import android.support.v4.app.FragmentManager
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatDialogFragment
@@ -58,7 +59,7 @@ class AlertDialogFragment : AppCompatDialogFragment() {
                 it.message = message
                 it.positiveButton = positiveButton
                 it.negativeButton = negativeButton
-            }.run { (this as AppCompatDialogFragment).show(fragmentManager, tag) }
+            }.run { (this as DialogFragment).show(fragmentManager, tag) }
         }
     }
 }

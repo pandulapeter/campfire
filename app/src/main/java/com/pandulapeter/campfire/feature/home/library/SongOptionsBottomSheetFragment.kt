@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
 import android.support.design.widget.BottomSheetDialog
 import android.support.design.widget.CoordinatorLayout
+import android.support.v4.app.DialogFragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
@@ -158,7 +159,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), Subscrib
         private var Bundle?.songId by BundleArgumentDelegate.String("song_id")
 
         fun show(fragmentManager: FragmentManager, songId: String) {
-            SongOptionsBottomSheetFragment().setArguments { it.songId = songId }.run { show(fragmentManager, tag ?: "") }
+            SongOptionsBottomSheetFragment().setArguments { it.songId = songId }.run { (this as DialogFragment).show(fragmentManager, tag) }
         }
     }
 }
