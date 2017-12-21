@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.util.mapToLanguage
 import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.replaceSpecialCharacters
 import com.pandulapeter.campfire.util.toggle
 
 /**
@@ -81,12 +82,12 @@ class LibraryViewModel(
 
     fun isHeader(position: Int) = position == 0 ||
         if (isSortedByTitle.get()) {
-            adapter.items[position].songInfo.title.replaceSpecialCharacters()[0] != adapter.items[position - 1].songInfo.title.replaceSpecialCharacters()[0]
+            adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.artistWithSpecialCharactersRemoved[0]
         } else {
-            adapter.items[position].songInfo.artist.replaceSpecialCharacters()[0] != adapter.items[position - 1].songInfo.artist.replaceSpecialCharacters()[0]
+            adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.artistWithSpecialCharactersRemoved[0]
         }
 
-    fun getHeaderTitle(position: Int) = (if (isSortedByTitle.get()) adapter.items[position].songInfo.title.replaceSpecialCharacters()[0] else adapter.items[position].songInfo.artist.replaceSpecialCharacters()[0]).toString()
+    fun getHeaderTitle(position: Int) = (if (isSortedByTitle.get()) adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0] else adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0]).toString().toUpperCase()
 
     private fun List<SongInfo>.filterByLanguages() = filter { languageRepository.isLanguageFilterEnabled(it.language.mapToLanguage()) }
 
@@ -94,24 +95,10 @@ class LibraryViewModel(
 
     //TODO: Prioritize results that begin with the searchQuery.
     private fun List<SongInfo>.filterByQuery() = if (isSearchInputVisible.get()) {
-        val query = searchQuery.get().trim().replaceSpecialCharacters()
-        filter { it.title.replaceSpecialCharacters().contains(query, true) || it.artist.replaceSpecialCharacters().contains(query, true) }
+        searchQuery.get().trim().replaceSpecialCharacters().let { query ->
+            filter { it.artistWithSpecialCharactersRemoved.contains(query, true) || it.artistWithSpecialCharactersRemoved.contains(query, true) }
+        }
     } else this
 
-    private fun List<SongInfo>.sort() = sortedBy { if (isSortedByTitle.get()) it.title.replaceSpecialCharacters() else it.artist.replaceSpecialCharacters() }
-
-    private fun String.replaceSpecialCharacters() = this
-        .replace("á", "a", true)
-        .replace("ă", "a", true)
-        .replace("â", "a", true)
-        .replace("é", "e", true)
-        .replace("í", "i", true)
-        .replace("î", "i", true)
-        .replace("ó", "o", true)
-        .replace("ö", "o", true)
-        .replace("ő", "o", true)
-        .replace("ú", "u", true)
-        .replace("ș", "s", true)
-        .replace("ț", "t", true)
-        .replace("ű", "u", true)
+    private fun List<SongInfo>.sort() = sortedBy { if (isSortedByTitle.get()) it.artistWithSpecialCharactersRemoved else it.artistWithSpecialCharactersRemoved }
 }
