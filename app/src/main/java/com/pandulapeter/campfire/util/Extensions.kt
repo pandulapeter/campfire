@@ -1,6 +1,8 @@
 package com.pandulapeter.campfire.util
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.databinding.Observable
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
@@ -18,6 +20,7 @@ import com.pandulapeter.campfire.data.model.Language
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import kotlin.reflect.KClass
 
 
 fun Context.color(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
@@ -92,3 +95,5 @@ fun Fragment.setArguments(bundleOperations: (Bundle) -> Unit): Fragment {
     arguments = Bundle().apply { bundleOperations(this) }
     return this
 }
+
+fun Context.getStartIntent(activityClass: KClass<out Activity>, extraOperations: (Intent) -> Unit = {}) = Intent(this, activityClass.java).apply { extraOperations(this) }

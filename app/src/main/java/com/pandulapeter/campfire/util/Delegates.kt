@@ -1,34 +1,70 @@
 package com.pandulapeter.campfire.util
 
+import android.content.Intent
 import android.os.Bundle
+import java.util.ArrayList
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
+sealed class BundleArgumentDelegate<T>(protected val key: kotlin.String, protected val defaultValue: T) : ReadWriteProperty<Bundle?, T> {
 
-sealed class BundleArgumentDelegate(protected val key: kotlin.String) {
+    class Boolean(key: kotlin.String, defaultValue: kotlin.Boolean = false) : BundleArgumentDelegate<kotlin.Boolean>(key, defaultValue) {
 
-    class Boolean(key: kotlin.String) : BundleArgumentDelegate(key), ReadWriteProperty<Bundle?, kotlin.Boolean> {
-
-        override fun getValue(thisRef: Bundle?, property: KProperty<*>) = thisRef?.getBoolean(key) ?: false
+        override fun getValue(thisRef: Bundle?, property: KProperty<*>) = thisRef?.getBoolean(key, defaultValue) ?: defaultValue
 
         override fun setValue(thisRef: Bundle?, property: KProperty<*>, value: kotlin.Boolean) = thisRef?.putBoolean(key, value) ?: Unit
     }
 
-    class Int(key: kotlin.String) : BundleArgumentDelegate(key), ReadWriteProperty<Bundle?, kotlin.Int> {
+    class Int(key: kotlin.String, defaultValue: kotlin.Int = 0) : BundleArgumentDelegate<kotlin.Int>(key, defaultValue) {
 
-        override fun getValue(thisRef: Bundle?, property: KProperty<*>) = thisRef?.getInt(key) ?: 0
+        override fun getValue(thisRef: Bundle?, property: KProperty<*>) = thisRef?.getInt(key, defaultValue) ?: defaultValue
 
         override fun setValue(thisRef: Bundle?, property: KProperty<*>, value: kotlin.Int) = thisRef?.putInt(key, value) ?: Unit
     }
 
-    class String(key: kotlin.String) : BundleArgumentDelegate(key), ReadWriteProperty<Bundle?, kotlin.String> {
+    class String(key: kotlin.String, defaultValue: kotlin.String = "") : BundleArgumentDelegate<kotlin.String>(key, defaultValue) {
 
-        override fun getValue(thisRef: Bundle?, property: KProperty<*>) = thisRef?.getString(key) ?: ""
+        override fun getValue(thisRef: Bundle?, property: KProperty<*>) = thisRef?.getString(key, defaultValue) ?: defaultValue
 
         override fun setValue(thisRef: Bundle?, property: KProperty<*>, value: kotlin.String) = thisRef?.putString(key, value) ?: Unit
     }
 }
 
-sealed class IntentExtraDelegate(protected val key: kotlin.String) {
+sealed class IntentExtraDelegate<T>(protected val key: kotlin.String, protected val defaultValue: T) : ReadWriteProperty<Intent?, T> {
 
+    class Boolean(key: kotlin.String, defaultValue: kotlin.Boolean = false) : IntentExtraDelegate<kotlin.Boolean>(key, defaultValue) {
+
+        override fun getValue(thisRef: Intent?, property: KProperty<*>) = thisRef?.getBooleanExtra(key, defaultValue) ?: defaultValue
+
+        override fun setValue(thisRef: Intent?, property: KProperty<*>, value: kotlin.Boolean) {
+            thisRef?.putExtra(key, value)
+        }
+    }
+
+    class Int(key: kotlin.String, defaultValue: kotlin.Int = 0) : IntentExtraDelegate<kotlin.Int>(key, defaultValue) {
+
+        override fun getValue(thisRef: Intent?, property: KProperty<*>) = thisRef?.getIntExtra(key, defaultValue) ?: defaultValue
+
+        override fun setValue(thisRef: Intent?, property: KProperty<*>, value: kotlin.Int) {
+            thisRef?.putExtra(key, value)
+        }
+    }
+
+    class String(key: kotlin.String, defaultValue: kotlin.String = "") : IntentExtraDelegate<kotlin.String>(key, defaultValue) {
+
+        override fun getValue(thisRef: Intent?, property: KProperty<*>) = thisRef?.getStringExtra(key) ?: defaultValue
+
+        override fun setValue(thisRef: Intent?, property: KProperty<*>, value: kotlin.String) {
+            thisRef?.putExtra(key, value)
+        }
+    }
+
+    class StringArray(key: kotlin.String, defaultValue: List<kotlin.String> = listOf()) : IntentExtraDelegate<List<kotlin.String>>(key, defaultValue) {
+
+        override fun getValue(thisRef: Intent?, property: KProperty<*>) = thisRef?.getStringArrayListExtra(key) ?: defaultValue
+
+        override fun setValue(thisRef: Intent?, property: KProperty<*>, value: List<kotlin.String>) {
+            thisRef?.putStringArrayListExtra(key, value as ArrayList<kotlin.String>)
+        }
+    }
 }
