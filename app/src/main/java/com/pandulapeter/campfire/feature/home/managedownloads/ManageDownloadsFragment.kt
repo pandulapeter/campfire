@@ -6,6 +6,7 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.ManageDownloadsBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
@@ -19,7 +20,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageD
 
     override fun getRecyclerView() = binding.recyclerView
 
-    override fun createViewModel() = ManageDownloadsViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository)
+    override fun createViewModel() = ManageDownloadsViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -43,6 +44,12 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageD
             }
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
+        // Set up list item click listeners.
+        context?.let { context ->
+            viewModel.adapter.itemClickListener = { position ->
+                startActivity(DetailActivity.getStartIntent(context = context, currentId = viewModel.adapter.items[position].songInfo.id))
+            }
+        }
     }
 
     override fun onPositiveButtonSelected() = viewModel.deleteAllDownloads()

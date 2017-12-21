@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.home.library
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
@@ -12,6 +13,7 @@ import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import com.pandulapeter.campfire.util.mapToLanguage
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.replaceSpecialCharacters
@@ -25,8 +27,8 @@ class LibraryViewModel(
     userPreferenceRepository: UserPreferenceRepository,
     songInfoRepository: SongInfoRepository,
     downloadedSongRepository: DownloadedSongRepository,
-    playlistRepository: PlaylistRepository,
-    private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository) {
+    private val playlistRepository: PlaylistRepository,
+    private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.searchQuery.isNotEmpty())
     val searchQuery = ObservableField(userPreferenceRepository.searchQuery)
     val shouldShowViewOptions = ObservableBoolean(false)
@@ -45,7 +47,7 @@ class LibraryViewModel(
         isSortedByTitle.onPropertyChanged { userPreferenceRepository.isSortedByTitle = it }
     }
 
-    override fun getAdapterItems(): List<SongInfo> {
+    override fun getAdapterItems(): List<SongInfoViewModel> {
         val librarySongs = songInfoRepository.getLibrarySongs()
             .filterWorkInProgress()
             .filterExplicit()
@@ -55,7 +57,23 @@ class LibraryViewModel(
             .filterByQuery()
             .sort()
         filteredItemCount.set(if (filteredItems.size == librarySongs.size) "${filteredItems.size}" else "${filteredItems.size} / ${librarySongs.size}")
-        return filteredItems
+        return filteredItems.map { songInfo ->
+            val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
+            val isSongNew = false //TODO: Check if the song is new.
+            SongInfoViewModel(
+                songInfo = songInfo,
+                isSongDownloaded = isDownloaded,
+                isSongLoading = downloadedSongRepository.isSongLoading(songInfo.id),
+                isSongOnAnyPlaylist = playlistRepository.isSongInAnyPlaylist(songInfo.id),
+                shouldShowDragHandle = false,
+                shouldShowPlaylistButton = true,
+                shouldShowDownloadButton = !isDownloaded || isSongNew,
+                alertText = if (isDownloaded) {
+                    if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
+                } else {
+                    if (isSongNew) R.string.library_new else null
+                })
+        }
     }
 
     override fun onUpdate(updateType: UpdateType) {

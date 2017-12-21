@@ -3,7 +3,6 @@ package com.pandulapeter.campfire.feature.home.managedownloads
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
@@ -21,17 +20,27 @@ class ManageDownloadsViewModel(
     homeCallbacks: HomeFragment.HomeCallbacks?,
     userPreferenceRepository: UserPreferenceRepository,
     songInfoRepository: SongInfoRepository,
-    downloadedSongRepository: DownloadedSongRepository,
-    playlistRepository: PlaylistRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository) {
+    downloadedSongRepository: DownloadedSongRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
     val shouldShowDeleteAllButton = ObservableBoolean(downloadedSongRepository.getDownloadedSongIds().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val totalFileSize = ObservableField("")
 
-    //TODO: Find a meaningful way to sort these items.
     override fun getAdapterItems() = downloadedSongRepository.getDownloadedSongIds()
         .mapNotNull { songInfoRepository.getSongInfo(it) }
         .filterWorkInProgress() //TODO: Consider if we need to filter this out here as well.
         .filterExplicit() //TODO: Consider if we need to filter this out here as well.
+        .sortedBy { it.titleWithSpecialCharactersRemoved } //TODO: Find a more meaningful way to sort these items (maybe by size).
+        .map {
+            SongInfoViewModel(
+                songInfo = it,
+                isSongDownloaded = true,
+                isSongLoading = false,
+                isSongOnAnyPlaylist = false,
+                shouldShowDragHandle = false,
+                shouldShowPlaylistButton = false,
+                shouldShowDownloadButton = false,
+                alertText = null)
+        }
 
     override fun onUpdate(updateType: UpdateType) {
         super.onUpdate(updateType)
@@ -46,10 +55,6 @@ class ManageDownloadsViewModel(
         super.onUpdateDone(items)
         shouldShowDeleteAllButton.set(items.isNotEmpty())
     }
-
-    override fun shouldShowPlaylistButton() = false
-
-    override fun shouldAllowDownloadButton() = false
 
     fun onDeleteAllButtonClicked() = shouldShowConfirmationDialog.set(true)
 

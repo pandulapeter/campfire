@@ -8,7 +8,10 @@ import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.LanguageRepository
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
@@ -29,6 +32,7 @@ import javax.inject.Inject
  * Controlled by [LibraryViewModel].
  */
 class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library) {
+    @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var languageRepository: LanguageRepository
 
     override fun createViewModel() = LibraryViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository, languageRepository)
@@ -87,14 +91,31 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
                 .setAction(R.string.library_try_again, { viewModel.forceRefresh() })
                 .show()
         }
-        // Set up the item headers.
-        context?.let {
-            binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(it) {
+        context?.let { context ->
+            // Set up the item headers.
+            binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(context) {
 
                 override fun isHeader(position: Int) = position >= 0 && viewModel.isHeader(position)
 
                 override fun getHeaderTitle(position: Int) = if (position >= 0) viewModel.getHeaderTitle(position) else ""
             })
+            // Set up list item click listeners.
+            viewModel.adapter.itemClickListener = { position -> startActivity(DetailActivity.getStartIntent(context = context, currentId = viewModel.adapter.items[position].songInfo.id)) }
+            viewModel.adapter.itemPrimaryActionClickListener = { position ->
+                viewModel.adapter.items[position].let { songInfoViewModel ->
+                    val songId = songInfoViewModel.songInfo.id
+                    if (playlistRepository.getPlaylists().size == 1) {
+                        if (playlistRepository.isSongInPlaylist(Playlist.FAVORITES_ID, songId)) {
+                            playlistRepository.removeSongFromPlaylist(Playlist.FAVORITES_ID, songId)
+                        } else {
+                            playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, songId)
+                        }
+                    } else {
+                        SongOptionsBottomSheetFragment.show(childFragmentManager, songId)
+                    }
+                }
+            }
+            viewModel.adapter.itemDownloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) } }
         }
         // Set up view options toggle.
         viewModel.shouldShowViewOptions.onEventTriggered {
@@ -107,14 +128,12 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         super.onStart()
         playlistRepository.subscribe(viewModel)
         languageRepository.subscribe(viewModel)
-        downloadedSongRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
         playlistRepository.unsubscribe(viewModel)
         languageRepository.unsubscribe(viewModel)
-        downloadedSongRepository.unsubscribe(viewModel)
     }
 
     override fun onBackPressed(): Boolean {

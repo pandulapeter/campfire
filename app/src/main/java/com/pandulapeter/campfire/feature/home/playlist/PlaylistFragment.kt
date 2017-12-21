@@ -7,6 +7,8 @@ import android.view.View
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.HomeActivity
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
@@ -15,6 +17,7 @@ import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
+import javax.inject.Inject
 
 /**
  * Displays the list of all songs the user marked as favorite. All of these items are also downloads.
@@ -24,6 +27,7 @@ import com.pandulapeter.campfire.util.onPropertyChanged
  * Controlled by [PlaylistViewModel].
  */
 class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist), AlertDialogFragment.OnDialogItemsSelectedListener {
+    @Inject lateinit var playlistRepository: PlaylistRepository
 
     override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
 
@@ -67,7 +71,18 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
             }
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
-        // Setup list item click listeners.
+        // Set up list item click listeners.
+        context?.let { context ->
+            viewModel.adapter.itemClickListener = { position ->
+                startActivity(DetailActivity.getStartIntent(
+                    context = context,
+                    currentId = viewModel.adapter.items[position].songInfo.id,
+                    ids = viewModel.adapter.items.map { it.songInfo.id }))
+            }
+        }
+        viewModel.adapter.itemDownloadActionClickListener = { position ->
+            viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }
+        }
         viewModel.adapter.itemPrimaryActionTouchListener = { position ->
             if (viewModel.isInEditMode.get()) {
                 itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
@@ -78,13 +93,11 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
     override fun onStart() {
         super.onStart()
         playlistRepository.subscribe(viewModel)
-        downloadedSongRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
         playlistRepository.unsubscribe(viewModel)
-        downloadedSongRepository.unsubscribe(viewModel)
     }
 
     override fun onPositiveButtonSelected() {
@@ -92,7 +105,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         viewModel.deletePlaylist()
     }
 
-    override fun getRelatedSongIds() = viewModel.adapter.items.map { it.songInfo.id }
+//TODO    override fun getRelatedSongIds() = viewModel.adapter.items.map { it.songInfo.id }
 
     companion object {
         private const val PLAYLIST_ID = "playlist_id"

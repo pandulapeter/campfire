@@ -22,8 +22,8 @@ class HistoryViewModel(
     userPreferenceRepository: UserPreferenceRepository,
     songInfoRepository: SongInfoRepository,
     downloadedSongRepository: DownloadedSongRepository,
-    playlistRepository: PlaylistRepository,
-    private val historyRepository: HistoryRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository) {
+    private val playlistRepository: PlaylistRepository,
+    private val historyRepository: HistoryRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
     val shouldShowClearButton = ObservableBoolean(historyRepository.getHistory().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     private val Calendar.year get() = get(Calendar.YEAR)
@@ -35,6 +35,23 @@ class HistoryViewModel(
         .mapNotNull { songInfoRepository.getSongInfo(it.songId) }
         .filterWorkInProgress()
         .filterExplicit()
+        .map { songInfo ->
+            val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
+            val isSongNew = false //TODO: Check if the song is new.
+            SongInfoViewModel(
+                songInfo = songInfo,
+                isSongDownloaded = isDownloaded,
+                isSongLoading = downloadedSongRepository.isSongLoading(songInfo.id),
+                isSongOnAnyPlaylist = playlistRepository.isSongInAnyPlaylist(songInfo.id),
+                shouldShowDragHandle = false,
+                shouldShowPlaylistButton = true,
+                shouldShowDownloadButton = !isDownloaded || isSongNew,
+                alertText = if (isDownloaded) {
+                    if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
+                } else {
+                    if (isSongNew) R.string.library_new else null
+                })
+        }
 
     override fun onUpdateDone(items: List<SongInfoViewModel>) {
         super.onUpdateDone(items)

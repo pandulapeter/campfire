@@ -49,7 +49,7 @@ class DetailActivity : CampfireActivity<DetailBinding, DetailViewModel>(R.layout
         private var Intent.currentId by IntentExtraDelegate.String("current_id")
         private var Intent.ids by IntentExtraDelegate.StringList("ids")
 
-        fun getStartIntent(context: Context, currentId: String, ids: List<String>?) = context.getIntentFor(DetailActivity::class) {
+        fun getStartIntent(context: Context, currentId: String, ids: List<String>? = null) = context.getIntentFor(DetailActivity::class) {
             it.currentId = currentId
             it.ids = ids ?: listOf(currentId)
         }
