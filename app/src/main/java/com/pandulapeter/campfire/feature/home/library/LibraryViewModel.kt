@@ -94,13 +94,16 @@ class LibraryViewModel(
                 }
                 PlaylistRepository::class -> super.onUpdate(updateType)
             }
-            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOADING_STARTED) }
-            is UpdateType.DownloadFinished -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOADING_FINISHED) }
+            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_STARTED) }
+            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_SUCCESSFUL) }
+            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_FAILED) }
             is UpdateType.LanguageFilterChanged,
             is UpdateType.PlaylistsUpdated,
             is UpdateType.LibraryCacheUpdated,
-            is UpdateType.DownloadedSongsUpdated -> super.onUpdate(updateType)
-            else -> super.onUpdate(updateType)
+            is UpdateType.DownloadedSongsUpdated,
+            is UpdateType.IsSortedByTitleUpdated,
+            is UpdateType.ShouldShowDownloadedOnlyUpdated,
+            is UpdateType.SearchQueryUpdated -> super.onUpdate(updateType)
         }
     }
 

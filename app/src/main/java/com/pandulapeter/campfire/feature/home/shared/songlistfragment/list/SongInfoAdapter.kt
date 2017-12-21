@@ -73,13 +73,16 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
                 items[position].run {
                     if (!shouldShowDragHandle) {
                         when (it) {
-                            DOWNLOADING_STARTED -> {
+                            DOWNLOAD_STARTED -> {
                                 isSongLoading = true
                             }
-                            DOWNLOADING_FINISHED -> {
+                            DOWNLOAD_SUCCESSFUL -> {
                                 isSongLoading = false
                                 isSongDownloaded = true
                                 shouldShowDownloadButton = false
+                            }
+                            DOWNLOAD_FAILED -> {
+                                isSongLoading = false
                             }
                         }
                     }
@@ -146,7 +149,8 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
     }
 
     companion object {
-        const val DOWNLOADING_STARTED = "downloadingStarted"
-        const val DOWNLOADING_FINISHED = "downloadingFinished"
+        const val DOWNLOAD_STARTED = "downloadStarted"
+        const val DOWNLOAD_SUCCESSFUL = "downloadSuccessful"
+        const val DOWNLOAD_FAILED = "downloadFailed"
     }
 }

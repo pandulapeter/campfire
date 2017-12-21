@@ -70,14 +70,15 @@ class DownloadedSongRepository(
             onSuccess = {
                 downloadQueue.remove(songInfo.id)
                 fileStorageManager.saveDownloadedSongText(it.id, it.song)
+                notifySubscribers(UpdateType.DownloadSuccessful(songInfo.id))
+                //TODO: Re-assigning the dataSet value will trigger a DownloadedSongsUpdated update anyway :(
                 dataSet = dataSet.toMutableMap().apply { put(it.id, DownloadedSong(it.id, songInfo.version ?: 0)) }
                 onSuccess(it.song)
-                notifySubscribers(UpdateType.DownloadFinished(songInfo.id))
             },
             onFailure = {
+                notifySubscribers(UpdateType.DownloadFailed(songInfo.id))
                 downloadQueue.remove(songInfo.id)
                 onFailure()
-                notifySubscribers(UpdateType.DownloadFinished(songInfo.id))
             }
         )
     }

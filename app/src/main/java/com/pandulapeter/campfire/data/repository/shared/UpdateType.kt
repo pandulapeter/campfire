@@ -11,6 +11,7 @@ import kotlin.reflect.KClass
  * Represents all the possible [Repository] update events.
  */
 sealed class UpdateType {
+    //TODO : Even more granular update vents are needed.
 
     // General
     object Unspecified : UpdateType()
@@ -22,7 +23,9 @@ sealed class UpdateType {
 
     class DownloadStarted(val songId: String) : UpdateType()
 
-    class DownloadFinished(val songId: String) : UpdateType()
+    class DownloadSuccessful(val songId: String) : UpdateType()
+
+    class DownloadFailed(val songId: String) : UpdateType()
 
     // HistoryRepository
     class HistoryUpdated(val historyIds: List<History>) : UpdateType()
