@@ -21,7 +21,9 @@ import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.util.setArguments
 import dagger.android.support.DaggerAppCompatDialogFragment
 import javax.inject.Inject
 
@@ -50,13 +52,10 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), Subscrib
         binding.close.setOnClickListener { dismiss() }
         binding.newPlaylist.setOnClickListener { NewPlaylistDialogFragment.show(childFragmentManager) }
         behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-
             override fun onSlide(bottomSheet: View, slideOffset: Float) = updateSlideState(slideOffset)
 
             override fun onStateChanged(bottomSheet: View, newState: Int) {
-                if (newState == BottomSheetBehavior.STATE_HIDDEN) {
-                    dismiss()
-                }
+                if (newState == BottomSheetBehavior.STATE_HIDDEN) dismiss()
             }
         })
         binding.nestedScrollView.setOnScrollChangeListener { _: NestedScrollView?, _: Int, scrollY: Int, _: Int, _: Int ->
@@ -156,15 +155,10 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), Subscrib
     }
 
     companion object {
-        private const val SONG_ID = "song_id"
-        private var Bundle?.songId: String
-            get() = this?.getString(SONG_ID) ?: ""
-            set(value) {
-                this?.putString(SONG_ID, value)
-            }
+        private var Bundle?.songId by BundleArgumentDelegate.String("song_id")
 
         fun show(fragmentManager: FragmentManager, songId: String) {
-            SongOptionsBottomSheetFragment().apply { arguments = Bundle().apply { putString(SONG_ID, songId) } }.let { it.show(fragmentManager, it.tag) }
+            SongOptionsBottomSheetFragment().setArguments { it.songId = songId }.run { show(fragmentManager, tag ?: "") }
         }
     }
 }

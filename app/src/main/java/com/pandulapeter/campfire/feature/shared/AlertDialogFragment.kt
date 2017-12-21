@@ -6,6 +6,8 @@ import android.support.annotation.StringRes
 import android.support.v4.app.FragmentManager
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatDialogFragment
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.setArguments
 
 /**
  * Wrapper for [AlertDialog] with that handles state saving.
@@ -41,45 +43,22 @@ class AlertDialogFragment : AppCompatDialogFragment() {
     }
 
     companion object {
-        //TODO: Remove duplicated code using delegation.
-        private const val TITLE = "title"
-        private const val MESSAGE = "message"
-        private const val POSITIVE_BUTTON = "positiveButton"
-        private const val NEGATIVE_BUTTON = "negativeButton"
-        private var Bundle?.title
-            get() = this?.getInt(TITLE) ?: 0
-            set(value) {
-                this?.putInt(TITLE, value)
-            }
-        private var Bundle?.message
-            get() = this?.getInt(MESSAGE) ?: 0
-            set(value) {
-                this?.putInt(MESSAGE, value)
-            }
-        private var Bundle?.positiveButton
-            get() = this?.getInt(POSITIVE_BUTTON) ?: 0
-            set(value) {
-                this?.putInt(POSITIVE_BUTTON, value)
-            }
-        private var Bundle?.negativeButton
-            get() = this?.getInt(NEGATIVE_BUTTON) ?: 0
-            set(value) {
-                this?.putInt(NEGATIVE_BUTTON, value)
-            }
+        private var Bundle?.title by BundleArgumentDelegate.Int("title")
+        private var Bundle?.message by BundleArgumentDelegate.Int("message")
+        private var Bundle?.positiveButton by BundleArgumentDelegate.Int("positiveButton")
+        private var Bundle?.negativeButton by BundleArgumentDelegate.Int("negativeButton")
 
         fun show(fragmentManager: FragmentManager,
                  @StringRes title: Int,
                  @StringRes message: Int,
                  @StringRes positiveButton: Int,
                  @StringRes negativeButton: Int) {
-            AlertDialogFragment().apply {
-                arguments = Bundle().apply {
-                    this.title = title
-                    this.message = message
-                    this.positiveButton = positiveButton
-                    this.negativeButton = negativeButton
-                }
-            }.let { it.show(fragmentManager, it.tag) }
+            AlertDialogFragment().setArguments {
+                it.title = title
+                it.message = message
+                it.positiveButton = positiveButton
+                it.negativeButton = negativeButton
+            }.run { (this as AppCompatDialogFragment).show(fragmentManager, tag) }
         }
     }
 }

@@ -5,11 +5,13 @@ import android.databinding.Observable
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
+import android.os.Bundle
 import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
 import android.support.annotation.DrawableRes
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
+import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v7.content.res.AppCompatResources
 import com.pandulapeter.campfire.data.model.Language
@@ -84,4 +86,9 @@ fun String?.mapToLanguage() = when (this) {
 
 fun NavigationView.disableScrollbars() {
     (getChildAt(0) as? NavigationMenuView)?.isVerticalScrollBarEnabled = false
+}
+
+fun Fragment.setArguments(bundleOperations: (Bundle) -> Unit): Fragment {
+    arguments = Bundle().apply { bundleOperations(this) }
+    return this
 }
