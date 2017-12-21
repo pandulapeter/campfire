@@ -13,6 +13,8 @@ data class SongInfo(
     @SerializedName("language") val language: String? = null,
     @SerializedName("version") val version: Int? = 0,
     @SerializedName("isExplicit") val isExplicit: Boolean? = false) {
+    @delegate:Transient
     val titleWithSpecialCharactersRemoved by lazy { title.replaceSpecialCharacters() }
+    @delegate:Transient
     val artistWithSpecialCharactersRemoved by lazy { artist.replaceSpecialCharacters() }
 }

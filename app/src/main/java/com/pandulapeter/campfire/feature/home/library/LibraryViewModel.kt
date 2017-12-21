@@ -82,12 +82,12 @@ class LibraryViewModel(
 
     fun isHeader(position: Int) = position == 0 ||
         if (isSortedByTitle.get()) {
-            adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.artistWithSpecialCharactersRemoved[0]
+            adapter.items[position].songInfo.titleWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.titleWithSpecialCharactersRemoved[0]
         } else {
             adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.artistWithSpecialCharactersRemoved[0]
         }
 
-    fun getHeaderTitle(position: Int) = (if (isSortedByTitle.get()) adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0] else adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0]).toString().toUpperCase()
+    fun getHeaderTitle(position: Int) = (if (isSortedByTitle.get()) adapter.items[position].songInfo.titleWithSpecialCharactersRemoved[0] else adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0]).toString().toUpperCase()
 
     private fun List<SongInfo>.filterByLanguages() = filter { languageRepository.isLanguageFilterEnabled(it.language.mapToLanguage()) }
 
@@ -96,9 +96,9 @@ class LibraryViewModel(
     //TODO: Prioritize results that begin with the searchQuery.
     private fun List<SongInfo>.filterByQuery() = if (isSearchInputVisible.get()) {
         searchQuery.get().trim().replaceSpecialCharacters().let { query ->
-            filter { it.artistWithSpecialCharactersRemoved.contains(query, true) || it.artistWithSpecialCharactersRemoved.contains(query, true) }
+            filter { it.titleWithSpecialCharactersRemoved.contains(query, true) || it.artistWithSpecialCharactersRemoved.contains(query, true) }
         }
     } else this
 
-    private fun List<SongInfo>.sort() = sortedBy { if (isSortedByTitle.get()) it.artistWithSpecialCharactersRemoved else it.artistWithSpecialCharactersRemoved }
+    private fun List<SongInfo>.sort() = sortedBy { if (isSortedByTitle.get()) it.titleWithSpecialCharactersRemoved else it.artistWithSpecialCharactersRemoved }
 }
