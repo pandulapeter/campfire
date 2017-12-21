@@ -23,29 +23,29 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
     private var coroutine: CoroutineContext? = null
     var items = listOf<SongInfoViewModel>()
         set(newItems) {
-            if (field != newItems) {
-                if (field.isEmpty()) {
+            if (field.isEmpty()) {
+                if (newItems.isNotEmpty()) {
                     field = newItems
                     notifyDataSetChanged()
-                } else {
-                    coroutine?.cancel()
-                    coroutine = async(UI) {
-                        val oldItems = items
-                        async(CommonPool) {
-                            DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-                                override fun getOldListSize() = oldItems.size
+                }
+            } else {
+                coroutine?.cancel()
+                coroutine = async(UI) {
+                    val oldItems = items
+                    async(CommonPool) {
+                        DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+                            override fun getOldListSize() = oldItems.size
 
-                                override fun getNewListSize() = newItems.size
+                            override fun getNewListSize() = newItems.size
 
-                                override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int)
-                                    = oldItems[oldItemPosition].songInfo.id == newItems[newItemPosition].songInfo.id
+                            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int)
+                                = oldItems[oldItemPosition].songInfo.id == newItems[newItemPosition].songInfo.id
 
-                                override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int)
-                                    = oldItems[oldItemPosition] == newItems[newItemPosition]
-                            })
-                        }.await().dispatchUpdatesTo(this@SongInfoAdapter)
-                        field = newItems
-                    }
+                            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int)
+                                = oldItems[oldItemPosition] == newItems[newItemPosition]
+                        })
+                    }.await().dispatchUpdatesTo(this@SongInfoAdapter)
+                    field = newItems
                 }
             }
         }

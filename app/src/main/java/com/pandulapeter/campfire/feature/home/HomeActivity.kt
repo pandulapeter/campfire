@@ -42,7 +42,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
-    override val viewModel by lazy { HomeViewModel(userPreferenceRepository, downloadedSongRepository, playlistRepository) }
+    override val viewModel by lazy { HomeViewModel(downloadedSongRepository, playlistRepository, userPreferenceRepository) }
     private var coroutine: CoroutineContext? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {

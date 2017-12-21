@@ -14,11 +14,11 @@ import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 /**
  * Handles events and logic for [HomeActivity].
  */
-class HomeViewModel(private val userPreferenceRepository: UserPreferenceRepository,
-                    private val downloadedSongRepository: DownloadedSongRepository,
-                    private val playlistRepository: PlaylistRepository) : CampfireViewModel(), Subscriber {
-    val playlists = ObservableField<List<Playlist>>()
-    val hasDownloads = ObservableBoolean()
+class HomeViewModel(downloadedSongRepository: DownloadedSongRepository,
+                    playlistRepository: PlaylistRepository,
+                    private val userPreferenceRepository: UserPreferenceRepository) : CampfireViewModel(), Subscriber {
+    val playlists = ObservableField<List<Playlist>>(playlistRepository.getPlaylists())
+    val hasDownloads = ObservableBoolean(downloadedSongRepository.getDownloadedSongIds().isNotEmpty())
     var navigationItem: NavigationItem = userPreferenceRepository.navigationItem
         set(value) {
             field = value
@@ -26,8 +26,14 @@ class HomeViewModel(private val userPreferenceRepository: UserPreferenceReposito
         }
 
     override fun onUpdate(updateType: UpdateType) {
-        playlists.set(playlistRepository.getPlaylists())
-        hasDownloads.set(downloadedSongRepository.getDownloadedSongIds().isNotEmpty())
+        when (updateType) {
+            is UpdateType.InitialUpdate -> if (updateType.repositoryClass == PlaylistRepository::class) {
+                playlists.notifyChange()
+            }
+            is UpdateType.PlaylistsUpdated -> playlists.set(updateType.playlists)
+            is UpdateType.DownloadedSongsUpdated -> hasDownloads.set(updateType.donloadedSongIds.isNotEmpty())
+            is UpdateType.DownloadSuccessful -> hasDownloads.set(true)
+        }
     }
 
     /**
@@ -39,7 +45,7 @@ class HomeViewModel(private val userPreferenceRepository: UserPreferenceReposito
         object History : NavigationItem()
         object Settings : NavigationItem()
         class Playlist(@SerializedName("id") val id: Int) : NavigationItem()
-        object ManagePlaylists: NavigationItem()
-        object ManageDownloads: NavigationItem()
+        object ManagePlaylists : NavigationItem()
+        object ManageDownloads : NavigationItem()
     }
 }
