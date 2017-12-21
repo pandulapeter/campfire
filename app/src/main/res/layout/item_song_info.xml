@@ -42,7 +42,6 @@
                     android:visibility="@{viewModel.shouldShowDownloadButton}"
                     app:displayedChild="@{viewModel.isSongLoading ? 0 : 1}">
 
-                    <!--TODO: Fix Lint warnings. -->
                     <ProgressBar
                         android:layout_width="@dimen/loading_indicator_size"
                         android:layout_height="@dimen/loading_indicator_size"
