@@ -6,9 +6,9 @@ import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
-import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 
 /**
  * Handles events and logic for [HistoryFragment].
@@ -28,9 +28,9 @@ class HistoryViewModel(
         .filterWorkInProgress()
         .filterExplicit()
 
-    override fun onUpdate(updateType: UpdateType) {
-        super.onUpdate(updateType)
-        shouldShowClearButton.set(isAdapterNotEmpty)
+    override fun onUpdateDone(items: List<SongInfoViewModel>) {
+        super.onUpdateDone(items)
+        shouldShowClearButton.set(items.isNotEmpty())
     }
 
     fun removeSongFromHistory(songId: String) = historyRepository.removeFromHistory(songId)

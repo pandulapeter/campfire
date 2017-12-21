@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.shared.songlistfragment
 
+import android.support.annotation.CallSuper
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
@@ -12,6 +13,9 @@ import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragmentViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
 
 /**
  * Parent class for view models that display lists of songs.
@@ -24,36 +28,43 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                                  protected val downloadedSongRepository: DownloadedSongRepository,
                                  protected val playlistRepository: PlaylistRepository) : HomeFragmentViewModel(homeCallbacks), Subscriber {
     val adapter = SongInfoAdapter()
-    protected var isAdapterNotEmpty = false
 
     abstract fun getAdapterItems(): List<SongInfo>
 
+    @CallSuper
     override fun onUpdate(updateType: UpdateType) {
-        //TODO: Move to background thread.
-        val items = getAdapterItems()
-        val shouldShowDragHandle = shouldShowDragHandle(items.size)
-        adapter.items = items.map { songInfo ->
-            val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
-            val isUpdateAvailable = false //TODO: Check for updates.
-            SongInfoViewModel(
-                songInfo = songInfo,
-                isSongDownloaded = isDownloaded,
-                isSongLoading = downloadedSongRepository.isSongLoading(songInfo.id),
-                isSongOnAnyPlaylist = playlistRepository.isSongInAnyPlaylist(songInfo.id),
-                shouldShowDragHandle = shouldShowDragHandle,
-                shouldShowPlaylistButton = shouldShowPlaylistButton(),
-                shouldShowDownloadButton = !shouldShowDragHandle && (!isDownloaded || isUpdateAvailable),
-                alertText = if (isDownloaded) {
-                    if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
-                } else {
-                    if (isUpdateAvailable) R.string.library_new else null
-                })
+        async(UI) {
+            onUpdateDone(async(CommonPool) {
+                val items = getAdapterItems()
+                val shouldShowDragHandle = shouldShowDragHandle(items.size)
+                items.map { songInfo ->
+                    val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
+                    val isSongNew = false //TODO: Check if the song is new.
+                    SongInfoViewModel(
+                        songInfo = songInfo,
+                        isSongDownloaded = isDownloaded,
+                        isSongLoading = downloadedSongRepository.isSongLoading(songInfo.id),
+                        isSongOnAnyPlaylist = playlistRepository.isSongInAnyPlaylist(songInfo.id),
+                        shouldShowDragHandle = shouldShowDragHandle,
+                        shouldShowPlaylistButton = shouldShowPlaylistButton(),
+                        shouldShowDownloadButton = !shouldShowDragHandle && (!isDownloaded || isSongNew),
+                        alertText = if (isDownloaded) {
+                            if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
+                        } else {
+                            if (isSongNew) R.string.library_new else null
+                        })
+                }
+            }.await())
         }
-        isAdapterNotEmpty = items.isNotEmpty()
     }
 
     //TODO: Display snackbars on success / failure (with Retry action).
     fun downloadSong(songInfo: SongInfo) = downloadedSongRepository.downloadSong(songInfo)
+
+    @CallSuper
+    protected open fun onUpdateDone(items: List<SongInfoViewModel>) {
+        adapter.items = items
+    }
 
     protected open fun shouldShowDragHandle(itemCount: Int) = false
 

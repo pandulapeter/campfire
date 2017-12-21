@@ -63,11 +63,9 @@ class LibraryViewModel(
             if (languages != languageFilters.get().keys.toList()) {
                 languageFilters.get().clear()
                 languages.forEach { language ->
-                    languageFilters.get().put(
-                        language,
-                        ObservableBoolean(languageRepository.isLanguageFilterEnabled(language)).apply {
-                            onPropertyChanged { languageRepository.setLanguageFilterEnabled(language, it) }
-                        })
+                    languageFilters.get().put(language, ObservableBoolean(languageRepository.isLanguageFilterEnabled(language)).apply {
+                        onPropertyChanged { languageRepository.setLanguageFilterEnabled(language, it) }
+                    })
                 }
                 languageFilters.notifyChange()
             }
