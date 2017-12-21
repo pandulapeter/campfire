@@ -71,13 +71,16 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
         if (payloads?.isNotEmpty() == true) {
             payloads.forEach {
                 items[position].run {
-                    when (it) {
-                        DOWNLOADING_STARTED -> {
-                            isSongLoading = true
-                        }
-                        DOWNLOADING_FINISHED -> {
-                            isSongLoading = false
-                            isSongDownloaded = true
+                    if (!shouldShowDragHandle) {
+                        when (it) {
+                            DOWNLOADING_STARTED -> {
+                                isSongLoading = true
+                            }
+                            DOWNLOADING_FINISHED -> {
+                                isSongLoading = false
+                                isSongDownloaded = true
+                                shouldShowDownloadButton = false
+                            }
                         }
                     }
                 }
