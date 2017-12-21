@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/drawer_header_height"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/content_padding"
+    android:paddingEnd="@dimen/first_keyline"
+    android:paddingStart="@dimen/first_keyline"
+    android:paddingTop="@dimen/first_keyline"
     tools:context=".feature.home.HomeActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/first_keyline"
+        android:text="@string/campfire"
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        android:textColor="@color/accent" />
 
     <TextView
         android:id="@+id/version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="@dimen/content_padding"
-        android:layout_marginStart="@dimen/first_keyline"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         tools:text="v1.0.0" />
 
-    <TextView
-        android:id="@+id/title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/version"
-        android:layout_marginStart="@dimen/first_keyline"
-        android:text="@string/campfire"
-        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-        android:textColor="@color/accent" />
-
-</RelativeLayout>
+</LinearLayout>
