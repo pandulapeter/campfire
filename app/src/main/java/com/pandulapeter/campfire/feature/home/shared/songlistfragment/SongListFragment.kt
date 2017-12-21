@@ -14,6 +14,8 @@ import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.onEventTriggered
+import com.pandulapeter.campfire.util.showSnackbar
 import javax.inject.Inject
 
 /**
@@ -38,13 +40,24 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
                 layoutManager = LinearLayoutManager(context)
                 addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
                 addOnScrollListener(object : RecyclerView.OnScrollListener() {
-
                     override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
                         if (dy > 0) {
                             hideKeyboard(activity?.currentFocus)
                         }
                     }
                 })
+            }
+            // Display confirmation message if the download succeeds.
+            viewModel.shouldShowSongDownloadedSnackbar.onEventTriggered {
+                binding.root.showSnackbar(getString(R.string.song_item_song_downloaded, it))
+            }
+            // Display error snackbar with Retry action if the download fails.
+            viewModel.shouldShowDownloadErrorSnackbar.onEventTriggered {
+                it?.let { songInfo ->
+                    binding.root.showSnackbar(getString(R.string.song_item_song_download_failed, songInfo.title), R.string.song_item_try_again) {
+                        viewModel.downloadSong(songInfo)
+                    }
+                }
             }
         }
     }

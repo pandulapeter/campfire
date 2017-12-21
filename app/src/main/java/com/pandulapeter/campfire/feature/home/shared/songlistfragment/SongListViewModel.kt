@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.shared.songlistfragment
 
+import android.databinding.ObservableField
 import android.support.annotation.CallSuper
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
@@ -25,6 +26,8 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                                  protected val songInfoRepository: SongInfoRepository,
                                  protected val downloadedSongRepository: DownloadedSongRepository) : HomeFragmentViewModel(homeCallbacks), Subscriber {
     val adapter = SongInfoAdapter()
+    val shouldShowSongDownloadedSnackbar = ObservableField<String?>()
+    val shouldShowDownloadErrorSnackbar = ObservableField<SongInfo?>()
 
     abstract fun getAdapterItems(): List<SongInfoViewModel>
 
@@ -33,8 +36,10 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
         async(UI) { onUpdateDone(async(CommonPool) { getAdapterItems() }.await()) }
     }
 
-    //TODO: Display snackbars on success / failure (with Retry action).
-    fun downloadSong(songInfo: SongInfo) = downloadedSongRepository.downloadSong(songInfo)
+    fun downloadSong(songInfo: SongInfo) = downloadedSongRepository.downloadSong(
+        songInfo = songInfo,
+        onSuccess = { shouldShowSongDownloadedSnackbar.set(songInfo.title) },
+        onFailure = { shouldShowDownloadErrorSnackbar.set(songInfo) })
 
     @CallSuper
     protected open fun onUpdateDone(items: List<SongInfoViewModel>) {
