@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.shared.CampfireActivity
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
@@ -158,7 +159,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                 viewModel.navigationItem = navigationItem
                 currentFragment?.let {
                     it.outAnimation = AnimationUtils.loadAnimation(this@HomeActivity, android.R.anim.fade_out)
-                    nextFragment.inAnimation = AnimationUtils.loadAnimation(this@HomeActivity, android.R.anim.fade_in)
+                    (nextFragment as CampfireFragment<*, *>).inAnimation = AnimationUtils.loadAnimation(this@HomeActivity, android.R.anim.fade_in)
                 }
                 supportFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commit()
             }
