@@ -80,9 +80,16 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
                                 isSongLoading = false
                                 isSongDownloaded = true
                                 shouldShowDownloadButton = false
+                                alertText = null
                             }
                             DOWNLOAD_FAILED -> {
                                 isSongLoading = false
+                            }
+                            EDIT_MODE_OPEN -> {
+                                shouldShowDragHandle = true
+                            }
+                            EDIT_MODE_CLOSE -> {
+                                shouldShowDragHandle = false
                             }
                         }
                     }
@@ -152,5 +159,7 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
         const val DOWNLOAD_STARTED = "downloadStarted"
         const val DOWNLOAD_SUCCESSFUL = "downloadSuccessful"
         const val DOWNLOAD_FAILED = "downloadFailed"
+        const val EDIT_MODE_OPEN = "editModeOpen"
+        const val EDIT_MODE_CLOSE = "editModeClose"
     }
 }

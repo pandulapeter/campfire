@@ -6,17 +6,18 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.HomeActivity
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.setArguments
 import javax.inject.Inject
 
 /**
@@ -105,13 +106,9 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         viewModel.deletePlaylist()
     }
 
-//TODO    override fun getRelatedSongIds() = viewModel.adapter.items.map { it.songInfo.id }
-
     companion object {
-        private const val PLAYLIST_ID = "playlist_id"
-        private val Bundle?.playlistId
-            get() = this?.getInt(PLAYLIST_ID) ?: Playlist.FAVORITES_ID
+        private var Bundle?.playlistId by BundleArgumentDelegate.Int("playlist_id")
 
-        fun newInstance(playlistId: Int) = PlaylistFragment().apply { arguments = Bundle().apply { putInt(PLAYLIST_ID, playlistId) } }
+        fun newInstance(playlistId: Int) = PlaylistFragment().setArguments { it.playlistId = playlistId }
     }
 }

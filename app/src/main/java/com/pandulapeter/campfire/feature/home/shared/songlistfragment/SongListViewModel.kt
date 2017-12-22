@@ -33,7 +33,7 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
 
     @CallSuper
     override fun onUpdate(updateType: UpdateType) {
-        async(UI) { onUpdateDone(async(CommonPool) { getAdapterItems() }.await()) }
+        async(UI) { onUpdateDone(async(CommonPool) { getAdapterItems() }.await(), updateType) }
     }
 
     fun downloadSong(songInfo: SongInfo) = downloadedSongRepository.downloadSong(
@@ -42,7 +42,7 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
         onFailure = { shouldShowDownloadErrorSnackbar.set(songInfo) })
 
     @CallSuper
-    protected open fun onUpdateDone(items: List<SongInfoViewModel>) {
+    protected open fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         adapter.items = items
     }
 
