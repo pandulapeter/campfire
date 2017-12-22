@@ -5,23 +5,13 @@ import com.pandulapeter.campfire.data.repository.shared.Repository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.data.storage.DataStorageManager
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.async
 import kotlin.properties.Delegates
-import kotlin.reflect.KProperty
 
 /**
  * Wraps caching and updating of [Playlist] objects.
  */
 class PlaylistRepository(private val dataStorageManager: DataStorageManager) : Repository() {
-    private var dataSet by Delegates.observable(dataStorageManager.playlists) { _: KProperty<*>, old: Map<String, Playlist>, new: Map<String, Playlist> ->
-        async(CommonPool) {
-            if (old != new) {
-                //TODO: If only a single line has been changed, we should not rewrite the entire map.
-                dataStorageManager.playlists = new
-            }
-        }
-    }
+    private var dataSet by Delegates.observable(dataStorageManager.playlists) { _, _, new -> dataStorageManager.playlists = new }
 
     init {
         if (!dataSet.keys.contains(Playlist.FAVORITES_ID.toString())) {

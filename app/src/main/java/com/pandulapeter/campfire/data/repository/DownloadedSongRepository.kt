@@ -14,7 +14,6 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlin.properties.Delegates
-import kotlin.reflect.KProperty
 
 /**
  * Wraps caching and updating of [DownloadedSong] objects.
@@ -23,14 +22,7 @@ class DownloadedSongRepository(
     private val dataStorageManager: DataStorageManager,
     private val fileStorageManager: FileStorageManager,
     private val networkManager: NetworkManager) : Repository() {
-    private var dataSet by Delegates.observable(dataStorageManager.downloadedSongCache) { _: KProperty<*>, old: Map<String, DownloadedSong>, new: Map<String, DownloadedSong> ->
-        async(CommonPool) {
-            if (old != new) {
-                //TODO: If only a single line has been changed, we should not rewrite the entire map.
-                dataStorageManager.downloadedSongCache = new
-            }
-        }
-    }
+    private var dataSet by Delegates.observable(dataStorageManager.downloadedSongCache) { _, _, new -> dataStorageManager.downloadedSongCache = new }
     private val downloadQueue = mutableListOf<String>()
 
     override fun subscribe(subscriber: Subscriber) {

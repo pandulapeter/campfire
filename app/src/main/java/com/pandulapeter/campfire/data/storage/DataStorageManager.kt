@@ -9,6 +9,8 @@ import com.pandulapeter.campfire.data.model.DownloadedSong
 import com.pandulapeter.campfire.data.model.History
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.model.SongInfo
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -48,10 +50,17 @@ class DataStorageManager(context: Context, gson: Gson) {
         }
 
         override fun setValue(thisRef: Any, property: KProperty<*>, value: Map<String, T>) {
-            //TODO: This code does not clean up after itself: once an ID is removed, the corresponding entry is still stored in the file.
-            ids = value.keys.toList()
-            value.keys.forEach { id ->
-                sharedPreferences.edit().putString(valueKeyPrefix + id, gson.toJson(value[id])).apply()
+            async {
+                if (async(CommonPool) {
+                    getValue(thisRef, property) != value
+                }.await()) {
+                    //TODO: If only a single line has been changed, we should not rewrite the entire map.
+                    //TODO: This code does not clean up after itself: once an ID is removed, the corresponding entry is still stored in the file.
+                    ids = value.keys.toList()
+                    value.keys.forEach { id ->
+                        sharedPreferences.edit().putString(valueKeyPrefix + id, gson.toJson(value[id])).apply()
+                    }
+                }
             }
         }
 

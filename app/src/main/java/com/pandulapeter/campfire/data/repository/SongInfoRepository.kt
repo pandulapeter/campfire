@@ -20,12 +20,9 @@ class SongInfoRepository(
     private val dataStorageManager: DataStorageManager,
     private val networkManager: NetworkManager,
     private val languageRepository: LanguageRepository) : Repository() {
-    private var dataSet by Delegates.observable(dataStorageManager.songInfoCache) { _: KProperty<*>, old: Map<String, SongInfo>, new: Map<String, SongInfo> ->
-        if (old != new) {
-            languageRepository.updateLanguages(getLibrarySongs())
-            //TODO: If only a single line has been changed, we should not rewrite the entire map.
-            dataStorageManager.songInfoCache = new
-        }
+    private var dataSet by Delegates.observable(dataStorageManager.songInfoCache) { _, _, new ->
+        languageRepository.updateLanguages(getLibrarySongs())
+        dataStorageManager.songInfoCache = new
     }
     var isLoading by Delegates.observable(false) { _: KProperty<*>, old: Boolean, new: Boolean -> if (old != new) notifySubscribers(UpdateType.LoadingStateChanged(new)) }
 
