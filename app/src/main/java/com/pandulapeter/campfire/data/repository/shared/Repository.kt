@@ -1,16 +1,18 @@
 package com.pandulapeter.campfire.data.repository.shared
 
+import android.support.annotation.CallSuper
+
 /**
  * Base class for all repositories that handles the subscription management.
  */
 abstract class Repository {
     private var subscribers = mutableSetOf<Subscriber>()
 
-    fun subscribe(subscriber: Subscriber) {
+    @CallSuper
+    open fun subscribe(subscriber: Subscriber) {
         if (!subscribers.contains(subscriber)) {
             subscribers.add(subscriber)
         }
-        subscriber.onUpdate(UpdateType.InitialUpdate(this::class))
     }
 
     fun unsubscribe(subscriber: Subscriber) {

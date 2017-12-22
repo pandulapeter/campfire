@@ -4,6 +4,7 @@ import com.pandulapeter.campfire.data.model.SongInfo
 
 import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.data.storage.DataStorageManager
 import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
@@ -22,7 +23,6 @@ class SongInfoRepository(
     private var dataSet by Delegates.observable(dataStorageManager.songInfoCache) { _: KProperty<*>, old: Map<String, SongInfo>, new: Map<String, SongInfo> ->
         if (old != new) {
             languageRepository.updateLanguages(getLibrarySongs())
-            notifySubscribers((UpdateType.LibraryCacheUpdated(getLibrarySongs())))
             //TODO: If only a single line has been changed, we should not rewrite the entire map.
             dataStorageManager.songInfoCache = new
         }
@@ -36,6 +36,12 @@ class SongInfoRepository(
         languageRepository.updateLanguages(getLibrarySongs())
     }
 
+    override fun subscribe(subscriber: Subscriber) {
+        super.subscribe(subscriber)
+        subscriber.onUpdate(UpdateType.LibraryCacheUpdated(getLibrarySongs()))
+        subscriber.onUpdate(UpdateType.LoadingStateChanged(isLoading))
+    }
+
     fun getLibrarySongs(): List<SongInfo> = dataSet.values.toList()
 
     fun getSongInfo(id: String) = dataSet[id]
@@ -47,6 +53,7 @@ class SongInfoRepository(
                 isLoading = false
                 dataSet = it.associateBy { it.id }
                 preferenceStorageManager.lastUpdateTimestamp = System.currentTimeMillis()
+                notifySubscribers(UpdateType.LibraryCacheUpdated(getLibrarySongs()))
             },
             onFailure = {
                 isLoading = false

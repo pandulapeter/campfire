@@ -23,7 +23,7 @@ class HistoryViewModel(
     downloadedSongRepository: DownloadedSongRepository,
     private val playlistRepository: PlaylistRepository,
     private val historyRepository: HistoryRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
-    val shouldShowClearButton = ObservableBoolean(historyRepository.getHistory().isNotEmpty())
+    val shouldShowClearButton = ObservableBoolean(historyRepository.getHistoryItems().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldInvalidateItemDecorations = ObservableBoolean()
     private val Calendar.year get() = get(Calendar.YEAR)
@@ -31,7 +31,7 @@ class HistoryViewModel(
     private val Calendar.week get() = get(Calendar.WEEK_OF_YEAR)
     private val Calendar.day get() = get(Calendar.DAY_OF_YEAR)
 
-    override fun getAdapterItems() = historyRepository.getHistory()
+    override fun getAdapterItems() = historyRepository.getHistoryItems()
         .mapNotNull { songInfoRepository.getSongInfo(it.songId) }
         .filterWorkInProgress()
         .filterExplicit()

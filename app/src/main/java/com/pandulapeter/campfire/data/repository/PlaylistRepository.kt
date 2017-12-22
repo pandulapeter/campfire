@@ -2,22 +2,24 @@ package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.data.storage.DataStorageManager
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
 /**
  * Wraps caching and updating of [Playlist] objects.
  */
-class PlaylistRepository(private val dataStorageManager: DataStorageManager,
-                         private val downloadedSongRepository: DownloadedSongRepository) : Repository() {
+class PlaylistRepository(private val dataStorageManager: DataStorageManager) : Repository() {
     private var dataSet by Delegates.observable(dataStorageManager.playlists) { _: KProperty<*>, old: Map<String, Playlist>, new: Map<String, Playlist> ->
-        if (old != new) {
-            notifySubscribers(UpdateType.PlaylistsUpdated(getPlaylists()))
-            //TODO: If only a single line has been changed, we should not rewrite the entire map.
-            //TODO: If only a single line has been changed, send a more specific notify event.
-            dataStorageManager.playlists = new
+        async(CommonPool) {
+            if (old != new) {
+                //TODO: If only a single line has been changed, we should not rewrite the entire map.
+                dataStorageManager.playlists = new
+            }
         }
     }
 
@@ -27,21 +29,18 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
         }
     }
 
+    override fun subscribe(subscriber: Subscriber) {
+        super.subscribe(subscriber)
+        subscriber.onUpdate(UpdateType.PlaylistsUpdated(getPlaylists()))
+    }
+
     fun getPlaylists(): List<Playlist> = dataSet.values.toList()
 
     fun getPlaylist(playlistId: Int) = dataSet[playlistId.toString()]
 
     fun getPlaylistSongIds(playlistId: Int) = dataSet[playlistId.toString()]?.songIds ?: listOf()
 
-    fun newPlaylist(title: String) {
-        var id = Playlist.FAVORITES_ID
-        while (dataSet.containsKey(id.toString())) {
-            id++
-        }
-        dataSet = dataSet.toMutableMap().apply { put(id.toString(), Playlist(id, title)) }
-    }
-
-    fun isSongInPlaylist(playlistId: Int, songId: String) = getPlaylist(playlistId)?.songIds?.contains(songId) == true
+    fun isSongInPlaylist(playlistId: Int, songId: String) = getPlaylistSongIds(playlistId).contains(songId)
 
     fun isSongInAnyPlaylist(songId: String): Boolean {
         getPlaylists().forEach {
@@ -52,39 +51,21 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
         return false
     }
 
-    fun addSongToPlaylist(playlistId: Int, songId: String, position: Int? = null) {
-        if (!isSongInPlaylist(playlistId, songId)) {
-            dataSet = dataSet.toMutableMap().apply {
-                getPlaylist(playlistId)?.let {
-                    put(playlistId.toString(), Playlist(playlistId, it.title, it.songIds.toMutableList().apply { if (!contains(songId)) if (position == null) add(songId) else add(position, songId) }))
-                }
-            }
+    fun createNewPlaylist(title: String) {
+        var id = Playlist.FAVORITES_ID
+        while (dataSet.containsKey(id.toString())) {
+            id++
         }
-    }
-
-    fun removeSongFromPlaylist(playlistId: Int, songId: String) {
-        if (isSongInPlaylist(playlistId, songId)) {
-            dataSet = dataSet.toMutableMap().apply {
-                getPlaylist(playlistId)?.let {
-                    put(playlistId.toString(), Playlist(playlistId, it.title, it.songIds.toMutableList().apply { remove(songId) }))
-                }
-            }
-        }
-    }
-
-    fun renamePlaylist(playlistId: Int, title: String) {
-        if (playlistId != Playlist.FAVORITES_ID) {
-            dataSet = dataSet.toMutableMap().apply {
-                getPlaylist(playlistId)?.songIds?.let {
-                    put(playlistId.toString(), Playlist(playlistId, title, it))
-                }
-            }
-        }
+        val playlist = Playlist(id, title)
+        dataSet = dataSet.toMutableMap().apply { put(id.toString(), playlist) }
+        notifySubscribers(UpdateType.NewPlaylistsCreated(playlist))
     }
 
     fun deletePlaylist(playlistId: Int) {
         if (playlistId != Playlist.FAVORITES_ID && dataSet.containsKey(playlistId.toString())) {
+            val position = getPlaylists().indexOfFirst { it.id == playlistId }
             dataSet = dataSet.toMutableMap().apply { remove(playlistId.toString()) }
+            notifySubscribers(UpdateType.PlaylistDeleted(playlistId, position))
         }
     }
 
@@ -96,6 +77,42 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager,
                     addAll(songIds)
                 }))
             }
+        }
+        notifySubscribers(UpdateType.PlaylistSongOrderUpdated(playlistId, songIds))
+    }
+
+    fun addSongToPlaylist(playlistId: Int, songId: String, position: Int? = null) {
+        if (!isSongInPlaylist(playlistId, songId)) {
+            dataSet = dataSet.toMutableMap().apply {
+                getPlaylist(playlistId)?.let {
+                    put(playlistId.toString(), Playlist(playlistId, it.title, it.songIds.toMutableList().apply { if (!contains(songId)) if (position == null) add(songId) else add(position, songId) }))
+                }
+            }
+            notifySubscribers(UpdateType.SongAddedToPlaylist(playlistId, songId, position ?: dataSet.values.size - 1))
+        }
+    }
+
+    fun removeSongFromPlaylist(playlistId: Int, songId: String) {
+        if (isSongInPlaylist(playlistId, songId)) {
+            val songIds = getPlaylistSongIds(playlistId)
+            val position = songIds.indexOf(songId)
+            dataSet = dataSet.toMutableMap().apply {
+                getPlaylist(playlistId)?.let {
+                    put(playlistId.toString(), Playlist(playlistId, it.title, songIds.toMutableList().apply { removeAt(position) }))
+                }
+            }
+            notifySubscribers(UpdateType.SongRemovedFromPlaylist(playlistId, position))
+        }
+    }
+
+    fun renamePlaylist(playlistId: Int, title: String) {
+        if (playlistId != Playlist.FAVORITES_ID) {
+            dataSet = dataSet.toMutableMap().apply {
+                getPlaylist(playlistId)?.songIds?.let {
+                    put(playlistId.toString(), Playlist(playlistId, title, it))
+                }
+            }
+            notifySubscribers(UpdateType.PlaylistRenamed(playlistId, title))
         }
     }
 }

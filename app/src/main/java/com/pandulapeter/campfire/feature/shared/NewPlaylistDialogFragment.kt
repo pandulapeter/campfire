@@ -21,7 +21,7 @@ class NewPlaylistDialogFragment : DaggerAppCompatDialogFragment() {
             .setTitle("Work in progress")
             .setMessage("Add new playlist?")
             .setPositiveButton("OK", { _, _ ->
-                playlistRepository.newPlaylist("Random ${System.currentTimeMillis()}")
+                playlistRepository.createNewPlaylist("Random ${System.currentTimeMillis()}")
             })
             .setNegativeButton("Cancel", null)
             .create()

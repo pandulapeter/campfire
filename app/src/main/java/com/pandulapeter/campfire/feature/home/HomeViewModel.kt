@@ -31,7 +31,7 @@ class HomeViewModel(downloadedSongRepository: DownloadedSongRepository,
                 playlists.notifyChange()
             }
             is UpdateType.PlaylistsUpdated -> playlists.set(updateType.playlists)
-            is UpdateType.DownloadedSongsUpdated -> hasDownloads.set(updateType.donloadedSongIds.isNotEmpty())
+            is UpdateType.DownloadedSongsUpdated -> hasDownloads.set(updateType.downloadedSongIds.isNotEmpty())
             is UpdateType.DownloadSuccessful -> hasDownloads.set(true)
         }
     }

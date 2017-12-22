@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.data.repository
 
 import android.text.TextUtils
 import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
 import com.pandulapeter.campfire.feature.home.HomeViewModel
@@ -53,5 +54,16 @@ class UserPreferenceRepository(
         if (!TextUtils.equals(old, new)) {
             notifySubscribers(UpdateType.SearchQueryUpdated(new))
         }
+    }
+
+    override fun subscribe(subscriber: Subscriber) {
+        super.subscribe(subscriber)
+        subscriber.onUpdate(UpdateType.NavigationItemUpdated(navigationItem))
+        subscriber.onUpdate(UpdateType.IsSortedByTitleUpdated(isSortedByTitle))
+        subscriber.onUpdate(UpdateType.ShouldShowDownloadedOnlyUpdated(shouldShowDownloadedOnly))
+        subscriber.onUpdate(UpdateType.ShouldHideExplicitUpdated(shouldHideExplicit))
+        subscriber.onUpdate(UpdateType.ShouldHideWorkInProgressUpdated(shouldHideWorkInProgress))
+        subscriber.onUpdate(UpdateType.ShouldShowSongCountUpdated(shouldShowSongCount))
+        subscriber.onUpdate(UpdateType.SearchQueryUpdated(searchQuery))
     }
 }

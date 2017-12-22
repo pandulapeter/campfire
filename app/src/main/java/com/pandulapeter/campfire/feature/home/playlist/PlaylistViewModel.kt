@@ -39,7 +39,7 @@ class PlaylistViewModel(
         title.onPropertyChanged { editedTitle.set(it) }
         isInEditMode.onPropertyChanged {
             shouldShowPlayButton.set(if (it) false else isAdapterNotEmpty)
-            onUpdate(UpdateType.Unspecified)
+            onUpdate(UpdateType.EditModeOpened(playlistId))
         }
     }
 

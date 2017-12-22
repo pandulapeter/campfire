@@ -5,21 +5,20 @@ import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.feature.home.HomeViewModel
-import kotlin.reflect.KClass
 
 /**
  * Represents all the possible [Repository] update events.
  */
 sealed class UpdateType {
-    //TODO : Even more granular update vents are needed.
-
-    // General
-    object Unspecified : UpdateType()
-
-    class InitialUpdate(val repositoryClass: KClass<out Repository>) : UpdateType()
 
     // DownloadedSongRepository
-    class DownloadedSongsUpdated(val donloadedSongIds: List<String>) : UpdateType()
+    class DownloadedSongsUpdated(val downloadedSongIds: List<String>) : UpdateType()
+
+    class SongRemovedFromDownloads(val songId: String) : UpdateType()
+
+    class SongAddedToDownloads(val songId: String) : UpdateType()
+
+    object AllDownloadsRemoved : UpdateType()
 
     class DownloadStarted(val songId: String) : UpdateType()
 
@@ -30,16 +29,36 @@ sealed class UpdateType {
     // HistoryRepository
     class HistoryUpdated(val historyIds: List<History>) : UpdateType()
 
+    class ItemAddedToHistory(val history: History, val position: Int) : UpdateType()
+
+    class ItemRemovedFromHistory(val songId: String) : UpdateType()
+
+    object HistoryCleared : UpdateType()
+
     // LanguageRepository
+    class LanguagesUpdated(val languageFilters: Map<Language, Boolean>) : UpdateType()
+
     class LanguageFilterChanged(val language: Language, val isEnabled: Boolean) : UpdateType()
 
     // PlaylistRepository
     class PlaylistsUpdated(val playlists: List<Playlist>) : UpdateType()
 
-    // SongInfoRepository
-    class LoadingStateChanged(val isLoading: Boolean) : UpdateType()
+    class NewPlaylistsCreated(val playlists: Playlist) : UpdateType()
 
+    class SongAddedToPlaylist(val playlistId: Int, val songId: String, val position: Int) : UpdateType()
+
+    class SongRemovedFromPlaylist(val playlistId: Int, val position: Int) : UpdateType()
+
+    class PlaylistRenamed(val playlistId: Int, val title: String) : UpdateType()
+
+    class PlaylistDeleted(val playlistId: Int, val position: Int) : UpdateType()
+
+    class PlaylistSongOrderUpdated(val playlistId: Int, val songIds: List<String>) : UpdateType()
+
+    // SongInfoRepository
     class LibraryCacheUpdated(val songInfos: List<SongInfo>) : UpdateType()
+
+    class LoadingStateChanged(val isLoading: Boolean) : UpdateType()
 
     // UserPreferenceRepository
     class NavigationItemUpdated(val navigationItem: HomeViewModel.NavigationItem) : UpdateType()
@@ -55,4 +74,9 @@ sealed class UpdateType {
     class ShouldShowSongCountUpdated(val shouldShowSongCount: Boolean) : UpdateType()
 
     class SearchQueryUpdated(val searchQuery: String) : UpdateType()
+
+    // Other
+    object Unspecified : UpdateType()
+
+    class EditModeOpened(val playlistId: Int) : UpdateType()
 }

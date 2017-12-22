@@ -3,9 +3,13 @@ package com.pandulapeter.campfire.data.repository
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
 import com.pandulapeter.campfire.util.mapToLanguage
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
 
 /**
  * Wraps caching and updating of [Language] objects.
@@ -13,12 +17,24 @@ import com.pandulapeter.campfire.util.mapToLanguage
 class LanguageRepository(private val preferenceStorageManager: PreferenceStorageManager) : Repository() {
     private var dataSet: Map<Language, Boolean> = HashMap()
 
+    override fun subscribe(subscriber: Subscriber) {
+        super.subscribe(subscriber)
+        subscriber.onUpdate(UpdateType.LanguagesUpdated(dataSet))
+    }
+
     fun updateLanguages(songInfoList: List<SongInfo>) {
-        val languageFilters = HashMap<Language, Boolean>()
-        songInfoList.map { it.language.mapToLanguage() }.distinct().forEach {
-            languageFilters.put(it, isLanguageFilterEnabled(it))
+        async(UI) {
+            async(CommonPool) {
+                val languageFilters = HashMap<Language, Boolean>()
+                songInfoList.map { it.language.mapToLanguage() }.distinct().forEach {
+                    languageFilters.put(it, isLanguageFilterEnabled(it))
+                }
+                languageFilters
+            }.await().let {
+                dataSet = it
+                notifySubscribers(UpdateType.LanguagesUpdated(it))
+            }
         }
-        dataSet = languageFilters
     }
 
     fun getLanguages() = dataSet.keys.toList()

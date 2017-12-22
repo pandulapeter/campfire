@@ -1,13 +1,18 @@
 package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.DownloadedSong
+import com.pandulapeter.campfire.data.model.SongDetail
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.data.storage.DataStorageManager
 import com.pandulapeter.campfire.data.storage.FileStorageManager
 import com.pandulapeter.campfire.util.enqueueCall
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
@@ -19,13 +24,19 @@ class DownloadedSongRepository(
     private val fileStorageManager: FileStorageManager,
     private val networkManager: NetworkManager) : Repository() {
     private var dataSet by Delegates.observable(dataStorageManager.downloadedSongCache) { _: KProperty<*>, old: Map<String, DownloadedSong>, new: Map<String, DownloadedSong> ->
-        if (old != new) {
-            notifySubscribers(UpdateType.DownloadedSongsUpdated(getDownloadedSongIds()))
-            //TODO: If only a single line has been changed, we should not rewrite the entire map.
-            dataStorageManager.downloadedSongCache = new
+        async(CommonPool) {
+            if (old != new) {
+                //TODO: If only a single line has been changed, we should not rewrite the entire map.
+                dataStorageManager.downloadedSongCache = new
+            }
         }
     }
-    private var downloadQueue = mutableListOf<String>()
+    private val downloadQueue = mutableListOf<String>()
+
+    override fun subscribe(subscriber: Subscriber) {
+        super.subscribe(subscriber)
+        subscriber.onUpdate(UpdateType.DownloadedSongsUpdated(getDownloadedSongIds()))
+    }
 
     fun getDownloadCacheSize(): Long {
         var totalSizeInBytes = 0L
@@ -37,21 +48,33 @@ class DownloadedSongRepository(
 
     fun getDownloadedSongIds(): List<String> = dataSet.keys.toList()
 
-    fun getDownloadedSong(id: String) = dataSet[id]
+    fun getDownloadedSong(songId: String) = dataSet[songId]
 
-    fun isSongDownloaded(id: String) = dataSet.containsKey(id)
+    fun isSongDownloaded(songId: String) = dataSet.containsKey(songId)
 
-    fun isSongLoading(id: String) = downloadQueue.contains(id)
+    fun isSongLoading(songId: String) = downloadQueue.contains(songId)
 
-    fun removeSongFromDownloads(id: String) {
-        if (isSongDownloaded(id)) {
-            fileStorageManager.deleteDownloadedSongText(id)
-            dataSet = dataSet.toMutableMap().apply { remove(id) }
+    fun removeSongFromDownloads(songId: String) {
+        if (isSongDownloaded(songId)) {
+            fileStorageManager.deleteDownloadedSongText(songId)
+            dataSet = dataSet.toMutableMap().apply { remove(songId) }
+            notifySubscribers(UpdateType.SongRemovedFromDownloads(songId))
+        }
+    }
+
+    private fun addSongToDownloads(downloadedSong: DownloadedSong, songDetail: SongDetail) {
+        addSongToDownloadsWithoutNotifications(downloadedSong, songDetail) {
+            notifySubscribers(UpdateType.SongAddedToDownloads(songDetail.id))
         }
     }
 
     fun clearDownloads() {
+        downloadQueue.clear()
+        getDownloadedSongIds().forEach {
+            fileStorageManager.deleteDownloadedSongText(it)
+        }
         dataSet = dataSet.toMutableMap().apply { clear() }
+        notifySubscribers(UpdateType.AllDownloadsRemoved)
     }
 
     //TODO: It's not great that we need to know the version of the song before downloading it, but this is a backend API limitation.
@@ -68,12 +91,10 @@ class DownloadedSongRepository(
         notifySubscribers(UpdateType.DownloadStarted(songInfo.id))
         networkManager.service.getSong(songInfo.id).enqueueCall(
             onSuccess = {
-                downloadQueue.remove(songInfo.id)
-                fileStorageManager.saveDownloadedSongText(it.id, it.song)
-                notifySubscribers(UpdateType.DownloadSuccessful(songInfo.id))
-                //TODO: Re-assigning the dataSet value will trigger a DownloadedSongsUpdated update anyway :(
-                dataSet = dataSet.toMutableMap().apply { put(it.id, DownloadedSong(it.id, songInfo.version ?: 0)) }
-                onSuccess(it.song)
+                addSongToDownloadsWithoutNotifications(DownloadedSong(it.id, songInfo.version ?: 0), it) {
+                    notifySubscribers(UpdateType.DownloadSuccessful(songInfo.id))
+                    onSuccess(it.song)
+                }
             },
             onFailure = {
                 notifySubscribers(UpdateType.DownloadFailed(songInfo.id))
@@ -87,5 +108,18 @@ class DownloadedSongRepository(
         fileStorageManager.loadDownloadedSongText(id)
     } else {
         null
+    }
+
+    private fun addSongToDownloadsWithoutNotifications(downloadedSong: DownloadedSong, songDetail: SongDetail, action: () -> Unit) {
+        if (downloadQueue.contains(downloadedSong.id)) {
+            downloadQueue.remove(downloadedSong.id)
+        }
+        async(UI) {
+            async(CommonPool) {
+                fileStorageManager.saveDownloadedSongText(downloadedSong.id, songDetail.song)
+            }.await()
+            action()
+        }
+        dataSet = dataSet.toMutableMap().apply { put(downloadedSong.id, downloadedSong) }
     }
 }
