@@ -48,13 +48,17 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
             }
             // Display confirmation message if the download succeeds.
             viewModel.shouldShowSongDownloadedSnackbar.onEventTriggered {
-                binding.root.showSnackbar(getString(R.string.song_item_song_downloaded, it))
+                if (isAdded) {
+                    binding.root.showSnackbar(getString(R.string.song_item_song_downloaded, it))
+                }
             }
             // Display error snackbar with Retry action if the download fails.
             viewModel.shouldShowDownloadErrorSnackbar.onEventTriggered {
                 it?.let { songInfo ->
-                    binding.root.showSnackbar(getString(R.string.song_item_song_download_failed, songInfo.title), R.string.song_item_try_again) {
-                        viewModel.downloadSong(songInfo)
+                    if (isAdded) {
+                        binding.root.showSnackbar(message = getString(R.string.song_item_song_download_failed, songInfo.title),
+                            actionButton = R.string.song_item_try_again,
+                            action = { viewModel.downloadSong(songInfo) })
                     }
                 }
             }

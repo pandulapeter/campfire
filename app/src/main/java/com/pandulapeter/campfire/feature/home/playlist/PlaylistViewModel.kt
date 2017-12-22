@@ -89,7 +89,8 @@ class PlaylistViewModel(
             is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_SUCCESSFUL) }
             is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_FAILED) }
             is UpdateType.EditModeChanged -> if (updateType.playlistId == playlistId) {
-                adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, if (updateType.isInEditMode) SongInfoAdapter.EDIT_MODE_OPEN else SongInfoAdapter.EDIT_MODE_CLOSE) }
+                val payload = if (updateType.isInEditMode) SongInfoAdapter.EDIT_MODE_OPEN else SongInfoAdapter.EDIT_MODE_CLOSE
+                adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
             }
         }
     }

@@ -69,40 +69,24 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
 
     override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int, payloads: List<Any>?) {
         if (payloads?.isNotEmpty() == true) {
-            payloads.forEach {
+            payloads.forEach { payload ->
                 items[position].run {
                     if (!shouldShowDragHandle) {
-                        when (it) {
-                            SONG_DOWNLOADED -> {
-                                isSongDownloaded = true
-                            }
-                            SONG_DOWNLOAD_DELETED -> {
-                                isSongDownloaded = false
-                            }
-                            DOWNLOAD_STARTED -> {
-                                isSongLoading = true
-                            }
+                        when (payload) {
+                            SONG_DOWNLOADED -> isSongDownloaded = true
+                            SONG_DOWNLOAD_DELETED -> isSongDownloaded = false
+                            DOWNLOAD_STARTED -> isSongLoading = true
                             DOWNLOAD_SUCCESSFUL -> {
                                 isSongLoading = false
                                 isSongDownloaded = true
                                 shouldShowDownloadButton = false
                                 alertText = null
                             }
-                            DOWNLOAD_FAILED -> {
-                                isSongLoading = false
-                            }
-                            EDIT_MODE_OPEN -> {
-                                shouldShowDragHandle = true
-                            }
-                            EDIT_MODE_CLOSE -> {
-                                shouldShowDragHandle = false
-                            }
-                            SONG_IS_IN_A_PLAYLIST -> {
-                                isSongOnAnyPlaylist = true
-                            }
-                            SONG_IS_NOT_IN_A_PLAYLISTS -> {
-                                isSongOnAnyPlaylist = false
-                            }
+                            DOWNLOAD_FAILED -> isSongLoading = false
+                            EDIT_MODE_OPEN -> shouldShowDragHandle = true
+                            EDIT_MODE_CLOSE -> shouldShowDragHandle = false
+                            SONG_IS_IN_A_PLAYLIST -> isSongOnAnyPlaylist = true
+                            SONG_IS_NOT_IN_A_PLAYLISTS -> isSongOnAnyPlaylist = false
                         }
                     }
                 }
@@ -154,8 +138,8 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
         }
 
         fun setItemDownloadActionClickListener(itemClickListener: ((position: Int) -> Unit)?) = itemClickListener?.let {
-            binding.downloadAction.setOnClickListener {
-                if (adapterPosition != RecyclerView.NO_POSITION) {
+            binding.downloadActionContainer.setOnClickListener {
+                if (binding.downloadActionContainer.displayedChild == 1 && adapterPosition != RecyclerView.NO_POSITION) {
                     itemClickListener(adapterPosition)
                 }
             }
