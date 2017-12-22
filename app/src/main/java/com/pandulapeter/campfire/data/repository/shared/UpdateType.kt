@@ -76,7 +76,5 @@ sealed class UpdateType {
     class SearchQueryUpdated(val searchQuery: String) : UpdateType()
 
     // Other
-    object Unspecified : UpdateType()
-
     class EditModeOpened(val playlistId: Int) : UpdateType()
 }

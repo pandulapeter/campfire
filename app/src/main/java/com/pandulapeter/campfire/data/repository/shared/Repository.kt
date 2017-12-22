@@ -21,5 +21,5 @@ abstract class Repository {
         }
     }
 
-    protected fun notifySubscribers(updateType: UpdateType = UpdateType.Unspecified) = subscribers.forEach { it.onUpdate(updateType) }
+    protected fun notifySubscribers(updateType: UpdateType) = subscribers.forEach { it.onUpdate(updateType) }
 }
