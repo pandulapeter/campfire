@@ -79,31 +79,32 @@ class LibraryViewModel(
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
+            is UpdateType.LanguageFilterChanged,
+            is UpdateType.DownloadedSongsUpdated,
+            is UpdateType.LibraryCacheUpdated,
+            is UpdateType.PlaylistsUpdated,
+            is UpdateType.HistoryUpdated,
+            is UpdateType.IsSortedByTitleUpdated,
+            is UpdateType.ShouldShowDownloadedOnlyUpdated,
+            is UpdateType.SearchQueryUpdated,
+            is UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
             is UpdateType.LoadingStateChanged -> isLoading.set(updateType.isLoading)
-            is UpdateType.InitialUpdate -> when (updateType.repositoryClass) {
-                LanguageRepository::class -> languageRepository.getLanguages().let { languages ->
-                    if (languages != languageFilters.get().keys.toList()) {
-                        languageFilters.get().clear()
-                        languages.forEach { language ->
-                            languageFilters.get().put(language, ObservableBoolean(languageRepository.isLanguageFilterEnabled(language)).apply {
-                                onPropertyChanged { languageRepository.setLanguageFilterEnabled(language, it) }
-                            })
-                        }
-                        languageFilters.notifyChange()
-                    }
-                }
-                PlaylistRepository::class -> super.onUpdate(updateType)
-            }
+            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.SONG_DOWNLOADED) }
+            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.SONG_DOWNLOAD_DELETED) }
             is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_STARTED) }
             is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_SUCCESSFUL) }
             is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_FAILED) }
-            is UpdateType.LanguageFilterChanged,
-            is UpdateType.PlaylistsUpdated,
-            is UpdateType.LibraryCacheUpdated,
-            is UpdateType.DownloadedSongsUpdated,
-            is UpdateType.IsSortedByTitleUpdated,
-            is UpdateType.ShouldShowDownloadedOnlyUpdated,
-            is UpdateType.SearchQueryUpdated -> super.onUpdate(updateType)
+            is UpdateType.SongAddedToPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.SONG_IS_IN_A_PLAYLIST) }
+            is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, if (playlistRepository.isSongInAnyPlaylist(updateType.songId)) SongInfoAdapter.SONG_IS_IN_A_PLAYLIST else SongInfoAdapter.SONG_IS_NOT_IN_A_PLAYLISTS) }
+            is UpdateType.LanguagesUpdated -> {
+                languageFilters.get().clear()
+                updateType.languageFilters.forEach { (language, isEnabled) ->
+                    languageFilters.get().put(language, ObservableBoolean(isEnabled).apply {
+                        onPropertyChanged { languageRepository.setLanguageFilterEnabled(language, it) }
+                    })
+                }
+                languageFilters.notifyChange()
+            }
         }
     }
 

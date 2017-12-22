@@ -74,6 +74,15 @@ class PlaylistViewModel(
             is UpdateType.DownloadedSongsUpdated,
             is UpdateType.LibraryCacheUpdated,
             is UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
+
+            is UpdateType.SongAddedToPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType) //TODO: Call adapter.notifyItemAdded() instead.
+            is UpdateType.SongRemovedFromPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType) //TODO: Call adapter.notifyItemRemoved() instead.
+            is UpdateType.PlaylistRenamed -> if (updateType.playlistId == playlistId) title.set(updateType.title)
+            is UpdateType.PlaylistSongOrderUpdated -> if (updateType.playlistId == playlistId) super.onUpdate(updateType)
+            is UpdateType.PlaylistsUpdated -> {
+                super.onUpdate(updateType)
+                playlistRepository.getPlaylist(playlistId)?.let { title.set(it.title ?: favoritesTitle) }
+            }
             is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.SONG_DOWNLOADED) }
             is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.SONG_DOWNLOAD_DELETED) }
             is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_STARTED) }
@@ -82,14 +91,6 @@ class PlaylistViewModel(
             is UpdateType.EditModeChanged -> if (updateType.playlistId == playlistId) {
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, if (updateType.isInEditMode) SongInfoAdapter.EDIT_MODE_OPEN else SongInfoAdapter.EDIT_MODE_CLOSE) }
             }
-            is UpdateType.PlaylistsUpdated -> {
-                super.onUpdate(updateType)
-                playlistRepository.getPlaylist(playlistId)?.let { title.set(it.title ?: favoritesTitle) }
-            }
-            is UpdateType.SongAddedToPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType) //TODO: Call adapter.notifyItemAdded() instead.
-            is UpdateType.SongRemovedFromPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType) //TODO: Call adapter.notifyItemRemoved() instead.
-            is UpdateType.PlaylistRenamed -> if (updateType.playlistId == playlistId) title.set(updateType.title)
-            is UpdateType.PlaylistSongOrderUpdated -> if (updateType.playlistId == playlistId) super.onUpdate(updateType)
         }
     }
 
