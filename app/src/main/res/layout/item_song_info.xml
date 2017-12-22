@@ -21,102 +21,95 @@
         app:cardBackgroundColor="@{viewModel.isSongDownloaded ? @color/card_song_downloaded : @color/card_song_not_downloaded}"
         app:contentPadding="@dimen/content_padding">
 
-        <!--TODO: Add ConstraintLayout to improve performance. -->
-        <RelativeLayout
+        <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clipChildren="false">
+            android:layout_height="wrap_content">
 
-            <LinearLayout
-                android:id="@+id/action_container"
+            <!--TODO: Animate transition. -->
+            <ImageView
+                android:id="@+id/primary_action"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
                 android:layout_marginEnd="-4dp"
-                android:animateLayoutChanges="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@{viewModel.shouldShowDragHandle ? @string/playlist_drag_to_rearrange : @string/manage_playlists}"
+                android:padding="@dimen/content_padding"
+                android:src="@{viewModel.shouldShowDragHandle ? @drawable/ic_drag_handle_24dp : viewModel.isSongOnAnyPlaylist ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
+                android:visibility="@{viewModel.shouldShowPlaylistButton || viewModel.shouldShowDragHandle}"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:src="@drawable/ic_playlist_border_24dp" />
+
+            <!--TODO: Animate transition. -->
+            <ViewSwitcher
+                android:id="@+id/download_action_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="-4dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="@{!viewModel.isSongLoading}"
                 android:clipChildren="false"
-                android:orientation="horizontal">
+                android:visibility="@{viewModel.shouldShowDownloadButton}"
+                app:displayedChild="@{viewModel.isSongLoading ? 0 : 1}"
+                app:layout_constraintEnd_toStartOf="@id/primary_action">
 
-                <ViewSwitcher
-                    android:id="@+id/download_action_container"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="-4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:clickable="@{!viewModel.isSongLoading}"
-                    android:clipChildren="false"
-                    android:visibility="@{viewModel.shouldShowDownloadButton}"
-                    app:displayedChild="@{viewModel.isSongLoading ? 0 : 1}">
-
-                    <ProgressBar
-                        android:layout_width="@dimen/loading_indicator_size"
-                        android:layout_height="@dimen/loading_indicator_size"
-                        android:layout_gravity="center"
-                        android:indeterminateTint="@android:color/white"
-                        android:indeterminateTintMode="src_in"
-                        android:padding="@dimen/content_padding" />
-
-                    <ImageView
-                        android:id="@+id/download_action"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:contentDescription="@{viewModel.isSongDownloaded ? @string/update : @string/download}"
-                        android:padding="@dimen/content_padding"
-                        app:srcCompat="@drawable/ic_download_24dp" />
-
-                </ViewSwitcher>
+                <ProgressBar
+                    android:layout_width="@dimen/loading_indicator_size"
+                    android:layout_height="@dimen/loading_indicator_size"
+                    android:layout_gravity="center"
+                    android:indeterminateTint="@android:color/white"
+                    android:indeterminateTintMode="src_in"
+                    android:padding="@dimen/content_padding" />
 
                 <ImageView
-                    android:id="@+id/primary_action"
+                    android:id="@+id/download_action"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@{viewModel.shouldShowDragHandle ? @string/playlist_drag_to_rearrange : @string/manage_playlists}"
+                    android:layout_gravity="center"
+                    android:contentDescription="@{viewModel.isSongDownloaded ? @string/update : @string/download}"
                     android:padding="@dimen/content_padding"
-                    android:src="@{viewModel.shouldShowDragHandle ? @drawable/ic_drag_handle_24dp : viewModel.isSongOnAnyPlaylist ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
-                    android:visibility="@{viewModel.shouldShowPlaylistButton || viewModel.shouldShowDragHandle}"
-                    tools:src="@drawable/ic_playlist_border_24dp" />
+                    app:srcCompat="@drawable/ic_download_24dp" />
 
-            </LinearLayout>
+            </ViewSwitcher>
 
             <TextView
                 android:id="@+id/title"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_toStartOf="@id/action_container"
                 android:alpha="@{viewModel.isSongDownloaded ? 1f : 0.8f }"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:maxLines="3"
                 android:text="@{viewModel.songInfo.title}"
+                app:layout_constraintEnd_toStartOf="@id/download_action_container"
+                app:layout_constraintStart_toStartOf="parent"
                 tools:text="Song title" />
 
             <TextView
                 android:id="@+id/artist"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/title"
                 android:layout_marginTop="@dimen/card_text_margin"
-                android:layout_toStartOf="@id/action_container"
                 android:alpha="@{viewModel.isSongDownloaded ? 1f : 0.5f }"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-thin"
                 android:maxLines="2"
                 android:text="@{viewModel.songInfo.artist}"
+                app:layout_constraintEnd_toStartOf="@id/download_action_container"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/title"
                 tools:text="Artist" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/artist"
                 android:layout_marginTop="@dimen/card_text_margin"
                 android:text="@{viewModel.alertText}"
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
                 android:textColor="@color/accent"
+                app:layout_constraintTop_toBottomOf="@id/artist"
                 tools:text="Alert" />
 
-        </RelativeLayout>
+        </android.support.constraint.ConstraintLayout>
 
     </android.support.v7.widget.CardView>
 
