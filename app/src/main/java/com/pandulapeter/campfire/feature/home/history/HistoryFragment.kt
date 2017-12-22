@@ -64,7 +64,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
 
             // Set up list item click listeners.
             viewModel.adapter.itemClickListener = { position -> startActivity(DetailActivity.getStartIntent(context = context, currentId = viewModel.adapter.items[position].songInfo.id)) }
-            viewModel.adapter.itemPrimaryActionClickListener = { position ->
+            viewModel.adapter.playlistActionClickListener = { position ->
                 viewModel.adapter.items[position].let { songInfoViewModel ->
                     val songId = songInfoViewModel.songInfo.id
                     if (playlistRepository.getPlaylists().size == 1) {
@@ -78,7 +78,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
                     }
                 }
             }
-            viewModel.adapter.itemDownloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) } }
+            viewModel.adapter.downloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) } }
         }
         //TODO: Only show this during FTUX.
         binding.root.showInfoSnackbar(R.string.history_hint)

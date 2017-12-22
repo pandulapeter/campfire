@@ -51,17 +51,17 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
         }
 
     var itemClickListener: (position: Int) -> Unit = { _ -> }
-    var itemPrimaryActionTouchListener: ((position: Int) -> Unit)? = null
-    var itemPrimaryActionClickListener: ((position: Int) -> Unit)? = null
-    var itemDownloadActionClickListener: ((position: Int) -> Unit)? = null
+    var dragHandleTouchListener: ((position: Int) -> Unit)? = null
+    var playlistActionClickListener: ((position: Int) -> Unit)? = null
+    var downloadActionClickListener: ((position: Int) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): SongInfoViewHolder {
         val viewHolder = SongInfoViewHolder.create(parent)
         viewHolder.setItemClickListener(itemClickListener)
-        viewHolder.setItemPrimaryActionTouchListener(itemPrimaryActionTouchListener)
-        viewHolder.setItemPrimaryActionClickListener(itemPrimaryActionClickListener)
-        viewHolder.setItemDownloadActionClickListener(itemDownloadActionClickListener)
-        viewHolder.setOnLongClickListener(itemPrimaryActionClickListener ?: itemDownloadActionClickListener)
+        viewHolder.setDragHandleTouchListener(dragHandleTouchListener)
+        viewHolder.setPlaylistActionClickListener(playlistActionClickListener)
+        viewHolder.setDownloadActionClickListener(downloadActionClickListener)
+        viewHolder.setOnLongClickListener(playlistActionClickListener ?: downloadActionClickListener)
         return viewHolder
     }
 
@@ -76,7 +76,6 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
                         Payload.SONG_DOWNLOAD_DELETED -> isSongDownloaded = false
                         Payload.DOWNLOAD_STARTED -> isSongLoading = true
                         Payload.DOWNLOAD_SUCCESSFUL -> {
-                            isSongLoading = false
                             isSongDownloaded = true
                             shouldShowDownloadButton = false
                             alertText = null
@@ -106,10 +105,10 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
             }
         }
 
-        fun setItemPrimaryActionTouchListener(itemTouchListener: ((position: Int) -> Unit)?) {
+        fun setDragHandleTouchListener(itemTouchListener: ((position: Int) -> Unit)?) {
             if (itemTouchListener != null) {
                 //TODO: Fix Lint warning.
-                binding.primaryAction.setOnTouchListener { _, event ->
+                binding.dragHandle.setOnTouchListener { _, event ->
                     if (event.actionMasked == MotionEvent.ACTION_DOWN && adapterPosition != RecyclerView.NO_POSITION) {
                         itemTouchListener(adapterPosition)
                     }
@@ -127,15 +126,15 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
             }
         }
 
-        fun setItemPrimaryActionClickListener(itemClickListener: ((position: Int) -> Unit)?) = itemClickListener?.let {
-            binding.primaryAction.setOnClickListener {
+        fun setPlaylistActionClickListener(itemClickListener: ((position: Int) -> Unit)?) = itemClickListener?.let {
+            binding.playlistAction.setOnClickListener {
                 if (adapterPosition != RecyclerView.NO_POSITION) {
                     itemClickListener(adapterPosition)
                 }
             }
         }
 
-        fun setItemDownloadActionClickListener(itemClickListener: ((position: Int) -> Unit)?) = itemClickListener?.let {
+        fun setDownloadActionClickListener(itemClickListener: ((position: Int) -> Unit)?) = itemClickListener?.let {
             binding.downloadActionContainer.setOnClickListener {
                 if (binding.downloadActionContainer.displayedChild == 1 && adapterPosition != RecyclerView.NO_POSITION) {
                     itemClickListener(adapterPosition)

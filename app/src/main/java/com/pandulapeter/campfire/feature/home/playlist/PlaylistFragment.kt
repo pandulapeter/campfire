@@ -87,10 +87,10 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
                     ids = viewModel.adapter.items.map { it.songInfo.id }))
             }
         }
-        viewModel.adapter.itemDownloadActionClickListener = { position ->
+        viewModel.adapter.downloadActionClickListener = { position ->
             viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }
         }
-        viewModel.adapter.itemPrimaryActionTouchListener = { position ->
+        viewModel.adapter.dragHandleTouchListener = { position ->
             if (viewModel.isInEditMode.get()) {
                 itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
             }

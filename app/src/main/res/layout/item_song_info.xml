@@ -23,33 +23,48 @@
 
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:animateLayoutChanges="true">
 
             <android.support.v4.widget.Space
                 android:id="@+id/space_1"
-                android:layout_width="4dp"
+                android:layout_width="2dp"
                 android:layout_height="0dp"
                 app:layout_constraintStart_toEndOf="parent" />
 
-            <!--TODO: Animate transition. -->
-
             <ImageView
-                android:id="@+id/primary_action"
-                android:layout_width="0dp"
+                android:id="@+id/drag_handle"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@{viewModel.shouldShowDragHandle ? @string/playlist_drag_to_rearrange : @string/manage_playlists}"
+                android:contentDescription="@string/playlist_drag_to_rearrange"
                 android:padding="@dimen/content_padding"
-                android:src="@{viewModel.shouldShowDragHandle ? @drawable/ic_drag_handle_24dp : viewModel.isSongOnAnyPlaylist ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
-                android:visibility="@{viewModel.shouldShowPlaylistButton || viewModel.shouldShowDragHandle}"
+                android:visibility="@{viewModel.shouldShowDragHandle}"
                 app:layout_constraintEnd_toEndOf="@id/space_1"
-                tools:src="@drawable/ic_playlist_border_24dp" />
+                app:srcCompat="@drawable/ic_drag_handle_24dp" />
 
             <android.support.v4.widget.Space
                 android:id="@+id/space_2"
                 android:layout_width="2dp"
                 android:layout_height="0dp"
-                app:layout_constraintStart_toStartOf="@id/primary_action" />
+                app:layout_constraintStart_toStartOf="@id/drag_handle" />
+
+            <ImageView
+                android:id="@+id/playlist_action"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/manage_playlists"
+                android:padding="@dimen/content_padding"
+                android:src="@{viewModel.isSongOnAnyPlaylist ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
+                android:visibility="@{viewModel.shouldShowPlaylistButton}"
+                app:layout_constraintEnd_toEndOf="@id/space_2"
+                tools:src="@drawable/ic_playlist_border_24dp" />
+
+            <android.support.v4.widget.Space
+                android:id="@+id/space_3"
+                android:layout_width="2dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toStartOf="@id/playlist_action" />
 
             <!--TODO: Animate transition. -->
 
@@ -61,14 +76,14 @@
                 android:clickable="@{!viewModel.isSongLoading}"
                 android:visibility="@{viewModel.shouldShowDownloadButton}"
                 app:displayedChild="@{viewModel.isSongLoading ? 0 : 1}"
-                app:layout_constraintEnd_toEndOf="@id/space_2">
+                app:layout_constraintEnd_toEndOf="@id/space_3">
 
                 <ProgressBar
                     android:layout_width="@dimen/loading_indicator_size"
                     android:layout_height="@dimen/loading_indicator_size"
+                    android:background="@null"
                     android:layout_gravity="center"
                     android:indeterminateTint="@android:color/white"
-                    android:indeterminateTintMode="src_in"
                     android:padding="@dimen/content_padding" />
 
                 <ImageView
