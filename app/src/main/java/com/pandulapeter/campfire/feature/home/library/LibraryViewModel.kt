@@ -89,13 +89,13 @@ class LibraryViewModel(
             is UpdateType.SearchQueryUpdated,
             is UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
             is UpdateType.LoadingStateChanged -> isLoading.set(updateType.isLoading)
-            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.SONG_DOWNLOADED) }
-            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.SONG_DOWNLOAD_DELETED) }
-            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_STARTED) }
-            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_SUCCESSFUL) }
-            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_FAILED) }
-            is UpdateType.SongAddedToPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.SONG_IS_IN_A_PLAYLIST) }
-            is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, if (playlistRepository.isSongInAnyPlaylist(updateType.songId)) SongInfoAdapter.SONG_IS_IN_A_PLAYLIST else SongInfoAdapter.SONG_IS_NOT_IN_A_PLAYLISTS) }
+            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.Payload.SONG_DOWNLOADED) }
+            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.Payload.SONG_DOWNLOAD_DELETED) }
+            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.Payload.DOWNLOAD_STARTED) }
+            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.Payload.DOWNLOAD_SUCCESSFUL) }
+            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.Payload.DOWNLOAD_FAILED) }
+            is UpdateType.SongAddedToPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.Payload.SONG_IS_IN_A_PLAYLIST) }
+            is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, if (playlistRepository.isSongInAnyPlaylist(updateType.songId)) SongInfoAdapter.Payload.SONG_IS_IN_A_PLAYLIST else SongInfoAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS) }
             is UpdateType.LanguagesUpdated -> {
                 languageFilters.get().clear()
                 updateType.languageFilters.forEach { (language, isEnabled) ->

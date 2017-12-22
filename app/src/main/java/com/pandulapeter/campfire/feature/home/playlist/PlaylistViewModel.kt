@@ -27,7 +27,7 @@ class PlaylistViewModel(
     private val playlistRepository: PlaylistRepository,
     private val favoritesTitle: String,
     private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
-    private var isAdapterNotEmpty = playlistRepository.getPlaylistSongIds(playlistId).isNotEmpty()
+    private var adapterItemCount = 0
     val title = ObservableField(favoritesTitle)
     val editedTitle = ObservableField(title.get())
     val shouldShowPlayButton = ObservableBoolean()
@@ -39,7 +39,6 @@ class PlaylistViewModel(
     init {
         title.onPropertyChanged { editedTitle.set(it) }
         isInEditMode.onPropertyChanged {
-            shouldShowPlayButton.set(if (it) false else isAdapterNotEmpty)
             onUpdate(UpdateType.EditModeChanged(playlistId, it))
         }
     }
@@ -83,13 +82,13 @@ class PlaylistViewModel(
                 super.onUpdate(updateType)
                 playlistRepository.getPlaylist(playlistId)?.let { title.set(it.title ?: favoritesTitle) }
             }
-            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.SONG_DOWNLOADED) }
-            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.SONG_DOWNLOAD_DELETED) }
-            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_STARTED) }
-            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_SUCCESSFUL) }
-            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_FAILED) }
+            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.Payload.SONG_DOWNLOADED) }
+            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.Payload.SONG_DOWNLOAD_DELETED) }
+            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.Payload.DOWNLOAD_STARTED) }
+            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.Payload.DOWNLOAD_SUCCESSFUL) }
+            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.Payload.DOWNLOAD_FAILED) }
             is UpdateType.EditModeChanged -> if (updateType.playlistId == playlistId) {
-                val payload = if (updateType.isInEditMode) SongInfoAdapter.EDIT_MODE_OPEN else SongInfoAdapter.EDIT_MODE_CLOSE
+                val payload = if (updateType.isInEditMode && adapterItemCount > 1) SongInfoAdapter.Payload.EDIT_MODE_OPEN else SongInfoAdapter.Payload.EDIT_MODE_CLOSE
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
             }
         }
@@ -97,10 +96,10 @@ class PlaylistViewModel(
 
     override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         super.onUpdateDone(items, updateType)
-        isAdapterNotEmpty = items.isNotEmpty()
-        shouldDisplayEditButton.set(isAdapterNotEmpty || playlistId != Playlist.FAVORITES_ID)
+        adapterItemCount = items.size
+        shouldDisplayEditButton.set(adapterItemCount > 0 || playlistId != Playlist.FAVORITES_ID)
         if (!isInEditMode.get()) {
-            shouldShowPlayButton.set(isAdapterNotEmpty)
+            shouldShowPlayButton.set(adapterItemCount > 0)
         }
     }
 
@@ -121,14 +120,14 @@ class PlaylistViewModel(
             if (newTitle != null && newTitle.trim().isNotEmpty()) {
                 playlistRepository.renamePlaylist(playlistId, newTitle.trim())
             }
+            isInEditMode.set(false)
+        } else {
+            isInEditMode.set(true)
         }
-        isInEditMode.set(!isInEditMode.get())
     }
 
     fun onPlayButtonClicked() {
-        if (isAdapterNotEmpty) {
-            adapter.itemClickListener(0)
-        }
+        if (adapterItemCount > 0) adapter.itemClickListener(0)
     }
 
     fun removeSongFromPlaylist(songId: String) = playlistRepository.removeSongFromPlaylist(playlistId, songId)

@@ -53,6 +53,7 @@
                         android:onClick="@{() -> viewModel.toggleEditMode()}"
                         android:padding="@dimen/action_button_padding"
                         android:src="@{viewModel.isInEditMode ? @drawable/ic_done_24dp : @drawable/ic_edit_24dp}"
+                        android:visibility="@{viewModel.shouldDisplayEditButton}"
                         tools:src="@drawable/ic_edit_24dp" />
 
                     <ViewSwitcher

@@ -73,20 +73,20 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
                 items[position].run {
                     if (!shouldShowDragHandle) {
                         when (payload) {
-                            SONG_DOWNLOADED -> isSongDownloaded = true
-                            SONG_DOWNLOAD_DELETED -> isSongDownloaded = false
-                            DOWNLOAD_STARTED -> isSongLoading = true
-                            DOWNLOAD_SUCCESSFUL -> {
+                            Payload.SONG_DOWNLOADED -> isSongDownloaded = true
+                            Payload.SONG_DOWNLOAD_DELETED -> isSongDownloaded = false
+                            Payload.DOWNLOAD_STARTED -> isSongLoading = true
+                            Payload.DOWNLOAD_SUCCESSFUL -> {
                                 isSongLoading = false
                                 isSongDownloaded = true
                                 shouldShowDownloadButton = false
                                 alertText = null
                             }
-                            DOWNLOAD_FAILED -> isSongLoading = false
-                            EDIT_MODE_OPEN -> shouldShowDragHandle = true
-                            EDIT_MODE_CLOSE -> shouldShowDragHandle = false
-                            SONG_IS_IN_A_PLAYLIST -> isSongOnAnyPlaylist = true
-                            SONG_IS_NOT_IN_A_PLAYLISTS -> isSongOnAnyPlaylist = false
+                            Payload.DOWNLOAD_FAILED -> isSongLoading = false
+                            Payload.EDIT_MODE_OPEN -> shouldShowDragHandle = true
+                            Payload.EDIT_MODE_CLOSE -> shouldShowDragHandle = false
+                            Payload.SONG_IS_IN_A_PLAYLIST -> isSongOnAnyPlaylist = true
+                            Payload.SONG_IS_NOT_IN_A_PLAYLISTS -> isSongOnAnyPlaylist = false
                         }
                     }
                 }
@@ -151,15 +151,15 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
         }
     }
 
-    companion object {
-        const val SONG_DOWNLOADED = "sondDownloaded"
-        const val SONG_DOWNLOAD_DELETED = "sondDownloadDeleted"
-        const val DOWNLOAD_STARTED = "downloadStarted"
-        const val DOWNLOAD_SUCCESSFUL = "downloadSuccessful"
-        const val DOWNLOAD_FAILED = "downloadFailed"
-        const val EDIT_MODE_OPEN = "editModeOpen"
-        const val EDIT_MODE_CLOSE = "editModeClose"
-        const val SONG_IS_IN_A_PLAYLIST = "songIsInAPlaylist"
-        const val SONG_IS_NOT_IN_A_PLAYLISTS = "songIsNotInAPlaylist"
+    enum class Payload {
+        SONG_DOWNLOADED,
+        SONG_DOWNLOAD_DELETED,
+        DOWNLOAD_STARTED,
+        DOWNLOAD_SUCCESSFUL,
+        DOWNLOAD_FAILED,
+        EDIT_MODE_OPEN,
+        EDIT_MODE_CLOSE,
+        SONG_IS_IN_A_PLAYLIST,
+        SONG_IS_NOT_IN_A_PLAYLISTS
     }
 }

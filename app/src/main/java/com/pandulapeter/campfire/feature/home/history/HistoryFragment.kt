@@ -53,7 +53,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Fix a bug with updating the item decorations.
-        viewModel.shouldInvalidateItemDecorations.onEventTriggered { binding.recyclerView.invalidateItemDecorations() }
+        viewModel.shouldInvalidateItemDecorations.onEventTriggered { binding.recyclerView.run { postDelayed( { invalidateItemDecorations() }, 100) } }
         context?.let { context ->
             // Set up the item headers.
             binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(context) {
