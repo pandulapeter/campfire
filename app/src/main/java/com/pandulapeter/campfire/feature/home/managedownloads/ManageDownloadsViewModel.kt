@@ -54,8 +54,8 @@ class ManageDownloadsViewModel(
         }
     }
 
-    override fun onUpdateDone(items: List<SongInfoViewModel>) {
-        super.onUpdateDone(items)
+    override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
+        super.onUpdateDone(items, updateType)
         shouldShowDeleteAllButton.set(items.isNotEmpty())
         async(UI) {
             totalFileSize.set(async(CommonPool) {

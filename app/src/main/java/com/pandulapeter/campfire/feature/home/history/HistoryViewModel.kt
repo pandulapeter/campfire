@@ -7,6 +7,7 @@ import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
@@ -53,8 +54,8 @@ class HistoryViewModel(
                 })
         }
 
-    override fun onUpdateDone(items: List<SongInfoViewModel>) {
-        super.onUpdateDone(items)
+    override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
+        super.onUpdateDone(items, updateType)
         shouldShowClearButton.set(items.isNotEmpty())
         shouldInvalidateItemDecorations.set(true)
     }
@@ -74,8 +75,8 @@ class HistoryViewModel(
         if (now.year == then.year && now.month == then.month && now.day == then.day) {
             return R.string.history_today
         }
-        val yesterday = Calendar.getInstance().apply { timeInMillis = timestamp - 24 * 60 * 60 * 1000 }
-        if (now.year == yesterday.year && now.month == yesterday.month && now.day == yesterday.day) {
+        val yesterday = Calendar.getInstance().apply { timeInMillis -= 24 * 60 * 60 * 1000 }
+        if (yesterday.year == then.year && yesterday.month == then.month && yesterday.day == then.day) {
             return R.string.history_yesterday
         }
         return when (abs(now.year - then.year)) {

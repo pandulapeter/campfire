@@ -89,19 +89,11 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), Subscrib
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
-            is UpdateType.InitialUpdate -> {
-                when (updateType.repositoryClass) {
-                    SongInfoRepository::class -> {
-                        binding.songInfo = songInfoRepository.getLibrarySongs().first { it.id == songId }
-                    }
-                    PlaylistRepository::class -> {
-                        refreshPlaylistCheckboxes()
-                    }
-                }
-            }
-            is UpdateType.PlaylistsUpdated -> {
-                refreshPlaylistCheckboxes()
-            }
+            is UpdateType.LibraryCacheUpdated -> binding.songInfo = songInfoRepository.getLibrarySongs().first { it.id == songId }
+            is UpdateType.PlaylistsUpdated,
+            is UpdateType.NewPlaylistsCreated,
+            is UpdateType.PlaylistRenamed,
+            is UpdateType.PlaylistDeleted -> refreshPlaylistCheckboxes()
         }
     }
 
@@ -118,6 +110,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), Subscrib
         }
     }
 
+    //TODO: Maybe replace this with a RecyclerView.
     private fun refreshPlaylistCheckboxes() {
         context?.let { context ->
             binding.playlistContainer.removeAllViews()
