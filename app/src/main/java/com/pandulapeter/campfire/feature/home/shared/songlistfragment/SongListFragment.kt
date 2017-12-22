@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
-import com.pandulapeter.campfire.util.showSnackbar
 import javax.inject.Inject
 
 /**

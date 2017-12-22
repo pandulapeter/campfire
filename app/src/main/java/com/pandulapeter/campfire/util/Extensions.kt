@@ -11,15 +11,11 @@ import android.os.Bundle
 import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
 import android.support.annotation.DrawableRes
-import android.support.annotation.StringRes
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
-import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v7.content.res.AppCompatResources
-import android.view.View
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Language
 import retrofit2.Call
 import retrofit2.Callback
@@ -140,17 +136,3 @@ fun String.replaceSpecialCharacters() = this
     .replace("Ú", "U")
     .replace("ű", "u")
     .replace("Ű", "U")
-
-private fun View.makeSnackbar(message: String, duration: Int) = Snackbar.make(this, message, duration)
-
-fun View.showInfoSnackbar(@StringRes message: Int) = makeSnackbar(context.getString(message), Snackbar.LENGTH_INDEFINITE).apply { setBackgroundColor(context.color(R.color.accent)) }.show()
-
-fun View.showSnackbar(@StringRes message: Int, @StringRes actionButton: Int? = null, action: (View) -> Unit = {}) = showSnackbar(context.getString(message), actionButton, action)
-
-fun View.showSnackbar(message: String, @StringRes actionButton: Int? = null, action: (View) -> Unit = {}) {
-    val snackbar = makeSnackbar(message, Snackbar.LENGTH_LONG)
-    actionButton?.let {
-        snackbar.setAction(it, action)
-    }
-    snackbar.show()
-}

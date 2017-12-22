@@ -47,7 +47,7 @@ sealed class UpdateType {
 
     class SongAddedToPlaylist(val playlistId: Int, val songId: String, val position: Int) : UpdateType()
 
-    class SongRemovedFromPlaylist(val playlistId: Int, val position: Int) : UpdateType()
+    class SongRemovedFromPlaylist(val playlistId: Int, val songId: String, val position: Int) : UpdateType()
 
     class PlaylistRenamed(val playlistId: Int, val title: String) : UpdateType()
 

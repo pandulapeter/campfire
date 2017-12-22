@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import java.util.Calendar
 import kotlin.math.abs
@@ -53,6 +54,26 @@ class HistoryViewModel(
                     if (isSongNew) R.string.library_new else null
                 })
         }
+
+    override fun onUpdate(updateType: UpdateType) {
+        when (updateType) {
+            is UpdateType.DownloadedSongsUpdated,
+            is UpdateType.LibraryCacheUpdated,
+            is UpdateType.PlaylistsUpdated,
+            is UpdateType.HistoryUpdated,
+            is UpdateType.ItemAddedToHistory, //TODO: Call adapter.notifyItemAdded() instead.
+            is UpdateType.ItemRemovedFromHistory, //TODO: Call adapter.notifyItemRemoved() instead.
+            is UpdateType.HistoryCleared, //TODO: Call adapter.notifyDataSetChanged() instead.
+            is UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
+            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.SONG_DOWNLOADED) }
+            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.SONG_DOWNLOAD_DELETED) }
+            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_STARTED) }
+            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_SUCCESSFUL) }
+            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.DOWNLOAD_FAILED) }
+            is UpdateType.SongAddedToPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.SONG_IS_IN_A_PLAYLIST) }
+            is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, if (playlistRepository.isSongInAnyPlaylist(updateType.songId)) SongInfoAdapter.SONG_IS_IN_A_PLAYLIST else SongInfoAdapter.SONG_IS_NOT_IN_A_PLAYLISTS) }
+        }
+    }
 
     override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         super.onUpdateDone(items, updateType)

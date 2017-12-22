@@ -31,20 +31,19 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
 
     abstract fun getAdapterItems(): List<SongInfoViewModel>
 
-    @CallSuper
     override fun onUpdate(updateType: UpdateType) {
         async(UI) { onUpdateDone(async(CommonPool) { getAdapterItems() }.await(), updateType) }
+    }
+
+    @CallSuper
+    protected open fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
+        adapter.items = items
     }
 
     fun downloadSong(songInfo: SongInfo) = downloadedSongRepository.downloadSong(
         songInfo = songInfo,
         onSuccess = { shouldShowSongDownloadedSnackbar.set(songInfo.title) },
         onFailure = { shouldShowDownloadErrorSnackbar.set(songInfo) })
-
-    @CallSuper
-    protected open fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
-        adapter.items = items
-    }
 
     protected fun List<SongInfo>.filterWorkInProgress() = if (userPreferenceRepository.shouldHideWorkInProgress) filter { it.version ?: 0 >= 0 } else this
 

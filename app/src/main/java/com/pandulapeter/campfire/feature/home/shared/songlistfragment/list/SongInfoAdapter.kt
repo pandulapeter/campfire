@@ -73,6 +73,12 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
                 items[position].run {
                     if (!shouldShowDragHandle) {
                         when (it) {
+                            SONG_DOWNLOADED -> {
+                                isSongDownloaded = true
+                            }
+                            SONG_DOWNLOAD_DELETED -> {
+                                isSongDownloaded = false
+                            }
                             DOWNLOAD_STARTED -> {
                                 isSongLoading = true
                             }
@@ -90,6 +96,12 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
                             }
                             EDIT_MODE_CLOSE -> {
                                 shouldShowDragHandle = false
+                            }
+                            SONG_IS_IN_A_PLAYLIST -> {
+                                isSongOnAnyPlaylist = true
+                            }
+                            SONG_IS_NOT_IN_A_PLAYLISTS -> {
+                                isSongOnAnyPlaylist = false
                             }
                         }
                     }
@@ -156,10 +168,14 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
     }
 
     companion object {
+        const val SONG_DOWNLOADED = "sondDownloaded"
+        const val SONG_DOWNLOAD_DELETED = "sondDownloadDeleted"
         const val DOWNLOAD_STARTED = "downloadStarted"
         const val DOWNLOAD_SUCCESSFUL = "downloadSuccessful"
         const val DOWNLOAD_FAILED = "downloadFailed"
         const val EDIT_MODE_OPEN = "editModeOpen"
         const val EDIT_MODE_CLOSE = "editModeClose"
+        const val SONG_IS_IN_A_PLAYLIST = "songIsInAPlaylist"
+        const val SONG_IS_NOT_IN_A_PLAYLISTS = "songIsNotInAPlaylist"
     }
 }

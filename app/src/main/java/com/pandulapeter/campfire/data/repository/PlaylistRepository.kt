@@ -101,7 +101,7 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager) : R
                     put(playlistId.toString(), Playlist(playlistId, it.title, songIds.toMutableList().apply { removeAt(position) }))
                 }
             }
-            notifySubscribers(UpdateType.SongRemovedFromPlaylist(playlistId, position))
+            notifySubscribers(UpdateType.SongRemovedFromPlaylist(playlistId, songId, position))
         }
     }
 
