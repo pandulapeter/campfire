@@ -108,16 +108,30 @@
                                 app:subtitle="@{viewModel.shouldDisplaySubtitle ? @string/library_song_count(viewModel.filteredItemCount) : null}"
                                 app:title="@string/home_library"
                                 tools:subtitle="50 / 100 songs" />
-
-                            <EditText
-                                android:id="@+id/query"
+                            
+                            <android.support.constraint.ConstraintLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_gravity="center_vertical"
-                                android:hint="@string/library_search"
-                                android:inputType="textCapWords|textFilter"
-                                android:maxLength="@integer/search_query_limit"
-                                android:text="@={viewModel.searchQuery}" />
+                                android:layout_gravity="center_vertical">
+
+                                <android.support.v4.widget.Space
+                                    android:id="@+id/space_2"
+                                    android:layout_width="@dimen/edit_text_fix"
+                                    android:layout_height="0dp"
+                                    app:layout_constraintEnd_toStartOf="parent" />
+
+                                <EditText
+                                    android:id="@+id/query"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:hint="@string/library_search"
+                                    android:inputType="textCapWords|textFilter"
+                                    android:maxLength="@integer/search_query_limit"
+                                    android:text="@={viewModel.searchQuery}"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintStart_toStartOf="@id/space_2" />
+
+                            </android.support.constraint.ConstraintLayout>
 
                         </ViewSwitcher>
 

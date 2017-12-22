@@ -47,7 +47,7 @@
 
             <android.support.v4.widget.Space
                 android:id="@+id/space_2"
-                android:layout_width="4dp"
+                android:layout_width="2dp"
                 android:layout_height="0dp"
                 app:layout_constraintStart_toStartOf="@id/primary_action" />
 
