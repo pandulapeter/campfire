@@ -27,8 +27,6 @@ class ManageDownloadsViewModel(
 
     override fun getAdapterItems() = downloadedSongRepository.getDownloadedSongIds()
         .mapNotNull { songInfoRepository.getSongInfo(it) }
-        .filterWorkInProgress() //TODO: Consider if we need to filter this out here as well.
-        .filterExplicit() //TODO: Consider if we need to filter this out here as well.
         .sortedBy { it.titleWithSpecialCharactersRemoved } //TODO: Find a more meaningful way to sort these items (maybe by size).
         .map {
             SongInfoViewModel(

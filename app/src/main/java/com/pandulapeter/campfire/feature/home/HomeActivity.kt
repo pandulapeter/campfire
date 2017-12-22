@@ -42,8 +42,11 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
-    override val viewModel by lazy { HomeViewModel(downloadedSongRepository, playlistRepository, userPreferenceRepository) }
+    override val viewModel by lazy { HomeViewModel(downloadedSongRepository, userPreferenceRepository) }
     private var coroutine: CoroutineContext? = null
+    private val playlistsContainerItem by lazy { binding.navigationView.menu.findItem(R.id.playlists).subMenu }
+    private val managePlaylistsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_playlists) }
+    private val manageDownloadsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_downloads) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,29 +77,18 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
         })
         setCheckedItem(viewModel.navigationItem)
         viewModel.playlists.onPropertyChanged {
-            binding.navigationView.menu.findItem(R.id.playlists).subMenu.run {
+            playlistsContainerItem.run {
                 clear()
                 it.sortedBy { it.id }.forEachIndexed { index, playlist ->
-                    add(
-                        R.id.playlist_container,
-                        playlist.id,
-                        index,
-                        playlist.title ?: getString(R.string.home_favorites)).apply {
-                        setIcon(R.drawable.ic_playlist_24dp)
-                    }
+                    add(R.id.playlist_container, playlist.id, index, playlist.title ?: getString(R.string.home_favorites)).apply { setIcon(R.drawable.ic_playlist_24dp) }
                 }
-                add(R.id.playlist_container,
-                    R.id.playlists,
-                    it.size,
-                    R.string.home_new_playlist).apply {
-                    setIcon(R.drawable.ic_new_playlist_24dp)
-                }
+                add(R.id.playlist_container, R.id.playlists, it.size, R.string.home_new_playlist).apply { setIcon(R.drawable.ic_new_playlist_24dp) }
                 setGroupCheckable(R.id.playlist_container, true, true)
                 updateCheckedItem()
             }
-            binding.navigationView.menu.findItem(R.id.manage_playlists).isVisible = it.size > 1
+            managePlaylistsItem.isVisible = it.size > 1
         }
-        viewModel.hasDownloads.onPropertyChanged { binding.navigationView.menu.findItem(R.id.manage_downloads).isVisible = it }
+        viewModel.hasDownloads.onPropertyChanged { manageDownloadsItem.isVisible = it }
     }
 
     override fun onStart() {
