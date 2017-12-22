@@ -89,7 +89,6 @@ class PlaylistViewModel(
             is UpdateType.EditModeChanged -> if (updateType.playlistId == playlistId) {
                 val payload = if (updateType.isInEditMode && adapterItemCount > 1) SongInfoAdapter.Payload.EDIT_MODE_OPEN else SongInfoAdapter.Payload.EDIT_MODE_CLOSE
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
-                //TODO: Bug.
                 shouldShowPlayButton.set(if (!updateType.isInEditMode) adapterItemCount > 0 else false)
             }
         }

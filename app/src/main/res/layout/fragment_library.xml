@@ -108,7 +108,7 @@
                                 app:subtitle="@{viewModel.shouldDisplaySubtitle ? @string/library_song_count(viewModel.filteredItemCount) : null}"
                                 app:title="@string/home_library"
                                 tools:subtitle="50 / 100 songs" />
-                            
+
                             <android.support.constraint.ConstraintLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"

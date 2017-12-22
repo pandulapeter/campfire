@@ -71,23 +71,21 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
         if (payloads?.isNotEmpty() == true) {
             payloads.forEach { payload ->
                 items[position].run {
-                    if (!shouldShowDragHandle) {
-                        when (payload) {
-                            Payload.SONG_DOWNLOADED -> isSongDownloaded = true
-                            Payload.SONG_DOWNLOAD_DELETED -> isSongDownloaded = false
-                            Payload.DOWNLOAD_STARTED -> isSongLoading = true
-                            Payload.DOWNLOAD_SUCCESSFUL -> {
-                                isSongLoading = false
-                                isSongDownloaded = true
-                                shouldShowDownloadButton = false
-                                alertText = null
-                            }
-                            Payload.DOWNLOAD_FAILED -> isSongLoading = false
-                            Payload.EDIT_MODE_OPEN -> shouldShowDragHandle = true
-                            Payload.EDIT_MODE_CLOSE -> shouldShowDragHandle = false
-                            Payload.SONG_IS_IN_A_PLAYLIST -> isSongOnAnyPlaylist = true
-                            Payload.SONG_IS_NOT_IN_A_PLAYLISTS -> isSongOnAnyPlaylist = false
+                    when (payload) {
+                        Payload.SONG_DOWNLOADED -> isSongDownloaded = true
+                        Payload.SONG_DOWNLOAD_DELETED -> isSongDownloaded = false
+                        Payload.DOWNLOAD_STARTED -> isSongLoading = true
+                        Payload.DOWNLOAD_SUCCESSFUL -> {
+                            isSongLoading = false
+                            isSongDownloaded = true
+                            shouldShowDownloadButton = false
+                            alertText = null
                         }
+                        Payload.DOWNLOAD_FAILED -> isSongLoading = false
+                        Payload.EDIT_MODE_OPEN -> shouldShowDragHandle = true
+                        Payload.EDIT_MODE_CLOSE -> shouldShowDragHandle = false
+                        Payload.SONG_IS_IN_A_PLAYLIST -> isSongOnAnyPlaylist = true
+                        Payload.SONG_IS_NOT_IN_A_PLAYLISTS -> isSongOnAnyPlaylist = false
                     }
                 }
             }
