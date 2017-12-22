@@ -42,7 +42,9 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     protected fun View.showInfoSnackbar(@StringRes message: Int) {
         dismissSnackbar()
-        snackbar = makeSnackbar(context.getString(message), Snackbar.LENGTH_INDEFINITE).apply { setBackgroundColor(context.color(R.color.accent)) }
+        snackbar = makeSnackbar(context.getString(message), Snackbar.LENGTH_INDEFINITE).apply {
+            //TODO: Customize Snackbar appearance.
+        }
         snackbar?.show()
     }
 

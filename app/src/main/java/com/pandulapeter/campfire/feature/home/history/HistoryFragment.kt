@@ -53,7 +53,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Fix a bug with updating the item decorations.
-        viewModel.shouldInvalidateItemDecorations.onEventTriggered { binding.recyclerView.run { postDelayed( { invalidateItemDecorations() }, 100) } }
+        viewModel.shouldInvalidateItemDecorations.onEventTriggered { binding.recyclerView.run { postDelayed({ invalidateItemDecorations() }, 100) } }
         context?.let { context ->
             // Set up the item headers.
             binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(context) {
@@ -80,6 +80,8 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
             }
             viewModel.adapter.itemDownloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) } }
         }
+        //TODO: Only show this during FTUX.
+        binding.root.showInfoSnackbar(R.string.history_hint)
     }
 
     override fun onStart() {

@@ -14,37 +14,78 @@
 
     </data>
 
-    <RelativeLayout
+    <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/background"
         android:clipChildren="false">
 
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/fake_app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/background">
+
+            <View
+                android:id="@+id/background"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:alpha="0"
+                android:background="?attr/colorPrimary"
+                app:layout_constraintBottom_toBottomOf="@+id/toolbar_container"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:alpha="1" />
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@id/toolbar_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="@dimen/content_padding">
+
+                <ImageView
+                    android:id="@+id/close"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/bottom_sheet_toolbar_close_margin"
+                    android:alpha="0"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/library_close"
+                    android:padding="@dimen/toolbar_action_button_padding"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_close_24dp" />
+
+                <android.support.v7.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingEnd="@dimen/bottom_sheet_toolbar_margin"
+                    android:paddingStart="0dp"
+                    app:subtitle="@{songInfo.artist}"
+                    app:title="@{songInfo.title}"
+                    tools:subtitle="Artist"
+                    tools:title="Title" />
+
+            </android.support.constraint.ConstraintLayout>
+
+        </android.support.constraint.ConstraintLayout>
+
         <android.support.v4.widget.NestedScrollView
             android:id="@+id/nested_scroll_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/fake_app_bar"
             android:background="@color/background"
             android:clipToPadding="false"
             android:paddingBottom="@dimen/large_content_padding"
             android:paddingTop="@dimen/content_padding"
-            android:scrollbars="none">
+            android:scrollbars="none"
+            app:layout_constraintTop_toBottomOf="@id/fake_app_bar">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/content_padding"
-                    android:layout_marginEnd="@dimen/large_content_padding"
-                    android:layout_marginStart="@dimen/first_keyline"
-                    android:layout_marginTop="@dimen/content_padding"
-                    android:text="@string/home_playlists"
-                    android:textColor="@color/accent" />
 
                 <LinearLayout
                     android:id="@+id/playlist_container"
@@ -52,7 +93,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:paddingEnd="@dimen/first_keyline"
-                    android:paddingStart="@dimen/action_button_margin" />
+                    android:paddingStart="@dimen/toolbar_action_button_margin_fix" />
 
                 <TextView
                     android:id="@+id/new_playlist"
@@ -72,56 +113,6 @@
 
         </android.support.v4.widget.NestedScrollView>
 
-
-        <!-- The overdraw is intentional, it's needed for animating the elevation. -->
-
-        <RelativeLayout
-            android:id="@id/fake_app_bar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/background">
-
-            <View
-                android:id="@+id/background"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_alignBottom="@+id/toolbar_container"
-                android:alpha="0"
-                android:background="?attr/colorPrimary" />
-
-            <RelativeLayout
-                android:id="@id/toolbar_container"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingTop="@dimen/content_padding">
-
-                <ImageView
-                    android:id="@+id/close"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:layout_marginStart="@dimen/bottom_sheet_toolbar_close_margin"
-                    android:alpha="0"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/library_close"
-                    android:padding="@dimen/action_button_padding"
-                    app:srcCompat="@drawable/ic_close_24dp" />
-
-                <android.support.v7.widget.Toolbar
-                    android:id="@+id/toolbar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingEnd="@dimen/bottom_sheet_toolbar_margin"
-                    android:paddingStart="0dp"
-                    app:subtitle="@{songInfo.artist}"
-                    app:title="@{songInfo.title}"
-                    tools:subtitle="Artist"
-                    tools:title="Title" />
-
-            </RelativeLayout>
-
-        </RelativeLayout>
-
-    </RelativeLayout>
+    </android.support.constraint.ConstraintLayout>
 
 </layout>

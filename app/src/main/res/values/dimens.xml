@@ -2,20 +2,28 @@
 <resources>
 
     <!-- General -->
+    <dimen name="first_keyline">16dp</dimen>
+    <dimen name="second_keyline">72dp</dimen>
     <dimen name="content_padding">8dp</dimen>
     <dimen name="large_content_padding">16dp</dimen>
     <dimen name="touch_target">48dp</dimen>
-    <dimen name="first_keyline">16dp</dimen>
-    <dimen name="second_keyline">72dp</dimen>
+
+    <!-- Toolbar -->
+    <dimen name="toolbar_first_keyline_fix">2dp</dimen>
+    <dimen name="toolbar_second_keyline_fix">56dp</dimen>
+    <dimen name="toolbar_in_toolbar_fix">40dp</dimen> <!-- second_keyline_fix - first_keyline -->
+    <dimen name="toolbar_action_button_margin_fix">10dp</dimen>
+    <dimen name="toolbar_action_button_padding">2dp</dimen>
+
+    <!-- Fixes -->
+    <dimen name="edit_text_fix">4dp</dimen>
+
+    <!-- Song list items -->
+    <dimen name="card_text_margin">2dp</dimen>
     <dimen name="loading_indicator_size">36dp</dimen>
 
     <!-- Home screen -->
-    <dimen name="action_button_padding">2dp</dimen>
-    <dimen name="action_button_margin">10dp</dimen>
-    <dimen name="menu_margin">-2dp</dimen>
-    <dimen name="title_margin">56dp</dimen>
     <dimen name="view_options_width">240dp</dimen>
-    <dimen name="card_text_margin">2dp</dimen>
 
     <!-- Library screen -->
     <dimen name="header_height">36dp</dimen>

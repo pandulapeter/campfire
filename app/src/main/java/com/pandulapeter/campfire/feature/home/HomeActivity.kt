@@ -120,8 +120,8 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     }
 
     fun setCheckedItem(navigationItem: HomeViewModel.NavigationItem) {
-        updateCheckedItem()
         replaceActiveFragment(navigationItem)
+        updateCheckedItem()
     }
 
     private fun updateCheckedItem() = viewModel.navigationItem.let {

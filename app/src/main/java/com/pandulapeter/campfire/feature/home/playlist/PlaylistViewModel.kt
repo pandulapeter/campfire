@@ -27,7 +27,7 @@ class PlaylistViewModel(
     private val playlistRepository: PlaylistRepository,
     private val favoritesTitle: String,
     private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
-    private var adapterItemCount = 0
+    var adapterItemCount = 0
     val title = ObservableField(favoritesTitle)
     val editedTitle = ObservableField(title.get())
     val shouldShowPlayButton = ObservableBoolean()
@@ -73,7 +73,6 @@ class PlaylistViewModel(
             is UpdateType.DownloadedSongsUpdated,
             is UpdateType.LibraryCacheUpdated,
             is UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
-
             is UpdateType.SongAddedToPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType) //TODO: Call adapter.notifyItemAdded() instead.
             is UpdateType.SongRemovedFromPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType) //TODO: Call adapter.notifyItemRemoved() instead.
             is UpdateType.PlaylistRenamed -> if (updateType.playlistId == playlistId) title.set(updateType.title)
@@ -90,6 +89,8 @@ class PlaylistViewModel(
             is UpdateType.EditModeChanged -> if (updateType.playlistId == playlistId) {
                 val payload = if (updateType.isInEditMode && adapterItemCount > 1) SongInfoAdapter.Payload.EDIT_MODE_OPEN else SongInfoAdapter.Payload.EDIT_MODE_CLOSE
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
+                //TODO: Bug.
+                shouldShowPlayButton.set(if (!updateType.isInEditMode) adapterItemCount > 0 else false)
             }
         }
     }

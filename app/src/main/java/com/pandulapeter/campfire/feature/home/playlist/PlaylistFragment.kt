@@ -38,7 +38,13 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.isInEditMode.onPropertyChanged {
-            if (!it) {
+            if (it) {
+                if (viewModel.adapterItemCount > 0) {
+                    //TODO: Only show during FTUX.
+                    binding.root.showInfoSnackbar(R.string.playlist_hint)
+                }
+            } else {
+                dismissSnackbar()
                 hideKeyboard(activity?.currentFocus)
             }
         }
