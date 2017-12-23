@@ -4,6 +4,7 @@ import android.databinding.ObservableBoolean
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
+import android.support.v4.widget.DrawerLayout
 import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.LibraryBinding
@@ -122,6 +123,9 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
             binding.drawerLayout.openDrawer(GravityCompat.END)
             hideKeyboard(activity?.currentFocus)
         }
+        // Disable view options if the library is empty.
+        updateDrawerLockMode(viewModel.isLibraryNotEmpty.get())
+        viewModel.isLibraryNotEmpty.onPropertyChanged { updateDrawerLockMode(it) }
     }
 
     override fun onStart() {
@@ -153,4 +157,6 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         setOnCheckedChangeListener { _, isChecked -> backingField.set(if (shouldNegate) !isChecked else isChecked) }
         backingField.onPropertyChanged { isChecked = if (shouldNegate) !it else it }
     }
+
+    private fun updateDrawerLockMode(shouldAllowViewOptions: Boolean) = binding.drawerLayout.setDrawerLockMode(if (shouldAllowViewOptions) DrawerLayout.LOCK_MODE_UNDEFINED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
 }

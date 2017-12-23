@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.feature.home.library.SongOptionsBottomSheetFrag
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
+import com.pandulapeter.campfire.util.onPropertyChanged
 import javax.inject.Inject
 
 /**
@@ -82,7 +83,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
             }
             viewModel.adapter.downloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) } }
         }
-        viewModel.shouldShowHintSnackbar.onEventTriggered {
+        viewModel.shouldShowHintSnackbar.onPropertyChanged {
             if (firstTimeUserExperienceRepository.shouldShowHistoryHint) {
                 binding.root.showFirstTimeUserExperienceSnackbar(R.string.history_hint) {
                     firstTimeUserExperienceRepository.shouldShowHistoryHint = false

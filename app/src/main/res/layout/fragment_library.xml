@@ -25,19 +25,17 @@
 
             <android.support.design.widget.AppBarLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clipChildren="false">
+                android:layout_height="wrap_content">
 
                 <android.support.v7.widget.Toolbar
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:clipChildren="false"
                     app:isScrollEnabled="@{!viewModel.isSearchInputVisible}">
 
                     <android.support.constraint.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:clipChildren="false">
+                        android:animateLayoutChanges="true">
 
                         <android.support.v4.widget.Space
                             android:id="@+id/space"
@@ -66,6 +64,7 @@
                             android:contentDescription="@string/library_view_options"
                             android:onClick="@{() -> viewModel.showViewOptions()}"
                             android:padding="@dimen/toolbar_action_button_padding"
+                            android:visibility="@{viewModel.isLibraryNotEmpty}"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
@@ -83,6 +82,7 @@
                             android:onClick="@{() -> viewModel.showOrHideSearchInput()}"
                             android:padding="@dimen/toolbar_action_button_padding"
                             android:src="@{viewModel.isSearchInputVisible ? @drawable/ic_close_24dp : @drawable/ic_search_24dp}"
+                            android:visibility="@{viewModel.isLibraryNotEmpty}"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toStartOf="@id/view_options"
                             app:layout_constraintTop_toTopOf="parent"

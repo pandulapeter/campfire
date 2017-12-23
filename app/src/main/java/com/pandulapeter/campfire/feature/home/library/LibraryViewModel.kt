@@ -40,6 +40,7 @@ class LibraryViewModel(
     val languageFilters = ObservableField(HashMap<Language, ObservableBoolean>())
     val filteredItemCount = ObservableField("")
     val shouldDisplaySubtitle = userPreferenceRepository.shouldShowSongCount
+    val isLibraryNotEmpty = ObservableBoolean(songInfoRepository.getLibrarySongs().isNotEmpty())
 
     init {
         isSearchInputVisible.onPropertyChanged { if (it) searchQuery.set("") else userPreferenceRepository.searchQuery = "" }
@@ -57,6 +58,7 @@ class LibraryViewModel(
             .filterDownloaded()
             .filterByQuery()
             .sort()
+        isLibraryNotEmpty.set(librarySongs.isNotEmpty())
         filteredItemCount.set(if (filteredItems.size == librarySongs.size) "${filteredItems.size}" else "${filteredItems.size} / ${librarySongs.size}")
         return filteredItems.map { songInfo ->
             val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
