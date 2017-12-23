@@ -3,18 +3,21 @@ package com.pandulapeter.campfire.feature.home
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import com.google.gson.annotations.SerializedName
+import com.pandulapeter.campfire.data.integration.AppShortcutManager
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.util.onPropertyChanged
 
 /**
  * Handles events and logic for [HomeActivity].
  */
 class HomeViewModel(private val downloadedSongRepository: DownloadedSongRepository,
-                    private val userPreferenceRepository: UserPreferenceRepository) : CampfireViewModel(), Subscriber {
+                    private val userPreferenceRepository: UserPreferenceRepository,
+                    private val appShortcutManager: AppShortcutManager) : CampfireViewModel(), Subscriber {
     val playlists = ObservableField<List<Playlist>>()
     val isLibraryReady = ObservableBoolean()
     val hasDownloads = ObservableBoolean()
@@ -23,6 +26,10 @@ class HomeViewModel(private val downloadedSongRepository: DownloadedSongReposito
             field = value
             userPreferenceRepository.navigationItem = value
         }
+
+    init {
+        isLibraryReady.onPropertyChanged { appShortcutManager.onLibraryLoaded() }
+    }
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
@@ -45,6 +52,7 @@ class HomeViewModel(private val downloadedSongRepository: DownloadedSongReposito
             is UpdateType.PlaylistDeleted -> playlists.set(playlists.get().toMutableList().apply { removeAt(updateType.position) })
         }
     }
+
     /**
      * Marks the possible screens the user can reach using the side navigation on the home screen.
      */

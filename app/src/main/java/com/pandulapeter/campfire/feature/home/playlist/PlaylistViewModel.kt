@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.home.playlist
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.integration.AppShortcutManager
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
@@ -24,6 +25,7 @@ class PlaylistViewModel(
     userPreferenceRepository: UserPreferenceRepository,
     songInfoRepository: SongInfoRepository,
     downloadedSongRepository: DownloadedSongRepository,
+    appShortcutManager: AppShortcutManager,
     private val playlistRepository: PlaylistRepository,
     private val favoritesTitle: String,
     private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
@@ -41,6 +43,7 @@ class PlaylistViewModel(
         isInEditMode.onPropertyChanged {
             onUpdate(UpdateType.EditModeChanged(playlistId, it))
         }
+        appShortcutManager.onPlaylistOpened(playlistId)
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {

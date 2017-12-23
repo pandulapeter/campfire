@@ -16,18 +16,35 @@ import kotlin.reflect.KProperty
 
 /**
  * Wrapper for locally storing complex data in a database.
+ *
+ * TODO: This data shouldn't be stored in Shared Preferences, replace with a Room-based implementation.
  */
 class DataStorageManager(context: Context, gson: Gson) {
     private val songInfoPreferences = context.applicationContext.getSharedPreferences("song_info_storage", Context.MODE_PRIVATE)
     private val downloadedSongPreferences = context.applicationContext.getSharedPreferences("downloaded_song_storage", Context.MODE_PRIVATE)
     private val playlistPreferences = context.applicationContext.getSharedPreferences("playlist_storage", Context.MODE_PRIVATE)
     private val historyPreferences = context.applicationContext.getSharedPreferences("history_storage", Context.MODE_PRIVATE)
+    private val otherPreferences = context.applicationContext.getSharedPreferences("other_storage", Context.MODE_PRIVATE)
     var songInfoCache by MapDelegate(SongInfo::class.java, gson, songInfoPreferences, "ids", "song_")
     var downloadedSongCache by MapDelegate(DownloadedSong::class.java, gson, downloadedSongPreferences, "ids", "song_")
     var playlists by MapDelegate(Playlist::class.java, gson, playlistPreferences, "ids", "playlist_")
     var history by MapDelegate(History::class.java, gson, historyPreferences, "ids", "history_")
+    var lastThreePlaylistIds by StringListDelegate(gson, otherPreferences, "last_three_playlist_ids")
 
-    //TODO: This data shouldn't be stored in Shared Preferences, replace with a Room-based implementation.
+    private class StringListDelegate(
+        private val gson: Gson,
+        private val sharedPreferences: SharedPreferences,
+        private val key: String) : ReadWriteProperty<Any, List<String>> {
+
+        override fun getValue(thisRef: Any, property: KProperty<*>): List<String> = try {
+            gson.fromJson(sharedPreferences.getString(key, "[]"), object : TypeToken<List<String>>() {}.type)
+        } catch (_: JsonSyntaxException) {
+            listOf()
+        }
+
+        override fun setValue(thisRef: Any, property: KProperty<*>, value: List<String>) = sharedPreferences.edit().putString(key, gson.toJson(value)).apply()
+    }
+
     private class MapDelegate<T>(
         private val type: Class<T>,
         private val gson: Gson,
@@ -62,20 +79,6 @@ class DataStorageManager(context: Context, gson: Gson) {
                     }
                 }
             }
-        }
-
-        private class StringListDelegate(
-            private val gson: Gson,
-            private val sharedPreferences: SharedPreferences,
-            private val key: String) : ReadWriteProperty<Any, List<String>> {
-
-            override fun getValue(thisRef: Any, property: KProperty<*>): List<String> = try {
-                gson.fromJson(sharedPreferences.getString(key, "[]"), object : TypeToken<List<String>>() {}.type)
-            } catch (_: JsonSyntaxException) {
-                listOf()
-            }
-
-            override fun setValue(thisRef: Any, property: KProperty<*>, value: List<String>) = sharedPreferences.edit().putString(key, gson.toJson(value)).apply()
         }
     }
 }

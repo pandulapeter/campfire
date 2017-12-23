@@ -9,6 +9,7 @@ import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.integration.AppShortcutManager
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -46,7 +47,8 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
-    override val viewModel by lazy { HomeViewModel(downloadedSongRepository, userPreferenceRepository) }
+    @Inject lateinit var appShortcutManager: AppShortcutManager
+    override val viewModel by lazy { HomeViewModel(downloadedSongRepository, userPreferenceRepository, appShortcutManager) }
     private var coroutine: CoroutineContext? = null
     private val playlistsContainerItem by lazy { binding.navigationView.menu.findItem(R.id.playlists).subMenu }
     private val collectionsItem by lazy { binding.navigationView.menu.findItem(R.id.collections) }

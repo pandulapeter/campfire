@@ -41,11 +41,10 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     protected fun View.showFirstTimeUserExperienceSnackbar(@StringRes message: Int, onGotItClicked: (View) -> Unit) {
         dismissSnackbar()
-        snackbar = makeSnackbar(context.getString(message), Snackbar.LENGTH_INDEFINITE).apply {
+        makeSnackbar(context.getString(message), Snackbar.LENGTH_INDEFINITE).apply {
             //TODO: Customize Snackbar appearance.
             setAction(R.string.got_it, onGotItClicked)
-        }
-        snackbar?.show()
+        }.show()
     }
 
     protected fun View.showSnackbar(@StringRes message: Int, @StringRes actionButton: Int? = null, action: (View) -> Unit = {}, dismissListener: (() -> Unit)? = null) = showSnackbar(context.getString(message), actionButton, action, dismissListener)

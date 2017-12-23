@@ -5,6 +5,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!--TODO: Handle backups. -->
     <application
         android:name=".CampfireApplication"
         android:allowBackup="false"

@@ -1,11 +1,19 @@
 package com.pandulapeter.campfire.feature.home.playlist
 
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ShortcutInfo
+import android.content.pm.ShortcutManager
+import android.graphics.drawable.Icon
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.integration.AppShortcutManager
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
@@ -21,6 +29,7 @@ import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.setArguments
 import javax.inject.Inject
 
+
 /**
  * Displays the list of all songs the user marked as favorite. All of these items are also downloads.
  * They can be deleted from the list using the swipe-to-dismiss gesture. The list can also be re-
@@ -31,8 +40,9 @@ import javax.inject.Inject
 class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist), AlertDialogFragment.OnDialogItemsSelectedListener {
     @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
+    @Inject lateinit var appShortcutManager: AppShortcutManager
 
-    override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
+    override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
 
     override fun getRecyclerView() = binding.recyclerView
 
@@ -89,13 +99,24 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
                     currentId = viewModel.adapter.items[position].songInfo.id,
                     ids = viewModel.adapter.items.map { it.songInfo.id }))
             }
-        }
-        viewModel.adapter.downloadActionClickListener = { position ->
-            viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }
-        }
-        viewModel.adapter.dragHandleTouchListener = { position ->
-            if (viewModel.isInEditMode.get()) {
-                itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
+            viewModel.adapter.downloadActionClickListener = { position ->
+                viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }
+            }
+            viewModel.adapter.dragHandleTouchListener = { position ->
+                if (viewModel.isInEditMode.get()) {
+                    itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
+                }
+            }
+            // Update app shortcuts.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
+                (context.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager).dynamicShortcuts = listOf(
+                    ShortcutInfo.Builder(context, "library")
+                        .setShortLabel(getString(R.string.home_library))
+                        .setLongLabel(getString(R.string.app_shortcut_open_library))
+                        .setIcon(Icon.createWithResource(context, R.drawable.ic_library_24dp))
+                        .setIntent(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.mysite.example.com/"))) //TODO
+                        .build()
+                )
             }
         }
     }
