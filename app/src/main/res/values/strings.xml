@@ -15,7 +15,6 @@
     <string name="manage_playlists">Manage playlists</string>
     <string name="new_version_available">New version available</string>
     <string name="library_new">New</string>
-    <string name="song_item_song_downloaded">%s downloaded.</string>
     <string name="song_item_song_download_failed">%s cannot be downloaded.</string>
     <string name="song_item_try_again">Try again</string>
 

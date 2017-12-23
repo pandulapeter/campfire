@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.home
 
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
+import android.view.SubMenu
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.TextView
@@ -10,6 +11,7 @@ import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
@@ -40,12 +42,15 @@ import kotlin.coroutines.experimental.CoroutineContext
  * Controlled by [HomeViewModel].
  */
 class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activity_home), HomeFragment.HomeCallbacks {
+    @Inject lateinit var songInfoRepository: SongInfoRepository
     @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
     override val viewModel by lazy { HomeViewModel(downloadedSongRepository, userPreferenceRepository) }
     private var coroutine: CoroutineContext? = null
     private val playlistsContainerItem by lazy { binding.navigationView.menu.findItem(R.id.playlists).subMenu }
+    private val collectionsItem by lazy { binding.navigationView.menu.findItem(R.id.collections) }
+    private val historyItem by lazy { binding.navigationView.menu.findItem(R.id.history) }
     private val managePlaylistsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_playlists) }
     private val manageDownloadsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_downloads) }
 
@@ -80,26 +85,36 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
         viewModel.playlists.onPropertyChanged {
             playlistsContainerItem.run {
                 clear()
-                it.sortedBy { it.id }.forEachIndexed { index, playlist ->
-                    add(R.id.playlist_container, playlist.id, index, playlist.title ?: getString(R.string.home_favorites)).apply { setIcon(R.drawable.ic_playlist_24dp) }
-                }
-                add(R.id.playlist_container, R.id.playlists, it.size, R.string.home_new_playlist).apply { setIcon(R.drawable.ic_new_playlist_24dp) }
+                it.sortedBy { it.id }.forEachIndexed { index, playlist -> addPlaylistItem(playlist.id, index, playlist.title ?: getString(R.string.home_favorites)) }
+                addPlaylistItem(R.id.playlists, it.size, getString(R.string.home_new_playlist), true)
                 setGroupCheckable(R.id.playlist_container, true, true)
                 updateCheckedItem()
             }
             managePlaylistsItem.isVisible = it.size > 1
+        }
+        viewModel.isLibraryReady.onPropertyChanged { isLibraryReady ->
+            collectionsItem.isEnabled = isLibraryReady
+            historyItem.isEnabled = isLibraryReady
+            playlistsContainerItem.run {
+                viewModel.playlists.get()?.forEach {
+                    findItem(it.id)?.isEnabled = isLibraryReady
+                }
+                findItem(R.id.playlists)?.isEnabled = isLibraryReady
+            }
         }
         viewModel.hasDownloads.onPropertyChanged { manageDownloadsItem.isVisible = it }
     }
 
     override fun onStart() {
         super.onStart()
+        songInfoRepository.subscribe(viewModel)
         playlistRepository.subscribe(viewModel)
         downloadedSongRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
+        songInfoRepository.unsubscribe(viewModel)
         playlistRepository.unsubscribe(viewModel)
         downloadedSongRepository.unsubscribe(viewModel)
     }
@@ -171,5 +186,10 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     private fun consumeAndCloseDrawer(action: () -> Unit) = consume {
         action()
         binding.drawerLayout.closeDrawer(GravityCompat.START)
+    }
+
+    private fun SubMenu.addPlaylistItem(id: Int, index: Int, title: String, shouldUseAddIcon: Boolean = false) = add(com.pandulapeter.campfire.R.id.playlist_container, id, index, title).run {
+        setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist_24dp else R.drawable.ic_playlist_24dp)
+        isEnabled = viewModel.isLibraryReady.get()
     }
 }

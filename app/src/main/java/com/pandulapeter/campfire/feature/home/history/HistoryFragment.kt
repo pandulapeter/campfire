@@ -80,8 +80,9 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
             }
             viewModel.adapter.downloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) } }
         }
-        //TODO: Only show this during FTUX.
-        binding.root.showInfoSnackbar(R.string.history_hint)
+        viewModel.shouldShowHintSnackbar.onEventTriggered {
+            binding.root.showInfoSnackbar(R.string.history_hint)
+        }
     }
 
     override fun onStart() {

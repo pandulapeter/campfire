@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 class HomeViewModel(private val downloadedSongRepository: DownloadedSongRepository,
                     private val userPreferenceRepository: UserPreferenceRepository) : CampfireViewModel(), Subscriber {
     val playlists = ObservableField<List<Playlist>>()
+    val isLibraryReady = ObservableBoolean()
     val hasDownloads = ObservableBoolean()
     var navigationItem: NavigationItem = userPreferenceRepository.navigationItem
         set(value) {
@@ -25,6 +26,7 @@ class HomeViewModel(private val downloadedSongRepository: DownloadedSongReposito
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
+            is UpdateType.LibraryCacheUpdated -> isLibraryReady.set(updateType.songInfos.isNotEmpty())
             is UpdateType.DownloadedSongsUpdated -> hasDownloads.set(updateType.downloadedSongIds.isNotEmpty())
             is UpdateType.SongRemovedFromDownloads -> hasDownloads.set(downloadedSongRepository.getDownloadedSongIds().isNotEmpty())
             is UpdateType.SongAddedToDownloads,
@@ -43,7 +45,6 @@ class HomeViewModel(private val downloadedSongRepository: DownloadedSongReposito
             is UpdateType.PlaylistDeleted -> playlists.set(playlists.get().toMutableList().apply { removeAt(updateType.position) })
         }
     }
-
     /**
      * Marks the possible screens the user can reach using the side navigation on the home screen.
      */

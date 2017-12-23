@@ -28,6 +28,7 @@ class HistoryViewModel(
     val shouldShowClearButton = ObservableBoolean(historyRepository.getHistoryItems().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldInvalidateItemDecorations = ObservableBoolean()
+    val shouldShowHintSnackbar = ObservableBoolean()
     private val Calendar.year get() = get(Calendar.YEAR)
     private val Calendar.month get() = get(Calendar.MONTH)
     private val Calendar.week get() = get(Calendar.WEEK_OF_YEAR)
@@ -79,6 +80,10 @@ class HistoryViewModel(
         super.onUpdateDone(items, updateType)
         shouldShowClearButton.set(items.isNotEmpty())
         shouldInvalidateItemDecorations.set(true)
+        if (items.isNotEmpty()) {
+            //TODO: Only show this during FTUX
+            shouldShowHintSnackbar.set(true)
+        }
     }
 
     fun isHeader(position: Int) = position == 0 || getHeaderTitle(position) != getHeaderTitle(position - 1)

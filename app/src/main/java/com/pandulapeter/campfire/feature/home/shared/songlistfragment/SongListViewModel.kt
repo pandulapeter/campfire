@@ -26,7 +26,6 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
                                  protected val songInfoRepository: SongInfoRepository,
                                  protected val downloadedSongRepository: DownloadedSongRepository) : HomeFragmentViewModel(homeCallbacks), Subscriber {
     val adapter = SongInfoAdapter()
-    val shouldShowSongDownloadedSnackbar = ObservableField<String?>()
     val shouldShowDownloadErrorSnackbar = ObservableField<SongInfo?>()
 
     abstract fun getAdapterItems(): List<SongInfoViewModel>
@@ -42,7 +41,6 @@ abstract class SongListViewModel(homeCallbacks: HomeFragment.HomeCallbacks?,
 
     fun downloadSong(songInfo: SongInfo) = downloadedSongRepository.downloadSong(
         songInfo = songInfo,
-        onSuccess = { shouldShowSongDownloadedSnackbar.set(songInfo.title) },
         onFailure = { shouldShowDownloadErrorSnackbar.set(songInfo) })
 
     protected fun List<SongInfo>.filterWorkInProgress() = if (userPreferenceRepository.shouldHideWorkInProgress) filter { it.version ?: 0 >= 0 } else this

@@ -14,11 +14,13 @@
 
         <item
             android:id="@+id/collections"
+            android:enabled="false"
             android:icon="@drawable/ic_collections_24dp"
             android:title="@string/home_collections" />
 
         <item
             android:id="@+id/history"
+            android:enabled="false"
             android:icon="@drawable/ic_history_24dp"
             android:title="@string/home_history" />
 
@@ -31,13 +33,15 @@
 
     <item
         android:id="@+id/playlists"
+        android:enabled="false"
         android:title="@string/home_playlists">
 
         <menu>
 
             <group
                 android:id="@+id/playlist_container"
-                android:checkableBehavior="single">
+                android:checkableBehavior="single"
+                android:enabled="false">
 
             </group>
 
