@@ -25,7 +25,7 @@ sealed class UpdateType {
     class DownloadSuccessful(val songId: String) : UpdateType()
 
     class DownloadFailed(val songId: String) : UpdateType()
-
+    
     // HistoryRepository
     class HistoryUpdated(val historyIds: List<History>) : UpdateType()
 

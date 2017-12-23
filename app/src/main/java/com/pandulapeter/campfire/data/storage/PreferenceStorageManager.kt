@@ -18,6 +18,8 @@ class PreferenceStorageManager(context: Context) {
     var shouldHideExplicit by PreferenceFieldDelegate.Boolean("should_hide_explicit", true) //TODO: Add toggle in Settings.
     var shouldHideWorkInProgress by PreferenceFieldDelegate.Boolean("should_hide_work_in_progress", !BuildConfig.DEBUG)  //TODO: Add toggle in Settings.
     var shouldShowSongCount by PreferenceFieldDelegate.Boolean("should_show_song_count", BuildConfig.DEBUG) //TODO: Add toggle in Settings.
+    var shouldShowHistoryHint by PreferenceFieldDelegate.Boolean("should_show_history_hint", true)
+    var shouldShowPlaylistHint by PreferenceFieldDelegate.Boolean("should_show_playlist_hint", true)
     var navigationItem: HomeViewModel.NavigationItem
         get() {
             preferences.getString(KEY_NAVIGATION_ITEM, VALUE_LIBRARY).let {

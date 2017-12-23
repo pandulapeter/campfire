@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.ioc.module
 
 import com.pandulapeter.campfire.data.network.NetworkManager
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
+import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.LanguageRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
@@ -20,8 +21,34 @@ object RepositoryModule {
     @Provides
     @Singleton
     @JvmStatic
-    fun provideUserPreferenceRepository(
-        preferenceStorageManager: PreferenceStorageManager) = UserPreferenceRepository(preferenceStorageManager)
+    fun provideDownloadedSongRepository(
+        dataStorageManager: DataStorageManager,
+        fileStorageManager: FileStorageManager,
+        networkManager: NetworkManager) = DownloadedSongRepository(dataStorageManager, fileStorageManager, networkManager)
+
+    @Provides
+    @Singleton
+    @JvmStatic
+    fun provideFirstTimeUserExperienceRepository(
+        preferenceStorageManager: PreferenceStorageManager) = FirstTimeUserExperienceRepository(preferenceStorageManager)
+
+    @Provides
+    @Singleton
+    @JvmStatic
+    fun provideHistoryRepository(
+        dataStorageManager: DataStorageManager) = HistoryRepository(dataStorageManager)
+
+    @Provides
+    @Singleton
+    @JvmStatic
+    fun provideLanguageRepository(
+        preferenceStorageManager: PreferenceStorageManager) = LanguageRepository(preferenceStorageManager)
+
+    @Provides
+    @Singleton
+    @JvmStatic
+    fun providePlaylistRepository(
+        dataStorageManager: DataStorageManager) = PlaylistRepository(dataStorageManager)
 
     @Provides
     @Singleton
@@ -35,26 +62,6 @@ object RepositoryModule {
     @Provides
     @Singleton
     @JvmStatic
-    fun provideDownloadedSongRepository(
-        dataStorageManager: DataStorageManager,
-        fileStorageManager: FileStorageManager,
-        networkManager: NetworkManager) = DownloadedSongRepository(dataStorageManager, fileStorageManager, networkManager)
-
-    @Provides
-    @Singleton
-    @JvmStatic
-    fun provideLanguageRepository(
-        preferenceStorageManager: PreferenceStorageManager) = LanguageRepository(preferenceStorageManager)
-
-    @Provides
-    @Singleton
-    @JvmStatic
-    fun provideHistoryRepository(
-        dataStorageManager: DataStorageManager) = HistoryRepository(dataStorageManager)
-
-    @Provides
-    @Singleton
-    @JvmStatic
-    fun providePlaylistRepository(
-        dataStorageManager: DataStorageManager) = PlaylistRepository(dataStorageManager)
+    fun provideUserPreferenceRepository(
+        preferenceStorageManager: PreferenceStorageManager) = UserPreferenceRepository(preferenceStorageManager)
 }

@@ -3,11 +3,7 @@
 
     <!-- General -->
     <string name="campfire">Campfire</string>
-    <string name="remove_download">Remove download</string>
-    <string name="remove_download_confirmation_title">Are you sure?</string>
-    <string name="remove_download_confirmation_message">Removing the download will also delete the song from your playlists.</string>
-    <string name="remove_download_confirmation_remove">Remove</string>
-    <string name="remove_download_confirmation_cancel">Cancel</string>
+    <string name="got_it">Got it</string>
 
     <!-- Song list items -->
     <string name="download">Download</string>

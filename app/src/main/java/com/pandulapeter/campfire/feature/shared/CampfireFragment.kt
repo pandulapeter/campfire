@@ -12,7 +12,6 @@ import android.view.ViewGroup
 import android.view.animation.Animation
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.util.color
 import dagger.android.support.DaggerFragment
 
 /**
@@ -40,10 +39,11 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     override fun onCreateAnimation(transit: Int, enter: Boolean, nextAnim: Int): Animation? = if (enter) inAnimation else outAnimation
 
-    protected fun View.showInfoSnackbar(@StringRes message: Int) {
+    protected fun View.showFirstTimeUserExperienceSnackbar(@StringRes message: Int, onGotItClicked: (View) -> Unit) {
         dismissSnackbar()
         snackbar = makeSnackbar(context.getString(message), Snackbar.LENGTH_INDEFINITE).apply {
             //TODO: Customize Snackbar appearance.
+            setAction(R.string.got_it, onGotItClicked)
         }
         snackbar?.show()
     }

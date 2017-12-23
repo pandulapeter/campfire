@@ -6,6 +6,7 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.HomeActivity
@@ -29,6 +30,7 @@ import javax.inject.Inject
  */
 class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist), AlertDialogFragment.OnDialogItemsSelectedListener {
     @Inject lateinit var playlistRepository: PlaylistRepository
+    @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
 
     override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
 
@@ -39,9 +41,10 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         super.onViewCreated(view, savedInstanceState)
         viewModel.isInEditMode.onPropertyChanged {
             if (it) {
-                if (viewModel.adapterItemCount > 0) {
-                    //TODO: Only show during FTUX.
-                    binding.root.showInfoSnackbar(R.string.playlist_hint)
+                if (viewModel.adapterItemCount > 0 && firstTimeUserExperienceRepository.shouldShowPlaylistHint) {
+                    binding.root.showFirstTimeUserExperienceSnackbar(R.string.playlist_hint) {
+                        firstTimeUserExperienceRepository.shouldShowPlaylistHint = false
+                    }
                 }
             } else {
                 dismissSnackbar()

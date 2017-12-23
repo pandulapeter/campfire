@@ -7,6 +7,7 @@ import android.view.View
 import com.pandulapeter.campfire.HistoryBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
+import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
@@ -25,6 +26,7 @@ import javax.inject.Inject
 class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.layout.fragment_history), AlertDialogFragment.OnDialogItemsSelectedListener {
     @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var historyRepository: HistoryRepository
+    @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
 
     override fun getRecyclerView() = binding.recyclerView
 
@@ -81,7 +83,11 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
             viewModel.adapter.downloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) } }
         }
         viewModel.shouldShowHintSnackbar.onEventTriggered {
-            binding.root.showInfoSnackbar(R.string.history_hint)
+            if (firstTimeUserExperienceRepository.shouldShowHistoryHint) {
+                binding.root.showFirstTimeUserExperienceSnackbar(R.string.history_hint) {
+                    firstTimeUserExperienceRepository.shouldShowHistoryHint = false
+                }
+            }
         }
     }
 
