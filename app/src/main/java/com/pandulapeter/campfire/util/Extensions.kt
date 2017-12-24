@@ -6,7 +6,6 @@ import android.content.Intent
 import android.databinding.Observable
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
-import android.databinding.ObservableInt
 import android.os.Bundle
 import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
@@ -31,11 +30,6 @@ fun Context.drawable(@DrawableRes drawableId: Int) = AppCompatResources.getDrawa
 
 fun ObservableBoolean.toggle() = set(!get())
 
-fun <T> MutableCollection<T>.swap(newItems: Collection<T>) {
-    clear()
-    addAll(newItems)
-}
-
 inline fun ObservableBoolean.onEventTriggered(crossinline callback: () -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
@@ -59,14 +53,6 @@ inline fun <T> ObservableField<T>.onEventTriggered(crossinline callback: (T) -> 
 }
 
 inline fun ObservableBoolean.onPropertyChanged(crossinline callback: (Boolean) -> Unit) {
-    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            callback(get())
-        }
-    })
-}
-
-inline fun ObservableInt.onPropertyChanged(crossinline callback: (Int) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
             callback(get())

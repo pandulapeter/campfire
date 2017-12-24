@@ -37,8 +37,6 @@ class LanguageRepository(private val preferenceStorageManager: PreferenceStorage
         }
     }
 
-    fun getLanguages() = dataSet.keys.toList()
-
     fun isLanguageFilterEnabled(language: Language) = dataSet[language] ?: preferenceStorageManager.isLanguageFilterEnabled(language)
 
     fun setLanguageFilterEnabled(language: Language, isEnabled: Boolean) {
