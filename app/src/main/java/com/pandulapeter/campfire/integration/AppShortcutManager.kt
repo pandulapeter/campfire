@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.data.integration
+package com.pandulapeter.campfire.integration
 
 import android.content.Context
 import android.content.Intent
@@ -17,6 +17,8 @@ import kotlin.math.min
 
 /**
  * Handles dynamic app shortcuts on or above Android Oreo.
+ *
+ * TODO: Does not work as expected.
  */
 class AppShortcutManager(private val context: Context,
                          private val dataStorageManager: DataStorageManager,
@@ -29,14 +31,13 @@ class AppShortcutManager(private val context: Context,
     }
 
     fun onPlaylistOpened(playlistId: Int) {
-        val list = dataStorageManager.lastThreePlaylistIds.toMutableList().apply { add(0, playlistId.toString()) }.distinct()
-        dataStorageManager.lastThreePlaylistIds = list.subList(0, min(list.size, 3))
+        val list = dataStorageManager.playlistHistory.toMutableList().apply { add(0, playlistId.toString()) }.distinct()
+        dataStorageManager.playlistHistory = list.subList(0, min(list.size, 3))
         updateAppShortcuts()
     }
 
     private fun updateAppShortcuts() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
-            //TODO: There is no need to override if no changes were made.
             val shortcuts = mutableListOf<ShortcutInfo>()
             shortcuts.add(createAppShortcut(
                 "library",
@@ -50,7 +51,7 @@ class AppShortcutManager(private val context: Context,
                 context.getString(R.string.app_shortcut_open_collections),
                 R.drawable.ic_collections_24dp,
                 HomeViewModel.NavigationItem.Collections))
-            dataStorageManager.lastThreePlaylistIds.forEach {
+            dataStorageManager.playlistHistory.forEach {
                 playlistRepository.getPlaylist(it.toInt())?.let { playlist ->
                     val title = playlist.title ?: context.getString(R.string.home_favorites)
                     shortcuts.add(createAppShortcut(
@@ -73,7 +74,7 @@ class AppShortcutManager(private val context: Context,
                                   navigationItem: HomeViewModel.NavigationItem) = ShortcutInfo.Builder(context, id)
         .setShortLabel(shortLabel)
         .setLongLabel(longLabel)
-        .setIcon(Icon.createWithResource(context, icon))
+        .setIcon(Icon.createWithResource(context, icon)) //TODO: Tint icon.
         .setIntent(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/"))) //TODO: Do something with navigationItem.
         .build()
 }

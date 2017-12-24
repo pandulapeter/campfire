@@ -3,7 +3,7 @@ package com.pandulapeter.campfire.feature.home
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import com.google.gson.annotations.SerializedName
-import com.pandulapeter.campfire.data.integration.AppShortcutManager
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
@@ -28,7 +28,11 @@ class HomeViewModel(private val downloadedSongRepository: DownloadedSongReposito
         }
 
     init {
-        isLibraryReady.onPropertyChanged { appShortcutManager.onLibraryLoaded() }
+        isLibraryReady.onPropertyChanged {
+            if (it) {
+                appShortcutManager.onLibraryLoaded()
+            }
+        }
     }
 
     override fun onUpdate(updateType: UpdateType) {

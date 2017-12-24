@@ -1,9 +1,10 @@
 package com.pandulapeter.campfire.ioc.module
 
 import android.content.Context
-import com.pandulapeter.campfire.data.integration.AppShortcutManager
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.storage.DataStorageManager
+import com.pandulapeter.campfire.integration.AppShortcutManager
+import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.ioc.app.AppContext
 import dagger.Module
 import dagger.Provides
@@ -19,4 +20,9 @@ object IntegrationModule {
         @AppContext context: Context,
         dataStorageManager: DataStorageManager,
         playlistRepository: PlaylistRepository) = AppShortcutManager(context, dataStorageManager, playlistRepository)
+
+    @Provides
+    @Singleton
+    @JvmStatic
+    fun provideDeepLinkManager() = DeepLinkManager()
 }

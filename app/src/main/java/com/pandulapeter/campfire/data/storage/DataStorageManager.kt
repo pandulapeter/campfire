@@ -24,12 +24,11 @@ class DataStorageManager(context: Context, gson: Gson) {
     private val downloadedSongPreferences = context.applicationContext.getSharedPreferences("downloaded_song_storage", Context.MODE_PRIVATE)
     private val playlistPreferences = context.applicationContext.getSharedPreferences("playlist_storage", Context.MODE_PRIVATE)
     private val historyPreferences = context.applicationContext.getSharedPreferences("history_storage", Context.MODE_PRIVATE)
-    private val otherPreferences = context.applicationContext.getSharedPreferences("other_storage", Context.MODE_PRIVATE)
     var songInfoCache by MapDelegate(SongInfo::class.java, gson, songInfoPreferences, "ids", "song_")
     var downloadedSongCache by MapDelegate(DownloadedSong::class.java, gson, downloadedSongPreferences, "ids", "song_")
     var playlists by MapDelegate(Playlist::class.java, gson, playlistPreferences, "ids", "playlist_")
     var history by MapDelegate(History::class.java, gson, historyPreferences, "ids", "history_")
-    var lastThreePlaylistIds by StringListDelegate(gson, otherPreferences, "last_three_playlist_ids")
+    var playlistHistory by StringListDelegate(gson, historyPreferences, "playlist_ids")
 
     private class StringListDelegate(
         private val gson: Gson,
