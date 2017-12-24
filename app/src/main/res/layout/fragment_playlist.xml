@@ -134,15 +134,41 @@
 
                         </android.support.constraint.ConstraintLayout>
 
-                        <TextView
+                        <android.support.constraint.ConstraintLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_vertical"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:text="@{viewModel.title}"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                            tools:text="Favorites" />
+                            android:layout_height="match_parent">
+
+                            <ImageView
+                                android:id="@+id/share"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:contentDescription="@string/playlist_share"
+                                android:onClick="@{() -> viewModel.onShareButtonClicked()}"
+                                android:padding="@dimen/toolbar_action_button_padding"
+                                android:visibility="@{viewModel.shouldShowPlayButton}"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:srcCompat="@drawable/ic_share_24dp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="0dp"
+                                android:layout_gravity="center_vertical"
+                                android:ellipsize="end"
+                                android:gravity="center_vertical"
+                                android:maxLines="1"
+                                android:text="@{viewModel.title}"
+                                android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toStartOf="@id/share"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"
+                                tools:text="Favorites" />
+
+                        </android.support.constraint.ConstraintLayout>
 
                     </ViewSwitcher>
 

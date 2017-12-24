@@ -13,7 +13,6 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
@@ -21,6 +20,7 @@ import com.pandulapeter.campfire.feature.home.HomeActivity
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
@@ -57,7 +57,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
                     }
                 }
             } else {
-                dismissSnackbar()
+                dismissHintSnackbar()
                 hideKeyboard(activity?.currentFocus)
             }
         }
@@ -119,6 +119,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
                 )
             }
         }
+        viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered { binding.root.showSnackbar(R.string.work_in_progress) }
     }
 
     override fun onStart() {

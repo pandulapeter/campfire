@@ -25,6 +25,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     abstract protected val viewModel: VM
     protected lateinit var binding: B
     private var snackbar: Snackbar? = null
+    private var hintSnackbar: Snackbar? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)
@@ -41,10 +42,11 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     protected fun View.showFirstTimeUserExperienceSnackbar(@StringRes message: Int, onGotItClicked: (View) -> Unit) {
         dismissSnackbar()
-        makeSnackbar(context.getString(message), Snackbar.LENGTH_INDEFINITE).apply {
+        hintSnackbar = makeSnackbar(context.getString(message), Snackbar.LENGTH_INDEFINITE).apply {
             //TODO: Customize Snackbar appearance.
             setAction(R.string.got_it, onGotItClicked)
-        }.show()
+        }
+        hintSnackbar?.show()
     }
 
     protected fun View.showSnackbar(@StringRes message: Int, @StringRes actionButton: Int? = null, action: (View) -> Unit = {}, dismissListener: (() -> Unit)? = null) = showSnackbar(context.getString(message), actionButton, action, dismissListener)
@@ -56,6 +58,11 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
             snackbar?.setAction(it, action)
         }
         snackbar?.show()
+    }
+
+    protected fun dismissHintSnackbar() {
+        hintSnackbar?.dismiss()
+        hintSnackbar = null
     }
 
     protected fun dismissSnackbar() {

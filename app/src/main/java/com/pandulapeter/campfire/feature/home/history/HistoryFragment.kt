@@ -51,6 +51,8 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
                 viewHolder?.adapterPosition?.let { position ->
                     val songInfo = viewModel.adapter.items[position].songInfo
                     viewModel.removeSongFromHistory(songInfo.id)
+                    firstTimeUserExperienceRepository.shouldShowHistoryHint = false
+                    dismissHintSnackbar()
                 }
             }
         })

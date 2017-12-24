@@ -3,6 +3,7 @@
 
     <!-- General -->
     <string name="campfire">Campfire</string>
+    <string name="work_in_progress">Work in progress</string>
     <string name="got_it">Got it</string>
 
     <!-- App shortcut -->
@@ -58,7 +59,7 @@
     <string name="history_clear_confirmation_clear">Clear</string>
     <string name="history_clear_confirmation_cancel">Cancel</string>
     <string name="history_now">Now</string>
-    <string name="history_today">Today</string>
+    <string name="history_today">Earlier today</string>
     <string name="history_yesterday">Yesterday</string>
     <string name="history_this_week">This week</string>
     <string name="history_last_week">Last week</string>
@@ -72,6 +73,7 @@
     <!-- Playlist screen -->
     <string name="playlist_edit">Edit</string>
     <string name="playlist_delete">Delete</string>
+    <string name="playlist_share">Share</string>
     <string name="playlist_enter_title">Enter playlist title</string>
     <string name="playlist_done">Done</string>
     <string name="playlist_delete_confirmation_title">Are you sure?</string>

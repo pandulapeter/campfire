@@ -3,7 +3,6 @@ package com.pandulapeter.campfire.feature.home.playlist
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
@@ -14,6 +13,7 @@ import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 import java.util.Collections
 
@@ -36,6 +36,7 @@ class PlaylistViewModel(
     val isInEditMode = ObservableBoolean()
     val shouldShowDeleteConfirmation = ObservableBoolean()
     val shouldDisplayEditButton = ObservableBoolean()
+    val shouldShowWorkInProgressSnackbar = ObservableBoolean()
     val shouldAllowDeleteButton = playlistId != Playlist.FAVORITES_ID
 
     init {
@@ -131,6 +132,11 @@ class PlaylistViewModel(
 
     fun onPlayButtonClicked() {
         if (adapterItemCount > 0) adapter.itemClickListener(0)
+    }
+
+    fun onShareButtonClicked() {
+        //TODO: Implement deep link sharing.
+        shouldShowWorkInProgressSnackbar.set(true)
     }
 
     fun removeSongFromPlaylist(songId: String) = playlistRepository.removeSongFromPlaylist(playlistId, songId)
