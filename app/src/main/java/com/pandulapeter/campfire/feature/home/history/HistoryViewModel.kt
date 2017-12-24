@@ -81,7 +81,6 @@ class HistoryViewModel(
         shouldShowClearButton.set(items.isNotEmpty())
         shouldInvalidateItemDecorations.set(true)
         if (items.isNotEmpty()) {
-            //TODO: Only show this during FTUX
             shouldShowHintSnackbar.set(true)
         }
     }

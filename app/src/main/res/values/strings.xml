@@ -91,5 +91,6 @@
     <string name="manage_downloads_delete_all_confirmation_message">This will remove all downloaded songs.</string>
     <string name="manage_downloads_delete_all_confirmation_clear">Clear</string>
     <string name="manage_downloads_delete_all_confirmation_cancel">Cancel</string>
+    <string name="manage_downloads_hint">Swipe items away to remove them from your downloads.</string>
 
 </resources>

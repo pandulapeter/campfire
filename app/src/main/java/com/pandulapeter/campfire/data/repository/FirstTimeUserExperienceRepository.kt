@@ -19,4 +19,9 @@ class FirstTimeUserExperienceRepository(
             preferenceStorageManager.shouldShowPlaylistHint = new
         }
     }
+    var shouldShowManageDownloadsHint by Delegates.observable(preferenceStorageManager.shouldShowManageDownloadsHint) { _: KProperty<*>, old: Boolean, new: Boolean ->
+        if (old != new) {
+            preferenceStorageManager.shouldShowManageDownloadsHint = new
+        }
+    }
 }

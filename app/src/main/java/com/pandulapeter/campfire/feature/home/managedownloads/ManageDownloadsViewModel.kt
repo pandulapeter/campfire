@@ -26,6 +26,7 @@ class ManageDownloadsViewModel(
     downloadedSongRepository: DownloadedSongRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
     val shouldShowDeleteAllButton = ObservableBoolean()
     val shouldShowConfirmationDialog = ObservableBoolean()
+    val shouldShowHintSnackbar = ObservableBoolean()
     val totalFileSize = ObservableField(context?.getString(R.string.manage_downloads_total_size_calculating) ?: "")
 
     override fun getAdapterItems() = downloadedSongRepository.getDownloadedSongIds()
@@ -57,6 +58,9 @@ class ManageDownloadsViewModel(
     override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         super.onUpdateDone(items, updateType)
         shouldShowDeleteAllButton.set(items.isNotEmpty())
+        if (items.isNotEmpty()) {
+            shouldShowHintSnackbar.set(true)
+        }
         async(UI) {
             totalFileSize.set(async(CommonPool) {
                 humanReadableByteCount(downloadedSongRepository.getDownloadCacheSize())

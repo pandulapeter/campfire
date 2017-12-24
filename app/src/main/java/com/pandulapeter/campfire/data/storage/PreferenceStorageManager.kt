@@ -20,6 +20,7 @@ class PreferenceStorageManager(context: Context) {
     var shouldShowSongCount by PreferenceFieldDelegate.Boolean("should_show_song_count", BuildConfig.DEBUG) //TODO: Add toggle in Settings.
     var shouldShowHistoryHint by PreferenceFieldDelegate.Boolean("should_show_history_hint", true)
     var shouldShowPlaylistHint by PreferenceFieldDelegate.Boolean("should_show_playlist_hint", true)
+    var shouldShowManageDownloadsHint by PreferenceFieldDelegate.Boolean("should_show_manage_downloads_hint", true)
     var navigationItem: HomeViewModel.NavigationItem
         get() {
             preferences.getString(KEY_NAVIGATION_ITEM, VALUE_LIBRARY).let {

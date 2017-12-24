@@ -6,10 +6,13 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.ManageDownloadsBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
+import com.pandulapeter.campfire.util.onPropertyChanged
+import javax.inject.Inject
 
 /**
  * Allows the user to delete downloaded songs.
@@ -17,6 +20,7 @@ import com.pandulapeter.campfire.util.onEventTriggered
  * Controlled by [ManageDownloadsViewModel].
  */
 class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageDownloadsViewModel>(R.layout.fragment_manage_downloads), AlertDialogFragment.OnDialogItemsSelectedListener {
+    @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
 
     override fun getRecyclerView() = binding.recyclerView
 
@@ -40,6 +44,8 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageD
                 viewHolder?.adapterPosition?.let { position ->
                     val songInfo = viewModel.adapter.items[position].songInfo
                     viewModel.removeSongFromDownloads(songInfo.id)
+                    firstTimeUserExperienceRepository.shouldShowManageDownloadsHint = false
+                    dismissHintSnackbar()
                 }
             }
         })
@@ -48,6 +54,13 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageD
         context?.let { context ->
             viewModel.adapter.itemClickListener = { position ->
                 startActivity(DetailActivity.getStartIntent(context = context, currentId = viewModel.adapter.items[position].songInfo.id))
+            }
+        }
+        viewModel.shouldShowHintSnackbar.onPropertyChanged {
+            if (firstTimeUserExperienceRepository.shouldShowManageDownloadsHint) {
+                binding.root.showFirstTimeUserExperienceSnackbar(R.string.manage_downloads_hint) {
+                    firstTimeUserExperienceRepository.shouldShowManageDownloadsHint = false
+                }
             }
         }
     }
