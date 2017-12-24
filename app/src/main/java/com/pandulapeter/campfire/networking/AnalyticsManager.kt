@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.data.network
+package com.pandulapeter.campfire.networking
 
 /**
  * Wrapper for tracking analytics events.

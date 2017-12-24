@@ -30,7 +30,7 @@ class HomeViewModel(private val downloadedSongRepository: DownloadedSongReposito
     init {
         isLibraryReady.onPropertyChanged {
             if (it) {
-                appShortcutManager.onLibraryLoaded()
+                appShortcutManager.updateAppShortcuts()
             }
         }
     }

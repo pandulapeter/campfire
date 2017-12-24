@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire.ioc.module
 
-import com.pandulapeter.campfire.data.network.NetworkManager
+import com.pandulapeter.campfire.networking.NetworkManager
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository

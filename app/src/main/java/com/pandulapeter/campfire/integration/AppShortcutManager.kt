@@ -24,19 +24,13 @@ class AppShortcutManager(private val context: Context,
                          private val dataStorageManager: DataStorageManager,
                          private val playlistRepository: PlaylistRepository) {
 
-    fun onLibraryLoaded() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1 && (context.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager).dynamicShortcuts.isEmpty()) {
-            updateAppShortcuts()
-        }
-    }
-
     fun onPlaylistOpened(playlistId: Int) {
         val list = dataStorageManager.playlistHistory.toMutableList().apply { add(0, playlistId.toString()) }.distinct()
         dataStorageManager.playlistHistory = list.subList(0, min(list.size, 3))
         updateAppShortcuts()
     }
 
-    private fun updateAppShortcuts() {
+    fun updateAppShortcuts() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
             val shortcuts = mutableListOf<ShortcutInfo>()
             shortcuts.add(createAppShortcut(

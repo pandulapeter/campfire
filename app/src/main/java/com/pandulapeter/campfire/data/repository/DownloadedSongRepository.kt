@@ -3,7 +3,7 @@ package com.pandulapeter.campfire.data.repository
 import com.pandulapeter.campfire.data.model.DownloadedSong
 import com.pandulapeter.campfire.data.model.SongDetail
 import com.pandulapeter.campfire.data.model.SongInfo
-import com.pandulapeter.campfire.data.network.NetworkManager
+import com.pandulapeter.campfire.networking.NetworkManager
 import com.pandulapeter.campfire.data.repository.shared.Repository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType

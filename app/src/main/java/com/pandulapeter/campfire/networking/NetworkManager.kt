@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.data.network
+package com.pandulapeter.campfire.networking
 
 import com.google.gson.Gson
 import okhttp3.OkHttpClient
