@@ -54,13 +54,13 @@ class AppShortcutManager(context: Context, dataStorageManager: DataStorageManage
                 LIBRARY_ID,
                 context.getString(R.string.home_library),
                 context.getString(R.string.app_shortcut_open_library),
-                R.drawable.ic_library_24dp,
+                R.drawable.ic_shortcut_library_48dp,
                 HomeViewModel.NavigationItem.Library))
             shortcuts.add(createAppShortcut(
                 COLLECTIONS_ID,
                 context.getString(R.string.home_collections),
                 context.getString(R.string.app_shortcut_open_collections),
-                R.drawable.ic_collections_24dp,
+                R.drawable.ic_shortcut_collections_48dp,
                 HomeViewModel.NavigationItem.Collections))
             dataStorageManager.playlistHistory.forEach {
                 playlistRepository.getPlaylist(it.toInt())?.let { playlist ->
@@ -69,7 +69,7 @@ class AppShortcutManager(context: Context, dataStorageManager: DataStorageManage
                         PLAYLIST_ID + playlist.id,
                         title,
                         context.getString(R.string.app_shortcut_open_playlist, title),
-                        R.drawable.ic_playlist_24dp,
+                        R.drawable.ic_shortcut_playlist_48dp,
                         HomeViewModel.NavigationItem.Playlist(playlist.id)))
                 }
             }
