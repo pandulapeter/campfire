@@ -24,4 +24,9 @@ class FirstTimeUserExperienceRepository(
             preferenceStorageManager.shouldShowManageDownloadsHint = new
         }
     }
+    var shouldShowDetailSwipeHint by Delegates.observable(preferenceStorageManager.shouldShowDetailSwipeHint) { _: KProperty<*>, old: Boolean, new: Boolean ->
+        if (old != new) {
+            preferenceStorageManager.shouldShowDetailSwipeHint = new
+        }
+    }
 }

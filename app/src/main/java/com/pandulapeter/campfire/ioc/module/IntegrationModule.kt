@@ -19,7 +19,7 @@ object IntegrationModule {
     fun provideAppShortcutManager(
         @AppContext context: Context,
         dataStorageManager: DataStorageManager,
-        playlistRepository: PlaylistRepository) = AppShortcutManager(context, dataStorageManager, playlistRepository)
+        playlistRepository: PlaylistRepository) = AppShortcutManager(context, playlistRepository, dataStorageManager)
 
     @Provides
     @Singleton

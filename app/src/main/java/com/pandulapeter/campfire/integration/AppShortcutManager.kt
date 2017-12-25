@@ -18,36 +18,40 @@ import kotlin.math.min
 
 /**
  * Handles dynamic app shortcuts on or above Android Oreo.
- *
- * TODO: Does not work on Nova Launcher.
  */
-class AppShortcutManager(context: Context, dataStorageManager: DataStorageManager, playlistRepository: PlaylistRepository) : Features {
-    private val implementation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) Implementation(context, dataStorageManager, playlistRepository) else CompatImplementation()
+class AppShortcutManager(context: Context,
+                         playlistRepository:
+                         PlaylistRepository,
+                         private val dataStorageManager: DataStorageManager) {
+    private val implementation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) RealImplementation(context, playlistRepository, dataStorageManager) else FakeImplementation()
 
-    override fun onLibraryOpened() = implementation.onLibraryOpened()
+    fun onLibraryOpened() = implementation.trackAppShortcutUsage(LIBRARY_ID)
 
-    override fun onCollectionsOpened() = implementation.onCollectionsOpened()
+    fun onCollectionsOpened() = implementation.trackAppShortcutUsage(COLLECTIONS_ID)
 
-    override fun onPlaylistOpened(playlistId: Int) = implementation.onPlaylistOpened(playlistId)
+    fun onPlaylistOpened(playlistId: Int) {
+        implementation.trackAppShortcutUsage(PLAYLIST_ID + playlistId.toString())
+        val list = dataStorageManager.playlistHistory.toMutableList().apply { add(0, playlistId.toString()) }.distinct()
+        dataStorageManager.playlistHistory = list.subList(0, min(list.size, 3))
+        implementation.updateAppShortcuts()
+    }
 
-    override fun updateAppShortcuts() = implementation.updateAppShortcuts()
+    fun updateAppShortcuts() = implementation.updateAppShortcuts()
+
+    private interface Implementation {
+
+        fun updateAppShortcuts()
+
+        fun removeAppShortcuts()
+
+        fun trackAppShortcutUsage(id: String)
+    }
 
     @RequiresApi(Build.VERSION_CODES.N_MR1)
-    private class Implementation(private val context: Context,
-                                 private val dataStorageManager: DataStorageManager,
-                                 private val playlistRepository: PlaylistRepository) : Features {
+    private class RealImplementation(private val context: Context,
+                                     private val playlistRepository: PlaylistRepository,
+                                     private val dataStorageManager: DataStorageManager) : Implementation {
         private val shortcutManager: ShortcutManager = context.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
-
-        override fun onLibraryOpened() = trackAppShortcutUsage(LIBRARY_ID)
-
-        override fun onCollectionsOpened() = trackAppShortcutUsage(COLLECTIONS_ID)
-
-        override fun onPlaylistOpened(playlistId: Int) {
-            trackAppShortcutUsage(playlistId.toString())
-            val list = dataStorageManager.playlistHistory.toMutableList().apply { add(0, playlistId.toString()) }.distinct()
-            dataStorageManager.playlistHistory = list.subList(0, min(list.size, 3))
-            updateAppShortcuts()
-        }
 
         override fun updateAppShortcuts() {
             removeAppShortcuts()
@@ -78,6 +82,10 @@ class AppShortcutManager(context: Context, dataStorageManager: DataStorageManage
             shortcutManager.dynamicShortcuts = shortcuts
         }
 
+        override fun removeAppShortcuts() = shortcutManager.removeAllDynamicShortcuts()
+
+        override fun trackAppShortcutUsage(id: String) = shortcutManager.reportShortcutUsed(id)
+
         private fun createAppShortcut(id: String,
                                       label: String,
                                       @DrawableRes icon: Int,
@@ -86,37 +94,20 @@ class AppShortcutManager(context: Context, dataStorageManager: DataStorageManage
             .setIcon(Icon.createWithResource(context, icon))
             .setIntent(HomeActivity.getStartIntent(context, navigationItem).setAction(Intent.ACTION_VIEW))
             .build()
-
-        private fun removeAppShortcuts() = shortcutManager.removeAllDynamicShortcuts()
-
-        private fun trackAppShortcutUsage(id: String) = shortcutManager.reportShortcutUsed(id)
-
-        private companion object {
-            const val LIBRARY_ID = "library"
-            const val COLLECTIONS_ID = "collections"
-            const val PLAYLIST_ID = "playlist_"
-        }
     }
 
-    private class CompatImplementation : Features {
-
-        override fun onLibraryOpened() = Unit
-
-        override fun onCollectionsOpened() = Unit
-
-        override fun onPlaylistOpened(playlistId: Int) = Unit
+    private class FakeImplementation : Implementation {
 
         override fun updateAppShortcuts() = Unit
+
+        override fun removeAppShortcuts() = Unit
+
+        override fun trackAppShortcutUsage(id: String) = Unit
     }
-}
 
-private interface Features {
-
-    fun onLibraryOpened()
-
-    fun onCollectionsOpened()
-
-    fun onPlaylistOpened(playlistId: Int)
-
-    fun updateAppShortcuts()
+    private companion object {
+        const val LIBRARY_ID = "library"
+        const val COLLECTIONS_ID = "collections"
+        const val PLAYLIST_ID = "playlist_"
+    }
 }
