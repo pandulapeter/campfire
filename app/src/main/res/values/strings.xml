@@ -6,11 +6,6 @@
     <string name="work_in_progress">Work in progress</string>
     <string name="got_it">Got it</string>
 
-    <!-- App shortcut -->
-    <string name="app_shortcut_open_library">Open library</string>
-    <string name="app_shortcut_open_collections">Open collections</string>
-    <string name="app_shortcut_open_playlist">Open %s</string>
-
     <!-- Song list items -->
     <string name="download">Download</string>
     <string name="update">Update</string>

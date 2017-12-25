@@ -22,30 +22,8 @@ class PreferenceStorageManager(context: Context) {
     var shouldShowPlaylistHint by PreferenceFieldDelegate.Boolean("should_show_playlist_hint", true)
     var shouldShowManageDownloadsHint by PreferenceFieldDelegate.Boolean("should_show_manage_downloads_hint", true)
     var navigationItem: HomeViewModel.NavigationItem
-        get() {
-            preferences.getString(KEY_NAVIGATION_ITEM, VALUE_LIBRARY).let {
-                return when (it) {
-                    VALUE_LIBRARY -> HomeViewModel.NavigationItem.Library
-                    VALUE_COLLECTIONS -> HomeViewModel.NavigationItem.Collections
-                    VALUE_HISTORY -> HomeViewModel.NavigationItem.History
-                    VALUE_SETTINGS -> HomeViewModel.NavigationItem.Settings
-                    VALUE_MANAGE_PLAYLISTS -> HomeViewModel.NavigationItem.ManagePlaylists
-                    VALUE_MANAGE_DOWNLOADS -> HomeViewModel.NavigationItem.ManageDownloads
-                    else -> HomeViewModel.NavigationItem.Playlist(Integer.parseInt(it.removePrefix(VALUE_PLAYLIST)))
-                }
-            }
-        }
-        set(value) {
-            preferences.edit().putString(KEY_NAVIGATION_ITEM, when (value) {
-                HomeViewModel.NavigationItem.Library -> VALUE_LIBRARY
-                HomeViewModel.NavigationItem.Collections -> VALUE_COLLECTIONS
-                HomeViewModel.NavigationItem.History -> VALUE_HISTORY
-                HomeViewModel.NavigationItem.Settings -> VALUE_SETTINGS
-                is HomeViewModel.NavigationItem.Playlist -> VALUE_PLAYLIST + value.id
-                HomeViewModel.NavigationItem.ManagePlaylists -> VALUE_MANAGE_PLAYLISTS
-                HomeViewModel.NavigationItem.ManageDownloads -> VALUE_MANAGE_DOWNLOADS
-            }).apply()
-        }
+        get() = HomeViewModel.NavigationItem.fromStringValue(preferences.getString(KEY_NAVIGATION_ITEM, null))
+        set(value) = preferences.edit().putString(KEY_NAVIGATION_ITEM, value.stringValue).apply()
 
     fun isLanguageFilterEnabled(language: Language) = when (language) {
         is Language.Known -> preferences.getBoolean(KEY_LANGUAGE_FILTER + language.id, true)
@@ -76,13 +54,6 @@ class PreferenceStorageManager(context: Context) {
 
     private companion object {
         private const val KEY_NAVIGATION_ITEM = "navigation_item"
-        private const val VALUE_LIBRARY = "library"
-        private const val VALUE_COLLECTIONS = "collections"
-        private const val VALUE_HISTORY = "history"
-        private const val VALUE_SETTINGS = "settings"
-        private const val VALUE_PLAYLIST = "playlist_"
-        private const val VALUE_MANAGE_PLAYLISTS = "manage_playlists"
-        private const val VALUE_MANAGE_DOWNLOADS = "manage_downloads"
         private const val KEY_LANGUAGE_FILTER = "language_filter_"
         private const val KEY_UNKNOWN_LANGUAGE_FILTER = "unknown_language_filter"
     }

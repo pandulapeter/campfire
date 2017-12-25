@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.mapToLanguage
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.replaceSpecialCharacters
@@ -28,6 +29,7 @@ class LibraryViewModel(
     userPreferenceRepository: UserPreferenceRepository,
     songInfoRepository: SongInfoRepository,
     downloadedSongRepository: DownloadedSongRepository,
+    appShortcutManager: AppShortcutManager,
     private val playlistRepository: PlaylistRepository,
     private val languageRepository: LanguageRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.searchQuery.isNotEmpty())
@@ -47,6 +49,7 @@ class LibraryViewModel(
         searchQuery.onPropertyChanged { userPreferenceRepository.searchQuery = it }
         shouldShowDownloadedOnly.onPropertyChanged { userPreferenceRepository.shouldShowDownloadedOnly = it }
         isSortedByTitle.onPropertyChanged { userPreferenceRepository.isSortedByTitle = it }
+        appShortcutManager.onLibraryOpened()
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {

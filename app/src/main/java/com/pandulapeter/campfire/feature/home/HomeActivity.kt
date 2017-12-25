@@ -1,5 +1,7 @@
 package com.pandulapeter.campfire.feature.home
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.view.SubMenu
@@ -9,7 +11,6 @@ import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -25,9 +26,12 @@ import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.shared.CampfireActivity
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
+import com.pandulapeter.campfire.integration.AppShortcutManager
+import com.pandulapeter.campfire.util.IntentExtraDelegate
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.disableScrollbars
+import com.pandulapeter.campfire.util.getIntentFor
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onPropertyChanged
 import kotlinx.coroutines.experimental.CommonPool
@@ -58,6 +62,12 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Handle deep link.
+        intent.navigationItem.let {
+            if (it.isNotEmpty()) {
+                viewModel.navigationItem = HomeViewModel.NavigationItem.fromStringValue(it)
+            }
+        }
         // Set up the side navigation drawer.
         binding.navigationView.disableScrollbars()
         (binding.navigationView.getHeaderView(0).findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
@@ -105,6 +115,18 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
             }
         }
         viewModel.hasDownloads.onPropertyChanged { manageDownloadsItem.isVisible = it }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        intent?.let {
+            // Handle deep link.
+            intent.navigationItem.let {
+                if (it.isNotEmpty()) {
+                    setCheckedItem(HomeViewModel.NavigationItem.fromStringValue(it))
+                }
+            }
+        }
     }
 
     override fun onStart() {
@@ -160,6 +182,7 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     private fun replaceActiveFragment(navigationItem: HomeViewModel.NavigationItem) {
         val currentFragment = getCurrentFragment()
         if (viewModel.navigationItem != navigationItem || currentFragment == null) {
+            viewModel.navigationItem = navigationItem
             coroutine?.cancel()
             coroutine = async(UI) {
                 val nextFragment = async(CommonPool) {
@@ -173,7 +196,6 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
                         HomeViewModel.NavigationItem.ManageDownloads -> ManageDownloadsFragment()
                     }
                 }.await()
-                viewModel.navigationItem = navigationItem
                 currentFragment?.let {
                     it.outAnimation = AnimationUtils.loadAnimation(this@HomeActivity, android.R.anim.fade_out)
                     (nextFragment as CampfireFragment<*, *>).inAnimation = AnimationUtils.loadAnimation(this@HomeActivity, android.R.anim.fade_in)
@@ -193,5 +215,13 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     private fun SubMenu.addPlaylistItem(id: Int, index: Int, title: String, shouldUseAddIcon: Boolean = false) = add(com.pandulapeter.campfire.R.id.playlist_container, id, index, title).run {
         setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist_24dp else R.drawable.ic_playlist_24dp)
         isEnabled = viewModel.isLibraryReady.get()
+    }
+
+    companion object {
+        private var Intent.navigationItem by IntentExtraDelegate.String("navigation_item")
+
+        fun getStartIntent(context: Context, navigationItem: HomeViewModel.NavigationItem) = context.getIntentFor(HomeActivity::class) {
+            it.navigationItem = navigationItem.stringValue
+        }
     }
 }

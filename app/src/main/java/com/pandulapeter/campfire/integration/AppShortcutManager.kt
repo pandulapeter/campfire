@@ -9,15 +9,17 @@ import android.os.Build
 import android.support.annotation.DrawableRes
 import android.support.annotation.RequiresApi
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.storage.DataStorageManager
+import com.pandulapeter.campfire.feature.home.HomeActivity
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import kotlin.math.min
 
 /**
  * Handles dynamic app shortcuts on or above Android Oreo.
  *
- * TODO: Does not work as expected.
+ * TODO: Does not work on Nova Launcher.
  */
 class AppShortcutManager(context: Context, dataStorageManager: DataStorageManager, playlistRepository: PlaylistRepository) : Features {
     private val implementation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) Implementation(context, dataStorageManager, playlistRepository) else CompatImplementation()
@@ -53,22 +55,22 @@ class AppShortcutManager(context: Context, dataStorageManager: DataStorageManage
             shortcuts.add(createAppShortcut(
                 LIBRARY_ID,
                 context.getString(R.string.home_library),
-                context.getString(R.string.app_shortcut_open_library),
                 R.drawable.ic_shortcut_library_48dp,
                 HomeViewModel.NavigationItem.Library))
             shortcuts.add(createAppShortcut(
                 COLLECTIONS_ID,
                 context.getString(R.string.home_collections),
-                context.getString(R.string.app_shortcut_open_collections),
                 R.drawable.ic_shortcut_collections_48dp,
                 HomeViewModel.NavigationItem.Collections))
+            if (dataStorageManager.playlistHistory.isEmpty()) {
+                dataStorageManager.playlistHistory = dataStorageManager.playlistHistory.toMutableList().apply { add(Playlist.FAVORITES_ID.toString()) }
+            }
             dataStorageManager.playlistHistory.forEach {
                 playlistRepository.getPlaylist(it.toInt())?.let { playlist ->
                     val title = playlist.title ?: context.getString(R.string.home_favorites)
                     shortcuts.add(createAppShortcut(
                         PLAYLIST_ID + playlist.id,
                         title,
-                        context.getString(R.string.app_shortcut_open_playlist, title),
                         R.drawable.ic_shortcut_playlist_48dp,
                         HomeViewModel.NavigationItem.Playlist(playlist.id)))
                 }
@@ -77,14 +79,12 @@ class AppShortcutManager(context: Context, dataStorageManager: DataStorageManage
         }
 
         private fun createAppShortcut(id: String,
-                                      shortLabel: String,
-                                      longLabel: String,
+                                      label: String,
                                       @DrawableRes icon: Int,
                                       navigationItem: HomeViewModel.NavigationItem) = ShortcutInfo.Builder(context, id)
-            .setShortLabel(shortLabel)
-            .setLongLabel(longLabel)
-            .setIcon(Icon.createWithResource(context, icon)) //TODO: Tint icon.
-            .setIntent(Intent().setAction(Intent.ACTION_VIEW)) //TODO: Handle navigationItem.
+            .setShortLabel(label)
+            .setIcon(Icon.createWithResource(context, icon))
+            .setIntent(HomeActivity.getStartIntent(context, navigationItem).setAction(Intent.ACTION_VIEW))
             .build()
 
         private fun removeAppShortcuts() = shortcutManager.removeAllDynamicShortcuts()

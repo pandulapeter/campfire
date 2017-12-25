@@ -1,12 +1,5 @@
 package com.pandulapeter.campfire.feature.home.playlist
 
-import android.content.Context
-import android.content.Intent
-import android.content.pm.ShortcutInfo
-import android.content.pm.ShortcutManager
-import android.graphics.drawable.Icon
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -106,17 +99,6 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
                 if (viewModel.isInEditMode.get()) {
                     itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
                 }
-            }
-            // Update app shortcuts.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
-                (context.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager).dynamicShortcuts = listOf(
-                    ShortcutInfo.Builder(context, "library")
-                        .setShortLabel(getString(R.string.home_library))
-                        .setLongLabel(getString(R.string.app_shortcut_open_library))
-                        .setIcon(Icon.createWithResource(context, R.drawable.ic_library_24dp))
-                        .setIntent(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.mysite.example.com/"))) //TODO
-                        .build()
-                )
             }
         }
         viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered { binding.root.showSnackbar(R.string.work_in_progress) }

@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.repository.LanguageRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.disableScrollbars
@@ -35,8 +36,9 @@ import javax.inject.Inject
 class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library) {
     @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var languageRepository: LanguageRepository
+    @Inject lateinit var appShortcutManager: AppShortcutManager
 
-    override fun createViewModel() = LibraryViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository, languageRepository)
+    override fun createViewModel() = LibraryViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, languageRepository)
 
     override fun getRecyclerView() = binding.recyclerView
 
