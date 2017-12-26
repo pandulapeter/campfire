@@ -10,6 +10,8 @@
             name="viewModel"
             type="com.pandulapeter.campfire.feature.home.library.LibraryViewModel" />
 
+        <import type="com.pandulapeter.campfire.R" />
+
     </data>
 
     <android.support.v4.widget.DrawerLayout
@@ -82,7 +84,7 @@
                             android:onClick="@{() -> viewModel.showOrHideSearchInput()}"
                             android:padding="@dimen/toolbar_action_button_padding"
                             android:visibility="@{viewModel.isLibraryNotEmpty}"
-                            app:animation="@{viewModel.isSearchInputVisible ? @drawable/avd_search_to_close_24dp : @drawable/avd_close_to_search_24dp}"
+                            app:animation="@{viewModel.isSearchInputVisible ? R.drawable.avd_search_to_close_24dp : R.drawable.avd_close_to_search_24dp}"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toStartOf="@id/view_options"
                             app:layout_constraintTop_toTopOf="parent"

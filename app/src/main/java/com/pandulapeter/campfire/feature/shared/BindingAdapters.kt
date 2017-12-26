@@ -1,12 +1,11 @@
 package com.pandulapeter.campfire.feature.shared
 
 import android.databinding.BindingAdapter
-import android.graphics.drawable.AnimatedVectorDrawable
-import android.graphics.drawable.Drawable
 import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
 import android.support.design.widget.AppBarLayout
 import android.support.design.widget.FloatingActionButton
+import android.support.graphics.drawable.AnimatedVectorDrawableCompat
 import android.support.v7.widget.Toolbar
 import android.text.TextUtils
 import android.view.View
@@ -88,8 +87,12 @@ fun setScrollEnabled(view: Toolbar, isScrollEnabled: Boolean) {
 }
 
 @BindingAdapter("animation")
-fun setAnimation(view: ImageView, drawable: Drawable) {
+fun setAnimation(view: ImageView, @DrawableRes drawableRes: Int) {
     //TODO: If view.drawable == null, don't start the animation, just seek to the last frame.
-    view.setImageDrawable(drawable)
-    (drawable as AnimatedVectorDrawable).start()
+    if (drawableRes != view.tag) {
+        val drawable = AnimatedVectorDrawableCompat.create(view.context, drawableRes)
+        view.tag = drawableRes
+        view.setImageDrawable(drawable)
+        drawable?.start()
+    }
 }

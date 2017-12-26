@@ -10,6 +10,8 @@
             name="viewModel"
             type="com.pandulapeter.campfire.feature.home.playlist.PlaylistViewModel" />
 
+        <import type="com.pandulapeter.campfire.R" />
+
     </data>
 
     <android.support.design.widget.CoordinatorLayout
@@ -60,7 +62,7 @@
                         android:onClick="@{() -> viewModel.toggleEditMode()}"
                         android:padding="@dimen/toolbar_action_button_padding"
                         android:visibility="@{viewModel.shouldDisplayEditButton}"
-                        app:animation="@{viewModel.isInEditMode ? @drawable/avd_edit_to_done_24dp : @drawable/avd_done_to_edit_24dp}"
+                        app:animation="@{viewModel.isInEditMode ? R.drawable.avd_edit_to_done_24dp : R.drawable.avd_done_to_edit_24dp}"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
