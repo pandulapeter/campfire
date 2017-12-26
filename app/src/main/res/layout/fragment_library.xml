@@ -81,12 +81,12 @@
                             android:contentDescription="@{viewModel.isSearchInputVisible ? @string/library_close : @string/library_search}"
                             android:onClick="@{() -> viewModel.showOrHideSearchInput()}"
                             android:padding="@dimen/toolbar_action_button_padding"
-                            android:src="@{viewModel.isSearchInputVisible ? @drawable/ic_close_24dp : @drawable/ic_search_24dp}"
                             android:visibility="@{viewModel.isLibraryNotEmpty}"
+                            app:animation="@{viewModel.isSearchInputVisible ? @drawable/avd_search_to_close_24dp : @drawable/avd_close_to_search_24dp}"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toStartOf="@id/view_options"
                             app:layout_constraintTop_toTopOf="parent"
-                            tools:src="@drawable/ic_search_24dp" />
+                            tools:src="@drawable/avd_close_to_search_24dp" />
 
                         <ViewSwitcher
                             android:layout_width="0dp"
