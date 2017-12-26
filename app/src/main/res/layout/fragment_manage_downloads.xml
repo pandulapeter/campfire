@@ -43,10 +43,11 @@
                         android:contentDescription="@string/home_menu"
                         android:onClick="@{() -> viewModel.showMenu()}"
                         android:padding="@dimen/toolbar_action_button_padding"
+                        app:animation="@{R.drawable.avd_back_to_menu_24dp}"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="@id/space"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:srcCompat="@drawable/ic_menu_24dp" />
+                        tools:src="@drawable/avd_menu_to_back_24dp" />
 
                     <ImageView
                         android:id="@+id/delete_all"
