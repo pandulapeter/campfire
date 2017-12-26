@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.feature.home.HomeViewModel
  */
 class MainViewModel(userPreferenceRepository: UserPreferenceRepository, overrideMainNavigationItem: MainNavigationItem?) {
     val mainNavigationItem = ObservableField<MainNavigationItem>(overrideMainNavigationItem ?: MainNavigationItem.Home(userPreferenceRepository.navigationItem))
+    var previousNavigationItem: MainNavigationItem = MainNavigationItem.Home(userPreferenceRepository.navigationItem)
 
     sealed class MainNavigationItem(val stringValue: String) {
         class Home(val homeNavigationItem: HomeViewModel.HomeNavigationItem) : MainNavigationItem(VALUE_HOME + homeNavigationItem.stringValue)

@@ -127,16 +127,12 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         downloadedSongRepository.unsubscribe(viewModel)
     }
 
-    //TODO: Handle back navigation.
-//    override fun onBackPressed() {
-//        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-//            binding.drawerLayout.closeDrawers()
-//        } else {
-//            if (getCurrentFragment()?.onBackPressed() != true) {
-//                super.onBackPressed()
-//            }
-//        }
-//    }
+    override fun onBackPressed() = if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+        binding.drawerLayout.closeDrawers()
+        true
+    } else {
+        getCurrentFragment()?.onBackPressed() == true
+    }
 
     override fun showMenu() {
         binding.drawerLayout.openDrawer(GravityCompat.START)

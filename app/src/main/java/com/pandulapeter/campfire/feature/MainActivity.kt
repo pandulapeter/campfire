@@ -55,9 +55,18 @@ class MainActivity : DaggerAppCompatActivity() {
         outState?.mainNavigationItem = viewModel.mainNavigationItem.get().stringValue
     }
 
+    override fun onBackPressed() {
+        if (getCurrentFragment()?.onBackPressed() != true) {
+            super.onBackPressed()
+        }
+    }
+
     fun setNavigationItem(navigationItem: MainViewModel.MainNavigationItem) {
+        viewModel.previousNavigationItem = viewModel.mainNavigationItem.get()
         viewModel.mainNavigationItem.set(navigationItem)
     }
+
+    fun navigateBack() = viewModel.mainNavigationItem.set(viewModel.previousNavigationItem)
 
     private fun replaceActiveFragment(mainNavigationItem: MainViewModel.MainNavigationItem) {
         val currentFragment = getCurrentFragment()

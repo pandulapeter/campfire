@@ -3,7 +3,6 @@ package com.pandulapeter.campfire.feature.shared
 import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
 import android.os.Bundle
-import android.support.annotation.CallSuper
 import android.support.annotation.LayoutRes
 import android.support.annotation.StringRes
 import android.support.design.widget.Snackbar
@@ -16,15 +15,16 @@ import com.pandulapeter.campfire.R
 import dagger.android.support.DaggerFragment
 
 /**
- * Base class for all Fragments in the app. Handles layout inflation and setting up the view model.
+ * Base class for all Fragments in the app. Handles layout inflation, setting up the view model,
+ * the enter / exit animations and displaying snackbars.
  *
  * Controlled by subclasses of [CampfireViewModel].
  */
 abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private val layoutResourceId: Int) : DaggerFragment() {
-    var inAnimation: Animation? = null
-    var outAnimation: Animation? = null
     abstract protected val viewModel: VM
     protected lateinit var binding: B
+    var inAnimation: Animation? = null
+    var outAnimation: Animation? = null
     private var snackbar: Snackbar? = null
     private var hintSnackbar: Snackbar? = null
 
@@ -40,6 +40,8 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     override fun onCreateAnimation(transit: Int, enter: Boolean, nextAnim: Int): Animation? = if (enter) inAnimation else outAnimation
+
+    open fun onBackPressed() = false
 
     protected fun View.showFirstTimeUserExperienceSnackbar(@StringRes message: Int, onGotItClicked: (View) -> Unit) {
         dismissSnackbar()

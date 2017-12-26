@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.detail
 
+import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.support.v4.app.FragmentManager
 import com.pandulapeter.campfire.data.repository.HistoryRepository
@@ -20,6 +21,7 @@ class DetailViewModel(fragmentManager: FragmentManager,
     val artist = ObservableField("")
     val songIds = playlistRepository.getPlaylist(playlistId)?.songIds ?: listOf(songId)
     val adapter = SongPagerAdapter(fragmentManager, songIds)
+    val shouldNavigateBack = ObservableBoolean()
 
     init {
         updateToolbar(songIds[0])
@@ -31,6 +33,8 @@ class DetailViewModel(fragmentManager: FragmentManager,
             historyRepository.addToHistory(it)
         }
     }
+
+    fun navigateBack() = shouldNavigateBack.set(true)
 
     private fun updateToolbar(songId: String) {
         songInfoRepository.getSongInfo(songId)?.let {

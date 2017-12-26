@@ -23,8 +23,6 @@ abstract class HomeChildFragment<B : ViewDataBinding, out VM : HomeChildViewMode
 
     abstract fun createViewModel(): VM
 
-    open fun onBackPressed() = false
-
     interface HomeCallbacks {
 
         fun showMenu()

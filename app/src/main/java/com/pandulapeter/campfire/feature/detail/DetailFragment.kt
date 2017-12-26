@@ -9,8 +9,10 @@ import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceReposito
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.setArguments
 import javax.inject.Inject
 
@@ -47,6 +49,12 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             //TODO: Also dismiss for swipes.
             //TODO: Show hint.
         }
+        viewModel.shouldNavigateBack.onEventTriggered { (activity as? MainActivity)?.navigateBack() }
+    }
+
+    override fun onBackPressed(): Boolean {
+        viewModel.navigateBack()
+        return true
     }
 
     companion object {
