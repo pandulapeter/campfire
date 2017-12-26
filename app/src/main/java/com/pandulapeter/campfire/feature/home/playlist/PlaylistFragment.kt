@@ -86,17 +86,15 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Set up list item click listeners.
-        context?.let { context ->
-            viewModel.adapter.itemClickListener = { position ->
-                (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id, arguments.playlistId))
-            }
-            viewModel.adapter.downloadActionClickListener = { position ->
-                viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }
-            }
-            viewModel.adapter.dragHandleTouchListener = { position ->
-                if (viewModel.isInEditMode.get()) {
-                    itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
-                }
+        viewModel.adapter.itemClickListener = { position ->
+            (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id, arguments.playlistId))
+        }
+        viewModel.adapter.downloadActionClickListener = { position ->
+            viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }
+        }
+        viewModel.adapter.dragHandleTouchListener = { position ->
+            if (viewModel.isInEditMode.get()) {
+                itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
             }
         }
         viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered { binding.root.showSnackbar(R.string.work_in_progress) }

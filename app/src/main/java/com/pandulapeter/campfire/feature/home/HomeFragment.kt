@@ -13,6 +13,8 @@ import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.feature.MainActivity
+import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
@@ -162,6 +164,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
      */
     private fun replaceActiveFragment(homeNavigationItem: HomeViewModel.HomeNavigationItem) {
         val currentFragment = getCurrentFragment()
+        (activity as? MainActivity)?.updatePreviousNavigationItem(MainViewModel.MainNavigationItem.Home(homeNavigationItem))
         context?.let { context ->
             if (viewModel.homeNavigationItem != homeNavigationItem || currentFragment == null) {
                 viewModel.homeNavigationItem = homeNavigationItem

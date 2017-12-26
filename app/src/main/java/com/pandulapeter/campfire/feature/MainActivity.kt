@@ -62,8 +62,11 @@ class MainActivity : DaggerAppCompatActivity() {
     }
 
     fun setNavigationItem(navigationItem: MainViewModel.MainNavigationItem) {
-        viewModel.previousNavigationItem = viewModel.mainNavigationItem.get()
         viewModel.mainNavigationItem.set(navigationItem)
+    }
+
+    fun updatePreviousNavigationItem(navigationItem: MainViewModel.MainNavigationItem) {
+        viewModel.previousNavigationItem = navigationItem
     }
 
     fun navigateBack() = viewModel.mainNavigationItem.set(viewModel.previousNavigationItem)
