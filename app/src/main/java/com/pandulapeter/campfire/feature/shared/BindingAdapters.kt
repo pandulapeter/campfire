@@ -1,6 +1,8 @@
 package com.pandulapeter.campfire.feature.shared
 
 import android.databinding.BindingAdapter
+import android.graphics.drawable.AnimatedVectorDrawable
+import android.graphics.drawable.Drawable
 import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
 import android.support.design.widget.AppBarLayout
@@ -76,7 +78,6 @@ fun setVisibility(view: FloatingActionButton, isVisible: Boolean) {
     }
 }
 
-
 @BindingAdapter("isScrollEnabled")
 fun setScrollEnabled(view: Toolbar, isScrollEnabled: Boolean) {
     (view.layoutParams as AppBarLayout.LayoutParams).scrollFlags = if (isScrollEnabled) {
@@ -84,4 +85,10 @@ fun setScrollEnabled(view: Toolbar, isScrollEnabled: Boolean) {
     } else {
         0
     }
+}
+
+@BindingAdapter("animation")
+fun setAnimation(view: ImageView, drawable: Drawable) {
+    view.setImageDrawable(drawable)
+    (drawable as AnimatedVectorDrawable).start()
 }

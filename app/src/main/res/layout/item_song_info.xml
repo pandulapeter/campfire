@@ -55,10 +55,10 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/manage_playlists"
                 android:padding="@dimen/content_padding"
-                android:src="@{viewModel.isSongOnAnyPlaylist ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
                 android:visibility="@{viewModel.shouldShowPlaylistButton}"
+                app:animation="@{viewModel.isSongOnAnyPlaylist ? @drawable/avd_added_to_playlists_24dp : @drawable/avd_removed_from_playlists_24dp}"
                 app:layout_constraintEnd_toEndOf="@id/space_2"
-                tools:src="@drawable/ic_playlist_border_24dp" />
+                tools:src="@drawable/ic_playlist_24dp" />
 
             <android.support.v4.widget.Space
                 android:id="@+id/space_3"
@@ -81,8 +81,8 @@
                 <ProgressBar
                     android:layout_width="@dimen/loading_indicator_size"
                     android:layout_height="@dimen/loading_indicator_size"
-                    android:background="@null"
                     android:layout_gravity="center"
+                    android:background="@null"
                     android:indeterminateTint="@android:color/white"
                     android:padding="@dimen/content_padding" />
 
