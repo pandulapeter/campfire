@@ -207,6 +207,6 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
     companion object {
         private var Bundle?.homeNavigationItem by BundleArgumentDelegate.String("home_navigation_item")
 
-        fun newInstance(homeNavigationItem: HomeViewModel.HomeNavigationItem?) = PlaylistFragment().setArguments { it.homeNavigationItem = homeNavigationItem?.stringValue ?: "" }
+        fun newInstance(homeNavigationItem: HomeViewModel.HomeNavigationItem?) = HomeFragment().setArguments { it.homeNavigationItem = homeNavigationItem?.stringValue ?: "" }
     }
 }

@@ -43,11 +43,7 @@ class MainActivity : DaggerAppCompatActivity() {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        intent?.mainNavigationItem?.let {
-            if (it.isNotEmpty()) {
-                viewModel.mainNavigationItem.set(MainViewModel.MainNavigationItem.fromStringValue(it))
-            }
-        }
+        MainViewModel.MainNavigationItem.fromStringValue(intent?.mainNavigationItem)?.let { viewModel.mainNavigationItem.set(it) }
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {

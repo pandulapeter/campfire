@@ -19,8 +19,9 @@ class MainViewModel(userPreferenceRepository: UserPreferenceRepository, override
             private const val VALUE_DETAIL = "detail_"
 
             fun fromStringValue(string: String?) = when {
-                string?.startsWith(VALUE_HOME) == true -> Home(HomeViewModel.HomeNavigationItem.fromStringValue(string.removePrefix(VALUE_HOME)))
-                string?.startsWith(VALUE_DETAIL) == true -> Detail("", "")//TODO: Implement this.
+                string == null || string.isEmpty() -> null
+                string.startsWith(VALUE_HOME) -> Home(HomeViewModel.HomeNavigationItem.fromStringValue(string.removePrefix(VALUE_HOME)))
+                string.startsWith(VALUE_DETAIL) -> Detail("", "")//TODO: Implement this.
                 else -> Home(HomeViewModel.HomeNavigationItem.Library)
             }
         }
