@@ -10,6 +10,8 @@
             name="viewModel"
             type="com.pandulapeter.campfire.feature.home.history.HistoryViewModel" />
 
+        <import type="com.pandulapeter.campfire.R" />
+
     </data>
 
     <android.support.design.widget.CoordinatorLayout
