@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:name="vector"
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportHeight="24"
+            android:viewportWidth="24">
+            <group
+                android:name="container"
+                android:pivotX="12"
+                android:pivotY="12">
+                <group
+                    android:name="peak_group"
+                    android:pivotX="12"
+                    android:pivotY="12"
+                    android:scaleX="-0.2"
+                    android:scaleY="0.2"
+                    android:translateX="6.4">
+                    <path
+                        android:name="peak"
+                        android:fillColor="#FFFFFF"
+                        android:pathData="M 20 11 L 7.83 11 L 13.42 5.41 L 12 4 L 4 12 L 12 20 L 13.41 18.59 L 7.83 13 L 20 13 L 20 11 Z" />
+                </group>
+                <group
+                    android:name="middle_group"
+                    android:pivotX="8">
+                    <path
+                        android:name="middle"
+                        android:fillColor="#FFFFFF"
+                        android:pathData="M 3 13 L 21 13 L 21 11 L 3 11 L 3 13 Z M 3 6 Z" />
+                </group>
+                <group
+                    android:name="bottom_group"
+                    android:pivotX="12"
+                    android:pivotY="12">
+                    <path
+                        android:name="bottom"
+                        android:fillColor="#FFFFFF"
+                        android:pathData="M 3 18 L 21 18 L 21 16 L 3 16 L 3 18 Z M 3 6 Z" />
+                </group>
+                <group
+                    android:name="top_group"
+                    android:pivotX="12"
+                    android:pivotY="12">
+                    <path
+                        android:name="top"
+                        android:fillColor="#FFFFFF"
+                        android:pathData="M 3 6 L 3 8 L 21 8 L 21 6 L 3 6 Z" />
+                </group>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="top_group">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"
+                    android:propertyName="rotation"
+                    android:valueFrom="45"
+                    android:valueTo="0"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"
+                    android:propertyName="scaleX"
+                    android:valueFrom="0.6"
+                    android:valueTo="1"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"
+                    android:propertyName="translateX"
+                    android:valueFrom="-0.5"
+                    android:valueTo="0"
+                    android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="bottom_group">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"
+                    android:propertyName="rotation"
+                    android:valueFrom="-45"
+                    android:valueTo="0"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"
+                    android:propertyName="scaleX"
+                    android:valueFrom="0.6"
+                    android:valueTo="1"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="300"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"
+                    android:propertyName="translateX"
+                    android:valueFrom="-0.5"
+                    android:valueTo="0"
+                    android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="container">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="300"
+                android:interpolator="@android:interpolator/fast_out_slow_in"
+                android:propertyName="rotation"
+                android:valueFrom="180"
+                android:valueTo="360"
+                android:valueType="floatType" />
+        </aapt:attr>
+    </target>
+    <target android:name="middle_group">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="300"
+                android:interpolator="@android:interpolator/fast_out_slow_in"
+                android:propertyName="scaleX"
+                android:valueFrom="0.8"
+                android:valueTo="1"
+                android:valueType="floatType" />
+        </aapt:attr>
+    </target>
+    <target android:name="peak_group">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="300"
+                android:interpolator="@android:interpolator/fast_out_slow_in"
+                android:propertyName="scaleY"
+                android:valueFrom="0.2"
+                android:valueTo="0"
+                android:valueType="floatType" />
+        </aapt:attr>
+    </target>
+</animated-vector>
