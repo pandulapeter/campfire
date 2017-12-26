@@ -24,7 +24,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageD
 
     override fun getRecyclerView() = binding.recyclerView
 
-    override fun createViewModel() = ManageDownloadsViewModel(context, callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository)
+    override fun createViewModel() = ManageDownloadsViewModel(context, userPreferenceRepository, songInfoRepository, downloadedSongRepository)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

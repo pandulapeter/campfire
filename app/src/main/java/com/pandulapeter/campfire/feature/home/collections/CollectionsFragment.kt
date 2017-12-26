@@ -14,5 +14,5 @@ import javax.inject.Inject
 class CollectionsFragment : HomeFragment<CollectionsBinding, CollectionsViewModel>(R.layout.fragment_collections) {
     @Inject lateinit var appShortcutManager: AppShortcutManager
 
-    override fun createViewModel() = CollectionsViewModel(appShortcutManager, callbacks)
+    override fun createViewModel() = CollectionsViewModel(appShortcutManager)
 }

@@ -38,7 +38,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
     @Inject lateinit var languageRepository: LanguageRepository
     @Inject lateinit var appShortcutManager: AppShortcutManager
 
-    override fun createViewModel() = LibraryViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, languageRepository)
+    override fun createViewModel() = LibraryViewModel(userPreferenceRepository, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, languageRepository)
 
     override fun getRecyclerView() = binding.recyclerView
 

@@ -32,6 +32,7 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
     protected abstract fun getRecyclerView(): RecyclerView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         context?.let { context ->
             // Initialize the list.
             getRecyclerView().run {

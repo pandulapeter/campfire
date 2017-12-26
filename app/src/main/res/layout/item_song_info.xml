@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".feature.home.HomeActivity">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!--suppress AndroidUnknownAttribute -->
     <data class=".SongInfoBinding">
@@ -10,7 +9,7 @@
         <variable
             name="viewModel"
             type="com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel" />
-        
+
         <import type="com.pandulapeter.campfire.R" />
 
     </data>

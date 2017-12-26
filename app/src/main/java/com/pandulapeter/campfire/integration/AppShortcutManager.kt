@@ -12,7 +12,8 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.storage.DataStorageManager
-import com.pandulapeter.campfire.feature.home.HomeActivity
+import com.pandulapeter.campfire.feature.MainActivity
+import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import kotlin.math.min
 
@@ -60,12 +61,12 @@ class AppShortcutManager(context: Context,
                 LIBRARY_ID,
                 context.getString(R.string.home_library),
                 R.drawable.ic_shortcut_library_48dp,
-                HomeViewModel.NavigationItem.Library))
+                HomeViewModel.HomeNavigationItem.Library))
             shortcuts.add(createAppShortcut(
                 COLLECTIONS_ID,
                 context.getString(R.string.home_collections),
                 R.drawable.ic_shortcut_collections_48dp,
-                HomeViewModel.NavigationItem.Collections))
+                HomeViewModel.HomeNavigationItem.Collections))
             if (dataStorageManager.playlistHistory.isEmpty()) {
                 dataStorageManager.playlistHistory = dataStorageManager.playlistHistory.toMutableList().apply { add(Playlist.FAVORITES_ID.toString()) }
             }
@@ -76,7 +77,7 @@ class AppShortcutManager(context: Context,
                         PLAYLIST_ID + playlist.id,
                         title,
                         R.drawable.ic_shortcut_playlist_48dp,
-                        HomeViewModel.NavigationItem.Playlist(playlist.id)))
+                        HomeViewModel.HomeNavigationItem.Playlist(playlist.id)))
                 }
             }
             shortcutManager.dynamicShortcuts = shortcuts
@@ -89,10 +90,10 @@ class AppShortcutManager(context: Context,
         private fun createAppShortcut(id: String,
                                       label: String,
                                       @DrawableRes icon: Int,
-                                      navigationItem: HomeViewModel.NavigationItem) = ShortcutInfo.Builder(context, id)
+                                      homeNavigationItem: HomeViewModel.HomeNavigationItem) = ShortcutInfo.Builder(context, id)
             .setShortLabel(label)
             .setIcon(Icon.createWithResource(context, icon))
-            .setIntent(HomeActivity.getStartIntent(context, navigationItem).setAction(Intent.ACTION_VIEW))
+            .setIntent(MainActivity.getStartIntent(context, MainViewModel.MainNavigationItem.Home(homeNavigationItem)).setAction(Intent.ACTION_VIEW))
             .build()
     }
 

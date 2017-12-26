@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 
 /**
- * Handles events and logic for [HomeActivity].
+ * Handles events and logic for [HomeFragment].
  */
 class HomeViewModel(private val downloadedSongRepository: DownloadedSongRepository,
                     private val userPreferenceRepository: UserPreferenceRepository,
@@ -21,7 +21,7 @@ class HomeViewModel(private val downloadedSongRepository: DownloadedSongReposito
     val playlists = ObservableField<List<Playlist>>()
     val isLibraryReady = ObservableBoolean()
     val hasDownloads = ObservableBoolean()
-    var navigationItem: NavigationItem = userPreferenceRepository.navigationItem
+    var homeNavigationItem: HomeNavigationItem = userPreferenceRepository.navigationItem
         set(value) {
             field = value
             userPreferenceRepository.navigationItem = value
@@ -60,14 +60,14 @@ class HomeViewModel(private val downloadedSongRepository: DownloadedSongReposito
     /**
      * Marks the possible screens the user can reach using the side navigation on the home screen.
      */
-    sealed class NavigationItem(val stringValue: String) {
-        object Library : NavigationItem(VALUE_LIBRARY)
-        object Collections : NavigationItem(VALUE_COLLECTIONS)
-        object History : NavigationItem(VALUE_HISTORY)
-        object Settings : NavigationItem(VALUE_SETTINGS)
-        class Playlist(@SerializedName("id") val id: Int) : NavigationItem(VALUE_PLAYLIST + id)
-        object ManagePlaylists : NavigationItem(VALUE_MANAGE_PLAYLISTS)
-        object ManageDownloads : NavigationItem(VALUE_MANAGE_DOWNLOADS)
+    sealed class HomeNavigationItem(val stringValue: String) {
+        object Library : HomeNavigationItem(VALUE_LIBRARY)
+        object Collections : HomeNavigationItem(VALUE_COLLECTIONS)
+        object History : HomeNavigationItem(VALUE_HISTORY)
+        object Settings : HomeNavigationItem(VALUE_SETTINGS)
+        class Playlist(@SerializedName("id") val id: Int) : HomeNavigationItem(VALUE_PLAYLIST + id)
+        object ManagePlaylists : HomeNavigationItem(VALUE_MANAGE_PLAYLISTS)
+        object ManageDownloads : HomeNavigationItem(VALUE_MANAGE_DOWNLOADS)
 
         companion object {
             private const val VALUE_LIBRARY = "library"

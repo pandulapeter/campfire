@@ -1,8 +1,9 @@
 package com.pandulapeter.campfire.ioc
 
+import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.detail.DetailActivity
 import com.pandulapeter.campfire.feature.detail.page.SongPageFragment
-import com.pandulapeter.campfire.feature.home.HomeActivity
+import com.pandulapeter.campfire.feature.home.HomeFragment
 import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
@@ -19,10 +20,10 @@ import dagger.android.ContributesAndroidInjector
 abstract class CampfireModule {
 
     @ContributesAndroidInjector
-    abstract fun contributeHomeActivity(): HomeActivity
+    abstract fun contributeMainActivity(): MainActivity
 
     @ContributesAndroidInjector
-    abstract fun contributeDetailActivity(): DetailActivity
+    abstract fun contributeHomeFragment(): HomeFragment
 
     @ContributesAndroidInjector
     abstract fun contributeLibraryFragment(): LibraryFragment
@@ -46,11 +47,14 @@ abstract class CampfireModule {
     abstract fun contributeManageDownloadsFragment(): ManageDownloadsFragment
 
     @ContributesAndroidInjector
-    abstract fun contributeSongPageFragment(): SongPageFragment
+    abstract fun contributeNewPlaylistDialogFragment(): NewPlaylistDialogFragment
 
     @ContributesAndroidInjector
     abstract fun contributeSongOptionsBottomSheetFragment(): SongOptionsBottomSheetFragment
 
     @ContributesAndroidInjector
-    abstract fun contributeNewPlaylistDialogFragment(): NewPlaylistDialogFragment
+    abstract fun contributeDetailFragment(): DetailActivity
+
+    @ContributesAndroidInjector
+    abstract fun contributeSongPageFragment(): SongPageFragment
 }

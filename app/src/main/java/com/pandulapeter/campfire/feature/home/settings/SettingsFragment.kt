@@ -12,5 +12,5 @@ import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
  */
 class SettingsFragment : HomeFragment<SettingsBinding, SettingsViewModel>(R.layout.fragment_settings) {
 
-    override fun createViewModel() = SettingsViewModel(callbacks)
+    override fun createViewModel() = SettingsViewModel()
 }

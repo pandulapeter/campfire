@@ -22,8 +22,8 @@ class PreferenceStorageManager(context: Context) {
     var shouldShowPlaylistHint by PreferenceFieldDelegate.Boolean("should_show_playlist_hint", true)
     var shouldShowManageDownloadsHint by PreferenceFieldDelegate.Boolean("should_show_manage_downloads_hint", true)
     var shouldShowDetailSwipeHint by PreferenceFieldDelegate.Boolean("should_show_detail_swipe_hint", true)
-    var navigationItem: HomeViewModel.NavigationItem
-        get() = HomeViewModel.NavigationItem.fromStringValue(preferences.getString(KEY_NAVIGATION_ITEM, null))
+    var homeNavigationItem: HomeViewModel.HomeNavigationItem
+        get() = HomeViewModel.HomeNavigationItem.fromStringValue(preferences.getString(KEY_NAVIGATION_ITEM, null))
         set(value) = preferences.edit().putString(KEY_NAVIGATION_ITEM, value.stringValue).apply()
 
     fun isLanguageFilterEnabled(language: Language) = when (language) {

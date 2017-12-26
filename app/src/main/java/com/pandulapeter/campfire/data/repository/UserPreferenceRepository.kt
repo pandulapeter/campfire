@@ -14,10 +14,10 @@ import kotlin.reflect.KProperty
  */
 class UserPreferenceRepository(
     private val preferenceStorageManager: PreferenceStorageManager) : Repository() {
-    var navigationItem by Delegates.observable(preferenceStorageManager.navigationItem) { _: KProperty<*>, old: HomeViewModel.NavigationItem, new: HomeViewModel.NavigationItem ->
+    var navigationItem by Delegates.observable(preferenceStorageManager.homeNavigationItem) { _: KProperty<*>, old: HomeViewModel.HomeNavigationItem, new: HomeViewModel.HomeNavigationItem ->
         if (old != new) {
             notifySubscribers(UpdateType.NavigationItemUpdated(new))
-            preferenceStorageManager.navigationItem = new
+            preferenceStorageManager.homeNavigationItem = new
         }
     }
     var isSortedByTitle by Delegates.observable(preferenceStorageManager.isSortedByTitle) { _: KProperty<*>, old: Boolean, new: Boolean ->

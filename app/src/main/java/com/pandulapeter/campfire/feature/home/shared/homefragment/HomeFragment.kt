@@ -1,9 +1,12 @@
 package com.pandulapeter.campfire.feature.home.shared.homefragment
 
-import android.content.Context
 import android.databinding.ViewDataBinding
+import android.os.Bundle
+import android.support.annotation.CallSuper
 import android.support.annotation.LayoutRes
+import android.view.View
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.util.onEventTriggered
 
 /**
  * Parent class for Fragments that can be seen on the main screen.
@@ -12,16 +15,13 @@ import com.pandulapeter.campfire.feature.shared.CampfireFragment
  */
 abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>(@LayoutRes layoutResourceId: Int) : CampfireFragment<B, VM>(layoutResourceId) {
     override val viewModel by lazy { createViewModel() }
-    protected var callbacks: HomeCallbacks? = null
+
+    @CallSuper
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        viewModel.shouldShowMenu.onEventTriggered { (parentFragment as? HomeCallbacks)?.showMenu() }
+    }
 
     abstract fun createViewModel(): VM
-
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-        if (context is HomeCallbacks) {
-            callbacks = context
-        }
-    }
 
     open fun onBackPressed() = false
 

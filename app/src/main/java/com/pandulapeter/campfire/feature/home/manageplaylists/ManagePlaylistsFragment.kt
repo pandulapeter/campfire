@@ -11,5 +11,5 @@ import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
  */
 class ManagePlaylistsFragment : HomeFragment<ManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists) {
 
-    override fun createViewModel() = ManagePlaylistsViewModel(callbacks)
+    override fun createViewModel() = ManagePlaylistsViewModel()
 }

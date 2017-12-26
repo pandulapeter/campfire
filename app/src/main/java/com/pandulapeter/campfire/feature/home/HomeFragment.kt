@@ -1,7 +1,5 @@
 package com.pandulapeter.campfire.feature.home
 
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.view.SubMenu
@@ -23,17 +21,16 @@ import com.pandulapeter.campfire.feature.home.manageplaylists.ManagePlaylistsFra
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
-import com.pandulapeter.campfire.feature.shared.CampfireActivity
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.util.IntentExtraDelegate
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.disableScrollbars
-import com.pandulapeter.campfire.util.getIntentFor
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.setArguments
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -46,7 +43,7 @@ import kotlin.coroutines.experimental.CoroutineContext
  *
  * Controlled by [HomeViewModel].
  */
-class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activity_home), HomeFragment.HomeCallbacks {
+class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragment_home), HomeFragment.HomeCallbacks {
     @Inject lateinit var songInfoRepository: SongInfoRepository
     @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
@@ -60,40 +57,38 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     private val managePlaylistsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_playlists) }
     private val manageDownloadsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_downloads) }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         // Handle deep link.
-        intent.navigationItem.let {
-            if (it.isNotEmpty()) {
-                viewModel.navigationItem = HomeViewModel.NavigationItem.fromStringValue(it)
-            }
+        arguments.homeNavigationItem.let {
+            viewModel.homeNavigationItem = HomeViewModel.HomeNavigationItem.fromStringValue(it)
         }
         // Set up the side navigation drawer.
         binding.navigationView.disableScrollbars()
         (binding.navigationView.getHeaderView(0).findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.library -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Library) }
-                R.id.collections -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Collections) }
-                R.id.history -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.History) }
-                R.id.settings -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.Settings) }
+                R.id.library -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Library) }
+                R.id.collections -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Collections) }
+                R.id.history -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.History) }
+                R.id.settings -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Settings) }
                 R.id.playlists -> {
-                    NewPlaylistDialogFragment.show(supportFragmentManager)
+                    NewPlaylistDialogFragment.show(childFragmentManager)
                     false
                 }
-                R.id.manage_playlists -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.ManagePlaylists) }
-                R.id.manage_downloads -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.NavigationItem.ManageDownloads) }
+                R.id.manage_playlists -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.ManagePlaylists) }
+                R.id.manage_downloads -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.ManageDownloads) }
                 else -> consumeAndCloseDrawer {
                     binding.navigationView.setCheckedItem(menuItem.itemId)
-                    replaceActiveFragment(HomeViewModel.NavigationItem.Playlist(menuItem.itemId))
+                    replaceActiveFragment(HomeViewModel.HomeNavigationItem.Playlist(menuItem.itemId))
                 }
             }
         }
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
-            currentFocus?.clearFocus()
-            hideKeyboard(currentFocus)
+            activity?.currentFocus?.clearFocus()
+            hideKeyboard(activity?.currentFocus)
         })
-        setCheckedItem(viewModel.navigationItem)
+        setCheckedItem(viewModel.homeNavigationItem)
         viewModel.playlists.onPropertyChanged {
             playlistsContainerItem.run {
                 clear()
@@ -117,17 +112,6 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
         viewModel.hasDownloads.onPropertyChanged { manageDownloadsItem.isVisible = it }
     }
 
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        intent?.let {
-            // Handle deep link.
-            intent.navigationItem.let {
-                if (it.isNotEmpty()) {
-                    setCheckedItem(HomeViewModel.NavigationItem.fromStringValue(it))
-                }
-            }
-        }
-    }
 
     override fun onStart() {
         super.onStart()
@@ -143,35 +127,36 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
         downloadedSongRepository.unsubscribe(viewModel)
     }
 
-    override fun onBackPressed() {
-        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            binding.drawerLayout.closeDrawers()
-        } else {
-            if (getCurrentFragment()?.onBackPressed() != true) {
-                super.onBackPressed()
-            }
-        }
-    }
+    //TODO: Handle back navigation.
+//    override fun onBackPressed() {
+//        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+//            binding.drawerLayout.closeDrawers()
+//        } else {
+//            if (getCurrentFragment()?.onBackPressed() != true) {
+//                super.onBackPressed()
+//            }
+//        }
+//    }
 
     override fun showMenu() {
         binding.drawerLayout.openDrawer(GravityCompat.START)
-        hideKeyboard(currentFocus)
+        hideKeyboard(activity?.currentFocus)
     }
 
-    fun setCheckedItem(navigationItem: HomeViewModel.NavigationItem) {
-        replaceActiveFragment(navigationItem)
+    fun setCheckedItem(homeNavigationItem: HomeViewModel.HomeNavigationItem) {
+        replaceActiveFragment(homeNavigationItem)
         updateCheckedItem()
     }
 
-    private fun updateCheckedItem() = viewModel.navigationItem.let {
+    private fun updateCheckedItem() = viewModel.homeNavigationItem.let {
         binding.navigationView.setCheckedItem(when (it) {
-            HomeViewModel.NavigationItem.Library -> R.id.library
-            HomeViewModel.NavigationItem.Collections -> R.id.collections
-            HomeViewModel.NavigationItem.History -> R.id.history
-            HomeViewModel.NavigationItem.Settings -> R.id.settings
-            is HomeViewModel.NavigationItem.Playlist -> it.id
-            HomeViewModel.NavigationItem.ManagePlaylists -> R.id.manage_playlists
-            HomeViewModel.NavigationItem.ManageDownloads -> R.id.manage_downloads
+            HomeViewModel.HomeNavigationItem.Library -> R.id.library
+            HomeViewModel.HomeNavigationItem.Collections -> R.id.collections
+            HomeViewModel.HomeNavigationItem.History -> R.id.history
+            HomeViewModel.HomeNavigationItem.Settings -> R.id.settings
+            is HomeViewModel.HomeNavigationItem.Playlist -> it.id
+            HomeViewModel.HomeNavigationItem.ManagePlaylists -> R.id.manage_playlists
+            HomeViewModel.HomeNavigationItem.ManageDownloads -> R.id.manage_downloads
         })
     }
 
@@ -179,33 +164,35 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
      * Checks if the user actually changed the current selection and if so, persists it. Replaces the Fragment if
      * the selection changed or the container was empty.
      */
-    private fun replaceActiveFragment(navigationItem: HomeViewModel.NavigationItem) {
+    private fun replaceActiveFragment(homeNavigationItem: HomeViewModel.HomeNavigationItem) {
         val currentFragment = getCurrentFragment()
-        if (viewModel.navigationItem != navigationItem || currentFragment == null) {
-            viewModel.navigationItem = navigationItem
-            coroutine?.cancel()
-            coroutine = async(UI) {
-                val nextFragment = async(CommonPool) {
-                    when (navigationItem) {
-                        HomeViewModel.NavigationItem.Library -> LibraryFragment()
-                        HomeViewModel.NavigationItem.Collections -> CollectionsFragment()
-                        HomeViewModel.NavigationItem.History -> HistoryFragment()
-                        HomeViewModel.NavigationItem.Settings -> SettingsFragment()
-                        is HomeViewModel.NavigationItem.Playlist -> PlaylistFragment.newInstance(navigationItem.id)
-                        HomeViewModel.NavigationItem.ManagePlaylists -> ManagePlaylistsFragment()
-                        HomeViewModel.NavigationItem.ManageDownloads -> ManageDownloadsFragment()
+        context?.let { context ->
+            if (viewModel.homeNavigationItem != homeNavigationItem || currentFragment == null) {
+                viewModel.homeNavigationItem = homeNavigationItem
+                coroutine?.cancel()
+                coroutine = async(UI) {
+                    val nextFragment = async(CommonPool) {
+                        when (homeNavigationItem) {
+                            HomeViewModel.HomeNavigationItem.Library -> LibraryFragment()
+                            HomeViewModel.HomeNavigationItem.Collections -> CollectionsFragment()
+                            HomeViewModel.HomeNavigationItem.History -> HistoryFragment()
+                            HomeViewModel.HomeNavigationItem.Settings -> SettingsFragment()
+                            is HomeViewModel.HomeNavigationItem.Playlist -> PlaylistFragment.newInstance(homeNavigationItem.id)
+                            HomeViewModel.HomeNavigationItem.ManagePlaylists -> ManagePlaylistsFragment()
+                            HomeViewModel.HomeNavigationItem.ManageDownloads -> ManageDownloadsFragment()
+                        }
+                    }.await()
+                    currentFragment?.let {
+                        it.outAnimation = AnimationUtils.loadAnimation(context, android.R.anim.fade_out)
+                        (nextFragment as CampfireFragment<*, *>).inAnimation = AnimationUtils.loadAnimation(context, android.R.anim.fade_in)
                     }
-                }.await()
-                currentFragment?.let {
-                    it.outAnimation = AnimationUtils.loadAnimation(this@HomeActivity, android.R.anim.fade_out)
-                    (nextFragment as CampfireFragment<*, *>).inAnimation = AnimationUtils.loadAnimation(this@HomeActivity, android.R.anim.fade_in)
+                    childFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commit()
                 }
-                supportFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commit()
             }
         }
     }
 
-    private fun getCurrentFragment() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? HomeFragment<*, *>
+    private fun getCurrentFragment() = childFragmentManager.findFragmentById(R.id.fragment_container) as? HomeFragment<*, *>
 
     private fun consumeAndCloseDrawer(action: () -> Unit) = consume {
         action()
@@ -218,10 +205,8 @@ class HomeActivity : CampfireActivity<HomeBinding, HomeViewModel>(R.layout.activ
     }
 
     companion object {
-        private var Intent.navigationItem by IntentExtraDelegate.String("navigation_item")
+        private var Bundle?.homeNavigationItem by BundleArgumentDelegate.String("home_navigation_item")
 
-        fun getStartIntent(context: Context, navigationItem: HomeViewModel.NavigationItem) = context.getIntentFor(HomeActivity::class) {
-            it.navigationItem = navigationItem.stringValue
-        }
+        fun newInstance(homeNavigationItem: HomeViewModel.HomeNavigationItem?) = PlaylistFragment().setArguments { it.homeNavigationItem = homeNavigationItem?.stringValue ?: "" }
     }
 }

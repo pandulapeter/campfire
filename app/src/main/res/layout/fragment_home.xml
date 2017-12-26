@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <!--suppress AndroidUnknownAttribute -->
     <data class=".HomeBinding">
@@ -10,7 +9,7 @@
             name="viewModel"
             type="com.pandulapeter.campfire.feature.home.HomeViewModel" />
 
-        <import type="com.pandulapeter.campfire.feature.home.HomeViewModel.NavigationItem" />
+        <import type="com.pandulapeter.campfire.feature.home.HomeViewModel.HomeNavigationItem" />
 
     </data>
 
@@ -18,8 +17,7 @@
         android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true"
-        tools:context=".feature.home.HomeActivity">
+        android:fitsSystemWindows="true">
 
         <!-- Main content -->
 
