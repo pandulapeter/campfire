@@ -56,15 +56,15 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="@{viewModel.isInEditMode ? @string/playlist_done : @string/playlist_delete}"
+                        android:contentDescription="@{viewModel.isInEditMode ? @string/playlist_done : @string/playlist_edit}"
                         android:onClick="@{() -> viewModel.toggleEditMode()}"
                         android:padding="@dimen/toolbar_action_button_padding"
-                        android:src="@{viewModel.isInEditMode ? @drawable/ic_done_24dp : @drawable/ic_edit_24dp}"
                         android:visibility="@{viewModel.shouldDisplayEditButton}"
+                        app:animation="@{viewModel.isInEditMode ? @drawable/avd_edit_to_done_24dp : @drawable/avd_done_to_edit_24dp}"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        tools:src="@drawable/ic_edit_24dp" />
+                        tools:src="@drawable/avd_done_to_edit_24dp" />
 
                     <ViewSwitcher
                         android:layout_width="0dp"
