@@ -1,17 +1,17 @@
 package com.pandulapeter.campfire.feature.detail
 
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.support.v4.view.ViewPager
+import android.view.View
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.feature.shared.CampfireActivity
-import com.pandulapeter.campfire.util.IntentExtraDelegate
-import com.pandulapeter.campfire.util.getIntentFor
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.setArguments
 import javax.inject.Inject
 
 /**
@@ -20,17 +20,15 @@ import javax.inject.Inject
  *
  * Controlled by [DetailViewModel].
  */
-class DetailActivity : CampfireActivity<DetailBinding, DetailViewModel>(R.layout.activity_detail) {
+class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout.fragment_detail) {
     @Inject lateinit var songInfoRepository: SongInfoRepository
     @Inject lateinit var historyRepository: HistoryRepository
+    @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
-    override val viewModel by lazy { DetailViewModel(supportFragmentManager, intent.ids, songInfoRepository, historyRepository) }
+    override val viewModel by lazy { DetailViewModel(childFragmentManager, arguments.songId, arguments.playlistId, playlistRepository, songInfoRepository, historyRepository) }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        // Setup the toolbar.
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         // Setup the view pager.
         //TODO: Pay attention to instance state saving.
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
@@ -40,24 +38,24 @@ class DetailActivity : CampfireActivity<DetailBinding, DetailViewModel>(R.layout
 
             override fun onPageSelected(position: Int) = viewModel.onPageSelected(position)
         })
-        if (intent.ids.indexOf(intent.currentId) == 0) {
+        if (viewModel.songIds.indexOf(arguments.songId) == 0) {
             binding.viewModel?.onPageSelected(0)
         } else {
-            binding.viewPager.run { post { setCurrentItem(intent.ids.indexOf(intent.currentId), false) } }
+            binding.viewPager.run { post { setCurrentItem(viewModel.songIds.indexOf(arguments.songId), false) } }
         }
-        if (intent.ids.size > 1 && firstTimeUserExperienceRepository.shouldShowDetailSwipeHint) {
+        if (viewModel.songIds.size > 1 && firstTimeUserExperienceRepository.shouldShowDetailSwipeHint) {
             //TODO: Also dismiss for swipes.
             //TODO: Show hint.
         }
     }
 
     companion object {
-        private var Intent.currentId by IntentExtraDelegate.String("current_id")
-        private var Intent.ids by IntentExtraDelegate.StringList("ids")
+        private var Bundle?.songId by BundleArgumentDelegate.String("song_id")
+        private var Bundle?.playlistId by BundleArgumentDelegate.Int("playlist_id")
 
-        fun getStartIntent(context: Context, currentId: String, ids: List<String>? = null) = context.getIntentFor(DetailActivity::class) {
-            it.currentId = currentId
-            it.ids = ids ?: listOf(currentId)
+        fun newInstance(songId: String, playlistId: Int?) = DetailFragment().setArguments {
+            it.songId = songId
+            it.playlistId = playlistId ?: -1
         }
     }
 }

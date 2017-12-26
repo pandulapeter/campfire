@@ -8,7 +8,7 @@ import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
-import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragmentViewModel
+import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import kotlinx.coroutines.experimental.CommonPool
@@ -22,7 +22,7 @@ import kotlinx.coroutines.experimental.async
  */
 abstract class SongListViewModel(private val userPreferenceRepository: UserPreferenceRepository,
                                  protected val songInfoRepository: SongInfoRepository,
-                                 protected val downloadedSongRepository: DownloadedSongRepository) : HomeFragmentViewModel(), Subscriber {
+                                 protected val downloadedSongRepository: DownloadedSongRepository) : HomeChildViewModel(), Subscriber {
     val adapter = SongInfoAdapter()
     val shouldShowDownloadErrorSnackbar = ObservableField<SongInfo?>()
 

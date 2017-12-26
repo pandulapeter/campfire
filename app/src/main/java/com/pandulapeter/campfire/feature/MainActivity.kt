@@ -8,12 +8,13 @@ import android.view.animation.AnimationUtils
 import com.pandulapeter.campfire.MainBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.home.HomeFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.IntentExtraDelegate
 import com.pandulapeter.campfire.util.getIntentFor
-import com.pandulapeter.campfire.util.subscribe
+import com.pandulapeter.campfire.util.onPropertyChanged
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -38,17 +39,24 @@ class MainActivity : DaggerAppCompatActivity() {
         savedInstanceState?.let { intent.mainNavigationItem = it.mainNavigationItem }
         val binding = DataBindingUtil.setContentView<MainBinding>(this, R.layout.activity_main)
         binding.viewModel = viewModel
-        viewModel.mainNavigationItem.subscribe { replaceActiveFragment(it) }
+        viewModel.mainNavigationItem.onPropertyChanged { replaceActiveFragment(it) }
+        if (getCurrentFragment() == null) {
+            replaceActiveFragment(viewModel.mainNavigationItem.get())
+        }
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        MainViewModel.MainNavigationItem.fromStringValue(intent?.mainNavigationItem)?.let { viewModel.mainNavigationItem.set(it) }
+        MainViewModel.MainNavigationItem.fromStringValue(intent?.mainNavigationItem)?.let { setNavigationItem(it) }
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
         outState?.mainNavigationItem = viewModel.mainNavigationItem.get().stringValue
+    }
+
+    fun setNavigationItem(navigationItem: MainViewModel.MainNavigationItem) {
+        viewModel.mainNavigationItem.set(navigationItem)
     }
 
     private fun replaceActiveFragment(mainNavigationItem: MainViewModel.MainNavigationItem) {
@@ -58,7 +66,7 @@ class MainActivity : DaggerAppCompatActivity() {
             val nextFragment = async(CommonPool) {
                 when (mainNavigationItem) {
                     is MainViewModel.MainNavigationItem.Home -> HomeFragment.newInstance(mainNavigationItem.homeNavigationItem)
-                    else -> null //TODO: Detail.
+                    is MainViewModel.MainNavigationItem.Detail -> DetailFragment.newInstance(mainNavigationItem.songId, mainNavigationItem.playlistId)
                 }
             }.await()
             currentFragment?.let {

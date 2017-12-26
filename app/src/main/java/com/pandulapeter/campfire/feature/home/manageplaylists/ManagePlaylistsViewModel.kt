@@ -1,8 +1,8 @@
 package com.pandulapeter.campfire.feature.home.manageplaylists
 
-import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragmentViewModel
+import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildViewModel
 
 /**
  * Handles events and logic for [ManagePlaylistsFragment].
  */
-class ManagePlaylistsViewModel : HomeFragmentViewModel()
+class ManagePlaylistsViewModel : HomeChildViewModel()

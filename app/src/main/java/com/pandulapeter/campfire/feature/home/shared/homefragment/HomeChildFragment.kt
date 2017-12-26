@@ -9,11 +9,11 @@ import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.onEventTriggered
 
 /**
- * Parent class for Fragments that can be seen on the main screen.
+ * Parent class for Fragments that are part of the home screen.
  *
- * Controlled by subclasses of [HomeFragmentViewModel].
+ * Controlled by subclasses of [HomeChildViewModel].
  */
-abstract class HomeFragment<B : ViewDataBinding, out VM : HomeFragmentViewModel>(@LayoutRes layoutResourceId: Int) : CampfireFragment<B, VM>(layoutResourceId) {
+abstract class HomeChildFragment<B : ViewDataBinding, out VM : HomeChildViewModel>(@LayoutRes layoutResourceId: Int) : CampfireFragment<B, VM>(layoutResourceId) {
     override val viewModel by lazy { createViewModel() }
 
     @CallSuper

@@ -12,7 +12,7 @@ class MainViewModel(userPreferenceRepository: UserPreferenceRepository, override
 
     sealed class MainNavigationItem(val stringValue: String) {
         class Home(val homeNavigationItem: HomeViewModel.HomeNavigationItem) : MainNavigationItem(VALUE_HOME + homeNavigationItem.stringValue)
-        class Detail(val songId: String, val playlistId: String?) : MainNavigationItem(VALUE_DETAIL)
+        class Detail(val songId: String, val playlistId: Int? = null) : MainNavigationItem(VALUE_DETAIL)
 
         companion object {
             private const val VALUE_HOME = "home_"
@@ -21,7 +21,7 @@ class MainViewModel(userPreferenceRepository: UserPreferenceRepository, override
             fun fromStringValue(string: String?) = when {
                 string == null || string.isEmpty() -> null
                 string.startsWith(VALUE_HOME) -> Home(HomeViewModel.HomeNavigationItem.fromStringValue(string.removePrefix(VALUE_HOME)))
-                string.startsWith(VALUE_DETAIL) -> Detail("", "")//TODO: Implement this.
+                string.startsWith(VALUE_DETAIL) -> Detail(string.removePrefix(VALUE_DETAIL), null)//TODO: Implement playlist ID parsing.
                 else -> Home(HomeViewModel.HomeNavigationItem.Library)
             }
         }

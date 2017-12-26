@@ -8,7 +8,8 @@ import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.feature.detail.DetailActivity
+import com.pandulapeter.campfire.feature.MainActivity
+import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.HomeFragment
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
@@ -87,10 +88,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         // Set up list item click listeners.
         context?.let { context ->
             viewModel.adapter.itemClickListener = { position ->
-                startActivity(DetailActivity.getStartIntent(
-                    context = context,
-                    currentId = viewModel.adapter.items[position].songInfo.id,
-                    ids = viewModel.adapter.items.map { it.songInfo.id }))
+                (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id, arguments.playlistId))
             }
             viewModel.adapter.downloadActionClickListener = { position ->
                 viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }

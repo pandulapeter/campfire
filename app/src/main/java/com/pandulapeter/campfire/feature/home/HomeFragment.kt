@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.feature.home.managedownloads.ManageDownloadsFra
 import com.pandulapeter.campfire.feature.home.manageplaylists.ManagePlaylistsFragment
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
-import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
+import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
@@ -43,7 +43,7 @@ import kotlin.coroutines.experimental.CoroutineContext
  *
  * Controlled by [HomeViewModel].
  */
-class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragment_home), HomeFragment.HomeCallbacks {
+class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragment_home), HomeChildFragment.HomeCallbacks {
     @Inject lateinit var songInfoRepository: SongInfoRepository
     @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
@@ -192,7 +192,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         }
     }
 
-    private fun getCurrentFragment() = childFragmentManager.findFragmentById(R.id.fragment_container) as? HomeFragment<*, *>
+    private fun getCurrentFragment() = childFragmentManager.findFragmentById(R.id.fragment_container) as? HomeChildFragment<*, *>
 
     private fun consumeAndCloseDrawer(action: () -> Unit) = consume {
         action()

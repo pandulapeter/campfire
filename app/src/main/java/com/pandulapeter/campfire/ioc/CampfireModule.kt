@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.ioc
 
 import com.pandulapeter.campfire.feature.MainActivity
-import com.pandulapeter.campfire.feature.detail.DetailActivity
+import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.detail.page.SongPageFragment
 import com.pandulapeter.campfire.feature.home.HomeFragment
 import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
@@ -53,7 +53,7 @@ abstract class CampfireModule {
     abstract fun contributeSongOptionsBottomSheetFragment(): SongOptionsBottomSheetFragment
 
     @ContributesAndroidInjector
-    abstract fun contributeDetailFragment(): DetailActivity
+    abstract fun contributeDetailFragment(): DetailFragment
 
     @ContributesAndroidInjector
     abstract fun contributeSongPageFragment(): SongPageFragment
