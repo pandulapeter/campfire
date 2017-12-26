@@ -89,9 +89,7 @@ fun setScrollEnabled(view: Toolbar, isScrollEnabled: Boolean) {
 
 @BindingAdapter("animation")
 fun setAnimation(view: ImageView, drawable: Drawable) {
-    if (view.drawable != drawable) { //TODO: Does not work.
-        //TODO: If view.drawable == null, don't start the animation, just seek to the last frame.
-        view.setImageDrawable(drawable)
-        (drawable as AnimatedVectorDrawable).start()
-    }
+    //TODO: If view.drawable == null, don't start the animation, just seek to the last frame.
+    view.setImageDrawable(drawable)
+    (drawable as AnimatedVectorDrawable).start()
 }
