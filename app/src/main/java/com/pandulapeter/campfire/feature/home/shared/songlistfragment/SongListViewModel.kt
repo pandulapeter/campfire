@@ -29,7 +29,11 @@ abstract class SongListViewModel(private val userPreferenceRepository: UserPrefe
     abstract fun getAdapterItems(): List<SongInfoViewModel>
 
     override fun onUpdate(updateType: UpdateType) {
-        async(UI) { onUpdateDone(async(CommonPool) { getAdapterItems() }.await(), updateType) }
+        if (adapter.items.isEmpty()) {
+            onUpdateDone(getAdapterItems(), updateType)
+        } else {
+            async(UI) { onUpdateDone(async(CommonPool) { getAdapterItems() }.await(), updateType) }
+        }
     }
 
     @CallSuper
