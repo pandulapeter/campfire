@@ -61,7 +61,6 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
         viewHolder.setDragHandleTouchListener(dragHandleTouchListener)
         viewHolder.setPlaylistActionClickListener(playlistActionClickListener)
         viewHolder.setDownloadActionClickListener(downloadActionClickListener)
-        viewHolder.setOnLongClickListener(playlistActionClickListener ?: downloadActionClickListener)
         return viewHolder
     }
 
@@ -114,15 +113,6 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
                     }
                     false
                 }
-            }
-        }
-
-        fun setOnLongClickListener(itemClickListener: ((position: Int) -> Unit)?) = itemClickListener?.let {
-            binding.root.setOnLongClickListener {
-                if (adapterPosition != RecyclerView.NO_POSITION) {
-                    it(adapterPosition)
-                    true
-                } else false
             }
         }
 

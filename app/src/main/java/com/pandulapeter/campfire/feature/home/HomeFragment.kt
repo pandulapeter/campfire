@@ -1,10 +1,10 @@
 package com.pandulapeter.campfire.feature.home
 
 import android.os.Bundle
+import android.support.transition.Fade
 import android.support.v4.view.GravityCompat
 import android.view.SubMenu
 import android.view.View
-import android.view.animation.AnimationUtils
 import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
@@ -165,28 +165,26 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
     private fun replaceActiveFragment(homeNavigationItem: HomeViewModel.HomeNavigationItem) {
         val currentFragment = getCurrentFragment()
         (activity as? MainActivity)?.updatePreviousNavigationItem(MainViewModel.MainNavigationItem.Home(homeNavigationItem))
-        context?.let { context ->
-            if (viewModel.homeNavigationItem != homeNavigationItem || currentFragment == null) {
-                viewModel.homeNavigationItem = homeNavigationItem
-                coroutine?.cancel()
-                coroutine = async(UI) {
-                    val nextFragment = async(CommonPool) {
-                        when (homeNavigationItem) {
-                            HomeViewModel.HomeNavigationItem.Library -> LibraryFragment()
-                            HomeViewModel.HomeNavigationItem.Collections -> CollectionsFragment()
-                            HomeViewModel.HomeNavigationItem.History -> HistoryFragment()
-                            HomeViewModel.HomeNavigationItem.Settings -> SettingsFragment()
-                            is HomeViewModel.HomeNavigationItem.Playlist -> PlaylistFragment.newInstance(homeNavigationItem.id)
-                            HomeViewModel.HomeNavigationItem.ManagePlaylists -> ManagePlaylistsFragment()
-                            HomeViewModel.HomeNavigationItem.ManageDownloads -> ManageDownloadsFragment()
-                        }
-                    }.await()
-                    currentFragment?.let {
-                        it.outAnimation = AnimationUtils.loadAnimation(context, android.R.anim.fade_out)
-                        (nextFragment as CampfireFragment<*, *>).inAnimation = AnimationUtils.loadAnimation(context, android.R.anim.fade_in)
+        if (viewModel.homeNavigationItem != homeNavigationItem || currentFragment == null) {
+            viewModel.homeNavigationItem = homeNavigationItem
+            coroutine?.cancel()
+            coroutine = async(UI) {
+                val nextFragment = async(CommonPool) {
+                    when (homeNavigationItem) {
+                        HomeViewModel.HomeNavigationItem.Library -> LibraryFragment()
+                        HomeViewModel.HomeNavigationItem.Collections -> CollectionsFragment()
+                        HomeViewModel.HomeNavigationItem.History -> HistoryFragment()
+                        HomeViewModel.HomeNavigationItem.Settings -> SettingsFragment()
+                        is HomeViewModel.HomeNavigationItem.Playlist -> PlaylistFragment.newInstance(homeNavigationItem.id)
+                        HomeViewModel.HomeNavigationItem.ManagePlaylists -> ManagePlaylistsFragment()
+                        HomeViewModel.HomeNavigationItem.ManageDownloads -> ManageDownloadsFragment()
                     }
-                    childFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commit()
+                }.await()
+                currentFragment?.let {
+                    it.exitTransition = Fade()
+                    (nextFragment as CampfireFragment<*, *>).enterTransition = Fade()
                 }
+                childFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commitNow()
             }
         }
     }

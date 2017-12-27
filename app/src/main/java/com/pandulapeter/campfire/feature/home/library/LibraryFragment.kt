@@ -115,7 +115,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
                             playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, songId)
                         }
                     } else {
-                        SongOptionsBottomSheetFragment.show(childFragmentManager, songId)
+                        PlaylistChooserBottomSheetFragment.show(childFragmentManager, songId)
                     }
                 }
             }

@@ -15,7 +15,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.SongOptionsBottomSheetBinding
+import com.pandulapeter.campfire.PlaylistChooserBottomSheetBinding
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -32,11 +32,11 @@ import javax.inject.Inject
 /**
  * A bottom sheet that allows the user to set the positionSource of the avatar image (gallery or camera).
  */
-class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), Subscriber {
+class PlaylistChooserBottomSheetFragment : DaggerAppCompatDialogFragment(), Subscriber {
     @Inject lateinit var songInfoRepository: SongInfoRepository
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
-    private lateinit var binding: SongOptionsBottomSheetBinding
+    private lateinit var binding: PlaylistChooserBottomSheetBinding
     private lateinit var songId: String
     private val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
     private val finalToolbarElevation by lazy { context?.dimension(R.dimen.bottom_sheet_toolbar_elevation) ?: 0 }
@@ -47,7 +47,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), Subscrib
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->
         val dialog = BottomSheetDialog(context, theme)
-        binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_song_options_bottom_sheet, null, false)
+        binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_playlist_chooser_bottom_sheet, null, false)
         songId = savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId
         dialog.setContentView(binding.root)
         binding.close.setOnClickListener { dismiss() }
@@ -152,7 +152,7 @@ class SongOptionsBottomSheetFragment : DaggerAppCompatDialogFragment(), Subscrib
         private var Bundle?.songId by BundleArgumentDelegate.String("song_id")
 
         fun show(fragmentManager: FragmentManager, songId: String) {
-            SongOptionsBottomSheetFragment().setArguments { it.songId = songId }.run { (this as DialogFragment).show(fragmentManager, tag) }
+            PlaylistChooserBottomSheetFragment().setArguments { it.songId = songId }.run { (this as DialogFragment).show(fragmentManager, tag) }
         }
     }
 }

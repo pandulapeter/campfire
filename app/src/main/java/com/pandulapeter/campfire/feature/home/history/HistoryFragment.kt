@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.library.HeaderItemDecoration
-import com.pandulapeter.campfire.feature.home.library.SongOptionsBottomSheetFragment
+import com.pandulapeter.campfire.feature.home.library.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
@@ -80,7 +80,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
                             playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, songId)
                         }
                     } else {
-                        SongOptionsBottomSheetFragment.show(childFragmentManager, songId)
+                        PlaylistChooserBottomSheetFragment.show(childFragmentManager, songId)
                     }
                 }
             }

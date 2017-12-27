@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
-import android.view.animation.AnimationUtils
+import android.transition.TransitionInflater
 import com.pandulapeter.campfire.MainBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
@@ -82,8 +82,9 @@ class MainActivity : DaggerAppCompatActivity() {
                 }
             }.await()
             currentFragment?.let {
-                it.outAnimation = AnimationUtils.loadAnimation(this@MainActivity, android.R.anim.fade_out)
-                (nextFragment as CampfireFragment<*, *>).inAnimation = AnimationUtils.loadAnimation(this@MainActivity, android.R.anim.fade_in)
+                val transitionInflater = TransitionInflater.from(this@MainActivity)
+                it.exitTransition = transitionInflater.inflateTransition(if (it is HomeFragment) R.transition.explode else R.transition.fade)
+                (nextFragment as CampfireFragment<*, *>).enterTransition = transitionInflater.inflateTransition(R.transition.fade)
             }
             supportFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commit()
         }

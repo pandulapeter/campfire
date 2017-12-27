@@ -7,7 +7,7 @@ import com.pandulapeter.campfire.feature.home.HomeFragment
 import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
-import com.pandulapeter.campfire.feature.home.library.SongOptionsBottomSheetFragment
+import com.pandulapeter.campfire.feature.home.library.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.home.managedownloads.ManageDownloadsFragment
 import com.pandulapeter.campfire.feature.home.manageplaylists.ManagePlaylistsFragment
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
@@ -50,7 +50,7 @@ abstract class CampfireModule {
     abstract fun contributeNewPlaylistDialogFragment(): NewPlaylistDialogFragment
 
     @ContributesAndroidInjector
-    abstract fun contributeSongOptionsBottomSheetFragment(): SongOptionsBottomSheetFragment
+    abstract fun contributePlaylistChooserBottomSheetFragment(): PlaylistChooserBottomSheetFragment
 
     @ContributesAndroidInjector
     abstract fun contributeDetailFragment(): DetailFragment
