@@ -118,6 +118,6 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
     companion object {
         private var Bundle?.playlistId by BundleArgumentDelegate.Int("playlist_id")
 
-        fun newInstance(playlistId: Int) = PlaylistFragment().setArguments { it.playlistId = playlistId }
+        fun newInstance(playlistId: Int) = PlaylistFragment().setArguments { it.playlistId = playlistId } as PlaylistFragment
     }
 }

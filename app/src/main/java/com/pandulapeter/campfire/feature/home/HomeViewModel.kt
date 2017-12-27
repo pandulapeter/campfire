@@ -8,6 +8,14 @@ import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
+import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
+import com.pandulapeter.campfire.feature.home.history.HistoryFragment
+import com.pandulapeter.campfire.feature.home.library.LibraryFragment
+import com.pandulapeter.campfire.feature.home.managedownloads.ManageDownloadsFragment
+import com.pandulapeter.campfire.feature.home.manageplaylists.ManagePlaylistsFragment
+import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
+import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
+import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildFragment
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.onPropertyChanged
@@ -61,13 +69,35 @@ class HomeViewModel(private val downloadedSongRepository: DownloadedSongReposito
      * Marks the possible screens the user can reach using the side navigation on the home screen.
      */
     sealed class HomeNavigationItem(val stringValue: String) {
-        object Library : HomeNavigationItem(VALUE_LIBRARY)
-        object Collections : HomeNavigationItem(VALUE_COLLECTIONS)
-        object History : HomeNavigationItem(VALUE_HISTORY)
-        object Settings : HomeNavigationItem(VALUE_SETTINGS)
-        class Playlist(@SerializedName("id") val id: Int) : HomeNavigationItem(VALUE_PLAYLIST + id)
-        object ManagePlaylists : HomeNavigationItem(VALUE_MANAGE_PLAYLISTS)
-        object ManageDownloads : HomeNavigationItem(VALUE_MANAGE_DOWNLOADS)
+        abstract fun getFragment(): HomeChildFragment<*, *>
+
+        object Library : HomeNavigationItem(VALUE_LIBRARY) {
+            override fun getFragment() = LibraryFragment()
+        }
+
+        object Collections : HomeNavigationItem(VALUE_COLLECTIONS) {
+            override fun getFragment() = CollectionsFragment()
+        }
+
+        object History : HomeNavigationItem(VALUE_HISTORY) {
+            override fun getFragment() = HistoryFragment()
+        }
+
+        object Settings : HomeNavigationItem(VALUE_SETTINGS) {
+            override fun getFragment() = SettingsFragment()
+        }
+
+        class Playlist(@SerializedName("id") val id: Int) : HomeNavigationItem(VALUE_PLAYLIST + id) {
+            override fun getFragment() = PlaylistFragment.newInstance(id)
+        }
+
+        object ManagePlaylists : HomeNavigationItem(VALUE_MANAGE_PLAYLISTS) {
+            override fun getFragment() = ManagePlaylistsFragment()
+        }
+
+        object ManageDownloads : HomeNavigationItem(VALUE_MANAGE_DOWNLOADS) {
+            override fun getFragment() = ManageDownloadsFragment()
+        }
 
         companion object {
             private const val VALUE_LIBRARY = "library"

@@ -2,7 +2,10 @@ package com.pandulapeter.campfire.feature
 
 import android.databinding.ObservableField
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.feature.detail.DetailFragment
+import com.pandulapeter.campfire.feature.home.HomeFragment
 import com.pandulapeter.campfire.feature.home.HomeViewModel
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
 
 /**
  * Handles events and logic for [MainActivity].
@@ -12,8 +15,14 @@ class MainViewModel(userPreferenceRepository: UserPreferenceRepository, override
     var previousNavigationItem: MainNavigationItem = MainNavigationItem.Home(userPreferenceRepository.navigationItem)
 
     sealed class MainNavigationItem(val stringValue: String) {
-        class Home(val homeNavigationItem: HomeViewModel.HomeNavigationItem) : MainNavigationItem(VALUE_HOME + homeNavigationItem.stringValue)
-        class Detail(val songId: String, val playlistId: Int? = null) : MainNavigationItem(VALUE_DETAIL)
+        abstract fun getFragment(): CampfireFragment<*, *>
+        class Home(val homeNavigationItem: HomeViewModel.HomeNavigationItem) : MainNavigationItem(VALUE_HOME + homeNavigationItem.stringValue) {
+            override fun getFragment() = HomeFragment.newInstance(homeNavigationItem)
+        }
+
+        class Detail(val songId: String, val playlistId: Int? = null) : MainNavigationItem(VALUE_DETAIL) {
+            override fun getFragment() = DetailFragment.newInstance(songId, playlistId)
+        }
 
         companion object {
             private const val VALUE_HOME = "home_"

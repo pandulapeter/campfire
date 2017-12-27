@@ -15,13 +15,6 @@ import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.MainViewModel
-import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
-import com.pandulapeter.campfire.feature.home.history.HistoryFragment
-import com.pandulapeter.campfire.feature.home.library.LibraryFragment
-import com.pandulapeter.campfire.feature.home.managedownloads.ManageDownloadsFragment
-import com.pandulapeter.campfire.feature.home.manageplaylists.ManagePlaylistsFragment
-import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
-import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
@@ -167,24 +160,18 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         (activity as? MainActivity)?.updatePreviousNavigationItem(MainViewModel.MainNavigationItem.Home(homeNavigationItem))
         if (viewModel.homeNavigationItem != homeNavigationItem || currentFragment == null) {
             viewModel.homeNavigationItem = homeNavigationItem
-            coroutine?.cancel()
-            coroutine = async(UI) {
-                val nextFragment = async(CommonPool) {
-                    when (homeNavigationItem) {
-                        HomeViewModel.HomeNavigationItem.Library -> LibraryFragment()
-                        HomeViewModel.HomeNavigationItem.Collections -> CollectionsFragment()
-                        HomeViewModel.HomeNavigationItem.History -> HistoryFragment()
-                        HomeViewModel.HomeNavigationItem.Settings -> SettingsFragment()
-                        is HomeViewModel.HomeNavigationItem.Playlist -> PlaylistFragment.newInstance(homeNavigationItem.id)
-                        HomeViewModel.HomeNavigationItem.ManagePlaylists -> ManagePlaylistsFragment()
-                        HomeViewModel.HomeNavigationItem.ManageDownloads -> ManageDownloadsFragment()
-                    }
-                }.await()
-                currentFragment?.let {
-                    it.exitTransition = Fade()
-                    (nextFragment as CampfireFragment<*, *>).enterTransition = Fade()
+            if (currentFragment == null) {
+                childFragmentManager.beginTransaction().replace(R.id.fragment_container, homeNavigationItem.getFragment()).commitNow()
+            } else {
+                coroutine?.cancel()
+                coroutine = async(UI) {
+                    currentFragment.exitTransition = Fade()
+                    val nextFragment = async(CommonPool) {
+                        homeNavigationItem.getFragment()
+                    }.await()
+                    nextFragment.enterTransition = Fade()
+                    childFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commitNow()
                 }
-                childFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commitNow()
             }
         }
     }
@@ -204,6 +191,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
     companion object {
         private var Bundle?.homeNavigationItem by BundleArgumentDelegate.String("home_navigation_item")
 
-        fun newInstance(homeNavigationItem: HomeViewModel.HomeNavigationItem?) = HomeFragment().setArguments { it.homeNavigationItem = homeNavigationItem?.stringValue ?: "" }
+        fun newInstance(homeNavigationItem: HomeViewModel.HomeNavigationItem?) =
+            HomeFragment().setArguments { it.homeNavigationItem = homeNavigationItem?.stringValue ?: "" } as HomeFragment
     }
 }

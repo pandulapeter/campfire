@@ -8,7 +8,6 @@ import android.transition.TransitionInflater
 import com.pandulapeter.campfire.MainBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
-import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.home.HomeFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
@@ -73,20 +72,19 @@ class MainActivity : DaggerAppCompatActivity() {
 
     private fun replaceActiveFragment(mainNavigationItem: MainViewModel.MainNavigationItem) {
         val currentFragment = getCurrentFragment()
-        coroutine?.cancel()
-        coroutine = async(UI) {
-            val nextFragment = async(CommonPool) {
-                when (mainNavigationItem) {
-                    is MainViewModel.MainNavigationItem.Home -> HomeFragment.newInstance(mainNavigationItem.homeNavigationItem)
-                    is MainViewModel.MainNavigationItem.Detail -> DetailFragment.newInstance(mainNavigationItem.songId, mainNavigationItem.playlistId)
-                }
-            }.await()
-            currentFragment?.let {
+        if (currentFragment == null) {
+            supportFragmentManager.beginTransaction().replace(R.id.fragment_container, mainNavigationItem.getFragment()).commitNow()
+        } else {
+            coroutine?.cancel()
+            coroutine = async(UI) {
                 val transitionInflater = TransitionInflater.from(this@MainActivity)
-                it.exitTransition = transitionInflater.inflateTransition(if (it is HomeFragment) R.transition.explode else R.transition.fade)
-                (nextFragment as CampfireFragment<*, *>).enterTransition = transitionInflater.inflateTransition(R.transition.fade)
+                currentFragment.exitTransition = transitionInflater.inflateTransition(if (currentFragment is HomeFragment) R.transition.explode else R.transition.fade)
+                val nextFragment = async(CommonPool) {
+                    mainNavigationItem.getFragment()
+                }.await()
+                nextFragment.enterTransition = transitionInflater.inflateTransition(R.transition.fade)
+                supportFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commitNow()
             }
-            supportFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commit()
         }
     }
 

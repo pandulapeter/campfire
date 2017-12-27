@@ -64,6 +64,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         fun newInstance(songId: String, playlistId: Int?) = DetailFragment().setArguments {
             it.songId = songId
             it.playlistId = playlistId ?: -1
-        }
+        } as DetailFragment
     }
 }
