@@ -82,8 +82,9 @@ class MainActivity : DaggerAppCompatActivity() {
                 val nextFragment = async(CommonPool) {
                     mainNavigationItem.getFragment()
                 }.await()
+                //TODO: Fade animation glitches when opening the detail screen.
                 nextFragment.enterTransition = transitionInflater.inflateTransition(R.transition.fade)
-                supportFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commitNow()
+                supportFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commit()
             }
         }
     }

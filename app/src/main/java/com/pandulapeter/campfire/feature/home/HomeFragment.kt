@@ -170,7 +170,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
                         homeNavigationItem.getFragment()
                     }.await()
                     nextFragment.enterTransition = Fade()
-                    childFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commitNow()
+                    childFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commit()
                 }
             }
         }

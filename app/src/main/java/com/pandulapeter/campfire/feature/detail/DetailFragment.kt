@@ -34,6 +34,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         // Setup the view pager.
         //TODO: Pay attention to instance state saving.
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+
             override fun onPageScrollStateChanged(state: Int) = Unit
 
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) = Unit

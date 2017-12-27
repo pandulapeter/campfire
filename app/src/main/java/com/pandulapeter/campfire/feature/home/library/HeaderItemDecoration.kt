@@ -47,6 +47,7 @@ abstract class HeaderItemDecoration(context: Context) : RecyclerView.ItemDecorat
             headerBinding?.let {
                 if (previousHeaderText != title || isHeader(position)) {
                     it.title.text = title
+                    //TODO: Item decorations are not animated during FragmentTransitions.
                     drawHeader(canvas, child, it.root)
                     previousHeaderText = title
                 }
@@ -57,7 +58,6 @@ abstract class HeaderItemDecoration(context: Context) : RecyclerView.ItemDecorat
     private fun drawHeader(canvas: Canvas, child: View, headerView: View) {
         canvas.save()
         canvas.translate(0f, child.y - headerView.height)
-        headerView.alpha = child.alpha
         headerView.draw(canvas)
         canvas.restore()
     }
