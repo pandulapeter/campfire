@@ -42,6 +42,8 @@
                         android:layout_height="0dp"
                         app:layout_constraintEnd_toStartOf="parent" />
 
+                    <!--TODO: Delay starting the animation. -->
+                    <!--TODO: Implement return the animation. -->
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

@@ -53,6 +53,7 @@
                             android:onClick="@{() -> viewModel.showMenu()}"
                             android:padding="@dimen/toolbar_action_button_padding"
                             app:animation="@{R.drawable.avd_back_to_menu_24dp}"
+                            app:lastFrame="@{@drawable/ic_menu_24dp}"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toStartOf="@id/space"
                             app:layout_constraintTop_toTopOf="parent"
@@ -73,8 +74,6 @@
                             app:layout_constraintTop_toTopOf="parent"
                             app:srcCompat="@drawable/ic_view_options_24dp" />
 
-                        <!--TODO: Animate transition. -->
-
                         <ImageView
                             android:id="@+id/search_toggle"
                             android:layout_width="wrap_content"
@@ -86,6 +85,7 @@
                             android:padding="@dimen/toolbar_action_button_padding"
                             android:visibility="@{viewModel.isLibraryNotEmpty}"
                             app:animation="@{viewModel.isSearchInputVisible ? R.drawable.avd_search_to_close_24dp : R.drawable.avd_close_to_search_24dp}"
+                            app:lastFrame="@{viewModel.isSearchInputVisible ? @drawable/ic_close_24dp : @drawable/ic_search_24dp}"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toStartOf="@id/view_options"
                             app:layout_constraintTop_toTopOf="parent"
