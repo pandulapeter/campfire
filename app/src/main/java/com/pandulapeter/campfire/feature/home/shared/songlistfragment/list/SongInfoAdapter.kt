@@ -125,8 +125,8 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
         }
 
         fun setDownloadActionClickListener(itemClickListener: ((position: Int) -> Unit)?) = itemClickListener?.let {
-            binding.downloadActionContainer.setOnClickListener {
-                if (binding.downloadActionContainer.displayedChild == 1 && adapterPosition != RecyclerView.NO_POSITION) {
+            binding.downloadActionSwitcher.setOnClickListener {
+                if (binding.downloadActionSwitcher.displayedChild == 1 && adapterPosition != RecyclerView.NO_POSITION) {
                     itemClickListener(adapterPosition)
                 }
             }
