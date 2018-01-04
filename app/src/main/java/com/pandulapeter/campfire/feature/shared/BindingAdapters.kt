@@ -94,9 +94,9 @@ fun setAnimation(view: ImageView, @DrawableRes drawableRes: Int, lastFrame: Draw
     } else {
         if (drawableRes != view.tag) {
             val drawable = AnimatedVectorDrawableCompat.create(view.context, drawableRes)
-            view.tag = drawableRes
             view.setImageDrawable(drawable)
             drawable?.start()
         }
     }
+    view.tag = drawableRes
 }

@@ -74,7 +74,7 @@
                 android:layout_height="wrap_content"
                 android:visibility="@{viewModel.shouldShowDownloadButton}"
                 app:layout_constraintEnd_toEndOf="@id/space_3">
-                
+
                 <!--TODO: Animate transition. -->
 
                 <ViewSwitcher
