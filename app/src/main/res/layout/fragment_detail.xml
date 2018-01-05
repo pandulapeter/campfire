@@ -23,8 +23,7 @@
         <android.support.design.widget.AppBarLayout
             android:id="@+id/app_bar_layout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:transitionGroup="true">
+            android:layout_height="wrap_content">
 
             <android.support.v7.widget.Toolbar
                 android:layout_width="match_parent"
@@ -33,8 +32,7 @@
 
                 <android.support.constraint.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:animateLayoutChanges="true">
+                    android:layout_height="wrap_content">
 
                     <android.support.v4.widget.Space
                         android:id="@+id/space"
@@ -42,7 +40,6 @@
                         android:layout_height="0dp"
                         app:layout_constraintEnd_toStartOf="parent" />
 
-                    <!--TODO: Implement return the animation. -->
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -56,13 +53,30 @@
                         app:layout_constraintTop_toTopOf="parent"
                         tools:src="@drawable/avd_back_to_menu_24dp" />
 
+                    <ImageView
+                        android:id="@+id/playlist_action"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/manage_playlists"
+                        android:onClick="@{() -> viewModel.onPlaylistActionClicked()}"
+                        android:padding="@dimen/toolbar_action_button_padding"
+                        android:visibility="@{viewModel.shouldShowPlaylistAction}"
+                        app:animation="@{viewModel.isSongOnAnyPlaylist ? R.drawable.avd_added_to_playlists_24dp : R.drawable.avd_removed_from_playlists_24dp}"
+                        app:lastFrame="@{viewModel.isSongOnAnyPlaylist ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:src="@drawable/ic_playlist_24dp" />
+
                     <android.support.v7.widget.Toolbar
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
                         android:layout_marginStart="@dimen/toolbar_in_toolbar_fix"
-                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/playlist_action"
                         app:layout_constraintStart_toStartOf="parent"
                         app:subtitle="@{viewModel.artist}"
                         app:title="@{viewModel.title}"

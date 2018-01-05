@@ -69,6 +69,7 @@ class HomeViewModel(private val downloadedSongRepository: DownloadedSongReposito
      * Marks the possible screens the user can reach using the side navigation on the home screen.
      */
     sealed class HomeNavigationItem(val stringValue: String) {
+        //TODO: Scroll position, edit mode state, etc are lost when restoring instance state.
         abstract fun getFragment(): HomeChildFragment<*, *>
 
         object Library : HomeNavigationItem(VALUE_LIBRARY) {

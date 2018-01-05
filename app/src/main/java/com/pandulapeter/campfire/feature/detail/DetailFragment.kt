@@ -27,12 +27,12 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     @Inject lateinit var historyRepository: HistoryRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
-    override val viewModel by lazy { DetailViewModel(childFragmentManager, arguments.songId, arguments.playlistId, playlistRepository, songInfoRepository, historyRepository) }
+    override val viewModel by lazy { DetailViewModel(arguments.songId, arguments.playlistId, childFragmentManager, playlistRepository, songInfoRepository, historyRepository) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Setup the view pager.
-        //TODO: Pay attention to instance state saving.
+        //TODO: Selected song index is lost when restoring the state.
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
 
             override fun onPageScrollStateChanged(state: Int) = Unit
@@ -47,8 +47,8 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             binding.viewPager.run { post { setCurrentItem(viewModel.songIds.indexOf(arguments.songId), false) } }
         }
         if (viewModel.songIds.size > 1 && firstTimeUserExperienceRepository.shouldShowDetailSwipeHint) {
-            //TODO: Also dismiss for swipes.
             //TODO: Show hint.
+            //TODO: Also dismiss for swipes.
         }
         viewModel.shouldNavigateBack.onEventTriggered { (activity as? MainActivity)?.navigateBack() }
     }
@@ -58,13 +58,24 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         return true
     }
 
+    override fun onStart() {
+        super.onStart()
+        playlistRepository.subscribe(viewModel)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        playlistRepository.unsubscribe(viewModel)
+    }
+
     companion object {
+        const val NO_PLAYLIST = -1
         private var Bundle?.songId by BundleArgumentDelegate.String("song_id")
         private var Bundle?.playlistId by BundleArgumentDelegate.Int("playlist_id")
 
         fun newInstance(songId: String, playlistId: Int?) = DetailFragment().setArguments {
             it.songId = songId
-            it.playlistId = playlistId ?: -1
+            it.playlistId = playlistId ?: NO_PLAYLIST
         } as DetailFragment
     }
 }
