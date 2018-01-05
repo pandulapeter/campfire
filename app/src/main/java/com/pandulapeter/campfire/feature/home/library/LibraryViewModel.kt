@@ -47,6 +47,8 @@ class LibraryViewModel(songInfoRepository: SongInfoRepository,
         isSearchInputVisible.onPropertyChanged { if (it) searchQuery.set("") else userPreferenceRepository.searchQuery = "" }
         searchQuery.onPropertyChanged { userPreferenceRepository.searchQuery = it }
         shouldShowDownloadedOnly.onPropertyChanged { userPreferenceRepository.shouldShowDownloadedOnly = it }
+        shouldShowExplicit.onPropertyChanged { userPreferenceRepository.shouldShowExplicit = it }
+        shouldShowWorkInProgress.onPropertyChanged { userPreferenceRepository.shouldShowWorkInProgress = it }
         isSortedByTitle.onPropertyChanged { userPreferenceRepository.isSortedByTitle = it }
         appShortcutManager.onLibraryOpened()
     }
@@ -90,6 +92,8 @@ class LibraryViewModel(songInfoRepository: SongInfoRepository,
             is UpdateType.HistoryUpdated,
             is UpdateType.IsSortedByTitleUpdated,
             is UpdateType.ShouldShowDownloadedOnlyUpdated,
+            is UpdateType.ShouldHideExplicitUpdated,
+            is UpdateType.ShouldHideWorkInProgressUpdated,
             is UpdateType.SearchQueryUpdated,
             is UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
             is UpdateType.LoadingStateChanged -> isLoading.set(updateType.isLoading)
@@ -140,7 +144,7 @@ class LibraryViewModel(songInfoRepository: SongInfoRepository,
 
     private fun List<SongInfo>.sort() = sortedBy { if (isSortedByTitle.get()) it.titleWithSpecialCharactersRemoved else it.artistWithSpecialCharactersRemoved }
 
-    private fun List<SongInfo>.filterWorkInProgress() = if (shouldShowWorkInProgress.get()) filter { it.version ?: 0 >= 0 } else this
+    private fun List<SongInfo>.filterWorkInProgress() = if (!shouldShowWorkInProgress.get()) filter { it.version ?: 0 >= 0 } else this
 
-    private fun List<SongInfo>.filterExplicit() = if (shouldShowExplicit.get()) filter { it.isExplicit != true } else this
+    private fun List<SongInfo>.filterExplicit() = if (!shouldShowExplicit.get()) filter { it.isExplicit != true } else this
 }
