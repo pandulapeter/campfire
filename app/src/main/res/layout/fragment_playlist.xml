@@ -197,7 +197,7 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/large_content_padding"
             android:onClick="@{() -> viewModel.onPlayButtonClicked()}"
-            android:visibility="gone"
+            android:visibility="invisible"
             app:srcCompat="@drawable/ic_play_24dp"
             app:visibility="@{viewModel.shouldShowPlayButton}"
             tools:visibility="visible" />

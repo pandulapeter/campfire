@@ -27,11 +27,7 @@ abstract class SongListViewModel(protected val songInfoRepository: SongInfoRepos
     abstract fun getAdapterItems(): List<SongInfoViewModel>
 
     override fun onUpdate(updateType: UpdateType) {
-        if (adapter.items.isEmpty()) {
-            onUpdateDone(getAdapterItems(), updateType)
-        } else {
-            async(UI) { onUpdateDone(async(CommonPool) { getAdapterItems() }.await(), updateType) }
-        }
+        async(UI) { onUpdateDone(async(CommonPool) { getAdapterItems() }.await(), updateType) }
     }
 
     @CallSuper
