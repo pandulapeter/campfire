@@ -61,7 +61,7 @@ sealed class UpdateType {
     class LoadingStateChanged(val isLoading: Boolean) : UpdateType()
 
     // UserPreferenceRepository
-    class NavigationItemUpdated(val navigationItem: HomeViewModel.NavigationItem) : UpdateType()
+    class NavigationItemUpdated(val homeNavigationItem: HomeViewModel.HomeNavigationItem) : UpdateType()
 
     class IsSortedByTitleUpdated(val isSortedByTitle: Boolean) : UpdateType()
 

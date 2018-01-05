@@ -10,14 +10,16 @@
             name="viewModel"
             type="com.pandulapeter.campfire.feature.home.settings.SettingsViewModel" />
 
+        <import type="com.pandulapeter.campfire.R" />
+
     </data>
 
     <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context=".feature.home.HomeActivity">
+        android:layout_height="match_parent">
 
         <android.support.design.widget.AppBarLayout
+            android:id="@+id/app_bar_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -44,8 +46,10 @@
                         android:contentDescription="@string/home_menu"
                         android:onClick="@{() -> viewModel.showMenu()}"
                         android:padding="@dimen/toolbar_action_button_padding"
+                        app:animation="@{R.drawable.avd_back_to_menu_24dp}"
+                        app:lastFrame="@{@drawable/ic_menu_24dp}"
                         app:layout_constraintStart_toStartOf="@id/space"
-                        app:srcCompat="@drawable/ic_menu_24dp" />
+                        tools:src="@drawable/avd_menu_to_back_24dp" />
 
                     <TextView
                         android:layout_width="0dp"

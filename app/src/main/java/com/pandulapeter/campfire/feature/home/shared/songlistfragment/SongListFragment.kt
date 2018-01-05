@@ -11,7 +11,7 @@ import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
-import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
+import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildFragment
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
@@ -24,7 +24,7 @@ import javax.inject.Inject
  *
  * Controlled by subclasses of [SongListViewModel].
  */
-abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>(@LayoutRes layoutResourceId: Int) : HomeFragment<B, VM>(layoutResourceId) {
+abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>(@LayoutRes layoutResourceId: Int) : HomeChildFragment<B, VM>(layoutResourceId) {
     @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
     @Inject lateinit var songInfoRepository: SongInfoRepository
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
@@ -32,6 +32,7 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
     protected abstract fun getRecyclerView(): RecyclerView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         context?.let { context ->
             // Initialize the list.
             getRecyclerView().run {

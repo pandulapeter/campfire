@@ -10,9 +10,10 @@ import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.feature.detail.DetailActivity
+import com.pandulapeter.campfire.feature.MainActivity
+import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.library.HeaderItemDecoration
-import com.pandulapeter.campfire.feature.home.library.SongOptionsBottomSheetFragment
+import com.pandulapeter.campfire.feature.home.library.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
@@ -31,7 +32,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
 
     override fun getRecyclerView() = binding.recyclerView
 
-    override fun createViewModel() = HistoryViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, playlistRepository, historyRepository)
+    override fun createViewModel() = HistoryViewModel(songInfoRepository, downloadedSongRepository, playlistRepository, historyRepository)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -68,7 +69,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
             })
 
             // Set up list item click listeners.
-            viewModel.adapter.itemClickListener = { position -> startActivity(DetailActivity.getStartIntent(context = context, currentId = viewModel.adapter.items[position].songInfo.id)) }
+            viewModel.adapter.itemClickListener = { position -> (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id)) }
             viewModel.adapter.playlistActionClickListener = { position ->
                 viewModel.adapter.items[position].let { songInfoViewModel ->
                     val songId = songInfoViewModel.songInfo.id
@@ -79,7 +80,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
                             playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, songId)
                         }
                     } else {
-                        SongOptionsBottomSheetFragment.show(childFragmentManager, songId)
+                        PlaylistChooserBottomSheetFragment.show(childFragmentManager, songId)
                     }
                 }
             }

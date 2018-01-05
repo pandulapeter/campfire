@@ -18,7 +18,7 @@
         tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
 
         <activity
-            android:name=".feature.home.HomeActivity"
+            android:name=".feature.MainActivity"
             android:launchMode="singleTop"
             android:windowSoftInputMode="adjustNothing">
 
@@ -28,10 +28,6 @@
             </intent-filter>
 
         </activity>
-
-        <activity
-            android:name=".feature.detail.DetailActivity"
-            android:parentActivityName=".feature.home.HomeActivity" />
 
     </application>
 

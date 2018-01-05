@@ -8,12 +8,20 @@ import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
+import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
+import com.pandulapeter.campfire.feature.home.history.HistoryFragment
+import com.pandulapeter.campfire.feature.home.library.LibraryFragment
+import com.pandulapeter.campfire.feature.home.managedownloads.ManageDownloadsFragment
+import com.pandulapeter.campfire.feature.home.manageplaylists.ManagePlaylistsFragment
+import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
+import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
+import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildFragment
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 
 /**
- * Handles events and logic for [HomeActivity].
+ * Handles events and logic for [HomeFragment].
  */
 class HomeViewModel(private val downloadedSongRepository: DownloadedSongRepository,
                     private val userPreferenceRepository: UserPreferenceRepository,
@@ -21,7 +29,7 @@ class HomeViewModel(private val downloadedSongRepository: DownloadedSongReposito
     val playlists = ObservableField<List<Playlist>>()
     val isLibraryReady = ObservableBoolean()
     val hasDownloads = ObservableBoolean()
-    var navigationItem: NavigationItem = userPreferenceRepository.navigationItem
+    var homeNavigationItem: HomeNavigationItem = userPreferenceRepository.navigationItem
         set(value) {
             field = value
             userPreferenceRepository.navigationItem = value
@@ -60,14 +68,36 @@ class HomeViewModel(private val downloadedSongRepository: DownloadedSongReposito
     /**
      * Marks the possible screens the user can reach using the side navigation on the home screen.
      */
-    sealed class NavigationItem(val stringValue: String) {
-        object Library : NavigationItem(VALUE_LIBRARY)
-        object Collections : NavigationItem(VALUE_COLLECTIONS)
-        object History : NavigationItem(VALUE_HISTORY)
-        object Settings : NavigationItem(VALUE_SETTINGS)
-        class Playlist(@SerializedName("id") val id: Int) : NavigationItem(VALUE_PLAYLIST + id)
-        object ManagePlaylists : NavigationItem(VALUE_MANAGE_PLAYLISTS)
-        object ManageDownloads : NavigationItem(VALUE_MANAGE_DOWNLOADS)
+    sealed class HomeNavigationItem(val stringValue: String) {
+        abstract fun getFragment(): HomeChildFragment<*, *>
+
+        object Library : HomeNavigationItem(VALUE_LIBRARY) {
+            override fun getFragment() = LibraryFragment()
+        }
+
+        object Collections : HomeNavigationItem(VALUE_COLLECTIONS) {
+            override fun getFragment() = CollectionsFragment()
+        }
+
+        object History : HomeNavigationItem(VALUE_HISTORY) {
+            override fun getFragment() = HistoryFragment()
+        }
+
+        object Settings : HomeNavigationItem(VALUE_SETTINGS) {
+            override fun getFragment() = SettingsFragment()
+        }
+
+        class Playlist(@SerializedName("id") val id: Int) : HomeNavigationItem(VALUE_PLAYLIST + id) {
+            override fun getFragment() = PlaylistFragment.newInstance(id)
+        }
+
+        object ManagePlaylists : HomeNavigationItem(VALUE_MANAGE_PLAYLISTS) {
+            override fun getFragment() = ManagePlaylistsFragment()
+        }
+
+        object ManageDownloads : HomeNavigationItem(VALUE_MANAGE_DOWNLOADS) {
+            override fun getFragment() = ManageDownloadsFragment()
+        }
 
         companion object {
             private const val VALUE_LIBRARY = "library"

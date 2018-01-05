@@ -7,9 +7,7 @@ import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
-import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
@@ -20,15 +18,12 @@ import java.util.Collections
 /**
  * Handles events and logic for [PlaylistFragment].
  */
-class PlaylistViewModel(
-    homeCallbacks: HomeFragment.HomeCallbacks?,
-    userPreferenceRepository: UserPreferenceRepository,
-    songInfoRepository: SongInfoRepository,
-    downloadedSongRepository: DownloadedSongRepository,
-    appShortcutManager: AppShortcutManager,
-    private val playlistRepository: PlaylistRepository,
-    private val favoritesTitle: String,
-    private val playlistId: Int) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
+class PlaylistViewModel(songInfoRepository: SongInfoRepository,
+                        downloadedSongRepository: DownloadedSongRepository,
+                        appShortcutManager: AppShortcutManager,
+                        private val playlistRepository: PlaylistRepository,
+                        private val favoritesTitle: String,
+                        private val playlistId: Int) : SongListViewModel(songInfoRepository, downloadedSongRepository) {
     var adapterItemCount = 0
     val title = ObservableField(favoritesTitle)
     val editedTitle = ObservableField(title.get())
@@ -50,8 +45,6 @@ class PlaylistViewModel(
     override fun getAdapterItems(): List<SongInfoViewModel> {
         val items = playlistRepository.getPlaylistSongIds(playlistId)
             .mapNotNull { songInfoRepository.getSongInfo(it) }
-            .filterWorkInProgress()
-            .filterExplicit()
         val shouldShowDragHandle = isInEditMode.get() && items.size > 1
         return items.map { songInfo ->
             val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)

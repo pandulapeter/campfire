@@ -7,8 +7,7 @@
     android:paddingBottom="@dimen/content_padding"
     android:paddingEnd="@dimen/first_keyline"
     android:paddingStart="@dimen/first_keyline"
-    android:paddingTop="@dimen/first_keyline"
-    tools:context=".feature.home.HomeActivity">
+    android:paddingTop="@dimen/first_keyline">
 
     <TextView
         android:layout_width="wrap_content"

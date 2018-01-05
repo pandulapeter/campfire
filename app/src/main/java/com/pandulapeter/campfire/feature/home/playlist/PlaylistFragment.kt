@@ -8,8 +8,9 @@ import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.feature.detail.DetailActivity
-import com.pandulapeter.campfire.feature.home.HomeActivity
+import com.pandulapeter.campfire.feature.MainActivity
+import com.pandulapeter.campfire.feature.MainViewModel
+import com.pandulapeter.campfire.feature.home.HomeFragment
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
@@ -35,7 +36,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
     @Inject lateinit var appShortcutManager: AppShortcutManager
 
-    override fun createViewModel() = PlaylistViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
+    override fun createViewModel() = PlaylistViewModel(songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
 
     override fun getRecyclerView() = binding.recyclerView
 
@@ -85,20 +86,15 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Set up list item click listeners.
-        context?.let { context ->
-            viewModel.adapter.itemClickListener = { position ->
-                startActivity(DetailActivity.getStartIntent(
-                    context = context,
-                    currentId = viewModel.adapter.items[position].songInfo.id,
-                    ids = viewModel.adapter.items.map { it.songInfo.id }))
-            }
-            viewModel.adapter.downloadActionClickListener = { position ->
-                viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }
-            }
-            viewModel.adapter.dragHandleTouchListener = { position ->
-                if (viewModel.isInEditMode.get()) {
-                    itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
-                }
+        viewModel.adapter.itemClickListener = { position ->
+            (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id, arguments.playlistId))
+        }
+        viewModel.adapter.downloadActionClickListener = { position ->
+            viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }
+        }
+        viewModel.adapter.dragHandleTouchListener = { position ->
+            if (viewModel.isInEditMode.get()) {
+                itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
             }
         }
         viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered { binding.root.showSnackbar(R.string.work_in_progress) }
@@ -115,13 +111,13 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
     }
 
     override fun onPositiveButtonSelected() {
-        (activity as HomeActivity).setCheckedItem(HomeViewModel.NavigationItem.Library)
+        (parentFragment as HomeFragment).setCheckedItem(HomeViewModel.HomeNavigationItem.Library)
         viewModel.deletePlaylist()
     }
 
     companion object {
         private var Bundle?.playlistId by BundleArgumentDelegate.Int("playlist_id")
 
-        fun newInstance(playlistId: Int) = PlaylistFragment().setArguments { it.playlistId = playlistId }
+        fun newInstance(playlistId: Int) = PlaylistFragment().setArguments { it.playlistId = playlistId } as PlaylistFragment
     }
 }

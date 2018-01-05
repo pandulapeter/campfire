@@ -52,6 +52,15 @@ inline fun <T> ObservableField<T>.onEventTriggered(crossinline callback: (T) -> 
     })
 }
 
+inline fun <T> ObservableField<T>.subscribe(crossinline callback: (T) -> Unit) {
+    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+            callback(get())
+        }
+    })
+    callback(get())
+}
+
 inline fun ObservableBoolean.onPropertyChanged(crossinline callback: (Boolean) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {

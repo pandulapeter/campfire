@@ -6,9 +6,7 @@ import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
-import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
@@ -18,13 +16,10 @@ import kotlin.math.abs
 /**
  * Handles events and logic for [HistoryFragment].
  */
-class HistoryViewModel(
-    homeCallbacks: HomeFragment.HomeCallbacks?,
-    userPreferenceRepository: UserPreferenceRepository,
-    songInfoRepository: SongInfoRepository,
-    downloadedSongRepository: DownloadedSongRepository,
-    private val playlistRepository: PlaylistRepository,
-    private val historyRepository: HistoryRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
+class HistoryViewModel(songInfoRepository: SongInfoRepository,
+                       downloadedSongRepository: DownloadedSongRepository,
+                       private val playlistRepository: PlaylistRepository,
+                       private val historyRepository: HistoryRepository) : SongListViewModel(songInfoRepository, downloadedSongRepository) {
     val shouldShowClearButton = ObservableBoolean(historyRepository.getHistoryItems().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldInvalidateItemDecorations = ObservableBoolean()
@@ -36,8 +31,6 @@ class HistoryViewModel(
 
     override fun getAdapterItems() = historyRepository.getHistoryItems()
         .mapNotNull { songInfoRepository.getSongInfo(it.songId) }
-        .filterWorkInProgress()
-        .filterExplicit()
         .map { songInfo ->
             val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
             val isSongNew = false //TODO: Check if the song is new.

@@ -12,7 +12,8 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.LanguageRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.feature.detail.DetailActivity
+import com.pandulapeter.campfire.feature.MainActivity
+import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.addDrawerListener
@@ -38,7 +39,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
     @Inject lateinit var languageRepository: LanguageRepository
     @Inject lateinit var appShortcutManager: AppShortcutManager
 
-    override fun createViewModel() = LibraryViewModel(callbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, languageRepository)
+    override fun createViewModel() = LibraryViewModel(songInfoRepository, downloadedSongRepository, appShortcutManager, userPreferenceRepository, playlistRepository, languageRepository)
 
     override fun getRecyclerView() = binding.recyclerView
 
@@ -51,6 +52,8 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.downloaded_only -> consume { viewModel.shouldShowDownloadedOnly.toggle() }
+                R.id.show_work_in_progress -> consume { viewModel.shouldShowWorkInProgress.toggle() }
+                R.id.show_explicit -> consume { viewModel.shouldShowExplicit.toggle() }
                 R.id.sort_by_title -> consume { if (!viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(true) }
                 R.id.sort_by_artist -> consume { if (viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(false) }
                 else -> consume { viewModel.languageFilters.get().filterKeys { language -> language.nameResource == it.itemId }.values.first().toggle() }
@@ -68,6 +71,8 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
             }
         }
         (binding.navigationView.menu.findItem(R.id.downloaded_only).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowDownloadedOnly)
+        (binding.navigationView.menu.findItem(R.id.show_work_in_progress).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowWorkInProgress)
+        (binding.navigationView.menu.findItem(R.id.show_explicit).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowExplicit)
         (binding.navigationView.menu.findItem(R.id.sort_by_title).actionView as CompoundButton).setupWithBackingField(viewModel.isSortedByTitle)
         // Set up keyboard handling for the search view.
         viewModel.isSearchInputVisible.onPropertyChanged {
@@ -103,7 +108,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
                 override fun getHeaderTitle(position: Int) = if (position >= 0) viewModel.getHeaderTitle(position) else ""
             })
             // Set up list item click listeners.
-            viewModel.adapter.itemClickListener = { position -> startActivity(DetailActivity.getStartIntent(context = context, currentId = viewModel.adapter.items[position].songInfo.id)) }
+            viewModel.adapter.itemClickListener = { position -> (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id)) }
             viewModel.adapter.playlistActionClickListener = { position ->
                 viewModel.adapter.items[position].let { songInfoViewModel ->
                     val songId = songInfoViewModel.songInfo.id
@@ -114,7 +119,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
                             playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, songId)
                         }
                     } else {
-                        SongOptionsBottomSheetFragment.show(childFragmentManager, songId)
+                        PlaylistChooserBottomSheetFragment.show(childFragmentManager, songId)
                     }
                 }
             }

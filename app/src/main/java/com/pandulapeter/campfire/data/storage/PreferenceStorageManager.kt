@@ -15,15 +15,15 @@ class PreferenceStorageManager(context: Context) {
     var lastUpdateTimestamp by PreferenceFieldDelegate.Long("last_update_timestamp")
     var isSortedByTitle by PreferenceFieldDelegate.Boolean("is_sorted_by_title", true)
     var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("should_show_downloaded_only")
-    var shouldHideExplicit by PreferenceFieldDelegate.Boolean("should_hide_explicit", true) //TODO: Add toggle in Settings.
-    var shouldHideWorkInProgress by PreferenceFieldDelegate.Boolean("should_hide_work_in_progress", !BuildConfig.DEBUG)  //TODO: Add toggle in Settings.
+    var shouldShowExplicit by PreferenceFieldDelegate.Boolean("should_show_explicit", false)
+    var shouldShowWorkInProgress by PreferenceFieldDelegate.Boolean("should_show_work_in_progress", BuildConfig.DEBUG)
     var shouldShowSongCount by PreferenceFieldDelegate.Boolean("should_show_song_count", BuildConfig.DEBUG) //TODO: Add toggle in Settings.
     var shouldShowHistoryHint by PreferenceFieldDelegate.Boolean("should_show_history_hint", true)
     var shouldShowPlaylistHint by PreferenceFieldDelegate.Boolean("should_show_playlist_hint", true)
     var shouldShowManageDownloadsHint by PreferenceFieldDelegate.Boolean("should_show_manage_downloads_hint", true)
     var shouldShowDetailSwipeHint by PreferenceFieldDelegate.Boolean("should_show_detail_swipe_hint", true)
-    var navigationItem: HomeViewModel.NavigationItem
-        get() = HomeViewModel.NavigationItem.fromStringValue(preferences.getString(KEY_NAVIGATION_ITEM, null))
+    var homeNavigationItem: HomeViewModel.HomeNavigationItem
+        get() = HomeViewModel.HomeNavigationItem.fromStringValue(preferences.getString(KEY_NAVIGATION_ITEM, null))
         set(value) = preferences.edit().putString(KEY_NAVIGATION_ITEM, value.stringValue).apply()
 
     fun isLanguageFilterEnabled(language: Language) = when (language) {

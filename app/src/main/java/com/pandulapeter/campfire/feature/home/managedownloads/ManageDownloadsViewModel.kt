@@ -6,9 +6,7 @@ import android.databinding.ObservableField
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
-import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import kotlinx.coroutines.experimental.CommonPool
@@ -18,12 +16,9 @@ import kotlinx.coroutines.experimental.async
 /**
  * Handles events and logic for [ManageDownloadsFragment].
  */
-class ManageDownloadsViewModel(
-    context: Context?,
-    homeCallbacks: HomeFragment.HomeCallbacks?,
-    userPreferenceRepository: UserPreferenceRepository,
-    songInfoRepository: SongInfoRepository,
-    downloadedSongRepository: DownloadedSongRepository) : SongListViewModel(homeCallbacks, userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
+class ManageDownloadsViewModel(context: Context?,
+                               songInfoRepository: SongInfoRepository,
+                               downloadedSongRepository: DownloadedSongRepository) : SongListViewModel(songInfoRepository, downloadedSongRepository) {
     val shouldShowDeleteAllButton = ObservableBoolean()
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldShowHintSnackbar = ObservableBoolean()
