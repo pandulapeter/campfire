@@ -5,7 +5,6 @@ import android.support.annotation.CallSuper
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildViewModel
@@ -20,8 +19,7 @@ import kotlinx.coroutines.experimental.async
  *
  * Handles events and logic for subclasses of [SongListFragment].
  */
-abstract class SongListViewModel(private val userPreferenceRepository: UserPreferenceRepository,
-                                 protected val songInfoRepository: SongInfoRepository,
+abstract class SongListViewModel(protected val songInfoRepository: SongInfoRepository,
                                  protected val downloadedSongRepository: DownloadedSongRepository) : HomeChildViewModel(), Subscriber {
     val adapter = SongInfoAdapter()
     val shouldShowDownloadErrorSnackbar = ObservableField<SongInfo?>()
@@ -44,8 +42,4 @@ abstract class SongListViewModel(private val userPreferenceRepository: UserPrefe
     fun downloadSong(songInfo: SongInfo) = downloadedSongRepository.downloadSong(
         songInfo = songInfo,
         onFailure = { shouldShowDownloadErrorSnackbar.set(songInfo) })
-
-    protected fun List<SongInfo>.filterWorkInProgress() = if (userPreferenceRepository.shouldHideWorkInProgress) filter { it.version ?: 0 >= 0 } else this
-
-    protected fun List<SongInfo>.filterExplicit() = if (userPreferenceRepository.shouldHideExplicit) filter { it.isExplicit != true } else this
 }

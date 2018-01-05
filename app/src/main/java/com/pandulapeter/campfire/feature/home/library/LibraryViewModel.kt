@@ -23,18 +23,20 @@ import com.pandulapeter.campfire.util.toggle
 /**
  * Handles events and logic for [LibraryFragment].
  */
-class LibraryViewModel(userPreferenceRepository: UserPreferenceRepository,
-                       songInfoRepository: SongInfoRepository,
+class LibraryViewModel(songInfoRepository: SongInfoRepository,
                        downloadedSongRepository: DownloadedSongRepository,
                        appShortcutManager: AppShortcutManager,
+                       private val userPreferenceRepository: UserPreferenceRepository,
                        private val playlistRepository: PlaylistRepository,
-                       private val languageRepository: LanguageRepository) : SongListViewModel(userPreferenceRepository, songInfoRepository, downloadedSongRepository) {
+                       private val languageRepository: LanguageRepository) : SongListViewModel(songInfoRepository, downloadedSongRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.searchQuery.isNotEmpty())
     val searchQuery = ObservableField(userPreferenceRepository.searchQuery)
     val shouldShowViewOptions = ObservableBoolean(false)
     val isLoading = ObservableBoolean(songInfoRepository.isLoading)
     val shouldShowErrorSnackbar = ObservableBoolean(false)
     val shouldShowDownloadedOnly = ObservableBoolean(userPreferenceRepository.shouldShowDownloadedOnly)
+    val shouldShowExplicit = ObservableBoolean(userPreferenceRepository.shouldShowExplicit)
+    val shouldShowWorkInProgress = ObservableBoolean(userPreferenceRepository.shouldShowWorkInProgress)
     val isSortedByTitle = ObservableBoolean(userPreferenceRepository.isSortedByTitle)
     val languageFilters = ObservableField(HashMap<Language, ObservableBoolean>())
     val filteredItemCount = ObservableField("")
@@ -51,9 +53,9 @@ class LibraryViewModel(userPreferenceRepository: UserPreferenceRepository,
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
         val librarySongs = songInfoRepository.getLibrarySongs()
+        val filteredItems = librarySongs
             .filterWorkInProgress()
             .filterExplicit()
-        val filteredItems = librarySongs
             .filterByLanguages()
             .filterDownloaded()
             .filterByQuery()
@@ -137,4 +139,8 @@ class LibraryViewModel(userPreferenceRepository: UserPreferenceRepository,
     } else this
 
     private fun List<SongInfo>.sort() = sortedBy { if (isSortedByTitle.get()) it.titleWithSpecialCharactersRemoved else it.artistWithSpecialCharactersRemoved }
+
+    private fun List<SongInfo>.filterWorkInProgress() = if (shouldShowWorkInProgress.get()) filter { it.version ?: 0 >= 0 } else this
+
+    private fun List<SongInfo>.filterExplicit() = if (shouldShowExplicit.get()) filter { it.isExplicit != true } else this
 }

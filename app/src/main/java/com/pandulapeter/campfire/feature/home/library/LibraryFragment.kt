@@ -39,7 +39,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
     @Inject lateinit var languageRepository: LanguageRepository
     @Inject lateinit var appShortcutManager: AppShortcutManager
 
-    override fun createViewModel() = LibraryViewModel(userPreferenceRepository, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, languageRepository)
+    override fun createViewModel() = LibraryViewModel(songInfoRepository, downloadedSongRepository, appShortcutManager, userPreferenceRepository, playlistRepository, languageRepository)
 
     override fun getRecyclerView() = binding.recyclerView
 
@@ -52,6 +52,8 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.downloaded_only -> consume { viewModel.shouldShowDownloadedOnly.toggle() }
+                R.id.show_work_in_progress -> consume { viewModel.shouldShowWorkInProgress.toggle() }
+                R.id.show_explicit -> consume { viewModel.shouldShowExplicit.toggle() }
                 R.id.sort_by_title -> consume { if (!viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(true) }
                 R.id.sort_by_artist -> consume { if (viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(false) }
                 else -> consume { viewModel.languageFilters.get().filterKeys { language -> language.nameResource == it.itemId }.values.first().toggle() }
@@ -69,6 +71,8 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
             }
         }
         (binding.navigationView.menu.findItem(R.id.downloaded_only).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowDownloadedOnly)
+        (binding.navigationView.menu.findItem(R.id.show_work_in_progress).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowWorkInProgress)
+        (binding.navigationView.menu.findItem(R.id.show_explicit).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowExplicit)
         (binding.navigationView.menu.findItem(R.id.sort_by_title).actionView as CompoundButton).setupWithBackingField(viewModel.isSortedByTitle)
         // Set up keyboard handling for the search view.
         viewModel.isSearchInputVisible.onPropertyChanged {

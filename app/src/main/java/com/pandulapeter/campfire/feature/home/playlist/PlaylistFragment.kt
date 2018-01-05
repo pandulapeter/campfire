@@ -36,7 +36,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
     @Inject lateinit var appShortcutManager: AppShortcutManager
 
-    override fun createViewModel() = PlaylistViewModel(userPreferenceRepository, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
+    override fun createViewModel() = PlaylistViewModel(songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
 
     override fun getRecyclerView() = binding.recyclerView
 

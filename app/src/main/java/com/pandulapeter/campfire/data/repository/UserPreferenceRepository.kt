@@ -32,16 +32,16 @@ class UserPreferenceRepository(
             preferenceStorageManager.shouldShowDownloadedOnly = new
         }
     }
-    var shouldHideExplicit by Delegates.observable(preferenceStorageManager.shouldHideExplicit) { _: KProperty<*>, old: Boolean, new: Boolean ->
+    var shouldShowExplicit by Delegates.observable(preferenceStorageManager.shouldShowExplicit) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
             notifySubscribers(UpdateType.ShouldHideExplicitUpdated(new))
-            preferenceStorageManager.shouldHideExplicit = new
+            preferenceStorageManager.shouldShowExplicit = new
         }
     }
-    var shouldHideWorkInProgress by Delegates.observable(preferenceStorageManager.shouldHideWorkInProgress) { _: KProperty<*>, old: Boolean, new: Boolean ->
+    var shouldShowWorkInProgress by Delegates.observable(preferenceStorageManager.shouldShowWorkInProgress) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
             notifySubscribers(UpdateType.ShouldHideWorkInProgressUpdated(new))
-            preferenceStorageManager.shouldHideWorkInProgress = new
+            preferenceStorageManager.shouldShowWorkInProgress = new
         }
     }
     var shouldShowSongCount by Delegates.observable(preferenceStorageManager.shouldShowSongCount) { _: KProperty<*>, old: Boolean, new: Boolean ->
@@ -61,8 +61,8 @@ class UserPreferenceRepository(
         subscriber.onUpdate(UpdateType.NavigationItemUpdated(navigationItem))
         subscriber.onUpdate(UpdateType.IsSortedByTitleUpdated(isSortedByTitle))
         subscriber.onUpdate(UpdateType.ShouldShowDownloadedOnlyUpdated(shouldShowDownloadedOnly))
-        subscriber.onUpdate(UpdateType.ShouldHideExplicitUpdated(shouldHideExplicit))
-        subscriber.onUpdate(UpdateType.ShouldHideWorkInProgressUpdated(shouldHideWorkInProgress))
+        subscriber.onUpdate(UpdateType.ShouldHideExplicitUpdated(shouldShowExplicit))
+        subscriber.onUpdate(UpdateType.ShouldHideWorkInProgressUpdated(shouldShowWorkInProgress))
         subscriber.onUpdate(UpdateType.ShouldShowSongCountUpdated(shouldShowSongCount))
         subscriber.onUpdate(UpdateType.SearchQueryUpdated(searchQuery))
     }
