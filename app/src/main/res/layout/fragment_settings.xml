@@ -47,6 +47,7 @@
                         android:onClick="@{() -> viewModel.showMenu()}"
                         android:padding="@dimen/toolbar_action_button_padding"
                         app:animation="@{R.drawable.avd_back_to_menu_24dp}"
+                        app:forcePlay="@{viewModel.shouldPlayReturnAnimation}"
                         app:lastFrame="@{@drawable/ic_menu_24dp}"
                         app:layout_constraintStart_toStartOf="@id/space"
                         tools:src="@drawable/avd_menu_to_back_24dp" />

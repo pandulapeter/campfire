@@ -10,10 +10,4 @@
         </targets>
     </explode>
 
-    <fade>
-        <targets>
-            <target android:targetId="@id/app_bar_layout" />
-        </targets>
-    </fade>
-
 </transitionSet>

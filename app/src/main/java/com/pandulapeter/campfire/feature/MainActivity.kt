@@ -78,10 +78,17 @@ class MainActivity : DaggerAppCompatActivity() {
             coroutine?.cancel()
             coroutine = async(UI) {
                 val transitionInflater = TransitionInflater.from(this@MainActivity)
-                currentFragment.exitTransition = transitionInflater.inflateTransition(if (currentFragment is HomeFragment) R.transition.explode else R.transition.fade)
+                //TODO: Excluding the menu button does not work.
+                 currentFragment.exitTransition = transitionInflater.inflateTransition(if (currentFragment is HomeFragment) R.transition.explode else R.transition.fade)
+//                if (currentFragment is HomeFragment) {
+//                    currentFragment.exitTransition = transitionInflater.inflateTransition(R.transition.explode)
+//                }
                 val nextFragment = async(CommonPool) {
                     mainNavigationItem.getFragment()
                 }.await()
+                if (nextFragment is HomeFragment) {
+                    nextFragment.shouldPlayReturnAnimation = true
+                }
                 supportFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commit()
             }
         }

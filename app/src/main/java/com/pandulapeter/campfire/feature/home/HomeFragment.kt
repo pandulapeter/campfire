@@ -1,8 +1,8 @@
 package com.pandulapeter.campfire.feature.home
 
 import android.os.Bundle
-import android.support.transition.Fade
 import android.support.v4.view.GravityCompat
+import android.transition.TransitionInflater
 import android.view.SubMenu
 import android.view.View
 import android.widget.TextView
@@ -51,6 +51,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
     private val historyItem by lazy { binding.navigationView.menu.findItem(R.id.history) }
     private val managePlaylistsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_playlists) }
     private val manageDownloadsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_downloads) }
+    var shouldPlayReturnAnimation = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -161,15 +162,16 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         if (viewModel.homeNavigationItem != homeNavigationItem || currentFragment == null) {
             viewModel.homeNavigationItem = homeNavigationItem
             if (currentFragment == null) {
-                childFragmentManager.beginTransaction().replace(R.id.fragment_container, homeNavigationItem.getFragment()).commitNow()
+                childFragmentManager.beginTransaction().replace(R.id.fragment_container, homeNavigationItem.getFragment().apply { shouldPlayReturnAnimation = this@HomeFragment.shouldPlayReturnAnimation }).commitNow()
             } else {
                 coroutine?.cancel()
                 coroutine = async(UI) {
-                    currentFragment.exitTransition = Fade()
+                    val fade = TransitionInflater.from(this@HomeFragment.context).inflateTransition(R.transition.fade)
+                    currentFragment.exitTransition = fade
                     val nextFragment = async(CommonPool) {
                         homeNavigationItem.getFragment()
                     }.await()
-                    nextFragment.enterTransition = Fade()
+                    nextFragment.enterTransition = fade
                     childFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commit()
                 }
             }

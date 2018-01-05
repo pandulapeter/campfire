@@ -87,15 +87,23 @@ fun setScrollEnabled(view: Toolbar, isScrollEnabled: Boolean) {
     }
 }
 
-@BindingAdapter(value = ["animation", "lastFrame"], requireAll = false)
-fun setAnimation(view: ImageView, @DrawableRes drawableRes: Int, lastFrame: Drawable?) {
-    if (view.drawable == null && lastFrame != null) {
-        view.setImageDrawable(lastFrame)
-    } else {
-        if (drawableRes != view.tag) {
+@BindingAdapter(value = ["animation", "lastFrame", "forcePlay"], requireAll = false)
+fun setAnimation(view: ImageView, @DrawableRes drawableRes: Int, lastFrame: Drawable?, forcePlay: Boolean?) {
+    if (forcePlay == true) {
+        view.post {
             val drawable = AnimatedVectorDrawableCompat.create(view.context, drawableRes)
             view.setImageDrawable(drawable)
             drawable?.start()
+        }
+    } else {
+        if (view.drawable == null && lastFrame != null) {
+            view.setImageDrawable(lastFrame)
+        } else {
+            if (drawableRes != view.tag) {
+                val drawable = AnimatedVectorDrawableCompat.create(view.context, drawableRes)
+                view.setImageDrawable(drawable)
+                drawable?.start()
+            }
         }
     }
     view.tag = drawableRes

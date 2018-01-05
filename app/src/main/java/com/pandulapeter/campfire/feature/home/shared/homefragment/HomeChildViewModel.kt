@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.feature.shared.CampfireViewModel
  */
 abstract class HomeChildViewModel : CampfireViewModel() {
     val shouldShowMenu = ObservableBoolean()
+    val shouldPlayReturnAnimation = ObservableBoolean()
 
     fun showMenu() = shouldShowMenu.set(true)
 }
