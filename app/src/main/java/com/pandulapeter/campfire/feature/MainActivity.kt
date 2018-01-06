@@ -77,7 +77,7 @@ class MainActivity : DaggerAppCompatActivity() {
         } else {
             coroutine?.cancel()
             coroutine = async(UI) {
-                currentFragment.exitTransition = TransitionInflater.from(this@MainActivity).inflateTransition(R.transition.fade)
+//                currentFragment.exitTransition = TransitionInflater.from(this@MainActivity).inflateTransition(R.transition.fade)
                 val nextFragment = async(CommonPool) {
                     mainNavigationItem.getFragment()
                 }.await()

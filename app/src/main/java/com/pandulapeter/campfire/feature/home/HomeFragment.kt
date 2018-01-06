@@ -166,12 +166,12 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             } else {
                 coroutine?.cancel()
                 coroutine = async(UI) {
-                    val fade = TransitionInflater.from(this@HomeFragment.context).inflateTransition(R.transition.fade)
-                    currentFragment.exitTransition = fade
+//                    val fade = TransitionInflater.from(this@HomeFragment.context).inflateTransition(R.transition.fade)
+//                    currentFragment.exitTransition = fade
                     val nextFragment = async(CommonPool) {
                         childFragmentManager.findFragmentByTag(homeNavigationItem.stringValue) ?: homeNavigationItem.getFragment()
                     }.await()
-                    nextFragment.enterTransition = fade
+//                    nextFragment.enterTransition = fade
                     childFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment, homeNavigationItem.stringValue).addToBackStack(homeNavigationItem.stringValue).commit()
                 }
             }
