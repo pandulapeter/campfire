@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.detail
 
 import android.os.Bundle
+import android.support.design.widget.AppBarLayout
 import android.support.v4.view.ViewPager
 import android.view.View
 import com.pandulapeter.campfire.DetailBinding
@@ -16,6 +17,7 @@ import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.setArguments
 import javax.inject.Inject
 
+
 /**
  * Displays a horizontal pager with the songs that are in the currently selected playlist (or a
  * single song if no playlist is available).
@@ -28,6 +30,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
     override val viewModel by lazy { DetailViewModel(arguments.songId, arguments.playlistId, childFragmentManager, playlistRepository, songInfoRepository, historyRepository) }
+    private var isBackAnimationInProgress = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -55,8 +58,37 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 firstTimeUserExperienceRepository.shouldShowDetailSwipeHint = false
             }
         }
-        viewModel.shouldNavigateBack.onEventTriggered { (activity as? MainActivity)?.navigateBack() }
+        viewModel.shouldNavigateBack.onEventTriggered {
+            if (!isBackAnimationInProgress) {
+                isBackAnimationInProgress = true
+                viewModel.adapter.getItemAt(binding.viewPager.currentItem).scrollToTop(
+                    onScrollCompleted = {
+                        if (binding.appBarLayout.height - binding.appBarLayout.bottom == 0) {
+                            (activity as? MainActivity)?.navigateBack()
+                        } else {
+                            var previousVerticalOffset = -Int.MAX_VALUE
+                            binding.appBarLayout.setExpanded(true, true)
+                            binding.appBarLayout.addOnOffsetChangedListener(object : AppBarLayout.OnOffsetChangedListener {
+                                override fun onOffsetChanged(appBarLayout: AppBarLayout?, verticalOffset: Int) {
+                                    if (verticalOffset < binding.appBarLayout.height / 10) {
+                                        (activity as? MainActivity)?.navigateBack()
+                                    }
+                                    if (verticalOffset < previousVerticalOffset) {
+                                        binding.appBarLayout.removeOnOffsetChangedListener(this)
+                                        isBackAnimationInProgress = false
+                                    }
+                                    previousVerticalOffset = verticalOffset
+                                }
+                            })
+                        }
+                    },
+                    onScrollInterrupted = {
+                        isBackAnimationInProgress = false
+                    })
+            }
+        }
     }
+
 
     override fun onBackPressed(): Boolean {
         viewModel.navigateBack()
