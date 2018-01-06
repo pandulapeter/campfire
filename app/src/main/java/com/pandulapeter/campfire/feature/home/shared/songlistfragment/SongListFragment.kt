@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildFragment
 import com.pandulapeter.campfire.util.dimension
@@ -56,6 +57,10 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
                             action = { viewModel.downloadSong(songInfo) })
                     }
                 }
+            }
+            // Implement navigation from placeholder action button.
+            viewModel.shouldNavigateToLibrary.onEventTriggered {
+                (parentFragment as? HomeCallbacks)?.setCheckedItem(HomeViewModel.HomeNavigationItem.Library)
             }
         }
     }

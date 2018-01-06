@@ -161,6 +161,13 @@
 
             </android.support.v4.widget.SwipeRefreshLayout>
 
+            <com.pandulapeter.campfire.feature.home.shared.PlaceholderView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="@{viewModel.placeholderText}"
+                android:visibility="@{viewModel.shouldShowPlaceholder}"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
         </android.support.design.widget.CoordinatorLayout>
 
         <android.support.design.widget.NavigationView

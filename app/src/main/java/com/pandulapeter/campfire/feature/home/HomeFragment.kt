@@ -135,7 +135,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         hideKeyboard(activity?.currentFocus)
     }
 
-    fun setCheckedItem(homeNavigationItem: HomeViewModel.HomeNavigationItem) {
+    override fun setCheckedItem(homeNavigationItem: HomeViewModel.HomeNavigationItem) {
         replaceActiveFragment(homeNavigationItem)
         updateCheckedItem()
     }

@@ -82,6 +82,8 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
                 viewHolder?.adapterPosition?.let { position ->
                     val songInfo = viewModel.adapter.items[position].songInfo
                     viewModel.removeSongFromPlaylist(songInfo.id)
+                    firstTimeUserExperienceRepository.shouldShowPlaylistHint = false
+                    dismissHintSnackbar()
                 }
             }
         })

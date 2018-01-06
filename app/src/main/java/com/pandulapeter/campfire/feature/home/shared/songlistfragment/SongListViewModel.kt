@@ -1,7 +1,10 @@
 package com.pandulapeter.campfire.feature.home.shared.songlistfragment
 
+import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
+import android.databinding.ObservableInt
 import android.support.annotation.CallSuper
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -23,6 +26,8 @@ abstract class SongListViewModel(protected val songInfoRepository: SongInfoRepos
                                  protected val downloadedSongRepository: DownloadedSongRepository) : HomeChildViewModel(), Subscriber {
     val adapter = SongInfoAdapter()
     val shouldShowDownloadErrorSnackbar = ObservableField<SongInfo?>()
+    val shouldShowPlaceholder = ObservableBoolean()
+    val shouldNavigateToLibrary = ObservableBoolean()
 
     abstract fun getAdapterItems(): List<SongInfoViewModel>
 
@@ -33,7 +38,10 @@ abstract class SongListViewModel(protected val songInfoRepository: SongInfoRepos
     @CallSuper
     protected open fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         adapter.items = items
+        shouldShowPlaceholder.set(items.isEmpty())
     }
+
+    fun navigateToLibrary() = shouldNavigateToLibrary.set(true)
 
     fun downloadSong(songInfo: SongInfo) = downloadedSongRepository.downloadSong(
         songInfo = songInfo,

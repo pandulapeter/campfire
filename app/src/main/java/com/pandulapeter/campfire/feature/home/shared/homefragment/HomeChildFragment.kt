@@ -8,6 +8,7 @@ import android.support.annotation.LayoutRes
 import android.view.View
 import android.widget.ImageView
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.onEventTriggered
 
@@ -33,5 +34,7 @@ abstract class HomeChildFragment<B : ViewDataBinding, out VM : HomeChildViewMode
     interface HomeCallbacks {
 
         fun showMenu()
+
+        fun setCheckedItem(homeNavigationItem: HomeViewModel.HomeNavigationItem)
     }
 }

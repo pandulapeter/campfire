@@ -17,6 +17,7 @@
     <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:animateLayoutChanges="true"
         android:fitsSystemWindows="true">
 
         <android.support.design.widget.AppBarLayout
@@ -192,6 +193,15 @@
             app:adapter="@{viewModel.adapter}"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             tools:listitem="@layout/item_song_info" />
+
+        <com.pandulapeter.campfire.feature.home.shared.PlaceholderView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:onClick="@{() -> viewModel.navigateToLibrary()}"
+            android:visibility="@{viewModel.shouldShowPlaceholder}"
+            app:buttonText="@string/home_library"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            app:text="@string/playlist_placeholder" />
 
         <android.support.design.widget.FloatingActionButton
             android:layout_width="wrap_content"

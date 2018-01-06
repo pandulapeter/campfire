@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.home.library
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
+import android.databinding.ObservableInt
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
@@ -42,6 +43,7 @@ class LibraryViewModel(songInfoRepository: SongInfoRepository,
     val filteredItemCount = ObservableField("")
     val shouldDisplaySubtitle = userPreferenceRepository.shouldShowSongCount
     val isLibraryNotEmpty = ObservableBoolean(songInfoRepository.getLibrarySongs().isNotEmpty())
+    val placeholderText = ObservableInt(R.string.campfire)         //TODO: Dynamically change the value of the placeholder's text.
 
     init {
         isSearchInputVisible.onPropertyChanged { if (it) searchQuery.set("") else userPreferenceRepository.searchQuery = "" }
