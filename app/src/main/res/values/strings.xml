@@ -92,6 +92,6 @@
     <string name="manage_downloads_hint">Swipe items away to remove them from your downloads.</string>
 
     <!-- Detail screen -->
-    <string name="detail_swipe_hint">Swipe horizontally to go through the playlist.</string>
+    <string name="detail_swipe_hint">Swipe horizontally to cycle through songs in the playlist.</string>
 
 </resources>

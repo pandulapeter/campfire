@@ -39,7 +39,11 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
 
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) = Unit
 
-            override fun onPageSelected(position: Int) = viewModel.onPageSelected(position)
+            override fun onPageSelected(position: Int) {
+                viewModel.onPageSelected(position)
+                firstTimeUserExperienceRepository.shouldShowDetailSwipeHint = false
+                dismissHintSnackbar()
+            }
         })
         if (viewModel.songIds.indexOf(arguments.songId) == 0) {
             binding.viewModel?.onPageSelected(0)
@@ -47,8 +51,9 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             binding.viewPager.run { post { setCurrentItem(viewModel.songIds.indexOf(arguments.songId), false) } }
         }
         if (viewModel.songIds.size > 1 && firstTimeUserExperienceRepository.shouldShowDetailSwipeHint) {
-            //TODO: Show hint.
-            //TODO: Also dismiss for swipes.
+            binding.root.showFirstTimeUserExperienceSnackbar(R.string.detail_swipe_hint) {
+                firstTimeUserExperienceRepository.shouldShowDetailSwipeHint = false
+            }
         }
         viewModel.shouldNavigateBack.onEventTriggered { (activity as? MainActivity)?.navigateBack() }
     }
