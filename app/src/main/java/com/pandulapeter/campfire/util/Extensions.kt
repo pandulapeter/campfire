@@ -11,6 +11,7 @@ import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
 import android.support.annotation.DrawableRes
 import android.support.design.internal.NavigationMenuView
+import android.support.design.widget.AppBarLayout
 import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
@@ -131,3 +132,25 @@ fun String.replaceSpecialCharacters() = this
     .replace("Ú", "U")
     .replace("ű", "u")
     .replace("Ű", "U")
+
+fun AppBarLayout.performAfterExpand(onExpanded: () -> Unit, onInterrupted: () -> Unit = {}) {
+    if (height - bottom == 0) {
+        onExpanded()
+    } else {
+        var previousVerticalOffset = -Int.MAX_VALUE
+        addOnOffsetChangedListener(object : AppBarLayout.OnOffsetChangedListener {
+            override fun onOffsetChanged(appBarLayout: AppBarLayout?, verticalOffset: Int) {
+                if (verticalOffset > -height / 10) {
+                    onExpanded()
+                    removeOnOffsetChangedListener(this)
+                }
+                if (verticalOffset < previousVerticalOffset) {
+                    removeOnOffsetChangedListener(this)
+                    onInterrupted()
+                }
+                previousVerticalOffset = verticalOffset
+            }
+        })
+        setExpanded(true, true)
+    }
+}

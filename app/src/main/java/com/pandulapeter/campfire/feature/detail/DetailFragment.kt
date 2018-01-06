@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature.detail
 
 import android.os.Bundle
-import android.support.design.widget.AppBarLayout
 import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewPager
 import android.view.View
@@ -16,6 +15,7 @@ import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.disableScrollbars
 import com.pandulapeter.campfire.util.onEventTriggered
+import com.pandulapeter.campfire.util.performAfterExpand
 import com.pandulapeter.campfire.util.setArguments
 import javax.inject.Inject
 
@@ -67,24 +67,9 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 isBackAnimationInProgress = true
                 viewModel.adapter.getItemAt(binding.viewPager.currentItem).scrollToTop(
                     onScrollCompleted = {
-                        if (binding.appBarLayout.height - binding.appBarLayout.bottom == 0) {
-                            (activity as? MainActivity)?.navigateBack()
-                        } else {
-                            var previousVerticalOffset = -Int.MAX_VALUE
-                            binding.appBarLayout.setExpanded(true, true)
-                            binding.appBarLayout.addOnOffsetChangedListener(object : AppBarLayout.OnOffsetChangedListener {
-                                override fun onOffsetChanged(appBarLayout: AppBarLayout?, verticalOffset: Int) {
-                                    if (verticalOffset < binding.appBarLayout.height / 10) {
-                                        (activity as? MainActivity)?.navigateBack()
-                                    }
-                                    if (verticalOffset < previousVerticalOffset) {
-                                        binding.appBarLayout.removeOnOffsetChangedListener(this)
-                                        isBackAnimationInProgress = false
-                                    }
-                                    previousVerticalOffset = verticalOffset
-                                }
-                            })
-                        }
+                        binding.appBarLayout.performAfterExpand(
+                            onExpanded = { (activity as? MainActivity)?.navigateBack() },
+                            onInterrupted = { isBackAnimationInProgress = false })
                     },
                     onScrollInterrupted = {
                         isBackAnimationInProgress = false
