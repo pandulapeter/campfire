@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="@string/detail_transpose">
+
+        <menu>
+
+            <item
+                android:id="@+id/transpose_higher"
+                android:icon="@drawable/ic_increment_24dp"
+                android:title="@string/detail_transpose_higher" />
+
+            <item
+                android:id="@+id/transpose_lower"
+                android:icon="@drawable/ic_decrement_24dp"
+                android:title="@string/detail_transpose_lower" />
+
+        </menu>
+
+    </item>
+
+    <item android:title="@string/detail_auto_scroll">
+
+        <menu>
+
+            <item
+                android:id="@+id/auto_scroll_faster"
+                android:icon="@drawable/ic_increment_24dp"
+                android:title="@string/detail_auto_scroll_faster" />
+
+            <item
+                android:id="@+id/auto_scroll_slower"
+                android:icon="@drawable/ic_decrement_24dp"
+                android:title="@string/detail_auto_scroll_slower" />
+
+        </menu>
+
+    </item>
+
+    <item
+        android:id="@+id/play_on_youtube"
+        android:title="@string/detail_play_on_youtube" />
+
+</menu>

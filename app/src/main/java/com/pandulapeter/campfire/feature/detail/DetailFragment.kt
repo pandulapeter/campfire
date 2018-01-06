@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.detail
 
 import android.os.Bundle
 import android.support.design.widget.AppBarLayout
+import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewPager
 import android.view.View
 import com.pandulapeter.campfire.DetailBinding
@@ -13,6 +14,7 @@ import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.disableScrollbars
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.setArguments
 import javax.inject.Inject
@@ -58,6 +60,8 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 firstTimeUserExperienceRepository.shouldShowDetailSwipeHint = false
             }
         }
+        binding.navigationView.disableScrollbars()
+        viewModel.shouldShowSongOptions.onEventTriggered { binding.drawerLayout.openDrawer(GravityCompat.END) }
         viewModel.shouldNavigateBack.onEventTriggered {
             if (!isBackAnimationInProgress) {
                 isBackAnimationInProgress = true
@@ -89,8 +93,11 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         }
     }
 
-
     override fun onBackPressed(): Boolean {
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.END)) {
+            binding.drawerLayout.closeDrawers()
+            return true
+        }
         viewModel.navigateBack()
         return true
     }

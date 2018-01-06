@@ -92,6 +92,14 @@
     <string name="manage_downloads_hint">Swipe items away to remove them from your downloads.</string>
 
     <!-- Detail screen -->
+    <string name="detail_song_options">Song options</string>
+    <string name="detail_transpose">Transpose (original)</string>
+    <string name="detail_transpose_higher">Higher</string>
+    <string name="detail_transpose_lower">Lower</string>
+    <string name="detail_auto_scroll">Auto-scroll (off)</string>
+    <string name="detail_auto_scroll_faster">Faster</string>
+    <string name="detail_auto_scroll_slower">Slower</string>
+    <string name="detail_play_on_youtube">Play on YouTube</string>
     <string name="detail_swipe_hint">Swipe horizontally to cycle through songs in the playlist.</string>
 
 </resources>

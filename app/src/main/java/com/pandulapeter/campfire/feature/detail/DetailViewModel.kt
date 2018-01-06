@@ -27,6 +27,7 @@ class DetailViewModel(songId: String,
     val adapter = SongPagerAdapter(fragmentManager, songIds)
     val shouldNavigateBack = ObservableBoolean()
     val isSongOnAnyPlaylist = ObservableBoolean()
+    val shouldShowSongOptions = ObservableBoolean()
     val shouldShowPlaylistAction = playlistId == DetailFragment.NO_PLAYLIST
     private var selectedPosition = 0
 
@@ -64,6 +65,8 @@ class DetailViewModel(songId: String,
     }
 
     fun navigateBack() = shouldNavigateBack.set(true)
+
+    fun showSongOptions() = shouldShowSongOptions.set(true)
 
     private fun updateToolbar(songId: String) {
         songInfoRepository.getSongInfo(songId)?.let {
