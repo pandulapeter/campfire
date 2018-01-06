@@ -19,7 +19,7 @@ import kotlinx.coroutines.experimental.async
 class ManageDownloadsViewModel(context: Context?,
                                songInfoRepository: SongInfoRepository,
                                downloadedSongRepository: DownloadedSongRepository) : SongListViewModel(songInfoRepository, downloadedSongRepository) {
-    val shouldShowDeleteAllButton = ObservableBoolean()
+    val shouldShowDeleteAllButton = ObservableBoolean(downloadedSongRepository.getDownloadedSongIds().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldShowHintSnackbar = ObservableBoolean()
     val totalFileSize = ObservableField(context?.getString(R.string.manage_downloads_total_size_calculating) ?: "")

@@ -11,7 +11,7 @@
 
     </data>
 
-    <ScrollView
+    <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
@@ -26,6 +26,6 @@
             android:text="@{viewModel.text}"
             tools:context=".feature.detail.DetailFragment" />
 
-    </ScrollView>
+    </android.support.v4.widget.NestedScrollView>
 
 </layout>
