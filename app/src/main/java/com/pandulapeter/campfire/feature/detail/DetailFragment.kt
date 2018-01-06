@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.detail
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewPager
@@ -13,6 +14,7 @@ import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.disableScrollbars
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.performAfterExpand
@@ -61,7 +63,20 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             }
         }
         binding.navigationView.disableScrollbars()
+        binding.navigationView.setNavigationItemSelectedListener {
+            when (it.itemId) {
+                R.id.play_on_youtube -> consume { viewModel.onPlayOnYouTubeClicked() }
+                else -> false
+            }
+        }
         viewModel.shouldShowSongOptions.onEventTriggered { binding.drawerLayout.openDrawer(GravityCompat.END) }
+        viewModel.youTubeSearchQuery.onEventTriggered {
+            //TODO: Handle the case if no YouTube app is installed.
+            startActivity(Intent(Intent.ACTION_SEARCH).apply {
+                `package` = "com.google.android.youtube"
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }.putExtra("query", it))
+        }
         viewModel.shouldNavigateBack.onEventTriggered {
             if (!isBackAnimationInProgress) {
                 isBackAnimationInProgress = true

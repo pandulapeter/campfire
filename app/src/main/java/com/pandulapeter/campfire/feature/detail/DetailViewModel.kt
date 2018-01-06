@@ -29,6 +29,7 @@ class DetailViewModel(songId: String,
     val isSongOnAnyPlaylist = ObservableBoolean()
     val shouldShowSongOptions = ObservableBoolean()
     val shouldShowPlaylistAction = playlistId == DetailFragment.NO_PLAYLIST
+    val youTubeSearchQuery = ObservableField<String>()
     private var selectedPosition = 0
 
     init {
@@ -67,6 +68,12 @@ class DetailViewModel(songId: String,
     fun navigateBack() = shouldNavigateBack.set(true)
 
     fun showSongOptions() = shouldShowSongOptions.set(true)
+
+    fun onPlayOnYouTubeClicked() {
+        songInfoRepository.getSongInfo(songIds[selectedPosition])?.let {
+            youTubeSearchQuery.set("${it.artist} - ${it.title}")
+        }
+    }
 
     private fun updateToolbar(songId: String) {
         songInfoRepository.getSongInfo(songId)?.let {
