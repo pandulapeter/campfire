@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.performAfterExpand
 import com.pandulapeter.campfire.util.setArguments
 import javax.inject.Inject
 
@@ -86,8 +87,11 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Set up list item click listeners.
+
         viewModel.adapter.itemClickListener = { position ->
-            (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id, arguments.playlistId))
+            binding.appBarLayout.performAfterExpand(onExpanded = {
+                (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id, arguments.playlistId))
+            })
         }
         viewModel.adapter.downloadActionClickListener = { position ->
             viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }

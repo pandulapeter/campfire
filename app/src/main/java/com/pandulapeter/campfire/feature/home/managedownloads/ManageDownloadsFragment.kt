@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFr
 import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.performAfterExpand
 import javax.inject.Inject
 
 /**
@@ -53,7 +54,9 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageD
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Set up list item click listeners.
         viewModel.adapter.itemClickListener = { position ->
-            (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
+            binding.appBarLayout.performAfterExpand(onExpanded = {
+                (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
+            })
         }
         viewModel.shouldShowHintSnackbar.onPropertyChanged {
             if (firstTimeUserExperienceRepository.shouldShowManageDownloadsHint) {

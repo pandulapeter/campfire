@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFr
 import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.performAfterExpand
 import javax.inject.Inject
 
 /**
@@ -69,7 +70,11 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
             })
 
             // Set up list item click listeners.
-            viewModel.adapter.itemClickListener = { position -> (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id)) }
+            viewModel.adapter.itemClickListener = { position ->
+                binding.appBarLayout.performAfterExpand(onExpanded = {
+                    (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
+                })
+            }
             viewModel.adapter.playlistActionClickListener = { position ->
                 viewModel.adapter.items[position].let { songInfoViewModel ->
                     val songId = songInfoViewModel.songInfo.id
