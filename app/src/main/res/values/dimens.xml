@@ -23,7 +23,7 @@
     <dimen name="loading_indicator_size">36dp</dimen>
 
     <!-- Home screen -->
-    <dimen name="view_options_width">200dp</dimen>
+    <dimen name="view_options_width">216dp</dimen>
 
     <!-- Library screen -->
     <dimen name="header_height">36dp</dimen>
