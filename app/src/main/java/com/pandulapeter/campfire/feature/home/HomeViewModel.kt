@@ -18,14 +18,16 @@ import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
 import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildFragment
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.integration.AppShortcutManager
+import com.pandulapeter.campfire.networking.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 
 /**
  * Handles events and logic for [HomeFragment].
  */
-class HomeViewModel(private val downloadedSongRepository: DownloadedSongRepository,
+class HomeViewModel(analyticsManager: AnalyticsManager,
+                    private val downloadedSongRepository: DownloadedSongRepository,
                     private val userPreferenceRepository: UserPreferenceRepository,
-                    private val appShortcutManager: AppShortcutManager) : CampfireViewModel(), Subscriber {
+                    private val appShortcutManager: AppShortcutManager) : CampfireViewModel(analyticsManager), Subscriber {
     val playlists = ObservableField<List<Playlist>>()
     val isLibraryReady = ObservableBoolean()
     val hasDownloads = ObservableBoolean()

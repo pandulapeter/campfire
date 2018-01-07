@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListVi
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import com.pandulapeter.campfire.integration.AppShortcutManager
+import com.pandulapeter.campfire.networking.AnalyticsManager
 import com.pandulapeter.campfire.util.mapToLanguage
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.replaceSpecialCharacters
@@ -24,12 +25,13 @@ import com.pandulapeter.campfire.util.toggle
 /**
  * Handles events and logic for [LibraryFragment].
  */
-class LibraryViewModel(songInfoRepository: SongInfoRepository,
+class LibraryViewModel(analyticsManager: AnalyticsManager,
+                       songInfoRepository: SongInfoRepository,
                        downloadedSongRepository: DownloadedSongRepository,
                        appShortcutManager: AppShortcutManager,
                        private val userPreferenceRepository: UserPreferenceRepository,
                        private val playlistRepository: PlaylistRepository,
-                       private val languageRepository: LanguageRepository) : SongListViewModel(songInfoRepository, downloadedSongRepository) {
+                       private val languageRepository: LanguageRepository) : SongListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.searchQuery.isNotEmpty())
     val searchQuery = ObservableField(userPreferenceRepository.searchQuery)
     val shouldShowViewOptions = ObservableBoolean(false)
@@ -40,13 +42,17 @@ class LibraryViewModel(songInfoRepository: SongInfoRepository,
     val shouldShowWorkInProgress = ObservableBoolean(userPreferenceRepository.shouldShowWorkInProgress)
     val isSortedByTitle = ObservableBoolean(userPreferenceRepository.isSortedByTitle)
     val languageFilters = ObservableField(HashMap<Language, ObservableBoolean>())
+    val shouldAllowToolbarScrolling = ObservableBoolean()
     val filteredItemCount = ObservableField("")
     val shouldDisplaySubtitle = userPreferenceRepository.shouldShowSongCount
     val isLibraryNotEmpty = ObservableBoolean(songInfoRepository.getLibrarySongs().isNotEmpty())
     val placeholderText = ObservableInt(R.string.campfire)         //TODO: Dynamically change the value of the placeholder's text.
 
     init {
-        isSearchInputVisible.onPropertyChanged { if (it) searchQuery.set("") else userPreferenceRepository.searchQuery = "" }
+        isSearchInputVisible.onPropertyChanged {
+            if (it) searchQuery.set("") else userPreferenceRepository.searchQuery = ""
+            updateShouldAllowToolbarScrolling(adapter.items.isNotEmpty())
+        }
         searchQuery.onPropertyChanged { userPreferenceRepository.searchQuery = it }
         shouldShowDownloadedOnly.onPropertyChanged { userPreferenceRepository.shouldShowDownloadedOnly = it }
         shouldShowExplicit.onPropertyChanged { userPreferenceRepository.shouldShowExplicit = it }
@@ -118,6 +124,11 @@ class LibraryViewModel(songInfoRepository: SongInfoRepository,
         }
     }
 
+    override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
+        super.onUpdateDone(items, updateType)
+        updateShouldAllowToolbarScrolling(items.isNotEmpty())
+    }
+
     fun forceRefresh() = songInfoRepository.updateDataSet { shouldShowErrorSnackbar.set(true) }
 
     fun showOrHideSearchInput() = isSearchInputVisible.toggle()
@@ -132,6 +143,8 @@ class LibraryViewModel(songInfoRepository: SongInfoRepository,
         }
 
     fun getHeaderTitle(position: Int) = (if (isSortedByTitle.get()) adapter.items[position].songInfo.titleWithSpecialCharactersRemoved[0] else adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0]).toString().toUpperCase()
+
+    private fun updateShouldAllowToolbarScrolling(isAdapterNotEmpty: Boolean) = shouldAllowToolbarScrolling.set(if (isSearchInputVisible.get()) false else isAdapterNotEmpty)
 
     private fun List<SongInfo>.filterByLanguages() = filter { languageRepository.isLanguageFilterEnabled(it.language.mapToLanguage()) }
 

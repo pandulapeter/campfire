@@ -85,6 +85,7 @@ fun setScrollEnabled(view: Toolbar, isScrollEnabled: Boolean) {
     } else {
         0
     }
+    (view.parent as? AppBarLayout)?.setExpanded(true, true)
 }
 
 @BindingAdapter(value = ["animation", "lastFrame", "forcePlay"], requireAll = false)

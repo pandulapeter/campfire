@@ -17,7 +17,7 @@ import javax.inject.Inject
 class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.layout.fragment_song_page) {
     @Inject lateinit var songInfoRepository: SongInfoRepository
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
-    override val viewModel by lazy { SongPageViewModel(arguments.songId, songInfoRepository, downloadedSongRepository) }
+    override val viewModel by lazy { SongPageViewModel(arguments.songId, analyticsManager, songInfoRepository, downloadedSongRepository) }
 
     fun stopScroll() = binding.nestedScrollView.smoothScrollBy(0, 0)
 

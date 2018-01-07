@@ -10,20 +10,23 @@ import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
+import com.pandulapeter.campfire.networking.AnalyticsManager
 import java.util.Calendar
 import kotlin.math.abs
 
 /**
  * Handles events and logic for [HistoryFragment].
  */
-class HistoryViewModel(songInfoRepository: SongInfoRepository,
+class HistoryViewModel(analyticsManager: AnalyticsManager,
+                       songInfoRepository: SongInfoRepository,
                        downloadedSongRepository: DownloadedSongRepository,
                        private val playlistRepository: PlaylistRepository,
-                       private val historyRepository: HistoryRepository) : SongListViewModel(songInfoRepository, downloadedSongRepository) {
+                       private val historyRepository: HistoryRepository) : SongListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val shouldShowClearButton = ObservableBoolean(historyRepository.getHistoryItems().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldInvalidateItemDecorations = ObservableBoolean()
     val shouldShowHintSnackbar = ObservableBoolean()
+    val shouldAllowToolbarScrolling = ObservableBoolean()
     private val Calendar.year get() = get(Calendar.YEAR)
     private val Calendar.month get() = get(Calendar.MONTH)
     private val Calendar.week get() = get(Calendar.WEEK_OF_YEAR)
@@ -72,6 +75,7 @@ class HistoryViewModel(songInfoRepository: SongInfoRepository,
     override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         super.onUpdateDone(items, updateType)
         shouldShowClearButton.set(items.isNotEmpty())
+        shouldAllowToolbarScrolling.set(items.isNotEmpty())
         shouldInvalidateItemDecorations.set(true)
         if (items.isNotEmpty()) {
             shouldShowHintSnackbar.set(true)

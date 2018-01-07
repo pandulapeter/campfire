@@ -11,16 +11,18 @@ import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.library.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.networking.AnalyticsManager
 
 /**
  * Handles events and logic for [DetailFragment].
  */
 class DetailViewModel(songId: String,
                       playlistId: Int,
+                      analyticsManager: AnalyticsManager,
                       private val fragmentManager: FragmentManager,
                       private val playlistRepository: PlaylistRepository,
                       private val songInfoRepository: SongInfoRepository,
-                      private val historyRepository: HistoryRepository) : CampfireViewModel(), Subscriber {
+                      private val historyRepository: HistoryRepository) : CampfireViewModel(analyticsManager), Subscriber {
     val title = ObservableField("")
     val artist = ObservableField("")
     val songIds = playlistRepository.getPlaylist(playlistId)?.songIds ?: listOf(songId)

@@ -12,7 +12,7 @@ import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildFragm
  */
 class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R.layout.fragment_settings) {
 
-    override fun createViewModel() = SettingsViewModel()
+    override fun createViewModel() = SettingsViewModel(analyticsManager)
 
     override fun getAppBarLayout() = binding.appBarLayout
 }

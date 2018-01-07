@@ -11,7 +11,7 @@ import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildFragm
  */
 class ManagePlaylistsFragment : HomeChildFragment<ManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists) {
 
-    override fun createViewModel() = ManagePlaylistsViewModel()
+    override fun createViewModel() = ManagePlaylistsViewModel(analyticsManager)
 
     override fun getAppBarLayout() = binding.appBarLayout
 }

@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
+import com.pandulapeter.campfire.networking.AnalyticsManager
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -17,12 +18,14 @@ import kotlinx.coroutines.experimental.async
  * Handles events and logic for [ManageDownloadsFragment].
  */
 class ManageDownloadsViewModel(context: Context?,
+                               analyticsManager: AnalyticsManager,
                                songInfoRepository: SongInfoRepository,
-                               downloadedSongRepository: DownloadedSongRepository) : SongListViewModel(songInfoRepository, downloadedSongRepository) {
+                               downloadedSongRepository: DownloadedSongRepository) : SongListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val shouldShowDeleteAllButton = ObservableBoolean(downloadedSongRepository.getDownloadedSongIds().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldShowHintSnackbar = ObservableBoolean()
     val totalFileSize = ObservableField(context?.getString(R.string.manage_downloads_total_size_calculating) ?: "")
+    val shouldAllowToolbarScrolling = ObservableBoolean()
 
     override fun getAdapterItems() = downloadedSongRepository.getDownloadedSongIds()
         .mapNotNull { songInfoRepository.getSongInfo(it) }
@@ -56,6 +59,7 @@ class ManageDownloadsViewModel(context: Context?,
         if (items.isNotEmpty()) {
             shouldShowHintSnackbar.set(true)
         }
+        shouldAllowToolbarScrolling.set(items.isNotEmpty())
         async(UI) {
             totalFileSize.set(async(CommonPool) {
                 humanReadableByteCount(downloadedSongRepository.getDownloadCacheSize())

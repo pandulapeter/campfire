@@ -24,7 +24,7 @@ import javax.inject.Inject
 class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageDownloadsViewModel>(R.layout.fragment_manage_downloads), AlertDialogFragment.OnDialogItemsSelectedListener {
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
 
-    override fun createViewModel() = ManageDownloadsViewModel(context, songInfoRepository, downloadedSongRepository)
+    override fun createViewModel() = ManageDownloadsViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository)
 
     override fun getAppBarLayout() = binding.appBarLayout
 

@@ -24,7 +24,7 @@ class AppShortcutManager(context: Context,
                          playlistRepository:
                          PlaylistRepository,
                          private val dataStorageManager: DataStorageManager) {
-    private val implementation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) RealImplementation(context, playlistRepository, dataStorageManager) else FakeImplementation()
+    private val implementation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) RealImplementation(context, playlistRepository, dataStorageManager) else object : Implementation {}
 
     fun onLibraryOpened() = implementation.trackAppShortcutUsage(LIBRARY_ID)
 
@@ -41,11 +41,11 @@ class AppShortcutManager(context: Context,
 
     private interface Implementation {
 
-        fun updateAppShortcuts()
+        fun updateAppShortcuts() = Unit
 
-        fun removeAppShortcuts()
+        fun removeAppShortcuts() = Unit
 
-        fun trackAppShortcutUsage(id: String)
+        fun trackAppShortcutUsage(id: String) = Unit
     }
 
     @RequiresApi(Build.VERSION_CODES.N_MR1)
@@ -95,15 +95,6 @@ class AppShortcutManager(context: Context,
             .setIcon(Icon.createWithResource(context, icon))
             .setIntent(MainActivity.getStartIntent(context, MainViewModel.MainNavigationItem.Home(homeNavigationItem)).setAction(Intent.ACTION_VIEW))
             .build()
-    }
-
-    private class FakeImplementation : Implementation {
-
-        override fun updateAppShortcuts() = Unit
-
-        override fun removeAppShortcuts() = Unit
-
-        override fun trackAppShortcutUsage(id: String) = Unit
     }
 
     private companion object {

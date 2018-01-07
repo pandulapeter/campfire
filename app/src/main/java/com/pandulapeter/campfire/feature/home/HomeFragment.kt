@@ -43,7 +43,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var appShortcutManager: AppShortcutManager
-    override val viewModel by lazy { HomeViewModel(downloadedSongRepository, userPreferenceRepository, appShortcutManager) }
+    override val viewModel by lazy { HomeViewModel(analyticsManager, downloadedSongRepository, userPreferenceRepository, appShortcutManager) }
     private var coroutine: CoroutineContext? = null
     private val playlistsContainerItem by lazy { binding.navigationView.menu.findItem(R.id.playlists).subMenu }
     private val collectionsItem by lazy { binding.navigationView.menu.findItem(R.id.collections) }
@@ -93,10 +93,8 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
                 setGroupCheckable(R.id.playlist_container, true, true)
                 updateCheckedItem()
             }
-            if (it.isEmpty()) {
-                managePlaylistsItem.isChecked = false
-            }
             managePlaylistsItem.isVisible = it.size > 1
+            updateCheckedItem()
         }
         viewModel.isLibraryReady.onPropertyChanged { isLibraryReady ->
             collectionsItem.isEnabled = isLibraryReady
@@ -109,10 +107,8 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             }
         }
         viewModel.hasDownloads.onPropertyChanged {
-            if (!it) {
-                manageDownloadsItem.isChecked = false
-            }
             manageDownloadsItem.isVisible = it
+            updateCheckedItem()
         }
     }
 

@@ -40,7 +40,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
     @Inject lateinit var languageRepository: LanguageRepository
     @Inject lateinit var appShortcutManager: AppShortcutManager
 
-    override fun createViewModel() = LibraryViewModel(songInfoRepository, downloadedSongRepository, appShortcutManager, userPreferenceRepository, playlistRepository, languageRepository)
+    override fun createViewModel() = LibraryViewModel(analyticsManager, songInfoRepository, downloadedSongRepository, appShortcutManager, userPreferenceRepository, playlistRepository, languageRepository)
 
     override fun getAppBarLayout() = binding.appBarLayout
 

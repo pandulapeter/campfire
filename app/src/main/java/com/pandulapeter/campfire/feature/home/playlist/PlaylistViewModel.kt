@@ -12,19 +12,20 @@ import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListVi
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import com.pandulapeter.campfire.integration.AppShortcutManager
+import com.pandulapeter.campfire.networking.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 import java.util.Collections
 
 /**
  * Handles events and logic for [PlaylistFragment].
  */
-class PlaylistViewModel(songInfoRepository: SongInfoRepository,
+class PlaylistViewModel(analyticsManager: AnalyticsManager,
+                        songInfoRepository: SongInfoRepository,
                         downloadedSongRepository: DownloadedSongRepository,
                         appShortcutManager: AppShortcutManager,
                         private val playlistRepository: PlaylistRepository,
                         private val favoritesTitle: String,
-                        private val playlistId: Int) : SongListViewModel(songInfoRepository, downloadedSongRepository) {
-    var adapterItemCount = 0
+                        private val playlistId: Int) : SongListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val title = ObservableField(favoritesTitle)
     val editedTitle = ObservableField(title.get())
     val shouldShowPlayButton = ObservableBoolean(playlistRepository.getPlaylistSongIds(playlistId).isNotEmpty())
@@ -32,13 +33,12 @@ class PlaylistViewModel(songInfoRepository: SongInfoRepository,
     val shouldShowDeleteConfirmation = ObservableBoolean()
     val shouldDisplayEditButton = ObservableBoolean()
     val shouldShowWorkInProgressSnackbar = ObservableBoolean()
+    val shouldAllowToolbarScrolling = ObservableBoolean()
     val shouldAllowDeleteButton = playlistId != Playlist.FAVORITES_ID
 
     init {
         title.onPropertyChanged { editedTitle.set(it) }
-        isInEditMode.onPropertyChanged {
-            onUpdate(UpdateType.EditModeChanged(playlistId, it))
-        }
+        isInEditMode.onPropertyChanged { onUpdate(UpdateType.EditModeChanged(playlistId, it)) }
         appShortcutManager.onPlaylistOpened(playlistId)
     }
 
@@ -84,20 +84,21 @@ class PlaylistViewModel(songInfoRepository: SongInfoRepository,
             is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.Payload.DOWNLOAD_SUCCESSFUL) }
             is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoAdapter.Payload.DOWNLOAD_FAILED) }
             is UpdateType.EditModeChanged -> if (updateType.playlistId == playlistId) {
-                val payload = if (updateType.isInEditMode && adapterItemCount > 1) SongInfoAdapter.Payload.EDIT_MODE_OPEN else SongInfoAdapter.Payload.EDIT_MODE_CLOSE
+                val payload = if (updateType.isInEditMode && adapter.items.size > 1) SongInfoAdapter.Payload.EDIT_MODE_OPEN else SongInfoAdapter.Payload.EDIT_MODE_CLOSE
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
-                shouldShowPlayButton.set(if (!updateType.isInEditMode) adapterItemCount > 0 else false)
+                shouldShowPlayButton.set(if (!updateType.isInEditMode) adapter.items.isNotEmpty() else false)
+                updateShouldAllowToolbarScrolling(adapter.items.isNotEmpty())
             }
         }
     }
 
     override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         super.onUpdateDone(items, updateType)
-        adapterItemCount = items.size
-        shouldDisplayEditButton.set(adapterItemCount > 0 || playlistId != Playlist.FAVORITES_ID)
+        shouldDisplayEditButton.set(items.isNotEmpty() || playlistId != Playlist.FAVORITES_ID)
         if (!isInEditMode.get()) {
-            shouldShowPlayButton.set(adapterItemCount > 0)
+            shouldShowPlayButton.set(items.isNotEmpty())
         }
+        updateShouldAllowToolbarScrolling(items.isNotEmpty())
     }
 
     fun onDeleteButtonClicked() {
@@ -124,7 +125,7 @@ class PlaylistViewModel(songInfoRepository: SongInfoRepository,
     }
 
     fun onPlayButtonClicked() {
-        if (adapterItemCount > 0) adapter.itemClickListener(0)
+        if (adapter.items.isNotEmpty()) adapter.itemClickListener(0)
     }
 
     fun onShareButtonClicked() {
@@ -147,4 +148,6 @@ class PlaylistViewModel(songInfoRepository: SongInfoRepository,
         }
         playlistRepository.updatePlaylist(playlistId, list)
     }
+
+    private fun updateShouldAllowToolbarScrolling(isAdapterNotEmpty: Boolean) = shouldAllowToolbarScrolling.set(if (isInEditMode.get()) false else isAdapterNotEmpty)
 }

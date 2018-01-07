@@ -37,7 +37,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
     @Inject lateinit var appShortcutManager: AppShortcutManager
 
-    override fun createViewModel() = PlaylistViewModel(songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
+    override fun createViewModel() = PlaylistViewModel(analyticsManager, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
 
     override fun getAppBarLayout() = binding.appBarLayout
 
@@ -50,7 +50,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         super.onViewCreated(view, savedInstanceState)
         viewModel.isInEditMode.onPropertyChanged {
             if (it) {
-                if (viewModel.adapterItemCount > 0 && firstTimeUserExperienceRepository.shouldShowPlaylistHint) {
+                if (viewModel.adapter.items.isNotEmpty() && firstTimeUserExperienceRepository.shouldShowPlaylistHint) {
                     binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.playlist_hint) {
                         firstTimeUserExperienceRepository.shouldShowPlaylistHint = false
                     }

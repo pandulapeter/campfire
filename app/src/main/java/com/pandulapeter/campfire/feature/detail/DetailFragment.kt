@@ -34,7 +34,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     @Inject lateinit var historyRepository: HistoryRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
-    override val viewModel by lazy { DetailViewModel(arguments.songId, arguments.playlistId, childFragmentManager, playlistRepository, songInfoRepository, historyRepository) }
+    override val viewModel by lazy { DetailViewModel(arguments.songId, arguments.playlistId, analyticsManager, childFragmentManager, playlistRepository, songInfoRepository, historyRepository) }
     private var isBackAnimationInProgress = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
