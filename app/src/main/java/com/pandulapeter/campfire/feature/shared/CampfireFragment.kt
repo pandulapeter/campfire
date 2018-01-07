@@ -25,11 +25,6 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     private var snackbar: Snackbar? = null
     private var hintSnackbar: Snackbar? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        allowEnterTransitionOverlap = true
-    }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)
         binding.setVariable(BR.viewModel, viewModel)
