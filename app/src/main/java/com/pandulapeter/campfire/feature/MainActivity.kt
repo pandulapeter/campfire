@@ -2,11 +2,7 @@ package com.pandulapeter.campfire.feature
 
 import android.content.Context
 import android.content.Intent
-import android.databinding.DataBindingUtil
 import android.os.Bundle
-import android.transition.TransitionInflater
-import com.pandulapeter.campfire.MainBinding
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.HomeFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
@@ -36,8 +32,6 @@ class MainActivity : DaggerAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         savedInstanceState?.let { intent.mainNavigationItem = it.mainNavigationItem }
-        val binding = DataBindingUtil.setContentView<MainBinding>(this, R.layout.activity_main)
-        binding.viewModel = viewModel
         viewModel.mainNavigationItem.onPropertyChanged { replaceActiveFragment(it) }
         if (getCurrentFragment() == null) {
             replaceActiveFragment(viewModel.mainNavigationItem.get())
@@ -73,23 +67,23 @@ class MainActivity : DaggerAppCompatActivity() {
     private fun replaceActiveFragment(mainNavigationItem: MainViewModel.MainNavigationItem) {
         val currentFragment = getCurrentFragment()
         if (currentFragment == null) {
-            supportFragmentManager.beginTransaction().replace(R.id.fragment_container, mainNavigationItem.getFragment()).commitNow()
+            supportFragmentManager.beginTransaction().replace(android.R.id.content, mainNavigationItem.getFragment()).commitNow()
         } else {
             coroutine?.cancel()
             coroutine = async(UI) {
-//                currentFragment.exitTransition = TransitionInflater.from(this@MainActivity).inflateTransition(R.transition.fade)
+                //                currentFragment.exitTransition = TransitionInflater.from(this@MainActivity).inflateTransition(R.transition.fade)
                 val nextFragment = async(CommonPool) {
                     mainNavigationItem.getFragment()
                 }.await()
                 if (nextFragment is HomeFragment) {
                     nextFragment.shouldPlayReturnAnimation = true
                 }
-                supportFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commit()
+                supportFragmentManager.beginTransaction().replace(android.R.id.content, nextFragment).commit()
             }
         }
     }
 
-    private fun getCurrentFragment() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? CampfireFragment<*, *>
+    private fun getCurrentFragment() = supportFragmentManager.findFragmentById(android.R.id.content) as? CampfireFragment<*, *>
 
     companion object {
         private var Intent.mainNavigationItem by IntentExtraDelegate.String("main_navigation_item")

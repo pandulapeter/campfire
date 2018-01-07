@@ -49,7 +49,6 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Set up the side navigation drawer.
-        context?.let { binding.drawerLayout.setScrimColor(it.color(android.R.color.transparent)) }
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { hideKeyboard(activity?.currentFocus) })
         binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {

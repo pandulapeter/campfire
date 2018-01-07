@@ -129,6 +129,7 @@
             android:layout_width="@dimen/view_options_width"
             android:layout_height="match_parent"
             android:layout_gravity="end"
+            android:paddingTop="@dimen/navigation_view_top_padding"
             app:menu="@menu/detail" />
 
     </android.support.v4.widget.DrawerLayout>

@@ -15,7 +15,9 @@ class MainViewModel(userPreferenceRepository: UserPreferenceRepository, override
     var previousNavigationItem: MainNavigationItem = MainNavigationItem.Home(userPreferenceRepository.navigationItem)
 
     sealed class MainNavigationItem(val stringValue: String) {
+
         abstract fun getFragment(): CampfireFragment<*, *>
+
         class Home(val homeNavigationItem: HomeViewModel.HomeNavigationItem) : MainNavigationItem(VALUE_HOME + homeNavigationItem.stringValue) {
             override fun getFragment() = HomeFragment.newInstance(homeNavigationItem)
         }

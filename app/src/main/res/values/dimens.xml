@@ -17,6 +17,7 @@
 
     <!-- Fixes -->
     <dimen name="edit_text_fix">4dp</dimen>
+    <dimen name="navigation_view_top_padding">@dimen/content_padding</dimen>
 
     <!-- Song list items -->
     <dimen name="card_text_margin">2dp</dimen>

@@ -23,8 +23,7 @@
         <FrameLayout
             android:id="@+id/fragment_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fitsSystemWindows="true" />
+            android:layout_height="match_parent" />
 
         <!-- Menu -->
 
@@ -33,6 +32,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
+            android:paddingTop="@dimen/navigation_view_top_padding"
             app:headerLayout="@layout/view_menu_header"
             app:menu="@menu/home" />
 

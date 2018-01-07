@@ -73,6 +73,9 @@
     <string name="history_hint">Swipe items away to remove them from your history.</string>
     <string name="history_placeholder">The list of songs you opened will appear here in chronological order.</string>
 
+    <!-- Settings screen -->
+    <string name="settings_work_in_progress">Work on the Settings screen is in progress.</string>
+
     <!-- Playlist screen -->
     <string name="playlist_edit">Edit</string>
     <string name="playlist_delete">Delete</string>

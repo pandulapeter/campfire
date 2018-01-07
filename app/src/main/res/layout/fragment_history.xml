@@ -14,92 +14,99 @@
 
     </data>
 
-    <android.support.design.widget.CoordinatorLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:animateLayoutChanges="true"
         android:fitsSystemWindows="true">
 
-        <android.support.design.widget.AppBarLayout
-            android:id="@+id/app_bar_layout"
+        <android.support.design.widget.CoordinatorLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true"
+            android:fitsSystemWindows="true">
 
-            <android.support.v7.widget.Toolbar
+            <android.support.design.widget.AppBarLayout
+                android:id="@+id/app_bar_layout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_scrollFlags="scroll|enterAlways|snap">
+                android:layout_height="wrap_content">
 
-                <android.support.constraint.ConstraintLayout
+                <android.support.v7.widget.Toolbar
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:animateLayoutChanges="true">
+                    app:layout_scrollFlags="scroll|enterAlways|snap">
 
-                    <android.support.v4.widget.Space
-                        android:id="@+id/space"
-                        android:layout_width="@dimen/toolbar_first_keyline_fix"
-                        android:layout_height="0dp"
-                        app:layout_constraintEnd_toStartOf="parent" />
-
-                    <ImageView
-                        android:layout_width="wrap_content"
+                    <android.support.constraint.ConstraintLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="@string/home_menu"
-                        android:onClick="@{() -> viewModel.showMenu()}"
-                        android:padding="@dimen/toolbar_action_button_padding"
-                        app:animation="@{R.drawable.avd_back_to_menu_24dp}"
-                        app:forcePlay="@{viewModel.shouldPlayReturnAnimation}"
-                        app:lastFrame="@{@drawable/ic_menu_24dp}"
-                        app:layout_constraintStart_toStartOf="@id/space"
-                        tools:src="@drawable/avd_menu_to_back_24dp" />
+                        android:animateLayoutChanges="true">
 
-                    <ImageView
-                        android:id="@+id/clear"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="@string/history_clear"
-                        android:onClick="@{() -> viewModel.onClearButtonClicked()}"
-                        android:padding="@dimen/toolbar_action_button_padding"
-                        android:visibility="@{viewModel.shouldShowClearButton}"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:srcCompat="@drawable/ic_delete_24dp" />
+                        <android.support.v4.widget.Space
+                            android:id="@+id/space"
+                            android:layout_width="@dimen/toolbar_first_keyline_fix"
+                            android:layout_height="0dp"
+                            app:layout_constraintEnd_toStartOf="parent" />
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/toolbar_second_keyline_fix"
-                        android:text="@string/home_history"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                        app:layout_constraintEnd_toStartOf="@id/clear"
-                        app:layout_constraintStart_toStartOf="parent" />
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="@string/home_menu"
+                            android:onClick="@{() -> viewModel.showMenu()}"
+                            android:padding="@dimen/toolbar_action_button_padding"
+                            app:animation="@{R.drawable.avd_back_to_menu_24dp}"
+                            app:forcePlay="@{viewModel.shouldPlayReturnAnimation}"
+                            app:lastFrame="@{@drawable/ic_menu_24dp}"
+                            app:layout_constraintStart_toStartOf="@id/space"
+                            tools:src="@drawable/avd_menu_to_back_24dp" />
 
-                </android.support.constraint.ConstraintLayout>
+                        <ImageView
+                            android:id="@+id/clear"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="@string/history_clear"
+                            android:onClick="@{() -> viewModel.onClearButtonClicked()}"
+                            android:padding="@dimen/toolbar_action_button_padding"
+                            android:visibility="@{viewModel.shouldShowClearButton}"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:srcCompat="@drawable/ic_delete_24dp" />
 
-            </android.support.v7.widget.Toolbar>
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/toolbar_second_keyline_fix"
+                            android:text="@string/home_history"
+                            android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                            app:layout_constraintEnd_toStartOf="@id/clear"
+                            app:layout_constraintStart_toStartOf="parent" />
 
-        </android.support.design.widget.AppBarLayout>
+                    </android.support.constraint.ConstraintLayout>
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recycler_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            app:adapter="@{viewModel.adapter}"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:listitem="@layout/item_song_info" />
+                </android.support.v7.widget.Toolbar>
 
-        <com.pandulapeter.campfire.feature.home.shared.PlaceholderView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:onClick="@{() -> viewModel.navigateToLibrary()}"
-            android:visibility="@{viewModel.shouldShowPlaceholder}"
-            app:buttonText="@string/go_to_library"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            app:text="@string/history_placeholder" />
+            </android.support.design.widget.AppBarLayout>
 
-    </android.support.design.widget.CoordinatorLayout>
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                app:adapter="@{viewModel.adapter}"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                tools:listitem="@layout/item_song_info" />
+
+            <com.pandulapeter.campfire.feature.home.shared.PlaceholderView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:onClick="@{() -> viewModel.navigateToLibrary()}"
+                android:visibility="@{viewModel.shouldShowPlaceholder}"
+                app:buttonText="@string/go_to_library"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                app:text="@string/history_placeholder" />
+
+        </android.support.design.widget.CoordinatorLayout>
+
+    </FrameLayout>
 
 </layout>

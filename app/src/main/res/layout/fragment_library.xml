@@ -17,164 +17,171 @@
     <android.support.v4.widget.DrawerLayout
         android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:layout_height="match_parent">
 
-        <android.support.design.widget.CoordinatorLayout
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fitsSystemWindows="true">
 
-            <android.support.design.widget.AppBarLayout
-                android:id="@+id/app_bar_layout"
+            <android.support.design.widget.CoordinatorLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="match_parent"
+                android:fitsSystemWindows="true">
 
-                <android.support.v7.widget.Toolbar
+                <android.support.design.widget.AppBarLayout
+                    android:id="@+id/app_bar_layout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:isScrollEnabled="@{!viewModel.isSearchInputVisible}">
+                    android:layout_height="wrap_content">
 
-                    <android.support.constraint.ConstraintLayout
+                    <android.support.v7.widget.Toolbar
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:animateLayoutChanges="true">
+                        app:isScrollEnabled="@{!viewModel.isSearchInputVisible}">
 
-                        <android.support.v4.widget.Space
-                            android:id="@+id/space"
-                            android:layout_width="@dimen/toolbar_first_keyline_fix"
-                            android:layout_height="0dp"
-                            app:layout_constraintEnd_toStartOf="parent" />
-
-                        <ImageView
-                            android:layout_width="wrap_content"
+                        <android.support.constraint.ConstraintLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:contentDescription="@string/home_menu"
-                            android:onClick="@{() -> viewModel.showMenu()}"
-                            android:padding="@dimen/toolbar_action_button_padding"
-                            app:animation="@{R.drawable.avd_back_to_menu_24dp}"
-                            app:forcePlay="@{viewModel.shouldPlayReturnAnimation}"
-                            app:lastFrame="@{@drawable/ic_menu_24dp}"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="@id/space"
-                            app:layout_constraintTop_toTopOf="parent"
-                            tools:src="@drawable/avd_menu_to_back_24dp" />
+                            android:animateLayoutChanges="true">
 
-                        <ImageView
-                            android:id="@+id/view_options"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:contentDescription="@string/library_view_options"
-                            android:onClick="@{() -> viewModel.showViewOptions()}"
-                            android:padding="@dimen/toolbar_action_button_padding"
-                            android:visibility="@{viewModel.isLibraryNotEmpty}"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/ic_view_options_24dp" />
+                            <android.support.v4.widget.Space
+                                android:id="@+id/space"
+                                android:layout_width="@dimen/toolbar_first_keyline_fix"
+                                android:layout_height="0dp"
+                                app:layout_constraintEnd_toStartOf="parent" />
 
-                        <ImageView
-                            android:id="@+id/search_toggle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:contentDescription="@{viewModel.isSearchInputVisible ? @string/library_close : @string/library_search}"
-                            android:onClick="@{() -> viewModel.showOrHideSearchInput()}"
-                            android:padding="@dimen/toolbar_action_button_padding"
-                            android:visibility="@{viewModel.isLibraryNotEmpty}"
-                            app:animation="@{viewModel.isSearchInputVisible ? R.drawable.avd_search_to_close_24dp : R.drawable.avd_close_to_search_24dp}"
-                            app:lastFrame="@{viewModel.isSearchInputVisible ? @drawable/ic_close_24dp : @drawable/ic_search_24dp}"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@id/view_options"
-                            app:layout_constraintTop_toTopOf="parent"
-                            tools:src="@drawable/avd_close_to_search_24dp" />
-
-                        <ViewSwitcher
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
-                            android:layout_marginStart="@dimen/toolbar_second_keyline_fix"
-                            android:clipChildren="false"
-                            android:inAnimation="@android:anim/fade_in"
-                            android:outAnimation="@android:anim/fade_out"
-                            app:displayedChild="@{viewModel.isSearchInputVisible ? 1 : 0}"
-                            app:layout_constraintEnd_toStartOf="@id/search_toggle"
-                            app:layout_constraintStart_toStartOf="parent">
-
-                            <android.support.v7.widget.Toolbar
-                                android:id="@+id/title"
-                                android:layout_width="match_parent"
+                            <ImageView
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="-16dp"
-                                app:subtitle="@{viewModel.shouldDisplaySubtitle ? @string/library_song_count(viewModel.filteredItemCount) : null}"
-                                app:title="@string/home_library"
-                                tools:subtitle="50 / 100 songs" />
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:contentDescription="@string/home_menu"
+                                android:onClick="@{() -> viewModel.showMenu()}"
+                                android:padding="@dimen/toolbar_action_button_padding"
+                                app:animation="@{R.drawable.avd_back_to_menu_24dp}"
+                                app:forcePlay="@{viewModel.shouldPlayReturnAnimation}"
+                                app:lastFrame="@{@drawable/ic_menu_24dp}"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="@id/space"
+                                app:layout_constraintTop_toTopOf="parent"
+                                tools:src="@drawable/avd_menu_to_back_24dp" />
 
-                            <android.support.constraint.ConstraintLayout
-                                android:layout_width="match_parent"
+                            <ImageView
+                                android:id="@+id/view_options"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_gravity="center_vertical">
+                                android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:contentDescription="@string/library_view_options"
+                                android:onClick="@{() -> viewModel.showViewOptions()}"
+                                android:padding="@dimen/toolbar_action_button_padding"
+                                android:visibility="@{viewModel.isLibraryNotEmpty}"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:srcCompat="@drawable/ic_view_options_24dp" />
 
-                                <android.support.v4.widget.Space
-                                    android:id="@+id/space_2"
-                                    android:layout_width="@dimen/edit_text_fix"
-                                    android:layout_height="0dp"
-                                    app:layout_constraintEnd_toStartOf="parent" />
+                            <ImageView
+                                android:id="@+id/search_toggle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:contentDescription="@{viewModel.isSearchInputVisible ? @string/library_close : @string/library_search}"
+                                android:onClick="@{() -> viewModel.showOrHideSearchInput()}"
+                                android:padding="@dimen/toolbar_action_button_padding"
+                                android:visibility="@{viewModel.isLibraryNotEmpty}"
+                                app:animation="@{viewModel.isSearchInputVisible ? R.drawable.avd_search_to_close_24dp : R.drawable.avd_close_to_search_24dp}"
+                                app:lastFrame="@{viewModel.isSearchInputVisible ? @drawable/ic_close_24dp : @drawable/ic_search_24dp}"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintEnd_toStartOf="@id/view_options"
+                                app:layout_constraintTop_toTopOf="parent"
+                                tools:src="@drawable/avd_close_to_search_24dp" />
 
-                                <EditText
-                                    android:id="@+id/query"
-                                    android:layout_width="0dp"
+                            <ViewSwitcher
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
+                                android:layout_marginStart="@dimen/toolbar_second_keyline_fix"
+                                android:clipChildren="false"
+                                android:inAnimation="@android:anim/fade_in"
+                                android:outAnimation="@android:anim/fade_out"
+                                app:displayedChild="@{viewModel.isSearchInputVisible ? 1 : 0}"
+                                app:layout_constraintEnd_toStartOf="@id/search_toggle"
+                                app:layout_constraintStart_toStartOf="parent">
+
+                                <android.support.v7.widget.Toolbar
+                                    android:id="@+id/title"
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:hint="@string/library_search"
-                                    android:inputType="textCapWords|textFilter"
-                                    android:maxLength="@integer/search_query_limit"
-                                    android:text="@={viewModel.searchQuery}"
-                                    app:layout_constraintEnd_toEndOf="parent"
-                                    app:layout_constraintStart_toStartOf="@id/space_2" />
+                                    android:layout_marginStart="-16dp"
+                                    app:subtitle="@{viewModel.shouldDisplaySubtitle ? @string/library_song_count(viewModel.filteredItemCount) : null}"
+                                    app:title="@string/home_library"
+                                    tools:subtitle="50 / 100 songs" />
 
-                            </android.support.constraint.ConstraintLayout>
+                                <android.support.constraint.ConstraintLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center_vertical">
 
-                        </ViewSwitcher>
+                                    <android.support.v4.widget.Space
+                                        android:id="@+id/space_2"
+                                        android:layout_width="@dimen/edit_text_fix"
+                                        android:layout_height="0dp"
+                                        app:layout_constraintEnd_toStartOf="parent" />
 
-                    </android.support.constraint.ConstraintLayout>
+                                    <EditText
+                                        android:id="@+id/query"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:hint="@string/library_search"
+                                        android:inputType="textCapWords|textFilter"
+                                        android:maxLength="@integer/search_query_limit"
+                                        android:text="@={viewModel.searchQuery}"
+                                        app:layout_constraintEnd_toEndOf="parent"
+                                        app:layout_constraintStart_toStartOf="@id/space_2" />
 
-                </android.support.v7.widget.Toolbar>
+                                </android.support.constraint.ConstraintLayout>
 
-            </android.support.design.widget.AppBarLayout>
+                            </ViewSwitcher>
 
-            <android.support.v4.widget.SwipeRefreshLayout
-                android:id="@+id/swipe_refresh_layout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior">
+                        </android.support.constraint.ConstraintLayout>
 
-                <android.support.v7.widget.RecyclerView
-                    android:id="@+id/recycler_view"
+                    </android.support.v7.widget.Toolbar>
+
+                </android.support.design.widget.AppBarLayout>
+
+                <android.support.v4.widget.SwipeRefreshLayout
+                    android:id="@+id/swipe_refresh_layout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    app:adapter="@{viewModel.adapter}"
-                    tools:listitem="@layout/item_song_info" />
+                    app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-            </android.support.v4.widget.SwipeRefreshLayout>
+                    <android.support.v7.widget.RecyclerView
+                        android:id="@+id/recycler_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:adapter="@{viewModel.adapter}"
+                        tools:listitem="@layout/item_song_info" />
 
-            <com.pandulapeter.campfire.feature.home.shared.PlaceholderView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="@{viewModel.shouldShowPlaceholder}"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior"
-                app:text="@{viewModel.placeholderText}" />
+                </android.support.v4.widget.SwipeRefreshLayout>
 
-        </android.support.design.widget.CoordinatorLayout>
+                <com.pandulapeter.campfire.feature.home.shared.PlaceholderView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="@{viewModel.shouldShowPlaceholder}"
+                    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                    app:text="@{viewModel.placeholderText}" />
+
+            </android.support.design.widget.CoordinatorLayout>
+
+        </FrameLayout>
 
         <android.support.design.widget.NavigationView
             android:id="@+id/navigation_view"
             android:layout_width="@dimen/view_options_width"
             android:layout_height="match_parent"
             android:layout_gravity="end"
+            android:paddingTop="@dimen/navigation_view_top_padding"
             app:menu="@menu/library" />
 
     </android.support.v4.widget.DrawerLayout>

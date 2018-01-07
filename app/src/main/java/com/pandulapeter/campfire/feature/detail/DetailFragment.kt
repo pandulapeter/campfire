@@ -64,7 +64,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             }
         }
         // Set up the side navigation drawer.
-        context?.let { binding.drawerLayout.setScrimColor(it.color(android.R.color.transparent)) }
         binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {

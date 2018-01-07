@@ -14,99 +14,106 @@
 
     </data>
 
-    <android.support.design.widget.CoordinatorLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:animateLayoutChanges="true"
         android:fitsSystemWindows="true">
 
-        <android.support.design.widget.AppBarLayout
-            android:id="@+id/app_bar_layout"
+        <android.support.design.widget.CoordinatorLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true"
+            android:fitsSystemWindows="true">
 
-            <android.support.v7.widget.Toolbar
+            <android.support.design.widget.AppBarLayout
+                android:id="@+id/app_bar_layout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_scrollFlags="scroll|enterAlways|snap">
+                android:layout_height="wrap_content">
 
-                <android.support.constraint.ConstraintLayout
+                <android.support.v7.widget.Toolbar
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:animateLayoutChanges="true">
+                    app:layout_scrollFlags="scroll|enterAlways|snap">
 
-                    <android.support.v4.widget.Space
-                        android:id="@+id/space"
-                        android:layout_width="@dimen/toolbar_first_keyline_fix"
-                        android:layout_height="0dp"
-                        app:layout_constraintEnd_toStartOf="parent" />
-
-                    <ImageView
-                        android:layout_width="wrap_content"
+                    <android.support.constraint.ConstraintLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="@string/home_menu"
-                        android:onClick="@{() -> viewModel.showMenu()}"
-                        android:padding="@dimen/toolbar_action_button_padding"
-                        app:animation="@{R.drawable.avd_back_to_menu_24dp}"
-                        app:forcePlay="@{viewModel.shouldPlayReturnAnimation}"
-                        app:lastFrame="@{@drawable/ic_menu_24dp}"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="@id/space"
-                        app:layout_constraintTop_toTopOf="parent"
-                        tools:src="@drawable/avd_menu_to_back_24dp" />
+                        android:animateLayoutChanges="true">
 
-                    <ImageView
-                        android:id="@+id/delete_all"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="@string/history_clear"
-                        android:onClick="@{() -> viewModel.onDeleteAllButtonClicked()}"
-                        android:padding="@dimen/toolbar_action_button_padding"
-                        android:visibility="@{viewModel.shouldShowDeleteAllButton}"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:srcCompat="@drawable/ic_delete_24dp" />
+                        <android.support.v4.widget.Space
+                            android:id="@+id/space"
+                            android:layout_width="@dimen/toolbar_first_keyline_fix"
+                            android:layout_height="0dp"
+                            app:layout_constraintEnd_toStartOf="parent" />
 
-                    <android.support.v7.widget.Toolbar
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:layout_marginStart="@dimen/toolbar_in_toolbar_fix"
-                        app:layout_constraintEnd_toStartOf="@id/delete_all"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:subtitle="@{@string/manage_downloads_total_size(viewModel.totalFileSize)}"
-                        app:title="@string/home_manage_downloads"
-                        tools:subtitle="Total size: 16 MB" />
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="@string/home_menu"
+                            android:onClick="@{() -> viewModel.showMenu()}"
+                            android:padding="@dimen/toolbar_action_button_padding"
+                            app:animation="@{R.drawable.avd_back_to_menu_24dp}"
+                            app:forcePlay="@{viewModel.shouldPlayReturnAnimation}"
+                            app:lastFrame="@{@drawable/ic_menu_24dp}"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="@id/space"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:src="@drawable/avd_menu_to_back_24dp" />
 
-                </android.support.constraint.ConstraintLayout>
+                        <ImageView
+                            android:id="@+id/delete_all"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="@string/history_clear"
+                            android:onClick="@{() -> viewModel.onDeleteAllButtonClicked()}"
+                            android:padding="@dimen/toolbar_action_button_padding"
+                            android:visibility="@{viewModel.shouldShowDeleteAllButton}"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:srcCompat="@drawable/ic_delete_24dp" />
 
-            </android.support.v7.widget.Toolbar>
+                        <android.support.v7.widget.Toolbar
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginStart="@dimen/toolbar_in_toolbar_fix"
+                            app:layout_constraintEnd_toStartOf="@id/delete_all"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:subtitle="@{@string/manage_downloads_total_size(viewModel.totalFileSize)}"
+                            app:title="@string/home_manage_downloads"
+                            tools:subtitle="Total size: 16 MB" />
 
-        </android.support.design.widget.AppBarLayout>
+                    </android.support.constraint.ConstraintLayout>
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recycler_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            app:adapter="@{viewModel.adapter}"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:listitem="@layout/item_song_info" />
+                </android.support.v7.widget.Toolbar>
 
-        <com.pandulapeter.campfire.feature.home.shared.PlaceholderView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:onClick="@{() -> viewModel.navigateToLibrary()}"
-            android:visibility="@{viewModel.shouldShowPlaceholder}"
-            app:buttonText="@string/go_to_library"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            app:text="@string/manage_downloads_placeholder" />
+            </android.support.design.widget.AppBarLayout>
 
-    </android.support.design.widget.CoordinatorLayout>
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                app:adapter="@{viewModel.adapter}"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                tools:listitem="@layout/item_song_info" />
 
+            <com.pandulapeter.campfire.feature.home.shared.PlaceholderView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:onClick="@{() -> viewModel.navigateToLibrary()}"
+                android:visibility="@{viewModel.shouldShowPlaceholder}"
+                app:buttonText="@string/go_to_library"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                app:text="@string/manage_downloads_placeholder" />
+
+        </android.support.design.widget.CoordinatorLayout>
+
+    </FrameLayout>
+    
 </layout>

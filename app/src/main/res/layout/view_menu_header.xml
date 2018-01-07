@@ -7,12 +7,12 @@
     android:paddingBottom="@dimen/content_padding"
     android:paddingEnd="@dimen/first_keyline"
     android:paddingStart="@dimen/first_keyline"
-    android:paddingTop="@dimen/first_keyline">
+    android:paddingTop="@dimen/content_padding">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/first_keyline"
+        android:layout_marginTop="@dimen/large_content_padding"
         android:text="@string/campfire"
         android:textAppearance="@style/TextAppearance.AppCompat.Headline"
         android:textColor="@color/accent" />
