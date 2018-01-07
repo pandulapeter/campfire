@@ -7,6 +7,7 @@ import android.support.v7.app.AlertDialog
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import com.pandulapeter.campfire.NewPlaylistBinding
 import com.pandulapeter.campfire.R
@@ -19,9 +20,6 @@ import javax.inject.Inject
 
 /**
  * Allows the user to create a new playlist.
- *
- * TODO: The positions of the dialog should change when the keyboard is visible.
- * TODO: In the smallest multi-window mode the input field is not visible.
  */
 class NewPlaylistDialogFragment : DaggerAppCompatDialogFragment() {
 
@@ -41,7 +39,7 @@ class NewPlaylistDialogFragment : DaggerAppCompatDialogFragment() {
 
             override fun onTextChanged(text: CharSequence?, p1: Int, p2: Int, p3: Int) = Unit
         })
-        AlertDialog.Builder(context)
+        AlertDialog.Builder(context, R.style.AlertDialog)
             .setView(binding.root)
             .setTitle(R.string.home_new_playlist)
             .setPositiveButton(R.string.ok, { _, _ -> onOkButtonPressed() })
@@ -51,6 +49,7 @@ class NewPlaylistDialogFragment : DaggerAppCompatDialogFragment() {
 
     override fun onStart() {
         super.onStart()
+        dialog.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN)
         binding.root.post {
             showKeyboard(binding.inputField)
             binding.inputField.setSelection(binding.inputField.text?.length ?: 0)
