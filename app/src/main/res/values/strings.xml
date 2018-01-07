@@ -6,6 +6,8 @@
     <string name="work_in_progress">Work in progress</string>
     <string name="got_it">Got it</string>
     <string name="go_to_library">Go to Library</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
 
     <!-- Song list items -->
     <string name="download">Download</string>
@@ -59,7 +61,6 @@
     <string name="history_clear_confirmation_title">Are you sure?</string>
     <string name="history_clear_confirmation_message">This will remove all items from your history.</string>
     <string name="history_clear_confirmation_clear">Clear</string>
-    <string name="history_clear_confirmation_cancel">Cancel</string>
     <string name="history_now">Now</string>
     <string name="history_today">Earlier today</string>
     <string name="history_yesterday">Yesterday</string>
@@ -85,7 +86,6 @@
     <string name="playlist_delete_confirmation_title">Are you sure?</string>
     <string name="playlist_delete_confirmation_message">This cannot be undone.</string>
     <string name="playlist_delete_confirmation_delete">Delete</string>
-    <string name="playlist_delete_confirmation_cancel">Cancel</string>
     <string name="playlist_drag_to_rearrange">Drag to rearrange</string>
     <string name="playlist_hint">Drag the items to rearrange them, swipe to remove.</string>
     <string name="playlist_placeholder">To start adding songs to this playlist, tap on the star icon near song titles.</string>
@@ -100,7 +100,6 @@
     <string name="manage_downloads_delete_all_confirmation_title">Are you sure?</string>
     <string name="manage_downloads_delete_all_confirmation_message">This will remove all downloaded songs.</string>
     <string name="manage_downloads_delete_all_confirmation_clear">Clear</string>
-    <string name="manage_downloads_delete_all_confirmation_cancel">Cancel</string>
     <string name="manage_downloads_hint">Swipe items away to remove them from your downloads.</string>
     <string name="manage_downloads_placeholder">You don\'t have any downloaded songs.</string>
 

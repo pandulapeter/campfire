@@ -35,7 +35,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageD
                 R.string.manage_downloads_delete_all_confirmation_title,
                 R.string.manage_downloads_delete_all_confirmation_message,
                 R.string.manage_downloads_delete_all_confirmation_clear,
-                R.string.manage_downloads_delete_all_confirmation_cancel)
+                R.string.cancel)
         }
         // Set up swipe-to-dismiss functionality.
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {

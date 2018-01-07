@@ -42,7 +42,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
                 R.string.history_clear_confirmation_title,
                 R.string.history_clear_confirmation_message,
                 R.string.history_clear_confirmation_clear,
-                R.string.history_clear_confirmation_cancel)
+                R.string.cancel)
         }
         // Set up swipe-to-dismiss functionality.
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {

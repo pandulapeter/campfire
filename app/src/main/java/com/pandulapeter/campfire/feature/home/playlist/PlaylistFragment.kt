@@ -61,7 +61,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
                 R.string.playlist_delete_confirmation_title,
                 R.string.playlist_delete_confirmation_message,
                 R.string.playlist_delete_confirmation_delete,
-                R.string.playlist_delete_confirmation_cancel)
+                R.string.cancel)
         }
         // Setup swipe-to-dismiss and drag-to-rearrange functionality.
         //TODO: Change the elevation of the card that's being dragged.
