@@ -17,7 +17,6 @@ import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.addDrawerListener
-import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.disableScrollbars
 import com.pandulapeter.campfire.util.hideKeyboard
@@ -45,11 +44,16 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
 
     override fun getRecyclerView() = binding.recyclerView
 
+    override fun getAppBarLayout() = binding.appBarLayout
+
     //TODO: Add error- and empty states.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Set up the side navigation drawer.
-        binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { hideKeyboard(activity?.currentFocus) })
+        binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
+            hideKeyboard(activity?.currentFocus)
+            expandAppBar()
+        })
         binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {

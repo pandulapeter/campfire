@@ -28,6 +28,8 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageD
 
     override fun createViewModel() = ManageDownloadsViewModel(context, songInfoRepository, downloadedSongRepository)
 
+    override fun getAppBarLayout() = binding.appBarLayout
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.shouldShowConfirmationDialog.onEventTriggered {

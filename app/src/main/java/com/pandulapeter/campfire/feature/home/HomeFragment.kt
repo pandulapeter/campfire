@@ -82,6 +82,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
             activity?.currentFocus?.clearFocus()
             hideKeyboard(activity?.currentFocus)
+            getCurrentFragment()?.expandAppBar()
         })
         setCheckedItem(viewModel.homeNavigationItem)
         viewModel.playlists.onPropertyChanged {

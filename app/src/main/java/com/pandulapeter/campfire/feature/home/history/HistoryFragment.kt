@@ -35,6 +35,8 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
 
     override fun createViewModel() = HistoryViewModel(songInfoRepository, downloadedSongRepository, playlistRepository, historyRepository)
 
+    override fun getAppBarLayout() = binding.appBarLayout
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.shouldShowConfirmationDialog.onEventTriggered {

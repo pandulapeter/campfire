@@ -15,4 +15,6 @@ class CollectionsFragment : HomeChildFragment<CollectionsBinding, CollectionsVie
     @Inject lateinit var appShortcutManager: AppShortcutManager
 
     override fun createViewModel() = CollectionsViewModel(appShortcutManager)
+
+    override fun getAppBarLayout() = binding.appBarLayout
 }

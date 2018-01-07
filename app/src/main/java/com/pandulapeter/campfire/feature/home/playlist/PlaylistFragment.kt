@@ -39,6 +39,8 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
 
     override fun createViewModel() = PlaylistViewModel(songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
 
+    override fun getAppBarLayout() = binding.appBarLayout
+
     override fun getRecyclerView() = binding.recyclerView
 
     //TODO: Add empty state placeholder.

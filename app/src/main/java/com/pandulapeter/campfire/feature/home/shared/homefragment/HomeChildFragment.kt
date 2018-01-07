@@ -1,13 +1,11 @@
 package com.pandulapeter.campfire.feature.home.shared.homefragment
 
 import android.databinding.ViewDataBinding
-import android.graphics.drawable.AnimatedVectorDrawable
 import android.os.Bundle
 import android.support.annotation.CallSuper
 import android.support.annotation.LayoutRes
+import android.support.design.widget.AppBarLayout
 import android.view.View
-import android.widget.ImageView
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.onEventTriggered
@@ -29,7 +27,11 @@ abstract class HomeChildFragment<B : ViewDataBinding, out VM : HomeChildViewMode
         }
     }
 
-    abstract fun createViewModel(): VM
+    abstract protected fun createViewModel(): VM
+
+    abstract protected fun getAppBarLayout(): AppBarLayout
+
+    fun expandAppBar() = getAppBarLayout().setExpanded(true, true)
 
     interface HomeCallbacks {
 
