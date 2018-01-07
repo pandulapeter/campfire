@@ -21,6 +21,7 @@ import javax.inject.Inject
  * Allows the user to create a new playlist.
  *
  * TODO: The positions of the dialog should change when the keyboard is visible.
+ * TODO: In the smallest multi-window mode the input field is not visible.
  */
 class NewPlaylistDialogFragment : DaggerAppCompatDialogFragment() {
 
@@ -50,7 +51,10 @@ class NewPlaylistDialogFragment : DaggerAppCompatDialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        binding.root.post { showKeyboard(binding.inputField) }
+        binding.root.post {
+            showKeyboard(binding.inputField)
+            binding.inputField.setSelection(binding.inputField.text?.length ?: 0)
+        }
         positiveButton.isEnabled = binding.inputField.text.isTextValid()
         binding.inputField.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
@@ -65,6 +69,7 @@ class NewPlaylistDialogFragment : DaggerAppCompatDialogFragment() {
     }
 
     //TODO: Check that there are no playlists with duplicate names.
+    //TODO: Display error messages below the input field.
     private fun CharSequence?.isTextValid() = !isNullOrBlank()
 
     private fun onOkButtonPressed() {
