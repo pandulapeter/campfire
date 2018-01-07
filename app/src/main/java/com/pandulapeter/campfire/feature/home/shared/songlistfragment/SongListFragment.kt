@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.home.shared.songlistfragment
 import android.databinding.ViewDataBinding
 import android.os.Bundle
 import android.support.annotation.LayoutRes
+import android.support.design.widget.CoordinatorLayout
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
@@ -32,6 +33,8 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
 
     protected abstract fun getRecyclerView(): RecyclerView
 
+    protected abstract fun getCoordinatorLayout(): CoordinatorLayout
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         context?.let { context ->
@@ -52,7 +55,7 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
             viewModel.shouldShowDownloadErrorSnackbar.onEventTriggered {
                 it?.let { songInfo ->
                     if (isAdded) {
-                        binding.root.showSnackbar(message = getString(R.string.song_item_song_download_failed, songInfo.title),
+                        getCoordinatorLayout().showSnackbar(message = getString(R.string.song_item_song_download_failed, songInfo.title),
                             actionButton = R.string.song_item_try_again,
                             action = { viewModel.downloadSong(songInfo) })
                     }

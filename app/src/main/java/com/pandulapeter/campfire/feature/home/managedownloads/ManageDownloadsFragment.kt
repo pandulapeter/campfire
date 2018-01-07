@@ -24,11 +24,13 @@ import javax.inject.Inject
 class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageDownloadsViewModel>(R.layout.fragment_manage_downloads), AlertDialogFragment.OnDialogItemsSelectedListener {
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
 
-    override fun getRecyclerView() = binding.recyclerView
-
     override fun createViewModel() = ManageDownloadsViewModel(context, songInfoRepository, downloadedSongRepository)
 
     override fun getAppBarLayout() = binding.appBarLayout
+
+    override fun getRecyclerView() = binding.recyclerView
+
+    override fun getCoordinatorLayout() = binding.coordinatorLayout
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -62,7 +64,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageD
         }
         viewModel.shouldShowHintSnackbar.onPropertyChanged {
             if (firstTimeUserExperienceRepository.shouldShowManageDownloadsHint) {
-                binding.root.showFirstTimeUserExperienceSnackbar(R.string.manage_downloads_hint) {
+                binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.manage_downloads_hint) {
                     firstTimeUserExperienceRepository.shouldShowManageDownloadsHint = false
                 }
             }

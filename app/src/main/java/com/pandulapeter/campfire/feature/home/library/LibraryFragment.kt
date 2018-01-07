@@ -42,9 +42,11 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
 
     override fun createViewModel() = LibraryViewModel(songInfoRepository, downloadedSongRepository, appShortcutManager, userPreferenceRepository, playlistRepository, languageRepository)
 
+    override fun getAppBarLayout() = binding.appBarLayout
+
     override fun getRecyclerView() = binding.recyclerView
 
-    override fun getAppBarLayout() = binding.appBarLayout
+    override fun getCoordinatorLayout() = binding.coordinatorLayout
 
     //TODO: Add error- and empty states.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

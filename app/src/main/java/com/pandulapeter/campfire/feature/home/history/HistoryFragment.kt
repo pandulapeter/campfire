@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.home.history
 
 import android.os.Bundle
+import android.support.design.widget.CoordinatorLayout
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
@@ -31,11 +32,13 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
     @Inject lateinit var historyRepository: HistoryRepository
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
 
-    override fun getRecyclerView() = binding.recyclerView
-
     override fun createViewModel() = HistoryViewModel(songInfoRepository, downloadedSongRepository, playlistRepository, historyRepository)
 
     override fun getAppBarLayout() = binding.appBarLayout
+
+    override fun getRecyclerView() = binding.recyclerView
+
+    override fun getCoordinatorLayout() = binding.coordinatorLayout
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -95,7 +98,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
         }
         viewModel.shouldShowHintSnackbar.onPropertyChanged {
             if (firstTimeUserExperienceRepository.shouldShowHistoryHint) {
-                binding.root.showFirstTimeUserExperienceSnackbar(R.string.history_hint) {
+                binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.history_hint) {
                     firstTimeUserExperienceRepository.shouldShowHistoryHint = false
                 }
             }

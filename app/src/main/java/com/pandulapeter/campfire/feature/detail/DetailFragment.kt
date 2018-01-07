@@ -59,7 +59,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             binding.viewPager.run { post { setCurrentItem(viewModel.songIds.indexOf(arguments.songId), false) } }
         }
         if (viewModel.songIds.size > 1 && firstTimeUserExperienceRepository.shouldShowDetailSwipeHint) {
-            binding.root.showFirstTimeUserExperienceSnackbar(R.string.detail_swipe_hint) {
+            binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.detail_swipe_hint) {
                 firstTimeUserExperienceRepository.shouldShowDetailSwipeHint = false
             }
         }

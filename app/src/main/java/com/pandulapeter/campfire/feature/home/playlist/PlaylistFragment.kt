@@ -42,6 +42,8 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
     override fun getAppBarLayout() = binding.appBarLayout
 
     override fun getRecyclerView() = binding.recyclerView
+    
+    override fun getCoordinatorLayout() = binding.coordinatorLayout
 
     //TODO: Add empty state placeholder.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -49,7 +51,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         viewModel.isInEditMode.onPropertyChanged {
             if (it) {
                 if (viewModel.adapterItemCount > 0 && firstTimeUserExperienceRepository.shouldShowPlaylistHint) {
-                    binding.root.showFirstTimeUserExperienceSnackbar(R.string.playlist_hint) {
+                    binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.playlist_hint) {
                         firstTimeUserExperienceRepository.shouldShowPlaylistHint = false
                     }
                 }
@@ -105,7 +107,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
                 itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
             }
         }
-        viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered { binding.root.showSnackbar(R.string.work_in_progress) }
+        viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
     }
 
     override fun onStart() {
