@@ -83,14 +83,12 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         viewModel.shouldNavigateBack.onEventTriggered {
             if (!isBackAnimationInProgress) {
                 isBackAnimationInProgress = true
-                viewModel.adapter.getItemAt(binding.viewPager.currentItem).scrollToTop(
-                    onScrollCompleted = {
-                        binding.appBarLayout.performAfterExpand(
-                            onExpanded = { (activity as? MainActivity)?.navigateBack() },
-                            onInterrupted = { isBackAnimationInProgress = false })
-                    },
-                    onScrollInterrupted = {
+                binding.appBarLayout.performAfterExpand(
+                    onExpanded = { (activity as? MainActivity)?.navigateBack() },
+                    onInterrupted = {
+                        viewModel.adapter.getItemAt(binding.viewPager.currentItem).stopScroll()
                         isBackAnimationInProgress = false
+                        viewModel.shouldNavigateBack.set(true)
                     })
             }
         }

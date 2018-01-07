@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature.detail.page
 
 import android.os.Bundle
-import android.support.v4.widget.NestedScrollView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SongPageBinding
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
@@ -20,22 +19,7 @@ class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     override val viewModel by lazy { SongPageViewModel(arguments.songId, songInfoRepository, downloadedSongRepository) }
 
-    fun scrollToTop(onScrollCompleted: () -> Unit, onScrollInterrupted: () -> Unit) {
-        if (binding.nestedScrollView.scrollY == 0) {
-            onScrollCompleted()
-        } else {
-            binding.nestedScrollView.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { _, _, scrollY, _, previousScrollY ->
-                if (scrollY == 0) {
-                    onScrollCompleted()
-                }
-                if (scrollY > previousScrollY) {
-                    onScrollInterrupted()
-                    binding.nestedScrollView.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { _, _, _, _, _ -> Unit })
-                }
-            })
-            binding.nestedScrollView.fling(-5000 - binding.nestedScrollView.scrollY * 5)
-        }
-    }
+    fun stopScroll() = binding.nestedScrollView.smoothScrollBy(0, 0)
 
     companion object {
         private const val SONG_ID = "song_id"
