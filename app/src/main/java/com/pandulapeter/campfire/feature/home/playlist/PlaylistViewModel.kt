@@ -27,7 +27,7 @@ class PlaylistViewModel(songInfoRepository: SongInfoRepository,
     var adapterItemCount = 0
     val title = ObservableField(favoritesTitle)
     val editedTitle = ObservableField(title.get())
-    val shouldShowPlayButton = ObservableBoolean()
+    val shouldShowPlayButton = ObservableBoolean(playlistRepository.getPlaylistSongIds(playlistId).isNotEmpty())
     val isInEditMode = ObservableBoolean()
     val shouldShowDeleteConfirmation = ObservableBoolean()
     val shouldDisplayEditButton = ObservableBoolean()
