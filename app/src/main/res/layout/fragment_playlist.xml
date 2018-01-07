@@ -199,7 +199,7 @@
             android:layout_height="match_parent"
             android:onClick="@{() -> viewModel.navigateToLibrary()}"
             android:visibility="@{viewModel.shouldShowPlaceholder}"
-            app:buttonText="@string/home_library"
+            app:buttonText="@string/go_to_library"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             app:text="@string/playlist_placeholder" />
 

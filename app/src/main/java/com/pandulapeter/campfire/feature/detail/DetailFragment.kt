@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.disableScrollbars
 import com.pandulapeter.campfire.util.onEventTriggered
@@ -62,6 +63,8 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 firstTimeUserExperienceRepository.shouldShowDetailSwipeHint = false
             }
         }
+        // Set up the side navigation drawer.
+        context?.let { binding.drawerLayout.setScrimColor(it.color(android.R.color.transparent)) }
         binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {

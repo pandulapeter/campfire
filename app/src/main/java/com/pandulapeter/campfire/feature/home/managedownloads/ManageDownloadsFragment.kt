@@ -67,5 +67,8 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageD
         }
     }
 
-    override fun onPositiveButtonSelected() = viewModel.deleteAllDownloads()
+    override fun onPositiveButtonSelected() {
+        viewModel.deleteAllDownloads()
+        dismissHintSnackbar()
+    }
 }

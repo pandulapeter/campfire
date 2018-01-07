@@ -164,9 +164,9 @@
             <com.pandulapeter.campfire.feature.home.shared.PlaceholderView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="@{viewModel.placeholderText}"
                 android:visibility="@{viewModel.shouldShowPlaceholder}"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                app:text="@{viewModel.placeholderText}" />
 
         </android.support.design.widget.CoordinatorLayout>
 

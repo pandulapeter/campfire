@@ -144,7 +144,7 @@ fun AppBarLayout.performAfterExpand(onExpanded: () -> Unit, onInterrupted: () ->
                     onExpanded()
                     removeOnOffsetChangedListener(this)
                 }
-                if (verticalOffset < previousVerticalOffset) {
+                if (verticalOffset <= previousVerticalOffset) {
                     removeOnOffsetChangedListener(this)
                     onInterrupted()
                 }

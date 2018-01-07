@@ -5,6 +5,7 @@
     <string name="campfire">Campfire</string>
     <string name="work_in_progress">Work in progress</string>
     <string name="got_it">Got it</string>
+    <string name="go_to_library">Go to Library</string>
 
     <!-- Song list items -->
     <string name="download">Download</string>
@@ -50,6 +51,9 @@
     <string name="library_song_count">%s songs</string>
     <string name="library_more">More</string>
 
+    <!-- Collections screen -->
+    <string name="collections_work_in_progress">Work on the Collections screen is in progress.</string>
+
     <!-- History screen -->
     <string name="history_clear">Clear</string>
     <string name="history_clear_confirmation_title">Are you sure?</string>
@@ -82,6 +86,9 @@
     <string name="playlist_drag_to_rearrange">Drag to rearrange</string>
     <string name="playlist_hint">Drag the items to rearrange them, swipe to remove.</string>
     <string name="playlist_placeholder">To start adding songs to this playlist, tap on the star icon near song titles.</string>
+
+    <!-- Manage playlists screen -->
+    <string name="manage_playlistst_work_in_progress">Work on the Manage playlists screen is in progress.</string>
 
     <!-- Manage downloads screen -->
     <string name="manage_downloads_total_size">Total size: %s</string>

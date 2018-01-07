@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.feature.home
 
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
-import android.transition.TransitionInflater
 import android.view.SubMenu
 import android.view.View
 import android.widget.TextView
@@ -93,6 +92,9 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
                 setGroupCheckable(R.id.playlist_container, true, true)
                 updateCheckedItem()
             }
+            if (it.isEmpty()) {
+                managePlaylistsItem.isChecked = false
+            }
             managePlaylistsItem.isVisible = it.size > 1
         }
         viewModel.isLibraryReady.onPropertyChanged { isLibraryReady ->
@@ -105,7 +107,12 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
                 findItem(R.id.playlists)?.isEnabled = isLibraryReady
             }
         }
-        viewModel.hasDownloads.onPropertyChanged { manageDownloadsItem.isVisible = it }
+        viewModel.hasDownloads.onPropertyChanged {
+            if (!it) {
+                manageDownloadsItem.isChecked = false
+            }
+            manageDownloadsItem.isVisible = it
+        }
     }
 
 
@@ -166,7 +173,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             } else {
                 coroutine?.cancel()
                 coroutine = async(UI) {
-//                    val fade = TransitionInflater.from(this@HomeFragment.context).inflateTransition(R.transition.fade)
+                    //                    val fade = TransitionInflater.from(this@HomeFragment.context).inflateTransition(R.transition.fade)
 //                    currentFragment.exitTransition = fade
                     val nextFragment = async(CommonPool) {
                         childFragmentManager.findFragmentByTag(homeNavigationItem.stringValue) ?: homeNavigationItem.getFragment()

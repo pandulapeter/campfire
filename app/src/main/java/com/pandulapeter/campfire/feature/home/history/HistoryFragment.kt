@@ -112,5 +112,8 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
         historyRepository.unsubscribe(viewModel)
     }
 
-    override fun onPositiveButtonSelected() = viewModel.clearHistory()
+    override fun onPositiveButtonSelected() {
+        viewModel.clearHistory()
+        dismissHintSnackbar()
+    }
 }
