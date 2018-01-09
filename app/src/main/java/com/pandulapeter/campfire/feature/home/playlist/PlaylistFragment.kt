@@ -122,6 +122,14 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         playlistRepository.unsubscribe(viewModel)
     }
 
+    override fun onBackPressed(): Boolean {
+        if (viewModel.isInEditMode.get() && viewModel.shouldAllowDeleteButton) {
+            viewModel.isInEditMode.set(false)
+            return true
+        }
+        return false
+    }
+
     override fun onPositiveButtonSelected() {
         (parentFragment as HomeFragment).setCheckedItem(HomeViewModel.HomeNavigationItem.Library)
         viewModel.deletePlaylist()
