@@ -25,7 +25,7 @@ sealed class UpdateType {
     class DownloadSuccessful(val songId: String) : UpdateType()
 
     class DownloadFailed(val songId: String) : UpdateType()
-    
+
     // HistoryRepository
     class HistoryUpdated(val historyIds: List<History>) : UpdateType()
 
@@ -70,6 +70,8 @@ sealed class UpdateType {
     class ShouldHideExplicitUpdated(val shouldHideExplicit: Boolean) : UpdateType()
 
     class ShouldHideWorkInProgressUpdated(val shouldHideWorkInProgress: Boolean) : UpdateType()
+
+    class ShouldShowChords(val shouldShowChords: Boolean) : UpdateType()
 
     class SearchQueryUpdated(val searchQuery: String) : UpdateType()
 

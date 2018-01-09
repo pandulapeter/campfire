@@ -70,6 +70,7 @@ class DownloadedSongRepository(
     }
 
     fun downloadSong(songInfo: SongInfo, onSuccess: (String) -> Unit = {}, onFailure: () -> Unit = {}) {
+        //TODO: Check that the updating logic actually works. Looks like the cache is never updated.
         dataSet[songInfo.id]?.let {
             getDownloadedSongText(songInfo.id)?.let {
                 onSuccess(it)

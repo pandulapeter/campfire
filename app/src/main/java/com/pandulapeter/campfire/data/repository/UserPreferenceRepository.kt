@@ -44,6 +44,12 @@ class UserPreferenceRepository(
             preferenceStorageManager.shouldShowWorkInProgress = new
         }
     }
+    var shouldShowChords by Delegates.observable(preferenceStorageManager.shouldShowChords) { _: KProperty<*>, old: Boolean, new: Boolean ->
+        if (old != new) {
+            notifySubscribers(UpdateType.ShouldShowChords(new))
+            preferenceStorageManager.shouldShowChords = new
+        }
+    }
     var searchQuery by Delegates.observable("") { _: KProperty<*>, old: String, new: String ->
         if (!TextUtils.equals(old, new)) {
             notifySubscribers(UpdateType.SearchQueryUpdated(new))

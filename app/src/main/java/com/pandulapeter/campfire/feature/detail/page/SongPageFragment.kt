@@ -5,6 +5,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SongPageBinding
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import javax.inject.Inject
 
@@ -17,7 +18,18 @@ import javax.inject.Inject
 class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.layout.fragment_song_page) {
     @Inject lateinit var songInfoRepository: SongInfoRepository
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
-    override val viewModel by lazy { SongPageViewModel(arguments.songId, analyticsManager, songInfoRepository, downloadedSongRepository) }
+    @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
+    override val viewModel by lazy { SongPageViewModel(arguments.songId, analyticsManager, songInfoRepository, downloadedSongRepository, userPreferenceRepository) }
+
+    override fun onStart() {
+        super.onStart()
+        downloadedSongRepository.subscribe(viewModel)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        downloadedSongRepository.unsubscribe(viewModel)
+    }
 
     fun stopScroll() = binding.nestedScrollView.smoothScrollBy(0, 0)
 

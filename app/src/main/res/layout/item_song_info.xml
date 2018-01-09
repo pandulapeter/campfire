@@ -88,7 +88,6 @@
                         android:layout_width="@dimen/loading_indicator_size"
                         android:layout_height="@dimen/loading_indicator_size"
                         android:layout_gravity="center"
-                        android:background="@null"
                         android:indeterminateTint="@android:color/white"
                         android:padding="@dimen/content_padding" />
 
