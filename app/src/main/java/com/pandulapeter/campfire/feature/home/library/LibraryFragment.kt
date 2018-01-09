@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.feature.home.library
 
 import android.databinding.ObservableBoolean
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.view.View
@@ -68,12 +67,14 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
             }
         }
         viewModel.languageFilters.onPropertyChanged {
-            binding.navigationView.menu.findItem(R.id.filter_by_language).subMenu.run {
-                clear()
-                it.keys.toList().sortedBy { it.nameResource }.forEachIndexed { index, language ->
-                    add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
-                        setActionView(R.layout.widget_checkbox)
-                        viewModel.languageFilters.get()[language]?.let { (actionView as CompoundButton).setupWithBackingField(it) }
+            if (isAdded) {
+                binding.navigationView.menu.findItem(R.id.filter_by_language).subMenu.run {
+                    clear()
+                    it.keys.toList().sortedBy { it.nameResource }.forEachIndexed { index, language ->
+                        add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
+                            setActionView(R.layout.widget_checkbox)
+                            viewModel.languageFilters.get()[language]?.let { (actionView as CompoundButton).setupWithBackingField(it) }
+                        }
                     }
                 }
             }
@@ -98,14 +99,11 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         binding.swipeRefreshLayout.run {
             setOnRefreshListener { viewModel.forceRefresh() }
             isRefreshing = viewModel.isLoading.get()
-            viewModel.isLoading.onPropertyChanged { isRefreshing = it }
+            viewModel.isLoading.onPropertyChanged { if (isAdded) isRefreshing = it }
         }
         // Set up error handling.
         viewModel.shouldShowErrorSnackbar.onEventTriggered {
-            Snackbar
-                .make(binding.root, R.string.library_update_error, Snackbar.LENGTH_LONG)
-                .setAction(R.string.library_try_again, { viewModel.forceRefresh() })
-                .show()
+            if (isAdded) binding.coordinatorLayout.showSnackbar(R.string.library_update_error, R.string.library_try_again, { viewModel.forceRefresh() })
         }
         context?.let { context ->
             // Set up the item headers.
@@ -118,7 +116,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
             // Set up list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
                 binding.appBarLayout.performAfterExpand(onExpanded = {
-                    (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
+                    if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
                 })
             }
             viewModel.adapter.playlistActionClickListener = { position ->
@@ -144,7 +142,7 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
         }
         // Disable view options if the library is empty.
         updateDrawerLockMode(viewModel.isLibraryNotEmpty.get())
-        viewModel.isLibraryNotEmpty.onPropertyChanged { updateDrawerLockMode(it) }
+        viewModel.isLibraryNotEmpty.onPropertyChanged { if (isAdded) updateDrawerLockMode(it) }
     }
 
     override fun onStart() {

@@ -40,7 +40,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Setup the view pager.
-        //TODO: Selected song index is lost when restoring the state.
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
 
             override fun onPageScrollStateChanged(state: Int) = Unit

@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.shared.songlistfragment.list
 
+import android.annotation.SuppressLint
 import android.databinding.DataBindingUtil
 import android.support.annotation.LayoutRes
 import android.support.v7.util.DiffUtil
@@ -104,6 +105,7 @@ class SongInfoAdapter : RecyclerView.Adapter<SongInfoAdapter.SongInfoViewHolder>
             }
         }
 
+        @SuppressLint("ClickableViewAccessibility")
         fun setDragHandleTouchListener(itemTouchListener: ((position: Int) -> Unit)?) {
             if (itemTouchListener != null) {
                 //TODO: Fix Lint warning.

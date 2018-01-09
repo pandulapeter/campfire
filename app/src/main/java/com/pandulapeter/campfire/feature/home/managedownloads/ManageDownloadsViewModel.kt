@@ -28,7 +28,7 @@ class ManageDownloadsViewModel(context: Context?,
     val shouldAllowToolbarScrolling = ObservableBoolean()
 
     override fun getAdapterItems() = downloadedSongRepository.getDownloadedSongIds()
-        .mapNotNull { songInfoRepository.getSongInfo(it) }
+        .mapNotNull { songInfoRepository.getSongInfo(it) } //TODO: Maybe display the item sizes.
         .sortedBy { it.titleWithSpecialCharactersRemoved } //TODO: Find a more meaningful way to sort these items (maybe by size).
         .map {
             SongInfoViewModel(

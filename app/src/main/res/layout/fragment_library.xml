@@ -98,7 +98,7 @@
                             app:layout_constraintEnd_toStartOf="@id/search_toggle"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:subtitle="@{viewModel.shouldDisplaySubtitle ? @string/library_song_count(viewModel.filteredItemCount) : null}"
+                            app:subtitle="@{@string/library_song_count(viewModel.filteredItemCount)}"
                             app:title="@{@string/home_library}"
                             app:visibilityHide="@{!viewModel.isSearchInputVisible}"
                             tools:text="Library\n50 / 100 songs" />

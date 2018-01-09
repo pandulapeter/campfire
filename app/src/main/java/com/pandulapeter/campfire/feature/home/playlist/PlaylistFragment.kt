@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
+import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
@@ -36,16 +37,16 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
     @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
     @Inject lateinit var appShortcutManager: AppShortcutManager
+    @Inject lateinit var deepLinkManager: DeepLinkManager
 
-    override fun createViewModel() = PlaylistViewModel(analyticsManager, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
+    override fun createViewModel() = PlaylistViewModel(analyticsManager, deepLinkManager, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
 
     override fun getAppBarLayout() = binding.appBarLayout
 
     override fun getRecyclerView() = binding.recyclerView
-    
+
     override fun getCoordinatorLayout() = binding.coordinatorLayout
 
-    //TODO: Add empty state placeholder.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.isInEditMode.onPropertyChanged {
@@ -69,6 +70,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         }
         // Setup swipe-to-dismiss and drag-to-rearrange functionality.
         //TODO: Change the elevation of the card that's being dragged.
+        //TODO: Re-ordering is glitchy.
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
 
             override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =
@@ -93,10 +95,9 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Set up list item click listeners.
-
         viewModel.adapter.itemClickListener = { position ->
             binding.appBarLayout.performAfterExpand(onExpanded = {
-                (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id, arguments.playlistId))
+                if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id, arguments.playlistId))
             })
         }
         viewModel.adapter.downloadActionClickListener = { position ->
@@ -107,6 +108,7 @@ class PlaylistFragment : SongListFragment<PlaylistBinding, PlaylistViewModel>(R.
                 itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
             }
         }
+        //TODO: Implement playlist sharing.
         viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
     }
 

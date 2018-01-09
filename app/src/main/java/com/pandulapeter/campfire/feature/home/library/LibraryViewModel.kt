@@ -44,7 +44,6 @@ class LibraryViewModel(analyticsManager: AnalyticsManager,
     val languageFilters = ObservableField(HashMap<Language, ObservableBoolean>())
     val shouldAllowToolbarScrolling = ObservableBoolean()
     val filteredItemCount = ObservableField("")
-    val shouldDisplaySubtitle = userPreferenceRepository.shouldShowSongCount
     val isLibraryNotEmpty = ObservableBoolean(songInfoRepository.getLibrarySongs().isNotEmpty())
     val placeholderText = ObservableInt(R.string.campfire)         //TODO: Dynamically change the value of the placeholder's text.
 

@@ -5,4 +5,4 @@ package com.pandulapeter.campfire.integration
  *
  * TODO: Write this class
  */
-class DeepLinkManager()
+class DeepLinkManager

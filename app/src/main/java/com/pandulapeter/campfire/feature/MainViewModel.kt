@@ -18,11 +18,11 @@ class MainViewModel(userPreferenceRepository: UserPreferenceRepository, override
 
         abstract fun getFragment(): CampfireFragment<*, *>
 
-        class Home(val homeNavigationItem: HomeViewModel.HomeNavigationItem) : MainNavigationItem(VALUE_HOME + homeNavigationItem.stringValue) {
+        class Home(private val homeNavigationItem: HomeViewModel.HomeNavigationItem) : MainNavigationItem(VALUE_HOME + homeNavigationItem.stringValue) {
             override fun getFragment() = HomeFragment.newInstance(homeNavigationItem)
         }
 
-        class Detail(val songId: String, val playlistId: Int? = null) : MainNavigationItem(VALUE_DETAIL) {
+        class Detail(private val songId: String, private val playlistId: Int? = null) : MainNavigationItem(VALUE_DETAIL) {
             override fun getFragment() = DetailFragment.newInstance(songId, playlistId)
         }
 
@@ -33,7 +33,8 @@ class MainViewModel(userPreferenceRepository: UserPreferenceRepository, override
             fun fromStringValue(string: String?) = when {
                 string == null || string.isEmpty() -> null
                 string.startsWith(VALUE_HOME) -> Home(HomeViewModel.HomeNavigationItem.fromStringValue(string.removePrefix(VALUE_HOME)))
-                string.startsWith(VALUE_DETAIL) -> Detail(string.removePrefix(VALUE_DETAIL), null)//TODO: Implement playlist ID parsing.
+                string.startsWith(VALUE_DETAIL) -> Detail(string.removePrefix(VALUE_DETAIL), null)
+                // Parsing the playlistId is not implemented because there is no way to open the detail screen with a playlist (from an app shortcut) without going through the main screen.
                 else -> Home(HomeViewModel.HomeNavigationItem.Library)
             }
         }

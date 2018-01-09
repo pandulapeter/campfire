@@ -64,7 +64,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Fix a bug with updating the item decorations.
-        viewModel.shouldInvalidateItemDecorations.onEventTriggered { binding.recyclerView.run { postDelayed({ invalidateItemDecorations() }, 100) } }
+        viewModel.shouldInvalidateItemDecorations.onEventTriggered { if (isAdded) binding.recyclerView.run { postDelayed({ invalidateItemDecorations() }, 100) } }
         context?.let { context ->
             // Set up the item headers.
             binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(context) {
@@ -76,7 +76,7 @@ class HistoryFragment : SongListFragment<HistoryBinding, HistoryViewModel>(R.lay
             // Set up list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
                 binding.appBarLayout.performAfterExpand(onExpanded = {
-                    (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
+                    if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
                 })
             }
             viewModel.adapter.playlistActionClickListener = { position ->

@@ -59,7 +59,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsBinding, ManageD
         // Set up list item click listeners.
         viewModel.adapter.itemClickListener = { position ->
             binding.appBarLayout.performAfterExpand(onExpanded = {
-                (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
+                if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
             })
         }
         viewModel.shouldShowHintSnackbar.onPropertyChanged {

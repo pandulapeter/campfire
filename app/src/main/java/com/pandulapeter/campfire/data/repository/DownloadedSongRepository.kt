@@ -69,7 +69,6 @@ class DownloadedSongRepository(
         notifySubscribers(UpdateType.AllDownloadsRemoved)
     }
 
-    //TODO: It's not great that we need to know the version of the song before downloading it, but this is a backend API limitation.
     fun downloadSong(songInfo: SongInfo, onSuccess: (String) -> Unit = {}, onFailure: () -> Unit = {}) {
         dataSet[songInfo.id]?.let {
             getDownloadedSongText(songInfo.id)?.let {

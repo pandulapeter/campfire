@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListVi
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoAdapter
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel
 import com.pandulapeter.campfire.integration.AppShortcutManager
+import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.networking.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 import java.util.Collections
@@ -20,6 +21,7 @@ import java.util.Collections
  * Handles events and logic for [PlaylistFragment].
  */
 class PlaylistViewModel(analyticsManager: AnalyticsManager,
+                        deepLinkManager: DeepLinkManager,
                         songInfoRepository: SongInfoRepository,
                         downloadedSongRepository: DownloadedSongRepository,
                         appShortcutManager: AppShortcutManager,
@@ -108,6 +110,7 @@ class PlaylistViewModel(analyticsManager: AnalyticsManager,
     }
 
     fun deletePlaylist() {
+        //TODO: Also delete the app shortcut.
         playlistRepository.unsubscribe(this)
         playlistRepository.deletePlaylist(playlistId)
     }

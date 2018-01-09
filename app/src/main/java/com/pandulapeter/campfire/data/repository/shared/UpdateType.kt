@@ -71,8 +71,6 @@ sealed class UpdateType {
 
     class ShouldHideWorkInProgressUpdated(val shouldHideWorkInProgress: Boolean) : UpdateType()
 
-    class ShouldShowSongCountUpdated(val shouldShowSongCount: Boolean) : UpdateType()
-
     class SearchQueryUpdated(val searchQuery: String) : UpdateType()
 
     // Other

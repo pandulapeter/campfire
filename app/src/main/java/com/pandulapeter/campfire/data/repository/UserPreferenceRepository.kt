@@ -44,12 +44,6 @@ class UserPreferenceRepository(
             preferenceStorageManager.shouldShowWorkInProgress = new
         }
     }
-    var shouldShowSongCount by Delegates.observable(preferenceStorageManager.shouldShowSongCount) { _: KProperty<*>, old: Boolean, new: Boolean ->
-        if (old != new) {
-            notifySubscribers(UpdateType.ShouldShowSongCountUpdated(new))
-            preferenceStorageManager.shouldShowSongCount = new
-        }
-    }
     var searchQuery by Delegates.observable("") { _: KProperty<*>, old: String, new: String ->
         if (!TextUtils.equals(old, new)) {
             notifySubscribers(UpdateType.SearchQueryUpdated(new))
@@ -63,7 +57,6 @@ class UserPreferenceRepository(
         subscriber.onUpdate(UpdateType.ShouldShowDownloadedOnlyUpdated(shouldShowDownloadedOnly))
         subscriber.onUpdate(UpdateType.ShouldHideExplicitUpdated(shouldShowExplicit))
         subscriber.onUpdate(UpdateType.ShouldHideWorkInProgressUpdated(shouldShowWorkInProgress))
-        subscriber.onUpdate(UpdateType.ShouldShowSongCountUpdated(shouldShowSongCount))
         subscriber.onUpdate(UpdateType.SearchQueryUpdated(searchQuery))
     }
 }
