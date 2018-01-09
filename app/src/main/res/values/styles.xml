@@ -11,4 +11,8 @@
         <item name="colorAccent">@color/accent</item>
     </style>
 
+    <style name="SubtitleTextAppearance">
+        <item name="android:textColor">@color/subtitle_color</item>
+    </style>
+
 </resources>

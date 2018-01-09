@@ -68,14 +68,14 @@
                 android:layout_height="0dp"
                 app:layout_constraintStart_toStartOf="@id/playlist_action" />
 
+            <!-- The extra containers are needed to avoid a glitch of the ripple effect. -->
+
             <FrameLayout
                 android:id="@+id/download_action_container"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 app:visibility="@{viewModel.shouldShowDownloadButton}"
                 app:layout_constraintEnd_toEndOf="@id/space_3">
-
-                <!--TODO: Animate transition. -->
 
                 <ViewSwitcher
                     android:id="@+id/download_action_switcher"

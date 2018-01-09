@@ -32,6 +32,7 @@ class DetailViewModel(songId: String,
     val shouldShowSongOptions = ObservableBoolean()
     val shouldShowPlaylistAction = playlistId == DetailFragment.NO_PLAYLIST
     val youTubeSearchQuery = ObservableField<String>()
+    val shouldAllowToolbarScrolling = ObservableBoolean() //TODO: Enable this when the loading is successful.
     private var selectedPosition = 0
 
     init {

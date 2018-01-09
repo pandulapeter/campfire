@@ -4,6 +4,7 @@
     <!-- General -->
     <color name="accent">#FFC107</color>
     <color name="background">#303030</color>
+    <color name="subtitle_color">#c0c0c0</color>
 
     <!-- Library -->
     <color name="card_song_downloaded">#424242</color>

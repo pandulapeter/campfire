@@ -31,56 +31,58 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <android.support.v7.widget.Toolbar
+                <android.support.constraint.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/toolbar_height"
+                    android:animateLayoutChanges="true"
+                    android:clipChildren="false"
                     app:isScrollEnabled="@{viewModel.shouldAllowToolbarScrolling}">
 
-                    <android.support.constraint.ConstraintLayout
-                        android:layout_width="match_parent"
+                    <android.support.v4.widget.Space
+                        android:id="@+id/space"
+                        android:layout_width="@dimen/toolbar_first_keyline_fix"
+                        android:layout_height="0dp"
+                        app:layout_constraintEnd_toStartOf="parent" />
+
+                    <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:animateLayoutChanges="true"
-                        android:clipChildren="false">
+                        android:layout_marginStart="@dimen/first_keyline"
+                        android:contentDescription="@string/home_menu"
+                        android:onClick="@{() -> viewModel.showMenu()}"
+                        app:animation="@{R.drawable.avd_back_to_menu_24dp}"
+                        app:forcePlay="@{viewModel.shouldPlayReturnAnimation}"
+                        app:lastFrame="@{@drawable/ic_menu_24dp}"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="@id/space"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:src="@drawable/avd_menu_to_back_24dp" />
 
-                        <android.support.v4.widget.Space
-                            android:id="@+id/space"
-                            android:layout_width="@dimen/toolbar_first_keyline_fix"
-                            android:layout_height="0dp"
-                            app:layout_constraintEnd_toStartOf="parent" />
+                    <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                        android:id="@+id/clear"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@string/history_clear"
+                        android:onClick="@{() -> viewModel.onClearButtonClicked()}"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_delete_24dp"
+                        app:visibility="@{viewModel.shouldShowClearButton}" />
 
-                        <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:contentDescription="@string/home_menu"
-                            android:onClick="@{() -> viewModel.showMenu()}"
-                            app:animation="@{R.drawable.avd_back_to_menu_24dp}"
-                            app:forcePlay="@{viewModel.shouldPlayReturnAnimation}"
-                            app:lastFrame="@{@drawable/ic_menu_24dp}"
-                            app:layout_constraintStart_toStartOf="@id/space"
-                            tools:src="@drawable/avd_menu_to_back_24dp" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/content_padding"
+                        android:layout_marginStart="@dimen/second_keyline"
+                        android:text="@string/home_history"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/clear"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
-                        <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
-                            android:id="@+id/clear"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:contentDescription="@string/history_clear"
-                            android:onClick="@{() -> viewModel.onClearButtonClicked()}"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:srcCompat="@drawable/ic_delete_24dp"
-                            app:visibility="@{viewModel.shouldShowClearButton}" />
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/toolbar_second_keyline_fix"
-                            android:text="@string/home_history"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                            app:layout_constraintEnd_toStartOf="@id/clear"
-                            app:layout_constraintStart_toStartOf="parent" />
-
-                    </android.support.constraint.ConstraintLayout>
-
-                </android.support.v7.widget.Toolbar>
+                </android.support.constraint.ConstraintLayout>
 
             </android.support.design.widget.AppBarLayout>
 

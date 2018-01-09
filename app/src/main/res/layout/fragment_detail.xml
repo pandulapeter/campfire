@@ -35,74 +35,71 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                    <android.support.v7.widget.Toolbar
+                    <android.support.constraint.ConstraintLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:layout_scrollFlags="scroll|enterAlways|snap">
+                        android:layout_height="@dimen/toolbar_height"
+                        android:clipChildren="false"
+                        app:isScrollEnabled="@{viewModel.shouldAllowToolbarScrolling}">
 
-                        <android.support.constraint.ConstraintLayout
-                            android:layout_width="match_parent"
+                        <android.support.v4.widget.Space
+                            android:id="@+id/space"
+                            android:layout_width="@dimen/toolbar_first_keyline_fix"
+                            android:layout_height="0dp"
+                            app:layout_constraintEnd_toStartOf="parent" />
+
+                        <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:clipChildren="false">
+                            android:layout_marginStart="@dimen/first_keyline"
+                            android:contentDescription="@string/home_menu"
+                            android:onClick="@{() -> viewModel.navigateBack()}"
+                            app:animation="@{R.drawable.avd_menu_to_back_24dp}"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="@id/space"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:src="@drawable/avd_back_to_menu_24dp" />
 
-                            <android.support.v4.widget.Space
-                                android:id="@+id/space"
-                                android:layout_width="@dimen/toolbar_first_keyline_fix"
-                                android:layout_height="0dp"
-                                app:layout_constraintEnd_toStartOf="parent" />
+                        <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                            android:id="@+id/song_options"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@string/detail_song_options"
+                            android:onClick="@{() -> viewModel.showSongOptions()}"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:srcCompat="@drawable/ic_song_options_24dp" />
 
-                            <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:contentDescription="@string/home_menu"
-                                android:onClick="@{() -> viewModel.navigateBack()}"
-                                app:animation="@{R.drawable.avd_menu_to_back_24dp}"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintStart_toStartOf="@id/space"
-                                app:layout_constraintTop_toTopOf="parent"
-                                tools:src="@drawable/avd_back_to_menu_24dp" />
+                        <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                            android:id="@+id/playlist_action"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:contentDescription="@string/manage_playlists"
+                            android:onClick="@{() -> viewModel.onPlaylistActionClicked()}"
+                            app:animation="@{viewModel.isSongOnAnyPlaylist ? R.drawable.avd_added_to_playlists_24dp : R.drawable.avd_removed_from_playlists_24dp}"
+                            app:lastFrame="@{viewModel.isSongOnAnyPlaylist ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toStartOf="@id/song_options"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:visibility="@{viewModel.shouldShowPlaylistAction}"
+                            tools:src="@drawable/ic_playlist_24dp" />
 
-                            <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
-                                android:id="@+id/song_options"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:contentDescription="@string/detail_song_options"
-                                android:onClick="@{() -> viewModel.showSongOptions()}"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:srcCompat="@drawable/ic_song_options_24dp" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="@dimen/content_padding"
+                            android:layout_marginStart="@dimen/second_keyline"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toStartOf="@id/playlist_action"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:subtitle="@{viewModel.artist}"
+                            app:title="@{viewModel.title}"
+                            tools:text="Song title\nArtist" />
 
-                            <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
-                                android:id="@+id/playlist_action"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:contentDescription="@string/manage_playlists"
-                                android:onClick="@{() -> viewModel.onPlaylistActionClicked()}"
-                                app:animation="@{viewModel.isSongOnAnyPlaylist ? R.drawable.avd_added_to_playlists_24dp : R.drawable.avd_removed_from_playlists_24dp}"
-                                app:lastFrame="@{viewModel.isSongOnAnyPlaylist ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toStartOf="@id/song_options"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:visibility="@{viewModel.shouldShowPlaylistAction}"
-                                tools:src="@drawable/ic_playlist_24dp" />
-
-                            <android.support.v7.widget.Toolbar
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentStart="true"
-                                android:layout_centerVertical="true"
-                                android:layout_marginStart="@dimen/toolbar_in_toolbar_fix"
-                                app:layout_constraintEnd_toStartOf="@id/playlist_action"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:subtitle="@{viewModel.artist}"
-                                app:title="@{viewModel.title}"
-                                tools:subtitle="Artist"
-                                tools:title="Song" />
-
-                        </android.support.constraint.ConstraintLayout>
-
-                    </android.support.v7.widget.Toolbar>
+                    </android.support.constraint.ConstraintLayout>
 
                 </android.support.design.widget.AppBarLayout>
 

@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.shared
 
+import android.annotation.SuppressLint
 import android.databinding.BindingAdapter
 import android.graphics.drawable.Drawable
 import android.support.annotation.DrawableRes
@@ -7,11 +8,15 @@ import android.support.annotation.StringRes
 import android.support.design.widget.AppBarLayout
 import android.support.design.widget.FloatingActionButton
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat
+import android.text.Spannable
+import android.text.SpannableString
 import android.text.TextUtils
+import android.text.style.TextAppearanceSpan
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.util.drawable
 
 @BindingAdapter(value = ["android:drawableStart", "android:drawableTop", "android:drawableEnd", "android:drawableBottom"], requireAll = false)
@@ -112,4 +117,14 @@ fun setAnimation(view: ImageView, @DrawableRes drawableRes: Int, lastFrame: Draw
         }
     }
     view.tag = drawableRes
+}
+
+@SuppressLint("PrivateResource")
+@BindingAdapter(value = ["title", "subtitle"], requireAll = false)
+fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?) {
+    //TODO: Long titles or subtitles should be separately ellipsized.
+    val completeText = SpannableString("${title ?: ""}\n${subtitle ?: ""}")
+    title?.let { completeText.setSpan(TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Title), 0, it.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE) }
+    subtitle?.let { completeText.setSpan(TextAppearanceSpan(view.context, R.style.SubtitleTextAppearance), title?.length ?: 0, completeText.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE) }
+    view.text = completeText
 }

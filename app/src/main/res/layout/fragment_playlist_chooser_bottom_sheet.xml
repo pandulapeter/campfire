@@ -40,32 +40,40 @@
             <android.support.constraint.ConstraintLayout
                 android:id="@id/toolbar_container"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/toolbar_height"
                 android:clipChildren="false"
                 android:paddingTop="@dimen/content_padding">
+
+                <android.support.v4.widget.Space
+                    android:id="@+id/space"
+                    android:layout_width="@dimen/toolbar_first_keyline_fix"
+                    android:layout_height="0dp"
+                    app:layout_constraintEnd_toStartOf="parent" />
 
                 <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
                     android:id="@+id/close"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/bottom_sheet_toolbar_close_margin"
+                    android:layout_marginStart="@dimen/first_keyline"
                     android:alpha="0"
                     android:contentDescription="@string/library_close"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/space"
                     app:layout_constraintTop_toTopOf="parent"
                     app:srcCompat="@drawable/ic_close_24dp" />
 
-                <android.support.v7.widget.Toolbar
+                <TextView
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/first_keyline"
                     android:paddingEnd="@dimen/bottom_sheet_toolbar_margin"
                     android:paddingStart="0dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
                     app:subtitle="@{songInfo.artist}"
                     app:title="@{songInfo.title}"
-                    tools:subtitle="Artist"
-                    tools:title="Title" />
+                    tools:text="Song title\nArtist" />
 
             </android.support.constraint.ConstraintLayout>
 

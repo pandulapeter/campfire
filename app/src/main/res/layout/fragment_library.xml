@@ -37,7 +37,7 @@
 
                     <android.support.constraint.ConstraintLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="@dimen/toolbar_height"
                         android:animateLayoutChanges="true"
                         android:clipChildren="false"
                         app:isScrollEnabled="@{viewModel.shouldAllowToolbarScrolling}">
@@ -78,7 +78,6 @@
                             android:id="@+id/search_toggle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/toolbar_action_button_margin_fix"
                             android:contentDescription="@{viewModel.isSearchInputVisible ? @string/library_close : @string/library_search}"
                             android:onClick="@{() -> viewModel.showOrHideSearchInput()}"
                             app:animation="@{viewModel.isSearchInputVisible ? R.drawable.avd_search_to_close_24dp : R.drawable.avd_close_to_search_24dp}"
@@ -89,17 +88,20 @@
                             app:visibility="@{viewModel.isLibraryNotEmpty}"
                             tools:src="@drawable/avd_close_to_search_24dp" />
 
-                        <android.support.v7.widget.Toolbar
+                        <TextView
                             android:id="@+id/title"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/toolbar_second_keyline_fix"
+                            android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
+                            android:layout_marginStart="@dimen/second_keyline"
+                            app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toStartOf="@id/search_toggle"
                             app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
                             app:subtitle="@{viewModel.shouldDisplaySubtitle ? @string/library_song_count(viewModel.filteredItemCount) : null}"
-                            app:title="@string/home_library"
+                            app:title="@{@string/home_library}"
                             app:visibilityHide="@{!viewModel.isSearchInputVisible}"
-                            tools:subtitle="50 / 100 songs" />
+                            tools:text="Library\n50 / 100 songs" />
 
                         <android.support.v4.widget.Space
                             android:id="@+id/space_2"
@@ -111,6 +113,7 @@
                             android:id="@+id/query"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
                             android:layout_marginStart="@dimen/second_keyline"
                             android:hint="@string/library_search"
                             android:inputType="textCapWords|textFilter"

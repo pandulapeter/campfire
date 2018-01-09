@@ -7,11 +7,10 @@
     <dimen name="content_padding">8dp</dimen>
     <dimen name="large_content_padding">16dp</dimen>
     <dimen name="touch_target">48dp</dimen>
+    <dimen name="toolbar_height">56dp</dimen>
 
     <!-- Toolbar -->
     <dimen name="toolbar_first_keyline_fix">2dp</dimen>
-    <dimen name="toolbar_second_keyline_fix">56dp</dimen>
-    <dimen name="toolbar_in_toolbar_fix">40dp</dimen> <!-- second_keyline_fix - first_keyline -->
     <dimen name="toolbar_action_button_margin_fix">10dp</dimen>
     <dimen name="toolbar_action_button_padding">2dp</dimen>
     <dimen name="toolbar_action_button_extra_touch_area">16dp</dimen>

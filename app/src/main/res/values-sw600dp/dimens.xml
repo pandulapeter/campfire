@@ -4,5 +4,6 @@
     <!-- General -->
     <dimen name="first_keyline">24dp</dimen>
     <dimen name="second_keyline">80dp</dimen>
+    <dimen name="toolbar_height">64dp</dimen>
 
 </resources>
