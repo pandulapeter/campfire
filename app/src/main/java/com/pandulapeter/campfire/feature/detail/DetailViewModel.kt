@@ -4,6 +4,7 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.support.v4.app.FragmentManager
 import com.pandulapeter.campfire.data.model.Playlist
+import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -22,6 +23,7 @@ class DetailViewModel(songId: String,
                       playlistId: Int,
                       analyticsManager: AnalyticsManager,
                       userPreferenceRepository: UserPreferenceRepository,
+                      private val downloadedSongRepository: DownloadedSongRepository,
                       private val fragmentManager: FragmentManager,
                       private val playlistRepository: PlaylistRepository,
                       private val songInfoRepository: SongInfoRepository,
@@ -36,32 +38,34 @@ class DetailViewModel(songId: String,
     val shouldShowPlaylistAction = playlistId == DetailFragment.NO_PLAYLIST
     val youTubeSearchQuery = ObservableField<String>()
     val shouldShowChords = ObservableBoolean(userPreferenceRepository.shouldShowChords)
-    val shouldAllowToolbarScrolling = ObservableBoolean() //TODO: Enable this when the loading is successful.
+    val shouldAllowToolbarScrolling = ObservableBoolean()
     private var selectedPosition = 0
 
     init {
         shouldShowChords.onPropertyChanged { userPreferenceRepository.shouldShowChords = it }
-        updateToolbar(songIds[selectedPosition])
     }
 
     override fun onUpdate(updateType: UpdateType) {
-        if (updateType is UpdateType.PlaylistsUpdated
-            || updateType is UpdateType.SongRemovedFromPlaylist && updateType.songId == songIds[selectedPosition]
-            || updateType is UpdateType.SongAddedToPlaylist && updateType.songId == songIds[selectedPosition]) {
-            updatePlaylistActionIcon()
+        when (updateType) {
+            is UpdateType.PlaylistsUpdated -> updatePlaylistActionIcon()
+            is UpdateType.SongRemovedFromPlaylist -> if (updateType.songId == getSelectedSongId()) updatePlaylistActionIcon()
+            is UpdateType.SongAddedToPlaylist -> if (updateType.songId == getSelectedSongId()) updatePlaylistActionIcon()
+            is UpdateType.DownloadStarted -> if (updateType.songId == getSelectedSongId()) shouldAllowToolbarScrolling.set(false)
+            is UpdateType.DownloadSuccessful -> if (updateType.songId == getSelectedSongId()) shouldAllowToolbarScrolling.set(true)
         }
     }
+
+    fun getSelectedSongId() = songIds[selectedPosition]
 
     fun onPageSelected(position: Int) {
         selectedPosition = position
-        songIds[position].let {
-            updateToolbar(it)
-            historyRepository.addToHistory(it)
-        }
+        updateToolbar()
+        historyRepository.addToHistory(getSelectedSongId())
+        shouldAllowToolbarScrolling.set(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
     }
 
     fun onPlaylistActionClicked() {
-        val songId = songIds[selectedPosition]
+        val songId = getSelectedSongId()
         if (playlistRepository.getPlaylists().size == 1) {
             if (playlistRepository.isSongInPlaylist(Playlist.FAVORITES_ID, songId)) {
                 playlistRepository.removeSongFromPlaylist(Playlist.FAVORITES_ID, songId)
@@ -78,13 +82,13 @@ class DetailViewModel(songId: String,
     fun showSongOptions() = shouldShowSongOptions.set(true)
 
     fun onPlayOnYouTubeClicked() {
-        songInfoRepository.getSongInfo(songIds[selectedPosition])?.let {
+        songInfoRepository.getSongInfo(getSelectedSongId())?.let {
             youTubeSearchQuery.set("${it.artist} - ${it.title}")
         }
     }
 
-    private fun updateToolbar(songId: String) {
-        songInfoRepository.getSongInfo(songId)?.let {
+    private fun updateToolbar() {
+        songInfoRepository.getSongInfo(getSelectedSongId())?.let {
             title.set(it.title)
             artist.set(it.artist)
             updatePlaylistActionIcon()
@@ -92,6 +96,6 @@ class DetailViewModel(songId: String,
     }
 
     private fun updatePlaylistActionIcon() {
-        isSongOnAnyPlaylist.set(playlistRepository.isSongInAnyPlaylist(songIds[selectedPosition]))
+        isSongOnAnyPlaylist.set(playlistRepository.isSongInAnyPlaylist(getSelectedSongId()))
     }
 }

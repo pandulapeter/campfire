@@ -20,12 +20,8 @@ class SongPageViewModel(private val id: String,
                         userPreferenceRepository: UserPreferenceRepository) : CampfireViewModel(analyticsManager), Subscriber {
     val text = ObservableField("")
     val shouldShowChords = ObservableBoolean(userPreferenceRepository.shouldShowChords)
-    val shouldShowPlaceholder = ObservableBoolean(false)
+    val shouldShowPlaceholder = ObservableBoolean()
     val isLoading = ObservableBoolean(downloadedSongRepository.isSongLoading(id))
-
-    init {
-        loadSong()
-    }
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
@@ -43,7 +39,7 @@ class SongPageViewModel(private val id: String,
     }
 
     fun loadSong() {
-        //TODO: Might be better to use the observer patternt instead of passing the lambda.
+        //TODO: Might be better to use the observer pattern instead of passing the lambda.
         songInfoRepository.getLibrarySongs().find { it.id == id }?.let { songInfo ->
             downloadedSongRepository.downloadSong(
                 songInfo = songInfo,

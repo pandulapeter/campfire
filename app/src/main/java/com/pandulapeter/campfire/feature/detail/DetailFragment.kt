@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
@@ -38,10 +39,11 @@ import javax.inject.Inject
 class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout.fragment_detail) {
     @Inject lateinit var songInfoRepository: SongInfoRepository
     @Inject lateinit var historyRepository: HistoryRepository
+    @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
-    override val viewModel by lazy { DetailViewModel(arguments.songId, arguments.playlistId, analyticsManager, userPreferenceRepository, childFragmentManager, playlistRepository, songInfoRepository, historyRepository) }
+    override val viewModel by lazy { DetailViewModel(arguments.songId, arguments.playlistId, analyticsManager, userPreferenceRepository, downloadedSongRepository, childFragmentManager, playlistRepository, songInfoRepository, historyRepository) }
     private var isBackAnimationInProgress = false
     private lateinit var transposeHigherMenuItem: MenuItem
     private lateinit var transposeLowerMenuItem: MenuItem
@@ -51,12 +53,11 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         // Setup the view pager.
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
 
-            override fun onPageScrollStateChanged(state: Int) = Unit
+            override fun onPageScrollStateChanged(state: Int) = binding.appBarLayout.setExpanded(true, true)
 
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) = Unit
 
             override fun onPageSelected(position: Int) {
-                binding.appBarLayout.setExpanded(true, true)
                 viewModel.onPageSelected(position)
                 firstTimeUserExperienceRepository.shouldShowDetailSwipeHint = false
                 dismissHintSnackbar()
@@ -121,11 +122,13 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     override fun onStart() {
         super.onStart()
         playlistRepository.subscribe(viewModel)
+        downloadedSongRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
         playlistRepository.unsubscribe(viewModel)
+        downloadedSongRepository.unsubscribe(viewModel)
     }
 
     private fun updateTransposeSectionState(isEnabled: Boolean) {

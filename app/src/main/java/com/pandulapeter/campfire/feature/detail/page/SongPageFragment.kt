@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.detail.page
 
 import android.os.Bundle
+import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SongPageBinding
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
@@ -20,6 +21,11 @@ class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.
     @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
     @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
     override val viewModel by lazy { SongPageViewModel(arguments.songId, analyticsManager, songInfoRepository, downloadedSongRepository, userPreferenceRepository) }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModel.loadSong()
+    }
 
     override fun onStart() {
         super.onStart()
