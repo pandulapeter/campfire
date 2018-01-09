@@ -42,15 +42,13 @@
                 android:layout_height="wrap_content"
                 android:paddingTop="@dimen/content_padding">
 
-                <ImageView
+                <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
                     android:id="@+id/close"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/bottom_sheet_toolbar_close_margin"
                     android:alpha="0"
-                    android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/library_close"
-                    android:padding="@dimen/toolbar_action_button_padding"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"

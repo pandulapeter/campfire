@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature.home.history
 
 import android.os.Bundle
-import android.support.design.widget.CoordinatorLayout
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
@@ -16,7 +15,7 @@ import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.library.HeaderItemDecoration
 import com.pandulapeter.campfire.feature.home.library.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
-import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
+import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.performAfterExpand

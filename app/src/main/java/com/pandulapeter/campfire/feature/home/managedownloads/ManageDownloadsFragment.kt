@@ -10,7 +10,7 @@ import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceReposito
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.shared.songlistfragment.SongListFragment
-import com.pandulapeter.campfire.feature.shared.AlertDialogFragment
+import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.performAfterExpand

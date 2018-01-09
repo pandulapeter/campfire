@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.shared
+package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.app.Dialog
 import android.os.Bundle
@@ -7,6 +7,7 @@ import android.support.v4.app.DialogFragment
 import android.support.v4.app.FragmentManager
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatDialogFragment
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.setArguments
 
@@ -18,7 +19,7 @@ class AlertDialogFragment : AppCompatDialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         context?.let { context ->
             arguments?.let { arguments ->
-                return AlertDialog.Builder(context)
+                return AlertDialog.Builder(context, R.style.AlertDialog)
                     .setTitle(arguments.title)
                     .setMessage(arguments.message)
                     .setPositiveButton(arguments.positiveButton, { _, _ -> getOnDialogItemsSelectedListener()?.onPositiveButtonSelected() })

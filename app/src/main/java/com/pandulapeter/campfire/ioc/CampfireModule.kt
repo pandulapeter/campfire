@@ -12,7 +12,7 @@ import com.pandulapeter.campfire.feature.home.managedownloads.ManageDownloadsFra
 import com.pandulapeter.campfire.feature.home.manageplaylists.ManagePlaylistsFragment
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
-import com.pandulapeter.campfire.feature.shared.NewPlaylistDialogFragment
+import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
 

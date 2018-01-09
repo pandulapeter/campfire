@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.shared
+package com.pandulapeter.campfire.feature.shared.widget
 
 import android.content.Context
 import android.databinding.DataBindingUtil

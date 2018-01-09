@@ -7,7 +7,6 @@ import android.support.annotation.StringRes
 import android.support.design.widget.AppBarLayout
 import android.support.design.widget.FloatingActionButton
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat
-import android.support.v7.widget.Toolbar
 import android.text.TextUtils
 import android.view.View
 import android.widget.EditText
@@ -63,9 +62,14 @@ fun setDrawable(view: ImageView, @DrawableRes drawable: Int?) {
     }
 }
 
-@BindingAdapter("android:visibility")
+@BindingAdapter("visibility")
 fun setVisibility(view: View, isVisible: Boolean) {
     view.visibility = if (isVisible) View.VISIBLE else View.GONE
+}
+
+@BindingAdapter("visibilityHide")
+fun setVisibilityHide(view: View, isVisible: Boolean) {
+    view.visibility = if (isVisible) View.VISIBLE else View.INVISIBLE
 }
 
 @BindingAdapter("visibility")
@@ -79,7 +83,7 @@ fun setVisibility(view: FloatingActionButton, isVisible: Boolean) {
 }
 
 @BindingAdapter("isScrollEnabled")
-fun setScrollEnabled(view: Toolbar, isScrollEnabled: Boolean) {
+fun setScrollEnabled(view: View, isScrollEnabled: Boolean) {
     (view.layoutParams as AppBarLayout.LayoutParams).scrollFlags = if (isScrollEnabled) {
         AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS or AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
     } else {

@@ -46,13 +46,11 @@
                             android:layout_height="0dp"
                             app:layout_constraintEnd_toStartOf="parent" />
 
-                        <ImageView
+                        <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:background="?attr/selectableItemBackgroundBorderless"
                             android:contentDescription="@string/home_menu"
                             android:onClick="@{() -> viewModel.showMenu()}"
-                            android:padding="@dimen/toolbar_action_button_padding"
                             app:animation="@{R.drawable.avd_back_to_menu_24dp}"
                             app:forcePlay="@{viewModel.shouldPlayReturnAnimation}"
                             app:lastFrame="@{@drawable/ic_menu_24dp}"
@@ -61,21 +59,18 @@
                             app:layout_constraintTop_toTopOf="parent"
                             tools:src="@drawable/avd_menu_to_back_24dp" />
 
-                        <ImageView
+                        <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
                             android:id="@+id/edit_mode_toggle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
-                            android:background="?attr/selectableItemBackgroundBorderless"
                             android:contentDescription="@{viewModel.isInEditMode ? @string/playlist_done : @string/playlist_edit}"
                             android:onClick="@{() -> viewModel.toggleEditMode()}"
-                            android:padding="@dimen/toolbar_action_button_padding"
-                            android:visibility="@{viewModel.shouldDisplayEditButton}"
                             app:animation="@{viewModel.isInEditMode ? R.drawable.avd_edit_to_done_24dp : R.drawable.avd_done_to_edit_24dp}"
                             app:lastFrame="@{viewModel.isInEditMode ? @drawable/ic_done_24dp : @drawable/ic_edit_24dp}"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
+                            app:visibility="@{viewModel.shouldDisplayEditButton}"
                             tools:src="@drawable/avd_done_to_edit_24dp" />
 
                         <ViewSwitcher
@@ -92,20 +87,17 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content">
 
-                                <ImageView
+                                <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
                                     android:id="@+id/delete"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
-                                    android:background="?attr/selectableItemBackgroundBorderless"
                                     android:contentDescription="@string/playlist_delete"
                                     android:onClick="@{() -> viewModel.onDeleteButtonClicked()}"
-                                    android:padding="@dimen/toolbar_action_button_padding"
-                                    android:visibility="@{viewModel.shouldAllowDeleteButton}"
                                     app:layout_constraintBottom_toBottomOf="parent"
                                     app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintTop_toTopOf="parent"
-                                    app:srcCompat="@drawable/ic_delete_24dp" />
+                                    app:srcCompat="@drawable/ic_delete_24dp"
+                                    app:visibility="@{viewModel.shouldAllowDeleteButton}" />
 
                                 <android.support.v4.widget.Space
                                     android:id="@+id/space_2"
@@ -123,11 +115,11 @@
                                     android:maxLines="1"
                                     android:text="@={viewModel.editedTitle}"
                                     android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                                    android:visibility="@{viewModel.shouldAllowDeleteButton}"
                                     app:layout_constraintBottom_toBottomOf="parent"
                                     app:layout_constraintEnd_toStartOf="@id/delete"
                                     app:layout_constraintStart_toStartOf="@id/space_2"
-                                    app:layout_constraintTop_toTopOf="parent" />
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:visibility="@{viewModel.shouldAllowDeleteButton}" />
 
                                 <TextView
                                     android:layout_width="0dp"
@@ -136,11 +128,11 @@
                                     android:maxLines="1"
                                     android:text="@{viewModel.title}"
                                     android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                                    android:visibility="@{!viewModel.shouldAllowDeleteButton}"
                                     app:layout_constraintBottom_toBottomOf="parent"
                                     app:layout_constraintEnd_toStartOf="@id/delete"
                                     app:layout_constraintStart_toStartOf="parent"
                                     app:layout_constraintTop_toTopOf="parent"
+                                    app:visibility="@{!viewModel.shouldAllowDeleteButton}"
                                     tools:text="Favorites"
                                     tools:visibility="gone" />
 
@@ -150,20 +142,17 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent">
 
-                                <ImageView
+                                <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
                                     android:id="@+id/share"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
-                                    android:background="?attr/selectableItemBackgroundBorderless"
                                     android:contentDescription="@string/playlist_share"
                                     android:onClick="@{() -> viewModel.onShareButtonClicked()}"
-                                    android:padding="@dimen/toolbar_action_button_padding"
-                                    android:visibility="@{viewModel.shouldShowPlayButton}"
                                     app:layout_constraintBottom_toBottomOf="parent"
                                     app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintTop_toTopOf="parent"
-                                    app:srcCompat="@drawable/ic_share_24dp" />
+                                    app:srcCompat="@drawable/ic_share_24dp"
+                                    app:visibility="@{viewModel.shouldShowPlayButton}" />
 
                                 <TextView
                                     android:layout_width="0dp"
@@ -200,14 +189,14 @@
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 tools:listitem="@layout/item_song_info" />
 
-            <com.pandulapeter.campfire.feature.home.shared.PlaceholderView
+            <com.pandulapeter.campfire.feature.shared.widget.PlaceholderView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:onClick="@{() -> viewModel.navigateToLibrary()}"
-                android:visibility="@{viewModel.shouldShowPlaceholder}"
                 app:buttonText="@string/go_to_library"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
-                app:text="@string/playlist_placeholder" />
+                app:text="@string/playlist_placeholder"
+                app:visibility="@{viewModel.shouldShowPlaceholder}" />
 
             <android.support.design.widget.FloatingActionButton
                 android:layout_width="wrap_content"

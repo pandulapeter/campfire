@@ -14,6 +14,7 @@
     <dimen name="toolbar_in_toolbar_fix">40dp</dimen> <!-- second_keyline_fix - first_keyline -->
     <dimen name="toolbar_action_button_margin_fix">10dp</dimen>
     <dimen name="toolbar_action_button_padding">2dp</dimen>
+    <dimen name="toolbar_action_button_extra_touch_area">16dp</dimen>
 
     <!-- Fixes -->
     <dimen name="edit_text_fix">4dp</dimen>

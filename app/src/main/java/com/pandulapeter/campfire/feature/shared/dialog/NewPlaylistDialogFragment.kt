@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.shared
+package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.databinding.DataBindingUtil
 import android.os.Bundle
