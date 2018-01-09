@@ -26,7 +26,6 @@ class AppBarButton @JvmOverloads constructor(context: Context, attrs: AttributeS
         context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true)
         setBackgroundResource(outValue.resourceId)
         post {
-            layoutParams = (layoutParams as ViewGroup.MarginLayoutParams).apply { marginEnd = context.dimension(R.dimen.toolbar_action_button_margin_fix) }
             (parent as View).let { parent ->
                 val extraTouchArea = context.dimension(R.dimen.toolbar_action_button_extra_touch_area)
                 val bounds = Rect()
@@ -41,6 +40,11 @@ class AppBarButton @JvmOverloads constructor(context: Context, attrs: AttributeS
                 }
             }
         }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        layoutParams = (layoutParams as ViewGroup.MarginLayoutParams).apply { marginEnd = context.dimension(R.dimen.toolbar_action_button_margin_fix) }
     }
 
     private inner class TouchDelegateComposite(view: View) : TouchDelegate(Rect(), view) {

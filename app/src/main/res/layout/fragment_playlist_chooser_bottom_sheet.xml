@@ -24,7 +24,8 @@
             android:id="@+id/fake_app_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background">
+            android:background="@color/background"
+            android:clipChildren="false">
 
             <View
                 android:id="@+id/background"
@@ -40,6 +41,7 @@
                 android:id="@id/toolbar_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:clipChildren="false"
                 android:paddingTop="@dimen/content_padding">
 
                 <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
