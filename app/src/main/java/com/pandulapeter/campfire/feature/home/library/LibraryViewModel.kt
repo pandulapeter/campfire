@@ -43,32 +43,43 @@ class LibraryViewModel(analyticsManager: AnalyticsManager,
     val isSortedByTitle = ObservableBoolean(userPreferenceRepository.isSortedByTitle)
     val languageFilters = ObservableField(HashMap<Language, ObservableBoolean>())
     val shouldAllowToolbarScrolling = ObservableBoolean()
+    val shouldShowPlaceholderButton = ObservableBoolean(true)
     val filteredItemCount = ObservableField("")
     val isLibraryNotEmpty = ObservableBoolean(songInfoRepository.getLibrarySongs().isNotEmpty())
-    val placeholderText = ObservableInt(R.string.campfire)         //TODO: Dynamically change the value of the placeholder's text.
+    val placeholderText = ObservableInt(R.string.library_placeholder_loading)
+    val placeholderButtonText = ObservableInt(R.string.try_again)
+    private var itemCountWithoutSearchFilter = 0
 
     init {
         isSearchInputVisible.onPropertyChanged {
             if (it) searchQuery.set("") else userPreferenceRepository.searchQuery = ""
             updateShouldAllowToolbarScrolling(adapter.items.isNotEmpty())
         }
-        searchQuery.onPropertyChanged { userPreferenceRepository.searchQuery = it }
+        searchQuery.onPropertyChanged {
+            updatePlaceholderState()
+            userPreferenceRepository.searchQuery = it
+        }
         shouldShowDownloadedOnly.onPropertyChanged { userPreferenceRepository.shouldShowDownloadedOnly = it }
         shouldShowExplicit.onPropertyChanged { userPreferenceRepository.shouldShowExplicit = it }
         shouldShowWorkInProgress.onPropertyChanged { userPreferenceRepository.shouldShowWorkInProgress = it }
         isSortedByTitle.onPropertyChanged { userPreferenceRepository.isSortedByTitle = it }
+        isLoading.onPropertyChanged { if (it || songInfoRepository.getLibrarySongs().isEmpty()) updatePlaceholderState() }
+        isSearchInputVisible.onPropertyChanged { updatePlaceholderState() }
         appShortcutManager.onLibraryOpened()
+        updatePlaceholderState()
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
         val librarySongs = songInfoRepository.getLibrarySongs()
-        val filteredItems = librarySongs
+        val preFilteredItems = librarySongs
             .filterWorkInProgress()
             .filterExplicit()
             .filterByLanguages()
             .filterDownloaded()
+        val filteredItems = preFilteredItems
             .filterByQuery()
             .sort()
+        itemCountWithoutSearchFilter = preFilteredItems.size
         isLibraryNotEmpty.set(librarySongs.isNotEmpty())
         filteredItemCount.set(if (filteredItems.size == librarySongs.size) "${filteredItems.size}" else "${filteredItems.size} / ${librarySongs.size}")
         return filteredItems.map { songInfo ->
@@ -126,9 +137,21 @@ class LibraryViewModel(analyticsManager: AnalyticsManager,
     override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         super.onUpdateDone(items, updateType)
         updateShouldAllowToolbarScrolling(items.isNotEmpty())
+        updatePlaceholderState()
     }
 
-    fun forceRefresh() = songInfoRepository.updateDataSet { shouldShowErrorSnackbar.set(true) }
+    fun forceRefresh() {
+        if (!isLoading.get()) {
+            updatePlaceholderState()
+            songInfoRepository.updateDataSet { if (adapter.itemCount > 0) shouldShowErrorSnackbar.set(true) }
+        }
+    }
+
+    fun onPlaceholderButtonClicked() = when (placeholderButtonText.get()) {
+        R.string.try_again -> forceRefresh()
+        R.string.library_view_options -> showViewOptions()
+        else -> Unit
+    }
 
     fun showOrHideSearchInput() = isSearchInputVisible.toggle()
 
@@ -142,6 +165,20 @@ class LibraryViewModel(analyticsManager: AnalyticsManager,
         }
 
     fun getHeaderTitle(position: Int) = (if (isSortedByTitle.get()) adapter.items[position].songInfo.titleWithSpecialCharactersRemoved[0] else adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0]).toString().toUpperCase()
+
+    private fun updatePlaceholderState() {
+        if (shouldShowPlaceholder.get()) {
+            val isLibraryInitialized = songInfoRepository.getLibrarySongs().isNotEmpty()
+            placeholderText.set(when {
+                isLoading.get() && !isLibraryInitialized -> R.string.library_placeholder_loading
+                !isLibraryInitialized -> R.string.library_placeholder_loading_failed
+                itemCountWithoutSearchFilter > 0 -> R.string.library_placeholder_search
+                else -> R.string.library_placeholder_filters
+            })
+            shouldShowPlaceholderButton.set((!isLoading.get() && !isLibraryInitialized) || placeholderText.get() == R.string.library_placeholder_filters)
+            placeholderButtonText.set(if (placeholderText.get() == R.string.library_placeholder_filters) R.string.library_view_options else R.string.try_again)
+        }
+    }
 
     private fun updateShouldAllowToolbarScrolling(isAdapterNotEmpty: Boolean) = shouldAllowToolbarScrolling.set(if (isSearchInputVisible.get()) false else isAdapterNotEmpty)
 

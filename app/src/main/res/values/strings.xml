@@ -6,6 +6,7 @@
     <string name="work_in_progress">Work in progress</string>
     <string name="got_it">Got it</string>
     <string name="go_to_library">Go to Library</string>
+    <string name="try_again">Try again</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
 
@@ -16,7 +17,6 @@
     <string name="new_version_available">New version available</string>
     <string name="library_new">New</string>
     <string name="song_item_song_download_failed">%s cannot be downloaded.</string>
-    <string name="song_item_try_again">Try again</string>
 
     <!-- Supported languages -->
     <string name="language_english">English</string>
@@ -37,6 +37,10 @@
     <string name="home_manage_downloads">Manage downloads</string>
 
     <!-- Library screen -->
+    <string name="library_placeholder_loading">Loading song library. This shouldn\'t take long…</string>
+    <string name="library_placeholder_loading_failed">Something went wrong while loading the library data.</string>
+    <string name="library_placeholder_search">No results found.</string>
+    <string name="library_placeholder_filters">No matching songs in the library. Double-check the filters you set up.</string>
     <string name="library_update_error">Error updating library.</string>
     <string name="library_try_again">Try again</string>
     <string name="library_search">Search</string>

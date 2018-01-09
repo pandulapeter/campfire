@@ -1,13 +1,12 @@
 package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.SongInfo
-
-import com.pandulapeter.campfire.networking.NetworkManager
 import com.pandulapeter.campfire.data.repository.shared.Repository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.data.storage.DataStorageManager
 import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
+import com.pandulapeter.campfire.networking.NetworkManager
 import com.pandulapeter.campfire.util.enqueueCall
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
@@ -24,7 +23,9 @@ class SongInfoRepository(
         languageRepository.updateLanguages(getLibrarySongs())
         dataStorageManager.songInfoCache = new
     }
-    var isLoading by Delegates.observable(false) { _: KProperty<*>, old: Boolean, new: Boolean -> if (old != new) notifySubscribers(UpdateType.LoadingStateChanged(new)) }
+    var isLoading by Delegates.observable(false) { _: KProperty<*>, old: Boolean, new: Boolean ->
+        if (old != new) notifySubscribers(UpdateType.LoadingStateChanged(new))
+    }
 
     init {
         if (!isLoading && System.currentTimeMillis() - preferenceStorageManager.lastUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
@@ -47,8 +48,8 @@ class SongInfoRepository(
         isLoading = true
         networkManager.service.getLibrary().enqueueCall(
             onSuccess = {
-                isLoading = false
                 dataSet = it.associateBy { it.id }
+                isLoading = false
                 preferenceStorageManager.lastUpdateTimestamp = System.currentTimeMillis()
                 notifySubscribers(UpdateType.LibraryCacheUpdated(getLibrarySongs()))
             },

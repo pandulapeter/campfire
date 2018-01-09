@@ -47,6 +47,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) = Unit
 
             override fun onPageSelected(position: Int) {
+                binding.appBarLayout.setExpanded(true, true)
                 viewModel.onPageSelected(position)
                 firstTimeUserExperienceRepository.shouldShowDetailSwipeHint = false
                 dismissHintSnackbar()

@@ -56,7 +56,7 @@ abstract class SongListFragment<B : ViewDataBinding, out VM : SongListViewModel>
                 it?.let { songInfo ->
                     if (isAdded) {
                         getCoordinatorLayout().showSnackbar(message = getString(R.string.song_item_song_download_failed, songInfo.title),
-                            actionButton = R.string.song_item_try_again,
+                            actionButton = R.string.try_again,
                             action = { viewModel.downloadSong(songInfo) })
                     }
                 }

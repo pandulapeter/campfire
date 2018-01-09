@@ -96,6 +96,23 @@
                         app:srcCompat="@drawable/ic_share_24dp"
                         app:visibility="@{!viewModel.isInEditMode &amp;&amp; viewModel.shouldDisplayEditButton &amp;&amp; viewModel.shouldShowPlayButton }" />
 
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/content_padding"
+                        android:layout_marginStart="@dimen/second_keyline"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@{viewModel.title}"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/share"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:visibility="@{!viewModel.isInEditMode || !viewModel.shouldAllowDeleteButton}"
+                        tools:text="Favorites"
+                        tools:visibility="gone" />
+
                     <android.support.v4.widget.Space
                         android:id="@+id/space_2"
                         android:layout_width="@dimen/edit_text_fix"
@@ -119,23 +136,6 @@
                         app:layout_constraintStart_toStartOf="@id/space_2"
                         app:layout_constraintTop_toTopOf="parent"
                         app:visibility="@{viewModel.shouldAllowDeleteButton &amp;&amp; viewModel.isInEditMode}" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/content_padding"
-                        android:layout_marginStart="@dimen/second_keyline"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:text="@{viewModel.title}"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@id/share"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:visibility="@{!viewModel.isInEditMode || !viewModel.shouldAllowDeleteButton}"
-                        tools:text="Favorites"
-                        tools:visibility="gone" />
 
                 </android.support.constraint.ConstraintLayout>
 

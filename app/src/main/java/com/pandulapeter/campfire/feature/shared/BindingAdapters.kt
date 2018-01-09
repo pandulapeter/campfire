@@ -72,11 +72,6 @@ fun setVisibility(view: View, isVisible: Boolean) {
     view.visibility = if (isVisible) View.VISIBLE else View.GONE
 }
 
-@BindingAdapter("visibilityHide")
-fun setVisibilityHide(view: View, isVisible: Boolean) {
-    view.visibility = if (isVisible) View.VISIBLE else View.INVISIBLE
-}
-
 @BindingAdapter("visibility")
 fun setVisibility(view: FloatingActionButton, isVisible: Boolean) {
     if (isVisible) {
