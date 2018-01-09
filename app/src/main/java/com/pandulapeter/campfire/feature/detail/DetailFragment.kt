@@ -4,13 +4,16 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewPager
+import android.view.MenuItem
 import android.view.View
+import android.widget.CompoundButton
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
@@ -18,8 +21,11 @@ import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.disableScrollbars
 import com.pandulapeter.campfire.util.onEventTriggered
+import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.performAfterExpand
 import com.pandulapeter.campfire.util.setArguments
+import com.pandulapeter.campfire.util.setupWithBackingField
+import com.pandulapeter.campfire.util.toggle
 import javax.inject.Inject
 
 
@@ -32,10 +38,13 @@ import javax.inject.Inject
 class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout.fragment_detail) {
     @Inject lateinit var songInfoRepository: SongInfoRepository
     @Inject lateinit var historyRepository: HistoryRepository
+    @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
     @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
-    override val viewModel by lazy { DetailViewModel(arguments.songId, arguments.playlistId, analyticsManager, childFragmentManager, playlistRepository, songInfoRepository, historyRepository) }
+    override val viewModel by lazy { DetailViewModel(arguments.songId, arguments.playlistId, analyticsManager, userPreferenceRepository, childFragmentManager, playlistRepository, songInfoRepository, historyRepository) }
     private var isBackAnimationInProgress = false
+    private lateinit var transposeHigherMenuItem: MenuItem
+    private lateinit var transposeLowerMenuItem: MenuItem
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -64,10 +73,16 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             }
         }
         // Set up the side navigation drawer.
+        transposeHigherMenuItem = binding.navigationView.menu.findItem(R.id.transpose_higher)
+        transposeLowerMenuItem = binding.navigationView.menu.findItem(R.id.transpose_lower)
+        updateTransposeSectionState(viewModel.shouldShowChords.get())
+        viewModel.shouldShowChords.onPropertyChanged { updateTransposeSectionState(it) }
+        (binding.navigationView.menu.findItem(R.id.show_chords).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowChords)
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { binding.appBarLayout.setExpanded(true, true) })
         binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
+                R.id.show_chords -> consume { viewModel.shouldShowChords.toggle() }
                 R.id.play_on_youtube -> consume { viewModel.onPlayOnYouTubeClicked() }
                 else -> false
             }
@@ -111,6 +126,11 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     override fun onStop() {
         super.onStop()
         playlistRepository.unsubscribe(viewModel)
+    }
+
+    private fun updateTransposeSectionState(isEnabled: Boolean) {
+        transposeHigherMenuItem.isEnabled = isEnabled
+        transposeLowerMenuItem.isEnabled = isEnabled
     }
 
     companion object {

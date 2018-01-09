@@ -16,6 +16,7 @@ import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v7.content.res.AppCompatResources
+import android.widget.CompoundButton
 import com.pandulapeter.campfire.data.model.Language
 import retrofit2.Call
 import retrofit2.Callback
@@ -76,6 +77,12 @@ inline fun <T> ObservableField<T>.onPropertyChanged(crossinline callback: (T) ->
             callback(get())
         }
     })
+}
+
+fun CompoundButton.setupWithBackingField(backingField: ObservableBoolean, shouldNegate: Boolean = false) {
+    isChecked = backingField.get().let { if (shouldNegate) !it else it }
+    setOnCheckedChangeListener { _, isChecked -> backingField.set(if (shouldNegate) !isChecked else isChecked) }
+    backingField.onPropertyChanged { isChecked = if (shouldNegate) !it else it }
 }
 
 fun <T> Call<T>.enqueueCall(onSuccess: (T) -> Unit, onFailure: () -> Unit) {

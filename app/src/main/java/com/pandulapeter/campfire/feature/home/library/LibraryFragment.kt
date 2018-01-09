@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.performAfterExpand
+import com.pandulapeter.campfire.util.setupWithBackingField
 import com.pandulapeter.campfire.util.showKeyboard
 import com.pandulapeter.campfire.util.toggle
 import javax.inject.Inject
@@ -167,12 +168,6 @@ class LibraryFragment : SongListFragment<LibraryBinding, LibraryViewModel>(R.lay
             return true
         }
         return false
-    }
-
-    private fun CompoundButton.setupWithBackingField(backingField: ObservableBoolean, shouldNegate: Boolean = false) {
-        isChecked = backingField.get().let { if (shouldNegate) !it else it }
-        setOnCheckedChangeListener { _, isChecked -> backingField.set(if (shouldNegate) !isChecked else isChecked) }
-        backingField.onPropertyChanged { isChecked = if (shouldNegate) !it else it }
     }
 
     private fun updateDrawerLockMode(shouldAllowViewOptions: Boolean) = binding.drawerLayout.setDrawerLockMode(if (shouldAllowViewOptions) DrawerLayout.LOCK_MODE_UNDEFINED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
