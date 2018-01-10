@@ -22,7 +22,7 @@ sealed class UpdateType {
 
     class DownloadStarted(val songId: String) : UpdateType()
 
-    class DownloadSuccessful(val songId: String) : UpdateType()
+    class DownloadSuccessful(val songId: String, val song: String) : UpdateType()
 
     class DownloadFailed(val songId: String) : UpdateType()
 

@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire
 
-import com.pandulapeter.campfire.ioc.app.DaggerAppComponent
+import com.pandulapeter.campfire.inversionOfControl.app.DaggerAppComponent
 import dagger.android.AndroidInjector
 import dagger.android.support.DaggerApplication
 

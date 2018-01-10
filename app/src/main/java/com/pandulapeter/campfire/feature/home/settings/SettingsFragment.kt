@@ -2,13 +2,13 @@ package com.pandulapeter.campfire.feature.home.settings
 
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SettingsBinding
-import com.pandulapeter.campfire.feature.home.playlist.PlaylistViewModel
-import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildFragment
+import com.pandulapeter.campfire.feature.home.playlist.PlaylistViewModelInfo
+import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildFragment
 
 /**
  * Allows the user to change the global settings of the app.
  *
- * Controlled by [PlaylistViewModel].
+ * Controlled by [PlaylistViewModelInfo].
  */
 class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R.layout.fragment_settings) {
 

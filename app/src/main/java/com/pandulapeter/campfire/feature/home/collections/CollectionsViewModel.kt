@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.feature.home.collections
 
 import android.databinding.ObservableBoolean
-import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildViewModel
+import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildViewModel
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.networking.AnalyticsManager
 

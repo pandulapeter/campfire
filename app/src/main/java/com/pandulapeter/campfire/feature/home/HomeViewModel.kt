@@ -9,13 +9,13 @@ import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
-import com.pandulapeter.campfire.feature.home.history.HistoryFragment
-import com.pandulapeter.campfire.feature.home.library.LibraryFragment
-import com.pandulapeter.campfire.feature.home.managedownloads.ManageDownloadsFragment
-import com.pandulapeter.campfire.feature.home.manageplaylists.ManagePlaylistsFragment
-import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
+import com.pandulapeter.campfire.feature.home.history.HistoryFragmentInfo
+import com.pandulapeter.campfire.feature.home.library.LibraryFragmentInfo
+import com.pandulapeter.campfire.feature.home.manageDownloads.ManageDownloadsFragmentInfo
+import com.pandulapeter.campfire.feature.home.managePlaylists.ManagePlaylistsFragment
+import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragmentInfo
 import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
-import com.pandulapeter.campfire.feature.home.shared.homefragment.HomeChildFragment
+import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.networking.AnalyticsManager
@@ -75,7 +75,7 @@ class HomeViewModel(analyticsManager: AnalyticsManager,
         abstract fun getFragment(): HomeChildFragment<*, *>
 
         object Library : HomeNavigationItem(VALUE_LIBRARY) {
-            override fun getFragment() = LibraryFragment()
+            override fun getFragment() = LibraryFragmentInfo()
         }
 
         object Collections : HomeNavigationItem(VALUE_COLLECTIONS) {
@@ -83,7 +83,7 @@ class HomeViewModel(analyticsManager: AnalyticsManager,
         }
 
         object History : HomeNavigationItem(VALUE_HISTORY) {
-            override fun getFragment() = HistoryFragment()
+            override fun getFragment() = HistoryFragmentInfo()
         }
 
         object Settings : HomeNavigationItem(VALUE_SETTINGS) {
@@ -91,7 +91,7 @@ class HomeViewModel(analyticsManager: AnalyticsManager,
         }
 
         class Playlist(@SerializedName("id") val id: Int) : HomeNavigationItem(VALUE_PLAYLIST + id) {
-            override fun getFragment() = PlaylistFragment.newInstance(id)
+            override fun getFragment() = PlaylistFragmentInfo.newInstance(id)
         }
 
         object ManagePlaylists : HomeNavigationItem(VALUE_MANAGE_PLAYLISTS) {
@@ -99,7 +99,7 @@ class HomeViewModel(analyticsManager: AnalyticsManager,
         }
 
         object ManageDownloads : HomeNavigationItem(VALUE_MANAGE_DOWNLOADS) {
-            override fun getFragment() = ManageDownloadsFragment()
+            override fun getFragment() = ManageDownloadsFragmentInfo()
         }
 
         companion object {

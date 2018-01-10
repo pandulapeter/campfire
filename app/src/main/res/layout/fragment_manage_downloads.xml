@@ -8,7 +8,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.managedownloads.ManageDownloadsViewModel" />
+            type="com.pandulapeter.campfire.feature.home.manageDownloads.ManageDownloadsViewModelInfo" />
 
         <import type="com.pandulapeter.campfire.R" />
 

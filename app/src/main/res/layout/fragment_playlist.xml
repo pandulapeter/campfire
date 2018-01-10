@@ -8,7 +8,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.playlist.PlaylistViewModel" />
+            type="com.pandulapeter.campfire.feature.home.playlist.PlaylistViewModelInfo" />
 
         <import type="com.pandulapeter.campfire.R" />
 

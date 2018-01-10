@@ -8,7 +8,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.shared.songlistfragment.list.SongInfoViewModel" />
+            type="com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoViewModel" />
 
         <import type="com.pandulapeter.campfire.R" />
 

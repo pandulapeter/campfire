@@ -8,7 +8,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.history.HistoryViewModel" />
+            type="com.pandulapeter.campfire.feature.home.history.HistoryViewModelInfo" />
 
         <import type="com.pandulapeter.campfire.R" />
 

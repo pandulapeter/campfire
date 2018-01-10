@@ -3,12 +3,12 @@ package com.pandulapeter.campfire.data.repository
 import com.pandulapeter.campfire.data.model.DownloadedSong
 import com.pandulapeter.campfire.data.model.SongDetail
 import com.pandulapeter.campfire.data.model.SongInfo
-import com.pandulapeter.campfire.networking.NetworkManager
 import com.pandulapeter.campfire.data.repository.shared.Repository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.data.storage.DataStorageManager
 import com.pandulapeter.campfire.data.storage.FileStorageManager
+import com.pandulapeter.campfire.networking.NetworkManager
 import com.pandulapeter.campfire.util.enqueueCall
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -69,11 +69,11 @@ class DownloadedSongRepository(
         notifySubscribers(UpdateType.AllDownloadsRemoved)
     }
 
-    fun downloadSong(songInfo: SongInfo, onSuccess: (String) -> Unit = {}, onFailure: () -> Unit = {}) {
+    fun startSongDownload(songInfo: SongInfo, onFailure: () -> Unit = {}) {
         //TODO: Check that the updating logic actually works. Looks like the cache is never updated.
         dataSet[songInfo.id]?.let {
             getDownloadedSongText(songInfo.id)?.let {
-                onSuccess(it)
+                notifySubscribers(UpdateType.DownloadSuccessful(songInfo.id, it))
                 return
             }
         }
@@ -84,8 +84,7 @@ class DownloadedSongRepository(
         networkManager.service.getSong(songInfo.id).enqueueCall(
             onSuccess = {
                 addSongToDownloadsWithoutNotifications(DownloadedSong(it.id, songInfo.version ?: 0), it) {
-                    notifySubscribers(UpdateType.DownloadSuccessful(songInfo.id))
-                    onSuccess(it.song)
+                    notifySubscribers(UpdateType.DownloadSuccessful(songInfo.id, it.song))
                 }
             },
             onFailure = {

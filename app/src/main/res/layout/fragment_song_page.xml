@@ -8,7 +8,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.detail.page.SongPageViewModel" />
+            type="com.pandulapeter.campfire.feature.detail.songPage.SongPageViewModel" />
 
     </data>
 
@@ -40,6 +40,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:onClick="@{() -> viewModel.loadSong()}"
+                android:visibility="gone"
                 app:buttonText="@string/try_again"
                 app:text="@string/detail_placeholder_error"
                 app:visibility="@{viewModel.shouldShowPlaceholder}" />

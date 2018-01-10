@@ -4,7 +4,7 @@ import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentStatePagerAdapter
 import android.util.SparseArray
 import android.view.ViewGroup
-import com.pandulapeter.campfire.feature.detail.page.SongPageFragment
+import com.pandulapeter.campfire.feature.detail.songPage.SongPageFragment
 
 /**
  * Creates the pages for the individual songs controlled by [SongPageFragment].
