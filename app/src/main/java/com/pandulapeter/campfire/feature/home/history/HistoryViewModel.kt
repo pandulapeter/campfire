@@ -7,21 +7,21 @@ import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
-import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListAdapter
+import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoViewModel
 import com.pandulapeter.campfire.networking.AnalyticsManager
 import java.util.Calendar
 import kotlin.math.abs
 
 /**
- * Handles events and logic for [HistoryFragmentInfo].
+ * Handles events and logic for [HistoryFragment].
  */
-class HistoryViewModelInfo(analyticsManager: AnalyticsManager,
-                           songInfoRepository: SongInfoRepository,
-                           downloadedSongRepository: DownloadedSongRepository,
-                           private val playlistRepository: PlaylistRepository,
-                           private val historyRepository: HistoryRepository) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
+class HistoryViewModel(analyticsManager: AnalyticsManager,
+                       songInfoRepository: SongInfoRepository,
+                       downloadedSongRepository: DownloadedSongRepository,
+                       private val playlistRepository: PlaylistRepository,
+                       private val historyRepository: HistoryRepository) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val shouldShowClearButton = ObservableBoolean(historyRepository.getHistoryItems().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldInvalidateItemDecorations = ObservableBoolean()

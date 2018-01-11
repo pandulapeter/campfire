@@ -31,15 +31,15 @@ import javax.inject.Inject
  * They can be deleted from the list using the swipe-to-dismiss gesture. The list can also be re-
  * organized.
  *
- * Controlled by [PlaylistViewModelInfo].
+ * Controlled by [PlaylistViewModel].
  */
-class PlaylistFragmentInfo : SongInfoListFragment<PlaylistBinding, PlaylistViewModelInfo>(R.layout.fragment_playlist), AlertDialogFragment.OnDialogItemsSelectedListener {
+class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist), AlertDialogFragment.OnDialogItemsSelectedListener {
     @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
     @Inject lateinit var appShortcutManager: AppShortcutManager
     @Inject lateinit var deepLinkManager: DeepLinkManager
 
-    override fun createViewModel() = PlaylistViewModelInfo(analyticsManager, deepLinkManager, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
+    override fun createViewModel() = PlaylistViewModel(analyticsManager, deepLinkManager, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
 
     override fun getAppBarLayout() = binding.appBarLayout
 
@@ -49,7 +49,7 @@ class PlaylistFragmentInfo : SongInfoListFragment<PlaylistBinding, PlaylistViewM
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.isInEditMode.onPropertyChanged {
+        viewModel.isInEditMode.onPropertyChanged(this) {
             if (it) {
                 if (viewModel.adapter.items.isNotEmpty() && firstTimeUserExperienceRepository.shouldShowPlaylistHint) {
                     binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.playlist_hint) {
@@ -61,7 +61,7 @@ class PlaylistFragmentInfo : SongInfoListFragment<PlaylistBinding, PlaylistViewM
                 hideKeyboard(activity?.currentFocus)
             }
         }
-        viewModel.shouldShowDeleteConfirmation.onEventTriggered {
+        viewModel.shouldShowDeleteConfirmation.onEventTriggered(this) {
             AlertDialogFragment.show(childFragmentManager,
                 R.string.playlist_delete_confirmation_title,
                 R.string.playlist_delete_confirmation_message,
@@ -109,7 +109,7 @@ class PlaylistFragmentInfo : SongInfoListFragment<PlaylistBinding, PlaylistViewM
             }
         }
         //TODO: Implement playlist sharing.
-        viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
+        viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered(this) { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
     }
 
     override fun onStart() {
@@ -138,6 +138,6 @@ class PlaylistFragmentInfo : SongInfoListFragment<PlaylistBinding, PlaylistViewM
     companion object {
         private var Bundle?.playlistId by BundleArgumentDelegate.Int("playlist_id")
 
-        fun newInstance(playlistId: Int) = PlaylistFragmentInfo().setArguments { it.playlistId = playlistId } as PlaylistFragmentInfo
+        fun newInstance(playlistId: Int) = PlaylistFragment().setArguments { it.playlistId = playlistId } as PlaylistFragment
     }
 }

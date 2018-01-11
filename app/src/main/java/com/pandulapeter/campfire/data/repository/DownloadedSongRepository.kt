@@ -54,12 +54,6 @@ class DownloadedSongRepository(
         }
     }
 
-    private fun addSongToDownloads(downloadedSong: DownloadedSong, songDetail: SongDetail) {
-        addSongToDownloadsWithoutNotifications(downloadedSong, songDetail) {
-            notifySubscribers(UpdateType.SongAddedToDownloads(songDetail.id))
-        }
-    }
-
     fun clearDownloads() {
         downloadQueue.clear()
         getDownloadedSongIds().forEach {

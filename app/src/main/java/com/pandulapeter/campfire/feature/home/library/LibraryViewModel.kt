@@ -12,8 +12,8 @@ import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
-import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListAdapter
+import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoViewModel
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.networking.AnalyticsManager
@@ -23,15 +23,15 @@ import com.pandulapeter.campfire.util.replaceSpecialCharacters
 import com.pandulapeter.campfire.util.toggle
 
 /**
- * Handles events and logic for [LibraryFragmentInfo].
+ * Handles events and logic for [LibraryFragment].
  */
-class LibraryViewModelInfo(analyticsManager: AnalyticsManager,
-                           songInfoRepository: SongInfoRepository,
-                           downloadedSongRepository: DownloadedSongRepository,
-                           appShortcutManager: AppShortcutManager,
-                           private val userPreferenceRepository: UserPreferenceRepository,
-                           private val playlistRepository: PlaylistRepository,
-                           private val languageRepository: LanguageRepository) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
+class LibraryViewModel(analyticsManager: AnalyticsManager,
+                       songInfoRepository: SongInfoRepository,
+                       downloadedSongRepository: DownloadedSongRepository,
+                       appShortcutManager: AppShortcutManager,
+                       private val userPreferenceRepository: UserPreferenceRepository,
+                       private val playlistRepository: PlaylistRepository,
+                       private val languageRepository: LanguageRepository) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.searchQuery.isNotEmpty())
     val searchQuery = ObservableField(userPreferenceRepository.searchQuery)
     val shouldShowViewOptions = ObservableBoolean(false)

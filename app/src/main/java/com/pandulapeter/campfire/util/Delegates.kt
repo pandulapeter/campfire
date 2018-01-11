@@ -57,13 +57,4 @@ sealed class IntentExtraDelegate<T>(protected val key: kotlin.String, protected 
             thisRef?.putExtra(key, value)
         }
     }
-
-    class StringList(key: kotlin.String, defaultValue: List<kotlin.String> = listOf()) : IntentExtraDelegate<List<kotlin.String>>(key, defaultValue) {
-
-        override fun getValue(thisRef: Intent?, property: KProperty<*>) = thisRef?.getStringArrayListExtra(key) ?: defaultValue
-
-        override fun setValue(thisRef: Intent?, property: KProperty<*>, value: List<kotlin.String>) {
-            thisRef?.putStringArrayListExtra(key, ArrayList(value))
-        }
-    }
 }

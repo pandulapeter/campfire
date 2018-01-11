@@ -32,10 +32,10 @@ fun Context.drawable(@DrawableRes drawableId: Int) = AppCompatResources.getDrawa
 
 fun ObservableBoolean.toggle() = set(!get())
 
-inline fun ObservableBoolean.onEventTriggered(crossinline callback: () -> Unit) {
+inline fun ObservableBoolean.onEventTriggered(fragment: Fragment? = null, crossinline callback: () -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            if (get()) {
+            if (get() && fragment?.isAdded != false) {
                 callback()
                 set(false)
             }
@@ -43,10 +43,10 @@ inline fun ObservableBoolean.onEventTriggered(crossinline callback: () -> Unit) 
     })
 }
 
-inline fun <T> ObservableField<T>.onEventTriggered(crossinline callback: (T) -> Unit) {
+inline fun <T> ObservableField<T>.onEventTriggered(fragment: Fragment? = null, crossinline callback: (T) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            if (get() != null) {
+            if (get() != null && fragment?.isAdded != false) {
                 callback(get())
                 set(null)
             }
@@ -54,27 +54,22 @@ inline fun <T> ObservableField<T>.onEventTriggered(crossinline callback: (T) -> 
     })
 }
 
-inline fun <T> ObservableField<T>.subscribe(crossinline callback: (T) -> Unit) {
+inline fun ObservableBoolean.onPropertyChanged(fragment: Fragment? = null, crossinline callback: (Boolean) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            callback(get())
-        }
-    })
-    callback(get())
-}
-
-inline fun ObservableBoolean.onPropertyChanged(crossinline callback: (Boolean) -> Unit) {
-    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            callback(get())
+            if (fragment?.isAdded != false) {
+                callback(get())
+            }
         }
     })
 }
 
-inline fun <T> ObservableField<T>.onPropertyChanged(crossinline callback: (T) -> Unit) {
+inline fun <T> ObservableField<T>.onPropertyChanged(fragment: Fragment? = null, crossinline callback: (T) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            callback(get())
+            if (fragment?.isAdded != false) {
+                callback(get())
+            }
         }
     })
 }

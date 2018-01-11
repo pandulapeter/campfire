@@ -21,7 +21,7 @@ abstract class HomeChildFragment<B : ViewDataBinding, out VM : HomeChildViewMode
 
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel.shouldShowMenu.onEventTriggered { (parentFragment as? HomeCallbacks)?.showMenu() }
+        viewModel.shouldShowMenu.onEventTriggered(this) { (parentFragment as? HomeCallbacks)?.showMenu() }
         if (shouldPlayReturnAnimation) {
             viewModel.shouldPlayReturnAnimation.set(true)
         }

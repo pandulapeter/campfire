@@ -8,7 +8,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.library.LibraryViewModelInfo" />
+            type="com.pandulapeter.campfire.feature.home.library.LibraryViewModel" />
 
         <import type="com.pandulapeter.campfire.R" />
 

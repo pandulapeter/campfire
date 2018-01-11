@@ -15,12 +15,12 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 
 /**
- * Handles events and logic for [ManageDownloadsFragmentInfo].
+ * Handles events and logic for [ManageDownloadsFragment].
  */
-class ManageDownloadsViewModelInfo(context: Context?,
-                                   analyticsManager: AnalyticsManager,
-                                   songInfoRepository: SongInfoRepository,
-                                   downloadedSongRepository: DownloadedSongRepository) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
+class ManageDownloadsViewModel(context: Context?,
+                               analyticsManager: AnalyticsManager,
+                               songInfoRepository: SongInfoRepository,
+                               downloadedSongRepository: DownloadedSongRepository) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val shouldShowDeleteAllButton = ObservableBoolean(downloadedSongRepository.getDownloadedSongIds().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldShowHintSnackbar = ObservableBoolean()

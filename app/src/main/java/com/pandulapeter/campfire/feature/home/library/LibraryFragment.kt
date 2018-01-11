@@ -32,14 +32,14 @@ import javax.inject.Inject
  * manually using the pull-to-refresh gesture. Songs that have already been downloaded are displayed
  * differently.
  *
- * Controlled by [LibraryViewModelInfo].
+ * Controlled by [LibraryViewModel].
  */
-class LibraryFragmentInfo : SongInfoListFragment<LibraryBinding, LibraryViewModelInfo>(R.layout.fragment_library) {
+class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library) {
     @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var languageRepository: LanguageRepository
     @Inject lateinit var appShortcutManager: AppShortcutManager
 
-    override fun createViewModel() = LibraryViewModelInfo(analyticsManager, songInfoRepository, downloadedSongRepository, appShortcutManager, userPreferenceRepository, playlistRepository, languageRepository)
+    override fun createViewModel() = LibraryViewModel(analyticsManager, songInfoRepository, downloadedSongRepository, appShortcutManager, userPreferenceRepository, playlistRepository, languageRepository)
 
     override fun getAppBarLayout() = binding.appBarLayout
 
@@ -66,7 +66,7 @@ class LibraryFragmentInfo : SongInfoListFragment<LibraryBinding, LibraryViewMode
                 else -> consume { viewModel.languageFilters.get().filterKeys { language -> language.nameResource == it.itemId }.values.first().toggle() }
             }
         }
-        viewModel.languageFilters.onPropertyChanged {
+        viewModel.languageFilters.onPropertyChanged(this) {
             if (isAdded) {
                 binding.navigationView.menu.findItem(R.id.filter_by_language).subMenu.run {
                     clear()
@@ -84,7 +84,7 @@ class LibraryFragmentInfo : SongInfoListFragment<LibraryBinding, LibraryViewMode
         (binding.navigationView.menu.findItem(R.id.show_explicit).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowExplicit)
         (binding.navigationView.menu.findItem(R.id.sort_by_title).actionView as CompoundButton).setupWithBackingField(viewModel.isSortedByTitle)
         // Set up keyboard handling for the search view.
-        viewModel.isSearchInputVisible.onPropertyChanged {
+        viewModel.isSearchInputVisible.onPropertyChanged(this) {
             if (it) {
                 binding.query.postDelayed({
                     binding.query.requestFocus()
@@ -99,10 +99,10 @@ class LibraryFragmentInfo : SongInfoListFragment<LibraryBinding, LibraryViewMode
         binding.swipeRefreshLayout.run {
             setOnRefreshListener { viewModel.forceRefresh() }
             isRefreshing = viewModel.isLoading.get()
-            viewModel.isLoading.onPropertyChanged { if (isAdded) isRefreshing = it }
+            viewModel.isLoading.onPropertyChanged(this@LibraryFragment) { if (isAdded) isRefreshing = it }
         }
         // Set up error handling.
-        viewModel.shouldShowErrorSnackbar.onEventTriggered {
+        viewModel.shouldShowErrorSnackbar.onEventTriggered(this) {
             if (isAdded) binding.coordinatorLayout.showSnackbar(R.string.library_update_error, R.string.library_try_again, { viewModel.forceRefresh() })
         }
         context?.let { context ->
@@ -136,13 +136,13 @@ class LibraryFragmentInfo : SongInfoListFragment<LibraryBinding, LibraryViewMode
             viewModel.adapter.downloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) } }
         }
         // Set up view options toggle.
-        viewModel.shouldShowViewOptions.onEventTriggered {
+        viewModel.shouldShowViewOptions.onEventTriggered(this) {
             binding.drawerLayout.openDrawer(GravityCompat.END)
             hideKeyboard(activity?.currentFocus)
         }
         // Disable view options if the library is empty.
         updateDrawerLockMode(viewModel.isLibraryNotEmpty.get())
-        viewModel.isLibraryNotEmpty.onPropertyChanged { if (isAdded) updateDrawerLockMode(it) }
+        viewModel.isLibraryNotEmpty.onPropertyChanged(this) { if (isAdded) updateDrawerLockMode(it) }
     }
 
     override fun onStart() {

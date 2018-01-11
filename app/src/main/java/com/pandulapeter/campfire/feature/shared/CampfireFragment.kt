@@ -71,7 +71,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         hintSnackbar = null
     }
 
-    protected fun dismissSnackbar() {
+    private fun dismissSnackbar() {
         snackbar?.dismiss()
         snackbar = null
     }

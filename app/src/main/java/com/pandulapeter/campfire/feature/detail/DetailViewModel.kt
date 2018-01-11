@@ -55,7 +55,7 @@ class DetailViewModel(songId: String,
         }
     }
 
-    fun getSelectedSongId() = songIds[selectedPosition]
+    private fun getSelectedSongId() = songIds[selectedPosition]
 
     fun onPageSelected(position: Int) {
         selectedPosition = position

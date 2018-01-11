@@ -22,9 +22,9 @@ class SongPageViewModel(private val id: String,
                         private val downloadedSongRepository: DownloadedSongRepository,
                         userPreferenceRepository: UserPreferenceRepository) : CampfireViewModel(analyticsManager), Subscriber {
     val text = ObservableField("")
-    val shouldShowChords = ObservableBoolean(userPreferenceRepository.shouldShowChords)
     val shouldShowPlaceholder = ObservableBoolean()
     val isLoading = ObservableBoolean(downloadedSongRepository.isSongLoading(id))
+    private val shouldShowChords = ObservableBoolean(userPreferenceRepository.shouldShowChords)
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {

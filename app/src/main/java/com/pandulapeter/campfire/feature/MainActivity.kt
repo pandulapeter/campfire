@@ -32,7 +32,11 @@ class MainActivity : DaggerAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         savedInstanceState?.let { intent.mainNavigationItem = it.mainNavigationItem }
-        viewModel.mainNavigationItem.onPropertyChanged { replaceActiveFragment(it) }
+        viewModel.mainNavigationItem.onPropertyChanged {
+            if (!isFinishing) {
+                replaceActiveFragment(it)
+            }
+        }
         if (getCurrentFragment() == null) {
             replaceActiveFragment(viewModel.mainNavigationItem.get())
         }

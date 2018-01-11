@@ -77,7 +77,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         transposeHigherMenuItem = binding.navigationView.menu.findItem(R.id.transpose_higher)
         transposeLowerMenuItem = binding.navigationView.menu.findItem(R.id.transpose_lower)
         updateTransposeSectionState(viewModel.shouldShowChords.get())
-        viewModel.shouldShowChords.onPropertyChanged { updateTransposeSectionState(it) }
+        viewModel.shouldShowChords.onPropertyChanged(this) { updateTransposeSectionState(it) }
         (binding.navigationView.menu.findItem(R.id.show_chords).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowChords)
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { binding.appBarLayout.setExpanded(true, true) })
         binding.navigationView.disableScrollbars()
@@ -88,15 +88,15 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 else -> false
             }
         }
-        viewModel.shouldShowSongOptions.onEventTriggered { binding.drawerLayout.openDrawer(GravityCompat.END) }
-        viewModel.youTubeSearchQuery.onEventTriggered {
+        viewModel.shouldShowSongOptions.onEventTriggered(this) { binding.drawerLayout.openDrawer(GravityCompat.END) }
+        viewModel.youTubeSearchQuery.onEventTriggered(this) {
             //TODO: Handle the case if no YouTube app is installed.
             startActivity(Intent(Intent.ACTION_SEARCH).apply {
                 `package` = "com.google.android.youtube"
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }.putExtra("query", it))
         }
-        viewModel.shouldNavigateBack.onEventTriggered {
+        viewModel.shouldNavigateBack.onEventTriggered(this) {
             if (!isBackAnimationInProgress) {
                 isBackAnimationInProgress = true
                 binding.appBarLayout.performAfterExpand(

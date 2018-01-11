@@ -85,7 +85,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             getCurrentFragment()?.expandAppBar()
         })
         setCheckedItem(viewModel.homeNavigationItem)
-        viewModel.playlists.onPropertyChanged {
+        viewModel.playlists.onPropertyChanged(this) {
             playlistsContainerItem.run {
                 clear()
                 it.sortedBy { it.id }.forEachIndexed { index, playlist -> addPlaylistItem(playlist.id, index, playlist.title ?: getString(R.string.home_favorites)) }
@@ -96,7 +96,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             managePlaylistsItem.isVisible = it.size > 1
             updateCheckedItem()
         }
-        viewModel.isLibraryReady.onPropertyChanged { isLibraryReady ->
+        viewModel.isLibraryReady.onPropertyChanged(this) { isLibraryReady ->
             collectionsItem.isEnabled = isLibraryReady
             historyItem.isEnabled = isLibraryReady
             playlistsContainerItem.run {
@@ -106,7 +106,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
                 findItem(R.id.playlists)?.isEnabled = isLibraryReady
             }
         }
-        viewModel.hasDownloads.onPropertyChanged {
+        viewModel.hasDownloads.onPropertyChanged(this) {
             manageDownloadsItem.isVisible = it
             updateCheckedItem()
         }

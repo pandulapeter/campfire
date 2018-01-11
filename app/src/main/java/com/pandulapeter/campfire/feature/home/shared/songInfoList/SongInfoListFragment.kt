@@ -42,6 +42,7 @@ abstract class SongInfoListFragment<B : ViewDataBinding, out VM : SongInfoListVi
             getRecyclerView().run {
                 adapter = viewModel.adapter
                 layoutManager = LinearLayoutManager(context)
+                setHasFixedSize(true)
                 addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
                 addOnScrollListener(object : RecyclerView.OnScrollListener() {
                     override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
@@ -52,7 +53,7 @@ abstract class SongInfoListFragment<B : ViewDataBinding, out VM : SongInfoListVi
                 })
             }
             // Display error snackbar with Retry action if the download fails.
-            viewModel.shouldShowDownloadErrorSnackbar.onEventTriggered {
+            viewModel.shouldShowDownloadErrorSnackbar.onEventTriggered(this) {
                 it?.let { songInfo ->
                     if (isAdded) {
                         getCoordinatorLayout().showSnackbar(message = getString(R.string.song_item_song_download_failed, songInfo.title),
@@ -62,7 +63,7 @@ abstract class SongInfoListFragment<B : ViewDataBinding, out VM : SongInfoListVi
                 }
             }
             // Implement navigation from placeholder action button.
-            viewModel.shouldNavigateToLibrary.onEventTriggered {
+            viewModel.shouldNavigateToLibrary.onEventTriggered(this) {
                 (parentFragment as? HomeCallbacks)?.setCheckedItem(HomeViewModel.HomeNavigationItem.Library)
             }
         }

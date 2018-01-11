@@ -24,14 +24,14 @@ import javax.inject.Inject
 /**
  * Allows the user to see the history of the songs they opened.
  *
- * Controlled by [HistoryViewModelInfo].
+ * Controlled by [HistoryViewModel].
  */
-class HistoryFragmentInfo : SongInfoListFragment<HistoryBinding, HistoryViewModelInfo>(R.layout.fragment_history), AlertDialogFragment.OnDialogItemsSelectedListener {
+class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R.layout.fragment_history), AlertDialogFragment.OnDialogItemsSelectedListener {
     @Inject lateinit var playlistRepository: PlaylistRepository
     @Inject lateinit var historyRepository: HistoryRepository
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
 
-    override fun createViewModel() = HistoryViewModelInfo(analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository, historyRepository)
+    override fun createViewModel() = HistoryViewModel(analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository, historyRepository)
 
     override fun getAppBarLayout() = binding.appBarLayout
 
@@ -41,7 +41,7 @@ class HistoryFragmentInfo : SongInfoListFragment<HistoryBinding, HistoryViewMode
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.shouldShowConfirmationDialog.onEventTriggered {
+        viewModel.shouldShowConfirmationDialog.onEventTriggered(this) {
             AlertDialogFragment.show(childFragmentManager,
                 R.string.history_clear_confirmation_title,
                 R.string.history_clear_confirmation_message,
@@ -64,7 +64,7 @@ class HistoryFragmentInfo : SongInfoListFragment<HistoryBinding, HistoryViewMode
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Fix a bug with updating the item decorations.
-        viewModel.shouldInvalidateItemDecorations.onEventTriggered { if (isAdded) binding.recyclerView.run { postDelayed({ invalidateItemDecorations() }, 100) } }
+        viewModel.shouldInvalidateItemDecorations.onEventTriggered(this) { if (isAdded) binding.recyclerView.run { postDelayed({ invalidateItemDecorations() }, 100) } }
         context?.let { context ->
             // Set up the item headers.
             binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(context) {
@@ -95,7 +95,7 @@ class HistoryFragmentInfo : SongInfoListFragment<HistoryBinding, HistoryViewMode
             }
             viewModel.adapter.downloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) } }
         }
-        viewModel.shouldShowHintSnackbar.onPropertyChanged {
+        viewModel.shouldShowHintSnackbar.onPropertyChanged(this) {
             if (firstTimeUserExperienceRepository.shouldShowHistoryHint) {
                 binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.history_hint) {
                     firstTimeUserExperienceRepository.shouldShowHistoryHint = false

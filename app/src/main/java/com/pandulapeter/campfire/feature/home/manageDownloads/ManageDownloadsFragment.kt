@@ -19,12 +19,13 @@ import javax.inject.Inject
 /**
  * Allows the user to delete downloaded songs.
  *
- * Controlled by [ManageDownloadsViewModelInfo].
+ * Controlled by [ManageDownloadsViewModel].
  */
-class ManageDownloadsFragmentInfo : SongInfoListFragment<ManageDownloadsBinding, ManageDownloadsViewModelInfo>(R.layout.fragment_manage_downloads), AlertDialogFragment.OnDialogItemsSelectedListener {
+class ManageDownloadsFragment : SongInfoListFragment<ManageDownloadsBinding, ManageDownloadsViewModel>(R.layout.fragment_manage_downloads), AlertDialogFragment.OnDialogItemsSelectedListener {
+
     @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
 
-    override fun createViewModel() = ManageDownloadsViewModelInfo(context, analyticsManager, songInfoRepository, downloadedSongRepository)
+    override fun createViewModel() = ManageDownloadsViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository)
 
     override fun getAppBarLayout() = binding.appBarLayout
 
@@ -34,7 +35,7 @@ class ManageDownloadsFragmentInfo : SongInfoListFragment<ManageDownloadsBinding,
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.shouldShowConfirmationDialog.onEventTriggered {
+        viewModel.shouldShowConfirmationDialog.onEventTriggered(this) {
             AlertDialogFragment.show(childFragmentManager,
                 R.string.manage_downloads_delete_all_confirmation_title,
                 R.string.manage_downloads_delete_all_confirmation_message,
@@ -62,7 +63,7 @@ class ManageDownloadsFragmentInfo : SongInfoListFragment<ManageDownloadsBinding,
                 if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
             })
         }
-        viewModel.shouldShowHintSnackbar.onPropertyChanged {
+        viewModel.shouldShowHintSnackbar.onPropertyChanged(this) {
             if (firstTimeUserExperienceRepository.shouldShowManageDownloadsHint) {
                 binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.manage_downloads_hint) {
                     firstTimeUserExperienceRepository.shouldShowManageDownloadsHint = false
