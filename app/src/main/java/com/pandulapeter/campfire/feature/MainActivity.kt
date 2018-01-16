@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.HomeFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
@@ -10,12 +11,11 @@ import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.IntentExtraDelegate
 import com.pandulapeter.campfire.util.getIntentFor
 import com.pandulapeter.campfire.util.onPropertyChanged
-import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.cancel
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 import kotlin.coroutines.experimental.CoroutineContext
 
 /**
@@ -23,8 +23,8 @@ import kotlin.coroutines.experimental.CoroutineContext
  *
  * Controlled by [MainViewModel].
  */
-class MainActivity : DaggerAppCompatActivity() {
-    @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
+class MainActivity : AppCompatActivity() {
+    private val userPreferenceRepository by inject<UserPreferenceRepository>()
     private val viewModel by lazy { MainViewModel(userPreferenceRepository, MainViewModel.MainNavigationItem.fromStringValue(intent.mainNavigationItem)) }
     private var coroutine: CoroutineContext? = null
     private var Bundle.mainNavigationItem by BundleArgumentDelegate.String("main_navigation_item")

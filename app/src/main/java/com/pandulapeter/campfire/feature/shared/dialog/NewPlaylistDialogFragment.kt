@@ -4,6 +4,7 @@ import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v4.app.FragmentManager
 import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatDialogFragment
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -15,15 +16,13 @@ import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.showKeyboard
-import dagger.android.support.DaggerAppCompatDialogFragment
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 /**
  * Allows the user to create a new playlist.
  */
-class NewPlaylistDialogFragment : DaggerAppCompatDialogFragment() {
-
-    @Inject lateinit var playlistRepository: PlaylistRepository
+class NewPlaylistDialogFragment : AppCompatDialogFragment() {
+    private val playlistRepository by inject<PlaylistRepository>()
     private lateinit var binding: NewPlaylistBinding
     private val positiveButton by lazy { (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE) }
 

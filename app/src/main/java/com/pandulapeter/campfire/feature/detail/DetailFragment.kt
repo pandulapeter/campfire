@@ -27,7 +27,7 @@ import com.pandulapeter.campfire.util.performAfterExpand
 import com.pandulapeter.campfire.util.setArguments
 import com.pandulapeter.campfire.util.setupWithBackingField
 import com.pandulapeter.campfire.util.toggle
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 
 /**
@@ -37,12 +37,12 @@ import javax.inject.Inject
  * Controlled by [DetailViewModel].
  */
 class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout.fragment_detail) {
-    @Inject lateinit var songInfoRepository: SongInfoRepository
-    @Inject lateinit var historyRepository: HistoryRepository
-    @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
-    @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
-    @Inject lateinit var playlistRepository: PlaylistRepository
-    @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
+    private val songInfoRepository by inject<SongInfoRepository>()
+    private val historyRepository by inject<HistoryRepository>()
+    private val downloadedSongRepository by inject<DownloadedSongRepository>()
+    private val userPreferenceRepository by inject<UserPreferenceRepository>()
+    private val playlistRepository by inject<PlaylistRepository>()
+    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
     override val viewModel by lazy { DetailViewModel(arguments.songId, arguments.playlistId, analyticsManager, userPreferenceRepository, downloadedSongRepository, childFragmentManager, playlistRepository, songInfoRepository, historyRepository) }
     private var isBackAnimationInProgress = false
     private lateinit var transposeHigherMenuItem: MenuItem

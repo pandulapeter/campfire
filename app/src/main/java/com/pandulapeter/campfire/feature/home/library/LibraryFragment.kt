@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListFragment
+import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
@@ -24,7 +25,7 @@ import com.pandulapeter.campfire.util.performAfterExpand
 import com.pandulapeter.campfire.util.setupWithBackingField
 import com.pandulapeter.campfire.util.showKeyboard
 import com.pandulapeter.campfire.util.toggle
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 /**
  * Displays the list of all available songs from the backend. The list is searchable and filterable
@@ -35,9 +36,9 @@ import javax.inject.Inject
  * Controlled by [LibraryViewModel].
  */
 class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library) {
-    @Inject lateinit var playlistRepository: PlaylistRepository
-    @Inject lateinit var languageRepository: LanguageRepository
-    @Inject lateinit var appShortcutManager: AppShortcutManager
+    private val playlistRepository by inject<PlaylistRepository>()
+    private val languageRepository by inject<LanguageRepository>()
+    private val appShortcutManager by inject<AppShortcutManager>()
 
     override fun createViewModel() = LibraryViewModel(analyticsManager, songInfoRepository, downloadedSongRepository, appShortcutManager, userPreferenceRepository, playlistRepository, languageRepository)
 

@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.performAfterExpand
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 /**
  * Allows the user to delete downloaded songs.
@@ -22,8 +22,7 @@ import javax.inject.Inject
  * Controlled by [ManageDownloadsViewModel].
  */
 class ManageDownloadsFragment : SongInfoListFragment<ManageDownloadsBinding, ManageDownloadsViewModel>(R.layout.fragment_manage_downloads), AlertDialogFragment.OnDialogItemsSelectedListener {
-
-    @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
+    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
 
     override fun createViewModel() = ManageDownloadsViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository)
 

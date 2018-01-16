@@ -4,7 +4,7 @@ import com.pandulapeter.campfire.CollectionsBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 /**
  * Displays a list of curated song collections.
@@ -12,7 +12,7 @@ import javax.inject.Inject
  * Controlled by [CollectionsViewModel].
  */
 class CollectionsFragment : HomeChildFragment<CollectionsBinding, CollectionsViewModel>(R.layout.fragment_collections) {
-    @Inject lateinit var appShortcutManager: AppShortcutManager
+    private val appShortcutManager by inject<AppShortcutManager>()
 
     override fun createViewModel() = CollectionsViewModel(analyticsManager, appShortcutManager)
 

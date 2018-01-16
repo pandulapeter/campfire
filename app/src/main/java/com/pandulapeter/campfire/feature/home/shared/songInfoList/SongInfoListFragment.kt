@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 /**
  * Displays the list of all available songs from the backend. The list is searchable and filterable
@@ -27,9 +27,9 @@ import javax.inject.Inject
  * Controlled by subclasses of [SongInfoListViewModel].
  */
 abstract class SongInfoListFragment<B : ViewDataBinding, out VM : SongInfoListViewModel>(@LayoutRes layoutResourceId: Int) : HomeChildFragment<B, VM>(layoutResourceId) {
-    @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
-    @Inject lateinit var songInfoRepository: SongInfoRepository
-    @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
+    protected val userPreferenceRepository by inject<UserPreferenceRepository>()
+    protected val songInfoRepository by inject<SongInfoRepository>()
+    protected val downloadedSongRepository by inject<DownloadedSongRepository>()
 
     protected abstract fun getRecyclerView(): RecyclerView
 

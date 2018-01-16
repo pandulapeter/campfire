@@ -1,9 +1,9 @@
-package com.pandulapeter.campfire.feature.home.library
+package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
-import android.support.design.widget.BottomSheetDialog
+import android.support.design.widget.BottomSheetDialogFragment
 import android.support.design.widget.CoordinatorLayout
 import android.support.v4.app.DialogFragment
 import android.support.v4.app.FragmentManager
@@ -14,28 +14,26 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.PlaylistChooserBottomSheetBinding
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
-import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.setArguments
-import dagger.android.support.DaggerAppCompatDialogFragment
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 
 /**
  * A bottom sheet that allows the user to set the positionSource of the avatar image (gallery or camera).
  */
-class PlaylistChooserBottomSheetFragment : DaggerAppCompatDialogFragment(), Subscriber {
-    @Inject lateinit var songInfoRepository: SongInfoRepository
-    @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
-    @Inject lateinit var playlistRepository: PlaylistRepository
+class PlaylistChooserBottomSheetFragment : BottomSheetDialogFragment(), Subscriber {
+    private val songInfoRepository by inject<SongInfoRepository>()
+    private val downloadedSongRepository by inject<DownloadedSongRepository>()
+    private val playlistRepository by inject<PlaylistRepository>()
     private lateinit var binding: PlaylistChooserBottomSheetBinding
     private lateinit var songId: String
     private val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
@@ -45,25 +43,25 @@ class PlaylistChooserBottomSheetFragment : DaggerAppCompatDialogFragment(), Subs
     private var scrollViewOffset = 0
     private var shouldTransformTopToAppBar = false
 
-    override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->
-        val dialog = BottomSheetDialog(context, theme)
-        binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_playlist_chooser_bottom_sheet, null, false)
-        songId = savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId
-        dialog.setContentView(binding.root)
-        binding.close.setOnClickListener { dismiss() }
-        binding.newPlaylist.setOnClickListener { NewPlaylistDialogFragment.show(childFragmentManager) }
-        behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-            override fun onSlide(bottomSheet: View, slideOffset: Float) = updateSlideState(slideOffset)
+    override fun onCreateDialog(savedInstanceState: Bundle?) = super.onCreateDialog(savedInstanceState).apply {
+        context?.let { context ->
+            binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_playlist_chooser_bottom_sheet, null, false)
+            songId = savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId
+            dialog.setContentView(binding.root)
+            binding.close.setOnClickListener { dismiss() }
+            binding.newPlaylist.setOnClickListener { NewPlaylistDialogFragment.show(childFragmentManager) }
+            behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+                override fun onSlide(bottomSheet: View, slideOffset: Float) = updateSlideState(slideOffset)
 
-            override fun onStateChanged(bottomSheet: View, newState: Int) {
-                if (newState == BottomSheetBehavior.STATE_HIDDEN) dismiss()
+                override fun onStateChanged(bottomSheet: View, newState: Int) {
+                    if (newState == BottomSheetBehavior.STATE_HIDDEN) dismiss()
+                }
+            })
+            binding.nestedScrollView.setOnScrollChangeListener { _: NestedScrollView?, _: Int, scrollY: Int, _: Int, _: Int ->
+                scrollViewOffset = scrollY
             }
-        })
-        binding.nestedScrollView.setOnScrollChangeListener { _: NestedScrollView?, _: Int, scrollY: Int, _: Int, _: Int ->
-            scrollViewOffset = scrollY
         }
-        dialog
-    } ?: super.onCreateDialog(savedInstanceState)
+    }
 
     override fun onStart() {
         super.onStart()

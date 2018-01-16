@@ -8,7 +8,7 @@ import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 
 /**
@@ -17,9 +17,9 @@ import javax.inject.Inject
  * Controlled by [SongPageViewModel].
  */
 class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.layout.fragment_song_page) {
-    @Inject lateinit var songInfoRepository: SongInfoRepository
-    @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
-    @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
+    private val songInfoRepository by inject<SongInfoRepository>()
+    private val downloadedSongRepository by inject<DownloadedSongRepository>()
+    private val userPreferenceRepository by inject<UserPreferenceRepository>()
     override val viewModel by lazy { SongPageViewModel(arguments.songId, analyticsManager, songInfoRepository, downloadedSongRepository, userPreferenceRepository) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

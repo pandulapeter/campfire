@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.performAfterExpand
 import com.pandulapeter.campfire.util.setArguments
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 
 /**
@@ -34,10 +34,10 @@ import javax.inject.Inject
  * Controlled by [PlaylistViewModel].
  */
 class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist), AlertDialogFragment.OnDialogItemsSelectedListener {
-    @Inject lateinit var playlistRepository: PlaylistRepository
-    @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
-    @Inject lateinit var appShortcutManager: AppShortcutManager
-    @Inject lateinit var deepLinkManager: DeepLinkManager
+    private val playlistRepository by inject<PlaylistRepository>()
+    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
+    private val appShortcutManager by inject<AppShortcutManager>()
+    private val deepLinkManager by inject<DeepLinkManager>()
 
     override fun createViewModel() = PlaylistViewModel(analyticsManager, deepLinkManager, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
 

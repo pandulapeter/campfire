@@ -29,7 +29,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.cancel
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 import kotlin.coroutines.experimental.CoroutineContext
 
 /**
@@ -38,11 +38,11 @@ import kotlin.coroutines.experimental.CoroutineContext
  * Controlled by [HomeViewModel].
  */
 class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragment_home), HomeChildFragment.HomeCallbacks {
-    @Inject lateinit var songInfoRepository: SongInfoRepository
-    @Inject lateinit var userPreferenceRepository: UserPreferenceRepository
-    @Inject lateinit var downloadedSongRepository: DownloadedSongRepository
-    @Inject lateinit var playlistRepository: PlaylistRepository
-    @Inject lateinit var appShortcutManager: AppShortcutManager
+    private val songInfoRepository by inject<SongInfoRepository>()
+    private val userPreferenceRepository by inject<UserPreferenceRepository>()
+    private val downloadedSongRepository by inject<DownloadedSongRepository>()
+    private val playlistRepository by inject<PlaylistRepository>()
+    private val appShortcutManager by inject<AppShortcutManager>()
     override val viewModel by lazy { HomeViewModel(analyticsManager, downloadedSongRepository, userPreferenceRepository, appShortcutManager) }
     private var coroutine: CoroutineContext? = null
     private val playlistsContainerItem by lazy { binding.navigationView.menu.findItem(R.id.playlists).subMenu }

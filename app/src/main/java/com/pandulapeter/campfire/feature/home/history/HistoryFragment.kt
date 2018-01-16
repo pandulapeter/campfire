@@ -13,13 +13,13 @@ import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.library.HeaderItemDecoration
-import com.pandulapeter.campfire.feature.home.library.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
+import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.performAfterExpand
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 /**
  * Allows the user to see the history of the songs they opened.
@@ -27,9 +27,9 @@ import javax.inject.Inject
  * Controlled by [HistoryViewModel].
  */
 class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R.layout.fragment_history), AlertDialogFragment.OnDialogItemsSelectedListener {
-    @Inject lateinit var playlistRepository: PlaylistRepository
-    @Inject lateinit var historyRepository: HistoryRepository
-    @Inject lateinit var firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository
+    private val playlistRepository by inject<PlaylistRepository>()
+    private val historyRepository by inject<HistoryRepository>()
+    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
 
     override fun createViewModel() = HistoryViewModel(analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository, historyRepository)
 

@@ -6,14 +6,14 @@ import android.os.Bundle
 import android.support.annotation.LayoutRes
 import android.support.annotation.StringRes
 import android.support.design.widget.Snackbar
+import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.networking.AnalyticsManager
-import dagger.android.support.DaggerFragment
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
 /**
  * Base class for all Fragments in the app. Handles layout inflation, setting up the view model,
@@ -21,8 +21,8 @@ import javax.inject.Inject
  *
  * Controlled by subclasses of [CampfireViewModel].
  */
-abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private val layoutResourceId: Int) : DaggerFragment() {
-    @Inject lateinit var analyticsManager: AnalyticsManager
+abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private val layoutResourceId: Int) : Fragment() {
+    protected val analyticsManager by inject<AnalyticsManager>()
     abstract protected val viewModel: VM
     protected lateinit var binding: B
     private var snackbar: Snackbar? = null
