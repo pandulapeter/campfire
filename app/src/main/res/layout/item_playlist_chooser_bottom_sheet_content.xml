@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--suppress AndroidUnknownAttribute -->
+    <data>
+
+        <variable
+            name="songInfo"
+            type="com.pandulapeter.campfire.data.model.SongInfo" />
+
+        <import type="com.pandulapeter.campfire.R" />
+
+    </data>
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background"
+        android:clipChildren="false">
+
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/fake_app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/background"
+            android:clipChildren="false">
+
+            <View
+                android:id="@+id/background"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:alpha="0"
+                android:background="?attr/colorPrimary"
+                app:layout_constraintBottom_toBottomOf="@+id/toolbar_container"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:alpha="1" />
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@id/toolbar_container"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/toolbar_height"
+                android:clipChildren="false"
+                android:paddingTop="@dimen/content_padding">
+
+                <android.support.v4.widget.Space
+                    android:id="@+id/space"
+                    android:layout_width="@dimen/toolbar_first_keyline_fix"
+                    android:layout_height="0dp"
+                    app:layout_constraintEnd_toStartOf="parent" />
+
+                <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                    android:id="@+id/close"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/first_keyline"
+                    android:alpha="0"
+                    android:contentDescription="@string/library_close"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/space"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_close_24dp" />
+
+                <TextView
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/first_keyline"
+                    android:paddingEnd="@dimen/bottom_sheet_toolbar_margin"
+                    android:paddingStart="0dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:subtitle="@{songInfo.artist}"
+                    app:title="@{songInfo.title}"
+                    tools:text="Song title\nArtist" />
+
+            </android.support.constraint.ConstraintLayout>
+
+        </android.support.constraint.ConstraintLayout>
+
+        <android.support.v4.widget.NestedScrollView
+            android:id="@+id/nested_scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/background"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/large_content_padding"
+            android:paddingTop="@dimen/content_padding"
+            android:scrollbars="none"
+            app:layout_constraintTop_toBottomOf="@id/fake_app_bar">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/playlist_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingEnd="@dimen/first_keyline"
+                    android:paddingStart="@dimen/toolbar_action_button_margin_fix" />
+
+                <TextView
+                    android:id="@+id/new_playlist"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/touch_target"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawablePadding="12dp"
+                    android:drawableStart="@{R.drawable.ic_new_playlist_24dp}"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="@dimen/first_keyline"
+                    android:paddingStart="14dp"
+                    android:text="@string/home_new_playlist"
+                    android:textColor="@android:color/white"
+                    tools:drawableStart="@drawable/ic_new_playlist_24dp" />
+
+            </LinearLayout>
+
+        </android.support.v4.widget.NestedScrollView>
+
+    </android.support.constraint.ConstraintLayout>
+
+</layout>

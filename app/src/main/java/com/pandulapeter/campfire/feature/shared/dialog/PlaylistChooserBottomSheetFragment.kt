@@ -1,14 +1,17 @@
 package com.pandulapeter.campfire.feature.shared.dialog
 
+import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
+import android.support.annotation.StyleRes
 import android.support.design.widget.BottomSheetBehavior
-import android.support.design.widget.BottomSheetDialogFragment
+import android.support.design.widget.BottomSheetDialog
 import android.support.design.widget.CoordinatorLayout
 import android.support.v4.app.DialogFragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
+import android.support.v7.app.AppCompatDialogFragment
 import android.support.v7.widget.AppCompatCheckBox
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -16,7 +19,6 @@ import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.PlaylistChooserBottomSheetBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
@@ -30,9 +32,8 @@ import org.koin.android.ext.android.inject
 /**
  * A bottom sheet that allows the user to set the positionSource of the avatar image (gallery or camera).
  */
-class PlaylistChooserBottomSheetFragment : BottomSheetDialogFragment(), Subscriber {
+class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment(), Subscriber {
     private val songInfoRepository by inject<SongInfoRepository>()
-    private val downloadedSongRepository by inject<DownloadedSongRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
     private lateinit var binding: PlaylistChooserBottomSheetBinding
     private lateinit var songId: String
@@ -43,13 +44,13 @@ class PlaylistChooserBottomSheetFragment : BottomSheetDialogFragment(), Subscrib
     private var scrollViewOffset = 0
     private var shouldTransformTopToAppBar = false
 
-    override fun onCreateDialog(savedInstanceState: Bundle?) = super.onCreateDialog(savedInstanceState).apply {
-        context?.let { context ->
+    override fun onCreateDialog(savedInstanceState: Bundle?) = activity?.let { context ->
+        CustomWidthBottomSheetDialog(context, theme).apply {
             binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_playlist_chooser_bottom_sheet, null, false)
             songId = savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId
-            dialog.setContentView(binding.root)
-            binding.close.setOnClickListener { dismiss() }
-            binding.newPlaylist.setOnClickListener { NewPlaylistDialogFragment.show(childFragmentManager) }
+            setContentView(binding.root)
+            binding.container?.close?.setOnClickListener { dismiss() }
+            binding.container?.newPlaylist?.setOnClickListener { NewPlaylistDialogFragment.show(childFragmentManager) }
             behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
                 override fun onSlide(bottomSheet: View, slideOffset: Float) = updateSlideState(slideOffset)
 
@@ -57,11 +58,11 @@ class PlaylistChooserBottomSheetFragment : BottomSheetDialogFragment(), Subscrib
                     if (newState == BottomSheetBehavior.STATE_HIDDEN) dismiss()
                 }
             })
-            binding.nestedScrollView.setOnScrollChangeListener { _: NestedScrollView?, _: Int, scrollY: Int, _: Int, _: Int ->
+            binding.container?.nestedScrollView?.setOnScrollChangeListener { _: NestedScrollView?, _: Int, scrollY: Int, _: Int, _: Int ->
                 scrollViewOffset = scrollY
             }
         }
-    }
+    } ?: super.onCreateDialog(savedInstanceState)
 
     override fun onStart() {
         super.onStart()
@@ -96,26 +97,25 @@ class PlaylistChooserBottomSheetFragment : BottomSheetDialogFragment(), Subscrib
     }
 
     private fun updateSlideState(slideOffset: Float) = Math.max(0f, 2 * slideOffset - 1).let { closenessToTop ->
-        if (shouldTransformTopToAppBar) {
-            binding.close.alpha = closenessToTop
-            binding.close.translationX = -(1 - closenessToTop) * finalToolbarMargin / 4
-            binding.toolbar.translationX = closenessToTop * finalToolbarMargin
+        if (shouldTransformTopToAppBar && (dialog as CustomWidthBottomSheetDialog).isFullWidth) {
+            binding.container?.close?.alpha = closenessToTop
+            binding.container?.close?.translationX = -(1 - closenessToTop) * finalToolbarMargin / 4
+            binding.container?.toolbar?.translationX = closenessToTop * finalToolbarMargin
             if (scrollViewOffset == 0) {
-                ViewCompat.setElevation(binding.fakeAppBar, closenessToTop * finalToolbarElevation)
-                binding.background.alpha = closenessToTop
-                binding.toolbarContainer.setPadding(0, Math.round((1 - closenessToTop) * initialToolbarContainerPadding), 0, 0)
+                ViewCompat.setElevation(binding.container?.fakeAppBar, closenessToTop * finalToolbarElevation)
+                binding.container?.background?.alpha = closenessToTop
+                binding.container?.toolbarContainer?.setPadding(0, Math.round((1 - closenessToTop) * initialToolbarContainerPadding), 0, 0)
             }
         }
     }
 
-    //TODO: Maybe replace this with a RecyclerView.
     private fun refreshPlaylistCheckboxes() {
         context?.let { context ->
-            binding.playlistContainer.removeAllViews()
+            binding.container?.playlistContainer?.removeAllViews()
             val height = context.dimension(R.dimen.touch_target)
             val padding = context.dimension(R.dimen.content_padding)
             playlistRepository.getPlaylists().forEach { playlist ->
-                binding.playlistContainer.addView(AppCompatCheckBox(context).apply {
+                binding.container?.playlistContainer?.addView(AppCompatCheckBox(context).apply {
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(padding, padding, padding, padding)
                     text = playlist.title ?: getString(R.string.home_favorites)
@@ -136,12 +136,25 @@ class PlaylistChooserBottomSheetFragment : BottomSheetDialogFragment(), Subscrib
     private fun checkIfToolbarTransformationIsNeeded() {
         binding.root.post {
             val screenHeight = activity?.window?.decorView?.height ?: 0
-            if (binding.root.height.toFloat() > screenHeight * 0.8f) {
+            if (binding.root.height > screenHeight - (binding.container?.fakeAppBar?.height ?: 0) && (dialog as CustomWidthBottomSheetDialog).isFullWidth) {
                 val layoutParams = binding.root.layoutParams
                 layoutParams.height = screenHeight
                 binding.root.layoutParams = layoutParams
                 shouldTransformTopToAppBar = true
                 updateSlideState(if (behavior.state == BottomSheetBehavior.STATE_EXPANDED) 1f else 0f)
+            }
+        }
+    }
+
+    class CustomWidthBottomSheetDialog(context: Context, @StyleRes theme: Int) : BottomSheetDialog(context, theme) {
+        private val width = context.dimension(R.dimen.playlist_chooser_bottom_sheet_width)
+        val isFullWidth = width == 0
+
+        override fun onCreate(savedInstanceState: Bundle?) {
+            super.onCreate(savedInstanceState)
+            if (!isFullWidth) {
+                window.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
+                window.setGravity(Gravity.BOTTOM)
             }
         }
     }

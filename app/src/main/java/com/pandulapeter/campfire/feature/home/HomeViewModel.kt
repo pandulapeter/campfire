@@ -24,10 +24,12 @@ import com.pandulapeter.campfire.util.onPropertyChanged
 /**
  * Handles events and logic for [HomeFragment].
  */
-class HomeViewModel(analyticsManager: AnalyticsManager,
-                    private val downloadedSongRepository: DownloadedSongRepository,
-                    private val userPreferenceRepository: UserPreferenceRepository,
-                    private val appShortcutManager: AppShortcutManager) : CampfireViewModel(analyticsManager), Subscriber {
+class HomeViewModel(
+    analyticsManager: AnalyticsManager,
+    private val downloadedSongRepository: DownloadedSongRepository,
+    private val userPreferenceRepository: UserPreferenceRepository,
+    private val appShortcutManager: AppShortcutManager
+) : CampfireViewModel(analyticsManager), Subscriber {
     val playlists = ObservableField<List<Playlist>>()
     val isLibraryReady = ObservableBoolean()
     val hasDownloads = ObservableBoolean()

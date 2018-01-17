@@ -107,7 +107,8 @@ fun Fragment.setArguments(bundleOperations: (Bundle) -> Unit): Fragment {
     return this
 }
 
-fun Context.getIntentFor(activityClass: KClass<out Activity>, extraOperations: (Intent) -> Unit = {}) = Intent(this, activityClass.java).apply { extraOperations(this) }
+fun Context.getIntentFor(activityClass: KClass<out Activity>, extraOperations: (Intent) -> Unit = {}) =
+    Intent(this, activityClass.java).apply { extraOperations(this) }
 
 fun String.replaceSpecialCharacters() = this
     .replace("á", "a")
