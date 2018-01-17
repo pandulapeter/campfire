@@ -1,5 +1,8 @@
-# Dagger
--dontwarn com.google.errorprone.annotations.**
+
+# Annotations
+-dontwarn javax.annotation.Nullable
+-dontwarn javax.annotation.concurrent.GuardedBy
+-dontwarn javax.annotation.ParametersAreNonnullByDefault
 
 # Retrofit
 -dontnote retrofit2.Platform
