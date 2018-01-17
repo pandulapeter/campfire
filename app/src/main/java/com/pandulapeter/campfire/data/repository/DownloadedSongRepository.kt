@@ -21,7 +21,8 @@ import kotlin.properties.Delegates
 class DownloadedSongRepository(
     private val dataStorageManager: DataStorageManager,
     private val fileStorageManager: FileStorageManager,
-    private val networkManager: NetworkManager) : Repository() {
+    private val networkManager: NetworkManager
+) : Repository() {
     private var dataSet by Delegates.observable(dataStorageManager.downloadedSongCache) { _, _, new -> dataStorageManager.downloadedSongCache = new }
     private val downloadQueue = mutableListOf<String>()
 

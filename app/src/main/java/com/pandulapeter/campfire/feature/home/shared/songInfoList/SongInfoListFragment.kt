@@ -26,7 +26,8 @@ import org.koin.android.ext.android.inject
  *
  * Controlled by subclasses of [SongInfoListViewModel].
  */
-abstract class SongInfoListFragment<B : ViewDataBinding, out VM : SongInfoListViewModel>(@LayoutRes layoutResourceId: Int) : HomeChildFragment<B, VM>(layoutResourceId) {
+abstract class SongInfoListFragment<B : ViewDataBinding, out VM : SongInfoListViewModel>(@LayoutRes layoutResourceId: Int) :
+    HomeChildFragment<B, VM>(layoutResourceId) {
     protected val userPreferenceRepository by inject<UserPreferenceRepository>()
     protected val songInfoRepository by inject<SongInfoRepository>()
     protected val downloadedSongRepository by inject<DownloadedSongRepository>()

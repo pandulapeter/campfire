@@ -7,4 +7,5 @@ import com.google.gson.annotations.SerializedName
  */
 data class DownloadedSong(
     @SerializedName("id") val id: String,
-    @SerializedName("version") val version: Int = 0)
+    @SerializedName("version") val version: Int = 0
+)

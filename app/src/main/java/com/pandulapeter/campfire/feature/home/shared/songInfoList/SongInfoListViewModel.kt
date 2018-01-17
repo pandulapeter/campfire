@@ -19,9 +19,11 @@ import kotlinx.coroutines.experimental.async
  *
  * Handles events and logic for subclasses of [SongInfoListFragment].
  */
-abstract class SongInfoListViewModel(analyticsManager: AnalyticsManager,
-                                     protected val songInfoRepository: SongInfoRepository,
-                                     protected val downloadedSongRepository: DownloadedSongRepository) : HomeChildViewModel(analyticsManager), Subscriber {
+abstract class SongInfoListViewModel(
+    analyticsManager: AnalyticsManager,
+    protected val songInfoRepository: SongInfoRepository,
+    protected val downloadedSongRepository: DownloadedSongRepository
+) : HomeChildViewModel(analyticsManager), Subscriber {
     val adapter = SongInfoListAdapter()
     val shouldShowDownloadErrorSnackbar = ObservableField<SongInfo?>()
     val shouldShowPlaceholder = ObservableBoolean()

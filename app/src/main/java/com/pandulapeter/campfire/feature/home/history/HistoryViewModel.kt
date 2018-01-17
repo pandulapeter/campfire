@@ -17,11 +17,13 @@ import kotlin.math.abs
 /**
  * Handles events and logic for [HistoryFragment].
  */
-class HistoryViewModel(analyticsManager: AnalyticsManager,
-                       songInfoRepository: SongInfoRepository,
-                       downloadedSongRepository: DownloadedSongRepository,
-                       private val playlistRepository: PlaylistRepository,
-                       private val historyRepository: HistoryRepository) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
+class HistoryViewModel(
+    analyticsManager: AnalyticsManager,
+    songInfoRepository: SongInfoRepository,
+    downloadedSongRepository: DownloadedSongRepository,
+    private val playlistRepository: PlaylistRepository,
+    private val historyRepository: HistoryRepository
+) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val shouldShowClearButton = ObservableBoolean(historyRepository.getHistoryItems().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldInvalidateItemDecorations = ObservableBoolean()
@@ -49,7 +51,8 @@ class HistoryViewModel(analyticsManager: AnalyticsManager,
                     if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
                 } else {
                     if (isSongNew) R.string.library_new else null
-                })
+                }
+            )
         }
 
     override fun onUpdate(updateType: UpdateType) {
@@ -60,15 +63,49 @@ class HistoryViewModel(analyticsManager: AnalyticsManager,
             is UpdateType.HistoryUpdated,
             is UpdateType.ItemAddedToHistory, //TODO: Call adapter.notifyItemAdded() instead.
             is UpdateType.ItemRemovedFromHistory, //TODO: Call adapter.notifyItemRemoved() instead.
-            is UpdateType.HistoryCleared, //TODO: Call adapter.notifyDataSetChanged() instead.
-            is UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
-            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_DOWNLOADED) }
-            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_DOWNLOAD_DELETED) }
-            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.DOWNLOAD_STARTED) }
-            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.DOWNLOAD_SUCCESSFUL) }
-            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.DOWNLOAD_FAILED) }
-            is UpdateType.SongAddedToPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1 && !adapter.items[it].isSongOnAnyPlaylist) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_IN_A_PLAYLIST) }
-            is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1 && !playlistRepository.isSongInAnyPlaylist(updateType.songId)) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS) }
+            UpdateType.HistoryCleared, //TODO: Call adapter.notifyDataSetChanged() instead.
+            UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
+            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.SONG_DOWNLOADED
+                )
+            }
+            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.SONG_DOWNLOAD_DELETED
+                )
+            }
+            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.DOWNLOAD_STARTED
+                )
+            }
+            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.DOWNLOAD_SUCCESSFUL
+                )
+            }
+            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.DOWNLOAD_FAILED
+                )
+            }
+            is UpdateType.SongAddedToPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1 && !adapter.items[it].isSongOnAnyPlaylist) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.SONG_IS_IN_A_PLAYLIST
+                )
+            }
+            is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1 && !playlistRepository.isSongInAnyPlaylist(
+                        updateType.songId
+                    )) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS)
+            }
         }
     }
 

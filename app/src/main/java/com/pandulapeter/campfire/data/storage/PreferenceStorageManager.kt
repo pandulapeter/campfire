@@ -28,13 +28,15 @@ class PreferenceStorageManager(context: Context) {
 
     fun isLanguageFilterEnabled(language: Language) = when (language) {
         is Language.Known -> preferences.getBoolean(KEY_LANGUAGE_FILTER + language.id, true)
-        is Language.Unknown -> preferences.getBoolean(KEY_UNKNOWN_LANGUAGE_FILTER, true)
+        Language.Unknown -> preferences.getBoolean(KEY_UNKNOWN_LANGUAGE_FILTER, true)
     }
 
-    fun setLanguageFilterEnabled(language: Language, isEnabled: Boolean) = preferences.edit().putBoolean(when (language) {
-        is Language.Known -> KEY_LANGUAGE_FILTER + language.id
-        is Language.Unknown -> KEY_UNKNOWN_LANGUAGE_FILTER
-    }, isEnabled).apply()
+    fun setLanguageFilterEnabled(language: Language, isEnabled: Boolean) = preferences.edit().putBoolean(
+        when (language) {
+            is Language.Known -> KEY_LANGUAGE_FILTER + language.id
+            Language.Unknown -> KEY_UNKNOWN_LANGUAGE_FILTER
+        }, isEnabled
+    ).apply()
 
     private sealed class PreferenceFieldDelegate<T>(protected val key: String, protected val defaultValue: T) : ReadWriteProperty<PreferenceStorageManager, T> {
 
@@ -42,14 +44,16 @@ class PreferenceStorageManager(context: Context) {
 
             override fun getValue(thisRef: PreferenceStorageManager, property: KProperty<*>) = thisRef.preferences.getBoolean(key, defaultValue)
 
-            override fun setValue(thisRef: PreferenceStorageManager, property: KProperty<*>, value: kotlin.Boolean) = thisRef.preferences.edit().putBoolean(key, value).apply()
+            override fun setValue(thisRef: PreferenceStorageManager, property: KProperty<*>, value: kotlin.Boolean) =
+                thisRef.preferences.edit().putBoolean(key, value).apply()
         }
 
         class Long(key: String, defaultValue: kotlin.Long = 0) : PreferenceFieldDelegate<kotlin.Long>(key, defaultValue) {
 
             override fun getValue(thisRef: PreferenceStorageManager, property: KProperty<*>) = thisRef.preferences.getLong(key, defaultValue)
 
-            override fun setValue(thisRef: PreferenceStorageManager, property: KProperty<*>, value: kotlin.Long) = thisRef.preferences.edit().putLong(key, value).apply()
+            override fun setValue(thisRef: PreferenceStorageManager, property: KProperty<*>, value: kotlin.Long) =
+                thisRef.preferences.edit().putLong(key, value).apply()
         }
     }
 

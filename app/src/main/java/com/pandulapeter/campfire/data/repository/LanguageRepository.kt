@@ -27,7 +27,7 @@ class LanguageRepository(private val preferenceStorageManager: PreferenceStorage
             async(CommonPool) {
                 val languageFilters = HashMap<Language, Boolean>()
                 songInfoList.map { it.language.mapToLanguage() }.distinct().forEach {
-                    languageFilters.put(it, isLanguageFilterEnabled(it))
+                    languageFilters[it] = isLanguageFilterEnabled(it)
                 }
                 languageFilters
             }.await().let {

@@ -20,7 +20,15 @@ class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.
     private val songInfoRepository by inject<SongInfoRepository>()
     private val downloadedSongRepository by inject<DownloadedSongRepository>()
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
-    override val viewModel by lazy { SongPageViewModel(arguments.songId, analyticsManager, songInfoRepository, downloadedSongRepository, userPreferenceRepository) }
+    override val viewModel by lazy {
+        SongPageViewModel(
+            arguments.songId,
+            analyticsManager,
+            songInfoRepository,
+            downloadedSongRepository,
+            userPreferenceRepository
+        )
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

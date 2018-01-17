@@ -7,4 +7,5 @@ import com.google.gson.annotations.SerializedName
  */
 data class SongDetail(
     @SerializedName("id") val id: String,
-    @SerializedName("song") val song: String)
+    @SerializedName("song") val song: String
+)

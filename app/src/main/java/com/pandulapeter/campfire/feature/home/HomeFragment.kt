@@ -60,7 +60,8 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         }
         // Set up the side navigation drawer.
         binding.navigationView.disableScrollbars()
-        (binding.navigationView.getHeaderView(0).findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
+        (binding.navigationView.getHeaderView(0).findViewById<View>(R.id.version) as? TextView)?.text =
+            getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.library -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Library) }
@@ -89,7 +90,8 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         viewModel.playlists.onPropertyChanged(this) {
             playlistsContainerItem.run {
                 clear()
-                it.sortedBy { it.id }.forEachIndexed { index, playlist -> addPlaylistItem(playlist.id, index, playlist.title ?: getString(R.string.home_favorites)) }
+                it.sortedBy { it.id }
+                    .forEachIndexed { index, playlist -> addPlaylistItem(playlist.id, index, playlist.title ?: getString(R.string.home_favorites)) }
                 addPlaylistItem(R.id.playlists, it.size, getString(R.string.home_new_playlist), true)
                 setGroupCheckable(R.id.playlist_container, true, true)
                 updateCheckedItem()
@@ -146,15 +148,17 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
     }
 
     private fun updateCheckedItem() = viewModel.homeNavigationItem.let {
-        binding.navigationView.setCheckedItem(when (it) {
-            HomeViewModel.HomeNavigationItem.Library -> R.id.library
-            HomeViewModel.HomeNavigationItem.Collections -> R.id.collections
-            HomeViewModel.HomeNavigationItem.History -> R.id.history
-            HomeViewModel.HomeNavigationItem.Settings -> R.id.settings
-            is HomeViewModel.HomeNavigationItem.Playlist -> it.id
-            HomeViewModel.HomeNavigationItem.ManagePlaylists -> R.id.manage_playlists
-            HomeViewModel.HomeNavigationItem.ManageDownloads -> R.id.manage_downloads
-        })
+        binding.navigationView.setCheckedItem(
+            when (it) {
+                HomeViewModel.HomeNavigationItem.Library -> R.id.library
+                HomeViewModel.HomeNavigationItem.Collections -> R.id.collections
+                HomeViewModel.HomeNavigationItem.History -> R.id.history
+                HomeViewModel.HomeNavigationItem.Settings -> R.id.settings
+                is HomeViewModel.HomeNavigationItem.Playlist -> it.id
+                HomeViewModel.HomeNavigationItem.ManagePlaylists -> R.id.manage_playlists
+                HomeViewModel.HomeNavigationItem.ManageDownloads -> R.id.manage_downloads
+            }
+        )
     }
 
     /**
@@ -167,7 +171,9 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         if (viewModel.homeNavigationItem != homeNavigationItem || currentFragment == null) {
             viewModel.homeNavigationItem = homeNavigationItem
             if (currentFragment == null) {
-                childFragmentManager.beginTransaction().replace(R.id.fragment_container, homeNavigationItem.getFragment().apply { shouldPlayReturnAnimation = this@HomeFragment.shouldPlayReturnAnimation }).commitNow()
+                childFragmentManager.beginTransaction().replace(
+                    R.id.fragment_container,
+                    homeNavigationItem.getFragment().apply { shouldPlayReturnAnimation = this@HomeFragment.shouldPlayReturnAnimation }).commitNow()
             } else {
                 coroutine?.cancel()
                 coroutine = async(UI) {
@@ -187,10 +193,11 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         binding.drawerLayout.closeDrawer(GravityCompat.START)
     }
 
-    private fun SubMenu.addPlaylistItem(id: Int, index: Int, title: String, shouldUseAddIcon: Boolean = false) = add(com.pandulapeter.campfire.R.id.playlist_container, id, index, title).run {
-        setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist_24dp else R.drawable.ic_playlist_24dp)
-        isEnabled = viewModel.isLibraryReady.get()
-    }
+    private fun SubMenu.addPlaylistItem(id: Int, index: Int, title: String, shouldUseAddIcon: Boolean = false) =
+        add(com.pandulapeter.campfire.R.id.playlist_container, id, index, title).run {
+            setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist_24dp else R.drawable.ic_playlist_24dp)
+            isEnabled = viewModel.isLibraryReady.get()
+        }
 
     companion object {
         private var Bundle?.homeNavigationItem by BundleArgumentDelegate.String("home_navigation_item")

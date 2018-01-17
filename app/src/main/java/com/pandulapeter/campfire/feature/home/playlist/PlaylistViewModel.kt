@@ -20,14 +20,16 @@ import java.util.Collections
 /**
  * Handles events and logic for [PlaylistFragment].
  */
-class PlaylistViewModel(analyticsManager: AnalyticsManager,
-                        deepLinkManager: DeepLinkManager,
-                        songInfoRepository: SongInfoRepository,
-                        downloadedSongRepository: DownloadedSongRepository,
-                        appShortcutManager: AppShortcutManager,
-                        private val playlistRepository: PlaylistRepository,
-                        private val favoritesTitle: String,
-                        private val playlistId: Int) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
+class PlaylistViewModel(
+    analyticsManager: AnalyticsManager,
+    deepLinkManager: DeepLinkManager,
+    songInfoRepository: SongInfoRepository,
+    downloadedSongRepository: DownloadedSongRepository,
+    appShortcutManager: AppShortcutManager,
+    private val playlistRepository: PlaylistRepository,
+    private val favoritesTitle: String,
+    private val playlistId: Int
+) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val title = ObservableField(favoritesTitle)
     val editedTitle = ObservableField(title.get())
     val shouldShowPlayButton = ObservableBoolean(playlistRepository.getPlaylistSongIds(playlistId).isNotEmpty())
@@ -63,7 +65,8 @@ class PlaylistViewModel(analyticsManager: AnalyticsManager,
                     if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
                 } else {
                     if (isSongNew) R.string.library_new else null
-                })
+                }
+            )
         }
     }
 
@@ -71,7 +74,7 @@ class PlaylistViewModel(analyticsManager: AnalyticsManager,
         when (updateType) {
             is UpdateType.DownloadedSongsUpdated,
             is UpdateType.LibraryCacheUpdated,
-            is UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
+            UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
             is UpdateType.SongAddedToPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType) //TODO: Call adapter.notifyItemAdded() instead.
             is UpdateType.SongRemovedFromPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType) //TODO: Call adapter.notifyItemRemoved() instead.
             is UpdateType.PlaylistRenamed -> if (updateType.playlistId == playlistId) title.set(updateType.title)
@@ -80,13 +83,39 @@ class PlaylistViewModel(analyticsManager: AnalyticsManager,
                 super.onUpdate(updateType)
                 playlistRepository.getPlaylist(playlistId)?.let { title.set(it.title ?: favoritesTitle) }
             }
-            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_DOWNLOADED) }
-            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_DOWNLOAD_DELETED) }
-            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.DOWNLOAD_STARTED) }
-            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.DOWNLOAD_SUCCESSFUL) }
-            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.DOWNLOAD_FAILED) }
+            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.SONG_DOWNLOADED
+                )
+            }
+            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.SONG_DOWNLOAD_DELETED
+                )
+            }
+            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.DOWNLOAD_STARTED
+                )
+            }
+            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.DOWNLOAD_SUCCESSFUL
+                )
+            }
+            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.DOWNLOAD_FAILED
+                )
+            }
             is UpdateType.EditModeChanged -> if (updateType.playlistId == playlistId) {
-                val payload = if (updateType.isInEditMode && adapter.items.size > 1) SongInfoListAdapter.Payload.EDIT_MODE_OPEN else SongInfoListAdapter.Payload.EDIT_MODE_CLOSE
+                val payload =
+                    if (updateType.isInEditMode && adapter.items.size > 1) SongInfoListAdapter.Payload.EDIT_MODE_OPEN else SongInfoListAdapter.Payload.EDIT_MODE_CLOSE
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
                 shouldShowPlayButton.set(if (!updateType.isInEditMode) adapter.items.isNotEmpty() else false)
                 updateShouldAllowToolbarScrolling(adapter.items.isNotEmpty())
@@ -152,5 +181,6 @@ class PlaylistViewModel(analyticsManager: AnalyticsManager,
         playlistRepository.updatePlaylist(playlistId, list)
     }
 
-    private fun updateShouldAllowToolbarScrolling(isAdapterNotEmpty: Boolean) = shouldAllowToolbarScrolling.set(if (isInEditMode.get()) false else isAdapterNotEmpty)
+    private fun updateShouldAllowToolbarScrolling(isAdapterNotEmpty: Boolean) =
+        shouldAllowToolbarScrolling.set(if (isInEditMode.get()) false else isAdapterNotEmpty)
 }

@@ -14,7 +14,8 @@ import com.pandulapeter.campfire.R
 /**
  * Displays a placeholder text with an optional call to action button over empty lists.
  */
-class PlaceholderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : ConstraintLayout(context, attrs, defStyleAttr) {
+class PlaceholderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+    ConstraintLayout(context, attrs, defStyleAttr) {
 
     private val binding = DataBindingUtil.inflate<PlaceholderBinding>(LayoutInflater.from(context), R.layout.view_placeholder, this, true)
 

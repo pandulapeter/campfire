@@ -39,11 +39,10 @@ class SongInfoListAdapter : RecyclerView.Adapter<SongInfoListAdapter.SongInfoVie
 
                             override fun getNewListSize() = newItems.size
 
-                            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int)
-                                = oldItems[oldItemPosition].songInfo.id == newItems[newItemPosition].songInfo.id
+                            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int) =
+                                oldItems[oldItemPosition].songInfo.id == newItems[newItemPosition].songInfo.id
 
-                            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int)
-                                = oldItems[oldItemPosition] == newItems[newItemPosition]
+                            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
                         })
                     }.await().dispatchUpdatesTo(this@SongInfoListAdapter)
                     field = newItems

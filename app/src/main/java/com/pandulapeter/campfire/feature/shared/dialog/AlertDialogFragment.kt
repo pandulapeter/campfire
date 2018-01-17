@@ -50,11 +50,13 @@ class AlertDialogFragment : AppCompatDialogFragment() {
         private var Bundle?.positiveButton by BundleArgumentDelegate.Int("positiveButton")
         private var Bundle?.negativeButton by BundleArgumentDelegate.Int("negativeButton")
 
-        fun show(fragmentManager: FragmentManager,
-                 @StringRes title: Int,
-                 @StringRes message: Int,
-                 @StringRes positiveButton: Int,
-                 @StringRes negativeButton: Int) {
+        fun show(
+            fragmentManager: FragmentManager,
+            @StringRes title: Int,
+            @StringRes message: Int,
+            @StringRes positiveButton: Int,
+            @StringRes negativeButton: Int
+        ) {
             AlertDialogFragment().setArguments {
                 it.title = title
                 it.message = message

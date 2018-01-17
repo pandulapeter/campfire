@@ -20,11 +20,15 @@ import kotlin.math.min
 /**
  * Handles dynamic app shortcuts on or above Android Oreo.
  */
-class AppShortcutManager(context: Context,
-                         playlistRepository:
-                         PlaylistRepository,
-                         private val dataStorageManager: DataStorageManager) {
-    private val implementation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) RealImplementation(context, playlistRepository, dataStorageManager) else object : Implementation {}
+class AppShortcutManager(
+    context: Context,
+    playlistRepository:
+    PlaylistRepository,
+    private val dataStorageManager: DataStorageManager
+) {
+    private val implementation =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) RealImplementation(context, playlistRepository, dataStorageManager) else object :
+            Implementation {}
 
     fun onLibraryOpened() = implementation.trackAppShortcutUsage(LIBRARY_ID)
 
@@ -49,35 +53,46 @@ class AppShortcutManager(context: Context,
     }
 
     @RequiresApi(Build.VERSION_CODES.N_MR1)
-    private class RealImplementation(private val context: Context,
-                                     private val playlistRepository: PlaylistRepository,
-                                     private val dataStorageManager: DataStorageManager) : Implementation {
+    private class RealImplementation(
+        private val context: Context,
+        private val playlistRepository: PlaylistRepository,
+        private val dataStorageManager: DataStorageManager
+    ) : Implementation {
         private val shortcutManager: ShortcutManager = context.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
 
         override fun updateAppShortcuts() {
             removeAppShortcuts()
             val shortcuts = mutableListOf<ShortcutInfo>()
-            shortcuts.add(createAppShortcut(
-                LIBRARY_ID,
-                context.getString(R.string.home_library),
-                R.drawable.ic_shortcut_library_48dp,
-                HomeViewModel.HomeNavigationItem.Library))
-            shortcuts.add(createAppShortcut(
-                COLLECTIONS_ID,
-                context.getString(R.string.home_collections),
-                R.drawable.ic_shortcut_collections_48dp,
-                HomeViewModel.HomeNavigationItem.Collections))
+            shortcuts.add(
+                createAppShortcut(
+                    LIBRARY_ID,
+                    context.getString(R.string.home_library),
+                    R.drawable.ic_shortcut_library_48dp,
+                    HomeViewModel.HomeNavigationItem.Library
+                )
+            )
+            shortcuts.add(
+                createAppShortcut(
+                    COLLECTIONS_ID,
+                    context.getString(R.string.home_collections),
+                    R.drawable.ic_shortcut_collections_48dp,
+                    HomeViewModel.HomeNavigationItem.Collections
+                )
+            )
             if (dataStorageManager.playlistHistory.isEmpty()) {
                 dataStorageManager.playlistHistory = dataStorageManager.playlistHistory.toMutableList().apply { add(Playlist.FAVORITES_ID.toString()) }
             }
             dataStorageManager.playlistHistory.forEach {
                 playlistRepository.getPlaylist(it.toInt())?.let { playlist ->
                     val title = playlist.title ?: context.getString(R.string.home_favorites)
-                    shortcuts.add(createAppShortcut(
-                        PLAYLIST_ID + playlist.id,
-                        title,
-                        R.drawable.ic_shortcut_playlist_48dp,
-                        HomeViewModel.HomeNavigationItem.Playlist(playlist.id)))
+                    shortcuts.add(
+                        createAppShortcut(
+                            PLAYLIST_ID + playlist.id,
+                            title,
+                            R.drawable.ic_shortcut_playlist_48dp,
+                            HomeViewModel.HomeNavigationItem.Playlist(playlist.id)
+                        )
+                    )
                 }
             }
             shortcutManager.dynamicShortcuts = shortcuts
@@ -87,10 +102,12 @@ class AppShortcutManager(context: Context,
 
         override fun trackAppShortcutUsage(id: String) = shortcutManager.reportShortcutUsed(id)
 
-        private fun createAppShortcut(id: String,
-                                      label: String,
-                                      @DrawableRes icon: Int,
-                                      homeNavigationItem: HomeViewModel.HomeNavigationItem) = ShortcutInfo.Builder(context, id)
+        private fun createAppShortcut(
+            id: String,
+            label: String,
+            @DrawableRes icon: Int,
+            homeNavigationItem: HomeViewModel.HomeNavigationItem
+        ) = ShortcutInfo.Builder(context, id)
             .setShortLabel(label)
             .setIcon(Icon.createWithResource(context, icon))
             .setIntent(MainActivity.getStartIntent(context, MainViewModel.MainNavigationItem.Home(homeNavigationItem)).setAction(Intent.ACTION_VIEW))

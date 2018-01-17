@@ -14,4 +14,5 @@ data class SongInfoViewModel(
     var shouldShowDragHandle: Boolean,
     var shouldShowPlaylistButton: Boolean,
     var shouldShowDownloadButton: Boolean,
-    @StringRes var alertText: Int? = null)
+    @StringRes var alertText: Int? = null
+)

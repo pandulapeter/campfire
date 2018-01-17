@@ -15,7 +15,8 @@ import com.pandulapeter.campfire.util.onEventTriggered
  *
  * Controlled by subclasses of [HomeChildViewModel].
  */
-abstract class HomeChildFragment<B : ViewDataBinding, out VM : HomeChildViewModel>(@LayoutRes layoutResourceId: Int) : CampfireFragment<B, VM>(layoutResourceId) {
+abstract class HomeChildFragment<B : ViewDataBinding, out VM : HomeChildViewModel>(@LayoutRes layoutResourceId: Int) :
+    CampfireFragment<B, VM>(layoutResourceId) {
     var shouldPlayReturnAnimation = false
     override val viewModel by lazy { createViewModel() }
 
@@ -27,9 +28,9 @@ abstract class HomeChildFragment<B : ViewDataBinding, out VM : HomeChildViewMode
         }
     }
 
-    abstract protected fun createViewModel(): VM
+    protected abstract fun createViewModel(): VM
 
-    abstract protected fun getAppBarLayout(): AppBarLayout
+    protected abstract fun getAppBarLayout(): AppBarLayout
 
     fun expandAppBar() = getAppBarLayout().setExpanded(true, true)
 

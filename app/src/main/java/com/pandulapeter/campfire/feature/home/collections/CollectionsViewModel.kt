@@ -8,8 +8,10 @@ import com.pandulapeter.campfire.networking.AnalyticsManager
 /**
  * Handles events and logic for [CollectionsFragment].
  */
-class CollectionsViewModel(analyticsManager: AnalyticsManager,
-                           appShortcutManager: AppShortcutManager) : HomeChildViewModel(analyticsManager) {
+class CollectionsViewModel(
+    analyticsManager: AnalyticsManager,
+    appShortcutManager: AppShortcutManager
+) : HomeChildViewModel(analyticsManager) {
     val shouldAllowToolbarScrolling = ObservableBoolean()
 
     init {

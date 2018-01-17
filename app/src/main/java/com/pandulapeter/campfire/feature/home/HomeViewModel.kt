@@ -54,7 +54,7 @@ class HomeViewModel(
             is UpdateType.SongRemovedFromDownloads -> hasDownloads.set(downloadedSongRepository.getDownloadedSongIds().isNotEmpty())
             is UpdateType.SongAddedToDownloads,
             is UpdateType.DownloadSuccessful -> hasDownloads.set(true)
-            is UpdateType.AllDownloadsRemoved -> hasDownloads.set(false)
+            UpdateType.AllDownloadsRemoved -> hasDownloads.set(false)
             is UpdateType.PlaylistsUpdated -> playlists.set(updateType.playlists)
             is UpdateType.NewPlaylistsCreated -> playlists.set(playlists.get().toMutableList().apply { add(updateType.playlists) })
             is UpdateType.PlaylistRenamed -> playlists.get().find { it.id == updateType.playlistId }?.let { oldPlaylist ->

@@ -33,13 +33,23 @@ import org.koin.android.ext.android.inject
  *
  * Controlled by [PlaylistViewModel].
  */
-class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist), AlertDialogFragment.OnDialogItemsSelectedListener {
+class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist),
+    AlertDialogFragment.OnDialogItemsSelectedListener {
     private val playlistRepository by inject<PlaylistRepository>()
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
     private val appShortcutManager by inject<AppShortcutManager>()
     private val deepLinkManager by inject<DeepLinkManager>()
 
-    override fun createViewModel() = PlaylistViewModel(analyticsManager, deepLinkManager, songInfoRepository, downloadedSongRepository, appShortcutManager, playlistRepository, getString(R.string.home_favorites), arguments.playlistId)
+    override fun createViewModel() = PlaylistViewModel(
+        analyticsManager,
+        deepLinkManager,
+        songInfoRepository,
+        downloadedSongRepository,
+        appShortcutManager,
+        playlistRepository,
+        getString(R.string.home_favorites),
+        arguments.playlistId
+    )
 
     override fun getAppBarLayout() = binding.appBarLayout
 
@@ -62,11 +72,13 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
             }
         }
         viewModel.shouldShowDeleteConfirmation.onEventTriggered(this) {
-            AlertDialogFragment.show(childFragmentManager,
+            AlertDialogFragment.show(
+                childFragmentManager,
                 R.string.playlist_delete_confirmation_title,
                 R.string.playlist_delete_confirmation_message,
                 R.string.playlist_delete_confirmation_delete,
-                R.string.cancel)
+                R.string.cancel
+            )
         }
         // Setup swipe-to-dismiss and drag-to-rearrange functionality.
         //TODO: Change the elevation of the card that's being dragged.
@@ -74,7 +86,10 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
 
             override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =
-                if (viewModel.isInEditMode.get()) makeMovementFlags(if (viewModel.adapter.items.size > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) else 0
+                if (viewModel.isInEditMode.get()) makeMovementFlags(
+                    if (viewModel.adapter.items.size > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
+                    ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                ) else 0
 
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = consume {
                 viewHolder?.adapterPosition?.let { originalPosition ->
@@ -97,8 +112,16 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
         // Set up list item click listeners.
         viewModel.adapter.itemClickListener = { position ->
             binding.appBarLayout.performAfterExpand(
-                onExpanded = { if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id, arguments.playlistId)) },
-                connectedView = binding.recyclerView)
+                onExpanded = {
+                    if (isAdded) (activity as? MainActivity)?.setNavigationItem(
+                        MainViewModel.MainNavigationItem.Detail(
+                            viewModel.adapter.items[position].songInfo.id,
+                            arguments.playlistId
+                        )
+                    )
+                },
+                connectedView = binding.recyclerView
+            )
         }
         viewModel.adapter.downloadActionClickListener = { position ->
             viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }

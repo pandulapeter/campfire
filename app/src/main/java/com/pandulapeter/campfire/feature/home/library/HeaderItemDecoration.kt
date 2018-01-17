@@ -33,8 +33,10 @@ abstract class HeaderItemDecoration(context: Context) : RecyclerView.ItemDecorat
         super.onDraw(canvas, parent, state)
         if (headerBinding == null) {
             DataBindingUtil.inflate<HeaderItemBinding>(LayoutInflater.from(parent.context), R.layout.item_header, parent, false).let {
-                it.root.measure(ViewGroup.getChildMeasureSpec(View.MeasureSpec.makeMeasureSpec(parent.width, View.MeasureSpec.EXACTLY), 0, it.root.layoutParams.width),
-                    ViewGroup.getChildMeasureSpec(View.MeasureSpec.makeMeasureSpec(parent.height, View.MeasureSpec.UNSPECIFIED), 0, it.root.layoutParams.height))
+                it.root.measure(
+                    ViewGroup.getChildMeasureSpec(View.MeasureSpec.makeMeasureSpec(parent.width, View.MeasureSpec.EXACTLY), 0, it.root.layoutParams.width),
+                    ViewGroup.getChildMeasureSpec(View.MeasureSpec.makeMeasureSpec(parent.height, View.MeasureSpec.UNSPECIFIED), 0, it.root.layoutParams.height)
+                )
                 it.root.layout(0, 0, it.root.measuredWidth, it.root.measuredHeight)
                 headerBinding = it
             }

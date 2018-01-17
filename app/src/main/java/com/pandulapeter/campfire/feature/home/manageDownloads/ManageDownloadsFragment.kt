@@ -21,7 +21,9 @@ import org.koin.android.ext.android.inject
  *
  * Controlled by [ManageDownloadsViewModel].
  */
-class ManageDownloadsFragment : SongInfoListFragment<ManageDownloadsBinding, ManageDownloadsViewModel>(R.layout.fragment_manage_downloads), AlertDialogFragment.OnDialogItemsSelectedListener {
+class ManageDownloadsFragment :
+    SongInfoListFragment<ManageDownloadsBinding, ManageDownloadsViewModel>(R.layout.fragment_manage_downloads),
+    AlertDialogFragment.OnDialogItemsSelectedListener {
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
 
     override fun createViewModel() = ManageDownloadsViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository)
@@ -35,11 +37,13 @@ class ManageDownloadsFragment : SongInfoListFragment<ManageDownloadsBinding, Man
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.shouldShowConfirmationDialog.onEventTriggered(this) {
-            AlertDialogFragment.show(childFragmentManager,
+            AlertDialogFragment.show(
+                childFragmentManager,
                 R.string.manage_downloads_delete_all_confirmation_title,
                 R.string.manage_downloads_delete_all_confirmation_message,
                 R.string.manage_downloads_delete_all_confirmation_clear,
-                R.string.cancel)
+                R.string.cancel
+            )
         }
         // Set up swipe-to-dismiss functionality.
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
@@ -60,7 +64,8 @@ class ManageDownloadsFragment : SongInfoListFragment<ManageDownloadsBinding, Man
         viewModel.adapter.itemClickListener = { position ->
             binding.appBarLayout.performAfterExpand(
                 onExpanded = { if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id)) },
-                connectedView = binding.recyclerView)
+                connectedView = binding.recyclerView
+            )
         }
         viewModel.shouldShowHintSnackbar.onPropertyChanged(this) {
             if (firstTimeUserExperienceRepository.shouldShowManageDownloadsHint) {

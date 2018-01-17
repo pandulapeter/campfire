@@ -43,7 +43,19 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
-    override val viewModel by lazy { DetailViewModel(arguments.songId, arguments.playlistId, analyticsManager, userPreferenceRepository, downloadedSongRepository, childFragmentManager, playlistRepository, songInfoRepository, historyRepository) }
+    override val viewModel by lazy {
+        DetailViewModel(
+            arguments.songId,
+            arguments.playlistId,
+            analyticsManager,
+            userPreferenceRepository,
+            downloadedSongRepository,
+            childFragmentManager,
+            playlistRepository,
+            songInfoRepository,
+            historyRepository
+        )
+    }
     private var isBackAnimationInProgress = false
     private lateinit var transposeHigherMenuItem: MenuItem
     private lateinit var transposeLowerMenuItem: MenuItem
@@ -106,7 +118,8 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                         isBackAnimationInProgress = false
                         viewModel.shouldNavigateBack.set(true)
                     },
-                    connectedView = binding.viewPager)
+                    connectedView = binding.viewPager
+                )
             }
         }
     }

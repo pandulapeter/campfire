@@ -14,7 +14,8 @@ fun DrawerLayout.addDrawerListener(
     onDrawerStateChanged: () -> Unit = {},
     onDrawerSlide: () -> Unit = {},
     onDrawerClosed: () -> Unit = {},
-    onDrawerOpened: () -> Unit = {}) = addDrawerListener(object : DrawerLayout.DrawerListener {
+    onDrawerOpened: () -> Unit = {}
+) = addDrawerListener(object : DrawerLayout.DrawerListener {
     override fun onDrawerStateChanged(newState: Int) = onDrawerStateChanged()
 
     override fun onDrawerSlide(drawerView: View, slideOffset: Float) = onDrawerSlide()

@@ -16,11 +16,13 @@ import kotlinx.coroutines.experimental.async
 /**
  * Handles events and logic for [SongPageFragment].
  */
-class SongPageViewModel(private val id: String,
-                        analyticsManager: AnalyticsManager,
-                        private val songInfoRepository: SongInfoRepository,
-                        private val downloadedSongRepository: DownloadedSongRepository,
-                        userPreferenceRepository: UserPreferenceRepository) : CampfireViewModel(analyticsManager), Subscriber {
+class SongPageViewModel(
+    private val id: String,
+    analyticsManager: AnalyticsManager,
+    private val songInfoRepository: SongInfoRepository,
+    private val downloadedSongRepository: DownloadedSongRepository,
+    userPreferenceRepository: UserPreferenceRepository
+) : CampfireViewModel(analyticsManager), Subscriber {
     val text = ObservableField("")
     val shouldShowPlaceholder = ObservableBoolean()
     val isLoading = ObservableBoolean(downloadedSongRepository.isSongLoading(id))

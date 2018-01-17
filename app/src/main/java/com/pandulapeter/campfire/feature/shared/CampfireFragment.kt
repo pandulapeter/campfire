@@ -23,7 +23,7 @@ import org.koin.android.ext.android.inject
  */
 abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private val layoutResourceId: Int) : Fragment() {
     protected val analyticsManager by inject<AnalyticsManager>()
-    abstract protected val viewModel: VM
+    protected abstract val viewModel: VM
     protected lateinit var binding: B
     private var snackbar: Snackbar? = null
     private var hintSnackbar: Snackbar? = null
@@ -55,7 +55,10 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         hintSnackbar?.show()
     }
 
-    protected fun View.showSnackbar(@StringRes message: Int, @StringRes actionButton: Int? = null, action: (View) -> Unit = {}, dismissListener: (() -> Unit)? = null) = showSnackbar(context.getString(message), actionButton, action, dismissListener)
+    protected fun View.showSnackbar(
+        @StringRes message: Int, @StringRes actionButton: Int? = null, action: (View) -> Unit = {},
+        dismissListener: (() -> Unit)? = null
+    ) = showSnackbar(context.getString(message), actionButton, action, dismissListener)
 
     protected fun View.showSnackbar(message: String, @StringRes actionButton: Int? = null, action: (View) -> Unit = {}, dismissListener: (() -> Unit)? = null) {
         dismissSnackbar()

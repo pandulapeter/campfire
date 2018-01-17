@@ -25,13 +25,15 @@ import com.pandulapeter.campfire.util.toggle
 /**
  * Handles events and logic for [LibraryFragment].
  */
-class LibraryViewModel(analyticsManager: AnalyticsManager,
-                       songInfoRepository: SongInfoRepository,
-                       downloadedSongRepository: DownloadedSongRepository,
-                       appShortcutManager: AppShortcutManager,
-                       private val userPreferenceRepository: UserPreferenceRepository,
-                       private val playlistRepository: PlaylistRepository,
-                       private val languageRepository: LanguageRepository) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
+class LibraryViewModel(
+    analyticsManager: AnalyticsManager,
+    songInfoRepository: SongInfoRepository,
+    downloadedSongRepository: DownloadedSongRepository,
+    appShortcutManager: AppShortcutManager,
+    private val userPreferenceRepository: UserPreferenceRepository,
+    private val playlistRepository: PlaylistRepository,
+    private val languageRepository: LanguageRepository
+) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.searchQuery.isNotEmpty())
     val searchQuery = ObservableField(userPreferenceRepository.searchQuery)
     val shouldShowViewOptions = ObservableBoolean(false)
@@ -97,7 +99,8 @@ class LibraryViewModel(analyticsManager: AnalyticsManager,
                     if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
                 } else {
                     if (isSongNew) R.string.library_new else null
-                })
+                }
+            )
         }
     }
 
@@ -113,21 +116,55 @@ class LibraryViewModel(analyticsManager: AnalyticsManager,
             is UpdateType.ShouldHideExplicitUpdated,
             is UpdateType.ShouldHideWorkInProgressUpdated,
             is UpdateType.SearchQueryUpdated,
-            is UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
+            UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
             is UpdateType.LoadingStateChanged -> isLoading.set(updateType.isLoading)
-            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_DOWNLOADED) }
-            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_DOWNLOAD_DELETED) }
-            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.DOWNLOAD_STARTED) }
-            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.DOWNLOAD_SUCCESSFUL) }
-            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.DOWNLOAD_FAILED) }
-            is UpdateType.SongAddedToPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1 && !adapter.items[it].isSongOnAnyPlaylist) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_IN_A_PLAYLIST) }
-            is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let { if (it != -1 && !playlistRepository.isSongInAnyPlaylist(updateType.songId)) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS) }
+            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.SONG_DOWNLOADED
+                )
+            }
+            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.SONG_DOWNLOAD_DELETED
+                )
+            }
+            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.DOWNLOAD_STARTED
+                )
+            }
+            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.DOWNLOAD_SUCCESSFUL
+                )
+            }
+            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.DOWNLOAD_FAILED
+                )
+            }
+            is UpdateType.SongAddedToPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1 && !adapter.items[it].isSongOnAnyPlaylist) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.SONG_IS_IN_A_PLAYLIST
+                )
+            }
+            is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1 && !playlistRepository.isSongInAnyPlaylist(
+                        updateType.songId
+                    )) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS)
+            }
             is UpdateType.LanguagesUpdated -> {
                 languageFilters.get().clear()
                 updateType.languageFilters.forEach { (language, isEnabled) ->
-                    languageFilters.get().put(language, ObservableBoolean(isEnabled).apply {
+                    languageFilters.get()[language] = ObservableBoolean(isEnabled).apply {
                         onPropertyChanged { languageRepository.setLanguageFilterEnabled(language, it) }
-                    })
+                    }
                 }
                 languageFilters.notifyChange()
             }
@@ -164,23 +201,27 @@ class LibraryViewModel(analyticsManager: AnalyticsManager,
             adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.artistWithSpecialCharactersRemoved[0]
         }
 
-    fun getHeaderTitle(position: Int) = (if (isSortedByTitle.get()) adapter.items[position].songInfo.titleWithSpecialCharactersRemoved[0] else adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0]).toString().toUpperCase()
+    fun getHeaderTitle(position: Int) =
+        (if (isSortedByTitle.get()) adapter.items[position].songInfo.titleWithSpecialCharactersRemoved[0] else adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0]).toString().toUpperCase()
 
     private fun updatePlaceholderState() {
         if (shouldShowPlaceholder.get()) {
             val isLibraryInitialized = songInfoRepository.getLibrarySongs().isNotEmpty()
-            placeholderText.set(when {
-                isLoading.get() && !isLibraryInitialized -> R.string.library_placeholder_loading
-                !isLibraryInitialized -> R.string.library_placeholder_loading_failed
-                itemCountWithoutSearchFilter > 0 -> R.string.library_placeholder_search
-                else -> R.string.library_placeholder_filters
-            })
+            placeholderText.set(
+                when {
+                    isLoading.get() && !isLibraryInitialized -> R.string.library_placeholder_loading
+                    !isLibraryInitialized -> R.string.library_placeholder_loading_failed
+                    itemCountWithoutSearchFilter > 0 -> R.string.library_placeholder_search
+                    else -> R.string.library_placeholder_filters
+                }
+            )
             shouldShowPlaceholderButton.set((!isLoading.get() && !isLibraryInitialized) || placeholderText.get() == R.string.library_placeholder_filters)
             placeholderButtonText.set(if (placeholderText.get() == R.string.library_placeholder_filters) R.string.library_view_options else R.string.try_again)
         }
     }
 
-    private fun updateShouldAllowToolbarScrolling(isAdapterNotEmpty: Boolean) = shouldAllowToolbarScrolling.set(if (isSearchInputVisible.get()) false else isAdapterNotEmpty)
+    private fun updateShouldAllowToolbarScrolling(isAdapterNotEmpty: Boolean) =
+        shouldAllowToolbarScrolling.set(if (isSearchInputVisible.get()) false else isAdapterNotEmpty)
 
     private fun List<SongInfo>.filterByLanguages() = filter { languageRepository.isLanguageFilterEnabled(it.language.mapToLanguage()) }
 

@@ -75,10 +75,16 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager) : R
         if (!isSongInPlaylist(playlistId, songId)) {
             dataSet = dataSet.toMutableMap().apply {
                 getPlaylist(playlistId)?.let {
-                    put(playlistId.toString(), Playlist(playlistId, it.title, it.songIds.toMutableList().apply { if (!contains(songId)) if (position == null) add(songId) else add(position, songId) }))
+                    put(
+                        playlistId.toString(),
+                        Playlist(
+                            playlistId,
+                            it.title,
+                            it.songIds.toMutableList().apply { if (!contains(songId)) if (position == null) add(songId) else add(position, songId) })
+                    )
                 }
             }
-            notifySubscribers(UpdateType.SongAddedToPlaylist(playlistId, songId, position ?: dataSet.values.size - 1))
+            notifySubscribers(UpdateType.SongAddedToPlaylist(playlistId, songId, position ?: dataSet.values.size-1))
         }
     }
 

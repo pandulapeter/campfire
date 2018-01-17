@@ -42,11 +42,13 @@ class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.shouldShowConfirmationDialog.onEventTriggered(this) {
-            AlertDialogFragment.show(childFragmentManager,
+            AlertDialogFragment.show(
+                childFragmentManager,
                 R.string.history_clear_confirmation_title,
                 R.string.history_clear_confirmation_message,
                 R.string.history_clear_confirmation_clear,
-                R.string.cancel)
+                R.string.cancel
+            )
         }
         // Set up swipe-to-dismiss functionality.
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
@@ -64,20 +66,29 @@ class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Fix a bug with updating the item decorations.
-        viewModel.shouldInvalidateItemDecorations.onEventTriggered(this) { if (isAdded) binding.recyclerView.run { postDelayed({ invalidateItemDecorations() }, 100) } }
+        viewModel.shouldInvalidateItemDecorations.onEventTriggered(this) {
+            if (isAdded) binding.recyclerView.run {
+                postDelayed(
+                    { invalidateItemDecorations() },
+                    100
+                )
+            }
+        }
         context?.let { context ->
             // Set up the item headers.
             binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(context) {
                 override fun isHeader(position: Int) = position >= 0 && viewModel.isHeader(position)
 
-                override fun getHeaderTitle(position: Int) = if (position >= 0) viewModel.getHeaderTitle(position).let { if (it == 0) "" else getString(it) } else ""
+                override fun getHeaderTitle(position: Int) =
+                    if (position >= 0) viewModel.getHeaderTitle(position).let { if (it == 0) "" else getString(it) } else ""
             })
 
             // Set up list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
                 binding.appBarLayout.performAfterExpand(
                     onExpanded = { if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id)) },
-                    connectedView = binding.recyclerView)
+                    connectedView = binding.recyclerView
+                )
             }
             viewModel.adapter.playlistActionClickListener = { position ->
                 viewModel.adapter.items[position].let { songInfoViewModel ->

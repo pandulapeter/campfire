@@ -40,7 +40,15 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
     private val languageRepository by inject<LanguageRepository>()
     private val appShortcutManager by inject<AppShortcutManager>()
 
-    override fun createViewModel() = LibraryViewModel(analyticsManager, songInfoRepository, downloadedSongRepository, appShortcutManager, userPreferenceRepository, playlistRepository, languageRepository)
+    override fun createViewModel() = LibraryViewModel(
+        analyticsManager,
+        songInfoRepository,
+        downloadedSongRepository,
+        appShortcutManager,
+        userPreferenceRepository,
+        playlistRepository,
+        languageRepository
+    )
 
     override fun getAppBarLayout() = binding.appBarLayout
 
@@ -118,7 +126,8 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
             viewModel.adapter.itemClickListener = { position ->
                 binding.appBarLayout.performAfterExpand(
                     onExpanded = { if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id)) },
-                    connectedView = binding.swipeRefreshLayout)
+                    connectedView = binding.swipeRefreshLayout
+                )
             }
             viewModel.adapter.playlistActionClickListener = { position ->
                 viewModel.adapter.items[position].let { songInfoViewModel ->
@@ -170,5 +179,6 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
         return false
     }
 
-    private fun updateDrawerLockMode(shouldAllowViewOptions: Boolean) = binding.drawerLayout.setDrawerLockMode(if (shouldAllowViewOptions) DrawerLayout.LOCK_MODE_UNDEFINED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+    private fun updateDrawerLockMode(shouldAllowViewOptions: Boolean) =
+        binding.drawerLayout.setDrawerLockMode(if (shouldAllowViewOptions) DrawerLayout.LOCK_MODE_UNDEFINED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
 }

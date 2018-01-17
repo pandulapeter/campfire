@@ -55,7 +55,6 @@
     <string name="library_show_work_in_progress">Show unfinished</string>
     <string name="library_show_explicit">Show explicit</string>
     <string name="library_song_count">%s songs</string>
-    <string name="library_more">More</string>
 
     <!-- Collections screen -->
     <string name="collections_work_in_progress">Work on the Collections screen is in progress.</string>

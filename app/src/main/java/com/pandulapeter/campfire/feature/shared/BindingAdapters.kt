@@ -19,17 +19,20 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.util.drawable
 
 @BindingAdapter(value = ["android:drawableStart", "android:drawableTop", "android:drawableEnd", "android:drawableBottom"], requireAll = false)
-fun setCompoundDrawables(view: TextView,
-                         @DrawableRes drawableStart: Int,
-                         @DrawableRes drawableTop: Int,
-                         @DrawableRes drawableEnd: Int,
-                         @DrawableRes drawableBottom: Int) {
+fun setCompoundDrawables(
+    view: TextView,
+    @DrawableRes drawableStart: Int,
+    @DrawableRes drawableTop: Int,
+    @DrawableRes drawableEnd: Int,
+    @DrawableRes drawableBottom: Int
+) {
     val drawables = view.compoundDrawables
     view.setCompoundDrawablesWithIntrinsicBounds(
         if (drawableStart == 0) drawables[0] else view.context.drawable(drawableStart),
         if (drawableTop == 0) drawables[1] else view.context.drawable(drawableTop),
         if (drawableEnd == 0) drawables[2] else view.context.drawable(drawableEnd),
-        if (drawableBottom == 0) drawables[3] else view.context.drawable(drawableBottom))
+        if (drawableBottom == 0) drawables[3] else view.context.drawable(drawableBottom)
+    )
 }
 
 @BindingAdapter("android:text")
@@ -47,22 +50,6 @@ fun setText(view: TextView, @StringRes text: Int?) {
     view.visibility = if (text == null) View.GONE else View.VISIBLE
     text?.let {
         view.setText(text)
-    }
-}
-
-
-@BindingAdapter("android:contentDescription")
-fun setContentDescription(view: ImageView, @StringRes contentDescription: Int?) {
-    contentDescription?.let {
-        view.contentDescription = view.context.getString(it)
-    }
-}
-
-@BindingAdapter("android:drawable")
-fun setDrawable(view: ImageView, @DrawableRes drawable: Int?) {
-    view.visibility = if (drawable == null) View.GONE else View.VISIBLE
-    drawable?.let {
-        view.setImageDrawable(view.context.drawable(it))
     }
 }
 
@@ -117,7 +104,21 @@ fun setAnimation(view: ImageView, @DrawableRes drawableRes: Int, lastFrame: Draw
 fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?) {
     //TODO: Long titles or subtitles should be separately ellipsized.
     val completeText = SpannableString("${title ?: ""}\n${subtitle ?: ""}")
-    title?.let { completeText.setSpan(TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Title), 0, it.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE) }
-    subtitle?.let { completeText.setSpan(TextAppearanceSpan(view.context, R.style.SubtitleTextAppearance), title?.length ?: 0, completeText.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE) }
+    title?.let {
+        completeText.setSpan(
+            TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Title),
+            0,
+            it.length,
+            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+        )
+    }
+    subtitle?.let {
+        completeText.setSpan(
+            TextAppearanceSpan(view.context, R.style.SubtitleTextAppearance),
+            title?.length ?: 0,
+            completeText.length,
+            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+        )
+    }
     view.text = completeText
 }

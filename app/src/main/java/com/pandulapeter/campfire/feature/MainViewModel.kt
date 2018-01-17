@@ -34,7 +34,7 @@ class MainViewModel(userPreferenceRepository: UserPreferenceRepository, override
                 string == null || string.isEmpty() -> null
                 string.startsWith(VALUE_HOME) -> Home(HomeViewModel.HomeNavigationItem.fromStringValue(string.removePrefix(VALUE_HOME)))
                 string.startsWith(VALUE_DETAIL) -> Detail(string.removePrefix(VALUE_DETAIL), null)
-                // Parsing the playlistId is not implemented because there is no way to open the detail screen with a playlist (from an app shortcut) without going through the main screen.
+            // Parsing the playlistId is not implemented because there is no way to open the detail screen with a playlist (from an app shortcut) without going through the main screen.
                 else -> Home(HomeViewModel.HomeNavigationItem.Library)
             }
         }

@@ -18,7 +18,8 @@ class SongInfoRepository(
     private val preferenceStorageManager: PreferenceStorageManager,
     private val dataStorageManager: DataStorageManager,
     private val networkManager: NetworkManager,
-    private val languageRepository: LanguageRepository) : Repository() {
+    private val languageRepository: LanguageRepository
+) : Repository() {
     private var dataSet by Delegates.observable(dataStorageManager.songInfoCache) { _, _, new ->
         languageRepository.updateLanguages(getLibrarySongs())
         dataStorageManager.songInfoCache = new

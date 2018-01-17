@@ -17,10 +17,12 @@ import kotlinx.coroutines.experimental.async
 /**
  * Handles events and logic for [ManageDownloadsFragment].
  */
-class ManageDownloadsViewModel(context: Context?,
-                               analyticsManager: AnalyticsManager,
-                               songInfoRepository: SongInfoRepository,
-                               downloadedSongRepository: DownloadedSongRepository) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
+class ManageDownloadsViewModel(
+    context: Context?,
+    analyticsManager: AnalyticsManager,
+    songInfoRepository: SongInfoRepository,
+    downloadedSongRepository: DownloadedSongRepository
+) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val shouldShowDeleteAllButton = ObservableBoolean(downloadedSongRepository.getDownloadedSongIds().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldShowHintSnackbar = ObservableBoolean()
@@ -39,7 +41,8 @@ class ManageDownloadsViewModel(context: Context?,
                 shouldShowDragHandle = false,
                 shouldShowPlaylistButton = false,
                 shouldShowDownloadButton = false,
-                alertText = null)
+                alertText = null
+            )
         }
 
     override fun onUpdate(updateType: UpdateType) {
@@ -47,7 +50,7 @@ class ManageDownloadsViewModel(context: Context?,
             is UpdateType.DownloadedSongsUpdated,
             is UpdateType.SongRemovedFromDownloads, //TODO: Cal adapter.notifyItemRemoved() instead
             is UpdateType.SongAddedToDownloads, //TODO: Cal adapter.notifyItemAdded() instead
-            is UpdateType.AllDownloadsRemoved, //TODO: Cal adapter.notifyDataSetChanged() instead
+            UpdateType.AllDownloadsRemoved, //TODO: Cal adapter.notifyDataSetChanged() instead
             is UpdateType.DownloadSuccessful, //TODO: Cal adapter.notifyItemAdded() instead
             is UpdateType.LibraryCacheUpdated -> super.onUpdate(updateType)
         }

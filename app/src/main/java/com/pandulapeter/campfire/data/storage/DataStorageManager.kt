@@ -33,7 +33,8 @@ class DataStorageManager(context: Context, gson: Gson) {
     private class StringListDelegate(
         private val gson: Gson,
         private val sharedPreferences: SharedPreferences,
-        private val key: String) : ReadWriteProperty<Any, List<String>> {
+        private val key: String
+    ) : ReadWriteProperty<Any, List<String>> {
 
         override fun getValue(thisRef: Any, property: KProperty<*>): List<String> = try {
             gson.fromJson(sharedPreferences.getString(key, "[]"), object : TypeToken<List<String>>() {}.type)
@@ -49,7 +50,8 @@ class DataStorageManager(context: Context, gson: Gson) {
         private val gson: Gson,
         private val sharedPreferences: SharedPreferences,
         idKey: String,
-        private val valueKeyPrefix: String) : ReadWriteProperty<Any, Map<String, T>> {
+        private val valueKeyPrefix: String
+    ) : ReadWriteProperty<Any, Map<String, T>> {
         private var ids by StringListDelegate(gson, sharedPreferences, idKey)
 
         override fun getValue(thisRef: Any, property: KProperty<*>): Map<String, T> {
@@ -68,8 +70,8 @@ class DataStorageManager(context: Context, gson: Gson) {
         override fun setValue(thisRef: Any, property: KProperty<*>, value: Map<String, T>) {
             async {
                 if (async(CommonPool) {
-                    getValue(thisRef, property) != value
-                }.await()) {
+                        getValue(thisRef, property) != value
+                    }.await()) {
                     //TODO: If only a single line has been changed, we should not rewrite the entire map.
                     //TODO: This code does not clean up after itself: once an ID is removed, the corresponding entry is still stored in the file.
                     ids = value.keys.toList()

@@ -17,7 +17,8 @@ import com.pandulapeter.campfire.util.dimension
  * Custom ImageView that sets its own background and padding and provides a fake touch area that is
  * larger than the actual View bounds. Used for icons that are part of the app bar.
  */
-class AppBarButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : AppCompatImageView(context, attrs, defStyleAttr) {
+class AppBarButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+    AppCompatImageView(context, attrs, defStyleAttr) {
 
     init {
         val padding = context.dimension(R.dimen.toolbar_action_button_padding)

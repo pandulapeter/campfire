@@ -38,8 +38,6 @@
 
     <!-- Playlist chooser bottom sheet -->
     <dimen name="playlist_chooser_bottom_sheet_width">0dp</dimen>
-    <dimen name="bottom_sheet_toolbar_close_margin">14dp</dimen>
-    <dimen name="bottom_sheet_toolbar_remove_margin">8dp</dimen>
     <dimen name="bottom_sheet_toolbar_margin">56dp</dimen>
     <dimen name="bottom_sheet_toolbar_elevation">4dp</dimen>
 
