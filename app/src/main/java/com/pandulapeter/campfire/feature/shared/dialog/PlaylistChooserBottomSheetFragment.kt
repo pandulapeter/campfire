@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.setArguments
 import org.koin.android.ext.android.inject
+import kotlin.math.min
 
 
 /**
@@ -143,6 +144,7 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment(), Subscriber
                 shouldTransformTopToAppBar = true
                 updateSlideState(if (behavior.state == BottomSheetBehavior.STATE_EXPANDED) 1f else 0f)
             }
+            behavior.peekHeight = min(binding.root.height, screenHeight / 2)
         }
     }
 
