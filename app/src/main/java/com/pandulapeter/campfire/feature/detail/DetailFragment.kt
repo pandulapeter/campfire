@@ -105,7 +105,8 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                         viewModel.adapter.getItemAt(binding.viewPager.currentItem).stopScroll()
                         isBackAnimationInProgress = false
                         viewModel.shouldNavigateBack.set(true)
-                    })
+                    },
+                    connectedView = binding.viewPager)
             }
         }
     }

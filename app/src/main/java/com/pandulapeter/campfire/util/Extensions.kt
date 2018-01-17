@@ -12,10 +12,12 @@ import android.support.annotation.DimenRes
 import android.support.annotation.DrawableRes
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.AppBarLayout
+import android.support.design.widget.CoordinatorLayout
 import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v7.content.res.AppCompatResources
+import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.data.model.Language
 import retrofit2.Call
@@ -135,11 +137,18 @@ fun String.replaceSpecialCharacters() = this
     .replace("ű", "u")
     .replace("Ű", "U")
 
-fun AppBarLayout.performAfterExpand(onExpanded: () -> Unit, onInterrupted: () -> Unit = {}) {
+fun AppBarLayout.performAfterExpand(onExpanded: () -> Unit, onInterrupted: () -> Unit = {}, connectedView: View? = null) {
     if (height - bottom == 0) {
         onExpanded()
     } else {
         var previousVerticalOffset = -Int.MAX_VALUE
+        connectedView?.let {
+            it.layoutParams = (it.layoutParams as CoordinatorLayout.LayoutParams).apply {
+                behavior = null
+                setMargins(leftMargin, topMargin + height, rightMargin, bottomMargin)
+            }
+            it.requestLayout()
+        }
         addOnOffsetChangedListener(object : AppBarLayout.OnOffsetChangedListener {
             override fun onOffsetChanged(appBarLayout: AppBarLayout?, verticalOffset: Int) {
                 if (verticalOffset > -height / 10) {
@@ -148,6 +157,13 @@ fun AppBarLayout.performAfterExpand(onExpanded: () -> Unit, onInterrupted: () ->
                 }
                 if (verticalOffset <= previousVerticalOffset) {
                     removeOnOffsetChangedListener(this)
+                    connectedView?.let {
+                        it.layoutParams = (it.layoutParams as CoordinatorLayout.LayoutParams).apply {
+                            behavior = AppBarLayout.ScrollingViewBehavior()
+                            setMargins(leftMargin, topMargin - height, rightMargin, bottomMargin)
+                        }
+                        it.requestLayout()
+                    }
                     onInterrupted()
                 }
                 previousVerticalOffset = verticalOffset

@@ -75,9 +75,9 @@ class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R
 
             // Set up list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
-                binding.appBarLayout.performAfterExpand(onExpanded = {
-                    if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
-                })
+                binding.appBarLayout.performAfterExpand(
+                    onExpanded = { if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id)) },
+                    connectedView = binding.recyclerView)
             }
             viewModel.adapter.playlistActionClickListener = { position ->
                 viewModel.adapter.items[position].let { songInfoViewModel ->
