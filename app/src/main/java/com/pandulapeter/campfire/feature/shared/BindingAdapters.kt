@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.util
+package com.pandulapeter.campfire.feature.shared
 
 import android.databinding.BindingAdapter
 import android.graphics.drawable.Drawable
@@ -16,6 +16,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.util.drawable
 
 @BindingAdapter(value = ["android:drawableStart", "android:drawableTop", "android:drawableEnd", "android:drawableBottom"], requireAll = false)
 fun setCompoundDrawables(view: TextView,

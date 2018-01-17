@@ -84,6 +84,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             hideKeyboard(activity?.currentFocus)
             getCurrentFragment()?.expandAppBar()
         })
+        //TODO: Does not work when restoring state (Don't keep activities enabled + Background process limit set to none).
         setCheckedItem(viewModel.homeNavigationItem)
         viewModel.playlists.onPropertyChanged(this) {
             playlistsContainerItem.run {
