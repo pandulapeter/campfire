@@ -13,6 +13,8 @@ import com.pandulapeter.campfire.networking.AnalyticsManager
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.cancel
+import kotlin.coroutines.experimental.CoroutineContext
 
 /**
  * Parent class for view models that display lists of songs.
@@ -28,11 +30,13 @@ abstract class SongInfoListViewModel(
     val shouldShowDownloadErrorSnackbar = ObservableField<SongInfo?>()
     val shouldShowPlaceholder = ObservableBoolean()
     val shouldNavigateToLibrary = ObservableBoolean()
+    private var coroutine: CoroutineContext? = null
 
     abstract fun getAdapterItems(): List<SongInfoViewModel>
 
     override fun onUpdate(updateType: UpdateType) {
-        async(UI) { onUpdateDone(async(CommonPool) { getAdapterItems() }.await(), updateType) }
+        coroutine?.cancel()
+        coroutine = async(UI) { onUpdateDone(async(CommonPool) { getAdapterItems() }.await(), updateType) }
     }
 
     @CallSuper
