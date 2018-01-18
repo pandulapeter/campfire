@@ -139,37 +139,42 @@ fun String.replaceSpecialCharacters() = this
     .replace("Ű", "U")
 
 fun AppBarLayout.performAfterExpand(onExpanded: () -> Unit, onInterrupted: () -> Unit = {}, connectedView: View? = null) {
-    if (height - bottom == 0) {
-        onExpanded()
-    } else {
-        var previousVerticalOffset = -Int.MAX_VALUE
-        connectedView?.let {
-            it.layoutParams = (it.layoutParams as CoordinatorLayout.LayoutParams).apply {
-                behavior = null
-                setMargins(leftMargin, topMargin + height, rightMargin, bottomMargin)
-            }
-            it.requestLayout()
-        }
-        addOnOffsetChangedListener(object : AppBarLayout.OnOffsetChangedListener {
-            override fun onOffsetChanged(appBarLayout: AppBarLayout?, verticalOffset: Int) {
-                if (verticalOffset > -height / 10) {
-                    onExpanded()
-                    removeOnOffsetChangedListener(this)
+    //TODO: Animation still can be interrupted by tapping on the items quickly.
+    if (tag == null) {
+        tag = "expanding"
+        if (height - bottom == 0) {
+            onExpanded()
+        } else {
+            var previousVerticalOffset = -Int.MAX_VALUE
+            connectedView?.let {
+                it.layoutParams = (it.layoutParams as CoordinatorLayout.LayoutParams).apply {
+                    behavior = null
+                    setMargins(leftMargin, topMargin + height, rightMargin, bottomMargin)
                 }
-                if (verticalOffset <= previousVerticalOffset) {
-                    removeOnOffsetChangedListener(this)
-                    connectedView?.let {
-                        it.layoutParams = (it.layoutParams as CoordinatorLayout.LayoutParams).apply {
-                            behavior = AppBarLayout.ScrollingViewBehavior()
-                            setMargins(leftMargin, topMargin - height, rightMargin, bottomMargin)
-                        }
-                        it.requestLayout()
+                it.requestLayout()
+            }
+            addOnOffsetChangedListener(object : AppBarLayout.OnOffsetChangedListener {
+                override fun onOffsetChanged(appBarLayout: AppBarLayout?, verticalOffset: Int) {
+                    if (verticalOffset > -height / 10) {
+                        onExpanded()
+                        removeOnOffsetChangedListener(this)
                     }
-                    onInterrupted()
+                    if (verticalOffset <= previousVerticalOffset) {
+                        removeOnOffsetChangedListener(this)
+                        connectedView?.let {
+                            it.layoutParams = (it.layoutParams as CoordinatorLayout.LayoutParams).apply {
+                                behavior = AppBarLayout.ScrollingViewBehavior()
+                                setMargins(leftMargin, topMargin - height, rightMargin, bottomMargin)
+                            }
+                            it.requestLayout()
+                        }
+                        tag = null
+                        onInterrupted()
+                    }
+                    previousVerticalOffset = verticalOffset
                 }
-                previousVerticalOffset = verticalOffset
-            }
-        })
-        setExpanded(true, true)
+            })
+            setExpanded(true, true)
+        }
     }
 }

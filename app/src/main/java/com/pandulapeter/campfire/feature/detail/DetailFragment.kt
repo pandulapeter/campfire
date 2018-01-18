@@ -56,7 +56,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             historyRepository
         )
     }
-    private var isBackAnimationInProgress = false
     private lateinit var transposeHigherMenuItem: MenuItem
     private lateinit var transposeLowerMenuItem: MenuItem
 
@@ -109,18 +108,14 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             }.putExtra("query", it))
         }
         viewModel.shouldNavigateBack.onEventTriggered(this) {
-            if (!isBackAnimationInProgress) {
-                isBackAnimationInProgress = true
-                binding.appBarLayout.performAfterExpand(
-                    onExpanded = { (activity as? MainActivity)?.navigateBack() },
-                    onInterrupted = {
-                        viewModel.adapter.getItemAt(binding.viewPager.currentItem).stopScroll()
-                        isBackAnimationInProgress = false
-                        viewModel.shouldNavigateBack.set(true)
-                    },
-                    connectedView = binding.viewPager
-                )
-            }
+            binding.appBarLayout.performAfterExpand(
+                onExpanded = { (activity as? MainActivity)?.navigateBack() },
+                onInterrupted = {
+                    viewModel.adapter.getItemAt(binding.viewPager.currentItem).stopScroll()
+                    viewModel.shouldNavigateBack.set(true)
+                },
+                connectedView = binding.viewPager
+            )
         }
     }
 
