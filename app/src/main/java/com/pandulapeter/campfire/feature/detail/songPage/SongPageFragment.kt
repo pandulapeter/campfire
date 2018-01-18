@@ -46,8 +46,6 @@ class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.
         downloadedSongRepository.unsubscribe(viewModel)
     }
 
-    fun stopScroll() = binding.nestedScrollView.smoothScrollBy(0, 0)
-
     companion object {
         private const val SONG_ID = "song_id"
         private val Bundle?.songId

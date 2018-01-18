@@ -108,14 +108,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             }.putExtra("query", it))
         }
         viewModel.shouldNavigateBack.onEventTriggered(this) {
-            binding.appBarLayout.performAfterExpand(
-                onExpanded = { (activity as? MainActivity)?.navigateBack() },
-                onInterrupted = {
-                    viewModel.adapter.getItemAt(binding.viewPager.currentItem).stopScroll()
-                    viewModel.shouldNavigateBack.set(true)
-                },
-                connectedView = binding.viewPager
-            )
+            binding.appBarLayout.performAfterExpand(binding.viewPager) { (activity as? MainActivity)?.navigateBack() }
         }
     }
 
