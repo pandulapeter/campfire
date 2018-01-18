@@ -139,31 +139,27 @@ fun String.replaceSpecialCharacters() = this
     .replace("Ű", "U")
 
 fun AppBarLayout.performAfterExpand(connectedView: View, onExpanded: () -> Unit) {
-    if (tag != null) {
+    if (tag != null || height == bottom) {
         onExpanded()
     } else {
         tag = "expanding"
-        if (height - bottom == 0) {
-            onExpanded()
-        } else {
-            var previousVerticalOffset = -Int.MAX_VALUE
-            connectedView.let {
-                it.layoutParams = (it.layoutParams as CoordinatorLayout.LayoutParams).apply {
-                    behavior = null
-                    setMargins(leftMargin, topMargin + height, rightMargin, bottomMargin)
-                }
-                it.requestLayout()
+        var previousVerticalOffset = -Int.MAX_VALUE
+        connectedView.let {
+            it.layoutParams = (it.layoutParams as CoordinatorLayout.LayoutParams).apply {
+                behavior = null
+                setMargins(leftMargin, topMargin + height, rightMargin, bottomMargin)
             }
-            addOnOffsetChangedListener(object : AppBarLayout.OnOffsetChangedListener {
-                override fun onOffsetChanged(appBarLayout: AppBarLayout?, verticalOffset: Int) {
-                    if (verticalOffset == 0 || verticalOffset <= previousVerticalOffset) {
-                        onExpanded()
-                        removeOnOffsetChangedListener(this)
-                    }
-                    previousVerticalOffset = verticalOffset
-                }
-            })
-            setExpanded(true, true)
+            it.requestLayout()
         }
+        addOnOffsetChangedListener(object : AppBarLayout.OnOffsetChangedListener {
+            override fun onOffsetChanged(appBarLayout: AppBarLayout?, verticalOffset: Int) {
+                if (verticalOffset == 0 || verticalOffset <= previousVerticalOffset) {
+                    onExpanded()
+                    removeOnOffsetChangedListener(this)
+                }
+                previousVerticalOffset = verticalOffset
+            }
+        })
+        setExpanded(true, true)
     }
 }
