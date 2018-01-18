@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.annotation.CallSuper
 import android.support.annotation.LayoutRes
 import android.support.design.widget.AppBarLayout
+import android.transition.Fade
 import android.view.View
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
@@ -19,6 +20,11 @@ abstract class HomeChildFragment<B : ViewDataBinding, out VM : HomeChildViewMode
     CampfireFragment<B, VM>(layoutResourceId) {
     var shouldPlayReturnAnimation = false
     override val viewModel by lazy { createViewModel() }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        exitTransition = Fade()
+    }
 
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
