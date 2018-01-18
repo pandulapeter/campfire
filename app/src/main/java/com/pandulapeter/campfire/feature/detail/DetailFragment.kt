@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.detail
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewPager
@@ -101,16 +102,22 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.show_chords -> consume { viewModel.shouldShowChords.toggle() }
-                R.id.play_on_youtube -> consume { viewModel.onPlayOnYouTubeClicked() }
+                R.id.play_in_youtube -> consume { viewModel.onPlayOnYouTubeClicked() }
                 else -> false
             }
         }
         viewModel.shouldShowSongOptions.onEventTriggered(this) { binding.drawerLayout.openDrawer(GravityCompat.END) }
         viewModel.youTubeSearchQuery.onEventTriggered(this) {
             //TODO: Handle the case if no YouTube app is installed.
+            //TODO: Handle alternative YouTube clients like com.lara.android.youtube
             startActivity(Intent(Intent.ACTION_SEARCH).apply {
                 `package` = "com.google.android.youtube"
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    //TODO: Does not seem to be working.
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
+                } else {
+                    Intent.FLAG_ACTIVITY_NEW_TASK
+                }
             }.putExtra("query", it))
         }
         viewModel.shouldNavigateBack.onEventTriggered(this) {

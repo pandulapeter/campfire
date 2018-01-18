@@ -23,8 +23,8 @@
     </item>
 
     <item
-        android:id="@+id/play_on_youtube"
-        android:title="@string/detail_play_on_youtube" />
+        android:id="@+id/play_in_youtube"
+        android:title="@string/detail_play_in_youtube" />
 
     <item
         android:id="@+id/show_chords"
