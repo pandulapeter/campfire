@@ -8,13 +8,11 @@ import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.networking.AnalyticsManager
-import com.pandulapeter.campfire.util.onPropertyChanged
 
 /**
  * Handles events and logic for [DetailFragment].
@@ -23,7 +21,6 @@ class DetailViewModel(
     songId: String,
     playlistId: Int,
     analyticsManager: AnalyticsManager,
-    userPreferenceRepository: UserPreferenceRepository,
     private val downloadedSongRepository: DownloadedSongRepository,
     private val fragmentManager: FragmentManager,
     private val playlistRepository: PlaylistRepository,
@@ -39,13 +36,8 @@ class DetailViewModel(
     val shouldShowSongOptions = ObservableBoolean()
     val shouldShowPlaylistAction = playlistId == DetailFragment.NO_PLAYLIST
     val youTubeSearchQuery = ObservableField<String>()
-    val shouldShowChords = ObservableBoolean(userPreferenceRepository.shouldShowChords)
     val shouldAllowToolbarScrolling = ObservableBoolean()
     private var selectedPosition = 0
-
-    init {
-        shouldShowChords.onPropertyChanged { userPreferenceRepository.shouldShowChords = it }
-    }
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {

@@ -8,7 +8,6 @@ import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewPager
 import android.view.MenuItem
 import android.view.View
-import android.widget.CompoundButton
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.*
@@ -38,7 +37,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             arguments.songId,
             arguments.playlistId,
             analyticsManager,
-            userPreferenceRepository,
             downloadedSongRepository,
             childFragmentManager,
             playlistRepository,
@@ -81,14 +79,12 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         // Set up the side navigation drawer.
         transposeHigherMenuItem = binding.navigationView.menu.findItem(R.id.transpose_higher)
         transposeLowerMenuItem = binding.navigationView.menu.findItem(R.id.transpose_lower)
-        updateTransposeSectionState(viewModel.shouldShowChords.get())
-        viewModel.shouldShowChords.onPropertyChanged(this) { updateTransposeSectionState(it) }
-        (binding.navigationView.menu.findItem(R.id.show_chords).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowChords)
+        transposeHigherMenuItem.isVisible = userPreferenceRepository.shouldShowChords
+        transposeLowerMenuItem.isVisible = userPreferenceRepository.shouldShowChords
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { binding.appBarLayout.setExpanded(true, true) })
         binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
-                R.id.show_chords -> consume { viewModel.shouldShowChords.toggle() }
                 R.id.play_in_youtube -> consume { viewModel.onPlayOnYouTubeClicked() }
                 else -> false
             }
@@ -141,11 +137,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             Intent.FLAG_ACTIVITY_NEW_TASK
         }
     }.putExtra("query", query)
-
-    private fun updateTransposeSectionState(isEnabled: Boolean) {
-        transposeHigherMenuItem.isEnabled = isEnabled
-        transposeLowerMenuItem.isEnabled = isEnabled
-    }
 
     companion object {
         const val NO_PLAYLIST = -1

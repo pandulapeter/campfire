@@ -29,6 +29,9 @@
     <!-- Library screen -->
     <dimen name="header_height">36dp</dimen>
 
+    <!-- Settings screen -->
+    <dimen name="settings_checkbox_padding">32dp</dimen>
+
     <!-- Playlist screen -->
     <dimen name="playlist_content_bottom_margin">56dp</dimen>
 

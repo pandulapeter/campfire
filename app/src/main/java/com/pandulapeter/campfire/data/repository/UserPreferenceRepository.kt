@@ -49,6 +49,12 @@ class UserPreferenceRepository(private val preferenceStorageManager: PreferenceS
             preferenceStorageManager.shouldShowChords = new
         }
     }
+    var shouldUseGermanNotation by Delegates.observable(preferenceStorageManager.shouldUseGermanNotation) { _: KProperty<*>, old: Boolean, new: Boolean ->
+        if (old != new) {
+            notifySubscribers(UpdateType.ShouldShowChords(new))
+            preferenceStorageManager.shouldUseGermanNotation = new
+        }
+    }
     var searchQuery by Delegates.observable("") { _: KProperty<*>, old: String, new: String ->
         if (!TextUtils.equals(old, new)) {
             notifySubscribers(UpdateType.SearchQueryUpdated(new))

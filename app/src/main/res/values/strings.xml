@@ -78,7 +78,13 @@
     <string name="history_placeholder">The list of songs you opened will appear here in chronological order.</string>
 
     <!-- Settings screen -->
-    <string name="settings_work_in_progress">Work on the Settings screen is in progress.</string>
+    <string name="settings_should_show_chords">Show chords</string>
+    <string name="settings_show_chords_checked">Lyrics and chords</string>
+    <string name="settings_show_chords_unchecked">Lyrics only</string>
+    <string name="settings_should_use_german_notation">Use German notation</string>
+    <!--TODO: Auto-generate these descriptions. -->
+    <string name="settings_should_use_german_notation_checked">C, C#, D, D#, E, F, F#, G, G#, A, A#, B</string>
+    <string name="settings_should_use_german_notation_unchecked">C, C#, D, D#, E, F, F#, G, G#, A, B, H</string>
 
     <!-- Playlist screen -->
     <string name="playlist_edit">Edit</string>
@@ -108,7 +114,6 @@
 
     <!-- Detail screen -->
     <string name="detail_song_options">Song options</string>
-    <string name="detail_show_chords">Show chords</string>
     <string name="detail_transpose">Transpose (original)</string>
     <string name="detail_transpose_higher">Higher</string>
     <string name="detail_transpose_lower">Lower</string>
