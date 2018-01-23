@@ -60,9 +60,9 @@ class HistoryViewModel(
             is UpdateType.LibraryCacheUpdated,
             is UpdateType.PlaylistsUpdated,
             is UpdateType.HistoryUpdated,
-            is UpdateType.ItemAddedToHistory, //TODO: Call adapter.notifyItemAdded() instead.
-            is UpdateType.ItemRemovedFromHistory, //TODO: Call adapter.notifyItemRemoved() instead.
-            UpdateType.HistoryCleared, //TODO: Call adapter.notifyDataSetChanged() instead.
+            is UpdateType.ItemAddedToHistory,
+            is UpdateType.ItemRemovedFromHistory,
+            UpdateType.HistoryCleared,
             UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
             is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
                 if (it != -1) adapter.notifyItemChanged(
@@ -152,7 +152,6 @@ class HistoryViewModel(
         }
     }
 
-    //TODO: Removing the
     fun removeSongFromHistory(songId: String) = historyRepository.removeFromHistory(songId)
 
     fun onClearButtonClicked() = shouldShowConfirmationDialog.set(true)

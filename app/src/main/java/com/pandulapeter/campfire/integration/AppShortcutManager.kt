@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.data.storage.DataStorageManager
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.HomeViewModel
-import kotlin.math.min
 
 /**
  * Handles dynamic app shortcuts on or above Android Oreo.
@@ -37,7 +36,7 @@ class AppShortcutManager(
     fun onPlaylistOpened(playlistId: Int) {
         implementation.trackAppShortcutUsage(PLAYLIST_ID + playlistId.toString())
         val list = dataStorageManager.playlistHistory.toMutableList().apply { add(0, playlistId.toString()) }.distinct()
-        dataStorageManager.playlistHistory = list.subList(0, min(list.size, 3))
+        dataStorageManager.playlistHistory = list.subList(0, Math.min(list.size, 3))
         implementation.updateAppShortcuts()
     }
 

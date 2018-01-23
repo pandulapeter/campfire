@@ -75,9 +75,8 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
             )
         }
         // Setup swipe-to-dismiss and drag-to-rearrange functionality.
-        //TODO: Change the elevation of the card that's being dragged.
         //TODO: Re-ordering is glitchy.
-        val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
+        val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
 
             override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =
                 if (viewModel.isInEditMode.get()) makeMovementFlags(
@@ -128,7 +127,6 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
                 viewModel.isAnimationOver = true
             }
         }, 300)
-        //TODO: Implement playlist sharing.
         viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered(this) { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
     }
 

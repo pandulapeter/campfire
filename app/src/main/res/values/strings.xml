@@ -118,5 +118,6 @@
     <string name="detail_play_in_youtube">Play in YouTube</string>
     <string name="detail_swipe_hint">Swipe horizontally to cycle through songs in the playlist.</string>
     <string name="detail_placeholder_error">Something went wrong while downloading the song.</string>
+    <string name="detail_no_youtube_client_found">No YouTube client found.</string>
 
 </resources>

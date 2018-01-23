@@ -70,7 +70,7 @@
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:visibility="@{viewModel.shouldDisplayEditButton}"
+                        app:visibility="@{viewModel.shouldShowEditButton}"
                         tools:src="@drawable/avd_done_to_edit_24dp" />
 
                     <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
@@ -85,7 +85,6 @@
                         app:srcCompat="@drawable/ic_delete_24dp"
                         app:visibility="@{viewModel.shouldAllowDeleteButton &amp;&amp; viewModel.isInEditMode}" />
 
-                    <!--TODO: No need to wait for the play button, this visibility should have a separate flag. -->
                     <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
                         android:id="@+id/share"
                         android:layout_width="wrap_content"
@@ -96,7 +95,7 @@
                         app:layout_constraintEnd_toStartOf="@id/edit_mode_toggle"
                         app:layout_constraintTop_toTopOf="parent"
                         app:srcCompat="@drawable/ic_share_24dp"
-                        app:visibility="@{!viewModel.isInEditMode &amp;&amp; viewModel.shouldDisplayEditButton &amp;&amp; viewModel.shouldShowPlayButton }" />
+                        app:visibility="@{viewModel.shouldShowShareButton}" />
 
                     <TextView
                         android:layout_width="0dp"

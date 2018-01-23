@@ -107,7 +107,6 @@ class SongInfoListAdapter : RecyclerView.Adapter<SongInfoListAdapter.SongInfoVie
         @SuppressLint("ClickableViewAccessibility")
         fun setDragHandleTouchListener(itemTouchListener: ((position: Int) -> Unit)?) {
             if (itemTouchListener != null) {
-                //TODO: Fix Lint warning.
                 binding.dragHandle.setOnTouchListener { _, event ->
                     if (event.actionMasked == MotionEvent.ACTION_DOWN && adapterPosition != RecyclerView.NO_POSITION) {
                         itemTouchListener(adapterPosition)

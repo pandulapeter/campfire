@@ -15,16 +15,7 @@ import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.util.addDrawerListener
-import com.pandulapeter.campfire.util.consume
-import com.pandulapeter.campfire.util.disableScrollbars
-import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.util.onEventTriggered
-import com.pandulapeter.campfire.util.onPropertyChanged
-import com.pandulapeter.campfire.util.performAfterExpand
-import com.pandulapeter.campfire.util.setupWithBackingField
-import com.pandulapeter.campfire.util.showKeyboard
-import com.pandulapeter.campfire.util.toggle
+import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
 /**
@@ -56,7 +47,6 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
 
     override fun getCoordinatorLayout() = binding.coordinatorLayout
 
-    //TODO: Add error- and empty states.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Set up the side navigation drawer.

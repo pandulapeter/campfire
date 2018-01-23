@@ -48,10 +48,10 @@ class ManageDownloadsViewModel(
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
             is UpdateType.DownloadedSongsUpdated,
-            is UpdateType.SongRemovedFromDownloads, //TODO: Cal adapter.notifyItemRemoved() instead
-            is UpdateType.SongAddedToDownloads, //TODO: Cal adapter.notifyItemAdded() instead
-            UpdateType.AllDownloadsRemoved, //TODO: Cal adapter.notifyDataSetChanged() instead
-            is UpdateType.DownloadSuccessful, //TODO: Cal adapter.notifyItemAdded() instead
+            is UpdateType.SongRemovedFromDownloads,
+            is UpdateType.SongAddedToDownloads,
+            UpdateType.AllDownloadsRemoved,
+            is UpdateType.DownloadSuccessful,
             is UpdateType.LibraryCacheUpdated -> super.onUpdate(updateType)
         }
     }

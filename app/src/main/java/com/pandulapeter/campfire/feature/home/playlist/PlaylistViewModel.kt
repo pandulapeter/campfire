@@ -33,16 +33,17 @@ class PlaylistViewModel(
     val title = ObservableField(favoritesTitle)
     val editedTitle = ObservableField(title.get())
     val shouldShowPlayButton = ObservableBoolean()
+    val shouldShowShareButton = ObservableBoolean(playlistRepository.getPlaylistSongIds(playlistId).isNotEmpty())
     val isInEditMode = ObservableBoolean()
     val shouldShowDeleteConfirmation = ObservableBoolean()
-    val shouldDisplayEditButton = ObservableBoolean()
+    val shouldShowEditButton = ObservableBoolean(shouldShowShareButton.get() || playlistId != Playlist.FAVORITES_ID)
     val shouldShowWorkInProgressSnackbar = ObservableBoolean()
     val shouldAllowToolbarScrolling = ObservableBoolean()
     val shouldAllowDeleteButton = playlistId != Playlist.FAVORITES_ID
     var isAnimationOver = false
         set(value) {
             if (!isInEditMode.get() && value) {
-                shouldShowPlayButton.set(playlistRepository.getPlaylistSongIds(playlistId).isNotEmpty())
+                shouldShowPlayButton.set(shouldShowShareButton.get())
             }
             field = value
         }
@@ -82,8 +83,8 @@ class PlaylistViewModel(
             is UpdateType.DownloadedSongsUpdated,
             is UpdateType.LibraryCacheUpdated,
             UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
-            is UpdateType.SongAddedToPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType) //TODO: Call adapter.notifyItemAdded() instead.
-            is UpdateType.SongRemovedFromPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType) //TODO: Call adapter.notifyItemRemoved() instead.
+            is UpdateType.SongAddedToPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType)
+            is UpdateType.SongRemovedFromPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType)
             is UpdateType.PlaylistRenamed -> if (updateType.playlistId == playlistId) title.set(updateType.title)
             is UpdateType.PlaylistSongOrderUpdated -> if (updateType.playlistId == playlistId) super.onUpdate(updateType)
             is UpdateType.PlaylistsUpdated -> {
@@ -125,6 +126,7 @@ class PlaylistViewModel(
                     if (updateType.isInEditMode && adapter.items.size > 1) SongInfoListAdapter.Payload.EDIT_MODE_OPEN else SongInfoListAdapter.Payload.EDIT_MODE_CLOSE
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
                 shouldShowPlayButton.set(if (isAnimationOver && !updateType.isInEditMode) adapter.items.isNotEmpty() else false)
+                shouldShowShareButton.set(if (!updateType.isInEditMode) adapter.items.isNotEmpty() else false)
                 updateShouldAllowToolbarScrolling(adapter.items.isNotEmpty())
             }
         }
@@ -132,9 +134,12 @@ class PlaylistViewModel(
 
     override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         super.onUpdateDone(items, updateType)
-        shouldDisplayEditButton.set(items.isNotEmpty() || playlistId != Playlist.FAVORITES_ID)
-        if (!isInEditMode.get() && isAnimationOver) {
-            shouldShowPlayButton.set(items.isNotEmpty())
+        shouldShowEditButton.set(items.isNotEmpty() || playlistId != Playlist.FAVORITES_ID)
+        if (!isInEditMode.get()) {
+            shouldShowShareButton.set(if (!isInEditMode.get()) adapter.items.isNotEmpty() else false)
+            if (isAnimationOver) {
+                shouldShowPlayButton.set(items.isNotEmpty())
+            }
         }
         updateShouldAllowToolbarScrolling(items.isNotEmpty())
     }

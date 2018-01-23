@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.detail
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -94,17 +95,17 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         }
         viewModel.shouldShowSongOptions.onEventTriggered(this) { binding.drawerLayout.openDrawer(GravityCompat.END) }
         viewModel.youTubeSearchQuery.onEventTriggered(this) {
-            //TODO: Handle the case if no YouTube app is installed.
-            //TODO: Handle alternative YouTube clients like com.lara.android.youtube
-            startActivity(Intent(Intent.ACTION_SEARCH).apply {
-                `package` = "com.google.android.youtube"
-                flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    //TODO: Does not seem to be working.
-                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
-                } else {
-                    Intent.FLAG_ACTIVITY_NEW_TASK
+            //TODO: Add support for more third party YouTube clients.
+            try {
+                startActivity(getYouTubeIntent("com.lara.android.youtube", it))
+            } catch (_: ActivityNotFoundException) {
+                try {
+                    startActivity(getYouTubeIntent("com.google.android.youtube", it))
+                } catch (_: ActivityNotFoundException) {
+                    binding.drawerLayout.closeDrawers()
+                    binding.coordinatorLayout.showSnackbar(R.string.detail_no_youtube_client_found)
                 }
-            }.putExtra("query", it))
+            }
         }
         viewModel.shouldNavigateBack.onEventTriggered(this) {
             binding.appBarLayout.performAfterExpand(binding.viewPager) { (activity as? MainActivity)?.navigateBack() }
@@ -131,6 +132,15 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         playlistRepository.unsubscribe(viewModel)
         downloadedSongRepository.unsubscribe(viewModel)
     }
+
+    private fun getYouTubeIntent(packageName: String, query: String) = Intent(Intent.ACTION_SEARCH).apply {
+        `package` = packageName
+        flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
+        } else {
+            Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+    }.putExtra("query", query)
 
     private fun updateTransposeSectionState(isEnabled: Boolean) {
         transposeHigherMenuItem.isEnabled = isEnabled
