@@ -113,7 +113,7 @@
                         android:minHeight="@dimen/touch_target"
                         android:paddingEnd="@dimen/content_padding"
                         android:paddingStart="@dimen/settings_checkbox_padding"
-                        app:description="@{viewModel.shouldUseGermanNotation ? @string/settings_should_use_german_notation_checked : @string/settings_should_use_german_notation_unchecked}"
+                        app:description="@{viewModel.shouldUseGermanNotationDescription}"
                         app:title="@{@string/settings_should_use_german_notation}"
                         tools:text="@string/settings_should_use_german_notation" />
 

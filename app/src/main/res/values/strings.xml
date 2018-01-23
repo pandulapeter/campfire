@@ -82,9 +82,6 @@
     <string name="settings_show_chords_checked">Lyrics and chords</string>
     <string name="settings_show_chords_unchecked">Lyrics only</string>
     <string name="settings_should_use_german_notation">Use German notation</string>
-    <!--TODO: Auto-generate these descriptions. -->
-    <string name="settings_should_use_german_notation_checked">C, C#, D, D#, E, F, F#, G, G#, A, A#, B</string>
-    <string name="settings_should_use_german_notation_unchecked">C, C#, D, D#, E, F, F#, G, G#, A, B, H</string>
 
     <!-- Playlist screen -->
     <string name="playlist_edit">Edit</string>
