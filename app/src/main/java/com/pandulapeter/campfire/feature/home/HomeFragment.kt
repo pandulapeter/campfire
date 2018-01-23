@@ -18,13 +18,7 @@ import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.util.BundleArgumentDelegate
-import com.pandulapeter.campfire.util.addDrawerListener
-import com.pandulapeter.campfire.util.consume
-import com.pandulapeter.campfire.util.disableScrollbars
-import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.util.onPropertyChanged
-import com.pandulapeter.campfire.util.setArguments
+import com.pandulapeter.campfire.util.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -50,6 +44,8 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
     private val historyItem by lazy { binding.navigationView.menu.findItem(R.id.history) }
     private val managePlaylistsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_playlists) }
     private val manageDownloadsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_downloads) }
+    private val currentFragment
+        get() = childFragmentManager.findFragmentById(R.id.fragment_container) as? HomeChildFragment<*, *>
     var shouldPlayReturnAnimation = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -61,7 +57,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         // Set up the side navigation drawer.
         binding.navigationView.disableScrollbars()
         (binding.navigationView.getHeaderView(0).findViewById<View>(R.id.version) as? TextView)?.text =
-            getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
+                getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.library -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Library) }
@@ -83,7 +79,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
             activity?.currentFocus?.clearFocus()
             hideKeyboard(activity?.currentFocus)
-            getCurrentFragment()?.expandAppBar()
+            currentFragment?.expandAppBar()
         })
         //TODO: Does not work when restoring state (Don't keep activities enabled + Background process limit set to none).
         setCheckedItem(viewModel.homeNavigationItem)
@@ -134,7 +130,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         binding.drawerLayout.closeDrawers()
         true
     } else {
-        getCurrentFragment()?.onBackPressed() == true
+        currentFragment?.onBackPressed() == true
     }
 
     override fun showMenu() {
@@ -166,27 +162,27 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
      * the selection changed or the container was empty.
      */
     private fun replaceActiveFragment(homeNavigationItem: HomeViewModel.HomeNavigationItem) {
-        val currentFragment = getCurrentFragment()
         (activity as? MainActivity)?.updatePreviousNavigationItem(MainViewModel.MainNavigationItem.Home(homeNavigationItem))
         if (viewModel.homeNavigationItem != homeNavigationItem || currentFragment == null) {
             viewModel.homeNavigationItem = homeNavigationItem
             if (currentFragment == null) {
-                childFragmentManager.beginTransaction().replace(
-                    R.id.fragment_container,
-                    homeNavigationItem.getFragment().apply { shouldPlayReturnAnimation = this@HomeFragment.shouldPlayReturnAnimation }).commitNow()
+                childFragmentManager
+                    .beginTransaction()
+                    .replace(
+                        R.id.fragment_container,
+                        homeNavigationItem.getFragment().apply { shouldPlayReturnAnimation = this@HomeFragment.shouldPlayReturnAnimation })
+                    .commitNow()
             } else {
                 coroutine?.cancel()
                 coroutine = async(UI) {
-                    val nextFragment = async(CommonPool) {
-                        homeNavigationItem.getFragment()
-                    }.await()
-                    childFragmentManager.beginTransaction().replace(R.id.fragment_container, nextFragment).commit()
+                    childFragmentManager
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, async(CommonPool) { homeNavigationItem.getFragment() }.await())
+                        .commit()
                 }
             }
         }
     }
-
-    private fun getCurrentFragment() = childFragmentManager.findFragmentById(R.id.fragment_container) as? HomeChildFragment<*, *>
 
     private fun consumeAndCloseDrawer(action: () -> Unit) = consume {
         action()
