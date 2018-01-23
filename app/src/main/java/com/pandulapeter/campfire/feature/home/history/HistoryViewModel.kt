@@ -11,8 +11,7 @@ import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListAd
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoViewModel
 import com.pandulapeter.campfire.networking.AnalyticsManager
-import java.util.Calendar
-import kotlin.math.abs
+import java.util.*
 
 /**
  * Handles events and logic for [HistoryFragment].
@@ -128,7 +127,7 @@ class HistoryViewModel(
         }
         val now = Calendar.getInstance()
         val then = Calendar.getInstance().apply { timeInMillis = timestamp }
-        if (abs(now.timeInMillis - then.timeInMillis) < 30 * 60 * 1000) {
+        if (Math.abs(now.timeInMillis - then.timeInMillis) < 30 * 60 * 1000) {
             return R.string.history_now
         }
         if (now.year == then.year && now.month == then.month && now.day == then.day) {
@@ -138,10 +137,10 @@ class HistoryViewModel(
         if (yesterday.year == then.year && yesterday.month == then.month && yesterday.day == then.day) {
             return R.string.history_yesterday
         }
-        return when (abs(now.year - then.year)) {
-            0 -> when (abs(now.month - then.month)) {
-                0 -> when (abs(now.week - then.week)) {
-                    0 -> R.string.history_this_week
+        return when (Math.abs(now.year - then.year)) {
+            0 -> when (Math.abs(now.month - then.month)) {
+                0 -> when (Math.abs(now.week - then.week)) {
+                    0 -> R.string.history_this_week //TODO: Buggy, this never seems to happen.
                     1 -> R.string.history_last_week
                     else -> R.string.history_this_month
                 }

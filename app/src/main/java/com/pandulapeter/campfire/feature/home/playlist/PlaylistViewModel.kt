@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.networking.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
-import java.util.Collections
+import java.util.*
 
 /**
  * Handles events and logic for [PlaylistFragment].
@@ -32,13 +32,20 @@ class PlaylistViewModel(
 ) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val title = ObservableField(favoritesTitle)
     val editedTitle = ObservableField(title.get())
-    val shouldShowPlayButton = ObservableBoolean(playlistRepository.getPlaylistSongIds(playlistId).isNotEmpty())
+    val shouldShowPlayButton = ObservableBoolean()
     val isInEditMode = ObservableBoolean()
     val shouldShowDeleteConfirmation = ObservableBoolean()
     val shouldDisplayEditButton = ObservableBoolean()
     val shouldShowWorkInProgressSnackbar = ObservableBoolean()
     val shouldAllowToolbarScrolling = ObservableBoolean()
     val shouldAllowDeleteButton = playlistId != Playlist.FAVORITES_ID
+    var isAnimationOver = false
+        set(value) {
+            if (!isInEditMode.get() && value) {
+                shouldShowPlayButton.set(playlistRepository.getPlaylistSongIds(playlistId).isNotEmpty())
+            }
+            field = value
+        }
 
     init {
         title.onPropertyChanged { editedTitle.set(it) }
@@ -117,7 +124,7 @@ class PlaylistViewModel(
                 val payload =
                     if (updateType.isInEditMode && adapter.items.size > 1) SongInfoListAdapter.Payload.EDIT_MODE_OPEN else SongInfoListAdapter.Payload.EDIT_MODE_CLOSE
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
-                shouldShowPlayButton.set(if (!updateType.isInEditMode) adapter.items.isNotEmpty() else false)
+                shouldShowPlayButton.set(if (isAnimationOver && !updateType.isInEditMode) adapter.items.isNotEmpty() else false)
                 updateShouldAllowToolbarScrolling(adapter.items.isNotEmpty())
             }
         }
@@ -126,7 +133,7 @@ class PlaylistViewModel(
     override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         super.onUpdateDone(items, updateType)
         shouldDisplayEditButton.set(items.isNotEmpty() || playlistId != Playlist.FAVORITES_ID)
-        if (!isInEditMode.get()) {
+        if (!isInEditMode.get() && isAnimationOver) {
             shouldShowPlayButton.set(items.isNotEmpty())
         }
         updateShouldAllowToolbarScrolling(items.isNotEmpty())

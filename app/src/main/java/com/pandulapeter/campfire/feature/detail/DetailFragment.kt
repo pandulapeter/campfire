@@ -10,24 +10,10 @@ import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
-import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
-import com.pandulapeter.campfire.data.repository.HistoryRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.data.repository.*
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
-import com.pandulapeter.campfire.util.BundleArgumentDelegate
-import com.pandulapeter.campfire.util.addDrawerListener
-import com.pandulapeter.campfire.util.consume
-import com.pandulapeter.campfire.util.disableScrollbars
-import com.pandulapeter.campfire.util.onEventTriggered
-import com.pandulapeter.campfire.util.onPropertyChanged
-import com.pandulapeter.campfire.util.performAfterExpand
-import com.pandulapeter.campfire.util.setArguments
-import com.pandulapeter.campfire.util.setupWithBackingField
-import com.pandulapeter.campfire.util.toggle
+import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
 

@@ -16,13 +16,7 @@ import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListFr
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
-import com.pandulapeter.campfire.util.BundleArgumentDelegate
-import com.pandulapeter.campfire.util.consume
-import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.util.onEventTriggered
-import com.pandulapeter.campfire.util.onPropertyChanged
-import com.pandulapeter.campfire.util.performAfterExpand
-import com.pandulapeter.campfire.util.setArguments
+import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
 
@@ -128,6 +122,12 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
                 itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
             }
         }
+        // Delay the appearance of the play button.
+        binding.root.postDelayed({
+            if (isAdded) {
+                viewModel.isAnimationOver = true
+            }
+        }, 300)
         //TODO: Implement playlist sharing.
         viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered(this) { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
     }
