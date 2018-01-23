@@ -51,8 +51,10 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Handle deep link.
-        arguments.homeNavigationItem.let {
-            viewModel.homeNavigationItem = HomeViewModel.HomeNavigationItem.fromStringValue(it)
+        viewModel.homeNavigationItem = savedInstanceState?.let {
+            HomeViewModel.HomeNavigationItem.fromStringValue(it.homeNavigationItem)
+        } ?: arguments.homeNavigationItem.let {
+            HomeViewModel.HomeNavigationItem.fromStringValue(it)
         }
         // Set up the side navigation drawer.
         binding.navigationView.disableScrollbars()
@@ -81,7 +83,6 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             hideKeyboard(activity?.currentFocus)
             currentFragment?.expandAppBar()
         })
-        //TODO: Does not work when restoring state (Don't keep activities enabled + Background process limit set to none).
         setCheckedItem(viewModel.homeNavigationItem)
         viewModel.playlists.onPropertyChanged(this) {
             playlistsContainerItem.run {
@@ -111,7 +112,6 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         }
     }
 
-
     override fun onStart() {
         super.onStart()
         songInfoRepository.subscribe(viewModel)
@@ -124,6 +124,11 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         songInfoRepository.unsubscribe(viewModel)
         playlistRepository.unsubscribe(viewModel)
         downloadedSongRepository.unsubscribe(viewModel)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.homeNavigationItem = viewModel.homeNavigationItem.stringValue
     }
 
     override fun onBackPressed() = if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {

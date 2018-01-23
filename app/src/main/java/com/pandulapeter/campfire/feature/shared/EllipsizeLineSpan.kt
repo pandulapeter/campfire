@@ -13,7 +13,6 @@ class EllipsizeLineSpan : ReplacementSpan(), LineBackgroundSpan {
     private var layoutLeft = 0
     private var layoutRight = 0
 
-
     override fun drawBackground(
         canvas: Canvas,
         paint: Paint,
