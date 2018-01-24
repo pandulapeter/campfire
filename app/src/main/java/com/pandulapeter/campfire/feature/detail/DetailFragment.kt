@@ -50,7 +50,10 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         // Setup the view pager.
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
 
-            override fun onPageScrollStateChanged(state: Int) = binding.appBarLayout.setExpanded(true, true)
+            override fun onPageScrollStateChanged(state: Int) {
+                binding.appBarLayout.setExpanded(true, true)
+                viewModel.isAutoPlayStarted.set(false)
+            }
 
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) = Unit
 

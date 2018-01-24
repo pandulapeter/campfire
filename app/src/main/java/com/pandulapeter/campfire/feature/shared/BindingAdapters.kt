@@ -68,6 +68,11 @@ fun setVisibility(view: FloatingActionButton, isVisible: Boolean) {
     }
 }
 
+@BindingAdapter("animatedVisibility")
+fun setAnimatedVisibility(view: View, isVisible: Boolean) {
+    view.visibility = if (isVisible) View.VISIBLE else View.INVISIBLE
+}
+
 @BindingAdapter("isScrollEnabled")
 fun setScrollEnabled(view: View, isScrollEnabled: Boolean) {
     (view.layoutParams as AppBarLayout.LayoutParams).scrollFlags = if (isScrollEnabled) {

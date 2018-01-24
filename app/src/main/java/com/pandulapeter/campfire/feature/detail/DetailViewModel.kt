@@ -55,7 +55,6 @@ class DetailViewModel(
     }
 
     fun onPageSelected(position: Int) {
-        isAutoPlayStarted.set(false)
         selectedPosition = position
         updateToolbar()
         historyRepository.addToHistory(getSelectedSongId())
