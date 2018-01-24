@@ -4,6 +4,7 @@ import android.content.Context
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.feature.home.HomeViewModel
+import java.util.*
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -18,7 +19,7 @@ class PreferenceStorageManager(context: Context) {
     var shouldShowExplicit by PreferenceFieldDelegate.Boolean("should_show_explicit", false)
     var shouldShowWorkInProgress by PreferenceFieldDelegate.Boolean("should_show_work_in_progress", BuildConfig.DEBUG)
     var shouldShowChords by PreferenceFieldDelegate.Boolean("should_show_chords", true)
-    var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("should_use_german_notation", false) //TODO: Enable by default in some countries.
+    var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("should_use_german_notation", shouldEnableGermanNotationByDefault())
     var shouldShowHistoryHint by PreferenceFieldDelegate.Boolean("should_show_history_hint", true)
     var shouldShowPlaylistHint by PreferenceFieldDelegate.Boolean("should_show_playlist_hint", true)
     var shouldShowManageDownloadsHint by PreferenceFieldDelegate.Boolean("should_show_manage_downloads_hint", true)
@@ -38,6 +39,11 @@ class PreferenceStorageManager(context: Context) {
             Language.Unknown -> KEY_UNKNOWN_LANGUAGE_FILTER
         }, isEnabled
     ).apply()
+
+    private fun shouldEnableGermanNotationByDefault() = when (Locale.getDefault().isO3Country.toUpperCase()) {
+        "AUT", "CZE", "DEU", "SWE", "DNK", "EST", "FIN", "HUN", "LVA", "NOR", "POL", "SRB", "SVK" -> true
+        else -> false
+    }
 
     private sealed class PreferenceFieldDelegate<T>(protected val key: String, protected val defaultValue: T) : ReadWriteProperty<PreferenceStorageManager, T> {
 
