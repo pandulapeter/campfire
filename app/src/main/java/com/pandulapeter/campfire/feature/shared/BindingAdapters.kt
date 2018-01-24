@@ -10,12 +10,14 @@ import android.support.graphics.drawable.AnimatedVectorDrawableCompat
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextUtils
+import android.text.style.ForegroundColorSpan
 import android.text.style.TextAppearanceSpan
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.drawable
 
 @BindingAdapter(value = ["android:drawableStart", "android:drawableTop", "android:drawableEnd", "android:drawableBottom"], requireAll = false)
@@ -127,6 +129,14 @@ fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?) {
 @BindingAdapter(value = ["title", "description"], requireAll = false)
 fun setTitleDescription(view: TextView, title: String?, description: String?) {
     val text = SpannableString("${title ?: ""}\n${description ?: ""}")
+    title?.let {
+        text.setSpan(
+            ForegroundColorSpan(view.context.color(R.color.text)),
+            0,
+            it.length,
+            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+        )
+    }
     description?.let {
         text.setSpan(
             TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Caption),
