@@ -15,7 +15,7 @@ class HistoryRepository(private val dataStorageManager: DataStorageManager) : Re
 
     override fun subscribe(subscriber: Subscriber) {
         super.subscribe(subscriber)
-        subscriber.onUpdate(UpdateType.HistoryUpdated(getHistoryItems()))
+        subscriber.onUpdate(UpdateType.HistoryUpdated)
     }
 
     fun getHistoryItems() = dataSet.values.toList().sortedByDescending { it.timestamp }

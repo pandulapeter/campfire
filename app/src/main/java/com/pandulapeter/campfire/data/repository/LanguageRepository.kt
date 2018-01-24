@@ -43,7 +43,7 @@ class LanguageRepository(private val preferenceStorageManager: PreferenceStorage
         if (isLanguageFilterEnabled(language) != isEnabled) {
             dataSet = dataSet.toMutableMap().apply { set(language, isEnabled) }
             preferenceStorageManager.setLanguageFilterEnabled(language, isEnabled)
-            notifySubscribers(UpdateType.LanguageFilterChanged(language, isEnabled))
+            notifySubscribers(UpdateType.LanguageFilterChanged)
         }
     }
 }

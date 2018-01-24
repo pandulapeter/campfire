@@ -55,7 +55,7 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager) : R
         if (playlistId != Playlist.FAVORITES_ID && dataSet.containsKey(playlistId.toString())) {
             val position = getPlaylists().indexOfFirst { it.id == playlistId }
             dataSet = dataSet.toMutableMap().apply { remove(playlistId.toString()) }
-            notifySubscribers(UpdateType.PlaylistDeleted(playlistId, position))
+            notifySubscribers(UpdateType.PlaylistDeleted(position))
         }
     }
 
@@ -68,7 +68,6 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager) : R
                 }))
             }
         }
-        notifySubscribers(UpdateType.PlaylistSongOrderUpdated(playlistId, songIds))
     }
 
     fun addSongToPlaylist(playlistId: Int, songId: String, position: Int? = null) {

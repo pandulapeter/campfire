@@ -4,7 +4,6 @@ import com.pandulapeter.campfire.data.model.History
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.model.SongInfo
-import com.pandulapeter.campfire.feature.home.HomeViewModel
 
 /**
  * Represents all the possible [Repository] update events.
@@ -27,7 +26,7 @@ sealed class UpdateType {
     class DownloadFailed(val songId: String) : UpdateType()
 
     // HistoryRepository
-    class HistoryUpdated(val historyIds: List<History>) : UpdateType()
+    object HistoryUpdated : UpdateType()
 
     class ItemAddedToHistory(val history: History, val position: Int) : UpdateType()
 
@@ -38,7 +37,7 @@ sealed class UpdateType {
     // LanguageRepository
     class LanguagesUpdated(val languageFilters: Map<Language, Boolean>) : UpdateType()
 
-    class LanguageFilterChanged(val language: Language, val isEnabled: Boolean) : UpdateType()
+    object LanguageFilterChanged : UpdateType()
 
     // PlaylistRepository
     class PlaylistsUpdated(val playlists: List<Playlist>) : UpdateType()
@@ -51,9 +50,7 @@ sealed class UpdateType {
 
     class PlaylistRenamed(val playlistId: Int, val title: String) : UpdateType()
 
-    class PlaylistDeleted(val playlistId: Int, val position: Int) : UpdateType()
-
-    class PlaylistSongOrderUpdated(val playlistId: Int, val songIds: List<String>) : UpdateType()
+    class PlaylistDeleted(val position: Int) : UpdateType()
 
     // SongInfoRepository
     class LibraryCacheUpdated(val songInfos: List<SongInfo>) : UpdateType()
@@ -61,19 +58,19 @@ sealed class UpdateType {
     class LoadingStateChanged(val isLoading: Boolean) : UpdateType()
 
     // UserPreferenceRepository
-    class NavigationItemUpdated(val homeNavigationItem: HomeViewModel.HomeNavigationItem) : UpdateType()
+    object NavigationItemUpdated : UpdateType()
 
-    class IsSortedByTitleUpdated(val isSortedByTitle: Boolean) : UpdateType()
+    object IsSortedByTitleUpdated : UpdateType()
 
-    class ShouldShowDownloadedOnlyUpdated(val shouldShowDownloadedOnly: Boolean) : UpdateType()
+    object ShouldShowDownloadedOnlyUpdated : UpdateType()
 
-    class ShouldHideExplicitUpdated(val shouldHideExplicit: Boolean) : UpdateType()
+    object ShouldHideExplicitUpdated : UpdateType()
 
-    class ShouldHideWorkInProgressUpdated(val shouldHideWorkInProgress: Boolean) : UpdateType()
+    object ShouldHideWorkInProgressUpdated : UpdateType()
 
     class ShouldShowChords(val shouldShowChords: Boolean) : UpdateType()
 
-    class SearchQueryUpdated(val searchQuery: String) : UpdateType()
+    object SearchQueryUpdated : UpdateType()
 
     // Other
     class EditModeChanged(val playlistId: Int, val isInEditMode: Boolean) : UpdateType()

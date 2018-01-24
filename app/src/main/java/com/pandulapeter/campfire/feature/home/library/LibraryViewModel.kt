@@ -6,11 +6,7 @@ import android.databinding.ObservableInt
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.data.model.SongInfo
-import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
-import com.pandulapeter.campfire.data.repository.LanguageRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.data.repository.*
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListAdapter
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListViewModel
@@ -106,16 +102,16 @@ class LibraryViewModel(
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
-            is UpdateType.LanguageFilterChanged,
+            UpdateType.LanguageFilterChanged,
             is UpdateType.DownloadedSongsUpdated,
             is UpdateType.LibraryCacheUpdated,
             is UpdateType.PlaylistsUpdated,
-            is UpdateType.HistoryUpdated,
-            is UpdateType.IsSortedByTitleUpdated,
-            is UpdateType.ShouldShowDownloadedOnlyUpdated,
-            is UpdateType.ShouldHideExplicitUpdated,
-            is UpdateType.ShouldHideWorkInProgressUpdated,
-            is UpdateType.SearchQueryUpdated,
+            UpdateType.HistoryUpdated,
+            UpdateType.IsSortedByTitleUpdated,
+            UpdateType.ShouldShowDownloadedOnlyUpdated,
+            UpdateType.ShouldHideExplicitUpdated,
+            UpdateType.ShouldHideWorkInProgressUpdated,
+            UpdateType.SearchQueryUpdated,
             UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
             is UpdateType.LoadingStateChanged -> isLoading.set(updateType.isLoading)
             is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
@@ -195,11 +191,11 @@ class LibraryViewModel(
     fun showViewOptions() = shouldShowViewOptions.set(true)
 
     fun isHeader(position: Int) = position == 0 ||
-        if (isSortedByTitle.get()) {
-            adapter.items[position].songInfo.titleWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.titleWithSpecialCharactersRemoved[0]
-        } else {
-            adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.artistWithSpecialCharactersRemoved[0]
-        }
+            if (isSortedByTitle.get()) {
+                adapter.items[position].songInfo.titleWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.titleWithSpecialCharactersRemoved[0]
+            } else {
+                adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.artistWithSpecialCharactersRemoved[0]
+            }
 
     fun getHeaderTitle(position: Int) =
         (if (isSortedByTitle.get()) adapter.items[position].songInfo.titleWithSpecialCharactersRemoved[0] else adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0]).toString().toUpperCase()

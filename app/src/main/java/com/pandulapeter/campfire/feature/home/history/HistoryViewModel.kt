@@ -59,7 +59,7 @@ class HistoryViewModel(
             is UpdateType.DownloadedSongsUpdated,
             is UpdateType.LibraryCacheUpdated,
             is UpdateType.PlaylistsUpdated,
-            is UpdateType.HistoryUpdated,
+            UpdateType.HistoryUpdated,
             is UpdateType.ItemAddedToHistory,
             is UpdateType.ItemRemovedFromHistory,
             UpdateType.HistoryCleared,
