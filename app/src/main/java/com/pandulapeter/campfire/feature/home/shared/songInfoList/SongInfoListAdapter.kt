@@ -22,7 +22,7 @@ import kotlin.coroutines.experimental.CoroutineContext
  */
 class SongInfoListAdapter : RecyclerView.Adapter<SongInfoListAdapter.SongInfoViewHolder>() {
     private var coroutine: CoroutineContext? = null
-    var items = listOf<SongInfoViewModel>()
+    var items = mutableListOf<SongInfoViewModel>()
         set(newItems) {
             if (field.isEmpty()) {
                 if (newItems.isNotEmpty()) {

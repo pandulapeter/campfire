@@ -41,7 +41,7 @@ abstract class SongInfoListViewModel(
 
     @CallSuper
     protected open fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
-        adapter.items = items
+        adapter.items = items.toMutableList()
         shouldShowPlaceholder.set(items.isEmpty())
     }
 

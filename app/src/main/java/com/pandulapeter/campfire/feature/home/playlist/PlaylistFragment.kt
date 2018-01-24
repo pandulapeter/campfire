@@ -76,7 +76,6 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
             )
         }
         // Setup swipe-to-dismiss and drag-to-rearrange functionality.
-        //TODO: Re-ordering is glitchy.
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
 
             override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =

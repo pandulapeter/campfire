@@ -53,9 +53,11 @@ class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R
             )
         }
         // Set up swipe-to-dismiss functionality.
-        val itemTouchHelper = ItemTouchHelper(object :
-            ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat(), 0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-
+        ItemTouchHelper(object : ElevationItemTouchHelperCallback(
+            (context?.dimension(R.dimen.content_padding) ?: 0).toFloat(),
+            0,
+            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+        ) {
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = false
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
@@ -66,8 +68,7 @@ class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R
                     dismissHintSnackbar()
                 }
             }
-        })
-        itemTouchHelper.attachToRecyclerView(binding.recyclerView)
+        }).attachToRecyclerView(binding.recyclerView)
         // Fix a bug with updating the item decorations.
         viewModel.shouldInvalidateItemDecorations.onEventTriggered(this) {
             if (isAdded) binding.recyclerView.run {

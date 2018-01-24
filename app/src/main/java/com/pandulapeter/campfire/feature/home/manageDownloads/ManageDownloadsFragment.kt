@@ -48,9 +48,11 @@ class ManageDownloadsFragment :
             )
         }
         // Set up swipe-to-dismiss functionality.
-        val itemTouchHelper = ItemTouchHelper(object :
-            ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat(), 0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-
+        ItemTouchHelper(object : ElevationItemTouchHelperCallback(
+            (context?.dimension(R.dimen.content_padding) ?: 0).toFloat(),
+            0,
+            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+        ) {
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = false
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
@@ -61,8 +63,7 @@ class ManageDownloadsFragment :
                     dismissHintSnackbar()
                 }
             }
-        })
-        itemTouchHelper.attachToRecyclerView(binding.recyclerView)
+        }).attachToRecyclerView(binding.recyclerView)
         // Set up list item click listeners.
         viewModel.adapter.itemClickListener = { position ->
             binding.appBarLayout.performAfterExpand(binding.recyclerView) {

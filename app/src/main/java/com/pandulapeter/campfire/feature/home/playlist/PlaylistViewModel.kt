@@ -86,7 +86,6 @@ class PlaylistViewModel(
             is UpdateType.SongAddedToPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType)
             is UpdateType.SongRemovedFromPlaylist -> if (updateType.playlistId == playlistId) super.onUpdate(updateType)
             is UpdateType.PlaylistRenamed -> if (updateType.playlistId == playlistId) title.set(updateType.title)
-            is UpdateType.PlaylistSongOrderUpdated -> if (updateType.playlistId == playlistId) super.onUpdate(updateType)
             is UpdateType.PlaylistsUpdated -> {
                 super.onUpdate(updateType)
                 playlistRepository.getPlaylist(playlistId)?.let { title.set(it.title ?: favoritesTitle) }
@@ -180,17 +179,17 @@ class PlaylistViewModel(
     fun removeSongFromPlaylist(songId: String) = playlistRepository.removeSongFromPlaylist(playlistId, songId)
 
     fun swapSongsInPlaylist(originalPosition: Int, targetPosition: Int) {
-        val list = adapter.items.map { it.songInfo.id }.toMutableList()
         if (originalPosition < targetPosition) {
             for (i in originalPosition until targetPosition) {
-                Collections.swap(list, i, i + 1)
+                Collections.swap(adapter.items, i, i + 1)
             }
         } else {
             for (i in originalPosition downTo targetPosition + 1) {
-                Collections.swap(list, i, i - 1)
+                Collections.swap(adapter.items, i, i - 1)
             }
         }
-        playlistRepository.updatePlaylist(playlistId, list)
+        adapter.notifyItemMoved(originalPosition, targetPosition)
+        playlistRepository.updatePlaylist(playlistId, adapter.items.map { it.songInfo.id }.toMutableList())
     }
 
     private fun updateShouldAllowToolbarScrolling(isAdapterNotEmpty: Boolean) =
