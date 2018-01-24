@@ -12,7 +12,7 @@
     </style>
 
     <style name="SubtitleTextAppearance">
-        <item name="android:textColor">@color/subtitle_color</item>
+        <item name="android:textColor">@color/subtitle</item>
     </style>
 
 </resources>

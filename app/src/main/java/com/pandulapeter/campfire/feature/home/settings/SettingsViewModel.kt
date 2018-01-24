@@ -18,22 +18,27 @@ class SettingsViewModel(
     val shouldAllowToolbarScrolling = ObservableBoolean()
     val shouldShowChords = ObservableBoolean(userPreferenceRepository.shouldShowChords)
     val shouldUseGermanNotation = ObservableBoolean(userPreferenceRepository.shouldUseGermanNotation)
-    val shouldUseGermanNotationDescription = ObservableField(generateNotationExample(shouldUseGermanNotation.get()))
+    val englishNotationExample = ObservableField(generateNotationExample(false))
+    val germanNotationExample = ObservableField(generateNotationExample(true))
 
     init {
         shouldShowChords.onPropertyChanged { userPreferenceRepository.shouldShowChords = it }
         shouldUseGermanNotation.onPropertyChanged {
             userPreferenceRepository.shouldUseGermanNotation = it
-            shouldUseGermanNotationDescription.set(generateNotationExample(it))
         }
     }
 
     private fun generateNotationExample(shouldUseGermanNotation: Boolean) =
         Note.C.getName(shouldUseGermanNotation) + ", " +
+                Note.CSharp.getName(shouldUseGermanNotation) + ", " +
                 Note.D.getName(shouldUseGermanNotation) + ", " +
+                Note.DSharp.getName(shouldUseGermanNotation) + ", " +
                 Note.E.getName(shouldUseGermanNotation) + ", " +
                 Note.F.getName(shouldUseGermanNotation) + ", " +
+                Note.FSharp.getName(shouldUseGermanNotation) + ", " +
                 Note.G.getName(shouldUseGermanNotation) + ", " +
+                Note.GSharp.getName(shouldUseGermanNotation) + ", " +
                 Note.A.getName(shouldUseGermanNotation) + ", " +
+                Note.ASharp.getName(shouldUseGermanNotation) + ", " +
                 Note.B.getName(shouldUseGermanNotation)
 }

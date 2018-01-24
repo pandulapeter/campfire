@@ -8,6 +8,7 @@
     <dimen name="large_content_padding">16dp</dimen>
     <dimen name="touch_target">48dp</dimen>
     <dimen name="toolbar_height">56dp</dimen>
+    <dimen name="divider_height">1dp</dimen>
 
     <!-- Toolbar -->
     <dimen name="toolbar_first_keyline_fix">2dp</dimen>
@@ -30,7 +31,10 @@
     <dimen name="header_height">36dp</dimen>
 
     <!-- Settings screen -->
-    <dimen name="settings_checkbox_padding">32dp</dimen>
+    <dimen name="settings_label_margin">2dp</dimen>
+    <dimen name="settings_checkbox_margin">-4dp</dimen>
+    <dimen name="settings_checkbox_padding">28dp</dimen>
+    <dimen name="settings_divider_margin">56dp</dimen>
 
     <!-- Playlist screen -->
     <dimen name="playlist_content_bottom_margin">56dp</dimen>
