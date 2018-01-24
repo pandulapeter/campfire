@@ -106,12 +106,14 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
         // Set up list item click listeners.
         viewModel.adapter.itemClickListener = { position ->
             binding.appBarLayout.performAfterExpand(binding.recyclerView) {
-                if (isAdded) (activity as? MainActivity)?.setNavigationItem(
-                    MainViewModel.MainNavigationItem.Detail(
-                        viewModel.adapter.items[position].songInfo.id,
-                        arguments.playlistId
+                if (isAdded && !viewModel.isInEditMode.get()) {
+                    (activity as? MainActivity)?.setNavigationItem(
+                        MainViewModel.MainNavigationItem.Detail(
+                            viewModel.adapter.items[position].songInfo.id,
+                            arguments.playlistId
+                        )
                     )
-                )
+                }
             }
         }
         viewModel.adapter.downloadActionClickListener = { position ->

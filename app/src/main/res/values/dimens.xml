@@ -9,6 +9,7 @@
     <dimen name="touch_target">48dp</dimen>
     <dimen name="toolbar_height">56dp</dimen>
     <dimen name="divider_height">1dp</dimen>
+    <dimen name="content_bottom_margin">72dp</dimen>
 
     <!-- Toolbar -->
     <dimen name="toolbar_first_keyline_fix">2dp</dimen>
@@ -36,9 +37,6 @@
     <dimen name="settings_checkbox_padding">28dp</dimen>
     <dimen name="settings_divider_margin">56dp</dimen>
 
-    <!-- Playlist screen -->
-    <dimen name="playlist_content_bottom_margin">56dp</dimen>
-
     <!-- New playlist dialog -->
     <dimen name="new_playlist_input_padding_start">20dp</dimen> <!-- large_content_padding + edit_text_fix -->
     <dimen name="new_playlist_input_padding_end">12dp</dimen> <!-- large_content_padding - edit_text_fix -->
@@ -47,5 +45,9 @@
     <dimen name="playlist_chooser_bottom_sheet_width">0dp</dimen>
     <dimen name="bottom_sheet_toolbar_margin">56dp</dimen>
     <dimen name="bottom_sheet_toolbar_elevation">4dp</dimen>
+
+    <!-- Detail screen -->
+    <dimen name="detail_auto_scroll_control_width">128dp</dimen>
+    <dimen name="detail_auto_scroll_control_margin">48dp</dimen>
 
 </resources>

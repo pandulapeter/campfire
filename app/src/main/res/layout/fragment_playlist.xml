@@ -147,7 +147,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingBottom="@dimen/playlist_content_bottom_margin"
+                android:paddingBottom="@dimen/content_bottom_margin"
                 app:adapter="@{viewModel.adapter}"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 tools:listitem="@layout/item_song_info" />
@@ -168,6 +168,7 @@
                 android:layout_margin="@dimen/large_content_padding"
                 android:onClick="@{() -> viewModel.onPlayButtonClicked()}"
                 android:visibility="invisible"
+                app:fabSize="mini"
                 app:srcCompat="@drawable/ic_play_24dp"
                 app:visibility="@{viewModel.shouldShowPlayButton}"
                 tools:visibility="visible" />

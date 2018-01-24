@@ -120,9 +120,6 @@
     <string name="detail_transpose">Transpose (original)</string>
     <string name="detail_transpose_higher">Higher</string>
     <string name="detail_transpose_lower">Lower</string>
-    <string name="detail_auto_scroll">Auto-scroll (off)</string>
-    <string name="detail_auto_scroll_faster">Faster</string>
-    <string name="detail_auto_scroll_slower">Slower</string>
     <string name="detail_play_in_youtube">Play in YouTube</string>
     <string name="detail_swipe_hint">Swipe horizontally to cycle through songs in the playlist.</string>
     <string name="detail_placeholder_error">Something went wrong while downloading the song.</string>

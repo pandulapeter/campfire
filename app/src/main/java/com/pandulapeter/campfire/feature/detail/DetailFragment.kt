@@ -30,8 +30,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
-    private val autoScrollFasterMenuItem by lazy { binding.navigationView.menu.findItem(R.id.auto_scroll_faster) }
-    private val autoScrollSlowerMenuItem by lazy { binding.navigationView.menu.findItem(R.id.auto_scroll_slower) }
     override val viewModel by lazy {
         DetailViewModel(
             arguments.songId,
@@ -49,10 +47,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.shouldAllowToolbarScrolling.onPropertyChanged {
-            autoScrollFasterMenuItem.isEnabled = it
-            autoScrollSlowerMenuItem.isEnabled = it
-        }
         // Setup the view pager.
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
 
@@ -89,6 +83,12 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
+                R.id.transpose_higher -> consume {
+                    //TODO: Implement transpose feature.
+                }
+                R.id.transpose_lower -> consume {
+                    //TODO: Implement transpose feature.
+                }
                 R.id.play_in_youtube -> consume { viewModel.onPlayOnYouTubeClicked() }
                 else -> false
             }

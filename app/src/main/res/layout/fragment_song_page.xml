@@ -29,7 +29,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:padding="@dimen/large_content_padding"
+                android:paddingBottom="@dimen/content_bottom_margin"
+                android:paddingEnd="@dimen/first_keyline"
+                android:paddingStart="@dimen/first_keyline"
+                android:paddingTop="@dimen/large_content_padding"
                 android:text="@{viewModel.text}"
                 app:visibility="@{viewModel.text.length > 0 &amp;&amp; !viewModel.isLoading &amp;&amp; !viewModel.shouldShowPlaceholder}"
                 tools:context=".feature.detail.DetailFragment" />

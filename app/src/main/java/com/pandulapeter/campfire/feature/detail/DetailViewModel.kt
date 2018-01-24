@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.detail
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
+import android.databinding.ObservableInt
 import android.support.v4.app.FragmentManager
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
@@ -13,6 +14,7 @@ import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.networking.AnalyticsManager
+import com.pandulapeter.campfire.util.toggle
 
 /**
  * Handles events and logic for [DetailFragment].
@@ -37,6 +39,9 @@ class DetailViewModel(
     val shouldShowPlaylistAction = playlistId == DetailFragment.NO_PLAYLIST
     val youTubeSearchQuery = ObservableField<String>()
     val shouldAllowToolbarScrolling = ObservableBoolean()
+    val shouldShowAutoPlayButton = ObservableBoolean(true) //TODO: Delay the appearance of the FAB until the animation is over and the song is loaded.
+    val isAutoPlayStarted = ObservableBoolean()
+    val autoPlaySpeed = ObservableInt(50) //TODO: Persist this value per song.
     private var selectedPosition = 0
 
     override fun onUpdate(updateType: UpdateType) {
@@ -49,9 +54,8 @@ class DetailViewModel(
         }
     }
 
-    private fun getSelectedSongId() = songIds[selectedPosition]
-
     fun onPageSelected(position: Int) {
+        isAutoPlayStarted.set(false)
         selectedPosition = position
         updateToolbar()
         historyRepository.addToHistory(getSelectedSongId())
@@ -80,6 +84,12 @@ class DetailViewModel(
             youTubeSearchQuery.set("${it.artist} - ${it.title}")
         }
     }
+
+    fun onAutoPlayButtonClicked() {
+        isAutoPlayStarted.toggle()
+    }
+
+    private fun getSelectedSongId() = songIds[selectedPosition]
 
     private fun updateToolbar() {
         songInfoRepository.getSongInfo(getSelectedSongId())?.let {
