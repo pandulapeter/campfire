@@ -1,5 +1,7 @@
 package com.pandulapeter.campfire.feature.shared
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.databinding.BindingAdapter
 import android.graphics.drawable.Drawable
 import android.support.annotation.DrawableRes
@@ -13,12 +15,14 @@ import android.text.TextUtils
 import android.text.style.ForegroundColorSpan
 import android.text.style.TextAppearanceSpan
 import android.view.View
+import android.view.ViewAnimationUtils
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.drawable
+
 
 @BindingAdapter(value = ["android:drawableStart", "android:drawableTop", "android:drawableEnd", "android:drawableBottom"], requireAll = false)
 fun setCompoundDrawables(
@@ -72,7 +76,22 @@ fun setVisibility(view: FloatingActionButton, isVisible: Boolean) {
 
 @BindingAdapter("animatedVisibility")
 fun setAnimatedVisibility(view: View, isVisible: Boolean) {
-    view.visibility = if (isVisible) View.VISIBLE else View.INVISIBLE
+    val cx = view.width
+    val cy = view.height / 2
+    val maxRadius = Math.hypot(cx.toDouble(), cy.toDouble()).toFloat()
+    if (isVisible) {
+        view.visibility = View.VISIBLE
+        ViewAnimationUtils.createCircularReveal(view, cx, cy, 0f, maxRadius).start()
+    } else {
+        ViewAnimationUtils.createCircularReveal(view, cx, cy, maxRadius, 0f).apply {
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    super.onAnimationEnd(animation)
+                    view.visibility = View.INVISIBLE
+                }
+            })
+        }.start()
+    }
 }
 
 @BindingAdapter("isScrollEnabled")

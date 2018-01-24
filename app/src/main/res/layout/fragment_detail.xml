@@ -111,35 +111,26 @@
                     app:adapter="@{viewModel.adapter}"
                     app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-                <FrameLayout
+                <android.support.v7.widget.CardView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:animateLayoutChanges="true"
+                    android:layout_marginEnd="@dimen/detail_auto_scroll_control_margin"
+                    android:visibility="invisible"
+                    app:animatedVisibility="@{viewModel.isAutoPlayStarted}"
+                    app:contentPadding="@dimen/content_padding"
                     app:layout_anchor="@+id/auto_scroll_button"
-                    app:layout_anchorGravity="center_vertical|end">
+                    app:layout_anchorGravity="center_vertical|end"
+                    tools:visibility="visible">
 
-                    <!-- TODO: Use a circular reveal instead. -->
-
-                    <android.support.v7.widget.CardView
+                    <SeekBar
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/detail_auto_scroll_control_margin"
-                        android:visibility="invisible"
-                        app:animatedVisibility="@{viewModel.isAutoPlayStarted}"
-                        app:contentPadding="@dimen/content_padding"
-                        tools:visibility="visible">
+                        android:minWidth="@dimen/detail_auto_scroll_control_width"
+                        android:progress="@{viewModel.autoPlaySpeed}" />
 
-                        <SeekBar
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minWidth="@dimen/detail_auto_scroll_control_width"
-                            android:progress="@{viewModel.autoPlaySpeed}" />
+                </android.support.v7.widget.CardView>
 
-                    </android.support.v7.widget.CardView>
-
-                </FrameLayout>
-
-                <!--TODO: Elevation is off during fragment transition. The standard show animation would look better. -->
+                <!--TODO: The FAB should perform a hide animation before the screen is closed. -->
 
                 <android.support.design.widget.FloatingActionButton
                     android:id="@id/auto_scroll_button"
