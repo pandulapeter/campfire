@@ -76,21 +76,23 @@ fun setVisibility(view: FloatingActionButton, isVisible: Boolean) {
 
 @BindingAdapter("animatedVisibility")
 fun setAnimatedVisibility(view: View, isVisible: Boolean) {
-    val cx = view.width
-    val cy = view.height / 2
-    val maxRadius = Math.hypot(cx.toDouble(), cy.toDouble()).toFloat()
-    if (isVisible) {
-        view.visibility = View.VISIBLE
-        ViewAnimationUtils.createCircularReveal(view, cx, cy, 0f, maxRadius).start()
-    } else {
-        ViewAnimationUtils.createCircularReveal(view, cx, cy, maxRadius, 0f).apply {
-            addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    super.onAnimationEnd(animation)
-                    view.visibility = View.INVISIBLE
-                }
-            })
-        }.start()
+    if (view.isAttachedToWindow) {
+        val cx = view.width
+        val cy = view.height / 2
+        val maxRadius = Math.hypot(cx.toDouble(), cy.toDouble()).toFloat()
+        if (isVisible) {
+            view.visibility = View.VISIBLE
+            ViewAnimationUtils.createCircularReveal(view, cx, cy, 0f, maxRadius).start()
+        } else {
+            ViewAnimationUtils.createCircularReveal(view, cx, cy, maxRadius, 0f).apply {
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        super.onAnimationEnd(animation)
+                        view.visibility = View.INVISIBLE
+                    }
+                })
+            }.start()
+        }
     }
 }
 

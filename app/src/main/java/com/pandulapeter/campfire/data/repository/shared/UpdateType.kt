@@ -74,4 +74,11 @@ sealed class UpdateType {
 
     // Other
     class EditModeChanged(val playlistId: Int, val isInEditMode: Boolean) : UpdateType()
+
+    // ScrollManager
+    class ScrollStarted(val songId: String) : UpdateType()
+
+    class ContentScrolled(val songId: String, val scrollSpeed: Int) : UpdateType()
+
+    class ContentEndReached(val songId: String) : UpdateType()
 }

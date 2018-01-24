@@ -40,8 +40,8 @@ class DetailViewModel(
     val youTubeSearchQuery = ObservableField<String>()
     val shouldAllowToolbarScrolling = ObservableBoolean()
     val shouldShowAutoPlayButton = ObservableBoolean()
-    val isAutoPlayStarted = ObservableBoolean()
-    val autoPlaySpeed = ObservableInt(50) //TODO: Persist this value per song.
+    val isAutoScrollStarted = ObservableBoolean()
+    val autoScrollSpeed = ObservableInt(4) //TODO: Persist this value per song.
     private var selectedPosition = songIds.indexOf(songId)
 
     init {
@@ -60,6 +60,9 @@ class DetailViewModel(
             is UpdateType.DownloadSuccessful -> if (updateType.songId == getSelectedSongId()) {
                 shouldAllowToolbarScrolling.set(true)
                 shouldShowAutoPlayButton.set(true)
+            }
+            is UpdateType.ContentEndReached -> if (updateType.songId == getSelectedSongId()) {
+                isAutoScrollStarted.set(false)
             }
         }
     }
@@ -85,7 +88,11 @@ class DetailViewModel(
         }
     }
 
-    fun navigateBack() = shouldNavigateBack.set(true)
+    fun navigateBack() {
+        isAutoScrollStarted.set(false)
+        shouldShowAutoPlayButton.set(false)
+        shouldNavigateBack.set(true)
+    }
 
     fun showSongOptions() = shouldShowSongOptions.set(true)
 
@@ -95,11 +102,10 @@ class DetailViewModel(
         }
     }
 
-    fun onAutoPlayButtonClicked() {
-        isAutoPlayStarted.toggle()
-    }
+    //TODO: Users should not be able to interrupt the animation.
+    fun onAutoPlayButtonClicked() = isAutoScrollStarted.toggle()
 
-    private fun getSelectedSongId() = songIds[selectedPosition]
+    fun getSelectedSongId() = songIds[selectedPosition]
 
     private fun updateToolbar() {
         songInfoRepository.getSongInfo(getSelectedSongId())?.let {

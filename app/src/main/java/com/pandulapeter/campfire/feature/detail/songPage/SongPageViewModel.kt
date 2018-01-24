@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.detail.songPage
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
+import android.databinding.ObservableInt
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
@@ -17,7 +18,7 @@ import kotlinx.coroutines.experimental.async
  * Handles events and logic for [SongPageFragment].
  */
 class SongPageViewModel(
-    private val id: String,
+    val songId: String,
     analyticsManager: AnalyticsManager,
     private val songInfoRepository: SongInfoRepository,
     private val downloadedSongRepository: DownloadedSongRepository,
@@ -25,17 +26,19 @@ class SongPageViewModel(
 ) : CampfireViewModel(analyticsManager), Subscriber {
     val text = ObservableField("")
     val shouldShowPlaceholder = ObservableBoolean()
-    val isLoading = ObservableBoolean(downloadedSongRepository.isSongLoading(id))
+    val scrollSpeed = ObservableInt()
+    val shouldScrollToTop = ObservableBoolean()
+    val isLoading = ObservableBoolean(downloadedSongRepository.isSongLoading(songId))
     private val shouldShowChords = ObservableBoolean(userPreferenceRepository.shouldShowChords)
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
             is UpdateType.ShouldShowChords -> shouldShowChords.set(updateType.shouldShowChords)
-            is UpdateType.DownloadStarted -> if (updateType.songId == id) {
+            is UpdateType.DownloadStarted -> if (updateType.songId == songId) {
                 isLoading.set(true)
                 shouldShowPlaceholder.set(false)
             }
-            is UpdateType.DownloadSuccessful -> if (updateType.songId == id) {
+            is UpdateType.DownloadSuccessful -> if (updateType.songId == songId) {
                 async(UI) {
                     async(CommonPool) {
                         text.set(updateType.song.parseSong())
@@ -43,16 +46,22 @@ class SongPageViewModel(
                     isLoading.set(false)
                 }
             }
-            is UpdateType.DownloadFailed -> if (updateType.songId == id) {
+            is UpdateType.DownloadFailed -> if (updateType.songId == songId) {
                 isLoading.set(false)
                 shouldShowPlaceholder.set(true)
+            }
+            is UpdateType.ScrollStarted -> if (updateType.songId == songId) {
+                shouldScrollToTop.set(true)
+            }
+            is UpdateType.ContentScrolled -> if (updateType.songId == songId) {
+                scrollSpeed.set(updateType.scrollSpeed)
             }
         }
     }
 
     fun loadSong() {
-        if (!downloadedSongRepository.isSongLoading(id)) {
-            songInfoRepository.getLibrarySongs().find { it.id == id }?.let { songInfo ->
+        if (!downloadedSongRepository.isSongLoading(songId)) {
+            songInfoRepository.getLibrarySongs().find { it.id == songId }?.let { songInfo ->
                 downloadedSongRepository.startSongDownload(songInfo)
             }
         }

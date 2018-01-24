@@ -1,16 +1,11 @@
 package com.pandulapeter.campfire.injection
 
 import com.google.gson.GsonBuilder
-import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
-import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
-import com.pandulapeter.campfire.data.repository.HistoryRepository
-import com.pandulapeter.campfire.data.repository.LanguageRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.data.repository.*
 import com.pandulapeter.campfire.data.storage.DataStorageManager
 import com.pandulapeter.campfire.data.storage.FileStorageManager
 import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
+import com.pandulapeter.campfire.feature.detail.ScrollManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.networking.AnalyticsManager
@@ -47,4 +42,8 @@ val storageModule: Module = applicationContext {
     provide { PreferenceStorageManager(get()) }
     provide { DataStorageManager(get(), get()) }
     provide { FileStorageManager(get()) }
+}
+
+val bridgeModule: Module = applicationContext {
+    provide { ScrollManager() }
 }

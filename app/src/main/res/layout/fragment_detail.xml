@@ -116,7 +116,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="@dimen/detail_auto_scroll_control_margin"
                     android:visibility="invisible"
-                    app:animatedVisibility="@{viewModel.isAutoPlayStarted}"
+                    app:animatedVisibility="@{viewModel.isAutoScrollStarted}"
                     app:contentPadding="@dimen/content_padding"
                     app:layout_anchor="@+id/auto_scroll_button"
                     app:layout_anchorGravity="center_vertical|end"
@@ -125,8 +125,9 @@
                     <SeekBar
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:max="10"
                         android:minWidth="@dimen/detail_auto_scroll_control_width"
-                        android:progress="@{viewModel.autoPlaySpeed}" />
+                        android:progress="@={viewModel.autoScrollSpeed}" />
 
                 </android.support.v7.widget.CardView>
 
@@ -140,9 +141,9 @@
                     android:layout_margin="@dimen/large_content_padding"
                     android:onClick="@{() -> viewModel.onAutoPlayButtonClicked()}"
                     android:visibility="invisible"
-                    app:animation="@{viewModel.isAutoPlayStarted ? R.drawable.avd_play_to_pause_24dp : R.drawable.avd_pause_to_play_24dp}"
+                    app:animation="@{viewModel.isAutoScrollStarted ? R.drawable.avd_play_to_pause_24dp : R.drawable.avd_pause_to_play_24dp}"
                     app:fabSize="mini"
-                    app:lastFrame="@{viewModel.isAutoPlayStarted ? @drawable/ic_pause_24dp : @drawable/ic_play_24dp}"
+                    app:lastFrame="@{viewModel.isAutoScrollStarted ? @drawable/ic_pause_24dp : @drawable/ic_play_24dp}"
                     app:visibility="@{viewModel.shouldShowAutoPlayButton}"
                     tools:src="@drawable/ic_play_24dp"
                     tools:visibility="visible" />

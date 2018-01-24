@@ -6,6 +6,7 @@ import android.content.Intent
 import android.databinding.Observable
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
+import android.databinding.ObservableInt
 import android.os.Bundle
 import android.support.annotation.ColorRes
 import android.support.annotation.DimenRes
@@ -40,6 +41,17 @@ inline fun ObservableBoolean.onEventTriggered(fragment: Fragment? = null, crossi
             if (get() && fragment?.isAdded != false) {
                 callback()
                 set(false)
+            }
+        }
+    })
+}
+
+inline fun ObservableInt.onEventTriggered(fragment: Fragment? = null, crossinline callback: (Int) -> Unit) {
+    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+            if (get() != 0 && fragment?.isAdded != false) {
+                callback(get())
+                set(0)
             }
         }
     })

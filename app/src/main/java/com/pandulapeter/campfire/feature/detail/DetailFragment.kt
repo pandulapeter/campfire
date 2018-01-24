@@ -29,6 +29,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
+    private val scrollManager by inject<ScrollManager>()
     override val viewModel by lazy {
         DetailViewModel(
             arguments.songId,
@@ -48,9 +49,10 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
 
             override fun onPageScrollStateChanged(state: Int) {
+                //TODO: Wierd behavior when scrolling from the first or the last page.
                 if (viewModel.adapter.count > 1) {
                     binding.appBarLayout.setExpanded(true, true)
-                    viewModel.isAutoPlayStarted.set(false)
+                    viewModel.isAutoScrollStarted.set(false)
                 }
             }
 
@@ -108,7 +110,20 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             }
         }
         viewModel.shouldNavigateBack.onEventTriggered(this) {
-            binding.appBarLayout.performAfterExpand(binding.viewPager) { (activity as? MainActivity)?.navigateBack() }
+            binding.appBarLayout.performAfterExpand(binding.viewPager) { if (isAdded) (activity as? MainActivity)?.navigateBack() }
+        }
+        viewModel.isAutoScrollStarted.onPropertyChanged(this) {
+            if (it) {
+                scrollManager.onScrollStarted(viewModel.getSelectedSongId())
+                binding.root.post(object : Runnable {
+                    override fun run() {
+                        if (isAdded && viewModel.isAutoScrollStarted.get()) {
+                            scrollManager.performScroll(viewModel.getSelectedSongId(), viewModel.autoScrollSpeed.get() + 2)
+                            binding.root.postOnAnimation(this)
+                        }
+                    }
+                })
+            }
         }
     }
 
@@ -125,17 +140,19 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         super.onStart()
         playlistRepository.subscribe(viewModel)
         downloadedSongRepository.subscribe(viewModel)
+        scrollManager.subscribe(viewModel)
     }
 
     override fun onPause() {
         super.onPause()
-        viewModel.isAutoPlayStarted.set(false)
+        viewModel.isAutoScrollStarted.set(false)
     }
 
     override fun onStop() {
         super.onStop()
         playlistRepository.unsubscribe(viewModel)
         downloadedSongRepository.unsubscribe(viewModel)
+        scrollManager.unsubscribe(viewModel)
     }
 
     private fun getYouTubeIntent(packageName: String, query: String) = Intent(Intent.ACTION_SEARCH).apply {
