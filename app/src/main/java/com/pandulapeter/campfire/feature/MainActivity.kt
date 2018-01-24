@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.home.HomeFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
@@ -78,7 +79,7 @@ class MainActivity : AppCompatActivity() {
                 val nextFragment = async(CommonPool) {
                     mainNavigationItem.getFragment()
                 }.await()
-                if (nextFragment is HomeFragment) {
+                if (nextFragment is HomeFragment && currentFragment is DetailFragment) {
                     nextFragment.shouldPlayReturnAnimation = true
                 }
                 supportFragmentManager.beginTransaction().replace(android.R.id.content, nextFragment).commit()
@@ -91,9 +92,10 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private var Intent.mainNavigationItem by IntentExtraDelegate.String("main_navigation_item")
 
-        fun getStartIntent(context: Context, mainNavigationItem: MainViewModel.MainNavigationItem? = null) =
-            context.getIntentFor(MainActivity::class) { intent ->
-                mainNavigationItem?.let { intent.mainNavigationItem = it.stringValue }
+        fun getStartIntent(context: Context, mainNavigationItem: MainViewModel.MainNavigationItem) =
+            context.getIntentFor(MainActivity::class) {
+                it.mainNavigationItem = mainNavigationItem.stringValue
+                it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
     }
 }
