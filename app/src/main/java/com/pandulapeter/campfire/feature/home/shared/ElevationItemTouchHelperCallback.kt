@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.playlist
+package com.pandulapeter.campfire.feature.home.shared
 
 import android.graphics.Canvas
 import android.support.v4.view.ViewCompat
@@ -8,7 +8,11 @@ import android.support.v7.widget.helper.ItemTouchHelper
 /**
  * Provides support for specifying the elevation to use when an item is being dragged.
  */
-abstract class ElevationItemTouchHelperCallback(private val activeElevationChange: Float) : ItemTouchHelper.Callback() {
+abstract class ElevationItemTouchHelperCallback(
+    private val activeElevationChange: Float,
+    dragDirs: Int = 0,
+    swipeDirs: Int = 0
+) : ItemTouchHelper.SimpleCallback(dragDirs, swipeDirs) {
     private var isElevated = false
     private var originalElevation = 0f
 
@@ -22,7 +26,7 @@ abstract class ElevationItemTouchHelperCallback(private val activeElevationChang
         isCurrentlyActive: Boolean
     ) {
         super.onChildDraw(canvas, recyclerView, viewHolder, dX, dY, actionState, false)
-        if (isCurrentlyActive && !isElevated && actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
+        if (isCurrentlyActive && !isElevated) {
             updateElevation(recyclerView, viewHolder, true)
         }
     }
