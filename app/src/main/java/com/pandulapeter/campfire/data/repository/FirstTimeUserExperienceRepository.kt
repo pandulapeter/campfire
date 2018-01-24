@@ -28,4 +28,11 @@ class FirstTimeUserExperienceRepository(private val preferenceStorageManager: Pr
             preferenceStorageManager.shouldShowDetailSwipeHint = new
         }
     }
+
+    fun resetAll() {
+        shouldShowHistoryHint = true
+        shouldShowPlaylistHint = true
+        shouldShowManageDownloadsHint = true
+        shouldShowDetailSwipeHint = true
+    }
 }

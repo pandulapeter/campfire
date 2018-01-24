@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.home.settings
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import com.pandulapeter.campfire.data.model.Note
+import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildViewModel
 import com.pandulapeter.campfire.networking.AnalyticsManager
@@ -13,8 +14,10 @@ import com.pandulapeter.campfire.util.onPropertyChanged
  */
 class SettingsViewModel(
     analyticsManager: AnalyticsManager,
+    private val firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository,
     private val userPreferenceRepository: UserPreferenceRepository
 ) : HomeChildViewModel(analyticsManager) {
+    val shouldShowHintsResetSnackbar = ObservableBoolean()
     val shouldAllowToolbarScrolling = ObservableBoolean()
     val shouldShowChords = ObservableBoolean(userPreferenceRepository.shouldShowChords)
     val shouldUseGermanNotation = ObservableBoolean(userPreferenceRepository.shouldUseGermanNotation)
@@ -26,6 +29,11 @@ class SettingsViewModel(
         shouldUseGermanNotation.onPropertyChanged {
             userPreferenceRepository.shouldUseGermanNotation = it
         }
+    }
+
+    fun onResetHintsClicked() {
+        firstTimeUserExperienceRepository.resetAll()
+        shouldShowHintsResetSnackbar.set(true)
     }
 
     private fun generateNotationExample(shouldUseGermanNotation: Boolean) =
