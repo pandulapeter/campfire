@@ -163,37 +163,3 @@ fun AppBarLayout.performAfterExpand(connectedView: View, onExpanded: () -> Unit)
         setExpanded(true, true)
     }
 }
-
-//TODO: Refactor to use enums and create a separate manager class for parsing chord data.
-fun Int.toNoteName(shouldUseGermanNotation: Boolean) = when (this) {
-    0 -> "C"
-    1 -> "C#"
-    2 -> "D"
-    3 -> "D#"
-    4 -> "E"
-    5 -> "F"
-    6 -> "F#"
-    7 -> "G"
-    8 -> "G#"
-    9 -> "A"
-    10 -> if (shouldUseGermanNotation) "B" else "A#"
-    11 -> if (shouldUseGermanNotation) "H" else "B"
-    else -> throw IllegalArgumentException("Incorrect note code ($this)")
-}
-
-fun String.toNoteCode(shouldUseGermanNotation: Boolean) = when (this) {
-    "C" -> 0
-    "C#", "Db" -> 1
-    "D" -> 2
-    "D#", "Eb" -> 3
-    "E" -> 4
-    "F" -> 5
-    "F#", "Gb" -> 6
-    "G" -> 7
-    "G#", "Ab" -> 8
-    "A" -> 9
-    "A#", "Bb" -> 10
-    "B" -> if (shouldUseGermanNotation) 10 else 11
-    "H" -> 11
-    else -> throw IllegalArgumentException("Incorrect note name ($this)")
-}

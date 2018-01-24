@@ -2,11 +2,11 @@ package com.pandulapeter.campfire.feature.home.settings
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
+import com.pandulapeter.campfire.data.model.Note
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildViewModel
 import com.pandulapeter.campfire.networking.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
-import com.pandulapeter.campfire.util.toNoteName
 
 /**
  * Handles events and logic for [SettingsFragment].
@@ -29,11 +29,11 @@ class SettingsViewModel(
     }
 
     private fun generateNotationExample(shouldUseGermanNotation: Boolean) =
-        0.toNoteName(shouldUseGermanNotation) + ", " +
-                2.toNoteName(shouldUseGermanNotation) + ", " +
-                4.toNoteName(shouldUseGermanNotation) + ", " +
-                5.toNoteName(shouldUseGermanNotation) + ", " +
-                7.toNoteName(shouldUseGermanNotation) + ", " +
-                9.toNoteName(shouldUseGermanNotation) + ", " +
-                11.toNoteName(shouldUseGermanNotation)
+        Note.C.getName(shouldUseGermanNotation) + ", " +
+                Note.D.getName(shouldUseGermanNotation) + ", " +
+                Note.E.getName(shouldUseGermanNotation) + ", " +
+                Note.F.getName(shouldUseGermanNotation) + ", " +
+                Note.G.getName(shouldUseGermanNotation) + ", " +
+                Note.A.getName(shouldUseGermanNotation) + ", " +
+                Note.B.getName(shouldUseGermanNotation)
 }
