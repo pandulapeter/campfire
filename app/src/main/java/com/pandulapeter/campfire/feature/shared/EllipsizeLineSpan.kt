@@ -37,7 +37,7 @@ class EllipsizeLineSpan : ReplacementSpan(), LineBackgroundSpan {
     override fun draw(canvas: Canvas, text: CharSequence, start: Int, end: Int, x: Float, top: Int, y: Int, bottom: Int, paint: Paint) {
         var newEnd = end
         val textWidth = paint.measureText(text, start, newEnd)
-        if (x + Math.ceil(textWidth.toDouble()).toInt() < layoutRight) {  //text fits
+        if (x + Math.ceil(textWidth.toDouble()).toInt() < layoutRight) {
             canvas.drawText(text, start, newEnd, x, y.toFloat(), paint)
         } else {
             val ellipsizeWidth = paint.measureText("\u2026")

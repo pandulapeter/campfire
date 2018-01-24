@@ -102,15 +102,19 @@ fun setAnimation(view: ImageView, @DrawableRes drawableRes: Int, lastFrame: Draw
 
 @BindingAdapter(value = ["title", "subtitle"], requireAll = false)
 fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?) {
-    //TODO: In portrait split screen mode the smallest possible window size adds an extra line break between the title and the subtitle.
     val text = SpannableString("${title ?: ""}\n${subtitle ?: ""}")
     title?.let {
         text.setSpan(TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Title), 0, it.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
         text.setSpan(EllipsizeLineSpan(), 0, it.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
     subtitle?.let {
-        text.setSpan(TextAppearanceSpan(view.context, R.style.SubtitleTextAppearance), title?.length ?: 0, text.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-        text.setSpan(EllipsizeLineSpan(), title?.length ?: 0, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        text.setSpan(
+            TextAppearanceSpan(view.context, R.style.SubtitleTextAppearance),
+            (title?.length ?: 0) + 1,
+            text.length,
+            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+        )
+        text.setSpan(EllipsizeLineSpan(), (title?.length ?: 0) + 1, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
     view.text = text
 }
@@ -121,7 +125,7 @@ fun setTitleDescription(view: TextView, title: String?, description: String?) {
     description?.let {
         text.setSpan(
             TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Caption),
-            title?.length ?: 0,
+            (title?.length ?: 0) + 1,
             text.length,
             Spannable.SPAN_INCLUSIVE_INCLUSIVE
         )
