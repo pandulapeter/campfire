@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.shared
 
+import android.animation.ObjectAnimator
 import android.graphics.Canvas
 import android.support.v4.view.ViewCompat
 import android.support.v7.widget.RecyclerView
@@ -39,11 +40,24 @@ abstract class ElevationItemTouchHelperCallback(
     private fun updateElevation(recyclerView: RecyclerView, holder: RecyclerView.ViewHolder, elevate: Boolean) {
         if (elevate) {
             originalElevation = ViewCompat.getElevation(holder.itemView)
-            val newElevation = activeElevationChange + findMaxElevation(recyclerView)
-            ViewCompat.setElevation(holder.itemView, newElevation)
+            ObjectAnimator.ofFloat(
+                holder.itemView,
+                "Elevation",
+                originalElevation,
+                activeElevationChange + findMaxElevation(recyclerView)
+            ).apply {
+                duration = 150
+            }.start()
             isElevated = true
         } else {
-            ViewCompat.setElevation(holder.itemView, originalElevation)
+            ObjectAnimator.ofFloat(
+                holder.itemView,
+                "Elevation",
+                ViewCompat.getElevation(holder.itemView),
+                originalElevation
+            ).apply {
+                duration = 150
+            }.start()
             originalElevation = 0f
             isElevated = false
         }
