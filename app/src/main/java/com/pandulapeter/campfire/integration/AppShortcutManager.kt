@@ -109,6 +109,7 @@ class AppShortcutManager(
         ) = ShortcutInfo.Builder(context, id)
             .setShortLabel(label)
             .setIcon(Icon.createWithResource(context, icon))
+            //TODO: There is no splashscreen when opening app shortcuts.
             .setIntent(MainActivity.getStartIntent(context, MainViewModel.MainNavigationItem.Home(homeNavigationItem)).setAction(Intent.ACTION_VIEW))
             .build()
     }

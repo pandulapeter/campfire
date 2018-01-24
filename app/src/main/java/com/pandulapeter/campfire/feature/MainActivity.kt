@@ -91,8 +91,9 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private var Intent.mainNavigationItem by IntentExtraDelegate.String("main_navigation_item")
 
-        fun getStartIntent(context: Context, mainNavigationItem: MainViewModel.MainNavigationItem) = context.getIntentFor(MainActivity::class) {
-            it.mainNavigationItem = mainNavigationItem.stringValue
-        }
+        fun getStartIntent(context: Context, mainNavigationItem: MainViewModel.MainNavigationItem? = null) =
+            context.getIntentFor(MainActivity::class) { intent ->
+                mainNavigationItem?.let { intent.mainNavigationItem = it.stringValue }
+            }
     }
 }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--TODO: The logo needs to look better here. -->
+
+    <item android:drawable="@color/background" />
+
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@mipmap/ic_launcher_foreground"
+            android:tint="@color/accent" />
+    </item>
+
+</layer-list>
