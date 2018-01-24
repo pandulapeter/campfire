@@ -32,21 +32,14 @@ class PlaylistViewModel(
 ) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val title = ObservableField(favoritesTitle)
     val editedTitle = ObservableField(title.get())
-    val shouldShowPlayButton = ObservableBoolean()
     val shouldShowShareButton = ObservableBoolean(playlistRepository.getPlaylistSongIds(playlistId).isNotEmpty())
+    val shouldShowPlayButton = ObservableBoolean(shouldShowShareButton.get())
     val isInEditMode = ObservableBoolean()
     val shouldShowDeleteConfirmation = ObservableBoolean()
     val shouldShowEditButton = ObservableBoolean(shouldShowShareButton.get() || playlistId != Playlist.FAVORITES_ID)
     val shouldShowWorkInProgressSnackbar = ObservableBoolean()
     val shouldAllowToolbarScrolling = ObservableBoolean()
     val shouldAllowDeleteButton = playlistId != Playlist.FAVORITES_ID
-    var isAnimationOver = false
-        set(value) {
-            if (!isInEditMode.get() && value) {
-                shouldShowPlayButton.set(shouldShowShareButton.get())
-            }
-            field = value
-        }
 
     init {
         title.onPropertyChanged { editedTitle.set(it) }
@@ -124,8 +117,8 @@ class PlaylistViewModel(
                 val payload =
                     if (updateType.isInEditMode && adapter.items.size > 1) SongInfoListAdapter.Payload.EDIT_MODE_OPEN else SongInfoListAdapter.Payload.EDIT_MODE_CLOSE
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
-                shouldShowPlayButton.set(if (isAnimationOver && !updateType.isInEditMode) adapter.items.isNotEmpty() else false)
                 shouldShowShareButton.set(if (!updateType.isInEditMode) adapter.items.isNotEmpty() else false)
+                shouldShowPlayButton.set(shouldShowPlayButton.get())
                 updateShouldAllowToolbarScrolling(adapter.items.isNotEmpty())
             }
         }
@@ -136,9 +129,7 @@ class PlaylistViewModel(
         shouldShowEditButton.set(items.isNotEmpty() || playlistId != Playlist.FAVORITES_ID)
         if (!isInEditMode.get()) {
             shouldShowShareButton.set(if (!isInEditMode.get()) adapter.items.isNotEmpty() else false)
-            if (isAnimationOver) {
-                shouldShowPlayButton.set(items.isNotEmpty())
-            }
+            shouldShowPlayButton.set(shouldShowShareButton.get())
         }
         updateShouldAllowToolbarScrolling(items.isNotEmpty())
     }

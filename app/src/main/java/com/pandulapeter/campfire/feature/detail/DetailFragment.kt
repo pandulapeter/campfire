@@ -6,7 +6,6 @@ import android.os.Build
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewPager
-import android.view.MenuItem
 import android.view.View
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
@@ -42,8 +41,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             historyRepository
         )
     }
-    private lateinit var transposeHigherMenuItem: MenuItem
-    private lateinit var transposeLowerMenuItem: MenuItem
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -78,10 +75,8 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             }
         }
         // Set up the side navigation drawer.
-        transposeHigherMenuItem = binding.navigationView.menu.findItem(R.id.transpose_higher)
-        transposeLowerMenuItem = binding.navigationView.menu.findItem(R.id.transpose_lower)
-        transposeHigherMenuItem.isVisible = userPreferenceRepository.shouldShowChords
-        transposeLowerMenuItem.isVisible = userPreferenceRepository.shouldShowChords
+        binding.navigationView.menu.findItem(R.id.transpose_higher).isVisible = userPreferenceRepository.shouldShowChords
+        binding.navigationView.menu.findItem(R.id.transpose_lower).isVisible = userPreferenceRepository.shouldShowChords
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { binding.appBarLayout.setExpanded(true, true) })
         binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
@@ -92,7 +87,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 R.id.transpose_lower -> consume {
                     //TODO: Implement transpose feature.
                 }
-                R.id.play_in_youtube -> consume { viewModel.onPlayOnYouTubeClicked() }
+                R.id.play_in_youtube -> consumeAndCloseDrawer(binding.drawerLayout) { viewModel.onPlayOnYouTubeClicked() }
                 else -> false
             }
         }
@@ -128,6 +123,11 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         super.onStart()
         playlistRepository.subscribe(viewModel)
         downloadedSongRepository.subscribe(viewModel)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.isAutoPlayStarted.set(false)
     }
 
     override fun onStop() {

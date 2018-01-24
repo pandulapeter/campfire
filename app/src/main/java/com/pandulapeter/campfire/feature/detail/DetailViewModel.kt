@@ -39,18 +39,28 @@ class DetailViewModel(
     val shouldShowPlaylistAction = playlistId == DetailFragment.NO_PLAYLIST
     val youTubeSearchQuery = ObservableField<String>()
     val shouldAllowToolbarScrolling = ObservableBoolean()
-    val shouldShowAutoPlayButton = ObservableBoolean(true) //TODO: Delay the appearance of the FAB until the animation is over and the song is loaded.
+    val shouldShowAutoPlayButton = ObservableBoolean(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
     val isAutoPlayStarted = ObservableBoolean()
     val autoPlaySpeed = ObservableInt(50) //TODO: Persist this value per song.
-    private var selectedPosition = 0
+    private var selectedPosition = songIds.indexOf(songId)
+
+    init {
+        updateToolbar()
+    }
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
             is UpdateType.PlaylistsUpdated -> updatePlaylistActionIcon()
             is UpdateType.SongRemovedFromPlaylist -> if (updateType.songId == getSelectedSongId()) updatePlaylistActionIcon()
             is UpdateType.SongAddedToPlaylist -> if (updateType.songId == getSelectedSongId()) updatePlaylistActionIcon()
-            is UpdateType.DownloadStarted -> if (updateType.songId == getSelectedSongId()) shouldAllowToolbarScrolling.set(false)
-            is UpdateType.DownloadSuccessful -> if (updateType.songId == getSelectedSongId()) shouldAllowToolbarScrolling.set(true)
+            is UpdateType.DownloadStarted -> if (updateType.songId == getSelectedSongId()) {
+                shouldAllowToolbarScrolling.set(false)
+                shouldShowAutoPlayButton.set(false)
+            }
+            is UpdateType.DownloadSuccessful -> if (updateType.songId == getSelectedSongId()) {
+                shouldAllowToolbarScrolling.set(true)
+                shouldShowAutoPlayButton.set(true)
+            }
         }
     }
 
@@ -59,6 +69,7 @@ class DetailViewModel(
         updateToolbar()
         historyRepository.addToHistory(getSelectedSongId())
         shouldAllowToolbarScrolling.set(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
+        shouldShowAutoPlayButton.set(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
     }
 
     fun onPlaylistActionClicked() {

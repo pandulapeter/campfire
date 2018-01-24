@@ -161,6 +161,7 @@
                 app:text="@string/playlist_placeholder"
                 app:visibility="@{viewModel.shouldShowPlaceholder}" />
 
+            <!--TODO: Elevation is off during fragment transition. The standard show animation would look better. -->
             <android.support.design.widget.FloatingActionButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

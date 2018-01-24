@@ -62,17 +62,17 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
                 getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.library -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Library) }
-                R.id.collections -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Collections) }
-                R.id.history -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.History) }
-                R.id.settings -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Settings) }
+                R.id.library -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Library) }
+                R.id.collections -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Collections) }
+                R.id.history -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.History) }
+                R.id.settings -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Settings) }
                 R.id.playlists -> {
                     NewPlaylistDialogFragment.show(childFragmentManager)
                     false
                 }
-                R.id.manage_playlists -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.ManagePlaylists) }
-                R.id.manage_downloads -> consumeAndCloseDrawer { replaceActiveFragment(HomeViewModel.HomeNavigationItem.ManageDownloads) }
-                else -> consumeAndCloseDrawer {
+                R.id.manage_playlists -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.ManagePlaylists) }
+                R.id.manage_downloads -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.ManageDownloads) }
+                else -> consumeAndCloseDrawer(binding.drawerLayout) {
                     binding.navigationView.setCheckedItem(menuItem.itemId)
                     replaceActiveFragment(HomeViewModel.HomeNavigationItem.Playlist(menuItem.itemId))
                 }
@@ -187,11 +187,6 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
                 }
             }
         }
-    }
-
-    private fun consumeAndCloseDrawer(action: () -> Unit) = consume {
-        action()
-        binding.drawerLayout.closeDrawer(GravityCompat.START)
     }
 
     private fun SubMenu.addPlaylistItem(id: Int, index: Int, title: String, shouldUseAddIcon: Boolean = false) =

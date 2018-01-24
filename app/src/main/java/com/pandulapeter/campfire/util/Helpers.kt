@@ -10,6 +10,12 @@ fun consume(action: () -> Unit): Boolean {
     return true
 }
 
+
+fun consumeAndCloseDrawer(drawerLayout: DrawerLayout, action: () -> Unit) = consume {
+    action()
+    drawerLayout.closeDrawers()
+}
+
 fun DrawerLayout.addDrawerListener(
     onDrawerStateChanged: () -> Unit = {},
     onDrawerSlide: () -> Unit = {},

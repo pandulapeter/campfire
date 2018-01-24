@@ -124,12 +124,6 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
                 itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
             }
         }
-        // Delay the appearance of the play button.
-        binding.root.postDelayed({
-            if (isAdded) {
-                viewModel.isAnimationOver = true
-            }
-        }, 300)
         viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered(this) { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
     }
 
