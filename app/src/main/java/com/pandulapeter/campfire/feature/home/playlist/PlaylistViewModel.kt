@@ -33,7 +33,6 @@ class PlaylistViewModel(
     val title = ObservableField(favoritesTitle)
     val editedTitle = ObservableField(title.get())
     val shouldShowShareButton = ObservableBoolean(playlistRepository.getPlaylistSongIds(playlistId).isNotEmpty())
-    val shouldShowPlayButton = ObservableBoolean(shouldShowShareButton.get())
     val isInEditMode = ObservableBoolean()
     val shouldShowDeleteConfirmation = ObservableBoolean()
     val shouldShowEditButton = ObservableBoolean(shouldShowShareButton.get() || playlistId != Playlist.FAVORITES_ID)
@@ -118,7 +117,6 @@ class PlaylistViewModel(
                     if (updateType.isInEditMode && adapter.items.size > 1) SongInfoListAdapter.Payload.EDIT_MODE_OPEN else SongInfoListAdapter.Payload.EDIT_MODE_CLOSE
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
                 shouldShowShareButton.set(if (!updateType.isInEditMode) adapter.items.isNotEmpty() else false)
-                shouldShowPlayButton.set(shouldShowPlayButton.get())
                 updateShouldAllowToolbarScrolling(adapter.items.isNotEmpty())
             }
         }
@@ -129,7 +127,6 @@ class PlaylistViewModel(
         shouldShowEditButton.set(items.isNotEmpty() || playlistId != Playlist.FAVORITES_ID)
         if (!isInEditMode.get()) {
             shouldShowShareButton.set(if (!isInEditMode.get()) adapter.items.isNotEmpty() else false)
-            shouldShowPlayButton.set(shouldShowShareButton.get())
         }
         updateShouldAllowToolbarScrolling(items.isNotEmpty())
     }
@@ -156,10 +153,6 @@ class PlaylistViewModel(
         } else {
             isInEditMode.set(true)
         }
-    }
-
-    fun onPlayButtonClicked() {
-        if (adapter.items.isNotEmpty()) adapter.itemClickListener(0)
     }
 
     fun onShareButtonClicked() {

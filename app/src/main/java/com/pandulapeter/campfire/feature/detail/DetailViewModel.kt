@@ -39,7 +39,7 @@ class DetailViewModel(
     val shouldShowPlaylistAction = playlistId == DetailFragment.NO_PLAYLIST
     val youTubeSearchQuery = ObservableField<String>()
     val shouldAllowToolbarScrolling = ObservableBoolean()
-    val shouldShowAutoPlayButton = ObservableBoolean(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
+    val shouldShowAutoPlayButton = ObservableBoolean()
     val isAutoPlayStarted = ObservableBoolean()
     val autoPlaySpeed = ObservableInt(50) //TODO: Persist this value per song.
     private var selectedPosition = songIds.indexOf(songId)

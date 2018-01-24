@@ -62,14 +62,14 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 dismissHintSnackbar()
             }
         })
-        if (savedInstanceState == null) {
-            if (viewModel.songIds.indexOf(arguments.songId) == 0) {
-                viewModel.onPageSelected(0)
-            } else {
-                binding.viewPager.run { post { setCurrentItem(viewModel.songIds.indexOf(arguments.songId), false) } }
+        binding.viewPager.run {
+            post {
+                if (savedInstanceState == null) {
+                    setCurrentItem(viewModel.songIds.indexOf(arguments.songId), false)
+                } else {
+                    viewModel.onPageSelected(currentItem)
+                }
             }
-        } else {
-            binding.viewPager.run { post { viewModel.onPageSelected(currentItem) } }
         }
         if (viewModel.songIds.size > 1 && firstTimeUserExperienceRepository.shouldShowDetailSwipeHint) {
             binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.detail_swipe_hint) {

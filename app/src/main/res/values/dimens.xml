@@ -9,7 +9,6 @@
     <dimen name="touch_target">48dp</dimen>
     <dimen name="toolbar_height">56dp</dimen>
     <dimen name="divider_height">1dp</dimen>
-    <dimen name="content_bottom_margin">72dp</dimen>
 
     <!-- Toolbar -->
     <dimen name="toolbar_first_keyline_fix">2dp</dimen>
@@ -49,5 +48,6 @@
     <!-- Detail screen -->
     <dimen name="detail_auto_scroll_control_width">128dp</dimen>
     <dimen name="detail_auto_scroll_control_margin">48dp</dimen>
+    <dimen name="detail_content_bottom_margin">72dp</dimen>
 
 </resources>

@@ -146,8 +146,6 @@
                 android:id="@+id/recycler_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingBottom="@dimen/content_bottom_margin"
                 app:adapter="@{viewModel.adapter}"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 tools:listitem="@layout/item_song_info" />
@@ -160,19 +158,6 @@
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 app:text="@string/playlist_placeholder"
                 app:visibility="@{viewModel.shouldShowPlaceholder}" />
-
-            <!--TODO: Elevation is off during fragment transition. The standard show animation would look better. -->
-            <android.support.design.widget.FloatingActionButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_margin="@dimen/large_content_padding"
-                android:onClick="@{() -> viewModel.onPlayButtonClicked()}"
-                android:visibility="invisible"
-                app:fabSize="mini"
-                app:srcCompat="@drawable/ic_play_24dp"
-                app:visibility="@{viewModel.shouldShowPlayButton}"
-                tools:visibility="visible" />
 
         </android.support.design.widget.CoordinatorLayout>
 
