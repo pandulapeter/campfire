@@ -17,6 +17,7 @@ import android.support.design.widget.CoordinatorLayout
 import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
+import android.support.v4.widget.DrawerLayout
 import android.support.v7.content.res.AppCompatResources
 import android.view.View
 import android.widget.CompoundButton
@@ -149,6 +150,21 @@ fun String.replaceSpecialCharacters() = this
     .replace("Ú", "U")
     .replace("ű", "u")
     .replace("Ű", "U")
+
+fun DrawerLayout.addDrawerListener(
+    onDrawerStateChanged: () -> Unit = {},
+    onDrawerSlide: () -> Unit = {},
+    onDrawerClosed: () -> Unit = {},
+    onDrawerOpened: () -> Unit = {}
+) = addDrawerListener(object : DrawerLayout.DrawerListener {
+    override fun onDrawerStateChanged(newState: Int) = onDrawerStateChanged()
+
+    override fun onDrawerSlide(drawerView: View, slideOffset: Float) = onDrawerSlide()
+
+    override fun onDrawerClosed(drawerView: View) = onDrawerClosed()
+
+    override fun onDrawerOpened(drawerView: View) = onDrawerOpened()
+})
 
 fun AppBarLayout.performAfterExpand(connectedView: View, onExpanded: () -> Unit) {
     if (tag != null || height == bottom) {
