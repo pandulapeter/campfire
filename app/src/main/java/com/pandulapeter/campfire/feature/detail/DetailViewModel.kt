@@ -84,6 +84,7 @@ class DetailViewModel(
                 playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, songId)
             }
         } else {
+            isAutoScrollStarted.set(false)
             PlaylistChooserBottomSheetFragment.show(fragmentManager, songId)
         }
     }
