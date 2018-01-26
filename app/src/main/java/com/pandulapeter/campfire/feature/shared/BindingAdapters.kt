@@ -14,6 +14,7 @@ import android.text.SpannableString
 import android.text.TextUtils
 import android.text.style.ForegroundColorSpan
 import android.text.style.TextAppearanceSpan
+import android.text.style.TypefaceSpan
 import android.view.View
 import android.view.ViewAnimationUtils
 import android.widget.EditText
@@ -162,6 +163,43 @@ fun setTitleDescription(view: TextView, title: String?, description: String?) {
         text.setSpan(
             TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Caption),
             (title?.length ?: 0) + 1,
+            text.length,
+            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+        )
+    }
+    view.text = text
+}
+
+@BindingAdapter(value = ["songTitle", "songArtist", "songExtra"], requireAll = false)
+fun setSongInfoItemText(view: TextView, title: String?, artist: String?, songExtra: Int?) {
+    val extra = songExtra?.let { view.context.getString(it) }
+    val text = SpannableString("${title ?: ""}\n${artist ?: ""}${extra?.let { "\n$it" } ?: ""}")
+    title?.let {
+        text.setSpan(
+            TypefaceSpan("sans-serif-medium"),
+            0,
+            it.length,
+            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+        )
+    }
+    artist?.let {
+        text.setSpan(
+            TypefaceSpan("sans-serif-thin"),
+            (title?.length ?: 0) + 1,
+            text.length,
+            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+        )
+    }
+    extra?.let {
+        text.setSpan(
+            ForegroundColorSpan(view.context.color(R.color.accent)),
+            text.length - it.length,
+            text.length,
+            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+        )
+        text.setSpan(
+            TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Caption),
+            text.length - it.length,
             text.length,
             Spannable.SPAN_INCLUSIVE_INCLUSIVE
         )

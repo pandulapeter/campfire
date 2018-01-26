@@ -39,9 +39,9 @@
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/playlist_drag_to_rearrange"
                 android:padding="@dimen/content_padding"
-                app:visibility="@{viewModel.shouldShowDragHandle}"
                 app:layout_constraintEnd_toEndOf="@id/space_1"
-                app:srcCompat="@drawable/ic_drag_handle_24dp" />
+                app:srcCompat="@drawable/ic_drag_handle_24dp"
+                app:visibility="@{viewModel.shouldShowDragHandle}" />
 
             <android.support.v4.widget.Space
                 android:id="@+id/space_2"
@@ -56,10 +56,10 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/manage_playlists"
                 android:padding="@dimen/content_padding"
-                app:visibility="@{viewModel.shouldShowPlaylistButton}"
                 app:animation="@{viewModel.isSongOnAnyPlaylist ? R.drawable.avd_added_to_playlists_24dp : R.drawable.avd_removed_from_playlists_24dp}"
                 app:lastFrame="@{viewModel.isSongOnAnyPlaylist ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
                 app:layout_constraintEnd_toEndOf="@id/space_2"
+                app:visibility="@{viewModel.shouldShowPlaylistButton}"
                 tools:src="@drawable/ic_playlist_24dp" />
 
             <android.support.v4.widget.Space
@@ -74,8 +74,8 @@
                 android:id="@+id/download_action_container"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:visibility="@{viewModel.shouldShowDownloadButton}"
-                app:layout_constraintEnd_toEndOf="@id/space_3">
+                app:layout_constraintEnd_toEndOf="@id/space_3"
+                app:visibility="@{viewModel.shouldShowDownloadButton}">
 
                 <ViewSwitcher
                     android:id="@+id/download_action_switcher"
@@ -109,38 +109,13 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:alpha="@{viewModel.isSongDownloaded ? 1f : 0.8f }"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif-medium"
-                android:maxLines="3"
-                android:text="@{viewModel.songInfo.title}"
+                android:lineSpacingExtra="2dp"
                 app:layout_constraintEnd_toStartOf="@id/download_action_container"
                 app:layout_constraintStart_toStartOf="parent"
-                tools:text="Song title" />
-
-            <TextView
-                android:id="@+id/artist"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/card_text_margin"
-                android:alpha="@{viewModel.isSongDownloaded ? 1f : 0.5f }"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif-thin"
-                android:maxLines="2"
-                android:text="@{viewModel.songInfo.artist}"
-                app:layout_constraintEnd_toStartOf="@id/download_action_container"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/title"
-                tools:text="Artist" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/card_text_margin"
-                android:text="@{viewModel.alertText}"
-                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                android:textColor="@color/accent"
-                app:layout_constraintTop_toBottomOf="@id/artist"
-                tools:text="Alert" />
+                app:songArtist="@{viewModel.songInfo.artist}"
+                app:songExtra="@{viewModel.alertText}"
+                app:songTitle="@{viewModel.songInfo.title}"
+                tools:text="Song title\nArtist" />
 
         </android.support.constraint.ConstraintLayout>
 
