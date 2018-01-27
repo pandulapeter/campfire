@@ -9,7 +9,6 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.library.HeaderItemDecoration
@@ -29,7 +28,6 @@ import org.koin.android.ext.android.inject
  * Controlled by [HistoryViewModel].
  */
 class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R.layout.fragment_history), AlertDialogFragment.OnDialogItemsSelectedListener {
-    private val playlistRepository by inject<PlaylistRepository>()
     private val historyRepository by inject<HistoryRepository>()
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
 
@@ -110,6 +108,7 @@ class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R
             }
             viewModel.adapter.downloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) } }
         }
+        // Display first-time user experience hint.
         viewModel.shouldShowHintSnackbar.onPropertyChanged(this) {
             if (firstTimeUserExperienceRepository.shouldShowHistoryHint) {
                 binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.history_hint) {
@@ -121,13 +120,11 @@ class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R
 
     override fun onStart() {
         super.onStart()
-        playlistRepository.subscribe(viewModel)
         historyRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
-        playlistRepository.unsubscribe(viewModel)
         historyRepository.unsubscribe(viewModel)
     }
 

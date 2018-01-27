@@ -6,12 +6,14 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.ManageDownloadsBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
+import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
@@ -28,7 +30,7 @@ class ManageDownloadsFragment :
     AlertDialogFragment.OnDialogItemsSelectedListener {
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
 
-    override fun createViewModel() = ManageDownloadsViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository)
+    override fun createViewModel() = ManageDownloadsViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository)
 
     override fun getAppBarLayout() = binding.appBarLayout
 
@@ -70,6 +72,21 @@ class ManageDownloadsFragment :
                 if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
             }
         }
+        viewModel.adapter.playlistActionClickListener = { position ->
+            viewModel.adapter.items[position].let { songInfoViewModel ->
+                val songId = songInfoViewModel.songInfo.id
+                if (playlistRepository.getPlaylists().size == 1) {
+                    if (playlistRepository.isSongInPlaylist(Playlist.FAVORITES_ID, songId)) {
+                        playlistRepository.removeSongFromPlaylist(Playlist.FAVORITES_ID, songId)
+                    } else {
+                        playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, songId)
+                    }
+                } else {
+                    PlaylistChooserBottomSheetFragment.show(childFragmentManager, songId)
+                }
+            }
+        }
+        // Display first-time user experience hint.
         viewModel.shouldShowHintSnackbar.onPropertyChanged(this) {
             if (firstTimeUserExperienceRepository.shouldShowManageDownloadsHint) {
                 binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.manage_downloads_hint) {

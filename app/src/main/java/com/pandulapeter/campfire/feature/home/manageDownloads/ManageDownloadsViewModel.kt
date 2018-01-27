@@ -3,10 +3,13 @@ package com.pandulapeter.campfire.feature.home.manageDownloads
 import android.content.Context
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
+import android.databinding.ObservableInt
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
+import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListAdapter
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListViewModel
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoViewModel
 import com.pandulapeter.campfire.networking.AnalyticsManager
@@ -21,27 +24,29 @@ class ManageDownloadsViewModel(
     context: Context?,
     analyticsManager: AnalyticsManager,
     songInfoRepository: SongInfoRepository,
-    downloadedSongRepository: DownloadedSongRepository
-) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository) {
+    downloadedSongRepository: DownloadedSongRepository,
+    playlistRepository: PlaylistRepository
+) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository) {
     val shouldShowDeleteAllButton = ObservableBoolean(downloadedSongRepository.getDownloadedSongIds().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldShowHintSnackbar = ObservableBoolean()
-    val totalFileSize = ObservableField(context?.getString(R.string.manage_downloads_total_size_calculating) ?: "")
+    val totalFileSize = ObservableField(context?.getString(R.string.manage_downloads_subtitle_calculating) ?: "")
+    val totalFileCount = ObservableInt(downloadedSongRepository.downloadedItemCount())
     val shouldAllowToolbarScrolling = ObservableBoolean()
 
     override fun getAdapterItems() = downloadedSongRepository.getDownloadedSongIds()
-        .mapNotNull { songInfoRepository.getSongInfo(it) } //TODO: Display the the playlist icon.
+        .mapNotNull { songInfoRepository.getSongInfo(it) }
         .sortedByDescending { downloadedSongRepository.getDownloadSize(it.id) }
-        .map {
+        .map { songInfo ->
             SongInfoViewModel(
-                songInfo = it,
+                songInfo = songInfo,
                 isSongDownloaded = true,
                 isSongLoading = false,
-                isSongOnAnyPlaylist = false,
+                isSongOnAnyPlaylist = playlistRepository.isSongInAnyPlaylist(songInfo.id),
                 shouldShowDragHandle = false,
-                shouldShowPlaylistButton = false,
+                shouldShowPlaylistButton = true,
                 shouldShowDownloadButton = false,
-                alertText = humanReadableByteCount(downloadedSongRepository.getDownloadSize(it.id))
+                alertText = humanReadableByteCount(downloadedSongRepository.getDownloadSize(songInfo.id))
             )
         }
 
@@ -53,6 +58,17 @@ class ManageDownloadsViewModel(
             UpdateType.AllDownloadsRemoved,
             is UpdateType.DownloadSuccessful,
             is UpdateType.LibraryCacheUpdated -> super.onUpdate(updateType)
+            is UpdateType.SongAddedToPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1 && !adapter.items[it].isSongOnAnyPlaylist) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.SONG_IS_IN_A_PLAYLIST
+                )
+            }
+            is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1 && !playlistRepository.isSongInAnyPlaylist(
+                        updateType.songId
+                    )) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS)
+            }
         }
     }
 
@@ -64,6 +80,7 @@ class ManageDownloadsViewModel(
         }
         shouldAllowToolbarScrolling.set(items.isNotEmpty())
         async(UI) {
+            totalFileCount.set(downloadedSongRepository.downloadedItemCount())
             totalFileSize.set(async(CommonPool) {
                 humanReadableByteCount(downloadedSongRepository.getDownloadCacheSize())
             }.await())

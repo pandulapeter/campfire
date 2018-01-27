@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.HomeViewModel
@@ -31,6 +32,8 @@ abstract class SongInfoListFragment<B : ViewDataBinding, out VM : SongInfoListVi
     protected val userPreferenceRepository by inject<UserPreferenceRepository>()
     protected val songInfoRepository by inject<SongInfoRepository>()
     protected val downloadedSongRepository by inject<DownloadedSongRepository>()
+    protected val playlistRepository by inject<PlaylistRepository>()
+
 
     protected abstract fun getRecyclerView(): RecyclerView
 
@@ -75,6 +78,7 @@ abstract class SongInfoListFragment<B : ViewDataBinding, out VM : SongInfoListVi
         userPreferenceRepository.subscribe(viewModel)
         songInfoRepository.subscribe(viewModel)
         downloadedSongRepository.subscribe(viewModel)
+        playlistRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
@@ -82,5 +86,6 @@ abstract class SongInfoListFragment<B : ViewDataBinding, out VM : SongInfoListVi
         userPreferenceRepository.unsubscribe(viewModel)
         songInfoRepository.unsubscribe(viewModel)
         downloadedSongRepository.unsubscribe(viewModel)
+        playlistRepository.unsubscribe(viewModel)
     }
 }

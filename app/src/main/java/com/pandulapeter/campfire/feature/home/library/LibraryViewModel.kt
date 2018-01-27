@@ -29,9 +29,9 @@ class LibraryViewModel(
     downloadedSongRepository: DownloadedSongRepository,
     appShortcutManager: AppShortcutManager,
     private val userPreferenceRepository: UserPreferenceRepository,
-    private val playlistRepository: PlaylistRepository,
+    playlistRepository: PlaylistRepository,
     private val languageRepository: LanguageRepository
-) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository) {
+) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.searchQuery.isNotEmpty())
     val searchQuery = ObservableField(userPreferenceRepository.searchQuery)
     val shouldShowViewOptions = ObservableBoolean(false)

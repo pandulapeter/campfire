@@ -7,7 +7,6 @@ import android.view.View
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.HomeFragment
@@ -30,7 +29,6 @@ import org.koin.android.ext.android.inject
  */
 class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist),
     AlertDialogFragment.OnDialogItemsSelectedListener {
-    private val playlistRepository by inject<PlaylistRepository>()
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
     private val appShortcutManager by inject<AppShortcutManager>()
     private val deepLinkManager by inject<DeepLinkManager>()
@@ -126,16 +124,6 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
             }
         }
         viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered(this) { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        playlistRepository.subscribe(viewModel)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        playlistRepository.unsubscribe(viewModel)
     }
 
     override fun onBackPressed(): Boolean {

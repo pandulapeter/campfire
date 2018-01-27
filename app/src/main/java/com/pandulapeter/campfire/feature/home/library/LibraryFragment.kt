@@ -9,7 +9,6 @@ import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.LanguageRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.MainViewModel
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListFragment
@@ -27,7 +26,6 @@ import org.koin.android.ext.android.inject
  * Controlled by [LibraryViewModel].
  */
 class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library) {
-    private val playlistRepository by inject<PlaylistRepository>()
     private val languageRepository by inject<LanguageRepository>()
     private val appShortcutManager by inject<AppShortcutManager>()
 
@@ -147,13 +145,11 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
 
     override fun onStart() {
         super.onStart()
-        playlistRepository.subscribe(viewModel)
         languageRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
-        playlistRepository.unsubscribe(viewModel)
         languageRepository.unsubscribe(viewModel)
     }
 

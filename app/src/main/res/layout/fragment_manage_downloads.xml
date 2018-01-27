@@ -83,7 +83,7 @@
                         app:layout_constraintEnd_toStartOf="@id/delete_all"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:subtitle="@{@string/manage_downloads_total_size(viewModel.totalFileSize)}"
+                        app:subtitle="@{@plurals/manage_downloads_subtitle(viewModel.totalFileCount, viewModel.totalFileCount, viewModel.totalFileSize)}"
                         app:title="@{@string/home_manage_downloads}"
                         tools:text="Manage downloads\nTotal size: 16 MB" />
 

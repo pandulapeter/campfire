@@ -28,10 +28,10 @@ class PlaylistViewModel(
     songInfoRepository: SongInfoRepository,
     downloadedSongRepository: DownloadedSongRepository,
     appShortcutManager: AppShortcutManager,
-    private val playlistRepository: PlaylistRepository,
+    playlistRepository: PlaylistRepository,
     private val favoritesTitle: String,
     private val playlistId: Int
-) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository) {
+) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository) {
     val title = ObservableField(favoritesTitle)
     val songCount = ObservableInt(playlistRepository.getPlaylistSongIds(playlistId).size)
     val editedTitle = ObservableField(title.get())

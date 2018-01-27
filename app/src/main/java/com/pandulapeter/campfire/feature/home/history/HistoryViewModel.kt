@@ -22,9 +22,9 @@ class HistoryViewModel(
     analyticsManager: AnalyticsManager,
     songInfoRepository: SongInfoRepository,
     downloadedSongRepository: DownloadedSongRepository,
-    private val playlistRepository: PlaylistRepository,
+    playlistRepository: PlaylistRepository,
     private val historyRepository: HistoryRepository
-) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository) {
+) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository) {
     val shouldShowClearButton = ObservableBoolean(historyRepository.getHistoryItems().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldInvalidateItemDecorations = ObservableBoolean()

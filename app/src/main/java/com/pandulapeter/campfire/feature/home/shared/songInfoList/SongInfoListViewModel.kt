@@ -7,6 +7,7 @@ import android.support.annotation.CallSuper
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
@@ -27,7 +28,8 @@ abstract class SongInfoListViewModel(
     context: Context?,
     analyticsManager: AnalyticsManager,
     protected val songInfoRepository: SongInfoRepository,
-    protected val downloadedSongRepository: DownloadedSongRepository
+    protected val downloadedSongRepository: DownloadedSongRepository,
+    protected val playlistRepository: PlaylistRepository
 ) : HomeChildViewModel(analyticsManager), Subscriber {
     val adapter = SongInfoListAdapter()
     val shouldShowDownloadErrorSnackbar = ObservableField<SongInfo?>()

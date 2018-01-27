@@ -57,6 +57,8 @@ class DownloadedSongRepository(
         }
     }
 
+    fun downloadedItemCount() = dataSet.keys.size
+
     fun clearDownloads() {
         downloadQueue.clear()
         getDownloadedSongIds().forEach {
