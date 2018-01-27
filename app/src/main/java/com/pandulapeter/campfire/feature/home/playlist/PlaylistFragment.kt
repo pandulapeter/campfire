@@ -106,7 +106,7 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
         // Set up list item click listeners.
         viewModel.adapter.itemClickListener = { position ->
             binding.appBarLayout.performAfterExpand(binding.recyclerView) {
-                if (isAdded && !viewModel.isInEditMode.get()) {
+                if (isAdded) {
                     (activity as? MainActivity)?.setNavigationItem(
                         MainViewModel.MainNavigationItem.Detail(
                             viewModel.adapter.items[position].songInfo.id,

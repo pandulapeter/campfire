@@ -17,7 +17,6 @@
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:clipChildren="false"
         android:foreground="?attr/selectableItemBackground"
         app:cardBackgroundColor="@{viewModel.isSongDownloaded ? @color/card_song_downloaded : @color/card_song_not_downloaded}"
         app:contentPadding="@dimen/content_padding">
@@ -25,7 +24,8 @@
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:animateLayoutChanges="true">
+            android:animateLayoutChanges="true"
+            android:minHeight="40dp">
 
             <android.support.v4.widget.Space
                 android:id="@+id/space_1"
@@ -110,8 +110,10 @@
                 android:layout_height="wrap_content"
                 android:alpha="@{viewModel.isSongDownloaded ? 1f : 0.8f }"
                 android:lineSpacingExtra="2dp"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/download_action_container"
                 app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
                 app:songArtist="@{viewModel.songInfo.artist}"
                 app:songExtra="@{viewModel.alertText}"
                 app:songTitle="@{viewModel.songInfo.title}"

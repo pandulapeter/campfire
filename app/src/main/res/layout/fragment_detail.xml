@@ -33,6 +33,7 @@
                 <android.support.design.widget.AppBarLayout
                     android:id="@+id/app_bar_layout"
                     android:layout_width="match_parent"
+                    android:clipChildren="false"
                     android:layout_height="wrap_content"
                     app:layout_behavior="com.pandulapeter.campfire.feature.shared.FixedAppBarBehavior">
 
@@ -85,6 +86,7 @@
                             app:visibility="@{viewModel.shouldShowPlaylistAction}"
                             tools:src="@drawable/ic_playlist_24dp" />
 
+                        <!--TODO: Capitalized Á,É,Í,Ó,Ö,Ő,Ü,Ű characters get clipped. -->
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
