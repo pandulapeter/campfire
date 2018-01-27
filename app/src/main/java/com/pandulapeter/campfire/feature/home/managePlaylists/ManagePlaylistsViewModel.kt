@@ -41,7 +41,7 @@ class ManagePlaylistsViewModel(
                     adapter.items = async(CommonPool) { getAdapterItems() }.await().toMutableList()
                     shouldShowHintSnackbar.set(firstTimeUserExperienceRepository.shouldShowManagePlaylistsHint)
                     itemCount.set(playlistRepository.getPlaylists().size)
-                    shouldShowNewPlaylistButton.set(true)
+                    shouldShowNewPlaylistButton.set(itemCount.get() < Playlist.MAXIMUM_PLAYLIST_COUNT)
                 }
             }
         }

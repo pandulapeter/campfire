@@ -8,6 +8,7 @@ import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -84,16 +85,18 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             currentFragment?.expandAppBar()
         })
         setCheckedItem(viewModel.homeNavigationItem)
-        viewModel.playlists.onPropertyChanged(this) {
+        viewModel.playlists.onPropertyChanged(this) { playlists ->
             playlistsContainerItem.run {
                 clear()
-                it.sortedBy { it.id }
+                playlists.sortedBy { it.id }
                     .forEachIndexed { index, playlist -> addPlaylistItem(playlist.id, index, playlist.title ?: getString(R.string.home_favorites)) }
-                addPlaylistItem(R.id.playlists, it.size, getString(R.string.home_new_playlist), true)
+                if (playlists.size < Playlist.MAXIMUM_PLAYLIST_COUNT) {
+                    addPlaylistItem(R.id.playlists, playlists.size, getString(R.string.home_new_playlist), true)
+                }
                 setGroupCheckable(R.id.playlist_container, true, true)
                 updateCheckedItem()
             }
-            managePlaylistsItem.isVisible = it.size > 1
+            managePlaylistsItem.isVisible = playlists.size > 1
             updateCheckedItem()
         }
         viewModel.isLibraryReady.onPropertyChanged(this) { isLibraryReady ->

@@ -42,13 +42,15 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager) : R
     }
 
     fun createNewPlaylist(title: String) {
-        var id = Playlist.FAVORITES_ID
-        while (dataSet.containsKey(id.toString())) {
-            id++
+        if (getPlaylists().size < Playlist.MAXIMUM_PLAYLIST_COUNT) {
+            var id = Playlist.FAVORITES_ID
+            while (dataSet.containsKey(id.toString())) {
+                id++
+            }
+            val playlist = Playlist(id, title)
+            dataSet = dataSet.toMutableMap().apply { put(id.toString(), playlist) }
+            notifySubscribers(UpdateType.NewPlaylistsCreated(playlist))
         }
-        val playlist = Playlist(id, title)
-        dataSet = dataSet.toMutableMap().apply { put(id.toString(), playlist) }
-        notifySubscribers(UpdateType.NewPlaylistsCreated(playlist))
     }
 
     fun deletePlaylist(playlistId: Int) {

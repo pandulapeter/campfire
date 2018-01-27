@@ -13,5 +13,6 @@ data class Playlist(
 
     companion object {
         const val FAVORITES_ID = 0
+        const val MAXIMUM_PLAYLIST_COUNT = 16
     }
 }

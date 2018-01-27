@@ -19,6 +19,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.PlaylistChooserBottomSheetBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
@@ -114,7 +115,8 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment(), Subscriber
             binding.container?.playlistContainer?.removeAllViews()
             val height = context.dimension(R.dimen.touch_target)
             val padding = context.dimension(R.dimen.content_padding)
-            playlistRepository.getPlaylists().forEach { playlist ->
+            val playlists = playlistRepository.getPlaylists()
+            playlists.forEach { playlist ->
                 binding.container?.playlistContainer?.addView(AppCompatCheckBox(context).apply {
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(padding, padding, padding, padding)
@@ -129,6 +131,7 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment(), Subscriber
                     }
                 }, ViewGroup.LayoutParams.MATCH_PARENT, height)
             }
+            binding.container?.newPlaylist?.visibility = if (playlists.size < Playlist.MAXIMUM_PLAYLIST_COUNT) View.VISIBLE else View.GONE
             checkIfToolbarTransformationIsNeeded()
         }
     }
@@ -147,7 +150,7 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment(), Subscriber
         }
     }
 
-    class CustomWidthBottomSheetDialog(context: Context, @StyleRes theme: Int) : BottomSheetDialog(context, theme) {
+    private class CustomWidthBottomSheetDialog(context: Context, @StyleRes theme: Int) : BottomSheetDialog(context, theme) {
         private val width = context.dimension(R.dimen.playlist_chooser_bottom_sheet_width)
         val isFullWidth = width == 0
 
