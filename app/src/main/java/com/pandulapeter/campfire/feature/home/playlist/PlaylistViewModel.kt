@@ -1,9 +1,9 @@
 package com.pandulapeter.campfire.feature.home.playlist
 
+import android.content.Context
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
@@ -22,6 +22,7 @@ import java.util.*
  * Handles events and logic for [PlaylistFragment].
  */
 class PlaylistViewModel(
+    context: Context?,
     analyticsManager: AnalyticsManager,
     deepLinkManager: DeepLinkManager,
     songInfoRepository: SongInfoRepository,
@@ -30,7 +31,7 @@ class PlaylistViewModel(
     private val playlistRepository: PlaylistRepository,
     private val favoritesTitle: String,
     private val playlistId: Int
-) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
+) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository) {
     val title = ObservableField(favoritesTitle)
     val songCount = ObservableInt(playlistRepository.getPlaylistSongIds(playlistId).size)
     val editedTitle = ObservableField(title.get())
@@ -64,9 +65,9 @@ class PlaylistViewModel(
                 shouldShowPlaylistButton = false,
                 shouldShowDownloadButton = !isDownloaded || isSongNew,
                 alertText = if (isDownloaded) {
-                    if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
+                    if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) updateString else null
                 } else {
-                    if (isSongNew) R.string.library_new else null
+                    if (isSongNew) newString else null
                 }
             )
         }

@@ -31,6 +31,8 @@ class DownloadedSongRepository(
         subscriber.onUpdate(UpdateType.DownloadedSongsUpdated(getDownloadedSongIds()))
     }
 
+    fun getDownloadSize(songId: String) = fileStorageManager.getFileSize(songId)
+
     fun getDownloadCacheSize(): Long {
         var totalSizeInBytes = 0L
         dataSet.keys.forEach {

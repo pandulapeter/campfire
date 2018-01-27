@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.library
 
+import android.content.Context
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
@@ -22,6 +23,7 @@ import com.pandulapeter.campfire.util.toggle
  * Handles events and logic for [LibraryFragment].
  */
 class LibraryViewModel(
+    context: Context?,
     analyticsManager: AnalyticsManager,
     songInfoRepository: SongInfoRepository,
     downloadedSongRepository: DownloadedSongRepository,
@@ -29,7 +31,7 @@ class LibraryViewModel(
     private val userPreferenceRepository: UserPreferenceRepository,
     private val playlistRepository: PlaylistRepository,
     private val languageRepository: LanguageRepository
-) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
+) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.searchQuery.isNotEmpty())
     val searchQuery = ObservableField(userPreferenceRepository.searchQuery)
     val shouldShowViewOptions = ObservableBoolean(false)
@@ -92,9 +94,9 @@ class LibraryViewModel(
                 shouldShowPlaylistButton = true,
                 shouldShowDownloadButton = !isDownloaded || isSongNew,
                 alertText = if (isDownloaded) {
-                    if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
+                    if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) updateString else null
                 } else {
-                    if (isSongNew) R.string.library_new else null
+                    if (isSongNew) newString else null
                 }
             )
         }

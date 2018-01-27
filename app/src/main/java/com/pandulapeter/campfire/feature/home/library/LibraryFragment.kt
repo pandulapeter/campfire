@@ -32,6 +32,7 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
     private val appShortcutManager by inject<AppShortcutManager>()
 
     override fun createViewModel() = LibraryViewModel(
+        context,
         analyticsManager,
         songInfoRepository,
         downloadedSongRepository,

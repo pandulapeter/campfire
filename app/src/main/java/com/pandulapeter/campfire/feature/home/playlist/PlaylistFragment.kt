@@ -36,6 +36,7 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
     private val deepLinkManager by inject<DeepLinkManager>()
 
     override fun createViewModel() = PlaylistViewModel(
+        context,
         analyticsManager,
         deepLinkManager,
         songInfoRepository,

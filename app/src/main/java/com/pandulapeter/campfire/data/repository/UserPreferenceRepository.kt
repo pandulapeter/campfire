@@ -45,19 +45,16 @@ class UserPreferenceRepository(private val preferenceStorageManager: PreferenceS
     }
     var shouldShowChords by Delegates.observable(preferenceStorageManager.shouldShowChords) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
-            notifySubscribers(UpdateType.ShouldShowChords(new))
             preferenceStorageManager.shouldShowChords = new
         }
     }
     var shouldEnableAutoScroll by Delegates.observable(preferenceStorageManager.shouldEnableAutoScroll) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
-            notifySubscribers(UpdateType.ShouldEnableAutoScroll(new))
             preferenceStorageManager.shouldEnableAutoScroll = new
         }
     }
     var shouldUseGermanNotation by Delegates.observable(preferenceStorageManager.shouldUseGermanNotation) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
-            notifySubscribers(UpdateType.ShouldShowChords(new))
             preferenceStorageManager.shouldUseGermanNotation = new
         }
     }

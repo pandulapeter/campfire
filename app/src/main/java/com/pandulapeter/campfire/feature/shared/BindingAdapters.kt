@@ -5,7 +5,6 @@ import android.animation.AnimatorListenerAdapter
 import android.databinding.BindingAdapter
 import android.graphics.drawable.Drawable
 import android.support.annotation.DrawableRes
-import android.support.annotation.StringRes
 import android.support.design.widget.AppBarLayout
 import android.support.design.widget.FloatingActionButton
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat
@@ -49,14 +48,6 @@ fun setText(view: EditText, text: String?) {
         if (text != null) {
             view.setSelection(text.length)
         }
-    }
-}
-
-@BindingAdapter("android:text")
-fun setText(view: TextView, @StringRes text: Int?) {
-    view.visibility = if (text == null) View.GONE else View.VISIBLE
-    text?.let {
-        view.setText(text)
     }
 }
 
@@ -171,8 +162,7 @@ fun setTitleDescription(view: TextView, title: String?, description: String?) {
 }
 
 @BindingAdapter(value = ["songTitle", "songArtist", "songExtra"], requireAll = false)
-fun setSongInfoItemText(view: TextView, title: String?, artist: String?, songExtra: Int?) {
-    val extra = songExtra?.let { view.context.getString(it) }
+fun setSongInfoItemText(view: TextView, title: String?, artist: String?, extra: String?) {
     val text = SpannableString("${title ?: ""}\n${artist ?: ""}${extra?.let { "\n$it" } ?: ""}")
     title?.let {
         text.setSpan(
@@ -192,13 +182,13 @@ fun setSongInfoItemText(view: TextView, title: String?, artist: String?, songExt
     }
     extra?.let {
         text.setSpan(
-            ForegroundColorSpan(view.context.color(R.color.accent)),
+            TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Caption),
             text.length - it.length,
             text.length,
             Spannable.SPAN_INCLUSIVE_INCLUSIVE
         )
         text.setSpan(
-            TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Caption),
+            ForegroundColorSpan(view.context.color(R.color.accent)),
             text.length - it.length,
             text.length,
             Spannable.SPAN_INCLUSIVE_INCLUSIVE

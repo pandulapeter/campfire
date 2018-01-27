@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.feature.home.shared.songInfoList
 
-import android.support.annotation.StringRes
 import com.pandulapeter.campfire.data.model.SongInfo
 
 /**
@@ -14,5 +13,5 @@ data class SongInfoViewModel(
     var shouldShowDragHandle: Boolean,
     var shouldShowPlaylistButton: Boolean,
     var shouldShowDownloadButton: Boolean,
-    @StringRes var alertText: Int? = null
+    var alertText: String? = null
 )

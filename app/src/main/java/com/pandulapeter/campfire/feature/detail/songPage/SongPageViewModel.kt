@@ -29,11 +29,10 @@ class SongPageViewModel(
     val scrollSpeed = ObservableInt()
     val shouldScrollToTop = ObservableBoolean()
     val isLoading = ObservableBoolean(downloadedSongRepository.isSongLoading(songId))
-    private val shouldShowChords = ObservableBoolean(userPreferenceRepository.shouldShowChords)
+    private val shouldShowChords = userPreferenceRepository.shouldShowChords
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
-            is UpdateType.ShouldShowChords -> shouldShowChords.set(updateType.shouldShowChords)
             is UpdateType.DownloadStarted -> if (updateType.songId == songId) {
                 isLoading.set(true)
                 shouldShowPlaceholder.set(false)

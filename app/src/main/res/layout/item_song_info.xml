@@ -109,7 +109,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:alpha="@{viewModel.isSongDownloaded ? 1f : 0.8f }"
-                android:lineSpacingExtra="2dp"
+                android:lineSpacingExtra="@dimen/card_text_spacing"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/download_action_container"
                 app:layout_constraintStart_toStartOf="parent"

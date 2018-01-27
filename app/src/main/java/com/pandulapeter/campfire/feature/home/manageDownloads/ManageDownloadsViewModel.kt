@@ -22,7 +22,7 @@ class ManageDownloadsViewModel(
     analyticsManager: AnalyticsManager,
     songInfoRepository: SongInfoRepository,
     downloadedSongRepository: DownloadedSongRepository
-) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
+) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository) {
     val shouldShowDeleteAllButton = ObservableBoolean(downloadedSongRepository.getDownloadedSongIds().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldShowHintSnackbar = ObservableBoolean()
@@ -30,8 +30,8 @@ class ManageDownloadsViewModel(
     val shouldAllowToolbarScrolling = ObservableBoolean()
 
     override fun getAdapterItems() = downloadedSongRepository.getDownloadedSongIds()
-        .mapNotNull { songInfoRepository.getSongInfo(it) } //TODO: Maybe display the item sizes and the playlist icon.
-        .sortedBy { it.titleWithSpecialCharactersRemoved } //TODO: Find a more meaningful way to sort these items (maybe by size).
+        .mapNotNull { songInfoRepository.getSongInfo(it) } //TODO: Display the the playlist icon.
+        .sortedByDescending { downloadedSongRepository.getDownloadSize(it.id) }
         .map {
             SongInfoViewModel(
                 songInfo = it,
@@ -41,7 +41,7 @@ class ManageDownloadsViewModel(
                 shouldShowDragHandle = false,
                 shouldShowPlaylistButton = false,
                 shouldShowDownloadButton = false,
-                alertText = null
+                alertText = humanReadableByteCount(downloadedSongRepository.getDownloadSize(it.id))
             )
         }
 

@@ -1,8 +1,10 @@
 package com.pandulapeter.campfire.feature.home.shared.songInfoList
 
+import android.content.Context
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.support.annotation.CallSuper
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
@@ -22,6 +24,7 @@ import kotlin.coroutines.experimental.CoroutineContext
  * Handles events and logic for subclasses of [SongInfoListFragment].
  */
 abstract class SongInfoListViewModel(
+    context: Context?,
     analyticsManager: AnalyticsManager,
     protected val songInfoRepository: SongInfoRepository,
     protected val downloadedSongRepository: DownloadedSongRepository
@@ -31,6 +34,8 @@ abstract class SongInfoListViewModel(
     val shouldShowPlaceholder = ObservableBoolean()
     val shouldNavigateToLibrary = ObservableBoolean()
     private var coroutine: CoroutineContext? = null
+    protected val newString = context?.getString(R.string.new_tag) ?: ""
+    protected val updateString = context?.getString(R.string.new_version_available) ?: ""
 
     abstract fun getAdapterItems(): List<SongInfoViewModel>
 

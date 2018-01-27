@@ -21,7 +21,7 @@
     <dimen name="navigation_view_top_padding">@dimen/content_padding</dimen>
 
     <!-- Song list items -->
-    <dimen name="card_text_margin">2dp</dimen>
+    <dimen name="card_text_spacing">2dp</dimen>
     <dimen name="loading_indicator_size">36dp</dimen>
 
     <!-- Home screen -->

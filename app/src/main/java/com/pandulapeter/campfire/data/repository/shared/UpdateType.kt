@@ -68,10 +68,6 @@ sealed class UpdateType {
 
     object ShouldHideWorkInProgressUpdated : UpdateType()
 
-    class ShouldShowChords(val shouldShowChords: Boolean) : UpdateType()
-
-    class ShouldEnableAutoScroll(val shouldEnableAutoScroll: Boolean) : UpdateType()
-
     object SearchQueryUpdated : UpdateType()
 
     // Other

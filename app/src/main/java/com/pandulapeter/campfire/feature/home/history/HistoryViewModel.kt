@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.history
 
+import android.content.Context
 import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
@@ -17,12 +18,13 @@ import java.util.*
  * Handles events and logic for [HistoryFragment].
  */
 class HistoryViewModel(
+    context: Context?,
     analyticsManager: AnalyticsManager,
     songInfoRepository: SongInfoRepository,
     downloadedSongRepository: DownloadedSongRepository,
     private val playlistRepository: PlaylistRepository,
     private val historyRepository: HistoryRepository
-) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
+) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository) {
     val shouldShowClearButton = ObservableBoolean(historyRepository.getHistoryItems().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldInvalidateItemDecorations = ObservableBoolean()
@@ -47,9 +49,9 @@ class HistoryViewModel(
                 shouldShowPlaylistButton = true,
                 shouldShowDownloadButton = !isDownloaded || isSongNew,
                 alertText = if (isDownloaded) {
-                    if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) R.string.new_version_available else null
+                    if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) updateString else null
                 } else {
-                    if (isSongNew) R.string.library_new else null
+                    if (isSongNew) newString else null
                 }
             )
         }
