@@ -13,6 +13,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.cancel
+import java.util.*
 import kotlin.coroutines.experimental.CoroutineContext
 
 /**
@@ -33,14 +34,15 @@ class ManagePlaylistsViewModel(
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
             is UpdateType.PlaylistsUpdated,
-            is UpdateType.NewPlaylistsCreated, //TODO: Optimize by events.
+            is UpdateType.NewPlaylistsCreated,
             is UpdateType.PlaylistRenamed,
             is UpdateType.PlaylistDeleted -> {
                 coroutine?.cancel()
                 coroutine = async(UI) {
                     adapter.items = async(CommonPool) { getAdapterItems() }.await().toMutableList()
-                    shouldShowHintSnackbar.set(firstTimeUserExperienceRepository.shouldShowManagePlaylistsHint)
                     itemCount.set(playlistRepository.getPlaylists().size)
+                    //TODO: It might be a good idea to show separate hints for rearrange and delete.
+                    shouldShowHintSnackbar.set(firstTimeUserExperienceRepository.shouldShowManagePlaylistsHint && itemCount.get() > 2)
                     shouldShowNewPlaylistButton.set(itemCount.get() < Playlist.MAXIMUM_PLAYLIST_COUNT)
                 }
             }
@@ -49,11 +51,31 @@ class ManagePlaylistsViewModel(
 
     fun onNewPlaylistButtonClicked() = shouldShowNewPlaylistDialog.set(true)
 
-    private fun getAdapterItems() = playlistRepository.getPlaylists().map {
-        PlaylistInfoViewModel(
-            playlist = it,
-            shouldShowDragHandle = it.id != Playlist.FAVORITES_ID,
-            itemCount = playlistRepository.getPlaylistSongIds(it.id).size
-        )
+    fun swapSongsInPlaylist(originalPosition: Int, targetPosition: Int) {
+        if (originalPosition < targetPosition) {
+            for (i in originalPosition until targetPosition) {
+                Collections.swap(adapter.items, i, i + 1)
+            }
+        } else {
+            for (i in originalPosition downTo targetPosition + 1) {
+                Collections.swap(adapter.items, i, i - 1)
+            }
+        }
+        adapter.notifyItemMoved(originalPosition, targetPosition)
+        playlistRepository.updatePlaylistOrder(adapter.items.map { it.playlist })
+    }
+
+    //TODO: Also delete the app shortcut.
+    fun deletePlaylist(playlistId: Int) = playlistRepository.deletePlaylist(playlistId)
+
+    private fun getAdapterItems(): List<PlaylistInfoViewModel> {
+        val playlists = playlistRepository.getPlaylists()
+        return playlists.map {
+            PlaylistInfoViewModel(
+                playlist = it,
+                shouldShowDragHandle = it.id != Playlist.FAVORITES_ID && playlists.size > 2,
+                itemCount = playlistRepository.getPlaylistSongIds(it.id).size
+            )
+        }
     }
 }

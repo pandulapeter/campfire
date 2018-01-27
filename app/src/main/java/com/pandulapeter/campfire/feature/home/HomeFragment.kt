@@ -88,8 +88,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         viewModel.playlists.onPropertyChanged(this) { playlists ->
             playlistsContainerItem.run {
                 clear()
-                playlists.sortedBy { it.id }
-                    .forEachIndexed { index, playlist -> addPlaylistItem(playlist.id, index, playlist.title ?: getString(R.string.home_favorites)) }
+                playlists.forEachIndexed { index, playlist -> addPlaylistItem(playlist.id, index, playlist.title ?: getString(R.string.home_favorites)) }
                 if (playlists.size < Playlist.MAXIMUM_PLAYLIST_COUNT) {
                     addPlaylistItem(R.id.playlists, playlists.size, getString(R.string.home_new_playlist), true)
                 }

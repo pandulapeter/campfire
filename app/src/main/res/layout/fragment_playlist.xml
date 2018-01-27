@@ -74,18 +74,6 @@
                         tools:src="@drawable/avd_done_to_edit_24dp" />
 
                     <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
-                        android:id="@+id/delete"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:contentDescription="@string/playlist_delete"
-                        android:onClick="@{() -> viewModel.onDeleteButtonClicked()}"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@id/edit_mode_toggle"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:srcCompat="@drawable/ic_delete_24dp"
-                        app:visibility="@{viewModel.shouldAllowDeleteButton &amp;&amp; viewModel.isInEditMode}" />
-
-                    <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
                         android:id="@+id/share"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -110,7 +98,7 @@
                         app:layout_constraintTop_toTopOf="parent"
                         app:subtitle="@{@plurals/playlist_song_count(viewModel.songCount, viewModel.songCount)}"
                         app:title="@{viewModel.title}"
-                        app:visibility="@{!viewModel.shouldAllowDeleteButton || !viewModel.isInEditMode}"
+                        app:visibility="@{!viewModel.isCustomPlaylist || !viewModel.isInEditMode}"
                         tools:text="Favorites"
                         tools:visibility="gone" />
 
@@ -125,7 +113,6 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/content_padding"
                         android:layout_marginStart="@dimen/second_keyline"
-                        android:layout_toStartOf="@id/delete"
                         android:hint="@string/playlist_enter_title"
                         android:inputType="textCapSentences"
                         android:maxLength="@integer/playlist_name_length_limit"
@@ -133,10 +120,10 @@
                         android:text="@={viewModel.editedTitle}"
                         android:textAppearance="@style/TextAppearance.AppCompat.Title"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@id/delete"
+                        app:layout_constraintEnd_toStartOf="@id/share"
                         app:layout_constraintStart_toStartOf="@id/space_2"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:visibility="@{viewModel.shouldAllowDeleteButton &amp;&amp; viewModel.isInEditMode}" />
+                        app:visibility="@{viewModel.isCustomPlaylist &amp;&amp; viewModel.isInEditMode}" />
 
                 </android.support.constraint.ConstraintLayout>
 

@@ -9,7 +9,6 @@ import com.pandulapeter.campfire.data.model.DownloadedSong
 import com.pandulapeter.campfire.data.model.History
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.model.SongInfo
-import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -54,32 +53,24 @@ class DataStorageManager(context: Context, gson: Gson) {
     ) : ReadWriteProperty<Any, Map<String, T>> {
         private var ids by StringListDelegate(gson, sharedPreferences, idKey)
 
-        override fun getValue(thisRef: Any, property: KProperty<*>): Map<String, T> {
-            val map = HashMap<String, T>()
-            ids.forEach { id ->
-                val value: T? = try {
-                    gson.fromJson(sharedPreferences.getString(valueKeyPrefix + id, "{}"), type)
-                } catch (_: JsonSyntaxException) {
-                    null
-                }
-                value?.let { map[id] = it }
-            }
-            return map
-        }
+        override fun getValue(thisRef: Any, property: KProperty<*>) = ids.mapNotNull { id -> getPlaylist(id)?.let { id to it } }.toMap()
 
         override fun setValue(thisRef: Any, property: KProperty<*>, value: Map<String, T>) {
             async {
-                if (async(CommonPool) {
-                        getValue(thisRef, property) != value
-                    }.await()) {
-                    //TODO: If only a single line has been changed, we should not rewrite the entire map.
-                    //TODO: This code does not clean up after itself: once an ID is removed, the corresponding entry is still stored in the file.
-                    ids = value.keys.toList()
-                    value.keys.forEach { id ->
-                        sharedPreferences.edit().putString(valueKeyPrefix + id, gson.toJson(value[id])).apply()
-                    }
+                //TODO: If only a single line has been changed, we should not rewrite the entire map.
+                //TODO: This code does not clean up after itself: once an ID is removed, the corresponding entry is still stored in the file.
+                ids = value.keys.toList()
+                value.keys.forEach { id ->
+                    sharedPreferences.edit().putString(valueKeyPrefix + id, gson.toJson(value[id])).apply()
                 }
             }
         }
+
+        private fun getPlaylist(id: String) = try {
+            gson.fromJson(sharedPreferences.getString(valueKeyPrefix + id, "{}"), type)
+        } catch (_: JsonSyntaxException) {
+            null
+        }
+
     }
 }

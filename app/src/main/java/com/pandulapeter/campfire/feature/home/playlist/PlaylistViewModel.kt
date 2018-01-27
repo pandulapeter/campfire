@@ -37,11 +37,10 @@ class PlaylistViewModel(
     val editedTitle = ObservableField(title.get())
     val shouldShowShareButton = ObservableBoolean(songCount.get() > 0)
     val isInEditMode = ObservableBoolean()
-    val shouldShowDeleteConfirmation = ObservableBoolean()
     val shouldShowEditButton = ObservableBoolean(shouldShowShareButton.get() || playlistId != Playlist.FAVORITES_ID)
     val shouldShowWorkInProgressSnackbar = ObservableBoolean()
     val shouldAllowToolbarScrolling = ObservableBoolean()
-    val shouldAllowDeleteButton = playlistId != Playlist.FAVORITES_ID
+    val isCustomPlaylist = playlistId != Playlist.FAVORITES_ID
 
     init {
         title.onPropertyChanged { editedTitle.set(it) }
@@ -125,7 +124,6 @@ class PlaylistViewModel(
                     title.notifyChange() // Needed to fix a visual glitch.
                 }
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
-                shouldShowShareButton.set(if (!updateType.isInEditMode) adapter.items.isNotEmpty() else false)
                 updateShouldAllowToolbarScrolling(adapter.items.isNotEmpty())
             }
         }
@@ -135,22 +133,10 @@ class PlaylistViewModel(
         super.onUpdateDone(items, updateType)
         shouldShowEditButton.set(items.isNotEmpty() || playlistId != Playlist.FAVORITES_ID)
         if (!isInEditMode.get()) {
-            shouldShowShareButton.set(if (!isInEditMode.get()) adapter.items.isNotEmpty() else false)
+            shouldShowShareButton.set(items.isNotEmpty())
         }
         songCount.set(items.size)
         updateShouldAllowToolbarScrolling(items.isNotEmpty())
-    }
-
-    fun onDeleteButtonClicked() {
-        if (shouldAllowDeleteButton) {
-            shouldShowDeleteConfirmation.set(true)
-        }
-    }
-
-    fun deletePlaylist() {
-        //TODO: Also delete the app shortcut.
-        playlistRepository.unsubscribe(this)
-        playlistRepository.deletePlaylist(playlistId)
     }
 
     fun toggleEditMode() {

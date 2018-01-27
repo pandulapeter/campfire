@@ -42,6 +42,8 @@ sealed class UpdateType {
     // PlaylistRepository
     class PlaylistsUpdated(val playlists: List<Playlist>) : UpdateType()
 
+    class PlaylistsOrderUpdated(val playlists: List<Playlist>) : UpdateType()
+
     class NewPlaylistsCreated(val playlists: Playlist) : UpdateType()
 
     class SongAddedToPlaylist(val playlistId: Int, val songId: String, val position: Int) : UpdateType()

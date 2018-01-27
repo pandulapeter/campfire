@@ -56,6 +56,7 @@ class HomeViewModel(
             is UpdateType.DownloadSuccessful -> hasDownloads.set(true)
             UpdateType.AllDownloadsRemoved -> hasDownloads.set(false)
             is UpdateType.PlaylistsUpdated -> playlists.set(updateType.playlists)
+            is UpdateType.PlaylistsOrderUpdated -> playlists.set(updateType.playlists)
             is UpdateType.NewPlaylistsCreated -> playlists.set(playlists.get().toMutableList().apply { add(updateType.playlists) })
             is UpdateType.PlaylistRenamed -> playlists.get().find { it.id == updateType.playlistId }?.let { oldPlaylist ->
                 val newPlaylist = Playlist(oldPlaylist.id, updateType.title, oldPlaylist.songIds)

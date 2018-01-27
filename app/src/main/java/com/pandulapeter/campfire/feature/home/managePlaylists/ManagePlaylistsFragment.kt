@@ -3,19 +3,18 @@ package com.pandulapeter.campfire.feature.home.managePlaylists
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.ManagePlaylistsBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.home.HomeViewModel
+import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
-import com.pandulapeter.campfire.util.dimension
-import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.util.onEventTriggered
-import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
 /**
@@ -46,13 +45,45 @@ class ManagePlaylistsFragment : HomeChildFragment<ManagePlaylistsBinding, Manage
                 }
             })
         }
-        //TODO: Implement drag to rearrange and swipe to dismiss.
+        // Setup swipe-to-dismiss and drag-to-rearrange functionality.
+        val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
+
+            override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =
+                if ((viewHolder?.adapterPosition ?: 0) > 0) makeMovementFlags(
+                    if (viewModel.adapter.items.size > 2) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
+                    ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                ) else 0
+
+            override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = consume {
+                viewHolder?.adapterPosition?.let { originalPosition ->
+                    target?.adapterPosition?.let { targetPosition ->
+                        if (originalPosition > 0 && targetPosition > 0) {
+                            viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
+                        }
+                    }
+                }
+            }
+
+            //TODO: Add confirmation snackbars with Undo action.
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
+                viewHolder?.adapterPosition?.let { position ->
+                    val playlist = viewModel.adapter.items[position].playlist
+                    viewModel.deletePlaylist(playlist.id)
+                    firstTimeUserExperienceRepository.shouldShowManagePlaylistsHint = false
+                    dismissHintSnackbar()
+                }
+            }
+        })
+        itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Set up list item click listeners.
         viewModel.adapter.itemClickListener = { position ->
             if (isAdded) {
                 //TODO: Transition glitch.
                 (parentFragment as? HomeCallbacks)?.setCheckedItem(HomeViewModel.HomeNavigationItem.Playlist(viewModel.adapter.items[position].playlist.id))
             }
+        }
+        viewModel.adapter.dragHandleTouchListener = { position ->
+            itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
         }
         // Display first-time user experience hint.
         viewModel.shouldShowHintSnackbar.onPropertyChanged(this) {

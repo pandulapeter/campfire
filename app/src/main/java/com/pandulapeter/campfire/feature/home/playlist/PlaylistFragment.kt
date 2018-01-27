@@ -9,11 +9,8 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.MainViewModel
-import com.pandulapeter.campfire.feature.home.HomeFragment
-import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListFragment
-import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.util.*
@@ -27,8 +24,7 @@ import org.koin.android.ext.android.inject
  *
  * Controlled by [PlaylistViewModel].
  */
-class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist),
-    AlertDialogFragment.OnDialogItemsSelectedListener {
+class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist) {
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
     private val appShortcutManager by inject<AppShortcutManager>()
     private val deepLinkManager by inject<DeepLinkManager>()
@@ -64,15 +60,6 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
                 dismissHintSnackbar()
                 hideKeyboard(activity?.currentFocus)
             }
-        }
-        viewModel.shouldShowDeleteConfirmation.onEventTriggered(this) {
-            AlertDialogFragment.show(
-                childFragmentManager,
-                R.string.playlist_delete_confirmation_title,
-                R.string.playlist_delete_confirmation_message,
-                R.string.playlist_delete_confirmation_delete,
-                R.string.cancel
-            )
         }
         // Setup swipe-to-dismiss and drag-to-rearrange functionality.
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
@@ -123,16 +110,11 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
     }
 
     override fun onBackPressed(): Boolean {
-        if (viewModel.isInEditMode.get() && viewModel.shouldAllowDeleteButton) {
+        if (viewModel.isInEditMode.get() && viewModel.isCustomPlaylist) {
             viewModel.isInEditMode.set(false)
             return true
         }
         return false
-    }
-
-    override fun onPositiveButtonSelected() {
-        (parentFragment as HomeFragment).setCheckedItem(HomeViewModel.HomeNavigationItem.Library)
-        viewModel.deletePlaylist()
     }
 
     companion object {

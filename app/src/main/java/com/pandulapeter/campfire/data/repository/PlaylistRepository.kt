@@ -72,6 +72,14 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager) : R
         }
     }
 
+    fun updatePlaylistOrder(playlists: List<Playlist>) {
+        dataSet = dataSet.toMutableMap().apply {
+            clear()
+            playlists.forEach { put(it.id.toString(), it) }
+        }
+        notifySubscribers(UpdateType.PlaylistsOrderUpdated(getPlaylists()))
+    }
+
     fun addSongToPlaylist(playlistId: Int, songId: String, position: Int? = null) {
         if (!isSongInPlaylist(playlistId, songId)) {
             dataSet = dataSet.toMutableMap().apply {
