@@ -5,10 +5,7 @@ import android.databinding.ObservableField
 import android.databinding.ObservableInt
 import android.support.v4.app.FragmentManager
 import com.pandulapeter.campfire.data.model.Playlist
-import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
-import com.pandulapeter.campfire.data.repository.HistoryRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.repository.*
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
@@ -23,6 +20,7 @@ class DetailViewModel(
     songId: String,
     playlistId: Int,
     analyticsManager: AnalyticsManager,
+    userPreferenceRepository: UserPreferenceRepository,
     private val downloadedSongRepository: DownloadedSongRepository,
     private val fragmentManager: FragmentManager,
     private val playlistRepository: PlaylistRepository,
@@ -39,8 +37,9 @@ class DetailViewModel(
     val shouldShowPlaylistAction = playlistId == DetailFragment.NO_PLAYLIST
     val youTubeSearchQuery = ObservableField<String>()
     val shouldAllowToolbarScrolling = ObservableBoolean()
-    val shouldShowAutoPlayButton = ObservableBoolean()
+    val shouldShowAutoScrollButton = ObservableBoolean()
     val isAutoScrollStarted = ObservableBoolean()
+    val isAutoScrollEnabled = userPreferenceRepository.shouldEnableAutoScroll
     val autoScrollSpeed = ObservableInt(4) //TODO: Persist this value per song.
     private var selectedPosition = songIds.indexOf(songId)
 
@@ -55,11 +54,11 @@ class DetailViewModel(
             is UpdateType.SongAddedToPlaylist -> if (updateType.songId == getSelectedSongId()) updatePlaylistActionIcon()
             is UpdateType.DownloadStarted -> if (updateType.songId == getSelectedSongId()) {
                 shouldAllowToolbarScrolling.set(false)
-                shouldShowAutoPlayButton.set(false)
+                shouldShowAutoScrollButton.set(false)
             }
             is UpdateType.DownloadSuccessful -> if (updateType.songId == getSelectedSongId()) {
                 shouldAllowToolbarScrolling.set(true)
-                shouldShowAutoPlayButton.set(true)
+                shouldShowAutoScrollButton.set(true)
             }
             is UpdateType.ContentEndReached -> if (updateType.songId == getSelectedSongId()) {
                 isAutoScrollStarted.set(false)
@@ -72,7 +71,7 @@ class DetailViewModel(
         updateToolbar()
         historyRepository.addToHistory(getSelectedSongId())
         shouldAllowToolbarScrolling.set(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
-        shouldShowAutoPlayButton.set(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
+        shouldShowAutoScrollButton.set(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
     }
 
     fun onPlaylistActionClicked() {
@@ -91,7 +90,7 @@ class DetailViewModel(
 
     fun navigateBack() {
         isAutoScrollStarted.set(false)
-        shouldShowAutoPlayButton.set(false)
+        shouldShowAutoScrollButton.set(false)
         shouldNavigateBack.set(true)
     }
 

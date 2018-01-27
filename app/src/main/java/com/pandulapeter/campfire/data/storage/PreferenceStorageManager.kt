@@ -19,6 +19,7 @@ class PreferenceStorageManager(context: Context) {
     var shouldShowExplicit by PreferenceFieldDelegate.Boolean("should_show_explicit", false)
     var shouldShowWorkInProgress by PreferenceFieldDelegate.Boolean("should_show_work_in_progress", BuildConfig.DEBUG)
     var shouldShowChords by PreferenceFieldDelegate.Boolean("should_show_chords", true)
+    var shouldEnableAutoScroll by PreferenceFieldDelegate.Boolean("should_enable_auto_scroll", true)
     var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("should_use_german_notation", shouldEnableGermanNotationByDefault())
     var shouldShowHistoryHint by PreferenceFieldDelegate.Boolean("should_show_history_hint", true)
     var shouldShowPlaylistHint by PreferenceFieldDelegate.Boolean("should_show_playlist_hint", true)

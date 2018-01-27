@@ -147,7 +147,7 @@
                     app:animation="@{viewModel.isAutoScrollStarted ? R.drawable.avd_play_to_pause_24dp : R.drawable.avd_pause_to_play_24dp}"
                     app:fabSize="normal"
                     app:lastFrame="@{viewModel.isAutoScrollStarted ? @drawable/ic_pause_24dp : @drawable/ic_play_24dp}"
-                    app:visibility="@{viewModel.shouldShowAutoPlayButton}"
+                    app:visibility="@{viewModel.isAutoScrollEnabled &amp;&amp; viewModel.shouldShowAutoScrollButton}"
                     tools:src="@drawable/ic_play_24dp"
                     tools:visibility="visible" />
 

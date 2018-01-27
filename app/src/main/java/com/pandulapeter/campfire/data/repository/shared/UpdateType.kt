@@ -70,6 +70,8 @@ sealed class UpdateType {
 
     class ShouldShowChords(val shouldShowChords: Boolean) : UpdateType()
 
+    class ShouldEnableAutoScroll(val shouldEnableAutoScroll: Boolean) : UpdateType()
+
     object SearchQueryUpdated : UpdateType()
 
     // Other

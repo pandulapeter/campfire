@@ -35,6 +35,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             arguments.songId,
             arguments.playlistId,
             analyticsManager,
+            userPreferenceRepository,
             downloadedSongRepository,
             childFragmentManager,
             playlistRepository,
