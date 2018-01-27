@@ -99,18 +99,18 @@
 
                     <TextView
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="0dp"
                         android:layout_marginEnd="@dimen/content_padding"
                         android:layout_marginStart="@dimen/second_keyline"
                         android:ellipsize="end"
-                        android:maxLines="1"
-                        android:text="@{viewModel.title}"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                        android:gravity="center_vertical"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toStartOf="@id/share"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:visibility="@{!viewModel.isInEditMode || !viewModel.shouldAllowDeleteButton}"
+                        app:subtitle="@{@string/playlist_song_count(viewModel.songCount)}"
+                        app:title="@{viewModel.title}"
+                        app:visibility="@{!viewModel.shouldAllowDeleteButton || !viewModel.isInEditMode}"
                         tools:text="Favorites"
                         tools:visibility="gone" />
 

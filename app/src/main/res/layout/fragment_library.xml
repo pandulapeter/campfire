@@ -92,9 +92,10 @@
                         <TextView
                             android:id="@+id/title"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="0dp"
                             android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
                             android:layout_marginStart="@dimen/second_keyline"
+                            android:gravity="center_vertical"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toStartOf="@id/search_toggle"
                             app:layout_constraintStart_toStartOf="parent"

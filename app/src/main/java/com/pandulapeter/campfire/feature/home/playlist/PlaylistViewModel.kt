@@ -2,6 +2,8 @@ package com.pandulapeter.campfire.feature.home.playlist
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
+import android.databinding.ObservableInt
+import android.util.Log
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
@@ -31,6 +33,7 @@ class PlaylistViewModel(
     private val playlistId: Int
 ) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val title = ObservableField(favoritesTitle)
+    val songCount = ObservableInt() //TODO: Count the items in the playlist.
     val editedTitle = ObservableField(title.get())
     val shouldShowShareButton = ObservableBoolean(playlistRepository.getPlaylistSongIds(playlistId).isNotEmpty())
     val isInEditMode = ObservableBoolean()
@@ -41,7 +44,10 @@ class PlaylistViewModel(
     val shouldAllowDeleteButton = playlistId != Playlist.FAVORITES_ID
 
     init {
-        title.onPropertyChanged { editedTitle.set(it) }
+        title.onPropertyChanged {
+            editedTitle.set(it)
+            Log.d("DEBBB", "New title: '$it'")
+        }
         isInEditMode.onPropertyChanged { onUpdate(UpdateType.EditModeChanged(playlistId, it)) }
         appShortcutManager.onPlaylistOpened(playlistId)
     }
@@ -113,8 +119,12 @@ class PlaylistViewModel(
                 )
             }
             is UpdateType.EditModeChanged -> if (updateType.playlistId == playlistId) {
-                val payload =
-                    if (updateType.isInEditMode && adapter.items.size > 1) SongInfoListAdapter.Payload.EDIT_MODE_OPEN else SongInfoListAdapter.Payload.EDIT_MODE_CLOSE
+                val payload = if (updateType.isInEditMode && adapter.items.size > 1) {
+                    SongInfoListAdapter.Payload.EDIT_MODE_OPEN
+                } else {
+                    SongInfoListAdapter.Payload.EDIT_MODE_CLOSE
+                }
+                title.notifyChange() // Needed to fix a visual glitch.
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
                 shouldShowShareButton.set(if (!updateType.isInEditMode) adapter.items.isNotEmpty() else false)
                 updateShouldAllowToolbarScrolling(adapter.items.isNotEmpty())

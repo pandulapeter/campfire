@@ -94,6 +94,8 @@
     <string name="settings_reset_hints_message">Tutorial progress reset.</string>
 
     <!-- Playlist screen -->
+    <!--TODO: Make this a plural, add separate string for empty playlist. -->
+    <string name="playlist_song_count">%d songs</string>
     <string name="playlist_edit">Edit</string>
     <string name="playlist_delete">Delete</string>
     <string name="playlist_share">Share</string>

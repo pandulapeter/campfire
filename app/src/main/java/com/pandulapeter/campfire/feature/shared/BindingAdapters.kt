@@ -15,6 +15,7 @@ import android.text.TextUtils
 import android.text.style.ForegroundColorSpan
 import android.text.style.TextAppearanceSpan
 import android.text.style.TypefaceSpan
+import android.util.Log
 import android.view.View
 import android.view.ViewAnimationUtils
 import android.widget.EditText
@@ -131,6 +132,7 @@ fun setAnimation(view: ImageView, @DrawableRes drawableRes: Int, lastFrame: Draw
 
 @BindingAdapter(value = ["title", "subtitle"], requireAll = false)
 fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?) {
+    Log.d("DEBBB", "Change:: '$title' + '$subtitle'")
     val text = SpannableString("${title ?: ""}\n${subtitle ?: ""}")
     title?.let {
         text.setSpan(TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Title), 0, it.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
