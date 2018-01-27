@@ -50,6 +50,7 @@ class ManagePlaylistsFragment : HomeChildFragment<ManagePlaylistsBinding, Manage
         // Set up list item click listeners.
         viewModel.adapter.itemClickListener = { position ->
             if (isAdded) {
+                //TODO: Transition glitch.
                 (parentFragment as? HomeCallbacks)?.setCheckedItem(HomeViewModel.HomeNavigationItem.Playlist(viewModel.adapter.items[position].playlist.id))
             }
         }

@@ -69,9 +69,8 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             post {
                 if (savedInstanceState == null) {
                     setCurrentItem(viewModel.songIds.indexOf(arguments.songId), false)
-                } else {
-                    viewModel.onPageSelected(currentItem)
                 }
+                viewModel.onPageSelected(currentItem)
             }
         }
         if (viewModel.songIds.size > 1 && firstTimeUserExperienceRepository.shouldShowDetailSwipeHint) {
