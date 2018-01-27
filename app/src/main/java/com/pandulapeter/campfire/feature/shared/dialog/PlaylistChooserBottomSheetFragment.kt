@@ -71,11 +71,6 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment(), Subscriber
         playlistRepository.subscribe(this)
     }
 
-    override fun onResume() {
-        super.onResume()
-        checkIfToolbarTransformationIsNeeded()
-    }
-
     override fun onStop() {
         super.onStop()
         songInfoRepository.unsubscribe(this)
@@ -136,6 +131,8 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment(), Subscriber
         }
     }
 
+    //TODO: Overlap glitch when having too many items and quickly resizing the screen.
+    //TODO: Method is not being called after small changes to multi window size.
     private fun checkIfToolbarTransformationIsNeeded() {
         binding.root.post {
             val screenHeight = activity?.window?.decorView?.height ?: 0
@@ -144,6 +141,7 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment(), Subscriber
                 layoutParams.height = screenHeight
                 binding.root.layoutParams = layoutParams
                 shouldTransformTopToAppBar = true
+                binding.container?.contentContainer?.setPadding(0, 0, 0, context?.dimension(R.dimen.list_fab_content_bottom_margin) ?: 0)
                 updateSlideState(if (behavior.state == BottomSheetBehavior.STATE_EXPANDED) 1f else 0f)
             }
             behavior.peekHeight = Math.min(binding.root.height, screenHeight / 2)

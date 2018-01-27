@@ -79,6 +79,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
+                android:paddingBottom="@dimen/list_fab_content_bottom_margin"
                 app:adapter="@{viewModel.adapter}"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 tools:listitem="@layout/item_playlist" />
