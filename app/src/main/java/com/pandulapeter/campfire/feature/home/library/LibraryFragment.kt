@@ -113,8 +113,11 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
             })
             // Set up list item click listeners.
             viewModel.adapter.itemClickListener = { position ->
+                val id = viewModel.adapter.items[position].songInfo.id
                 binding.appBarLayout.performAfterExpand(binding.swipeRefreshLayout) {
-                    if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
+                    if (isAdded) {
+                        (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(id))
+                    }
                 }
             }
             viewModel.adapter.playlistActionClickListener = { position ->

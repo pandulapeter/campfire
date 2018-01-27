@@ -18,6 +18,11 @@ class FirstTimeUserExperienceRepository(private val preferenceStorageManager: Pr
             preferenceStorageManager.shouldShowPlaylistHint = new
         }
     }
+    var shouldShowManagePlaylistsHint by Delegates.observable(preferenceStorageManager.shouldShowManagePlaylistsHint) { _: KProperty<*>, old: Boolean, new: Boolean ->
+        if (old != new) {
+            preferenceStorageManager.shouldShowManagePlaylistsHint = new
+        }
+    }
     var shouldShowManageDownloadsHint by Delegates.observable(preferenceStorageManager.shouldShowManageDownloadsHint) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
             preferenceStorageManager.shouldShowManageDownloadsHint = new
@@ -32,6 +37,7 @@ class FirstTimeUserExperienceRepository(private val preferenceStorageManager: Pr
     fun resetAll() {
         shouldShowHistoryHint = true
         shouldShowPlaylistHint = true
+        shouldShowManagePlaylistsHint = true
         shouldShowManageDownloadsHint = true
         shouldShowDetailSwipeHint = true
     }

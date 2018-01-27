@@ -23,6 +23,7 @@ class PreferenceStorageManager(context: Context) {
     var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("should_use_german_notation", shouldEnableGermanNotationByDefault())
     var shouldShowHistoryHint by PreferenceFieldDelegate.Boolean("should_show_history_hint", true)
     var shouldShowPlaylistHint by PreferenceFieldDelegate.Boolean("should_show_playlist_hint", true)
+    var shouldShowManagePlaylistsHint by PreferenceFieldDelegate.Boolean("should_show_manage_playlists_hint", true)
     var shouldShowManageDownloadsHint by PreferenceFieldDelegate.Boolean("should_show_manage_downloads_hint", true)
     var shouldShowDetailSwipeHint by PreferenceFieldDelegate.Boolean("should_show_detail_swipe_hint", true)
     var homeNavigationItem: HomeViewModel.HomeNavigationItem

@@ -48,8 +48,8 @@
                 app:visibility="@{viewModel.shouldShowPlaceholder}" />
 
             <ProgressBar
-                android:layout_width="@dimen/loading_indicator_size"
-                android:layout_height="@dimen/loading_indicator_size"
+                android:layout_width="@dimen/list_item_loading_indicator_size"
+                android:layout_height="@dimen/list_item_loading_indicator_size"
                 android:layout_gravity="center"
                 android:indeterminateTint="@android:color/white"
                 app:visibility="@{viewModel.isLoading}" />

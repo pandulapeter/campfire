@@ -10,7 +10,6 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SongInfoBinding
-import com.pandulapeter.campfire.data.model.SongInfo
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -18,7 +17,7 @@ import kotlinx.coroutines.experimental.cancel
 import kotlin.coroutines.experimental.CoroutineContext
 
 /**
- * Custom [RecyclerView.Adapter] that handles a a list of [SongInfo] objects.
+ * Custom [RecyclerView.Adapter] that handles a a list of [SongInfoViewModel] objects.
  */
 class SongInfoListAdapter : RecyclerView.Adapter<SongInfoListAdapter.SongInfoViewHolder>() {
     private var coroutine: CoroutineContext? = null

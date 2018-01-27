@@ -142,7 +142,7 @@ class HistoryViewModel(
         return when (Math.abs(now.year - then.year)) {
             0 -> when (Math.abs(now.month - then.month)) {
                 0 -> when (Math.abs(now.week - then.week)) {
-                    0 -> R.string.history_this_week //TODO: Buggy, this never seems to happen.
+                    0 -> R.string.history_this_week
                     1 -> R.string.history_last_week
                     else -> R.string.history_this_month
                 }

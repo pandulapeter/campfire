@@ -20,9 +20,10 @@
     <dimen name="edit_text_fix">4dp</dimen>
     <dimen name="navigation_view_top_padding">@dimen/content_padding</dimen>
 
-    <!-- Song list items -->
-    <dimen name="card_text_spacing">2dp</dimen>
-    <dimen name="loading_indicator_size">36dp</dimen>
+    <!-- List items -->
+    <dimen name="list_item_minimum_height">40dp</dimen>
+    <dimen name="list_item_text_spacing">2dp</dimen>
+    <dimen name="list_item_loading_indicator_size">36dp</dimen>
 
     <!-- Home screen -->
     <dimen name="view_options_width">216dp</dimen>

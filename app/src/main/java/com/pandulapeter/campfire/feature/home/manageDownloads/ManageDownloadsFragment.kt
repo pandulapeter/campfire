@@ -68,8 +68,11 @@ class ManageDownloadsFragment :
         }).attachToRecyclerView(binding.recyclerView)
         // Set up list item click listeners.
         viewModel.adapter.itemClickListener = { position ->
+            val id = viewModel.adapter.items[position].songInfo.id
             binding.appBarLayout.performAfterExpand(binding.recyclerView) {
-                if (isAdded) (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[position].songInfo.id))
+                if (isAdded) {
+                    (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(id))
+                }
             }
         }
         viewModel.adapter.playlistActionClickListener = { position ->
@@ -88,6 +91,7 @@ class ManageDownloadsFragment :
         }
         // Display first-time user experience hint.
         viewModel.shouldShowHintSnackbar.onPropertyChanged(this) {
+            //TODO: Move to viewModel.
             if (firstTimeUserExperienceRepository.shouldShowManageDownloadsHint) {
                 binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.manage_downloads_hint) {
                     firstTimeUserExperienceRepository.shouldShowManageDownloadsHint = false

@@ -35,7 +35,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/toolbar_height"
                     android:clipChildren="false"
-                    app:isScrollEnabled="@{viewModel.shouldAllowToolbarScrolling}">
+                    app:isScrollEnabled="@{true}">
 
                     <android.support.v4.widget.Space
                         android:id="@+id/space"
@@ -63,22 +63,25 @@
                         android:layout_marginEnd="@dimen/content_padding"
                         android:layout_marginStart="@dimen/second_keyline"
                         android:gravity="center_vertical"
-                        android:text="@string/home_manage_playlists"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:subtitle="@{@plurals/manage_playlists_subtitle(viewModel.itemCount,viewModel.itemCount)}"
+                        app:title="@{@string/home_manage_playlists}" />
 
                 </android.support.constraint.ConstraintLayout>
 
             </android.support.design.widget.AppBarLayout>
 
-            <com.pandulapeter.campfire.feature.shared.widget.PlaceholderView
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recycler_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:clipToPadding="false"
+                app:adapter="@{viewModel.adapter}"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
-                app:text="@string/manage_playlistst_work_in_progress" />
+                tools:listitem="@layout/item_playlist" />
 
         </android.support.design.widget.CoordinatorLayout>
 

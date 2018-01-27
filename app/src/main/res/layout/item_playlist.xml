@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--suppress AndroidUnknownAttribute -->
+    <data class=".PlaylistItemBinding">
+
+        <variable
+            name="viewModel"
+            type="com.pandulapeter.campfire.feature.home.managePlaylists.PlaylistInfoViewModel" />
+
+    </data>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:foreground="?attr/selectableItemBackground"
+        app:contentPadding="@dimen/content_padding">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
+            android:minHeight="@dimen/list_item_minimum_height">
+
+            <android.support.v4.widget.Space
+                android:id="@+id/space"
+                android:layout_width="2dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="parent" />
+
+            <ImageView
+                android:id="@+id/drag_handle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/drag_to_rearrange"
+                android:padding="@dimen/content_padding"
+                app:layout_constraintEnd_toEndOf="@id/space"
+                app:srcCompat="@drawable/ic_drag_handle_24dp"
+                app:visibility="@{viewModel.shouldShowDragHandle}" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="@dimen/list_item_text_spacing"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/drag_handle"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:extraText="@{viewModel.itemCount == 0 ? @string/manage_playlists_song_count_empty : @plurals/manage_playlists_song_count(viewModel.itemCount, viewModel.itemCount)}"
+                app:primaryText="@{viewModel.playlist.title ?? @string/home_favorites}"
+                tools:text="Playlist title\nSong count" />
+
+        </android.support.constraint.ConstraintLayout>
+
+    </android.support.v7.widget.CardView>
+
+</layout>

@@ -25,7 +25,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:animateLayoutChanges="true"
-            android:minHeight="40dp">
+            android:minHeight="@dimen/list_item_minimum_height">
 
             <android.support.v4.widget.Space
                 android:id="@+id/space_1"
@@ -37,7 +37,7 @@
                 android:id="@+id/drag_handle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:contentDescription="@string/playlist_drag_to_rearrange"
+                android:contentDescription="@string/drag_to_rearrange"
                 android:padding="@dimen/content_padding"
                 app:layout_constraintEnd_toEndOf="@id/space_1"
                 app:srcCompat="@drawable/ic_drag_handle_24dp"
@@ -85,8 +85,8 @@
                     app:displayedChild="@{viewModel.isSongLoading ? 0 : 1}">
 
                     <ProgressBar
-                        android:layout_width="@dimen/loading_indicator_size"
-                        android:layout_height="@dimen/loading_indicator_size"
+                        android:layout_width="@dimen/list_item_loading_indicator_size"
+                        android:layout_height="@dimen/list_item_loading_indicator_size"
                         android:layout_gravity="center"
                         android:indeterminateTint="@android:color/white"
                         android:padding="@dimen/content_padding" />
@@ -109,14 +109,14 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:alpha="@{viewModel.isSongDownloaded ? 1f : 0.8f }"
-                android:lineSpacingExtra="@dimen/card_text_spacing"
+                android:lineSpacingExtra="@dimen/list_item_text_spacing"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/download_action_container"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:songArtist="@{viewModel.songInfo.artist}"
-                app:songExtra="@{viewModel.alertText}"
-                app:songTitle="@{viewModel.songInfo.title}"
+                app:secondaryText="@{viewModel.songInfo.artist}"
+                app:extraText="@{viewModel.alertText}"
+                app:primaryText="@{viewModel.songInfo.title}"
                 tools:text="Song title\nArtist" />
 
         </android.support.constraint.ConstraintLayout>

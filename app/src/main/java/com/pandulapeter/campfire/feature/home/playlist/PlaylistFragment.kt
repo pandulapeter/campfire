@@ -104,14 +104,10 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Set up list item click listeners.
         viewModel.adapter.itemClickListener = { position ->
+            val id = viewModel.adapter.items[position].songInfo.id
             binding.appBarLayout.performAfterExpand(binding.recyclerView) {
                 if (isAdded) {
-                    (activity as? MainActivity)?.setNavigationItem(
-                        MainViewModel.MainNavigationItem.Detail(
-                            viewModel.adapter.items[position].songInfo.id,
-                            arguments.playlistId
-                        )
-                    )
+                    (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(id, arguments.playlistId))
                 }
             }
         }

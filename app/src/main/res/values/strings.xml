@@ -10,18 +10,19 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
 
-    <!-- Song list items -->
+    <!-- Supported languages -->
+    <string name="language_english">English</string>
+    <string name="language_hungarian">Hungarian</string>
+    <string name="language_unknown">Unknown</string>
+
+    <!-- List items -->
     <string name="download">Download</string>
     <string name="update">Update</string>
     <string name="manage_playlists">Manage playlists</string>
     <string name="new_version_available">New version available</string>
     <string name="new_tag">New</string>
     <string name="song_item_song_download_failed">%s cannot be downloaded.</string>
-
-    <!-- Supported languages -->
-    <string name="language_english">English</string>
-    <string name="language_hungarian">Hungarian</string>
-    <string name="language_unknown">Unknown</string>
+    <string name="drag_to_rearrange">Drag to rearrange</string>
 
     <!-- Home screen -->
     <string name="home_menu">Menu</string>
@@ -106,12 +107,20 @@
     <string name="playlist_delete_confirmation_title">Are you sure?</string>
     <string name="playlist_delete_confirmation_message">This cannot be undone.</string>
     <string name="playlist_delete_confirmation_delete">Delete</string>
-    <string name="playlist_drag_to_rearrange">Drag to rearrange</string>
-    <string name="playlist_hint">Drag the items to rearrange them, swipe to remove.</string>
+    <string name="playlist_hint">Drag the songs to rearrange them, swipe to remove.</string>
     <string name="playlist_placeholder">To start adding songs to this playlist, tap on the star icon near song titles.</string>
 
     <!-- Manage playlists screen -->
-    <string name="manage_playlistst_work_in_progress">Work on the Manage playlists screen is in progress.</string>
+    <plurals name="manage_playlists_subtitle">
+        <item quantity="one">%d playlist</item>
+        <item quantity="other">%d playlists</item>
+    </plurals>
+    <string name="manage_playlists_song_count_empty">Empty playlist</string>
+    <plurals name="manage_playlists_song_count">
+        <item quantity="one">Contains %d song</item>
+        <item quantity="other">Contains %d songs</item>
+    </plurals>
+    <string name="manage_playlists_hint">Drag the playlists to rearrange them, swipe to remove.</string>
 
     <!-- Manage downloads screen -->
     <plurals name="manage_downloads_subtitle">

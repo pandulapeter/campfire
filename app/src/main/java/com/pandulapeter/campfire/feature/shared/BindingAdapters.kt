@@ -161,26 +161,24 @@ fun setTitleDescription(view: TextView, title: String?, description: String?) {
     view.text = text
 }
 
-@BindingAdapter(value = ["songTitle", "songArtist", "songExtra"], requireAll = false)
-fun setSongInfoItemText(view: TextView, title: String?, artist: String?, extra: String?) {
-    val text = SpannableString("${title ?: ""}\n${artist ?: ""}${extra?.let { "\n$it" } ?: ""}")
-    title?.let {
-        text.setSpan(
-            TypefaceSpan("sans-serif-medium"),
-            0,
-            it.length,
-            Spannable.SPAN_INCLUSIVE_INCLUSIVE
-        )
-    }
-    artist?.let {
+@BindingAdapter(value = ["primaryText", "secondaryText", "extraText"], requireAll = false)
+fun setListItemText(view: TextView, primaryText: String, secondaryText: String?, extraText: String?) {
+    val text = SpannableString("$primaryText${secondaryText?.let { "\n$it" } ?: ""}${extraText?.let { "\n$it" } ?: ""}")
+    text.setSpan(
+        TypefaceSpan("sans-serif-medium"),
+        0,
+        primaryText.length,
+        Spannable.SPAN_INCLUSIVE_INCLUSIVE
+    )
+    secondaryText?.let {
         text.setSpan(
             TypefaceSpan("sans-serif-thin"),
-            (title?.length ?: 0) + 1,
+            primaryText.length + 1,
             text.length,
             Spannable.SPAN_INCLUSIVE_INCLUSIVE
         )
     }
-    extra?.let {
+    extraText?.let {
         text.setSpan(
             TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Caption),
             text.length - it.length,
