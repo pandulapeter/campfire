@@ -40,6 +40,11 @@ class AppShortcutManager(
         implementation.updateAppShortcuts()
     }
 
+    fun onPlaylistDeleted(playlistId: Int) {
+        dataStorageManager.playlistHistory = dataStorageManager.playlistHistory.toMutableList().apply { remove(playlistId.toString()) }
+        implementation.updateAppShortcuts()
+    }
+
     fun updateAppShortcuts() = implementation.updateAppShortcuts()
 
     private interface Implementation {

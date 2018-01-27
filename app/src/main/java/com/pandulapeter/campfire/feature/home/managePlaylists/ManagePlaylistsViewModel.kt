@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildViewModel
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.networking.AnalyticsManager
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -21,6 +22,7 @@ import kotlin.coroutines.experimental.CoroutineContext
  */
 class ManagePlaylistsViewModel(
     analyticsManager: AnalyticsManager,
+    private val appShortcutManager: AppShortcutManager,
     private val firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository,
     private val playlistRepository: PlaylistRepository
 ) : HomeChildViewModel(analyticsManager), Subscriber {
@@ -65,8 +67,10 @@ class ManagePlaylistsViewModel(
         playlistRepository.updatePlaylistOrder(adapter.items.map { it.playlist })
     }
 
-    //TODO: Also delete the app shortcut.
-    fun deletePlaylist(playlistId: Int) = playlistRepository.deletePlaylist(playlistId)
+    fun deletePlaylist(playlistId: Int) {
+        playlistRepository.deletePlaylist(playlistId)
+        appShortcutManager.onPlaylistDeleted(playlistId)
+    }
 
     private fun getAdapterItems(): List<PlaylistInfoViewModel> {
         val playlists = playlistRepository.getPlaylists()

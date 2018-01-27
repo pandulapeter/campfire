@@ -83,8 +83,6 @@
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 tools:listitem="@layout/item_playlist" />
 
-            <!--TODO: The FAB should perform a hide animation before the screen is closed. -->
-
             <android.support.design.widget.FloatingActionButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

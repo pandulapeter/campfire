@@ -132,9 +132,7 @@ class PlaylistViewModel(
     override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         super.onUpdateDone(items, updateType)
         shouldShowEditButton.set(items.isNotEmpty() || playlistId != Playlist.FAVORITES_ID)
-        if (!isInEditMode.get()) {
-            shouldShowShareButton.set(items.isNotEmpty())
-        }
+        shouldShowShareButton.set(items.isNotEmpty())
         songCount.set(items.size)
         updateShouldAllowToolbarScrolling(items.isNotEmpty())
     }
