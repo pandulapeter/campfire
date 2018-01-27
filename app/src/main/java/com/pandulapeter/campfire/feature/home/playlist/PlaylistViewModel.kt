@@ -3,7 +3,6 @@ package com.pandulapeter.campfire.feature.home.playlist
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
-import android.util.Log
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
@@ -33,9 +32,9 @@ class PlaylistViewModel(
     private val playlistId: Int
 ) : SongInfoListViewModel(analyticsManager, songInfoRepository, downloadedSongRepository) {
     val title = ObservableField(favoritesTitle)
-    val songCount = ObservableInt() //TODO: Count the items in the playlist.
+    val songCount = ObservableInt(playlistRepository.getPlaylistSongIds(playlistId).size)
     val editedTitle = ObservableField(title.get())
-    val shouldShowShareButton = ObservableBoolean(playlistRepository.getPlaylistSongIds(playlistId).isNotEmpty())
+    val shouldShowShareButton = ObservableBoolean(songCount.get() > 0)
     val isInEditMode = ObservableBoolean()
     val shouldShowDeleteConfirmation = ObservableBoolean()
     val shouldShowEditButton = ObservableBoolean(shouldShowShareButton.get() || playlistId != Playlist.FAVORITES_ID)
@@ -44,10 +43,7 @@ class PlaylistViewModel(
     val shouldAllowDeleteButton = playlistId != Playlist.FAVORITES_ID
 
     init {
-        title.onPropertyChanged {
-            editedTitle.set(it)
-            Log.d("DEBBB", "New title: '$it'")
-        }
+        title.onPropertyChanged { editedTitle.set(it) }
         isInEditMode.onPropertyChanged { onUpdate(UpdateType.EditModeChanged(playlistId, it)) }
         appShortcutManager.onPlaylistOpened(playlistId)
     }
@@ -124,7 +120,9 @@ class PlaylistViewModel(
                 } else {
                     SongInfoListAdapter.Payload.EDIT_MODE_CLOSE
                 }
-                title.notifyChange() // Needed to fix a visual glitch.
+                if (playlistId == Playlist.FAVORITES_ID) {
+                    title.notifyChange() // Needed to fix a visual glitch.
+                }
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
                 shouldShowShareButton.set(if (!updateType.isInEditMode) adapter.items.isNotEmpty() else false)
                 updateShouldAllowToolbarScrolling(adapter.items.isNotEmpty())
@@ -138,6 +136,7 @@ class PlaylistViewModel(
         if (!isInEditMode.get()) {
             shouldShowShareButton.set(if (!isInEditMode.get()) adapter.items.isNotEmpty() else false)
         }
+        songCount.set(items.size)
         updateShouldAllowToolbarScrolling(items.isNotEmpty())
     }
 

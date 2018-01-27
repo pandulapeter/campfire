@@ -108,7 +108,7 @@
                         app:layout_constraintEnd_toStartOf="@id/share"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:subtitle="@{@string/playlist_song_count(viewModel.songCount)}"
+                        app:subtitle="@{@plurals/playlist_song_count(viewModel.songCount, viewModel.songCount)}"
                         app:title="@{viewModel.title}"
                         app:visibility="@{!viewModel.shouldAllowDeleteButton || !viewModel.isInEditMode}"
                         tools:text="Favorites"
