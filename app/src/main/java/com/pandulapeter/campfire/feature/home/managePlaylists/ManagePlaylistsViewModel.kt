@@ -26,6 +26,8 @@ class ManagePlaylistsViewModel(
     val adapter = ManagePlaylistsListAdapter()
     val shouldShowHintSnackbar = ObservableBoolean()
     val itemCount = ObservableInt(playlistRepository.getPlaylists().size)
+    val shouldShowNewPlaylistButton = ObservableBoolean()
+    val shouldShowNewPlaylistDialog = ObservableBoolean()
     private var coroutine: CoroutineContext? = null
 
     override fun onUpdate(updateType: UpdateType) {
@@ -39,10 +41,13 @@ class ManagePlaylistsViewModel(
                     adapter.items = async(CommonPool) { getAdapterItems() }.await().toMutableList()
                     shouldShowHintSnackbar.set(firstTimeUserExperienceRepository.shouldShowManagePlaylistsHint)
                     itemCount.set(playlistRepository.getPlaylists().size)
+                    shouldShowNewPlaylistButton.set(true)
                 }
             }
         }
     }
+
+    fun onNewPlaylistButtonClicked() = shouldShowNewPlaylistDialog.set(true)
 
     private fun getAdapterItems() = playlistRepository.getPlaylists().map {
         PlaylistInfoViewModel(

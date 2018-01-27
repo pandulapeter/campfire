@@ -11,8 +11,10 @@ import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildFragment
+import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
@@ -56,6 +58,9 @@ class ManagePlaylistsFragment : HomeChildFragment<ManagePlaylistsBinding, Manage
             binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.manage_playlists_hint) {
                 firstTimeUserExperienceRepository.shouldShowManagePlaylistsHint = false
             }
+        }
+        viewModel.shouldShowNewPlaylistDialog.onEventTriggered(this) {
+            NewPlaylistDialogFragment.show(childFragmentManager)
         }
     }
 

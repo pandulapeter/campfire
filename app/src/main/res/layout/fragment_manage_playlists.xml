@@ -83,6 +83,20 @@
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 tools:listitem="@layout/item_playlist" />
 
+            <!--TODO: The FAB should perform a hide animation before the screen is closed. -->
+
+            <android.support.design.widget.FloatingActionButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="@dimen/large_content_padding"
+                android:onClick="@{() -> viewModel.onNewPlaylistButtonClicked()}"
+                android:visibility="invisible"
+                app:fabSize="normal"
+                app:srcCompat="@drawable/ic_add_24dp"
+                app:visibility="@{viewModel.shouldShowNewPlaylistButton}"
+                tools:visibility="visible" />
+
         </android.support.design.widget.CoordinatorLayout>
 
     </FrameLayout>
