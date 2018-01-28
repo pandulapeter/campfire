@@ -136,7 +136,7 @@
 
                 <!--TODO: The FAB should perform a hide animation before the screen is closed. -->
 
-                <android.support.design.widget.FloatingActionButton
+                <com.pandulapeter.campfire.feature.shared.widget.FloatingActionButton
                     android:id="@id/auto_scroll_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

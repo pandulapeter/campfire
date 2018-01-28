@@ -18,7 +18,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:foreground="?attr/selectableItemBackground"
-        app:cardBackgroundColor="@{viewModel.isSongDownloaded ? @color/card_song_downloaded : @color/card_song_not_downloaded}"
         app:contentPadding="@dimen/content_padding">
 
         <android.support.constraint.ConstraintLayout
@@ -39,6 +38,7 @@
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/drag_to_rearrange"
                 android:padding="@dimen/content_padding"
+                android:tint="?android:attr/textColorSecondary"
                 app:layout_constraintEnd_toEndOf="@id/space_1"
                 app:srcCompat="@drawable/ic_drag_handle_24dp"
                 app:visibility="@{viewModel.shouldShowDragHandle}" />
@@ -56,6 +56,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/manage_playlists"
                 android:padding="@dimen/content_padding"
+                android:tint="?android:attr/textColorSecondary"
                 app:animation="@{viewModel.isSongOnAnyPlaylist ? R.drawable.avd_added_to_playlists_24dp : R.drawable.avd_removed_from_playlists_24dp}"
                 app:lastFrame="@{viewModel.isSongOnAnyPlaylist ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
                 app:layout_constraintEnd_toEndOf="@id/space_2"
@@ -88,7 +89,7 @@
                         android:layout_width="@dimen/list_item_loading_indicator_size"
                         android:layout_height="@dimen/list_item_loading_indicator_size"
                         android:layout_gravity="center"
-                        android:indeterminateTint="@android:color/white"
+                        android:indeterminateTint="?android:attr/textColorSecondary"
                         android:padding="@dimen/content_padding" />
 
                     <ImageView
@@ -98,6 +99,7 @@
                         android:layout_gravity="center"
                         android:contentDescription="@{viewModel.isSongDownloaded ? @string/update : @string/download}"
                         android:padding="@dimen/content_padding"
+                        android:tint="?android:attr/textColorSecondary"
                         app:srcCompat="@drawable/ic_download_24dp" />
 
                 </ViewSwitcher>
@@ -108,15 +110,15 @@
                 android:id="@+id/title"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:alpha="@{viewModel.isSongDownloaded ? 1f : 0.8f }"
+                android:alpha="@{viewModel.isSongDownloaded ? 1f : 0.5f}"
                 android:lineSpacingExtra="@dimen/list_item_text_spacing"
+                app:extraText="@{viewModel.alertText}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/download_action_container"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:secondaryText="@{viewModel.songInfo.artist}"
-                app:extraText="@{viewModel.alertText}"
                 app:primaryText="@{viewModel.songInfo.title}"
+                app:secondaryText="@{viewModel.songInfo.artist}"
                 tools:text="Song title\nArtist" />
 
         </android.support.constraint.ConstraintLayout>

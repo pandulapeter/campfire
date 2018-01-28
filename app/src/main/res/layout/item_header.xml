@@ -9,7 +9,7 @@
         android:id="@+id/title"
         android:layout_width="match_parent"
         android:layout_height="@dimen/header_height"
-        android:background="@color/background"
+        android:background="?android:attr/windowBackground"
         android:gravity="center_vertical"
         android:paddingEnd="@dimen/first_keyline"
         android:paddingStart="@dimen/first_keyline"

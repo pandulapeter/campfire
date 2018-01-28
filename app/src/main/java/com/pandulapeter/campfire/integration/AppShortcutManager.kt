@@ -12,8 +12,8 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.storage.DataStorageManager
+import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.MainViewModel
-import com.pandulapeter.campfire.feature.SplashActivity
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 
 /**
@@ -114,7 +114,7 @@ class AppShortcutManager(
         ) = ShortcutInfo.Builder(context, id)
             .setShortLabel(label)
             .setIcon(Icon.createWithResource(context, icon))
-            .setIntent(SplashActivity.getStartIntent(context, MainViewModel.MainNavigationItem.Home(homeNavigationItem)).setAction(Intent.ACTION_VIEW))
+            .setIntent(MainActivity.getStartIntent(context, MainViewModel.MainNavigationItem.Home(homeNavigationItem)).setAction(Intent.ACTION_VIEW))
             .build()
     }
 

@@ -18,15 +18,16 @@ class SettingsViewModel(
     private val userPreferenceRepository: UserPreferenceRepository
 ) : HomeChildViewModel(analyticsManager) {
     val shouldShowHintsResetSnackbar = ObservableBoolean()
-    val shouldAllowToolbarScrolling = ObservableBoolean()
     val shouldShowChords = ObservableBoolean(userPreferenceRepository.shouldShowChords)
     val shouldEnableAutoScroll = ObservableBoolean(userPreferenceRepository.shouldEnableAutoScroll)
+    val shouldUseDarkTheme = ObservableBoolean(userPreferenceRepository.shouldUseDarkTheme)
     val shouldUseGermanNotation = ObservableBoolean(userPreferenceRepository.shouldUseGermanNotation)
     val englishNotationExample = ObservableField(generateNotationExample(false))
     val germanNotationExample = ObservableField(generateNotationExample(true))
 
     init {
         shouldShowChords.onPropertyChanged { userPreferenceRepository.shouldShowChords = it }
+        shouldUseDarkTheme.onPropertyChanged { userPreferenceRepository.shouldUseDarkTheme = it }
         shouldEnableAutoScroll.onPropertyChanged { userPreferenceRepository.shouldEnableAutoScroll = it }
         shouldUseGermanNotation.onPropertyChanged {
             userPreferenceRepository.shouldUseGermanNotation = it

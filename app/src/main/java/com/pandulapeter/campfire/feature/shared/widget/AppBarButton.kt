@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.shared.widget
 
 import android.content.Context
 import android.graphics.Rect
+import android.graphics.drawable.Drawable
 import android.support.v7.widget.AppCompatImageView
 import android.util.AttributeSet
 import android.util.TypedValue
@@ -11,11 +12,13 @@ import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.util.obtainColor
 
 
 /**
- * Custom ImageView that sets its own background and padding and provides a fake touch area that is
- * larger than the actual View bounds. Used for icons that are part of the app bar.
+ * Custom [AppCompatImageView] that sets its own background and padding and provides a fake touch area that is
+ * larger than the actual View bounds. It also sets the drawable tint based on the current theme. Used for icons
+ * that are part of the app bar.
  */
 class AppBarButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
     AppCompatImageView(context, attrs, defStyleAttr) {
@@ -41,6 +44,11 @@ class AppBarButton @JvmOverloads constructor(context: Context, attrs: AttributeS
                 }
             }
         }
+    }
+
+    override fun setImageDrawable(drawable: Drawable?) {
+        drawable?.setTint(context.obtainColor(android.R.attr.textColorSecondary))
+        super.setImageDrawable(drawable)
     }
 
     override fun onAttachedToWindow() {

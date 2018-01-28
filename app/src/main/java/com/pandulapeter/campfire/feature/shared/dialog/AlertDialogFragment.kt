@@ -8,18 +8,21 @@ import android.support.v4.app.FragmentManager
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatDialogFragment
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.setArguments
+import org.koin.android.ext.android.inject
 
 /**
  * Wrapper for [AlertDialog] with that handles state saving.
  */
 class AlertDialogFragment : AppCompatDialogFragment() {
+    private val userPreferenceRepository by inject<UserPreferenceRepository>()
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         context?.let { context ->
             arguments?.let { arguments ->
-                return AlertDialog.Builder(context, R.style.AlertDialog)
+                return AlertDialog.Builder(context, if (userPreferenceRepository.shouldUseDarkTheme) R.style.DarkAlertDialog else R.style.LightAlertDialog)
                     .setTitle(arguments.title)
                     .setMessage(arguments.message)
                     .setPositiveButton(arguments.positiveButton, { _, _ -> getOnDialogItemsSelectedListener()?.onPositiveButtonSelected() })

@@ -117,6 +117,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         }
         viewModel.isAutoScrollStarted.onPropertyChanged(this) {
             if (it) {
+                binding.appBarLayout.setExpanded(false, true)
                 scrollManager.onScrollStarted(viewModel.getSelectedSongId())
                 binding.root.post(object : Runnable {
                     override fun run() {

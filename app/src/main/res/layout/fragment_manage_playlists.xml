@@ -84,7 +84,7 @@
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 tools:listitem="@layout/item_playlist" />
 
-            <android.support.design.widget.FloatingActionButton
+            <com.pandulapeter.campfire.feature.shared.widget.FloatingActionButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"

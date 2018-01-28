@@ -104,6 +104,7 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
             if (isAdded) binding.coordinatorLayout.showSnackbar(R.string.library_update_error, R.string.library_try_again, { viewModel.forceRefresh() })
         }
         context?.let { context ->
+            binding.swipeRefreshLayout.setColorSchemeColors(context.color(R.color.accent))
             // Set up the item headers.
             binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(context) {
 

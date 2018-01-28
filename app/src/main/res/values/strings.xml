@@ -85,10 +85,14 @@
     <string name="settings_show_chords_unchecked">Lyrics only</string>
     <string name="settings_english_notation">English notation</string>
     <string name="settings_german_notation">German notation</string>
-    <string name="settings_appearance">Behavior</string>
+    <string name="settings_behavior">Behavior</string>
     <string name="settings_auto_scroll">Auto-scroll</string>
     <string name="settings_auto_scroll_enabled">Auto-scroll controls are enabled</string>
     <string name="settings_auto_scroll_disabled">Auto-scroll controls are disabled</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_use_dark_theme">Use dark theme</string>
+    <string name="settings_use_dark_theme_enabled">The app uses the dark theme</string>
+    <string name="settings_use_dark_theme_disabled">The app uses the light theme</string>
     <string name="settings_other">Other</string>
     <string name="settings_reset_hints">Reset hints</string>
     <string name="settings_reset_hints_description">The hints you dismissed in the past will appear again</string>

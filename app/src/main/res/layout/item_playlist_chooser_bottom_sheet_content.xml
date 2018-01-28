@@ -17,14 +17,14 @@
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/background"
+        android:background="?android:attr/windowBackground"
         android:clipChildren="false">
 
         <android.support.constraint.ConstraintLayout
             android:id="@+id/fake_app_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background"
+            android:background="?android:attr/windowBackground"
             android:clipChildren="false">
 
             <View
@@ -86,7 +86,6 @@
             android:id="@+id/nested_scroll_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background"
             android:clipToPadding="false"
             android:paddingBottom="@dimen/large_content_padding"
             android:paddingTop="@dimen/content_padding"
@@ -118,7 +117,6 @@
                     android:paddingEnd="@dimen/first_keyline"
                     android:paddingStart="14dp"
                     android:text="@string/home_new_playlist"
-                    android:textColor="@android:color/white"
                     tools:drawableStart="@drawable/ic_new_playlist_24dp" />
 
             </LinearLayout>

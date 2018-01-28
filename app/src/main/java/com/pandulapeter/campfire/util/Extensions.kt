@@ -8,9 +8,7 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
 import android.os.Bundle
-import android.support.annotation.ColorRes
-import android.support.annotation.DimenRes
-import android.support.annotation.DrawableRes
+import android.support.annotation.*
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.AppBarLayout
 import android.support.design.widget.CoordinatorLayout
@@ -19,6 +17,7 @@ import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.content.res.AppCompatResources
+import android.util.TypedValue
 import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.data.model.Language
@@ -27,12 +26,19 @@ import retrofit2.Callback
 import retrofit2.Response
 import kotlin.reflect.KClass
 
-
 fun Context.color(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
 
 fun Context.dimension(@DimenRes dimensionId: Int) = resources.getDimensionPixelSize(dimensionId)
 
 fun Context.drawable(@DrawableRes drawableId: Int) = AppCompatResources.getDrawable(this, drawableId)
+
+@ColorInt
+fun Context.obtainColor(@AttrRes colorAttribute: Int): Int {
+    val attributes = obtainStyledAttributes(TypedValue().data, intArrayOf(colorAttribute))
+    val color = attributes.getColor(0, 0)
+    attributes.recycle()
+    return color
+}
 
 fun ObservableBoolean.toggle() = set(!get())
 

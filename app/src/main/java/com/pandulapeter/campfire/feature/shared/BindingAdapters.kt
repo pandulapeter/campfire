@@ -22,6 +22,7 @@ import android.widget.TextView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.obtainColor
 
 
 @BindingAdapter(value = ["android:drawableStart", "android:drawableTop", "android:drawableEnd", "android:drawableBottom"], requireAll = false)
@@ -33,11 +34,13 @@ fun setCompoundDrawables(
     @DrawableRes drawableBottom: Int
 ) {
     val drawables = view.compoundDrawables
+    val secondary = view.context.obtainColor(android.R.attr.textColorSecondary)
+    view.setTextColor(view.context.obtainColor(android.R.attr.textColorPrimary))
     view.setCompoundDrawablesWithIntrinsicBounds(
-        if (drawableStart == 0) drawables[0] else view.context.drawable(drawableStart),
-        if (drawableTop == 0) drawables[1] else view.context.drawable(drawableTop),
-        if (drawableEnd == 0) drawables[2] else view.context.drawable(drawableEnd),
-        if (drawableBottom == 0) drawables[3] else view.context.drawable(drawableBottom)
+        if (drawableStart == 0) drawables[0] else view.context.drawable(drawableStart)?.apply { setTint(secondary) },
+        if (drawableTop == 0) drawables[1] else view.context.drawable(drawableTop)?.apply { setTint(secondary) },
+        if (drawableEnd == 0) drawables[2] else view.context.drawable(drawableEnd)?.apply { setTint(secondary) },
+        if (drawableBottom == 0) drawables[3] else view.context.drawable(drawableBottom)?.apply { setTint(secondary) }
     )
 }
 
@@ -129,7 +132,7 @@ fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?) {
     }
     subtitle?.let {
         text.setSpan(
-            TextAppearanceSpan(view.context, R.style.SubtitleTextAppearance),
+            ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorSecondary)),
             (title?.length ?: 0) + 1,
             text.length,
             Spannable.SPAN_INCLUSIVE_INCLUSIVE
@@ -144,7 +147,7 @@ fun setTitleDescription(view: TextView, title: String?, description: String?) {
     val text = SpannableString("${title ?: ""}\n${description ?: ""}")
     title?.let {
         text.setSpan(
-            ForegroundColorSpan(view.context.color(R.color.text)),
+            ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorPrimary)),
             0,
             it.length,
             Spannable.SPAN_INCLUSIVE_INCLUSIVE

@@ -35,7 +35,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/toolbar_height"
                     android:clipChildren="false"
-                    app:isScrollEnabled="@{viewModel.shouldAllowToolbarScrolling}">
+                    app:isScrollEnabled="@{true}">
 
                     <android.support.v4.widget.Space
                         android:id="@+id/space"
@@ -76,7 +76,7 @@
 
             </android.support.design.widget.AppBarLayout>
 
-            <ScrollView
+            <android.support.v4.widget.NestedScrollView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
@@ -122,11 +122,10 @@
                                 app:title="@{@string/settings_should_show_chords}"
                                 tools:text="@string/settings_should_show_chords" />
 
-                            <View
+                            <com.pandulapeter.campfire.feature.shared.widget.DividerView
                                 android:layout_width="match_parent"
                                 android:layout_height="@dimen/divider_height"
-                                android:layout_marginStart="@dimen/settings_divider_margin"
-                                android:background="@color/divider" />
+                                android:layout_marginStart="@dimen/settings_divider_margin" />
 
                             <RadioButton
                                 android:layout_width="match_parent"
@@ -176,7 +175,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_margin="@dimen/settings_label_margin"
                                 android:fontFamily="sans-serif-medium"
-                                android:text="@string/settings_appearance"
+                                android:text="@string/settings_behavior"
                                 android:textColor="@color/accent" />
 
                             <Switch
@@ -188,6 +187,40 @@
                                 app:description="@{viewModel.shouldEnableAutoScroll ? @string/settings_auto_scroll_enabled : @string/settings_auto_scroll_disabled}"
                                 app:title="@{@string/settings_auto_scroll}"
                                 tools:text="@string/settings_auto_scroll" />
+
+                        </LinearLayout>
+
+                    </android.support.v7.widget.CardView>
+
+
+                    <android.support.v7.widget.CardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/content_padding"
+                        app:contentPadding="@dimen/content_padding">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_margin="@dimen/settings_label_margin"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="@string/settings_appearance"
+                                android:textColor="@color/accent" />
+
+                            <Switch
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:checked="@={viewModel.shouldUseDarkTheme}"
+                                android:gravity="center_vertical"
+                                android:minHeight="@dimen/touch_target"
+                                app:description="@{viewModel.shouldUseDarkTheme ? @string/settings_use_dark_theme_enabled : @string/settings_use_dark_theme_disabled}"
+                                app:title="@{@string/settings_use_dark_theme}"
+                                tools:text="@string/settings_use_dark_theme" />
 
                         </LinearLayout>
 
@@ -233,7 +266,7 @@
 
                 </LinearLayout>
 
-            </ScrollView>
+            </android.support.v4.widget.NestedScrollView>
 
         </android.support.design.widget.CoordinatorLayout>
 

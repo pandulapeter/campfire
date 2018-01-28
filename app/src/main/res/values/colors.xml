@@ -2,14 +2,6 @@
 <resources>
 
     <!-- General -->
-    <color name="accent">#FFC107</color>
-    <color name="background">#303030</color>
-    <color name="subtitle">#c0c0c0</color>
-    <color name="divider">#7f7f7f</color>
-    <color name="text">#ffffff</color>
-
-    <!-- Library -->
-    <color name="card_song_downloaded">#424242</color>
-    <color name="card_song_not_downloaded">@color/background</color>
+    <color name="accent">#8BC34A</color>
 
 </resources>

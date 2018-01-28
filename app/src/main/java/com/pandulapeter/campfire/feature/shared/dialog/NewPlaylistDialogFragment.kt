@@ -13,6 +13,7 @@ import android.view.inputmethod.EditorInfo
 import com.pandulapeter.campfire.NewPlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.showKeyboard
@@ -23,6 +24,7 @@ import org.koin.android.ext.android.inject
  */
 class NewPlaylistDialogFragment : AppCompatDialogFragment() {
     private val playlistRepository by inject<PlaylistRepository>()
+    private val userPreferenceRepository by inject<UserPreferenceRepository>()
     private lateinit var binding: NewPlaylistBinding
     private val positiveButton by lazy { (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE) }
 
@@ -38,7 +40,7 @@ class NewPlaylistDialogFragment : AppCompatDialogFragment() {
 
             override fun onTextChanged(text: CharSequence?, p1: Int, p2: Int, p3: Int) = Unit
         })
-        AlertDialog.Builder(context, R.style.AlertDialog)
+        AlertDialog.Builder(context, if (userPreferenceRepository.shouldUseDarkTheme) R.style.DarkAlertDialog else R.style.LightAlertDialog)
             .setView(binding.root)
             .setTitle(R.string.home_new_playlist)
             .setPositiveButton(R.string.ok, { _, _ -> onOkButtonPressed() })

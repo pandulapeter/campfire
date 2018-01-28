@@ -36,6 +36,7 @@
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/drag_to_rearrange"
                 android:padding="@dimen/content_padding"
+                android:tint="?android:attr/textColorSecondary"
                 app:layout_constraintEnd_toEndOf="@id/space"
                 app:srcCompat="@drawable/ic_drag_handle_24dp"
                 app:visibility="@{viewModel.shouldShowDragHandle}" />
@@ -44,11 +45,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:lineSpacingExtra="@dimen/list_item_text_spacing"
+                app:extraText="@{viewModel.itemCount == 0 ? @string/manage_playlists_song_count_empty : @plurals/manage_playlists_song_count(viewModel.itemCount, viewModel.itemCount)}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/drag_handle"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:extraText="@{viewModel.itemCount == 0 ? @string/manage_playlists_song_count_empty : @plurals/manage_playlists_song_count(viewModel.itemCount, viewModel.itemCount)}"
                 app:primaryText="@{viewModel.playlist.title ?? @string/home_favorites}"
                 tools:text="Playlist title\nSong count" />
 

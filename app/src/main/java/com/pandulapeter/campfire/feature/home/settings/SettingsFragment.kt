@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistViewModel
 import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.util.onEventTriggered
+import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
 /**
@@ -26,6 +27,7 @@ class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.shouldShowHintsResetSnackbar.onEventTriggered { binding.coordinatorLayout.showSnackbar(R.string.settings_reset_hints_message) }
+        viewModel.shouldShowHintsResetSnackbar.onEventTriggered(this) { binding.coordinatorLayout.showSnackbar(R.string.settings_reset_hints_message) }
+        viewModel.shouldUseDarkTheme.onPropertyChanged(this) { activity?.recreate() }
     }
 }
