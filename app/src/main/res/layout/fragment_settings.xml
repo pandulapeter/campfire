@@ -181,6 +181,7 @@
                             <Switch
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:layout_marginEnd="@dimen/first_keyline"
                                 android:checked="@={viewModel.shouldEnableAutoScroll}"
                                 android:gravity="center_vertical"
                                 android:minHeight="@dimen/touch_target"
@@ -215,6 +216,7 @@
                             <Switch
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:layout_marginEnd="@dimen/first_keyline"
                                 android:checked="@={viewModel.shouldUseDarkTheme}"
                                 android:gravity="center_vertical"
                                 android:minHeight="@dimen/touch_target"

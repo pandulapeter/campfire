@@ -104,13 +104,9 @@
         <item quantity="other">%d songs</item>
     </plurals>
     <string name="playlist_edit">Edit</string>
-    <string name="playlist_delete">Delete</string>
     <string name="playlist_share">Share</string>
     <string name="playlist_enter_title">Enter playlist title</string>
     <string name="playlist_done">Done</string>
-    <string name="playlist_delete_confirmation_title">Are you sure?</string>
-    <string name="playlist_delete_confirmation_message">This cannot be undone.</string>
-    <string name="playlist_delete_confirmation_delete">Delete</string>
     <string name="playlist_hint">Drag the songs to rearrange them, swipe to remove.</string>
     <string name="playlist_placeholder">To start adding songs to this playlist, tap on the star icon near song titles.</string>
 

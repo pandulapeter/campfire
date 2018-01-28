@@ -4,21 +4,23 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/content_padding"
+    android:paddingBottom="@dimen/large_content_padding"
     android:paddingEnd="@dimen/first_keyline"
     android:paddingStart="@dimen/first_keyline"
-    android:paddingTop="@dimen/content_padding">
+    android:paddingTop="@dimen/large_content_padding">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/large_content_padding"
+        android:fontFamily="sans-serif-medium"
         android:text="@string/campfire"
         android:textAppearance="@style/TextAppearance.AppCompat.Headline"
         android:textColor="@color/accent" />
 
     <TextView
         android:id="@+id/version"
+        android:fontFamily="sans-serif-thin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
