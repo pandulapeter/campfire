@@ -72,13 +72,17 @@ class LibraryViewModel(
     override fun getAdapterItems(): List<SongInfoViewModel> {
         val librarySongs = songInfoRepository.getLibrarySongs()
         val preFilteredItems = librarySongs
+            .asSequence()
             .filterWorkInProgress()
             .filterExplicit()
             .filterByLanguages()
             .filterDownloaded()
+            .toList()
         val filteredItems = preFilteredItems
+            .asSequence()
             .filterByQuery()
             .sort()
+            .toList()
         itemCountWithoutSearchFilter = preFilteredItems.size
         isLibraryNotEmpty.set(librarySongs.isNotEmpty())
         filteredItemCount.set(if (filteredItems.size == librarySongs.size) "${filteredItems.size}" else "${filteredItems.size} / ${librarySongs.size}")
@@ -221,20 +225,22 @@ class LibraryViewModel(
     private fun updateShouldAllowToolbarScrolling(isAdapterNotEmpty: Boolean) =
         shouldAllowToolbarScrolling.set(if (isSearchInputVisible.get()) false else isAdapterNotEmpty)
 
-    private fun List<SongInfo>.filterByLanguages() = filter { languageRepository.isLanguageFilterEnabled(it.language.mapToLanguage()) }
+    private fun Sequence<SongInfo>.filterByLanguages() = filter { languageRepository.isLanguageFilterEnabled(it.language.mapToLanguage()) }
 
-    private fun List<SongInfo>.filterDownloaded() = if (shouldShowDownloadedOnly.get()) filter { downloadedSongRepository.isSongDownloaded(it.id) } else this
+    private fun Sequence<SongInfo>.filterDownloaded() =
+        if (shouldShowDownloadedOnly.get()) filter { downloadedSongRepository.isSongDownloaded(it.id) } else this
 
     //TODO: Prioritize results that begin with the searchQuery.
-    private fun List<SongInfo>.filterByQuery() = if (isSearchInputVisible.get()) {
+    private fun Sequence<SongInfo>.filterByQuery() = if (isSearchInputVisible.get()) {
         searchQuery.get().trim().replaceSpecialCharacters().let { query ->
             filter { it.titleWithSpecialCharactersRemoved.contains(query, true) || it.artistWithSpecialCharactersRemoved.contains(query, true) }
         }
     } else this
 
-    private fun List<SongInfo>.sort() = sortedBy { if (isSortedByTitle.get()) it.titleWithSpecialCharactersRemoved else it.artistWithSpecialCharactersRemoved }
+    private fun Sequence<SongInfo>.sort() =
+        sortedBy { if (isSortedByTitle.get()) it.titleWithSpecialCharactersRemoved else it.artistWithSpecialCharactersRemoved }
 
-    private fun List<SongInfo>.filterWorkInProgress() = if (!shouldShowWorkInProgress.get()) filter { it.version ?: 0 >= 0 } else this
+    private fun Sequence<SongInfo>.filterWorkInProgress() = if (!shouldShowWorkInProgress.get()) filter { it.version ?: 0 >= 0 } else this
 
-    private fun List<SongInfo>.filterExplicit() = if (!shouldShowExplicit.get()) filter { it.isExplicit != true } else this
+    private fun Sequence<SongInfo>.filterExplicit() = if (!shouldShowExplicit.get()) filter { it.isExplicit != true } else this
 }

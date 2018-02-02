@@ -36,6 +36,7 @@ class HistoryViewModel(
     private val Calendar.day get() = get(Calendar.DAY_OF_YEAR)
 
     override fun getAdapterItems() = historyRepository.getHistoryItems()
+        .asSequence()
         .mapNotNull { songInfoRepository.getSongInfo(it.songId) }
         .map { songInfo ->
             val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
@@ -55,6 +56,7 @@ class HistoryViewModel(
                 }
             )
         }
+        .toList()
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {

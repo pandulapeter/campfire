@@ -35,6 +35,7 @@ class ManageDownloadsViewModel(
     val shouldAllowToolbarScrolling = ObservableBoolean()
 
     override fun getAdapterItems() = downloadedSongRepository.getDownloadedSongIds()
+        .asSequence()
         .mapNotNull { songInfoRepository.getSongInfo(it) }
         .sortedByDescending { downloadedSongRepository.getDownloadSize(it.id) }
         .map { songInfo ->
@@ -49,6 +50,7 @@ class ManageDownloadsViewModel(
                 alertText = humanReadableByteCount(downloadedSongRepository.getDownloadSize(songInfo.id))
             )
         }
+        .toList()
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {

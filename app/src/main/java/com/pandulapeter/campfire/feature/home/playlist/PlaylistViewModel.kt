@@ -50,8 +50,9 @@ class PlaylistViewModel(
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
         val items = playlistRepository.getPlaylistSongIds(playlistId)
+            .asSequence()
             .mapNotNull { songInfoRepository.getSongInfo(it) }
-        val shouldShowDragHandle = isInEditMode.get() && items.size > 1
+        val shouldShowDragHandle = isInEditMode.get() && items.toList().size > 1
         return items.map { songInfo ->
             val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
             val isSongNew = false //TODO: Check if the song is new.
@@ -70,6 +71,7 @@ class PlaylistViewModel(
                 }
             )
         }
+            .toList()
     }
 
     override fun onUpdate(updateType: UpdateType) {
