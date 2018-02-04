@@ -25,14 +25,14 @@ class SongPageViewModel(
     private val songInfoRepository: SongInfoRepository,
     private val downloadedSongRepository: DownloadedSongRepository,
     private val detailEventBus: DetailEventBus,
-    userPreferenceRepository: UserPreferenceRepository
+    private val userPreferenceRepository: UserPreferenceRepository
 ) : CampfireViewModel(analyticsManager), Subscriber {
     val text = ObservableField("")
     val shouldShowPlaceholder = ObservableBoolean()
     val scrollSpeed = ObservableInt()
     val shouldScrollToTop = ObservableBoolean()
     val isLoading = ObservableBoolean(downloadedSongRepository.isSongLoading(songId))
-    val transposition = ObservableInt() //TODO: Persist this value per song.
+    val transposition = ObservableInt(userPreferenceRepository.getSongTransposition(songId))
     private val shouldShowChords = userPreferenceRepository.shouldShowChords
 
     init {
@@ -71,7 +71,7 @@ class SongPageViewModel(
             }
             is UpdateType.TransposeEvent -> if (updateType.songId == songId) {
                 transposition.set(transposition.get() + updateType.transposeBy)
-                //TODO: Save the transposed value.
+                userPreferenceRepository.setSongTransposition(songId, transposition.get())
                 detailEventBus.songTransposed(songId, transposition.get())
             }
             is UpdateType.ScrollStarted -> if (updateType.songId == songId) {

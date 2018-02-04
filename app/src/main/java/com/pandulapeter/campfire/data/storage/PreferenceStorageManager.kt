@@ -43,6 +43,16 @@ class PreferenceStorageManager(context: Context) {
         }, isEnabled
     ).apply()
 
+    fun getSongAutoScrollSpeed(songId: String) = Math.max(0, Math.min(14, preferences.getInt(KEY_SONG_AUTO_SCROLL_SPEED + songId, 4)))
+
+    fun setSongAutoScrollSpeed(songId: String, autoScrollSpeed: Int) =
+        preferences.edit().putInt(KEY_SONG_AUTO_SCROLL_SPEED + songId, Math.max(0, Math.min(14, autoScrollSpeed))).apply()
+
+    fun getSongTransposition(songId: String) = Math.max(-6, Math.min(6, preferences.getInt(KEY_SONG_TRANSPOSITION + songId, 0)))
+
+    fun setSongTransposition(songId: String, transposition: Int) =
+        preferences.edit().putInt(KEY_SONG_TRANSPOSITION + songId, Math.max(-6, Math.min(6, transposition))).apply()
+
     private fun shouldEnableGermanNotationByDefault() = when (Locale.getDefault().isO3Country.toUpperCase()) {
         "AUT", "CZE", "DEU", "SWE", "DNK", "EST", "FIN", "HUN", "LVA", "NOR", "POL", "SRB", "SVK" -> true
         else -> false
@@ -71,5 +81,7 @@ class PreferenceStorageManager(context: Context) {
         private const val KEY_NAVIGATION_ITEM = "navigation_item"
         private const val KEY_LANGUAGE_FILTER = "language_filter_"
         private const val KEY_UNKNOWN_LANGUAGE_FILTER = "unknown_language_filter"
+        private const val KEY_SONG_AUTO_SCROLL_SPEED = "song_auto_scroll_speed_"
+        private const val KEY_SONG_TRANSPOSITION = "song_transposition_"
     }
 }

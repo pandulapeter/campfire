@@ -2,9 +2,10 @@ package com.pandulapeter.campfire.feature.detail
 
 import com.pandulapeter.campfire.data.repository.shared.Repository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
+import com.pandulapeter.campfire.feature.detail.songPage.SongPageFragment
 
 /**
- * Dispathes scroll events between Fragments.
+ * Enables communication between [DetailFragment] and [SongPageFragment].
  */
 class DetailEventBus : Repository() {
 

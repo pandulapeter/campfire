@@ -69,6 +69,14 @@ class UserPreferenceRepository(private val preferenceStorageManager: PreferenceS
         }
     }
 
+    fun getSongAutoScrollSpeed(songId: String) = preferenceStorageManager.getSongAutoScrollSpeed(songId)
+
+    fun setSongAutoScrollSpeed(songId: String, autoScrollSpeed: Int) = preferenceStorageManager.setSongAutoScrollSpeed(songId, autoScrollSpeed)
+
+    fun getSongTransposition(songId: String) = preferenceStorageManager.getSongTransposition(songId)
+
+    fun setSongTransposition(songId: String, transposition: Int) = preferenceStorageManager.setSongTransposition(songId, transposition)
+
     override fun subscribe(subscriber: Subscriber) {
         super.subscribe(subscriber)
         subscriber.onUpdate(UpdateType.NavigationItemUpdated)
