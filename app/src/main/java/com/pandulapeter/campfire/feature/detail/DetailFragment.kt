@@ -31,6 +31,8 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
     private val detailEventBus by inject<DetailEventBus>()
     private val transposeContainer by lazy { binding.navigationView.menu.findItem(R.id.transpose_container) }
+    private val transposeHigher by lazy { binding.navigationView.menu.findItem(R.id.transpose_higher) }
+    private val transposeLower by lazy { binding.navigationView.menu.findItem(R.id.transpose_lower) }
     override val viewModel by lazy {
         DetailViewModel(
             arguments.songId,
@@ -93,6 +95,10 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 R.id.play_in_youtube -> consumeAndCloseDrawer(binding.drawerLayout) { viewModel.onPlayOnYouTubeClicked() }
                 else -> false
             }
+        }
+        viewModel.shouldShowAutoScrollButton.onPropertyChanged(this) {
+            transposeHigher.isEnabled = it
+            transposeLower.isEnabled = it
         }
         viewModel.transposition.onPropertyChanged(this) { updateTranposeText(it) }
         updateTranposeText(viewModel.transposition.get())

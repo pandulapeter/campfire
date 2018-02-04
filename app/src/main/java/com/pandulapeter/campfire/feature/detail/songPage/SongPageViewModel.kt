@@ -48,6 +48,7 @@ class SongPageViewModel(
                 transposition.set(modifiedValue)
             }
         }
+        detailEventBus.songTransposed(songId, transposition.get())
     }
 
     override fun onUpdate(updateType: UpdateType) {
@@ -69,8 +70,8 @@ class SongPageViewModel(
                 shouldShowPlaceholder.set(true)
             }
             is UpdateType.TransposeEvent -> if (updateType.songId == songId) {
-                //TODO: Save the transposed value.
                 transposition.set(transposition.get() + updateType.transposeBy)
+                //TODO: Save the transposed value.
                 detailEventBus.songTransposed(songId, transposition.get())
             }
             is UpdateType.ScrollStarted -> if (updateType.songId == songId) {

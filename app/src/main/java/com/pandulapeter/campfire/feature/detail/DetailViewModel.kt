@@ -117,7 +117,6 @@ class DetailViewModel(
             artist.set(it.artist)
             updatePlaylistActionIcon()
         }
-        //TODO: transposition.set()
     }
 
     private fun updatePlaylistActionIcon() {
