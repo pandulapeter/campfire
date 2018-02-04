@@ -11,6 +11,7 @@ import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.networking.AnalyticsManager
+import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.toggle
 
 /**
@@ -40,12 +41,13 @@ class DetailViewModel(
     val shouldShowAutoScrollButton = ObservableBoolean()
     val isAutoScrollStarted = ObservableBoolean()
     val isAutoScrollEnabled = userPreferenceRepository.shouldEnableAutoScroll
-    val autoScrollSpeed = ObservableInt(4) //TODO: Persist this value per song.
+    val autoScrollSpeed = ObservableInt()
     val transposition = ObservableInt()
     private var selectedPosition = songIds.indexOf(songId)
 
     init {
-        updateToolbar()
+        onSongSelected()
+        autoScrollSpeed.onPropertyChanged { userPreferenceRepository.setSongAutoScrollSpeed(getSelectedSongId(), it) }
     }
 
     override fun onUpdate(updateType: UpdateType) {
@@ -72,7 +74,7 @@ class DetailViewModel(
 
     fun onPageSelected(position: Int) {
         selectedPosition = position
-        updateToolbar()
+        onSongSelected()
         historyRepository.addToHistory(getSelectedSongId())
         shouldAllowToolbarScrolling.set(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
         shouldShowAutoScrollButton.set(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
@@ -111,12 +113,13 @@ class DetailViewModel(
 
     fun getSelectedSongId() = songIds[selectedPosition]
 
-    private fun updateToolbar() {
+    private fun onSongSelected() {
         songInfoRepository.getSongInfo(getSelectedSongId())?.let {
             title.set(it.title)
             artist.set(it.artist)
             updatePlaylistActionIcon()
             transposition.set(userPreferenceRepository.getSongTransposition(it.id))
+            autoScrollSpeed.set(userPreferenceRepository.getSongAutoScrollSpeed(it.id))
         }
     }
 
