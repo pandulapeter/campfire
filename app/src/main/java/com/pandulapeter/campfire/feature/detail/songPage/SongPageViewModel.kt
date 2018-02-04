@@ -48,7 +48,6 @@ class SongPageViewModel(
                 transposition.set(modifiedValue)
             }
         }
-        detailEventBus.songTransposed(songId, transposition.get())
     }
 
     override fun onUpdate(updateType: UpdateType) {

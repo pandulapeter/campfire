@@ -20,7 +20,7 @@ class DetailViewModel(
     songId: String,
     playlistId: Int,
     analyticsManager: AnalyticsManager,
-    userPreferenceRepository: UserPreferenceRepository,
+    private val userPreferenceRepository: UserPreferenceRepository,
     private val downloadedSongRepository: DownloadedSongRepository,
     private val fragmentManager: FragmentManager,
     private val playlistRepository: PlaylistRepository,
@@ -116,6 +116,7 @@ class DetailViewModel(
             title.set(it.title)
             artist.set(it.artist)
             updatePlaylistActionIcon()
+            transposition.set(userPreferenceRepository.getSongTransposition(it.id))
         }
     }
 
