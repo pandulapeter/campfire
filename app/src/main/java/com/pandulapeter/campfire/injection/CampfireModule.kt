@@ -6,6 +6,7 @@ import com.pandulapeter.campfire.data.storage.DataStorageManager
 import com.pandulapeter.campfire.data.storage.FileStorageManager
 import com.pandulapeter.campfire.data.storage.PreferenceStorageManager
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
+import com.pandulapeter.campfire.feature.detail.songPage.SongParser
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.networking.AnalyticsManager
@@ -44,6 +45,7 @@ val storageModule: Module = applicationContext {
     provide { FileStorageManager(get()) }
 }
 
-val bridgeModule: Module = applicationContext {
+val detailModule: Module = applicationContext {
     provide { DetailEventBus() }
+    provide { SongParser(get()) }
 }

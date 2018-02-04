@@ -23,10 +23,12 @@ class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.
     private val downloadedSongRepository by inject<DownloadedSongRepository>()
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
     private val detailEventBus by inject<DetailEventBus>()
+    private val songParser by inject<SongParser>()
     private var smoothScrollHolder = 0
     override val viewModel by lazy {
         SongPageViewModel(
             arguments.songId,
+            songParser,
             analyticsManager,
             songInfoRepository,
             downloadedSongRepository,

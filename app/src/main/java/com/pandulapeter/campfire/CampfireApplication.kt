@@ -13,6 +13,6 @@ class CampfireApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        startKoin(this, listOf(integrationModule, networkingModule, repositoryModule, storageModule, bridgeModule))
+        startKoin(this, listOf(integrationModule, networkingModule, repositoryModule, storageModule, detailModule))
     }
 }

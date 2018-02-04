@@ -106,12 +106,7 @@ class AppShortcutManager(
 
         override fun trackAppShortcutUsage(id: String) = shortcutManager.reportShortcutUsed(id)
 
-        private fun createAppShortcut(
-            id: String,
-            label: String,
-            @DrawableRes icon: Int,
-            homeNavigationItem: HomeViewModel.HomeNavigationItem
-        ) = ShortcutInfo.Builder(context, id)
+        private fun createAppShortcut(id: String, label: String, @DrawableRes icon: Int, homeNavigationItem: HomeViewModel.HomeNavigationItem) = ShortcutInfo.Builder(context, id)
             .setShortLabel(label)
             .setIcon(Icon.createWithResource(context, icon))
             .setIntent(MainActivity.getStartIntent(context, MainViewModel.MainNavigationItem.Home(homeNavigationItem)).setAction(Intent.ACTION_VIEW))

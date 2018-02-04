@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.detail.songPage
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
+import android.text.SpannableString
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
@@ -21,13 +22,14 @@ import kotlinx.coroutines.experimental.async
  */
 class SongPageViewModel(
     val songId: String,
+    private val songParser: SongParser,
     analyticsManager: AnalyticsManager,
     private val songInfoRepository: SongInfoRepository,
     private val downloadedSongRepository: DownloadedSongRepository,
     private val detailEventBus: DetailEventBus,
     private val userPreferenceRepository: UserPreferenceRepository
 ) : CampfireViewModel(analyticsManager), Subscriber {
-    val text = ObservableField("")
+    val text = ObservableField(SpannableString(""))
     val shouldShowPlaceholder = ObservableBoolean()
     val scrollSpeed = ObservableInt()
     val shouldScrollToTop = ObservableBoolean()
@@ -58,9 +60,7 @@ class SongPageViewModel(
             }
             is UpdateType.DownloadSuccessful -> if (updateType.songId == songId) {
                 async(UI) {
-                    async(CommonPool) {
-                        text.set(updateType.song.parseSong())
-                    }.await()
+                    async(CommonPool) { text.set(songParser.parseSong(updateType.song, shouldShowChords)) }.await()
                     isLoading.set(false)
                 }
             }
@@ -89,7 +89,4 @@ class SongPageViewModel(
             }
         }
     }
-
-    //TODO: Implement chord parsing.
-    private fun String.parseSong() = this
 }
