@@ -29,7 +29,8 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
-    private val scrollManager by inject<ScrollManager>()
+    private val detailEventBus by inject<DetailEventBus>()
+    private val transposeContainer by lazy { binding.navigationView.menu.findItem(R.id.transpose_container) }
     override val viewModel by lazy {
         DetailViewModel(
             arguments.songId,
@@ -79,7 +80,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             }
         }
         // Set up the side navigation drawer.
-        binding.navigationView.menu.findItem(R.id.transpose_container).isVisible = userPreferenceRepository.shouldShowChords
+        transposeContainer.isVisible = userPreferenceRepository.shouldShowChords
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
             binding.appBarLayout.setExpanded(true, true)
             viewModel.isAutoScrollStarted.set(false)
@@ -87,16 +88,14 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
-                R.id.transpose_higher -> consume {
-                    //TODO: Implement transpose feature.
-                }
-                R.id.transpose_lower -> consume {
-                    //TODO: Implement transpose feature.
-                }
+                R.id.transpose_higher -> consume { detailEventBus.transposeSong(viewModel.getSelectedSongId(), 1) }
+                R.id.transpose_lower -> consume { detailEventBus.transposeSong(viewModel.getSelectedSongId(), -1) }
                 R.id.play_in_youtube -> consumeAndCloseDrawer(binding.drawerLayout) { viewModel.onPlayOnYouTubeClicked() }
                 else -> false
             }
         }
+        viewModel.transposition.onPropertyChanged(this) { updateTranposeText(it) }
+        updateTranposeText(viewModel.transposition.get())
         viewModel.shouldShowSongOptions.onEventTriggered(this) { binding.drawerLayout.openDrawer(GravityCompat.END) }
         viewModel.youTubeSearchQuery.onEventTriggered(this) {
             //TODO: Add support for more third party YouTube clients.
@@ -117,11 +116,11 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         viewModel.isAutoScrollStarted.onPropertyChanged(this) {
             if (it) {
                 binding.appBarLayout.setExpanded(false, true)
-                scrollManager.onScrollStarted(viewModel.getSelectedSongId())
+                detailEventBus.onScrollStarted(viewModel.getSelectedSongId())
                 binding.root.post(object : Runnable {
                     override fun run() {
                         if (isAdded && viewModel.isAutoScrollStarted.get()) {
-                            scrollManager.performScroll(viewModel.getSelectedSongId(), viewModel.autoScrollSpeed.get() + 2)
+                            detailEventBus.performScroll(viewModel.getSelectedSongId(), viewModel.autoScrollSpeed.get() + 2)
                             binding.root.postOnAnimation(this)
                         }
                     }
@@ -143,7 +142,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         super.onStart()
         playlistRepository.subscribe(viewModel)
         downloadedSongRepository.subscribe(viewModel)
-        scrollManager.subscribe(viewModel)
+        detailEventBus.subscribe(viewModel)
     }
 
     override fun onPause() {
@@ -155,7 +154,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         super.onStop()
         playlistRepository.unsubscribe(viewModel)
         downloadedSongRepository.unsubscribe(viewModel)
-        scrollManager.unsubscribe(viewModel)
+        detailEventBus.unsubscribe(viewModel)
     }
 
     private fun getYouTubeIntent(packageName: String, query: String) = Intent(Intent.ACTION_SEARCH).apply {
@@ -166,6 +165,15 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             Intent.FLAG_ACTIVITY_NEW_TASK
         }
     }.putExtra("query", query)
+
+    private fun updateTranposeText(transposeValue: Int) {
+        context?.let {
+            transposeContainer.title = if (transposeValue == 0) it.getString(R.string.detail_transpose) else it.getString(
+                R.string.detail_transpose_value,
+                if (transposeValue < 0) "$transposeValue" else "+$transposeValue"
+            )
+        }
+    }
 
     companion object {
         const val NO_PLAYLIST = -1

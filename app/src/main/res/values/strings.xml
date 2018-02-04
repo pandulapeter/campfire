@@ -138,6 +138,7 @@
     <!-- Detail screen -->
     <string name="detail_song_options">Song options</string>
     <string name="detail_transpose">Transpose (original)</string>
+    <string name="detail_transpose_value">Transpose (%s)</string>
     <string name="detail_transpose_higher">Higher</string>
     <string name="detail_transpose_lower">Lower</string>
     <string name="detail_play_in_youtube">Play in YouTube</string>

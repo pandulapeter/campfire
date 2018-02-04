@@ -6,7 +6,11 @@ import com.pandulapeter.campfire.data.repository.shared.UpdateType
 /**
  * Dispathes scroll events between Fragments.
  */
-class ScrollManager : Repository() {
+class DetailEventBus : Repository() {
+
+    fun transposeSong(songId: String, value: Int) = notifySubscribers(UpdateType.TransposeEvent(songId, value))
+
+    fun songTransposed(songId: String, value: Int) = notifySubscribers(UpdateType.SongTransposed(songId, value))
 
     fun onScrollStarted(songId: String) = notifySubscribers(UpdateType.ScrollStarted(songId))
 

@@ -7,7 +7,7 @@ import com.pandulapeter.campfire.SongPageBinding
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
-import com.pandulapeter.campfire.feature.detail.ScrollManager
+import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.onEventTriggered
 import org.koin.android.ext.android.inject
@@ -22,7 +22,7 @@ class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.
     private val songInfoRepository by inject<SongInfoRepository>()
     private val downloadedSongRepository by inject<DownloadedSongRepository>()
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
-    private val scrollManager by inject<ScrollManager>()
+    private val detailEventBus by inject<DetailEventBus>()
     private var smoothScrollHolder = 0
     override val viewModel by lazy {
         SongPageViewModel(
@@ -30,6 +30,7 @@ class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.
             analyticsManager,
             songInfoRepository,
             downloadedSongRepository,
+            detailEventBus,
             userPreferenceRepository
         )
     }
@@ -45,7 +46,7 @@ class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.
                 binding.nestedScrollView.scrollBy(0, 1)
             }
             if (isScrolledToBottom()) {
-                scrollManager.onContentEndReached(viewModel.songId)
+                detailEventBus.onContentEndReached(viewModel.songId)
             }
         }
         viewModel.shouldScrollToTop.onEventTriggered(this) {
@@ -59,13 +60,13 @@ class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.
     override fun onStart() {
         super.onStart()
         downloadedSongRepository.subscribe(viewModel)
-        scrollManager.subscribe(viewModel)
+        detailEventBus.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
         downloadedSongRepository.unsubscribe(viewModel)
-        scrollManager.unsubscribe(viewModel)
+        detailEventBus.unsubscribe(viewModel)
     }
 
     private fun isScrolledToBottom() = binding.container.bottom <= binding.nestedScrollView.height + binding.nestedScrollView.scrollY

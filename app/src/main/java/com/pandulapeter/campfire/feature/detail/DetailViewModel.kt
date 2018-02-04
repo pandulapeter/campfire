@@ -41,6 +41,7 @@ class DetailViewModel(
     val isAutoScrollStarted = ObservableBoolean()
     val isAutoScrollEnabled = userPreferenceRepository.shouldEnableAutoScroll
     val autoScrollSpeed = ObservableInt(4) //TODO: Persist this value per song.
+    val transposition = ObservableInt()
     private var selectedPosition = songIds.indexOf(songId)
 
     init {
@@ -59,6 +60,9 @@ class DetailViewModel(
             is UpdateType.DownloadSuccessful -> if (updateType.songId == getSelectedSongId()) {
                 shouldAllowToolbarScrolling.set(true)
                 shouldShowAutoScrollButton.set(true)
+            }
+            is UpdateType.SongTransposed -> if (updateType.songId == getSelectedSongId()) {
+                transposition.set(updateType.transposedVaue)
             }
             is UpdateType.ContentEndReached -> if (updateType.songId == getSelectedSongId()) {
                 isAutoScrollStarted.set(false)
@@ -113,6 +117,7 @@ class DetailViewModel(
             artist.set(it.artist)
             updatePlaylistActionIcon()
         }
+        //TODO: transposition.set()
     }
 
     private fun updatePlaylistActionIcon() {

@@ -8,8 +8,10 @@ import com.pandulapeter.campfire.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
+import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.networking.AnalyticsManager
+import com.pandulapeter.campfire.util.onPropertyChanged
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -22,6 +24,7 @@ class SongPageViewModel(
     analyticsManager: AnalyticsManager,
     private val songInfoRepository: SongInfoRepository,
     private val downloadedSongRepository: DownloadedSongRepository,
+    private val detailEventBus: DetailEventBus,
     userPreferenceRepository: UserPreferenceRepository
 ) : CampfireViewModel(analyticsManager), Subscriber {
     val text = ObservableField("")
@@ -29,7 +32,23 @@ class SongPageViewModel(
     val scrollSpeed = ObservableInt()
     val shouldScrollToTop = ObservableBoolean()
     val isLoading = ObservableBoolean(downloadedSongRepository.isSongLoading(songId))
+    val transposition = ObservableInt() //TODO: Persist this value per song.
     private val shouldShowChords = userPreferenceRepository.shouldShowChords
+
+    init {
+        transposition.onPropertyChanged {
+            var modifiedValue = it
+            while (modifiedValue > 6) {
+                modifiedValue -= 12
+            }
+            while (modifiedValue < -6) {
+                modifiedValue += 12
+            }
+            if (modifiedValue != it) {
+                transposition.set(modifiedValue)
+            }
+        }
+    }
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
@@ -48,6 +67,11 @@ class SongPageViewModel(
             is UpdateType.DownloadFailed -> if (updateType.songId == songId) {
                 isLoading.set(false)
                 shouldShowPlaceholder.set(true)
+            }
+            is UpdateType.TransposeEvent -> if (updateType.songId == songId) {
+                //TODO: Save the transposed value.
+                transposition.set(transposition.get() + updateType.transposeBy)
+                detailEventBus.songTransposed(songId, transposition.get())
             }
             is UpdateType.ScrollStarted -> if (updateType.songId == songId) {
                 shouldScrollToTop.set(true)
