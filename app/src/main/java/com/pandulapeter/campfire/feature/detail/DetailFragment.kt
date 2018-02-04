@@ -79,8 +79,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             }
         }
         // Set up the side navigation drawer.
-        binding.navigationView.menu.findItem(R.id.transpose_higher).isVisible = userPreferenceRepository.shouldShowChords
-        binding.navigationView.menu.findItem(R.id.transpose_lower).isVisible = userPreferenceRepository.shouldShowChords
+        binding.navigationView.menu.findItem(R.id.transpose_container).isVisible = userPreferenceRepository.shouldShowChords
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
             binding.appBarLayout.setExpanded(true, true)
             viewModel.isAutoScrollStarted.set(false)

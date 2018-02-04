@@ -2,10 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/play_in_youtube"
-        android:title="@string/detail_play_in_youtube" />
-
-    <item android:title="@string/detail_transpose">
+        android:id="@+id/transpose_container"
+        android:title="@string/detail_transpose">
 
         <menu>
 
@@ -22,5 +20,9 @@
         </menu>
 
     </item>
+
+    <item
+        android:id="@+id/play_in_youtube"
+        android:title="@string/detail_play_in_youtube" />
 
 </menu>

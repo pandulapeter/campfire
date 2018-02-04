@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/large_content_padding"
+    android:paddingBottom="@dimen/content_padding"
     android:paddingEnd="@dimen/first_keyline"
     android:paddingStart="@dimen/first_keyline"
     android:paddingTop="@dimen/large_content_padding">
@@ -20,9 +20,9 @@
 
     <TextView
         android:id="@+id/version"
-        android:fontFamily="sans-serif-thin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-thin"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         tools:text="v1.0.0" />
 
