@@ -146,12 +146,14 @@ fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?) {
 fun setTitleDescription(view: TextView, title: String?, description: String?) {
     val text = SpannableString("${title ?: ""}\n${description ?: ""}")
     title?.let {
-        text.setSpan(
-            ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorPrimary)),
-            0,
-            it.length,
-            Spannable.SPAN_INCLUSIVE_INCLUSIVE
-        )
+        if (view.isEnabled) {
+            text.setSpan(
+                ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorPrimary)),
+                0,
+                it.length,
+                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+            )
+        }
     }
     description?.let {
         text.setSpan(
