@@ -5,45 +5,94 @@ import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.Chord
+import com.pandulapeter.campfire.data.model.Note
+import com.pandulapeter.campfire.data.model.Section
+import com.pandulapeter.campfire.data.model.SectionType
 import com.pandulapeter.campfire.util.color
 
 /**
  * Parses raw song texts.
  */
-class SongParser(context: Context) {
+class SongParser(private val context: Context) {
     private val accentColor = context.color(R.color.accent)
-    private val verse = context.getString(R.string.detail_verse)
-    private val bridge = context.getString(R.string.detail_bridge)
-    private val solo = context.getString(R.string.detail_solo)
-    private val chorus = context.getString(R.string.detail_chorus)
 
     //TODO: Implement chord parsing.
     //TODO: Remove line breaks if they occur multiple times in a row.
     fun parseSong(text: String, shouldShowChords: Boolean): SpannableString {
-        val sectionNames = mutableListOf<Pair<Int, Int>>()
+        val sectionNames = mutableListOf<Section>()
+        val chords = mutableListOf<Chord>()
         var offset = 0
-        val parsedText = (if (shouldShowChords) text else text.replace(Regex("\\[(.*?)\\]"), ""))
+        val newText = text.replace("*", "") //TODO: This should be useless.
+        val parsedText = (if (shouldShowChords) newText else newText.replace(Regex("\\[(.*?)\\]"), ""))
             .replace(Regex("\\{(.*?)\\}"), {
-                val name = when (it.value[1].toLowerCase()) {
-                    'v' -> verse
-                    'b' -> bridge
-                    's' -> solo
-                    'c' -> chorus
-                    else -> ""
+                val sectionType = SectionType.fromAbbreviation(it.value[1])
+                if (sectionType != null) {
+                    val index = it.value.indexOf("_").let { index -> if (index >= 0) it.value.substring(index + 1).removeSuffix("}").toInt() else 0 }
+                    val section = Section(sectionType, index, offset + it.range.first)
+                    val result = section.getName(context)
+                    sectionNames.add(section)
+                    offset += result.length - it.value.length
+                    result
+                } else {
+                    it.value
                 }
-                val result = it.value.indexOf("_").let { index ->
-                    if (index >= 0) {
-                        "$name ${it.value.substring(index + 1).removeSuffix("}")}"
-                    } else {
-                        name
-                    }
-                }
-                sectionNames.add(offset + it.range.first to offset + it.range.first + result.length)
-                offset += result.length - it.value.length
-                result
             })
-        return SpannableString(parsedText).apply {
-            sectionNames.forEach { setSpan(ForegroundColorSpan(accentColor), it.first, it.second, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
+        if (shouldShowChords) {
+            parsedText.replace(Regex("\\[(.*?)\\]")) {
+                chords.add(Chord(it.value.toNote(), it.value.toSuffix(), it.range.first, it.range.last + 1))
+                it.value
+            }
         }
+        return SpannableString(parsedText).apply {
+            sectionNames.forEach {
+                //TODO: getName() is called unnecessarily.
+                setSpan(ForegroundColorSpan(accentColor), it.startPosition, it.startPosition + it.getName(context).length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+            //TODO: Respect German notation preference and transposition.
+            chords.forEach {
+                setSpan(ChordSpan(it.getName(0, false)), it.startPosition, it.endPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+        }
+    }
+
+    //TODO: Crashing in the coroutine apparently does not cause the app to crash.
+    private fun String.toNote() = when (this[2].toLowerCase()) {
+        'b' -> when (this[1].toUpperCase()) {
+            'C' -> Note.B
+            'D' -> Note.CSharp
+            'E' -> Note.DSharp
+            'F' -> Note.E
+            'G' -> Note.FSharp
+            'A' -> Note.GSharp
+            'B' -> Note.ASharp
+            else -> throw IllegalArgumentException(EXCEPTION_MESSAGE)
+        }
+        '#' -> when (this[1].toUpperCase()) {
+            'C' -> Note.CSharp
+            'D' -> Note.DSharp
+            'E' -> Note.F
+            'F' -> Note.FSharp
+            'G' -> Note.GSharp
+            'A' -> Note.ASharp
+            'B' -> Note.C
+            else -> throw IllegalArgumentException(EXCEPTION_MESSAGE)
+        }
+        else -> when (this[1].toUpperCase()) {
+            'C' -> Note.C
+            'D' -> Note.D
+            'E' -> Note.E
+            'F' -> Note.F
+            'G' -> Note.G
+            'A' -> Note.A
+            'B' -> Note.B
+            else -> throw IllegalArgumentException(EXCEPTION_MESSAGE)
+        }
+    }
+
+    private fun String.toSuffix() = substring(if (this[2] == 'b' || this[2] == '#') 3 else 2).removeSuffix("]").toLowerCase()
+
+    companion object {
+        const val EXCEPTION_MESSAGE = "Cannot parse song."
     }
 }
