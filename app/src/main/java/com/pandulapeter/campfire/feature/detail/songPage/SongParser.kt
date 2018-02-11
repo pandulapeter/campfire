@@ -15,8 +15,8 @@ import com.pandulapeter.campfire.data.model.SectionType
  */
 class SongParser(private val context: Context) {
 
-    //TODO: Implement chord parsing.
     //TODO: Remove line breaks if they occur multiple times in a row.
+    //TODO: Refactor this method, it's difficult to read.
     fun parseSong(text: String, shouldShowChords: Boolean, shouldUseGermanNotation: Boolean, transposition: Int): SpannableString {
         val sectionNames = mutableListOf<Section>()
         val chords = mutableListOf<Chord>()

@@ -9,7 +9,7 @@ sealed class Note {
 
     fun transpose(pitchOffset: Int): Note {
         var newNote = this
-        for (i in 0..Math.abs(pitchOffset)) {
+        repeat(Math.abs(pitchOffset)) {
             newNote = if (pitchOffset > 0) newNote.transposeUp() else newNote.transposeDown()
         }
         return newNote
