@@ -188,7 +188,7 @@ class LibraryViewModel(
 
     fun onPlaceholderButtonClicked() = when (placeholderButtonText.get()) {
         R.string.try_again -> forceRefresh()
-        R.string.library_view_options -> showViewOptions()
+        R.string.library_filters -> showViewOptions()
         else -> Unit
     }
 
@@ -218,7 +218,7 @@ class LibraryViewModel(
                 }
             )
             shouldShowPlaceholderButton.set((!isLoading.get() && !isLibraryInitialized) || placeholderText.get() == R.string.library_placeholder_filters)
-            placeholderButtonText.set(if (placeholderText.get() == R.string.library_placeholder_filters) R.string.library_view_options else R.string.try_again)
+            placeholderButtonText.set(if (placeholderText.get() == R.string.library_placeholder_filters) R.string.library_filters else R.string.try_again)
         }
     }
 

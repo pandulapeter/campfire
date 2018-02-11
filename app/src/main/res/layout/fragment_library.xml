@@ -67,7 +67,7 @@
                             android:id="@+id/view_options"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:contentDescription="@string/library_view_options"
+                            android:contentDescription="@string/library_filters"
                             android:onClick="@{() -> viewModel.showViewOptions()}"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"

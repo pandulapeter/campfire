@@ -101,7 +101,7 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
         }
         // Set up error handling.
         viewModel.shouldShowErrorSnackbar.onEventTriggered(this) {
-            if (isAdded) binding.coordinatorLayout.showSnackbar(R.string.library_update_error, R.string.library_try_again, { viewModel.forceRefresh() })
+            if (isAdded) binding.coordinatorLayout.showSnackbar(R.string.library_update_error, R.string.try_again, { viewModel.forceRefresh() })
         }
         context?.let { context ->
             binding.swipeRefreshLayout.setColorSchemeColors(context.color(R.color.accent))
