@@ -148,6 +148,7 @@
     <string name="detail_verse">Verse</string>
     <string name="detail_bridge">Bridge</string>
     <string name="detail_solo">Solo</string>
+    <string name="detail_outro">Outro</string>
     <string name="detail_chorus">Chorus</string>
 
 </resources>

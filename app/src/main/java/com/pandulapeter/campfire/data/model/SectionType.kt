@@ -10,8 +10,9 @@ enum class SectionType(val abbreviation: Char, @StringRes val nameResourceId: In
     INTRO('I', R.string.detail_intro),
     VERSE('V', R.string.detail_verse),
     BRIDGE('B', R.string.detail_bridge),
+    CHORUS('C', R.string.detail_chorus),
     SOLO('S', R.string.detail_solo),
-    CHORUS('C', R.string.detail_chorus);
+    OUTRO('O', R.string.detail_outro);
 
     companion object {
         fun fromAbbreviation(abbreviation: Char): SectionType? {

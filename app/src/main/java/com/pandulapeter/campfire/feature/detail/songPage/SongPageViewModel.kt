@@ -36,6 +36,7 @@ class SongPageViewModel(
     val isLoading = ObservableBoolean(downloadedSongRepository.isSongLoading(songId))
     val transposition = ObservableInt(userPreferenceRepository.getSongTransposition(songId))
     private val shouldShowChords = userPreferenceRepository.shouldShowChords
+    private var unformattedText: String? = null
 
     init {
         transposition.onPropertyChanged {
@@ -49,6 +50,8 @@ class SongPageViewModel(
             if (modifiedValue != it) {
                 transposition.set(modifiedValue)
             }
+            //TODO: Buggy.
+            refreshText()
         }
     }
 
@@ -60,7 +63,10 @@ class SongPageViewModel(
             }
             is UpdateType.DownloadSuccessful -> if (updateType.songId == songId) {
                 async(UI) {
-                    async(CommonPool) { text.set(songParser.parseSong(updateType.song, shouldShowChords)) }.await()
+                    async(CommonPool) {
+                        unformattedText = updateType.song
+                        refreshText()
+                    }.await()
                     isLoading.set(false)
                 }
             }
@@ -87,6 +93,12 @@ class SongPageViewModel(
             songInfoRepository.getLibrarySongs().find { it.id == songId }?.let { songInfo ->
                 downloadedSongRepository.startSongDownload(songInfo)
             }
+        }
+    }
+
+    private fun refreshText() {
+        unformattedText?.let {
+            text.set(songParser.parseSong(it, shouldShowChords, userPreferenceRepository.shouldUseGermanNotation, transposition.get()))
         }
     }
 }
