@@ -33,6 +33,7 @@
             android:layout_height="match_parent"
             android:layout_gravity="start"
             app:headerLayout="@layout/view_menu_header"
+            app:itemIconTint="@color/accent"
             app:menu="@menu/home" />
 
     </android.support.v4.widget.DrawerLayout>

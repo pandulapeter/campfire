@@ -30,6 +30,7 @@
                 android:id="@+id/app_bar_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:theme="@style/ActionBar"
                 app:layout_behavior="com.pandulapeter.campfire.feature.shared.FixedAppBarBehavior">
 
                 <android.support.constraint.ConstraintLayout
@@ -74,9 +75,9 @@
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="0dp"
-                        android:gravity="center_vertical"
                         android:layout_marginEnd="@dimen/content_padding"
                         android:layout_marginStart="@dimen/second_keyline"
+                        android:gravity="center_vertical"
                         android:text="@string/home_history"
                         android:textAppearance="@style/TextAppearance.AppCompat.Title"
                         app:layout_constraintBottom_toBottomOf="parent"
