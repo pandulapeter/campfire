@@ -50,7 +50,6 @@ class SongPageViewModel(
             if (modifiedValue != it) {
                 transposition.set(modifiedValue)
             }
-            //TODO: Buggy.
             refreshText()
         }
     }
