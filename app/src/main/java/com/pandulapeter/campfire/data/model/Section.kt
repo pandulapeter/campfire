@@ -7,5 +7,5 @@ import android.content.Context
  */
 data class Section(private val sectionType: SectionType, private val index: Int, val startPosition: Int) {
 
-    fun getName(context: Context) = "${context.getString(sectionType.nameResourceId)}${if (index == 0) "" else " $index"}"
+    fun getName(context: Context) = "${context.getString(sectionType.nameResourceId)}${if (index == 0) "" else " $index"}\n"
 }

@@ -80,8 +80,8 @@
     <!-- Settings screen -->
     <string name="settings_chords">Chords</string>
     <string name="settings_should_show_chords">Show chords</string>
-    <string name="settings_show_chords_checked">Lyrics and chords</string>
-    <string name="settings_show_chords_unchecked">Lyrics only</string>
+    <string name="settings_show_chords_checked">Display both lyrics and chords</string>
+    <string name="settings_show_chords_unchecked">Display lyrics only</string>
     <string name="settings_english_notation">English notation</string>
     <string name="settings_german_notation">German notation</string>
     <string name="settings_behavior">Behavior</string>
