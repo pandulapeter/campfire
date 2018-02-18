@@ -29,8 +29,7 @@
                 android:id="@+id/app_bar_layout"
                 android:theme="@style/ActionBar"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_behavior="com.pandulapeter.campfire.feature.shared.FixedAppBarBehavior">
+                android:layout_height="wrap_content">
 
                 <android.support.constraint.ConstraintLayout
                     android:layout_width="match_parent"
