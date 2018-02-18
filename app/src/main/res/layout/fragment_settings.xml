@@ -14,10 +14,9 @@
 
     </data>
 
-    <FrameLayout
+    <com.pandulapeter.campfire.feature.shared.widget.ContainerView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:layout_height="match_parent">
 
         <android.support.design.widget.CoordinatorLayout
             android:id="@+id/coordinator_layout"
@@ -27,9 +26,9 @@
 
             <android.support.design.widget.AppBarLayout
                 android:id="@+id/app_bar_layout"
-                android:theme="@style/ActionBar"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:theme="@style/ActionBar">
 
                 <android.support.constraint.ConstraintLayout
                     android:layout_width="match_parent"
@@ -273,6 +272,6 @@
 
         </android.support.design.widget.CoordinatorLayout>
 
-    </FrameLayout>
+    </com.pandulapeter.campfire.feature.shared.widget.ContainerView>
 
 </layout>

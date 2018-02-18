@@ -83,7 +83,7 @@ class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R
                 override fun isHeader(position: Int) = position >= 0 && viewModel.isHeader(position)
 
                 override fun getHeaderTitle(position: Int) =
-                    if (position >= 0) viewModel.getHeaderTitle(position).let { if (it == 0) "" else getString(it) } else ""
+                    if (position >= 0) viewModel.getHeaderTitle(position).let { if (it == 0) "" else if (isAdded) getString(it) else "" } else ""
             })
 
             // Set up list item click listeners.

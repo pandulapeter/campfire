@@ -14,10 +14,9 @@
 
     </data>
 
-    <FrameLayout
+    <com.pandulapeter.campfire.feature.shared.widget.ContainerView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:layout_height="match_parent">
 
         <android.support.design.widget.CoordinatorLayout
             android:id="@+id/coordinator_layout"
@@ -148,6 +147,6 @@
 
         </android.support.design.widget.CoordinatorLayout>
 
-    </FrameLayout>
+    </com.pandulapeter.campfire.feature.shared.widget.ContainerView>
 
 </layout>

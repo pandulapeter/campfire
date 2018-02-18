@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.view.Window
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
@@ -91,7 +92,7 @@ class MainActivity : AppCompatActivity() {
                 if (nextFragment is HomeFragment && currentFragment is DetailFragment) {
                     nextFragment.shouldPlayReturnAnimation = true
                 }
-                supportFragmentManager.beginTransaction().replace(android.R.id.content, nextFragment).commit()
+                supportFragmentManager.beginTransaction().replace(Window.ID_ANDROID_CONTENT, nextFragment).commit()
             }
         }
     }

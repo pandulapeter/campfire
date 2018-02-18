@@ -31,26 +31,32 @@ abstract class HeaderItemDecoration(context: Context) : RecyclerView.ItemDecorat
 
     override fun onDraw(canvas: Canvas, parent: RecyclerView, state: RecyclerView.State?) {
         super.onDraw(canvas, parent, state)
-        if (headerBinding == null) {
-            DataBindingUtil.inflate<HeaderItemBinding>(LayoutInflater.from(parent.context), R.layout.item_header, parent, false).let {
-                it.root.measure(
-                    ViewGroup.getChildMeasureSpec(View.MeasureSpec.makeMeasureSpec(parent.width, View.MeasureSpec.EXACTLY), 0, it.root.layoutParams.width),
-                    ViewGroup.getChildMeasureSpec(View.MeasureSpec.makeMeasureSpec(parent.height, View.MeasureSpec.UNSPECIFIED), 0, it.root.layoutParams.height)
-                )
-                it.root.layout(0, 0, it.root.measuredWidth, it.root.measuredHeight)
-                headerBinding = it
+        if (parent.isAttachedToWindow) {
+            if (headerBinding == null) {
+                DataBindingUtil.inflate<HeaderItemBinding>(LayoutInflater.from(parent.context), R.layout.item_header, parent, false).let {
+                    it.root.measure(
+                        ViewGroup.getChildMeasureSpec(View.MeasureSpec.makeMeasureSpec(parent.width, View.MeasureSpec.EXACTLY), 0, it.root.layoutParams.width),
+                        ViewGroup.getChildMeasureSpec(
+                            View.MeasureSpec.makeMeasureSpec(parent.height, View.MeasureSpec.UNSPECIFIED),
+                            0,
+                            it.root.layoutParams.height
+                        )
+                    )
+                    it.root.layout(0, 0, it.root.measuredWidth, it.root.measuredHeight)
+                    headerBinding = it
+                }
             }
-        }
-        var previousHeaderText = ""
-        for (i in 0 until parent.childCount) {
-            val child = parent.getChildAt(i)
-            val position = parent.getChildAdapterPosition(child)
-            val title = getHeaderTitle(position)
-            headerBinding?.let {
-                if (previousHeaderText != title || isHeader(position)) {
-                    it.title.text = title
-                    drawHeader(canvas, child, it.root)
-                    previousHeaderText = title
+            var previousHeaderText = ""
+            for (i in 0 until parent.childCount) {
+                val child = parent.getChildAt(i)
+                val position = parent.getChildAdapterPosition(child)
+                val title = getHeaderTitle(position)
+                headerBinding?.let {
+                    if (previousHeaderText != title || isHeader(position)) {
+                        it.title.text = title
+                        drawHeader(canvas, child, it.root)
+                        previousHeaderText = title
+                    }
                 }
             }
         }
