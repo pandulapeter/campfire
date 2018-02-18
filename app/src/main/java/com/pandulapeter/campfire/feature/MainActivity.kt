@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         setTaskDescription(
             ActivityManager.TaskDescription(
                 getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
-                null, color(R.color.action_bar)
+                null, color(R.color.primary)
             )
         )
         super.onCreate(savedInstanceState)

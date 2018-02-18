@@ -25,7 +25,7 @@ class ContainerView @JvmOverloads constructor(context: Context, attrs: Attribute
         window.decorView.getWindowVisibleDisplayFrame(rectangle)
         rectangle.top.toFloat() - window.findViewById<View>(Window.ID_ANDROID_CONTENT).top
     }
-    private val paint = Paint().apply { color = context.color(R.color.status_bar) }
+    private val paint = Paint().apply { color = context.color(R.color.primary) }
 
     init {
         fitsSystemWindows = true

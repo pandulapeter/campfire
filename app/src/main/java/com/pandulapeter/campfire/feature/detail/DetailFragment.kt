@@ -87,7 +87,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             binding.appBarLayout.setExpanded(true, true)
             viewModel.isAutoScrollStarted.set(false)
         })
-        context?.let { binding.drawerLayout.setStatusBarBackgroundColor(it.color(R.color.status_bar)) }
+        context?.let { binding.drawerLayout.setStatusBarBackgroundColor(it.color(R.color.primary)) }
         binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
