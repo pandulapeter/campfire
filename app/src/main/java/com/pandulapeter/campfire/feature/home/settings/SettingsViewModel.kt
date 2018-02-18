@@ -17,6 +17,7 @@ class SettingsViewModel(
     private val firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository,
     private val userPreferenceRepository: UserPreferenceRepository
 ) : HomeChildViewModel(analyticsManager) {
+    val shouldShowHintsResetConfirmation = ObservableBoolean()
     val shouldShowHintsResetSnackbar = ObservableBoolean()
     val shouldShowChords = ObservableBoolean(userPreferenceRepository.shouldShowChords)
     val shouldEnableAutoScroll = ObservableBoolean(userPreferenceRepository.shouldEnableAutoScroll)
@@ -35,6 +36,10 @@ class SettingsViewModel(
     }
 
     fun onResetHintsClicked() {
+        shouldShowHintsResetConfirmation.set(true)
+    }
+
+    fun resetHints() {
         firstTimeUserExperienceRepository.resetAll()
         shouldShowHintsResetSnackbar.set(true)
     }

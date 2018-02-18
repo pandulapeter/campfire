@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceReposito
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistViewModel
 import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildFragment
+import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
@@ -17,7 +18,7 @@ import org.koin.android.ext.android.inject
  *
  * Controlled by [PlaylistViewModel].
  */
-class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R.layout.fragment_settings) {
+class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R.layout.fragment_settings), AlertDialogFragment.OnDialogItemsSelectedListener {
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
 
@@ -27,7 +28,18 @@ class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel.shouldShowHintsResetConfirmation.onEventTriggered(this) {
+            AlertDialogFragment.show(
+                childFragmentManager,
+                R.string.settings_reset_hints_confirmation_title,
+                R.string.settings_reset_hints_confirmation_message,
+                R.string.settings_reset_hints_confirmation_reset,
+                R.string.cancel
+            )
+        }
         viewModel.shouldShowHintsResetSnackbar.onEventTriggered(this) { binding.coordinatorLayout.showSnackbar(R.string.settings_reset_hints_message) }
         viewModel.shouldUseDarkTheme.onPropertyChanged(this) { activity?.recreate() }
     }
+
+    override fun onPositiveButtonSelected() = viewModel.resetHints()
 }
