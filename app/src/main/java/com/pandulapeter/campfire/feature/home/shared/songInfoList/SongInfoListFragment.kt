@@ -34,7 +34,6 @@ abstract class SongInfoListFragment<B : ViewDataBinding, out VM : SongInfoListVi
     protected val downloadedSongRepository by inject<DownloadedSongRepository>()
     protected val playlistRepository by inject<PlaylistRepository>()
 
-
     protected abstract fun getRecyclerView(): RecyclerView
 
     protected abstract fun getCoordinatorLayout(): CoordinatorLayout

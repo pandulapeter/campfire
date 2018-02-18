@@ -37,6 +37,7 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
         downloadedSongRepository,
         appShortcutManager,
         playlistRepository,
+        userPreferenceRepository,
         getString(R.string.home_favorites),
         arguments.playlistId
     )
@@ -109,12 +110,11 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
         viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered(this) { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
     }
 
-    override fun onBackPressed(): Boolean {
-        if (viewModel.isInEditMode.get() && viewModel.isCustomPlaylist) {
-            viewModel.isInEditMode.set(false)
-            return true
-        }
-        return false
+    override fun onBackPressed() = if (viewModel.isInEditMode.get()) {
+        viewModel.isInEditMode.set(false)
+        true
+    } else {
+        false
     }
 
     companion object {

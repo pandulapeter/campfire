@@ -70,6 +70,8 @@ sealed class UpdateType {
 
     object ShouldHideWorkInProgressUpdated : UpdateType()
 
+    object ShouldAllowToolbarScrollUpdated : UpdateType()
+
     object SearchQueryUpdated : UpdateType()
 
     // Other

@@ -60,7 +60,7 @@ class DetailViewModel(
                 shouldShowAutoScrollButton.set(false)
             }
             is UpdateType.DownloadSuccessful -> if (updateType.songId == getSelectedSongId()) {
-                shouldAllowToolbarScrolling.set(true)
+                shouldAllowToolbarScrolling.set(userPreferenceRepository.shouldAllowToolbarScroll)
                 shouldShowAutoScrollButton.set(true)
             }
             is UpdateType.SongTransposed -> if (updateType.songId == getSelectedSongId()) {
@@ -76,7 +76,7 @@ class DetailViewModel(
         selectedPosition = position
         onSongSelected()
         historyRepository.addToHistory(getSelectedSongId())
-        shouldAllowToolbarScrolling.set(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
+        shouldAllowToolbarScrolling.set(userPreferenceRepository.shouldAllowToolbarScroll && downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
         shouldShowAutoScrollButton.set(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
     }
 

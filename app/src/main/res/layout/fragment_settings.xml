@@ -34,7 +34,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/toolbar_height"
                     android:clipChildren="false"
-                    app:isScrollEnabled="@{true}">
+                    app:isScrollEnabled="@{viewModel.shouldAllowToolbarScroll}">
 
                     <android.support.v4.widget.Space
                         android:id="@+id/space"
@@ -76,8 +76,10 @@
             </android.support.design.widget.AppBarLayout>
 
             <android.support.v4.widget.NestedScrollView
+                android:id="@+id/scroll_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:clipChildren="false"
                 android:clipToPadding="false"
                 android:fillViewport="true"
                 android:paddingBottom="@dimen/content_padding"
@@ -88,6 +90,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/content_padding"
+                    android:clipChildren="false"
                     android:orientation="vertical">
 
                     <android.support.v7.widget.CardView
@@ -224,6 +227,17 @@
                                 app:title="@{@string/settings_use_dark_theme}"
                                 tools:text="@string/settings_use_dark_theme" />
 
+                            <Switch
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="@dimen/first_keyline"
+                                android:checked="@={viewModel.shouldAllowToolbarScroll}"
+                                android:gravity="center_vertical"
+                                android:minHeight="@dimen/touch_target"
+                                app:description="@{viewModel.shouldAllowToolbarScroll ? @string/settings_allow_toolbar_scroll_enabled : @string/settings_allow_toolbar_scroll_disabled}"
+                                app:title="@{@string/settings_allow_toolbar_scroll}"
+                                tools:text="@string/settings_allow_toolbar_scroll" />
+
                         </LinearLayout>
 
                     </android.support.v7.widget.CardView>
@@ -250,6 +264,7 @@
                                 android:textColor="@color/accent" />
 
                             <TextView
+                                style="@style/Widget.AppCompat.CompoundButton.CheckBox"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginBottom="@dimen/content_padding"

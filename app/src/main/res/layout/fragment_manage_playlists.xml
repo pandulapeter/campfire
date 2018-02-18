@@ -34,7 +34,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/toolbar_height"
                     android:clipChildren="false"
-                    app:isScrollEnabled="@{true}">
+                    app:isScrollEnabled="@{viewModel.isToolbarScrollEnabled}">
 
                     <android.support.v4.widget.Space
                         android:id="@+id/space"

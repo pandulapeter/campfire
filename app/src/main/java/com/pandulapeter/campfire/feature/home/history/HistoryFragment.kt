@@ -32,7 +32,7 @@ class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
 
     override fun createViewModel() =
-        HistoryViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository, historyRepository)
+        HistoryViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository, userPreferenceRepository, historyRepository)
 
     override fun getAppBarLayout() = binding.appBarLayout
 

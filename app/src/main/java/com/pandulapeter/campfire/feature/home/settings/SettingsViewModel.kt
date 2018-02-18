@@ -22,6 +22,7 @@ class SettingsViewModel(
     val shouldShowChords = ObservableBoolean(userPreferenceRepository.shouldShowChords)
     val shouldEnableAutoScroll = ObservableBoolean(userPreferenceRepository.shouldEnableAutoScroll)
     val shouldUseDarkTheme = ObservableBoolean(userPreferenceRepository.shouldUseDarkTheme)
+    val shouldAllowToolbarScroll = ObservableBoolean(userPreferenceRepository.shouldAllowToolbarScroll)
     val shouldUseGermanNotation = ObservableBoolean(userPreferenceRepository.shouldUseGermanNotation)
     val englishNotationExample = ObservableField(generateNotationExample(false))
     val germanNotationExample = ObservableField(generateNotationExample(true))
@@ -29,6 +30,7 @@ class SettingsViewModel(
     init {
         shouldShowChords.onPropertyChanged { userPreferenceRepository.shouldShowChords = it }
         shouldUseDarkTheme.onPropertyChanged { userPreferenceRepository.shouldUseDarkTheme = it }
+        shouldAllowToolbarScroll.onPropertyChanged { userPreferenceRepository.shouldAllowToolbarScroll = it }
         shouldEnableAutoScroll.onPropertyChanged { userPreferenceRepository.shouldEnableAutoScroll = it }
         shouldUseGermanNotation.onPropertyChanged {
             userPreferenceRepository.shouldUseGermanNotation = it

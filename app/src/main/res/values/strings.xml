@@ -92,6 +92,9 @@
     <string name="settings_use_dark_theme">Use dark theme</string>
     <string name="settings_use_dark_theme_enabled">The app uses the dark theme</string>
     <string name="settings_use_dark_theme_disabled">The app uses the light theme</string>
+    <string name="settings_allow_toolbar_scroll">Toolbar slide</string>
+    <string name="settings_allow_toolbar_scroll_enabled">Toolbars slide out when scrolling</string>
+    <string name="settings_allow_toolbar_scroll_disabled">Toolbars always remain on top of the screen</string>
     <string name="settings_other">Other</string>
     <string name="settings_reset_hints">Reset hints</string>
     <string name="settings_reset_hints_description">The hints you dismissed in the past will appear again</string>

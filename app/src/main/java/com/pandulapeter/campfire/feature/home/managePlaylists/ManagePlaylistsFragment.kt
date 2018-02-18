@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.ManagePlaylistsBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.HomeViewModel
 import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.feature.home.shared.SpacesItemDecoration
@@ -27,8 +28,15 @@ class ManagePlaylistsFragment : HomeChildFragment<ManagePlaylistsBinding, Manage
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
     private val appShortcutManager by inject<AppShortcutManager>()
+    private val userPreferenceRepository by inject<UserPreferenceRepository>()
 
-    override fun createViewModel() = ManagePlaylistsViewModel(analyticsManager, appShortcutManager, firstTimeUserExperienceRepository, playlistRepository)
+    override fun createViewModel() = ManagePlaylistsViewModel(
+        analyticsManager,
+        appShortcutManager,
+        firstTimeUserExperienceRepository,
+        playlistRepository,
+        userPreferenceRepository
+    )
 
     override fun getAppBarLayout() = binding.appBarLayout
 

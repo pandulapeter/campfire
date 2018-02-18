@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListAdapter
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListViewModel
@@ -25,8 +26,9 @@ class ManageDownloadsViewModel(
     analyticsManager: AnalyticsManager,
     songInfoRepository: SongInfoRepository,
     downloadedSongRepository: DownloadedSongRepository,
-    playlistRepository: PlaylistRepository
-) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository) {
+    playlistRepository: PlaylistRepository,
+    userPreferenceRepository: UserPreferenceRepository
+) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository, userPreferenceRepository) {
     val shouldShowDeleteAllButton = ObservableBoolean(downloadedSongRepository.getDownloadedSongIds().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldShowHintSnackbar = ObservableBoolean()
@@ -80,7 +82,7 @@ class ManageDownloadsViewModel(
         if (items.isNotEmpty()) {
             shouldShowHintSnackbar.set(true)
         }
-        shouldAllowToolbarScrolling.set(items.isNotEmpty())
+        shouldAllowToolbarScrolling.set(userPreferenceRepository.shouldAllowToolbarScroll && items.isNotEmpty())
         async(UI) {
             totalFileCount.set(downloadedSongRepository.downloadedItemCount())
             totalFileSize.set(async(CommonPool) {

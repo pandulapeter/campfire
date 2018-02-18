@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListAdapter
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListViewModel
@@ -29,9 +30,10 @@ class PlaylistViewModel(
     downloadedSongRepository: DownloadedSongRepository,
     appShortcutManager: AppShortcutManager,
     playlistRepository: PlaylistRepository,
+    userPreferenceRepository: UserPreferenceRepository,
     private val favoritesTitle: String,
     private val playlistId: Int
-) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository) {
+) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository, userPreferenceRepository) {
     val title = ObservableField(favoritesTitle)
     val songCount = ObservableInt(playlistRepository.getPlaylistSongIds(playlistId).size)
     val editedTitle = ObservableField(title.get())
@@ -173,5 +175,5 @@ class PlaylistViewModel(
     }
 
     private fun updateShouldAllowToolbarScrolling(isAdapterNotEmpty: Boolean) =
-        shouldAllowToolbarScrolling.set(if (isInEditMode.get()) false else isAdapterNotEmpty)
+        shouldAllowToolbarScrolling.set(if (isInEditMode.get()) false else userPreferenceRepository.shouldAllowToolbarScroll && isAdapterNotEmpty)
 }

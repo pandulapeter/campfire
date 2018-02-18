@@ -28,10 +28,10 @@ class LibraryViewModel(
     songInfoRepository: SongInfoRepository,
     downloadedSongRepository: DownloadedSongRepository,
     appShortcutManager: AppShortcutManager,
-    private val userPreferenceRepository: UserPreferenceRepository,
+    userPreferenceRepository: UserPreferenceRepository,
     playlistRepository: PlaylistRepository,
     private val languageRepository: LanguageRepository
-) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository) {
+) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository, userPreferenceRepository) {
     val isSearchInputVisible = ObservableBoolean(userPreferenceRepository.searchQuery.isNotEmpty())
     val searchQuery = ObservableField(userPreferenceRepository.searchQuery)
     val shouldShowViewOptions = ObservableBoolean(false)
@@ -223,7 +223,7 @@ class LibraryViewModel(
     }
 
     private fun updateShouldAllowToolbarScrolling(isAdapterNotEmpty: Boolean) =
-        shouldAllowToolbarScrolling.set(if (isSearchInputVisible.get()) false else isAdapterNotEmpty)
+        shouldAllowToolbarScrolling.set(if (isSearchInputVisible.get()) false else isAdapterNotEmpty && userPreferenceRepository.shouldAllowToolbarScroll)
 
     private fun Sequence<SongInfo>.filterByLanguages() = filter { languageRepository.isLanguageFilterEnabled(it.language.mapToLanguage()) }
 

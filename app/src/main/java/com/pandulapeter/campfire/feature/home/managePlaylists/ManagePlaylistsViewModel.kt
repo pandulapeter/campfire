@@ -5,6 +5,7 @@ import android.databinding.ObservableInt
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildViewModel
@@ -24,10 +25,12 @@ class ManagePlaylistsViewModel(
     analyticsManager: AnalyticsManager,
     private val appShortcutManager: AppShortcutManager,
     private val firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository,
-    private val playlistRepository: PlaylistRepository
+    private val playlistRepository: PlaylistRepository,
+    private val userPreferenceRepository: UserPreferenceRepository
 ) : HomeChildViewModel(analyticsManager), Subscriber {
     val adapter = ManagePlaylistsListAdapter()
     val shouldShowHintSnackbar = ObservableBoolean()
+    val isToolbarScrollEnabled = ObservableBoolean(userPreferenceRepository.shouldAllowToolbarScroll)
     val itemCount = ObservableInt(playlistRepository.getPlaylists().size)
     val shouldShowNewPlaylistButton = ObservableBoolean()
     val shouldShowNewPlaylistDialog = ObservableBoolean()

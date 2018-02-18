@@ -3,10 +3,7 @@ package com.pandulapeter.campfire.feature.home.history
 import android.content.Context
 import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
-import com.pandulapeter.campfire.data.repository.HistoryRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.repository.*
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListAdapter
 import com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoListViewModel
@@ -23,8 +20,9 @@ class HistoryViewModel(
     songInfoRepository: SongInfoRepository,
     downloadedSongRepository: DownloadedSongRepository,
     playlistRepository: PlaylistRepository,
+    userPreferenceRepository: UserPreferenceRepository,
     private val historyRepository: HistoryRepository
-) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository) {
+) : SongInfoListViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository, userPreferenceRepository) {
     val shouldShowClearButton = ObservableBoolean(historyRepository.getHistoryItems().isNotEmpty())
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldInvalidateItemDecorations = ObservableBoolean()
@@ -115,7 +113,7 @@ class HistoryViewModel(
     override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         super.onUpdateDone(items, updateType)
         shouldShowClearButton.set(items.isNotEmpty())
-        shouldAllowToolbarScrolling.set(items.isNotEmpty())
+        shouldAllowToolbarScrolling.set(userPreferenceRepository.shouldAllowToolbarScroll && items.isNotEmpty())
         shouldInvalidateItemDecorations.set(true)
         if (items.isNotEmpty()) {
             shouldShowHintSnackbar.set(true)

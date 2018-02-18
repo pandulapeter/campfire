@@ -30,7 +30,7 @@ class ManageDownloadsFragment :
     AlertDialogFragment.OnDialogItemsSelectedListener {
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
 
-    override fun createViewModel() = ManageDownloadsViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository)
+    override fun createViewModel() = ManageDownloadsViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository, userPreferenceRepository)
 
     override fun getAppBarLayout() = binding.appBarLayout
 

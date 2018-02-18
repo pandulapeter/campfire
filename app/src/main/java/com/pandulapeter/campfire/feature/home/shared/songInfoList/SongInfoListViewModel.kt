@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.data.model.SongInfo
 import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildViewModel
@@ -29,7 +30,8 @@ abstract class SongInfoListViewModel(
     analyticsManager: AnalyticsManager,
     protected val songInfoRepository: SongInfoRepository,
     protected val downloadedSongRepository: DownloadedSongRepository,
-    protected val playlistRepository: PlaylistRepository
+    protected val playlistRepository: PlaylistRepository,
+    protected val userPreferenceRepository: UserPreferenceRepository
 ) : HomeChildViewModel(analyticsManager), Subscriber {
     val adapter = SongInfoListAdapter()
     val shouldShowDownloadErrorSnackbar = ObservableField<SongInfo?>()
