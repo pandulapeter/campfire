@@ -18,7 +18,8 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:fillViewport="true"
-        android:scrollbars="none">
+        android:scrollbars="none"
+        android:transitionGroup="true">
 
         <FrameLayout
             android:id="@+id/container"

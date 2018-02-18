@@ -22,6 +22,7 @@ class PlaceholderView @JvmOverloads constructor(context: Context, attrs: Attribu
     init {
         clipChildren = false
         layoutTransition = LayoutTransition()
+        isTransitionGroup = true
         val styledAttrs = context.obtainStyledAttributes(attrs, R.styleable.PlaceholderView)
         styledAttrs.getString(R.styleable.PlaceholderView_text)?.let { setText(it) }
         styledAttrs.getString(R.styleable.PlaceholderView_buttonText)?.let { setButtonText(it) }
