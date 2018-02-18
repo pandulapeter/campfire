@@ -3,13 +3,14 @@ package com.pandulapeter.campfire.feature.shared.widget
 import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.View
 import android.view.Window
 import android.widget.FrameLayout
+import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.util.color
 
 
 /**
@@ -24,7 +25,7 @@ class ContainerView @JvmOverloads constructor(context: Context, attrs: Attribute
         window.decorView.getWindowVisibleDisplayFrame(rectangle)
         rectangle.top.toFloat() - window.findViewById<View>(Window.ID_ANDROID_CONTENT).top
     }
-    private val paint = Paint().apply { color = Color.BLACK }
+    private val paint = Paint().apply { color = context.color(R.color.status_bar) }
 
     init {
         fitsSystemWindows = true

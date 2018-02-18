@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         setTaskDescription(
             ActivityManager.TaskDescription(
                 getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
-                null, obtainColor(R.attr.colorPrimary) //TODO: The background color should always be dark.
+                null, color(R.color.action_bar)
             )
         )
         super.onCreate(savedInstanceState)

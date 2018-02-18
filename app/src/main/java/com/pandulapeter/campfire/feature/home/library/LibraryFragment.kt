@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.library
 
+import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
@@ -53,7 +54,7 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
             hideKeyboard(activity?.currentFocus)
             expandAppBar()
         })
-        binding.drawerLayout.setStatusBarBackgroundColor(binding.appBarLayout.context.obtainColor(android.R.attr.colorPrimaryDark))
+        context?.let { binding.drawerLayout.setStatusBarBackgroundColor(it.color(R.color.status_bar)) }
         binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {

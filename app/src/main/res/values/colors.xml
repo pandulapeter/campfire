@@ -3,5 +3,7 @@
 
     <!-- General -->
     <color name="accent">#FF9800</color>
+    <color name="action_bar">#212121</color>
+    <color name="status_bar">#000000</color>
 
 </resources>
