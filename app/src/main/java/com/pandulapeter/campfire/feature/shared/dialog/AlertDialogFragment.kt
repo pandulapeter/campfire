@@ -18,6 +18,7 @@ import org.koin.android.ext.android.inject
  */
 class AlertDialogFragment : AppCompatDialogFragment() {
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
+    private val onDialogItemsSelectedListener get() = parentFragment as? OnDialogItemsSelectedListener ?: activity as? OnDialogItemsSelectedListener
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         context?.let { context ->
@@ -25,7 +26,7 @@ class AlertDialogFragment : AppCompatDialogFragment() {
                 return AlertDialog.Builder(context, if (userPreferenceRepository.shouldUseDarkTheme) R.style.DarkAlertDialog else R.style.LightAlertDialog)
                     .setTitle(arguments.title)
                     .setMessage(arguments.message)
-                    .setPositiveButton(arguments.positiveButton, { _, _ -> getOnDialogItemsSelectedListener()?.onPositiveButtonSelected() })
+                    .setPositiveButton(arguments.positiveButton, { _, _ -> onDialogItemsSelectedListener?.onPositiveButtonSelected() })
                     .setNegativeButton(arguments.negativeButton, null)
                     .create()
             }
@@ -33,14 +34,6 @@ class AlertDialogFragment : AppCompatDialogFragment() {
         return super.onCreateDialog(savedInstanceState)
     }
 
-    private fun getOnDialogItemsSelectedListener(): OnDialogItemsSelectedListener? {
-        parentFragment?.let {
-            if (it is OnDialogItemsSelectedListener) {
-                return it
-            }
-        }
-        return null
-    }
 
     interface OnDialogItemsSelectedListener {
 

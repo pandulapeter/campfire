@@ -242,6 +242,7 @@
                                 app:title="@{@string/settings_use_dark_theme}"
                                 tools:text="@string/settings_use_dark_theme" />
 
+                            <!--TODO: Something weird is happening with end paddings when toggling this switch. -->
                             <Switch
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
