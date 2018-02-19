@@ -50,7 +50,6 @@ class UserPreferenceRepository(private val preferenceStorageManager: PreferenceS
     }
     var shouldAllowToolbarScroll by Delegates.observable(preferenceStorageManager.shouldAllowToolbarScroll) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
-            notifySubscribers(UpdateType.ShouldAllowToolbarScrollUpdated)
             preferenceStorageManager.shouldAllowToolbarScroll = new
         }
     }
@@ -62,6 +61,11 @@ class UserPreferenceRepository(private val preferenceStorageManager: PreferenceS
     var shouldEnableAutoScroll by Delegates.observable(preferenceStorageManager.shouldEnableAutoScroll) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
             preferenceStorageManager.shouldEnableAutoScroll = new
+        }
+    }
+    var shouldShowExitConfirmation by Delegates.observable(preferenceStorageManager.shouldShowExitConfirmation) { _: KProperty<*>, old: Boolean, new: Boolean ->
+        if (old != new) {
+            preferenceStorageManager.shouldShowExitConfirmation = new
         }
     }
     var shouldUseGermanNotation by Delegates.observable(preferenceStorageManager.shouldUseGermanNotation) { _: KProperty<*>, old: Boolean, new: Boolean ->

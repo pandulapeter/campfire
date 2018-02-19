@@ -36,6 +36,10 @@
     <string name="home_new_playlist">New playlist</string>
     <string name="home_manage_playlists">@string/manage_playlists</string>
     <string name="home_manage_downloads">Manage downloads</string>
+    <string name="home_exit_confirmation_title">Are you sure?</string>
+    <string name="home_exit_confirmation_message">Are you sure you want to close the app?</string>
+    <string name="home_exit_confirmation_close">Close</string>
+
 
     <!-- Library screen -->
     <string name="library_placeholder_loading">Loading song library. This shouldn\'t take long…</string>
@@ -88,6 +92,9 @@
     <string name="settings_auto_scroll">Auto-scroll</string>
     <string name="settings_auto_scroll_enabled">Auto-scroll controls are enabled</string>
     <string name="settings_auto_scroll_disabled">Auto-scroll controls are disabled</string>
+    <string name="settings_exit_confirmation">Exit confirmation</string>
+    <string name="settings_exit_confirmation_enabled">Display confirmation dialog when closing the app</string>
+    <string name="settings_exit_confirmation_disabled">Close the app without confirmation</string>
     <string name="settings_appearance">Appearance</string>
     <string name="settings_use_dark_theme">Use dark theme</string>
     <string name="settings_use_dark_theme_enabled">The app uses the dark theme</string>

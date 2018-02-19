@@ -21,6 +21,7 @@ class SettingsViewModel(
     val shouldShowHintsResetSnackbar = ObservableBoolean()
     val shouldShowChords = ObservableBoolean(userPreferenceRepository.shouldShowChords)
     val shouldEnableAutoScroll = ObservableBoolean(userPreferenceRepository.shouldEnableAutoScroll)
+    val shouldShowExitConfirmation = ObservableBoolean(userPreferenceRepository.shouldShowExitConfirmation)
     val shouldUseDarkTheme = ObservableBoolean(userPreferenceRepository.shouldUseDarkTheme)
     val shouldAllowToolbarScroll = ObservableBoolean(userPreferenceRepository.shouldAllowToolbarScroll)
     val shouldUseGermanNotation = ObservableBoolean(userPreferenceRepository.shouldUseGermanNotation)
@@ -32,6 +33,7 @@ class SettingsViewModel(
         shouldUseDarkTheme.onPropertyChanged { userPreferenceRepository.shouldUseDarkTheme = it }
         shouldAllowToolbarScroll.onPropertyChanged { userPreferenceRepository.shouldAllowToolbarScroll = it }
         shouldEnableAutoScroll.onPropertyChanged { userPreferenceRepository.shouldEnableAutoScroll = it }
+        shouldShowExitConfirmation.onPropertyChanged { userPreferenceRepository.shouldShowExitConfirmation = it }
         shouldUseGermanNotation.onPropertyChanged {
             userPreferenceRepository.shouldUseGermanNotation = it
         }

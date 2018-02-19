@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.home.HomeFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.util.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -26,10 +27,11 @@ import kotlin.coroutines.experimental.CoroutineContext
  *
  * Controlled by [MainViewModel].
  */
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelectedListener {
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
     private val viewModel by lazy { MainViewModel(userPreferenceRepository, MainViewModel.MainNavigationItem.fromStringValue(intent.mainNavigationItem)) }
     private var coroutine: CoroutineContext? = null
+    private val currentFragment get() = supportFragmentManager.findFragmentById(android.R.id.content) as? CampfireFragment<*, *>
     private var Bundle.mainNavigationItem by BundleArgumentDelegate.String("main_navigation_item")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +50,7 @@ class MainActivity : AppCompatActivity() {
                 replaceActiveFragment(it)
             }
         }
-        if (getCurrentFragment() == null) {
+        if (currentFragment == null) {
             replaceActiveFragment(viewModel.mainNavigationItem.get())
         }
     }
@@ -64,10 +66,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (getCurrentFragment()?.onBackPressed() != true) {
-            super.onBackPressed()
+        if (currentFragment?.onBackPressed() != true) {
+            if (userPreferenceRepository.shouldShowExitConfirmation) {
+                AlertDialogFragment.show(
+                    supportFragmentManager,
+                    R.string.home_exit_confirmation_title,
+                    R.string.home_exit_confirmation_message,
+                    R.string.home_exit_confirmation_close,
+                    R.string.cancel
+                )
+            } else {
+                onPositiveButtonSelected()
+            }
         }
     }
+
+    override fun onPositiveButtonSelected() = supportFinishAfterTransition()
 
     fun setNavigationItem(navigationItem: MainViewModel.MainNavigationItem) {
         viewModel.mainNavigationItem.set(navigationItem)
@@ -80,7 +94,6 @@ class MainActivity : AppCompatActivity() {
     fun navigateBack() = viewModel.mainNavigationItem.set(viewModel.previousNavigationItem)
 
     private fun replaceActiveFragment(mainNavigationItem: MainViewModel.MainNavigationItem) {
-        val currentFragment = getCurrentFragment()
         if (currentFragment == null) {
             supportFragmentManager.beginTransaction().replace(android.R.id.content, mainNavigationItem.getFragment()).commitNow()
         } else {
@@ -96,8 +109,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
-    private fun getCurrentFragment() = supportFragmentManager.findFragmentById(android.R.id.content) as? CampfireFragment<*, *>
 
     companion object {
         private var Intent.mainNavigationItem by IntentExtraDelegate.String("main_navigation_item")

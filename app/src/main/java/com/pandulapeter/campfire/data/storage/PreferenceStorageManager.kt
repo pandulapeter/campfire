@@ -14,7 +14,7 @@ import kotlin.reflect.KProperty
 class PreferenceStorageManager(context: Context) {
     private val preferences = context.applicationContext.getSharedPreferences("preference_storage", Context.MODE_PRIVATE)
     var lastUpdateTimestamp by PreferenceFieldDelegate.Long("last_update_timestamp")
-    var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("should_use_dark_theme", true)
+    var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("should_use_dark_theme", false)
     var isSortedByTitle by PreferenceFieldDelegate.Boolean("is_sorted_by_title", true)
     var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("should_show_downloaded_only")
     var shouldShowExplicit by PreferenceFieldDelegate.Boolean("should_show_explicit", false)
@@ -22,6 +22,7 @@ class PreferenceStorageManager(context: Context) {
     var shouldAllowToolbarScroll by PreferenceFieldDelegate.Boolean("should_allow_toolbar_scroll", false)
     var shouldShowChords by PreferenceFieldDelegate.Boolean("should_show_chords", true)
     var shouldEnableAutoScroll by PreferenceFieldDelegate.Boolean("should_enable_auto_scroll", true)
+    var shouldShowExitConfirmation by PreferenceFieldDelegate.Boolean("should_show_exit_confirmation", true)
     var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("should_use_german_notation", shouldEnableGermanNotationByDefault())
     var shouldShowHistoryHint by PreferenceFieldDelegate.Boolean("should_show_history_hint", true)
     var shouldShowPlaylistHint by PreferenceFieldDelegate.Boolean("should_show_playlist_hint", true)
