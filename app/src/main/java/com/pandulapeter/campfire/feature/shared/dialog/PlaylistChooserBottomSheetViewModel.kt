@@ -56,8 +56,10 @@ class PlaylistChooserBottomSheetViewModel(
         closeAlpha.set(closenessToTop)
         closeTranslation.set(-(1 - closenessToTop) * finalToolbarMargin / 4)
         toolbarTranslation.set(closenessToTop * finalToolbarMargin)
-        toolbarTitleColor.set(blendColors(titleCollapsedColor, titleExpandedColor, closenessToTop))
-        toolbarSubtitleColor.set(blendColors(subtitleCollapsedColor, subtitleExpandedColor, closenessToTop))
+        if (titleCollapsedColor != titleExpandedColor) {
+            toolbarTitleColor.set(blendColors(titleCollapsedColor, titleExpandedColor, closenessToTop))
+            toolbarSubtitleColor.set(blendColors(subtitleCollapsedColor, subtitleExpandedColor, closenessToTop))
+        }
         if (scrollViewOffset == 0) {
             appBarElevation.set(closenessToTop * finalToolbarElevation)
             containerAlpha.set(closenessToTop)

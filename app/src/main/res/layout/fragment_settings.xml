@@ -185,7 +185,7 @@
                                 android:text="@string/settings_behavior"
                                 android:textColor="@color/accent" />
 
-                            <Switch
+                            <android.support.v7.widget.SwitchCompat
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginEnd="@dimen/first_keyline"
@@ -196,7 +196,7 @@
                                 app:title="@{@string/settings_auto_scroll}"
                                 tools:text="@string/settings_auto_scroll" />
 
-                            <Switch
+                            <android.support.v7.widget.SwitchCompat
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginEnd="@dimen/first_keyline"
@@ -231,7 +231,7 @@
                                 android:text="@string/settings_appearance"
                                 android:textColor="@color/accent" />
 
-                            <Switch
+                            <android.support.v7.widget.SwitchCompat
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginEnd="@dimen/first_keyline"
@@ -243,7 +243,7 @@
                                 tools:text="@string/settings_use_dark_theme" />
 
                             <!--TODO: Something weird is happening with end paddings when toggling this switch. -->
-                            <Switch
+                            <android.support.v7.widget.SwitchCompat
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginEnd="@dimen/first_keyline"
