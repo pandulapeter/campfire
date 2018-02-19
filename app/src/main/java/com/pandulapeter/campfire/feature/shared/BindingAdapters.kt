@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.databinding.BindingAdapter
 import android.graphics.drawable.Drawable
+import android.support.annotation.ColorInt
 import android.support.annotation.DrawableRes
 import android.support.design.widget.AppBarLayout
 import android.support.design.widget.FloatingActionButton
@@ -43,6 +44,14 @@ fun setCompoundDrawables(
         if (drawableBottom == 0) drawables[3] else view.context.drawable(drawableBottom)?.apply { setTint(secondary) }
     )
 }
+
+@BindingAdapter(value = ["android:paddingStart", "android:paddingTop", "android:paddingEnd", "android:paddingBottom"], requireAll = false)
+fun setPadding(view: View, paddingStart: Int?, paddingTop: Int?, paddingEnd: Int?, paddingBottom: Int?) = view.setPadding(
+    paddingStart ?: view.paddingStart,
+    paddingTop ?: view.paddingTop,
+    paddingEnd ?: view.paddingEnd,
+    paddingBottom ?: view.paddingBottom
+)
 
 @BindingAdapter("android:text")
 fun setText(view: EditText, text: String?) {
@@ -123,21 +132,20 @@ fun setAnimation(view: ImageView, @DrawableRes drawableRes: Int, lastFrame: Draw
     view.tag = drawableRes
 }
 
-@BindingAdapter(value = ["title", "subtitle"], requireAll = false)
-fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?) {
+@BindingAdapter(value = ["title", "subtitle", "titleColor", "subtitleColor"], requireAll = false)
+fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?, @ColorInt titleColor: Int?, @ColorInt subtitleColor: Int?) {
     val text = SpannableString("${title ?: ""}\n${subtitle ?: ""}")
     title?.let {
         text.setSpan(TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Title), 0, it.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-        text.setSpan(EllipsizeLineSpan(), 0, it.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        text.setSpan(EllipsizeLineSpan(titleColor), 0, it.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
     subtitle?.let {
         text.setSpan(
-            ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorSecondary)),
+            EllipsizeLineSpan(subtitleColor ?: view.context.obtainColor(android.R.attr.textColorSecondary)),
             (title?.length ?: 0) + 1,
             text.length,
-            Spannable.SPAN_INCLUSIVE_INCLUSIVE
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
-        text.setSpan(EllipsizeLineSpan(), (title?.length ?: 0) + 1, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
     view.text = text
 }

@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.content.Context
 import android.databinding.DataBindingUtil
+import android.graphics.Color
 import android.os.Bundle
 import android.support.annotation.StyleRes
 import android.support.design.widget.BottomSheetBehavior
@@ -9,7 +10,6 @@ import android.support.design.widget.BottomSheetDialog
 import android.support.design.widget.CoordinatorLayout
 import android.support.v4.app.DialogFragment
 import android.support.v4.app.FragmentManager
-import android.support.v4.view.ViewCompat
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AppCompatDialogFragment
 import android.support.v7.widget.AppCompatCheckBox
@@ -22,41 +22,58 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.data.repository.shared.Subscriber
-import com.pandulapeter.campfire.data.repository.shared.UpdateType
-import com.pandulapeter.campfire.util.BundleArgumentDelegate
-import com.pandulapeter.campfire.util.dimension
-import com.pandulapeter.campfire.util.setArguments
+import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
 
 /**
  * A bottom sheet that allows the user to set the positionSource of the avatar image (gallery or camera).
+ *
+ * Controlled by [PlaylistChooserBottomSheetViewModel].
  */
-class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment(), Subscriber {
+class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
     private val songInfoRepository by inject<SongInfoRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
     private lateinit var binding: PlaylistChooserBottomSheetBinding
-    private lateinit var songId: String
+    private lateinit var viewModel: PlaylistChooserBottomSheetViewModel
     private val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
-    private val finalToolbarElevation by lazy { context?.dimension(R.dimen.bottom_sheet_toolbar_elevation) ?: 0 }
-    private val finalToolbarMargin by lazy { context?.dimension(R.dimen.bottom_sheet_toolbar_margin) ?: 0 }
-    private val initialToolbarContainerPadding by lazy { context?.dimension(R.dimen.content_padding) ?: 0 }
-    private var scrollViewOffset = 0
+    private val checkBoxHeight by lazy { context?.dimension(R.dimen.touch_target) ?: 0 }
+    private val contentPadding by lazy { context?.dimension(R.dimen.content_padding) ?: 0 }
+    private val contentBottomMargin by lazy { context?.dimension(R.dimen.list_fab_content_bottom_margin) ?: 0 }
     private var shouldTransformTopToAppBar = false
+    private var scrollViewOffset = 0
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = activity?.let { context ->
         CustomWidthBottomSheetDialog(context, theme).apply {
             binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_playlist_chooser_bottom_sheet, null, false)
-            songId = savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId
+            viewModel = PlaylistChooserBottomSheetViewModel(
+                songInfoRepository,
+                playlistRepository,
+                savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId,
+                binding.container?.toolbar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
+                binding.container?.fakeAppBar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
+                binding.container?.toolbar?.context?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
+                binding.container?.fakeAppBar?.context?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
+                context.dimension(R.dimen.content_padding),
+                context.dimension(R.dimen.bottom_sheet_toolbar_elevation),
+                context.dimension(R.dimen.bottom_sheet_toolbar_margin)
+            )
+            binding.viewModel = viewModel
             setContentView(binding.root)
-            binding.container?.close?.setOnClickListener { dismiss() }
-            binding.container?.newPlaylist?.setOnClickListener { NewPlaylistDialogFragment.show(childFragmentManager) }
+            viewModel.shouldDismissDialog.onEventTriggered(this@PlaylistChooserBottomSheetFragment) { dismiss() }
+            viewModel.shouldShowNewPlaylistDialog.onEventTriggered(this@PlaylistChooserBottomSheetFragment) { NewPlaylistDialogFragment.show(childFragmentManager) }
+            viewModel.playlists.onPropertyChanged(this@PlaylistChooserBottomSheetFragment) { refreshPlaylistCheckboxes(it) }
             behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-                override fun onSlide(bottomSheet: View, slideOffset: Float) = updateSlideState(slideOffset)
+                override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                    if (shouldTransformTopToAppBar) {
+                        viewModel.updateSlideState(slideOffset, scrollViewOffset)
+                    }
+                }
 
                 override fun onStateChanged(bottomSheet: View, newState: Int) {
-                    if (newState == BottomSheetBehavior.STATE_HIDDEN) dismiss()
+                    if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+                        dismiss()
+                    }
                 }
             })
             binding.container?.nestedScrollView?.setOnScrollChangeListener { _: NestedScrollView?, _: Int, scrollY: Int, _: Int, _: Int ->
@@ -67,64 +84,39 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment(), Subscriber
 
     override fun onStart() {
         super.onStart()
-        songInfoRepository.subscribe(this)
-        playlistRepository.subscribe(this)
+        songInfoRepository.subscribe(viewModel)
+        playlistRepository.subscribe(viewModel)
     }
 
     override fun onStop() {
         super.onStop()
-        songInfoRepository.unsubscribe(this)
-        playlistRepository.unsubscribe(this)
+        songInfoRepository.unsubscribe(viewModel)
+        playlistRepository.unsubscribe(viewModel)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.songId = songId
+        outState.songId = viewModel.songId
     }
 
-    override fun onUpdate(updateType: UpdateType) {
-        when (updateType) {
-            is UpdateType.LibraryCacheUpdated -> binding.songInfo = songInfoRepository.getLibrarySongs().first { it.id == songId }
-            is UpdateType.PlaylistsUpdated,
-            is UpdateType.NewPlaylistsCreated,
-            is UpdateType.PlaylistRenamed,
-            is UpdateType.PlaylistDeleted -> refreshPlaylistCheckboxes()
-        }
-    }
 
-    private fun updateSlideState(slideOffset: Float) = Math.max(0f, 2 * slideOffset - 1).let { closenessToTop ->
-        if (shouldTransformTopToAppBar && (dialog as CustomWidthBottomSheetDialog).isFullWidth) {
-            binding.container?.close?.alpha = closenessToTop
-            binding.container?.close?.translationX = -(1 - closenessToTop) * finalToolbarMargin / 4
-            binding.container?.toolbar?.translationX = closenessToTop * finalToolbarMargin
-            if (scrollViewOffset == 0) {
-                ViewCompat.setElevation(binding.container?.fakeAppBar, closenessToTop * finalToolbarElevation)
-                binding.container?.background?.alpha = closenessToTop
-                binding.container?.toolbarContainer?.setPadding(0, Math.round((1 - closenessToTop) * initialToolbarContainerPadding), 0, 0)
-            }
-        }
-    }
-
-    private fun refreshPlaylistCheckboxes() {
+    private fun refreshPlaylistCheckboxes(playlists: List<Playlist>) {
         context?.let { context ->
             binding.container?.playlistContainer?.removeAllViews()
-            val height = context.dimension(R.dimen.touch_target)
-            val padding = context.dimension(R.dimen.content_padding)
-            val playlists = playlistRepository.getPlaylists()
             playlists.forEach { playlist ->
                 binding.container?.playlistContainer?.addView(AppCompatCheckBox(context).apply {
                     gravity = Gravity.CENTER_VERTICAL
-                    setPadding(padding, padding, padding, padding)
+                    setPadding(contentPadding, contentPadding, contentPadding, contentPadding)
                     text = playlist.title ?: getString(R.string.home_favorites)
-                    isChecked = playlistRepository.isSongInPlaylist(playlist.id, songId)
+                    isChecked = playlistRepository.isSongInPlaylist(playlist.id, viewModel.songId)
                     setOnCheckedChangeListener { _, isChecked ->
                         if (isChecked) {
-                            playlistRepository.addSongToPlaylist(playlist.id, songId)
+                            playlistRepository.addSongToPlaylist(playlist.id, viewModel.songId)
                         } else {
-                            playlistRepository.removeSongFromPlaylist(playlist.id, songId)
+                            playlistRepository.removeSongFromPlaylist(playlist.id, viewModel.songId)
                         }
                     }
-                }, ViewGroup.LayoutParams.MATCH_PARENT, height)
+                }, ViewGroup.LayoutParams.MATCH_PARENT, checkBoxHeight)
             }
             binding.container?.newPlaylist?.visibility = if (playlists.size < Playlist.MAXIMUM_PLAYLIST_COUNT) View.VISIBLE else View.GONE
             checkIfToolbarTransformationIsNeeded()
@@ -141,8 +133,10 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment(), Subscriber
                 layoutParams.height = screenHeight
                 binding.root.layoutParams = layoutParams
                 shouldTransformTopToAppBar = true
-                binding.container?.contentContainer?.setPadding(0, 0, 0, context?.dimension(R.dimen.list_fab_content_bottom_margin) ?: 0)
-                updateSlideState(if (behavior.state == BottomSheetBehavior.STATE_EXPANDED) 1f else 0f)
+                binding.container?.contentContainer?.setPadding(0, 0, 0, contentBottomMargin)
+                if (shouldTransformTopToAppBar) {
+                    viewModel.updateSlideState(if (behavior.state == BottomSheetBehavior.STATE_EXPANDED) 1f else 0f, scrollViewOffset)
+                }
             }
             behavior.peekHeight = Math.min(binding.root.height, screenHeight / 2)
         }

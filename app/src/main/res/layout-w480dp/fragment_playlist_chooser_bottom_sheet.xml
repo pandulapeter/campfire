@@ -6,8 +6,8 @@
     <data class=".PlaylistChooserBottomSheetBinding">
 
         <variable
-            name="songInfo"
-            type="com.pandulapeter.campfire.data.model.SongInfo" />
+            name="viewModel"
+            type="com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetViewModel" />
 
     </data>
 
@@ -18,7 +18,7 @@
         <include
             android:id="@+id/container"
             layout="@layout/item_playlist_chooser_bottom_sheet_content"
-            app:songInfo="@{songInfo}" />
+            app:viewModel="@{viewModel}" />
 
     </android.support.v4.widget.NestedScrollView>
 

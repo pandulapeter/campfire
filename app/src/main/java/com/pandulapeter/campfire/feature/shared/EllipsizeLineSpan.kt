@@ -3,13 +3,15 @@ package com.pandulapeter.campfire.feature.shared
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
+import android.support.annotation.ColorInt
+import android.support.annotation.ColorRes
 import android.text.style.LineBackgroundSpan
 import android.text.style.ReplacementSpan
 
 /**
  * Ellipsizes individual lines of a text.
  */
-class EllipsizeLineSpan : ReplacementSpan(), LineBackgroundSpan {
+class EllipsizeLineSpan(@ColorInt private val color: Int? = null) : ReplacementSpan(), LineBackgroundSpan {
     private var layoutLeft = 0
     private var layoutRight = 0
 
@@ -35,6 +37,7 @@ class EllipsizeLineSpan : ReplacementSpan(), LineBackgroundSpan {
     override fun getSize(paint: Paint, text: CharSequence, start: Int, end: Int, fm: Paint.FontMetricsInt?) = layoutRight - layoutLeft
 
     override fun draw(canvas: Canvas, text: CharSequence, start: Int, end: Int, x: Float, top: Int, y: Int, bottom: Int, paint: Paint) {
+        color?.let { paint.color = it }
         var newEnd = end
         val textWidth = paint.measureText(text, start, newEnd)
         if (x + Math.ceil(textWidth.toDouble()).toInt() < layoutRight) {

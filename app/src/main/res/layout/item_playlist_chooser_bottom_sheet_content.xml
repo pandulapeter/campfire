@@ -7,8 +7,8 @@
     <data>
 
         <variable
-            name="songInfo"
-            type="com.pandulapeter.campfire.data.model.SongInfo" />
+            name="viewModel"
+            type="com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetViewModel" />
 
         <import type="com.pandulapeter.campfire.R" />
 
@@ -25,26 +25,26 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:attr/windowBackground"
-            android:clipChildren="false">
+            android:clipChildren="false"
+            android:elevation="@{viewModel.appBarElevation}">
 
-            <!--TODO: Crossfade colors when collapsing in Light theme -->
             <View
                 android:id="@+id/background"
-                android:theme="@style/ActionBar"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:alpha="0"
+                android:alpha="@{viewModel.containerAlpha}"
                 android:background="?attr/colorPrimary"
+                android:theme="@style/ActionBar"
                 app:layout_constraintBottom_toBottomOf="@+id/toolbar_container"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:alpha="1" />
+                app:layout_constraintTop_toTopOf="parent" />
 
             <android.support.constraint.ConstraintLayout
                 android:id="@id/toolbar_container"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/toolbar_height"
                 android:clipChildren="false"
-                android:paddingTop="@dimen/content_padding">
+                android:paddingTop="@{viewModel.containerPadding}"
+                android:theme="@style/ActionBar">
 
                 <android.support.v4.widget.Space
                     android:id="@+id/space"
@@ -52,13 +52,17 @@
                     android:layout_height="0dp"
                     app:layout_constraintEnd_toStartOf="parent" />
 
+                <!--TODO: Selector is not visible. -->
+
                 <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
                     android:id="@+id/close"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/first_keyline"
-                    android:alpha="0"
+                    android:alpha="@{viewModel.closeAlpha}"
                     android:contentDescription="@string/library_close"
+                    android:onClick="@{() -> viewModel.onCloseButtonClicked()}"
+                    android:translationX="@{viewModel.closeTranslation}"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="@id/space"
                     app:layout_constraintTop_toTopOf="parent"
@@ -72,12 +76,15 @@
                     android:gravity="center_vertical"
                     android:paddingEnd="@dimen/bottom_sheet_toolbar_margin"
                     android:paddingStart="0dp"
+                    android:translationX="@{viewModel.toolbarTranslation}"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:subtitle="@{songInfo.artist}"
-                    app:title="@{songInfo.title}"
+                    app:subtitle="@{viewModel.songInfo.artist}"
+                    app:title="@{viewModel.songInfo.title}"
+                    app:titleColor="@{viewModel.toolbarTitleColor}"
+                    app:subtitleColor="@{viewModel.toolbarSubtitleColor}"
                     tools:text="Song title\nArtist" />
 
             </android.support.constraint.ConstraintLayout>
@@ -116,6 +123,7 @@
                     android:drawablePadding="12dp"
                     android:drawableStart="@{R.drawable.ic_new_playlist_24dp}"
                     android:gravity="center_vertical"
+                    android:onClick="@{() -> viewModel.onNewPlaylistButtonClicked()}"
                     android:paddingEnd="@dimen/first_keyline"
                     android:paddingStart="14dp"
                     android:text="@string/home_new_playlist"
