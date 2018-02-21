@@ -21,7 +21,7 @@
     <string name="manage_playlists">Manage playlists</string>
     <string name="new_version_available">New version available</string>
     <string name="new_tag">New</string>
-    <string name="song_item_song_download_failed">%s cannot be downloaded.</string>
+    <string name="song_item_song_download_failed">%s cannot be downloaded</string>
     <string name="drag_to_rearrange">Drag to rearrange</string>
 
     <!-- Home screen -->
@@ -43,10 +43,10 @@
 
     <!-- Library screen -->
     <string name="library_placeholder_loading">Loading song library. This shouldn\'t take long…</string>
-    <string name="library_placeholder_loading_failed">Something went wrong while loading the library data.</string>
-    <string name="library_placeholder_search">No results found.</string>
-    <string name="library_placeholder_filters">No matching songs in the library. Double-check the filters you set up.</string>
-    <string name="library_update_error">Error updating library.</string>
+    <string name="library_placeholder_loading_failed">Something went wrong while loading the library data</string>
+    <string name="library_placeholder_search">No results found</string>
+    <string name="library_placeholder_filters">No matching songs in the library. Double-check the filters you set up</string>
+    <string name="library_update_error">Error updating library</string>
     <string name="library_search">Search</string>
     <string name="library_close">Close</string>
     <string name="library_filters">Filters</string>
@@ -61,7 +61,7 @@
     <string name="library_song_count">%s songs</string>
 
     <!-- Collections screen -->
-    <string name="collections_work_in_progress">Work on the Collections screen is in progress.</string>
+    <string name="collections_work_in_progress">Work on the Collections screen is in progress</string>
 
     <!-- History screen -->
     <string name="history_clear">Clear</string>
@@ -78,8 +78,8 @@
     <string name="history_this_year">This year</string>
     <string name="history_last_year">Last year</string>
     <string name="history_a_long_time_ago">A long time ago</string>
-    <string name="history_hint">Swipe items away to remove them from your history.</string>
-    <string name="history_placeholder">The list of songs you opened will appear here in chronological order.</string>
+    <string name="history_hint">Swipe items away to remove them from your history</string>
+    <string name="history_placeholder">The list of songs you opened will appear here in chronological order</string>
 
     <!-- Settings screen -->
     <string name="settings_chords">Chords</string>
@@ -105,7 +105,7 @@
     <string name="settings_other">Other</string>
     <string name="settings_reset_hints">Reset hints</string>
     <string name="settings_reset_hints_description">The hints you dismissed in the past will appear again</string>
-    <string name="settings_reset_hints_message">Tutorial progress reset.</string>
+    <string name="settings_reset_hints_message">Tutorial progress reset</string>
     <string name="settings_reset_hints_confirmation_title">Are you sure?</string>
     <string name="settings_reset_hints_confirmation_message">This will reset your progress in the tutorial.</string>
     <string name="settings_reset_hints_confirmation_reset">Reset</string>
@@ -119,8 +119,8 @@
     <string name="playlist_share">Share</string>
     <string name="playlist_enter_title">Enter playlist title</string>
     <string name="playlist_done">Done</string>
-    <string name="playlist_hint">Drag the songs to rearrange them, swipe to remove.</string>
-    <string name="playlist_placeholder">To start adding songs to this playlist, tap on the star icon near song titles.</string>
+    <string name="playlist_hint">Drag the songs to rearrange them, swipe to remove</string>
+    <string name="playlist_placeholder">To start adding songs to this playlist, tap on the star icon near song titles</string>
 
     <!-- Manage playlists screen -->
     <plurals name="manage_playlists_subtitle">
@@ -132,7 +132,7 @@
         <item quantity="one">Contains %d song</item>
         <item quantity="other">Contains %d songs</item>
     </plurals>
-    <string name="manage_playlists_hint">Drag the playlists to rearrange them, swipe to remove.</string>
+    <string name="manage_playlists_hint">Drag the playlists to rearrange them, swipe to remove</string>
 
     <!-- Manage downloads screen -->
     <plurals name="manage_downloads_subtitle">
@@ -142,10 +142,10 @@
     <string name="manage_downloads_subtitle_calculating">Calculating…</string>
     <string name="manage_downloads_delete_all">Delete all</string>
     <string name="manage_downloads_delete_all_confirmation_title">Are you sure?</string>
-    <string name="manage_downloads_delete_all_confirmation_message">This will remove all downloaded songs.</string>
+    <string name="manage_downloads_delete_all_confirmation_message">This will remove all downloaded songs</string>
     <string name="manage_downloads_delete_all_confirmation_clear">Clear</string>
-    <string name="manage_downloads_hint">Swipe items away to remove them from your downloads.</string>
-    <string name="manage_downloads_placeholder">You don\'t have any downloaded songs.</string>
+    <string name="manage_downloads_hint">Swipe items away to remove them from your downloads</string>
+    <string name="manage_downloads_placeholder">You don\'t have any downloaded songs</string>
 
     <!-- Detail screen -->
     <string name="detail_song_options">Song options</string>
@@ -153,10 +153,9 @@
     <string name="detail_transpose_value">Transpose (%s)</string>
     <string name="detail_transpose_higher">Higher</string>
     <string name="detail_transpose_lower">Lower</string>
-    <string name="detail_play_in_youtube">Play in YouTube</string>
-    <string name="detail_swipe_hint">Swipe horizontally to cycle through songs in the playlist.</string>
-    <string name="detail_placeholder_error">Something went wrong while downloading the song.</string>
-    <string name="detail_no_youtube_client_found">No YouTube client found.</string>
+    <string name="detail_play_original">Play original</string>
+    <string name="detail_swipe_hint">Swipe horizontally to cycle through songs in the playlist</string>
+    <string name="detail_placeholder_error">Something went wrong while downloading the song</string>
     <string name="detail_intro">Intro</string>
     <string name="detail_verse">Verse</string>
     <string name="detail_bridge">Bridge</string>

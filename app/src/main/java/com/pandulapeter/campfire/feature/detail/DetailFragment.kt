@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.detail
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
@@ -14,6 +15,7 @@ import com.pandulapeter.campfire.feature.MainActivity
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
+import java.net.URLEncoder
 
 
 /**
@@ -105,15 +107,13 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         updateTranposeText(viewModel.transposition.get())
         viewModel.shouldShowSongOptions.onEventTriggered(this) { binding.drawerLayout.openDrawer(GravityCompat.END) }
         viewModel.youTubeSearchQuery.onEventTriggered(this) {
-            //TODO: Add support for more third party YouTube clients.
             try {
                 startActivity(getYouTubeIntent("com.lara.android.youtube", it))
             } catch (_: ActivityNotFoundException) {
                 try {
                     startActivity(getYouTubeIntent("com.google.android.youtube", it))
                 } catch (_: ActivityNotFoundException) {
-                    binding.drawerLayout.closeDrawers()
-                    binding.coordinatorLayout.showSnackbar(R.string.detail_no_youtube_client_found)
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com/#q=" + URLEncoder.encode(it, "UTF-8"))))
                 }
             }
         }
