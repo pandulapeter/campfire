@@ -35,6 +35,11 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     private val transposeContainer by lazy { binding.navigationView.menu.findItem(R.id.transpose_container) }
     private val transposeHigher by lazy { binding.navigationView.menu.findItem(R.id.transpose_higher) }
     private val transposeLower by lazy { binding.navigationView.menu.findItem(R.id.transpose_lower) }
+    private val multiWindowFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
+    } else {
+        Intent.FLAG_ACTIVITY_NEW_TASK
+    }
     override val viewModel by lazy {
         DetailViewModel(
             arguments.songId,
@@ -113,7 +118,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 try {
                     startActivity(getYouTubeIntent("com.google.android.youtube", it))
                 } catch (_: ActivityNotFoundException) {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com/#q=" + URLEncoder.encode(it, "UTF-8"))))
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com/#q=" + URLEncoder.encode(it, "UTF-8"))).apply { flags = multiWindowFlags })
                 }
             }
         }
@@ -166,11 +171,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
 
     private fun getYouTubeIntent(packageName: String, query: String) = Intent(Intent.ACTION_SEARCH).apply {
         `package` = packageName
-        flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
-        } else {
-            Intent.FLAG_ACTIVITY_NEW_TASK
-        }
+        flags = multiWindowFlags
     }.putExtra("query", query)
 
     private fun updateTranposeText(transposeValue: Int) {
