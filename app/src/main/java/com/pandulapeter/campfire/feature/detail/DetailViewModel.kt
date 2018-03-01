@@ -36,7 +36,7 @@ class DetailViewModel(
     val isSongOnAnyPlaylist = ObservableBoolean()
     val shouldShowSongOptions = ObservableBoolean()
     val shouldShowPlaylistAction = playlistId == DetailFragment.NO_PLAYLIST
-    val youTubeSearchQuery = ObservableField<String>()
+    val playOriginalSearchQuery = ObservableField<String>()
     val shouldAllowToolbarScrolling = ObservableBoolean()
     val shouldShowAutoScrollButton = ObservableBoolean()
     val isAutoScrollStarted = ObservableBoolean()
@@ -104,7 +104,7 @@ class DetailViewModel(
 
     fun onPlayOnYouTubeClicked() {
         songInfoRepository.getSongInfo(getSelectedSongId())?.let {
-            youTubeSearchQuery.set("${it.artist} - ${it.title}")
+            playOriginalSearchQuery.set("${it.artist} - ${it.title}")
         }
     }
 

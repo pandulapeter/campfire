@@ -111,7 +111,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         viewModel.transposition.onPropertyChanged(this) { updateTranposeText(it) }
         updateTranposeText(viewModel.transposition.get())
         viewModel.shouldShowSongOptions.onEventTriggered(this) { binding.drawerLayout.openDrawer(GravityCompat.END) }
-        viewModel.youTubeSearchQuery.onEventTriggered(this) {
+        viewModel.playOriginalSearchQuery.onEventTriggered(this) {
             try {
                 startActivity(getYouTubeIntent("com.lara.android.youtube", it))
             } catch (_: ActivityNotFoundException) {
