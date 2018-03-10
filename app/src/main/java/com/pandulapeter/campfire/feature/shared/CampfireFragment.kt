@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.networking.AnalyticsManager
+import com.pandulapeter.campfire.util.color
 import org.koin.android.ext.android.inject
 
 /**
@@ -50,8 +51,8 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     protected fun View.showSnackbar(
-        @StringRes message: Int, @StringRes actionButton: Int? = null, action: (View) -> Unit = {},
-        dismissListener: (() -> Unit)? = null
+            @StringRes message: Int, @StringRes actionButton: Int? = null, action: (View) -> Unit = {},
+            dismissListener: (() -> Unit)? = null
     ) = showSnackbar(context.getString(message), actionButton, action, dismissListener)
 
     protected fun View.showSnackbar(message: String, @StringRes actionButton: Int? = null, action: (View) -> Unit = {}, dismissListener: (() -> Unit)? = null) {
@@ -74,6 +75,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     private fun View.makeSnackbar(message: String, duration: Int, dismissListener: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {
+        view.setBackgroundColor(context.color(R.color.primary))
         dismissListener?.let {
             addCallback(object : Snackbar.Callback() {
                 override fun onDismissed(transientBottomBar: Snackbar?, event: Int) = it()
