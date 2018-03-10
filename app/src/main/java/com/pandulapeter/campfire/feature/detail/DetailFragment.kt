@@ -42,15 +42,15 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     }
     override val viewModel by lazy {
         DetailViewModel(
-            arguments.songId,
-            arguments.playlistId,
-            analyticsManager,
-            userPreferenceRepository,
-            downloadedSongRepository,
-            childFragmentManager,
-            playlistRepository,
-            songInfoRepository,
-            historyRepository
+                arguments.songId,
+                arguments.playlistId,
+                analyticsManager,
+                userPreferenceRepository,
+                downloadedSongRepository,
+                childFragmentManager,
+                playlistRepository,
+                songInfoRepository,
+                historyRepository
         )
     }
 
@@ -101,6 +101,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 R.id.transpose_higher -> consume { detailEventBus.transposeSong(viewModel.getSelectedSongId(), 1) }
                 R.id.transpose_lower -> consume { detailEventBus.transposeSong(viewModel.getSelectedSongId(), -1) }
                 R.id.play_in_youtube -> consumeAndCloseDrawer(binding.drawerLayout) { viewModel.onPlayOnYouTubeClicked() }
+                R.id.share -> consumeAndCloseDrawer(binding.drawerLayout) { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
                 else -> false
             }
         }
@@ -177,8 +178,8 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     private fun updateTranposeText(transposeValue: Int) {
         context?.let {
             transposeContainer.title = if (transposeValue == 0) it.getString(R.string.detail_transpose) else it.getString(
-                R.string.detail_transpose_value,
-                if (transposeValue < 0) "$transposeValue" else "+$transposeValue"
+                    R.string.detail_transpose_value,
+                    if (transposeValue < 0) "$transposeValue" else "+$transposeValue"
             )
         }
     }

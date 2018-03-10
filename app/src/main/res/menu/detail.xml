@@ -27,4 +27,8 @@
         android:id="@+id/play_in_youtube"
         android:title="@string/detail_play_original" />
 
+    <item
+        android:id="@+id/share"
+        android:title="@string/detail_share" />
+
 </menu>
