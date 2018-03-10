@@ -1,6 +1,8 @@
 package com.pandulapeter.campfire.feature.shared.dialog
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.DialogInterface
 import android.databinding.DataBindingUtil
 import android.graphics.Color
 import android.os.Bundle
@@ -13,10 +15,8 @@ import android.support.v4.app.FragmentManager
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AppCompatDialogFragment
 import android.support.v7.widget.AppCompatCheckBox
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.util.TypedValue
+import android.view.*
 import com.pandulapeter.campfire.PlaylistChooserBottomSheetBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Playlist
@@ -42,21 +42,27 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
     private val contentBottomMargin by lazy { context?.dimension(R.dimen.list_fab_content_bottom_margin) ?: 0 }
     private var shouldTransformTopToAppBar = false
     private var scrollViewOffset = 0
+    private var originalStatusBarColor = 0
+    private val updatedStatusBarColor by lazy {
+        val outValue = TypedValue()
+        binding.container?.background?.context?.theme?.resolveAttribute(android.R.attr.colorPrimaryDark, outValue, true)
+        outValue.resourceId
+    }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?) = activity?.let { context ->
+    override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->
         CustomWidthBottomSheetDialog(context, theme).apply {
             binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_playlist_chooser_bottom_sheet, null, false)
             viewModel = PlaylistChooserBottomSheetViewModel(
-                songInfoRepository,
-                playlistRepository,
-                savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId,
-                binding.container?.toolbar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
-                binding.container?.fakeAppBar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
-                binding.container?.toolbar?.context?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
-                binding.container?.fakeAppBar?.context?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
-                context.dimension(R.dimen.content_padding),
-                context.dimension(R.dimen.bottom_sheet_toolbar_elevation),
-                context.dimension(R.dimen.bottom_sheet_toolbar_margin)
+                    songInfoRepository,
+                    playlistRepository,
+                    savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId,
+                    binding.container?.toolbar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
+                    binding.container?.fakeAppBar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
+                    binding.container?.toolbar?.context?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
+                    binding.container?.fakeAppBar?.context?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
+                    context.dimension(R.dimen.content_padding),
+                    context.dimension(R.dimen.bottom_sheet_toolbar_elevation),
+                    context.dimension(R.dimen.bottom_sheet_toolbar_margin)
             )
             binding.viewModel = viewModel
             setContentView(binding.root)
@@ -64,9 +70,25 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
             viewModel.shouldShowNewPlaylistDialog.onEventTriggered(this@PlaylistChooserBottomSheetFragment) { NewPlaylistDialogFragment.show(childFragmentManager) }
             viewModel.playlists.onPropertyChanged(this@PlaylistChooserBottomSheetFragment) { refreshPlaylistCheckboxes(it) }
             behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+
+                @SuppressLint("ResourceAsColor")
                 override fun onSlide(bottomSheet: View, slideOffset: Float) {
                     if (shouldTransformTopToAppBar) {
                         viewModel.updateSlideState(slideOffset, scrollViewOffset)
+                        activity?.window?.run {
+                            if (slideOffset == 1f) {
+                                if (statusBarColor != updatedStatusBarColor) {
+                                    clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+                                    originalStatusBarColor = statusBarColor
+                                    statusBarColor = updatedStatusBarColor
+                                }
+                            } else {
+                                if (statusBarColor != originalStatusBarColor) {
+                                    addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+                                    statusBarColor = originalStatusBarColor
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -94,11 +116,20 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
         playlistRepository.unsubscribe(viewModel)
     }
 
+    override fun onDismiss(dialog: DialogInterface?) {
+        super.onDismiss(dialog)
+        if (shouldTransformTopToAppBar) {
+            activity?.window?.run {
+                addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+                statusBarColor = originalStatusBarColor
+            }
+        }
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.songId = viewModel.songId
     }
-
 
     private fun refreshPlaylistCheckboxes(playlists: List<Playlist>) {
         context?.let { context ->
