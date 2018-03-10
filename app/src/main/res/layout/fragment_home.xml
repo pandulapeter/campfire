@@ -33,6 +33,7 @@
             android:layout_height="match_parent"
             android:layout_gravity="start"
             app:headerLayout="@layout/view_menu_header"
+            app:itemBackground="?attr/selectableItemBackground"
             app:itemIconTint="@color/accent"
             app:itemTextColor="@color/item"
             app:menu="@menu/home" />

@@ -93,6 +93,7 @@
                 android:layout_gravity="bottom|end"
                 android:layout_margin="@dimen/large_content_padding"
                 android:onClick="@{() -> viewModel.onNewPlaylistButtonClicked()}"
+                android:theme="@style/LightTheme"
                 android:visibility="invisible"
                 app:fabSize="normal"
                 app:srcCompat="@drawable/ic_add_24dp"

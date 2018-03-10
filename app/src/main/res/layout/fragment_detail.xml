@@ -149,6 +149,7 @@
                     android:layout_gravity="bottom|end"
                     android:layout_margin="@dimen/large_content_padding"
                     android:onClick="@{() -> viewModel.onAutoPlayButtonClicked()}"
+                    android:theme="@style/LightTheme"
                     android:visibility="invisible"
                     app:animation="@{viewModel.isAutoScrollStarted ? R.drawable.avd_play_to_pause_24dp : R.drawable.avd_pause_to_play_24dp}"
                     app:fabSize="normal"

@@ -20,8 +20,7 @@ import com.pandulapeter.campfire.util.obtainColor
  * larger than the actual View bounds. It also sets the drawable tint based on the current theme. Used for icons
  * that are part of the app bar.
  */
-class AppBarButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
-    AppCompatImageView(context, attrs, defStyleAttr) {
+class AppBarButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : AppCompatImageView(context, attrs, defStyleAttr) {
 
     init {
         val padding = context.dimension(R.dimen.toolbar_action_button_padding)
@@ -47,7 +46,7 @@ class AppBarButton @JvmOverloads constructor(context: Context, attrs: AttributeS
     }
 
     override fun setImageDrawable(drawable: Drawable?) {
-        drawable?.setTint(context.obtainColor(android.R.attr.textColorSecondary))
+        drawable?.setTint(context.obtainColor(android.R.attr.textColorPrimary))
         super.setImageDrawable(drawable)
     }
 
