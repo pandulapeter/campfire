@@ -60,6 +60,7 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
                 R.id.downloaded_only -> consume { viewModel.shouldShowDownloadedOnly.toggle() }
                 R.id.show_work_in_progress -> consume { viewModel.shouldShowWorkInProgress.toggle() }
                 R.id.show_explicit -> consume { viewModel.shouldShowExplicit.toggle() }
+                R.id.sort_by_popularity -> consume { } //TODO: Implement sorting by popularity.
                 R.id.sort_by_title -> consume { if (!viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(true) }
                 R.id.sort_by_artist -> consume { if (viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(false) }
                 else -> consume { viewModel.languageFilters.get().filterKeys { language -> language.nameResource == it.itemId }.values.first().toggle() }

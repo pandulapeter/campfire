@@ -98,7 +98,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             updateCheckedItem()
         }
         viewModel.isLibraryReady.onPropertyChanged(this) { isLibraryReady ->
-            collectionsItem.isEnabled = isLibraryReady
+            collectionsItem.isEnabled = false //TODO: Only enable this after the feature is implemented.
             historyItem.isEnabled = isLibraryReady
             playlistsContainerItem.run {
                 viewModel.playlists.get()?.forEach {

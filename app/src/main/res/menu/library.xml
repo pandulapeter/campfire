@@ -7,6 +7,12 @@
         <menu>
 
             <item
+                android:id="@+id/sort_by_popularity"
+                android:enabled="false"
+                android:title="@string/library_sort_by_popularity"
+                app:actionLayout="@layout/widget_radio_button_disabled" />
+
+            <item
                 android:id="@+id/sort_by_title"
                 android:title="@string/library_sort_by_title"
                 app:actionLayout="@layout/widget_radio_button" />
