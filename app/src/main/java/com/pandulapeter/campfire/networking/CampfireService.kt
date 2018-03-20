@@ -4,6 +4,7 @@ import com.pandulapeter.campfire.data.model.SongDetail
 import com.pandulapeter.campfire.data.model.SongInfo
 import retrofit2.Call
 import retrofit2.http.GET
+import retrofit2.http.PUT
 import retrofit2.http.Query
 
 /**
@@ -24,4 +25,12 @@ interface CampfireService {
      */
     @GET("/song")
     fun getSong(@Query("id") id: String): Call<SongDetail>
+
+    /**
+     * Notifies the server that a song has been opened so it can track its popularity.
+     *
+     * @param id - The ID of the song.
+     */
+    @PUT("/opened")
+    fun openSong(@Query("id") id: String): Call<Unit>
 }

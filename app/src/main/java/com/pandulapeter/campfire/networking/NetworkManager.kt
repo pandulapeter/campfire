@@ -11,7 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 class NetworkManager(gson: Gson) {
 
     val service: CampfireService = Retrofit.Builder()
-        .baseUrl("https://campfire-test1.herokuapp.com")
+        .baseUrl("https://campfire-test1.herokuapp.com/v1/")
         .client(OkHttpClient.Builder().build())
         .addConverterFactory(GsonConverterFactory.create(gson))
         .build()
