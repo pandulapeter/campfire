@@ -15,7 +15,7 @@ interface CampfireService {
     /**
      * Returns the list of all the songs in the database.
      */
-    @GET("/library")
+    @GET("/v1/library")
     fun getLibrary(): Call<List<SongInfo>>
 
     /**
@@ -23,7 +23,7 @@ interface CampfireService {
      *
      * @param id - The ID of the song.
      */
-    @GET("/song")
+    @GET("/v1/song")
     fun getSong(@Query("id") id: String): Call<SongDetail>
 
     /**
@@ -31,6 +31,6 @@ interface CampfireService {
      *
      * @param id - The ID of the song.
      */
-    @PUT("/opened")
-    fun openSong(@Query("id") id: String): Call<Unit>
+    @PUT("/v1/opened")
+    fun openSong(@Query("id") id: String): Call<Unit> //TODO: Use this endpoint.
 }

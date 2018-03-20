@@ -71,6 +71,7 @@ dependencies {
     final retrofitVersion = '2.3.0'
     implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
     implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
+    implementation "com.squareup.okhttp3:logging-interceptor:3.9.1"
 
     // Support library
     final supportLibraryVersion = '25.4.0'
