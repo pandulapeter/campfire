@@ -189,9 +189,9 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         private var Bundle?.songId by BundleArgumentDelegate.String("song_id")
         private var Bundle?.playlistId by BundleArgumentDelegate.Int("playlist_id")
 
-        fun newInstance(songId: String, playlistId: Int?) = DetailFragment().setArguments {
+        fun newInstance(songId: String, playlistId: Int?) = DetailFragment().withArguments {
             it.songId = songId
             it.playlistId = playlistId ?: NO_PLAYLIST
-        } as DetailFragment
+        }
     }
 }

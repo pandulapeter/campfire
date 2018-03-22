@@ -39,7 +39,7 @@ class ManagePlaylistsListAdapter : RecyclerView.Adapter<ManagePlaylistsListAdapt
                             override fun getNewListSize() = newItems.size
 
                             override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int) =
-                                oldItems[oldItemPosition].playlist.id == newItems[newItemPosition].playlist.id
+                                    oldItems[oldItemPosition].playlist.id == newItems[newItemPosition].playlist.id
 
                             override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
                         })
@@ -52,11 +52,9 @@ class ManagePlaylistsListAdapter : RecyclerView.Adapter<ManagePlaylistsListAdapt
     var itemClickListener: (position: Int) -> Unit = { _ -> }
     var dragHandleTouchListener: ((position: Int) -> Unit)? = null
 
-    override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): PlaylistViewHolder {
-        val viewHolder = PlaylistViewHolder.create(parent)
-        viewHolder.setItemClickListener(itemClickListener)
-        viewHolder.setDragHandleTouchListener(dragHandleTouchListener)
-        return viewHolder
+    override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int) = PlaylistViewHolder.create(parent).apply {
+        setItemClickListener(itemClickListener)
+        setDragHandleTouchListener(dragHandleTouchListener)
     }
 
     override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) = onBindViewHolder(holder, position, null)
@@ -92,7 +90,7 @@ class ManagePlaylistsListAdapter : RecyclerView.Adapter<ManagePlaylistsListAdapt
 
         companion object {
             fun create(parent: ViewGroup): PlaylistViewHolder =
-                PlaylistViewHolder(DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_playlist, parent, false))
+                    PlaylistViewHolder(DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_playlist, parent, false))
         }
     }
 

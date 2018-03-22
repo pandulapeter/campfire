@@ -30,16 +30,16 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
     private val deepLinkManager by inject<DeepLinkManager>()
 
     override fun createViewModel() = PlaylistViewModel(
-        context,
-        analyticsManager,
-        deepLinkManager,
-        songInfoRepository,
-        downloadedSongRepository,
-        appShortcutManager,
-        playlistRepository,
-        userPreferenceRepository,
-        getString(R.string.home_favorites),
-        arguments.playlistId
+            context,
+            analyticsManager,
+            deepLinkManager,
+            songInfoRepository,
+            downloadedSongRepository,
+            appShortcutManager,
+            playlistRepository,
+            userPreferenceRepository,
+            getString(R.string.home_favorites),
+            arguments.playlistId
     )
 
     override fun getAppBarLayout() = binding.appBarLayout
@@ -66,10 +66,10 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
 
             override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =
-                if (viewModel.isInEditMode.get()) makeMovementFlags(
-                    if (viewModel.adapter.items.size > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
-                    ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
-                ) else 0
+                    if (viewModel.isInEditMode.get()) makeMovementFlags(
+                            if (viewModel.adapter.items.size > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
+                            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                    ) else 0
 
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = consume {
                 viewHolder?.adapterPosition?.let { originalPosition ->
@@ -120,6 +120,6 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
     companion object {
         private var Bundle?.playlistId by BundleArgumentDelegate.Int("playlist_id")
 
-        fun newInstance(playlistId: Int) = PlaylistFragment().setArguments { it.playlistId = playlistId } as PlaylistFragment
+        fun newInstance(playlistId: Int) = PlaylistFragment().withArguments { it.playlistId = playlistId }
     }
 }

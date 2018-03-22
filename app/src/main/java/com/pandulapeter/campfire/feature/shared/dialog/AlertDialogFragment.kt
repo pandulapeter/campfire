@@ -10,7 +10,7 @@ import android.support.v7.app.AppCompatDialogFragment
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
-import com.pandulapeter.campfire.util.setArguments
+import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject
 
 /**
@@ -53,7 +53,7 @@ class AlertDialogFragment : AppCompatDialogFragment() {
             @StringRes positiveButton: Int,
             @StringRes negativeButton: Int
         ) {
-            AlertDialogFragment().setArguments {
+            AlertDialogFragment().withArguments {
                 it.title = title
                 it.message = message
                 it.positiveButton = positiveButton

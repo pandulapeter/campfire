@@ -190,7 +190,7 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
         private var Bundle?.songId by BundleArgumentDelegate.String("song_id")
 
         fun show(fragmentManager: FragmentManager, songId: String) {
-            PlaylistChooserBottomSheetFragment().setArguments { it.songId = songId }.run { (this as DialogFragment).show(fragmentManager, tag) }
+            PlaylistChooserBottomSheetFragment().withArguments { it.songId = songId }.run { (this as DialogFragment).show(fragmentManager, tag) }
         }
     }
 }

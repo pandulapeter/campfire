@@ -151,15 +151,15 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
 
     private fun updateCheckedItem() = viewModel.homeNavigationItem.let {
         binding.navigationView.setCheckedItem(
-            when (it) {
-                HomeViewModel.HomeNavigationItem.Library -> R.id.library
-                HomeViewModel.HomeNavigationItem.Collections -> R.id.collections
-                HomeViewModel.HomeNavigationItem.History -> R.id.history
-                HomeViewModel.HomeNavigationItem.Settings -> R.id.settings
-                is HomeViewModel.HomeNavigationItem.Playlist -> it.id
-                HomeViewModel.HomeNavigationItem.ManagePlaylists -> R.id.manage_playlists
-                HomeViewModel.HomeNavigationItem.ManageDownloads -> R.id.manage_downloads
-            }
+                when (it) {
+                    HomeViewModel.HomeNavigationItem.Library -> R.id.library
+                    HomeViewModel.HomeNavigationItem.Collections -> R.id.collections
+                    HomeViewModel.HomeNavigationItem.History -> R.id.history
+                    HomeViewModel.HomeNavigationItem.Settings -> R.id.settings
+                    is HomeViewModel.HomeNavigationItem.Playlist -> it.id
+                    HomeViewModel.HomeNavigationItem.ManagePlaylists -> R.id.manage_playlists
+                    HomeViewModel.HomeNavigationItem.ManageDownloads -> R.id.manage_downloads
+                }
         )
     }
 
@@ -173,33 +173,32 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             viewModel.homeNavigationItem = homeNavigationItem
             if (currentFragment == null) {
                 childFragmentManager
-                    .beginTransaction()
-                    .replace(
-                        R.id.fragment_container,
-                        homeNavigationItem.getFragment().apply { shouldPlayReturnAnimation = this@HomeFragment.shouldPlayReturnAnimation })
-                    .commitNow()
+                        .beginTransaction()
+                        .replace(
+                                R.id.fragment_container,
+                                homeNavigationItem.getFragment().apply { shouldPlayReturnAnimation = this@HomeFragment.shouldPlayReturnAnimation })
+                        .commitNow()
             } else {
                 coroutine?.cancel()
                 coroutine = async(UI) {
                     childFragmentManager
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, async(CommonPool) { homeNavigationItem.getFragment() }.await())
-                        .commit()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, async(CommonPool) { homeNavigationItem.getFragment() }.await())
+                            .commit()
                 }
             }
         }
     }
 
     private fun SubMenu.addPlaylistItem(id: Int, index: Int, title: String, shouldUseAddIcon: Boolean = false) =
-        add(com.pandulapeter.campfire.R.id.playlist_container, id, index, title).run {
-            setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist_24dp else R.drawable.ic_playlist_24dp)
-            isEnabled = viewModel.isLibraryReady.get()
-        }
+            add(com.pandulapeter.campfire.R.id.playlist_container, id, index, title).run {
+                setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist_24dp else R.drawable.ic_playlist_24dp)
+                isEnabled = viewModel.isLibraryReady.get()
+            }
 
     companion object {
         private var Bundle?.homeNavigationItem by BundleArgumentDelegate.String("home_navigation_item")
 
-        fun newInstance(homeNavigationItem: HomeViewModel.HomeNavigationItem?) =
-            HomeFragment().setArguments { it.homeNavigationItem = homeNavigationItem?.stringValue ?: "" } as HomeFragment
+        fun newInstance(homeNavigationItem: HomeViewModel.HomeNavigationItem?) = HomeFragment().withArguments { it.homeNavigationItem = homeNavigationItem?.stringValue ?: "" }
     }
 }
