@@ -1,6 +1,6 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
+apply plugin: "com.android.application"
+apply plugin: "kotlin-android"
+apply plugin: "kotlin-kapt"
 
 android {
     compileSdkVersion 27
@@ -26,19 +26,19 @@ android {
     buildTypes {
         debug {
             minifyEnabled false
-            applicationIdSuffix '.debug'
-            versionNameSuffix '-debug'
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
         }
         internal {
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
             signingConfig signingConfigs.internal
-            applicationIdSuffix '.internal'
-            versionNameSuffix '-internal'
+            applicationIdSuffix ".internal"
+            versionNameSuffix "-internal"
         }
         release {
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
             //TODO: Create a separate signing configuration for Release builds.
             signingConfig signingConfigs.internal
         }
@@ -57,7 +57,7 @@ kotlin {
     }
 }
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: "libs", include: ["*.jar"])
 
     // Kotlin
     kapt "com.android.databinding:compiler:$rootProject.buildToolsVersion"
@@ -68,13 +68,11 @@ dependencies {
     implementation "org.koin:koin-android:0.8.0"
 
     // Networking
-    final retrofitVersion = '2.3.0'
     implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
     implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
     implementation "com.squareup.okhttp3:logging-interceptor:3.9.1"
 
     // Support library
-    final supportLibraryVersion = '25.4.0'
     //noinspection GradleDependency,GradleCompatible
     implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
     //noinspection GradleDependency,GradleCompatible
@@ -88,9 +86,8 @@ dependencies {
 
 configurations.all {
     resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-        def requested = details.requested
-        if (requested.group == "com.android.support") {
-            details.useVersion "25.4.0"
+        if (details.requested.group == "com.android.support") {
+            details.useVersion "$supportLibraryVersion"
         }
     }
 }
