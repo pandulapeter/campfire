@@ -63,7 +63,7 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
                 R.id.sort_by_popularity -> consume { } //TODO: Implement sorting by popularity.
                 R.id.sort_by_title -> consume { if (!viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(true) }
                 R.id.sort_by_artist -> consume { if (viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(false) }
-                else -> consume { viewModel.languageFilters.get().filterKeys { language -> language.nameResource == it.itemId }.values.first().toggle() }
+                else -> consume { viewModel.languageFilters.get()?.filterKeys { language -> language.nameResource == it.itemId }?.values?.first()?.toggle() }
             }
         }
         viewModel.languageFilters.onPropertyChanged(this) {
@@ -73,7 +73,7 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
                     it.keys.toList().sortedBy { it.nameResource }.forEachIndexed { index, language ->
                         add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
                             setActionView(R.layout.widget_checkbox)
-                            viewModel.languageFilters.get()[language]?.let { (actionView as CompoundButton).setupWithBackingField(it) }
+                            viewModel.languageFilters.get()?.get(language)?.let { (actionView as CompoundButton).setupWithBackingField(it) }
                         }
                     }
                 }

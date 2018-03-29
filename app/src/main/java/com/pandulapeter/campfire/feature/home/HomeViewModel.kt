@@ -57,16 +57,16 @@ class HomeViewModel(
             UpdateType.AllDownloadsRemoved -> hasDownloads.set(false)
             is UpdateType.PlaylistsUpdated -> playlists.set(updateType.playlists)
             is UpdateType.PlaylistsOrderUpdated -> playlists.set(updateType.playlists)
-            is UpdateType.NewPlaylistsCreated -> playlists.set(playlists.get().toMutableList().apply { add(updateType.playlists) })
-            is UpdateType.PlaylistRenamed -> playlists.get().find { it.id == updateType.playlistId }?.let { oldPlaylist ->
+            is UpdateType.NewPlaylistsCreated -> playlists.set(playlists.get()?.toMutableList()?.apply { add(updateType.playlists) })
+            is UpdateType.PlaylistRenamed -> playlists.get()?.find { it.id == updateType.playlistId }?.let { oldPlaylist ->
                 val newPlaylist = Playlist(oldPlaylist.id, updateType.title, oldPlaylist.songIds)
-                playlists.set(playlists.get().toMutableList().apply {
+                playlists.set(playlists.get()?.toMutableList()?.apply {
                     val position = indexOf(oldPlaylist)
                     removeAt(position)
                     add(position, newPlaylist)
                 })
             }
-            is UpdateType.PlaylistDeleted -> playlists.set(playlists.get().toMutableList().apply { removeAt(updateType.position) })
+            is UpdateType.PlaylistDeleted -> playlists.set(playlists.get()?.toMutableList()?.apply { removeAt(updateType.position) })
         }
     }
 

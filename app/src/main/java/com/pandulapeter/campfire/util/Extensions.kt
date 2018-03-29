@@ -68,7 +68,7 @@ inline fun <T> ObservableField<T>.onEventTriggered(fragment: Fragment? = null, c
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
             if (get() != null && fragment?.isAdded != false) {
-                callback(get())
+                get()?.let { callback(it) }
                 set(null)
             }
         }
@@ -99,7 +99,7 @@ inline fun <T> ObservableField<T>.onPropertyChanged(fragment: Fragment? = null, 
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
             if (fragment?.isAdded != false) {
-                callback(get())
+                get()?.let { callback(it) }
             }
         }
     })
@@ -136,41 +136,41 @@ inline fun <T : Fragment> T.withArguments(bundleOperations: (Bundle) -> Unit): T
 }
 
 fun Context.getIntentFor(activityClass: KClass<out Activity>, extraOperations: (Intent) -> Unit = {}) =
-        Intent(this, activityClass.java).apply { extraOperations(this) }
+    Intent(this, activityClass.java).apply { extraOperations(this) }
 
 fun String.replaceSpecialCharacters() = this
-        .replace("á", "a")
-        .replace("Á", "A")
-        .replace("ă", "a")
-        .replace("Ă", "A")
-        .replace("â", "a")
-        .replace("Â", "A")
-        .replace("é", "e")
-        .replace("É", "E")
-        .replace("í", "i")
-        .replace("Í", "I")
-        .replace("î", "i")
-        .replace("Î", "I")
-        .replace("ó", "o")
-        .replace("Ó", "O")
-        .replace("ö", "o")
-        .replace("Ö", "O")
-        .replace("ő", "o")
-        .replace("Ő", "O")
-        .replace("ș", "s")
-        .replace("Ș", "S")
-        .replace("ț", "t")
-        .replace("Ț", "T")
-        .replace("ú", "u")
-        .replace("Ú", "U")
-        .replace("ű", "u")
-        .replace("Ű", "U")
+    .replace("á", "a")
+    .replace("Á", "A")
+    .replace("ă", "a")
+    .replace("Ă", "A")
+    .replace("â", "a")
+    .replace("Â", "A")
+    .replace("é", "e")
+    .replace("É", "E")
+    .replace("í", "i")
+    .replace("Í", "I")
+    .replace("î", "i")
+    .replace("Î", "I")
+    .replace("ó", "o")
+    .replace("Ó", "O")
+    .replace("ö", "o")
+    .replace("Ö", "O")
+    .replace("ő", "o")
+    .replace("Ő", "O")
+    .replace("ș", "s")
+    .replace("Ș", "S")
+    .replace("ț", "t")
+    .replace("Ț", "T")
+    .replace("ú", "u")
+    .replace("Ú", "U")
+    .replace("ű", "u")
+    .replace("Ű", "U")
 
 fun DrawerLayout.addDrawerListener(
-        onDrawerStateChanged: () -> Unit = {},
-        onDrawerSlide: () -> Unit = {},
-        onDrawerClosed: () -> Unit = {},
-        onDrawerOpened: () -> Unit = {}
+    onDrawerStateChanged: () -> Unit = {},
+    onDrawerSlide: () -> Unit = {},
+    onDrawerClosed: () -> Unit = {},
+    onDrawerOpened: () -> Unit = {}
 ) = addDrawerListener(object : DrawerLayout.DrawerListener {
     override fun onDrawerStateChanged(newState: Int) = onDrawerStateChanged()
 

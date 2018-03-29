@@ -159,14 +159,15 @@ class LibraryViewModel(
             is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
                 if (it != -1 && !playlistRepository.isSongInAnyPlaylist(
                         updateType.songId
-                    )) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS)
+                    )
+                ) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS)
             }
             is UpdateType.LanguagesUpdated -> {
-                languageFilters.get().clear()
+                languageFilters.get()?.clear()
                 updateType.languageFilters.forEach { (language, isEnabled) ->
-                    languageFilters.get()[language] = ObservableBoolean(isEnabled).apply {
+                    languageFilters.get()?.set(language, ObservableBoolean(isEnabled).apply {
                         onPropertyChanged { languageRepository.setLanguageFilterEnabled(language, it) }
-                    }
+                    })
                 }
                 languageFilters.notifyChange()
             }
@@ -232,9 +233,9 @@ class LibraryViewModel(
 
     //TODO: Prioritize results that begin with the searchQuery.
     private fun Sequence<SongInfo>.filterByQuery() = if (isSearchInputVisible.get()) {
-        searchQuery.get().trim().replaceSpecialCharacters().let { query ->
+        searchQuery.get()?.trim()?.replaceSpecialCharacters()?.let { query ->
             filter { it.titleWithSpecialCharactersRemoved.contains(query, true) || it.artistWithSpecialCharactersRemoved.contains(query, true) }
-        }
+        } ?: this
     } else this
 
     private fun Sequence<SongInfo>.sort() =

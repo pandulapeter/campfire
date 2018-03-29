@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelec
             }
         }
         if (currentFragment == null) {
-            replaceActiveFragment(viewModel.mainNavigationItem.get())
+            viewModel.mainNavigationItem.get()?.let { replaceActiveFragment(it) }
         }
     }
 
@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelec
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
-        outState?.mainNavigationItem = viewModel.mainNavigationItem.get().stringValue
+        viewModel.mainNavigationItem.get()?.stringValue?.let { outState?.mainNavigationItem = it }
     }
 
     override fun onBackPressed() {
