@@ -42,13 +42,9 @@ class ManageDownloadsViewModel(
         .map { songInfo ->
             SongInfoViewModel(
                 songInfo = songInfo,
-                isSongDownloaded = true,
-                isSongLoading = false,
+                downloadState = DownloadedSongRepository.DownloadState.Downloaded.UpToDate,
                 isSongOnAnyPlaylist = playlistRepository.isSongInAnyPlaylist(songInfo.id),
-                shouldShowDragHandle = false,
-                shouldShowPlaylistButton = true,
-                shouldShowDownloadButton = false,
-                alertText = humanReadableByteCount(downloadedSongRepository.getDownloadSize(songInfo.id))
+                text = humanReadableByteCount(downloadedSongRepository.getDownloadSize(songInfo.id))
             )
         }
         .toList()
@@ -57,21 +53,17 @@ class ManageDownloadsViewModel(
         when (updateType) {
             is UpdateType.DownloadedSongsUpdated,
             is UpdateType.SongRemovedFromDownloads,
-            is UpdateType.SongAddedToDownloads,
             UpdateType.AllDownloadsRemoved,
-            is UpdateType.DownloadSuccessful,
+            is UpdateType.Download.Successful,
             is UpdateType.LibraryCacheUpdated -> super.onUpdate(updateType)
             is UpdateType.SongAddedToPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1 && !adapter.items[it].isSongOnAnyPlaylist) adapter.notifyItemChanged(
-                    it,
-                    SongInfoListAdapter.Payload.SONG_IS_IN_A_PLAYLIST
-                )
+                if (it != -1 && !adapter.items[it].isSongOnAnyPlaylist) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.IsSongInAPlaylistChanged(true))
             }
             is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1 && !playlistRepository.isSongInAnyPlaylist(
-                        updateType.songId
-                    )
-                ) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS)
+                if (it != -1 && !playlistRepository.isSongInAnyPlaylist(updateType.songId)) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.IsSongInAPlaylistChanged(false)
+                )
             }
         }
     }

@@ -1,17 +1,25 @@
 package com.pandulapeter.campfire.feature.home.shared.songInfoList
 
 import com.pandulapeter.campfire.data.model.SongInfo
+import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 
 /**
  * Wraps all information that needs to appear on a single list item.
  */
 data class SongInfoViewModel(
     var songInfo: SongInfo,
-    var isSongDownloaded: Boolean,
-    var isSongLoading: Boolean,
+    var downloadState: DownloadedSongRepository.DownloadState,
     var isSongOnAnyPlaylist: Boolean,
-    var shouldShowDragHandle: Boolean,
-    var shouldShowPlaylistButton: Boolean,
-    var shouldShowDownloadButton: Boolean,
-    var alertText: String? = null
-)
+    var shouldShowPlaylistButton: Boolean = true,
+    var shouldShowDragHandle: Boolean = false,
+    private val updateText: String? = null,
+    private val newText: String? = null,
+    private var text: String? = null
+) {
+    val alertText
+        get() = text ?: when (downloadState) {
+            DownloadedSongRepository.DownloadState.Downloaded.Deprecated -> updateText
+            DownloadedSongRepository.DownloadState.NotDownloaded.New -> newText
+            else -> null
+        }
+}

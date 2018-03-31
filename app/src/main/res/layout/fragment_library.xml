@@ -100,12 +100,12 @@
                             android:layout_marginEnd="@dimen/toolbar_action_button_margin_fix"
                             android:layout_marginStart="@dimen/second_keyline"
                             android:gravity="center_vertical"
+                            android:text="@string/home_library"
+                            android:textAppearance="@style/TextAppearance.AppCompat.Title"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toStartOf="@id/search_toggle"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:subtitle="@{@string/library_song_count(viewModel.filteredItemCount)}"
-                            app:title="@{@string/home_library}"
                             app:visibility="@{!viewModel.isSearchInputVisible}"
                             tools:text="Library\n50 / 100 songs" />
 

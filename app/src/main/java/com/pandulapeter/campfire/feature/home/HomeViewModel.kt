@@ -52,8 +52,7 @@ class HomeViewModel(
             is UpdateType.LibraryCacheUpdated -> isLibraryReady.set(updateType.songInfos.isNotEmpty())
             is UpdateType.DownloadedSongsUpdated -> hasDownloads.set(updateType.downloadedSongIds.isNotEmpty())
             is UpdateType.SongRemovedFromDownloads -> hasDownloads.set(downloadedSongRepository.getDownloadedSongIds().isNotEmpty())
-            is UpdateType.SongAddedToDownloads,
-            is UpdateType.DownloadSuccessful -> hasDownloads.set(true)
+            is UpdateType.Download.Successful -> hasDownloads.set(true)
             UpdateType.AllDownloadsRemoved -> hasDownloads.set(false)
             is UpdateType.PlaylistsUpdated -> playlists.set(updateType.playlists)
             is UpdateType.PlaylistsOrderUpdated -> playlists.set(updateType.playlists)

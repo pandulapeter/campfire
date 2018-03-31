@@ -12,6 +12,8 @@
 
         <import type="com.pandulapeter.campfire.R" />
 
+        <import type="com.pandulapeter.campfire.data.repository.DownloadedSongRepository.DownloadState" />
+
     </data>
 
     <android.support.v7.widget.CardView
@@ -76,14 +78,15 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 app:layout_constraintEnd_toEndOf="@id/space_3"
-                app:visibility="@{viewModel.shouldShowDownloadButton}">
+                app:visibility="@{viewModel.downloadState instanceof DownloadState.NotDownloaded || viewModel.downloadState instanceof DownloadState.Downloading ||viewModel.downloadState instanceof DownloadState.Downloaded.Deprecated}">
 
                 <ViewSwitcher
                     android:id="@+id/download_action_switcher"
                     android:layout_width="wrap_content"
+                    android:inAnimation="@android:anim/fade_in"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    app:displayedChild="@{viewModel.isSongLoading ? 0 : 1}">
+                    app:displayedChild="@{viewModel.downloadState instanceof DownloadState.Downloading ? 0 : 1}">
 
                     <ProgressBar
                         android:layout_width="@dimen/list_item_loading_indicator_size"
@@ -97,7 +100,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:contentDescription="@{viewModel.isSongDownloaded ? @string/update : @string/download}"
+                        android:contentDescription="@{viewModel.downloadState instanceof DownloadState.Downloaded ? @string/update : @string/download}"
                         android:padding="@dimen/content_padding"
                         android:tint="?android:attr/textColorSecondary"
                         app:srcCompat="@drawable/ic_download_24dp" />
@@ -110,7 +113,7 @@
                 android:id="@+id/title"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:alpha="@{viewModel.isSongDownloaded ? 1f : 0.5f}"
+                android:alpha="@{viewModel.downloadState instanceof DownloadState.Downloaded ? 1f : 0.5f}"
                 android:lineSpacingExtra="@dimen/list_item_text_spacing"
                 app:extraText="@{viewModel.alertText}"
                 app:layout_constraintBottom_toBottomOf="parent"

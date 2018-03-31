@@ -54,10 +54,10 @@ class DetailViewModel(
             is UpdateType.PlaylistsUpdated -> updatePlaylistActionIcon()
             is UpdateType.SongRemovedFromPlaylist -> if (updateType.songId == getSelectedSongId()) updatePlaylistActionIcon()
             is UpdateType.SongAddedToPlaylist -> if (updateType.songId == getSelectedSongId()) updatePlaylistActionIcon()
-            is UpdateType.DownloadStarted -> if (updateType.songId == getSelectedSongId()) {
+            is UpdateType.Download.Started -> if (updateType.songId == getSelectedSongId()) {
                 shouldShowAutoScrollButton.set(false)
             }
-            is UpdateType.DownloadSuccessful -> if (updateType.songId == getSelectedSongId()) {
+            is UpdateType.Download.Successful -> if (updateType.songId == getSelectedSongId()) {
                 shouldShowAutoScrollButton.set(true)
             }
             is UpdateType.SongTransposed -> if (updateType.songId == getSelectedSongId()) {

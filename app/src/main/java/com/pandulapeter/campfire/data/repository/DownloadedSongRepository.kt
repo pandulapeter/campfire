@@ -43,11 +43,31 @@ class DownloadedSongRepository(
 
     fun getDownloadedSongIds(): List<String> = dataSet.keys.toList()
 
-    fun getDownloadedSong(songId: String) = dataSet[songId]
+    fun getSongDownloadedState(songId: String) = if (isSongLoading(songId)) {
+        DownloadState.Downloading
+    } else {
+        if (isSongDownloaded(songId)) {
+            if (areThereUpdatesToTheSong(songId)) {
+                DownloadState.Downloaded.Deprecated
+            } else {
+                DownloadState.Downloaded.UpToDate
+            }
+        } else {
+            if (isSongNew(songId)) {
+                DownloadState.NotDownloaded.New
+            } else {
+                DownloadState.NotDownloaded.Old
+            }
+        }
+    }
 
     fun isSongDownloaded(songId: String) = dataSet.containsKey(songId)
 
     fun isSongLoading(songId: String) = downloadQueue.contains(songId)
+
+    fun areThereUpdatesToTheSong(songId: String) = false //TODO: Missing functionality.
+
+    fun isSongNew(songId: String) = false //TODO: Missing functionality.
 
     fun removeSongFromDownloads(songId: String) {
         if (isSongDownloaded(songId)) {
@@ -72,22 +92,22 @@ class DownloadedSongRepository(
         //TODO: Check that the updating logic actually works. Looks like the cache is never updated.
         dataSet[songInfo.id]?.let {
             getDownloadedSongText(songInfo.id)?.let {
-                notifySubscribers(UpdateType.DownloadSuccessful(songInfo.id, it))
+                notifySubscribers(UpdateType.Download.Successful(songInfo.id, it))
                 return
             }
         }
         if (!isSongLoading(songInfo.id)) {
             downloadQueue.add(songInfo.id)
         }
-        notifySubscribers(UpdateType.DownloadStarted(songInfo.id))
+        notifySubscribers(UpdateType.Download.Started(songInfo.id))
         networkManager.service.getSong(songInfo.id).enqueueCall(
             onSuccess = {
                 addSongToDownloadsWithoutNotifications(DownloadedSong(it.id, songInfo.version ?: 0), it) {
-                    notifySubscribers(UpdateType.DownloadSuccessful(songInfo.id, it.song))
+                    notifySubscribers(UpdateType.Download.Successful(songInfo.id, it.song))
                 }
             },
             onFailure = {
-                notifySubscribers(UpdateType.DownloadFailed(songInfo.id))
+                notifySubscribers(UpdateType.Download.Failed(songInfo.id))
                 downloadQueue.remove(songInfo.id)
                 onFailure()
             }
@@ -111,5 +131,20 @@ class DownloadedSongRepository(
             action()
         }
         dataSet = dataSet.toMutableMap().apply { put(downloadedSong.id, downloadedSong) }
+    }
+
+    sealed class DownloadState {
+
+        sealed class NotDownloaded : DownloadState() {
+            object Old : NotDownloaded()
+            object New : NotDownloaded()
+        }
+
+        object Downloading : DownloadState()
+
+        sealed class Downloaded : DownloadState() {
+            object UpToDate : Downloaded()
+            object Deprecated : Downloaded()
+        }
     }
 }

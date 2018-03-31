@@ -43,7 +43,6 @@ class LibraryViewModel(
     val sortingMode = ObservableField<SortingMode>(SortingMode.fromIntValue(userPreferenceRepository.isSortedByTitle))
     val languageFilters = ObservableField(HashMap<Language, ObservableBoolean>())
     val shouldShowPlaceholderButton = ObservableBoolean(true)
-    val filteredItemCount = ObservableField("")
     val isLibraryNotEmpty = ObservableBoolean(songInfoRepository.getLibrarySongs().isNotEmpty())
     val placeholderText = ObservableInt(R.string.library_placeholder_loading)
     val placeholderButtonText = ObservableInt(R.string.try_again)
@@ -69,39 +68,26 @@ class LibraryViewModel(
 
     override fun getAdapterItems(): List<SongInfoViewModel> {
         val librarySongs = songInfoRepository.getLibrarySongs()
+        isLibraryNotEmpty.set(librarySongs.isNotEmpty())
         val preFilteredItems = librarySongs
             .asSequence()
             .filterWorkInProgress()
             .filterExplicit()
             .filterByLanguages()
             .filterDownloaded()
-            .toList()
-        val filteredItems = preFilteredItems
-            .asSequence()
+        itemCountWithoutSearchFilter = preFilteredItems.toList().size
+        return preFilteredItems
             .filterByQuery()
             .sort()
-            .toList()
-        itemCountWithoutSearchFilter = preFilteredItems.size
-        isLibraryNotEmpty.set(librarySongs.isNotEmpty())
-        filteredItemCount.set(if (filteredItems.size == librarySongs.size) "${filteredItems.size}" else "${filteredItems.size} / ${librarySongs.size}")
-        return filteredItems.map { songInfo ->
-            val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
-            val isSongNew = false //TODO: Check if the song is new.
-            SongInfoViewModel(
-                songInfo = songInfo,
-                isSongDownloaded = isDownloaded,
-                isSongLoading = downloadedSongRepository.isSongLoading(songInfo.id),
-                isSongOnAnyPlaylist = playlistRepository.isSongInAnyPlaylist(songInfo.id),
-                shouldShowDragHandle = false,
-                shouldShowPlaylistButton = true,
-                shouldShowDownloadButton = !isDownloaded || isSongNew,
-                alertText = if (isDownloaded) {
-                    if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) updateString else null
-                } else {
-                    if (isSongNew) newString else null
-                }
-            )
-        }
+            .map { songInfo ->
+                SongInfoViewModel(
+                    songInfo = songInfo,
+                    downloadState = downloadedSongRepository.getSongDownloadedState(songInfo.id),
+                    isSongOnAnyPlaylist = playlistRepository.isSongInAnyPlaylist(songInfo.id),
+                    updateText = updateString,
+                    newText = newString
+                )
+            }.toList()
     }
 
     override fun onUpdate(updateType: UpdateType) {
@@ -118,47 +104,17 @@ class LibraryViewModel(
             UpdateType.SearchQueryUpdated,
             UpdateType.AllDownloadsRemoved -> super.onUpdate(updateType)
             is UpdateType.LoadingStateChanged -> isLoading.set(updateType.isLoading)
-            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1) adapter.notifyItemChanged(
-                    it,
-                    SongInfoListAdapter.Payload.SONG_DOWNLOADED
-                )
-            }
-            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1) adapter.notifyItemChanged(
-                    it,
-                    SongInfoListAdapter.Payload.SONG_DOWNLOAD_DELETED
-                )
-            }
-            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1) adapter.notifyItemChanged(
-                    it,
-                    SongInfoListAdapter.Payload.DOWNLOAD_STARTED
-                )
-            }
-            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1) adapter.notifyItemChanged(
-                    it,
-                    SongInfoListAdapter.Payload.DOWNLOAD_SUCCESSFUL
-                )
-            }
-            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1) adapter.notifyItemChanged(
-                    it,
-                    SongInfoListAdapter.Payload.DOWNLOAD_FAILED
-                )
+            is UpdateType.Download -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.DownloadStateChanged(downloadedSongRepository.getSongDownloadedState(updateType.songId)))
             }
             is UpdateType.SongAddedToPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1 && !adapter.items[it].isSongOnAnyPlaylist) adapter.notifyItemChanged(
-                    it,
-                    SongInfoListAdapter.Payload.SONG_IS_IN_A_PLAYLIST
-                )
+                if (it != -1 && !adapter.items[it].isSongOnAnyPlaylist) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.IsSongInAPlaylistChanged(true))
             }
             is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1 && !playlistRepository.isSongInAnyPlaylist(
-                        updateType.songId
-                    )
-                ) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS)
+                if (it != -1 && !playlistRepository.isSongInAnyPlaylist(updateType.songId)) adapter.notifyItemChanged(
+                    it,
+                    SongInfoListAdapter.Payload.IsSongInAPlaylistChanged(false)
+                )
             }
             is UpdateType.LanguagesUpdated -> {
                 languageFilters.get()?.clear()

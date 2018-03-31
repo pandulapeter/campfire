@@ -10,6 +10,7 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SongInfoBinding
+import com.pandulapeter.campfire.data.repository.DownloadedSongRepository
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -72,19 +73,9 @@ class SongInfoListAdapter : RecyclerView.Adapter<SongInfoListAdapter.SongInfoVie
             payloads.forEach { payload ->
                 items[position].run {
                     when (payload) {
-                        Payload.SONG_DOWNLOADED -> isSongDownloaded = true
-                        Payload.SONG_DOWNLOAD_DELETED -> isSongDownloaded = false
-                        Payload.DOWNLOAD_STARTED -> isSongLoading = true
-                        Payload.DOWNLOAD_SUCCESSFUL -> {
-                            isSongDownloaded = true
-                            shouldShowDownloadButton = false
-                            alertText = null
-                        }
-                        Payload.DOWNLOAD_FAILED -> isSongLoading = false
-                        Payload.EDIT_MODE_OPEN -> shouldShowDragHandle = true
-                        Payload.EDIT_MODE_CLOSE -> shouldShowDragHandle = false
-                        Payload.SONG_IS_IN_A_PLAYLIST -> isSongOnAnyPlaylist = true
-                        Payload.SONG_IS_NOT_IN_A_PLAYLISTS -> isSongOnAnyPlaylist = false
+                        is Payload.DownloadStateChanged -> downloadState = payload.downloadState
+                        is Payload.EditModeChanged -> shouldShowDragHandle = payload.shouldShowDragHandle
+                        is Payload.IsSongInAPlaylistChanged -> isSongOnAnyPlaylist = payload.isSongInAPlaylist
                     }
                 }
             }
@@ -139,15 +130,9 @@ class SongInfoListAdapter : RecyclerView.Adapter<SongInfoListAdapter.SongInfoVie
         }
     }
 
-    enum class Payload {
-        SONG_DOWNLOADED,
-        SONG_DOWNLOAD_DELETED,
-        DOWNLOAD_STARTED,
-        DOWNLOAD_SUCCESSFUL,
-        DOWNLOAD_FAILED,
-        EDIT_MODE_OPEN,
-        EDIT_MODE_CLOSE,
-        SONG_IS_IN_A_PLAYLIST,
-        SONG_IS_NOT_IN_A_PLAYLISTS
+    sealed class Payload {
+        class DownloadStateChanged(val downloadState: DownloadedSongRepository.DownloadState) : Payload()
+        class EditModeChanged(val shouldShowDragHandle: Boolean) : Payload()
+        class IsSongInAPlaylistChanged(val isSongInAPlaylist: Boolean) : Payload()
     }
 }

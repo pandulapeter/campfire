@@ -55,24 +55,16 @@ class PlaylistViewModel(
             .mapNotNull { songInfoRepository.getSongInfo(it) }
         val shouldShowDragHandle = isInEditMode.get() && items.toList().size > 1
         return items.map { songInfo ->
-            val isDownloaded = downloadedSongRepository.isSongDownloaded(songInfo.id)
-            val isSongNew = false //TODO: Check if the song is new.
             SongInfoViewModel(
                 songInfo = songInfo,
-                isSongDownloaded = isDownloaded,
-                isSongLoading = downloadedSongRepository.isSongLoading(songInfo.id),
+                downloadState = downloadedSongRepository.getSongDownloadedState(songInfo.id),
                 isSongOnAnyPlaylist = false,
                 shouldShowDragHandle = shouldShowDragHandle,
                 shouldShowPlaylistButton = false,
-                shouldShowDownloadButton = !isDownloaded || isSongNew,
-                alertText = if (isDownloaded) {
-                    if (downloadedSongRepository.getDownloadedSong(songInfo.id)?.version ?: 0 != songInfo.version ?: 0) updateString else null
-                } else {
-                    if (isSongNew) newString else null
-                }
+                updateText = updateString,
+                newText = newString
             )
-        }
-            .toList()
+        }.toList()
     }
 
     override fun onUpdate(updateType: UpdateType) {
@@ -87,42 +79,11 @@ class PlaylistViewModel(
                 super.onUpdate(updateType)
                 playlistRepository.getPlaylist(playlistId)?.let { title.set(it.title ?: favoritesTitle) }
             }
-            is UpdateType.SongAddedToDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1) adapter.notifyItemChanged(
-                    it,
-                    SongInfoListAdapter.Payload.SONG_DOWNLOADED
-                )
-            }
-            is UpdateType.SongRemovedFromDownloads -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1) adapter.notifyItemChanged(
-                    it,
-                    SongInfoListAdapter.Payload.SONG_DOWNLOAD_DELETED
-                )
-            }
-            is UpdateType.DownloadStarted -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1) adapter.notifyItemChanged(
-                    it,
-                    SongInfoListAdapter.Payload.DOWNLOAD_STARTED
-                )
-            }
-            is UpdateType.DownloadSuccessful -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1) adapter.notifyItemChanged(
-                    it,
-                    SongInfoListAdapter.Payload.DOWNLOAD_SUCCESSFUL
-                )
-            }
-            is UpdateType.DownloadFailed -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
-                if (it != -1) adapter.notifyItemChanged(
-                    it,
-                    SongInfoListAdapter.Payload.DOWNLOAD_FAILED
-                )
+            is UpdateType.Download -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
+                if (it != -1) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.DownloadStateChanged(downloadedSongRepository.getSongDownloadedState(updateType.songId)))
             }
             is UpdateType.EditModeChanged -> if (updateType.playlistId == playlistId) {
-                val payload = if (updateType.isInEditMode && adapter.items.size > 1) {
-                    SongInfoListAdapter.Payload.EDIT_MODE_OPEN
-                } else {
-                    SongInfoListAdapter.Payload.EDIT_MODE_CLOSE
-                }
+                val payload = SongInfoListAdapter.Payload.EditModeChanged(updateType.isInEditMode && adapter.items.size > 1)
                 if (playlistId == Playlist.FAVORITES_ID) {
                     title.notifyChange() // Needed to fix a visual glitch.
                 }

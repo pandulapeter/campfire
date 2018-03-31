@@ -56,11 +56,11 @@ class SongPageViewModel(
 
     override fun onUpdate(updateType: UpdateType) {
         when (updateType) {
-            is UpdateType.DownloadStarted -> if (updateType.songId == songId) {
+            is UpdateType.Download.Started -> if (updateType.songId == songId) {
                 isLoading.set(true)
                 shouldShowPlaceholder.set(false)
             }
-            is UpdateType.DownloadSuccessful -> if (updateType.songId == songId) {
+            is UpdateType.Download.Successful -> if (updateType.songId == songId) {
                 async(UI) {
                     async(CommonPool) {
                         unformattedText = updateType.song
@@ -69,7 +69,7 @@ class SongPageViewModel(
                     isLoading.set(false)
                 }
             }
-            is UpdateType.DownloadFailed -> if (updateType.songId == songId) {
+            is UpdateType.Download.Failed -> if (updateType.songId == songId) {
                 isLoading.set(false)
                 shouldShowPlaceholder.set(true)
             }

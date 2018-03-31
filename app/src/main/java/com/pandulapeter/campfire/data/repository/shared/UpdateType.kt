@@ -15,15 +15,17 @@ sealed class UpdateType {
 
     class SongRemovedFromDownloads(val songId: String) : UpdateType()
 
-    class SongAddedToDownloads(val songId: String) : UpdateType()
-
     object AllDownloadsRemoved : UpdateType()
 
-    class DownloadStarted(val songId: String) : UpdateType()
+    sealed class Download(val songId: String) : UpdateType() {
 
-    class DownloadSuccessful(val songId: String, val song: String) : UpdateType()
+        class Started(songId: String) : Download(songId)
 
-    class DownloadFailed(val songId: String) : UpdateType()
+        class Successful(songId: String, val song: String) : Download(songId)
+
+        class Failed(songId: String) : Download(songId)
+
+    }
 
     // HistoryRepository
     object HistoryUpdated : UpdateType()
