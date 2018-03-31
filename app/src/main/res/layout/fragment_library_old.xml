@@ -53,7 +53,7 @@
                             android:layout_height="0dp"
                             app:layout_constraintEnd_toStartOf="parent" />
 
-                        <com.pandulapeter.campfire.old.feature.shared.widget.AppBarButton
+                        <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="@dimen/first_keyline"
@@ -67,7 +67,7 @@
                             app:layout_constraintTop_toTopOf="parent"
                             tools:src="@drawable/avd_menu_to_back_24dp" />
 
-                        <com.pandulapeter.campfire.old.feature.shared.widget.AppBarButton
+                        <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
                             android:id="@+id/view_options"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -79,7 +79,7 @@
                             app:srcCompat="@drawable/ic_view_options_24dp"
                             app:visibility="@{viewModel.isLibraryNotEmpty}" />
 
-                        <com.pandulapeter.campfire.old.feature.shared.widget.AppBarButton
+                        <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
                             android:id="@+id/search_toggle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"

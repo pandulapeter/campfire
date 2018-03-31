@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFrag
 import com.pandulapeter.campfire.old.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.old.integration.AppShortcutManager
 import com.pandulapeter.campfire.old.util.*
+import com.pandulapeter.campfire.util.dimension
 import org.koin.android.ext.android.inject
 
 /**

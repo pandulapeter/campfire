@@ -10,7 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.HeaderItemBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.old.util.dimension
+import com.pandulapeter.campfire.util.dimension
 
 abstract class HeaderItemDecoration(context: Context) : RecyclerView.ItemDecoration() {
     private var headerBinding: HeaderItemBinding? = null

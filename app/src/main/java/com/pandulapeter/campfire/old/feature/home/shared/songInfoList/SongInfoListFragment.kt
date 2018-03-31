@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.feature.home.HomeViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
-import com.pandulapeter.campfire.old.util.dimension
+import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.old.util.onEventTriggered
 import org.koin.android.ext.android.inject

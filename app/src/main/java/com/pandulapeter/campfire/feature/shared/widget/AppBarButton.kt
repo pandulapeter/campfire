@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.old.feature.shared.widget
+package com.pandulapeter.campfire.feature.shared.widget
 
 import android.content.Context
 import android.graphics.Rect
@@ -11,15 +11,9 @@ import android.view.TouchDelegate
 import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.old.util.dimension
+import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.obtainColor
 
-
-/**
- * Custom [AppCompatImageView] that sets its own background and padding and provides a fake touch area that is
- * larger than the actual View bounds. It also sets the drawable tint based on the current theme. Used for icons
- * that are part of the app bar.
- */
 class AppBarButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : AppCompatImageView(context, attrs, defStyleAttr) {
 
     init {

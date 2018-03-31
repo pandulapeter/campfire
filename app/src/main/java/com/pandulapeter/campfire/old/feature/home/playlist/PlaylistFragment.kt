@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoLi
 import com.pandulapeter.campfire.old.integration.AppShortcutManager
 import com.pandulapeter.campfire.old.integration.DeepLinkManager
 import com.pandulapeter.campfire.old.util.*
+import com.pandulapeter.campfire.util.dimension
 import org.koin.android.ext.android.inject
 
 

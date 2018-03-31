@@ -8,12 +8,10 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
 import android.os.Bundle
-import android.support.annotation.*
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
 import android.support.v4.widget.DrawerLayout
-import android.support.v7.content.res.AppCompatResources
 import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.old.data.model.Language
@@ -21,10 +19,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import kotlin.reflect.KClass
-
-fun Context.dimension(@DimenRes dimensionId: Int) = resources.getDimensionPixelSize(dimensionId)
-
-fun Context.drawable(@DrawableRes drawableId: Int) = AppCompatResources.getDrawable(this, drawableId)
 
 fun ObservableBoolean.toggle() = set(!get())
 

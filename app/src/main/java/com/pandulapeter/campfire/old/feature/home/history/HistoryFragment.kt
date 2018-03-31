@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.old.feature.home.shared.ElevationItemTouchHelpe
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.PlaylistChooserBottomSheetFragment
-import com.pandulapeter.campfire.old.util.dimension
+import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.old.util.onEventTriggered
 import com.pandulapeter.campfire.old.util.onPropertyChanged
 import org.koin.android.ext.android.inject

@@ -22,7 +22,7 @@ import android.widget.TextView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.shared.EllipsizeLineSpan
 import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.old.util.drawable
+import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.obtainColor
 
 

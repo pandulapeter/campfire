@@ -8,12 +8,10 @@ import com.pandulapeter.campfire.feature.CampfireFragment
 
 class SettingsFragment : CampfireFragment<SettingsBinding>(R.layout.fragment_settings) {
 
+    override var onFloatingActionButtonClicked: (() -> Unit)? = { mainActivity?.navigateToLibrary() }
+
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         updateToolbarTitle(R.string.home_settings)
-    }
-
-    override var onFloatingActionButtonClicked: (() -> Unit)? = {
-        mainActivity?.navigateToLibrary()
     }
 }

@@ -22,6 +22,7 @@
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/toolbar_height"
+                    android:animateLayoutChanges="true"
                     android:background="@color/primary"
                     android:elevation="@dimen/toolbar_elevation"
                     android:outlineProvider="paddedBounds"
@@ -31,6 +32,8 @@
                         android:id="@+id/toolbar_title_container"
                         android:layout_width="0dp"
                         android:layout_height="0dp"
+                        android:layout_marginEnd="@dimen/content_padding"
+                        android:animateLayoutChanges="true"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toStartOf="@+id/toolbar_button_container"
                         app:layout_constraintStart_toStartOf="parent"
@@ -38,13 +41,13 @@
 
                     <LinearLayout
                         android:id="@id/toolbar_button_container"
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="0dp"
-                        android:gravity="center_vertical"
+                        android:animateLayoutChanges="true"
+                        android:gravity="center_vertical|end"
                         android:orientation="horizontal"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toEndOf="@id/toolbar_title_container"
                         app:layout_constraintTop_toTopOf="parent" />
 
                 </android.support.constraint.ConstraintLayout>
