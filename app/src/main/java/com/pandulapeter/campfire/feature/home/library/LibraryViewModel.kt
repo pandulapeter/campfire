@@ -42,7 +42,6 @@ class LibraryViewModel(
     val shouldShowWorkInProgress = ObservableBoolean(userPreferenceRepository.shouldShowWorkInProgress)
     val isSortedByTitle = ObservableBoolean(userPreferenceRepository.isSortedByTitle)
     val languageFilters = ObservableField(HashMap<Language, ObservableBoolean>())
-    val shouldAllowToolbarScrolling = ObservableBoolean()
     val shouldShowPlaceholderButton = ObservableBoolean(true)
     val filteredItemCount = ObservableField("")
     val isLibraryNotEmpty = ObservableBoolean(songInfoRepository.getLibrarySongs().isNotEmpty())
@@ -53,7 +52,6 @@ class LibraryViewModel(
     init {
         isSearchInputVisible.onPropertyChanged {
             if (it) searchQuery.set("") else userPreferenceRepository.searchQuery = ""
-            updateShouldAllowToolbarScrolling(adapter.items.isNotEmpty())
         }
         searchQuery.onPropertyChanged {
             updatePlaceholderState()
@@ -176,7 +174,6 @@ class LibraryViewModel(
 
     override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         super.onUpdateDone(items, updateType)
-        updateShouldAllowToolbarScrolling(items.isNotEmpty())
         updatePlaceholderState()
     }
 
@@ -222,9 +219,6 @@ class LibraryViewModel(
             placeholderButtonText.set(if (placeholderText.get() == R.string.library_placeholder_filters) R.string.library_filters else R.string.try_again)
         }
     }
-
-    private fun updateShouldAllowToolbarScrolling(isAdapterNotEmpty: Boolean) =
-        shouldAllowToolbarScrolling.set(if (isSearchInputVisible.get()) false else isAdapterNotEmpty && userPreferenceRepository.shouldAllowToolbarScroll)
 
     private fun Sequence<SongInfo>.filterByLanguages() = filter { languageRepository.isLanguageFilterEnabled(it.language.mapToLanguage()) }
 

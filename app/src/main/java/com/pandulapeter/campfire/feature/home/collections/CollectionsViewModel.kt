@@ -1,7 +1,5 @@
 package com.pandulapeter.campfire.feature.home.collections
 
-import android.databinding.ObservableBoolean
-import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildViewModel
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.networking.AnalyticsManager
@@ -11,10 +9,8 @@ import com.pandulapeter.campfire.networking.AnalyticsManager
  */
 class CollectionsViewModel(
     analyticsManager: AnalyticsManager,
-    appShortcutManager: AppShortcutManager,
-    userPreferenceRepository: UserPreferenceRepository
+    appShortcutManager: AppShortcutManager
 ) : HomeChildViewModel(analyticsManager) {
-    val shouldAllowToolbarScrolling = ObservableBoolean(userPreferenceRepository.shouldAllowToolbarScroll)
 
     init {
         appShortcutManager.onCollectionsOpened()

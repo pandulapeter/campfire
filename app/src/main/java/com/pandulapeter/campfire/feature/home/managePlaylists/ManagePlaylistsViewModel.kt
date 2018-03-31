@@ -25,12 +25,10 @@ class ManagePlaylistsViewModel(
     analyticsManager: AnalyticsManager,
     private val appShortcutManager: AppShortcutManager,
     private val firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository,
-    private val playlistRepository: PlaylistRepository,
-    private val userPreferenceRepository: UserPreferenceRepository
+    private val playlistRepository: PlaylistRepository
 ) : HomeChildViewModel(analyticsManager), Subscriber {
     val adapter = ManagePlaylistsListAdapter()
     val shouldShowHintSnackbar = ObservableBoolean()
-    val isToolbarScrollEnabled = ObservableBoolean(userPreferenceRepository.shouldAllowToolbarScroll)
     val itemCount = ObservableInt(playlistRepository.getPlaylists().size)
     val shouldShowNewPlaylistButton = ObservableBoolean()
     val shouldShowNewPlaylistDialog = ObservableBoolean()

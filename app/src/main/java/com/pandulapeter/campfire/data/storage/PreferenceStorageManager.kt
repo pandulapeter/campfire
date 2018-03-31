@@ -19,7 +19,6 @@ class PreferenceStorageManager(context: Context) {
     var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("should_show_downloaded_only")
     var shouldShowExplicit by PreferenceFieldDelegate.Boolean("should_show_explicit", false)
     var shouldShowWorkInProgress by PreferenceFieldDelegate.Boolean("should_show_work_in_progress", BuildConfig.DEBUG)
-    var shouldAllowToolbarScroll by PreferenceFieldDelegate.Boolean("should_allow_toolbar_scroll", false)
     var shouldShowChords by PreferenceFieldDelegate.Boolean("should_show_chords", true)
     var shouldEnableAutoScroll by PreferenceFieldDelegate.Boolean("should_enable_auto_scroll", true)
     var shouldShowExitConfirmation by PreferenceFieldDelegate.Boolean("should_show_exit_confirmation", true)

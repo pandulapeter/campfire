@@ -10,8 +10,6 @@ import android.databinding.ObservableInt
 import android.os.Bundle
 import android.support.annotation.*
 import android.support.design.internal.NavigationMenuView
-import android.support.design.widget.AppBarLayout
-import android.support.design.widget.CoordinatorLayout
 import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
@@ -180,29 +178,3 @@ fun DrawerLayout.addDrawerListener(
 
     override fun onDrawerOpened(drawerView: View) = onDrawerOpened()
 })
-
-fun AppBarLayout.performAfterExpand(connectedView: View, onExpanded: () -> Unit) {
-    if (tag != null || height == bottom) {
-        onExpanded()
-    } else {
-        tag = "expanding"
-        var previousVerticalOffset = -Int.MAX_VALUE
-        connectedView.let {
-            it.layoutParams = (it.layoutParams as CoordinatorLayout.LayoutParams).apply {
-                behavior = null
-                setMargins(leftMargin, topMargin + height, rightMargin, bottomMargin)
-            }
-            it.requestLayout()
-        }
-        addOnOffsetChangedListener(object : AppBarLayout.OnOffsetChangedListener {
-            override fun onOffsetChanged(appBarLayout: AppBarLayout?, verticalOffset: Int) {
-                if (verticalOffset == 0 || verticalOffset <= previousVerticalOffset) {
-                    onExpanded()
-                    removeOnOffsetChangedListener(this)
-                }
-                previousVerticalOffset = verticalOffset
-            }
-        })
-        setExpanded(true, true)
-    }
-}

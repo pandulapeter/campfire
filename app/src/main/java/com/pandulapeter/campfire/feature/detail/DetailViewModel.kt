@@ -37,7 +37,6 @@ class DetailViewModel(
     val shouldShowSongOptions = ObservableBoolean()
     val shouldShowPlaylistAction = playlistId == DetailFragment.NO_PLAYLIST
     val playOriginalSearchQuery = ObservableField<String>()
-    val shouldAllowToolbarScrolling = ObservableBoolean()
     val shouldShowAutoScrollButton = ObservableBoolean()
     val isAutoScrollStarted = ObservableBoolean()
     val isAutoScrollEnabled = userPreferenceRepository.shouldEnableAutoScroll
@@ -56,11 +55,9 @@ class DetailViewModel(
             is UpdateType.SongRemovedFromPlaylist -> if (updateType.songId == getSelectedSongId()) updatePlaylistActionIcon()
             is UpdateType.SongAddedToPlaylist -> if (updateType.songId == getSelectedSongId()) updatePlaylistActionIcon()
             is UpdateType.DownloadStarted -> if (updateType.songId == getSelectedSongId()) {
-                shouldAllowToolbarScrolling.set(false)
                 shouldShowAutoScrollButton.set(false)
             }
             is UpdateType.DownloadSuccessful -> if (updateType.songId == getSelectedSongId()) {
-                shouldAllowToolbarScrolling.set(userPreferenceRepository.shouldAllowToolbarScroll)
                 shouldShowAutoScrollButton.set(true)
             }
             is UpdateType.SongTransposed -> if (updateType.songId == getSelectedSongId()) {
@@ -76,7 +73,6 @@ class DetailViewModel(
         selectedPosition = position
         onSongSelected()
         historyRepository.addToHistory(getSelectedSongId())
-        shouldAllowToolbarScrolling.set(userPreferenceRepository.shouldAllowToolbarScroll && downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
         shouldShowAutoScrollButton.set(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
     }
 

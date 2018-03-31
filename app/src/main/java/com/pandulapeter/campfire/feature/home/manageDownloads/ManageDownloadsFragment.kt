@@ -17,7 +17,6 @@ import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomShee
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
-import com.pandulapeter.campfire.util.performAfterExpand
 import org.koin.android.ext.android.inject
 
 /**
@@ -67,13 +66,8 @@ class ManageDownloadsFragment :
             }
         }).attachToRecyclerView(binding.recyclerView)
         // Set up list item click listeners.
-        viewModel.adapter.itemClickListener = { position ->
-            val id = viewModel.adapter.items[position].songInfo.id
-            binding.appBarLayout.performAfterExpand(binding.recyclerView) {
-                if (isAdded) {
-                    (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(id))
-                }
-            }
+        viewModel.adapter.itemClickListener = {
+            (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[it].songInfo.id))
         }
         viewModel.adapter.playlistActionClickListener = { position ->
             viewModel.adapter.items[position].let { songInfoViewModel ->

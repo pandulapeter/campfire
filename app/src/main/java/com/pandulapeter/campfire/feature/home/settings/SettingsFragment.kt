@@ -6,7 +6,6 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SettingsBinding
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.data.repository.UserPreferenceRepository
-import com.pandulapeter.campfire.feature.home.playlist.PlaylistViewModel
 import com.pandulapeter.campfire.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
@@ -16,7 +15,7 @@ import org.koin.android.ext.android.inject
 /**
  * Allows the user to change the global settings of the app.
  *
- * Controlled by [PlaylistViewModel].
+ * Controlled by [SettingsViewModel].
  */
 class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R.layout.fragment_settings), AlertDialogFragment.OnDialogItemsSelectedListener {
     private val userPreferenceRepository by inject<UserPreferenceRepository>()

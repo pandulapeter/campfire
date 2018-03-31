@@ -27,7 +27,6 @@ class HistoryViewModel(
     val shouldShowConfirmationDialog = ObservableBoolean()
     val shouldInvalidateItemDecorations = ObservableBoolean()
     val shouldShowHintSnackbar = ObservableBoolean()
-    val shouldAllowToolbarScrolling = ObservableBoolean()
     private val Calendar.year get() = get(Calendar.YEAR)
     private val Calendar.month get() = get(Calendar.MONTH)
     private val Calendar.week get() = get(Calendar.WEEK_OF_YEAR)
@@ -105,7 +104,8 @@ class HistoryViewModel(
             is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
                 if (it != -1 && !playlistRepository.isSongInAnyPlaylist(
                         updateType.songId
-                    )) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS)
+                    )
+                ) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS)
             }
         }
     }
@@ -113,7 +113,6 @@ class HistoryViewModel(
     override fun onUpdateDone(items: List<SongInfoViewModel>, updateType: UpdateType) {
         super.onUpdateDone(items, updateType)
         shouldShowClearButton.set(items.isNotEmpty())
-        shouldAllowToolbarScrolling.set(userPreferenceRepository.shouldAllowToolbarScroll && items.isNotEmpty())
         shouldInvalidateItemDecorations.set(true)
         if (items.isNotEmpty()) {
             shouldShowHintSnackbar.set(true)

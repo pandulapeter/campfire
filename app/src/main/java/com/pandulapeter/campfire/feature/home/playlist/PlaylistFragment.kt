@@ -30,16 +30,16 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
     private val deepLinkManager by inject<DeepLinkManager>()
 
     override fun createViewModel() = PlaylistViewModel(
-            context,
-            analyticsManager,
-            deepLinkManager,
-            songInfoRepository,
-            downloadedSongRepository,
-            appShortcutManager,
-            playlistRepository,
-            userPreferenceRepository,
-            getString(R.string.home_favorites),
-            arguments.playlistId
+        context,
+        analyticsManager,
+        deepLinkManager,
+        songInfoRepository,
+        downloadedSongRepository,
+        appShortcutManager,
+        playlistRepository,
+        userPreferenceRepository,
+        getString(R.string.home_favorites),
+        arguments.playlistId
     )
 
     override fun getAppBarLayout() = binding.appBarLayout
@@ -66,10 +66,10 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
 
             override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =
-                    if (viewModel.isInEditMode.get()) makeMovementFlags(
-                            if (viewModel.adapter.items.size > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
-                            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
-                    ) else 0
+                if (viewModel.isInEditMode.get()) makeMovementFlags(
+                    if (viewModel.adapter.items.size > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
+                    ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                ) else 0
 
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = consume {
                 viewHolder?.adapterPosition?.let { originalPosition ->
@@ -91,13 +91,8 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
         // Set up list item click listeners.
-        viewModel.adapter.itemClickListener = { position ->
-            val id = viewModel.adapter.items[position].songInfo.id
-            binding.appBarLayout.performAfterExpand(binding.recyclerView) {
-                if (isAdded) {
-                    (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(id, arguments.playlistId))
-                }
-            }
+        viewModel.adapter.itemClickListener = {
+            (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[it].songInfo.id, arguments.playlistId))
         }
         viewModel.adapter.downloadActionClickListener = { position ->
             viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }

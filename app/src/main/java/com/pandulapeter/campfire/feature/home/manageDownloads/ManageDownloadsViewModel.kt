@@ -34,7 +34,6 @@ class ManageDownloadsViewModel(
     val shouldShowHintSnackbar = ObservableBoolean()
     val totalFileSize = ObservableField(context?.getString(R.string.manage_downloads_subtitle_calculating) ?: "")
     val totalFileCount = ObservableInt(downloadedSongRepository.downloadedItemCount())
-    val shouldAllowToolbarScrolling = ObservableBoolean()
 
     override fun getAdapterItems() = downloadedSongRepository.getDownloadedSongIds()
         .asSequence()
@@ -71,7 +70,8 @@ class ManageDownloadsViewModel(
             is UpdateType.SongRemovedFromPlaylist -> adapter.items.indexOfFirst { it.songInfo.id == updateType.songId }.let {
                 if (it != -1 && !playlistRepository.isSongInAnyPlaylist(
                         updateType.songId
-                    )) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS)
+                    )
+                ) adapter.notifyItemChanged(it, SongInfoListAdapter.Payload.SONG_IS_NOT_IN_A_PLAYLISTS)
             }
         }
     }
@@ -82,7 +82,6 @@ class ManageDownloadsViewModel(
         if (items.isNotEmpty()) {
             shouldShowHintSnackbar.set(true)
         }
-        shouldAllowToolbarScrolling.set(userPreferenceRepository.shouldAllowToolbarScroll && items.isNotEmpty())
         async(UI) {
             totalFileCount.set(downloadedSongRepository.downloadedItemCount())
             totalFileSize.set(async(CommonPool) {

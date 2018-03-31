@@ -16,30 +16,29 @@
 
     <com.pandulapeter.campfire.feature.shared.widget.ContainerView
         android:layout_width="match_parent"
-        android:transitionGroup="false"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:transitionGroup="false">
 
         <android.support.design.widget.CoordinatorLayout
             android:id="@+id/coordinator_layout"
             android:layout_width="match_parent"
-            android:transitionGroup="false"
             android:layout_height="match_parent"
             android:animateLayoutChanges="true"
-            android:fitsSystemWindows="true">
+            android:fitsSystemWindows="true"
+            android:transitionGroup="false">
 
             <android.support.design.widget.AppBarLayout
-                android:transitionGroup="true"
                 android:id="@+id/app_bar_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:theme="@style/ActionBar">
+                android:theme="@style/ActionBar"
+                android:transitionGroup="true">
 
                 <android.support.constraint.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/toolbar_height"
                     android:animateLayoutChanges="true"
-                    android:clipChildren="false"
-                    app:isScrollEnabled="@{viewModel.shouldAllowToolbarScrolling}">
+                    android:clipChildren="false">
 
                     <android.support.v4.widget.Space
                         android:id="@+id/space"
@@ -93,9 +92,9 @@
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recycler_view"
                 android:layout_width="match_parent"
-                android:transitionGroup="true"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
+                android:transitionGroup="true"
                 app:adapter="@{viewModel.adapter}"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 tools:listitem="@layout/item_song_info" />

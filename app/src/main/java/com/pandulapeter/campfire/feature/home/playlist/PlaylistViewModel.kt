@@ -41,7 +41,6 @@ class PlaylistViewModel(
     val isInEditMode = ObservableBoolean()
     val shouldShowEditButton = ObservableBoolean(shouldShowShareButton.get() || playlistId != Playlist.FAVORITES_ID)
     val shouldShowWorkInProgressSnackbar = ObservableBoolean()
-    val shouldAllowToolbarScrolling = ObservableBoolean()
     val isCustomPlaylist = playlistId != Playlist.FAVORITES_ID
 
     init {
@@ -128,7 +127,6 @@ class PlaylistViewModel(
                     title.notifyChange() // Needed to fix a visual glitch.
                 }
                 adapter.items.forEachIndexed { index, _ -> adapter.notifyItemChanged(index, payload) }
-                updateShouldAllowToolbarScrolling(adapter.items.isNotEmpty())
             }
         }
     }
@@ -138,7 +136,6 @@ class PlaylistViewModel(
         shouldShowEditButton.set(items.isNotEmpty() || playlistId != Playlist.FAVORITES_ID)
         shouldShowShareButton.set(items.isNotEmpty())
         songCount.set(items.size)
-        updateShouldAllowToolbarScrolling(items.isNotEmpty())
     }
 
     fun toggleEditMode() {
@@ -173,7 +170,4 @@ class PlaylistViewModel(
         adapter.notifyItemMoved(originalPosition, targetPosition)
         playlistRepository.updatePlaylist(playlistId, adapter.items.map { it.songInfo.id }.toMutableList())
     }
-
-    private fun updateShouldAllowToolbarScrolling(isAdapterNotEmpty: Boolean) =
-        shouldAllowToolbarScrolling.set(if (isInEditMode.get()) false else userPreferenceRepository.shouldAllowToolbarScroll && isAdapterNotEmpty)
 }

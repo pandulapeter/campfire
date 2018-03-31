@@ -48,11 +48,6 @@ class UserPreferenceRepository(private val preferenceStorageManager: PreferenceS
             preferenceStorageManager.shouldShowWorkInProgress = new
         }
     }
-    var shouldAllowToolbarScroll by Delegates.observable(preferenceStorageManager.shouldAllowToolbarScroll) { _: KProperty<*>, old: Boolean, new: Boolean ->
-        if (old != new) {
-            preferenceStorageManager.shouldAllowToolbarScroll = new
-        }
-    }
     var shouldShowChords by Delegates.observable(preferenceStorageManager.shouldShowChords) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
             preferenceStorageManager.shouldShowChords = new

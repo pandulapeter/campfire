@@ -17,12 +17,14 @@
     <com.pandulapeter.campfire.feature.shared.widget.ContainerView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipChildren="false"
         android:transitionGroup="false">
 
         <android.support.design.widget.CoordinatorLayout
             android:id="@+id/coordinator_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:clipChildren="false"
             android:fitsSystemWindows="true"
             android:transitionGroup="false">
 
@@ -36,8 +38,7 @@
                 <android.support.constraint.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/toolbar_height"
-                    android:clipChildren="false"
-                    app:isScrollEnabled="@{viewModel.shouldAllowToolbarScroll}">
+                    android:clipChildren="false">
 
                     <android.support.v4.widget.Space
                         android:id="@+id/space"
@@ -94,6 +95,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:clipChildren="false"
+                    android:clipToPadding="false"
                     android:orientation="vertical"
                     android:paddingEnd="0dp"
                     android:paddingStart="@dimen/content_padding">
@@ -241,17 +243,6 @@
                                 app:description="@{viewModel.shouldUseDarkTheme ? @string/settings_use_dark_theme_enabled : @string/settings_use_dark_theme_disabled}"
                                 app:title="@{@string/settings_use_dark_theme}"
                                 tools:text="@string/settings_use_dark_theme" />
-
-                            <android.support.v7.widget.SwitchCompat
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="@dimen/content_padding"
-                                android:checked="@={viewModel.shouldAllowToolbarScroll}"
-                                android:gravity="center_vertical"
-                                android:minHeight="@dimen/touch_target"
-                                app:description="@{viewModel.shouldAllowToolbarScroll ? @string/settings_allow_toolbar_scroll_enabled : @string/settings_allow_toolbar_scroll_disabled}"
-                                app:title="@{@string/settings_allow_toolbar_scroll}"
-                                tools:text="@string/settings_allow_toolbar_scroll" />
 
                         </LinearLayout>
 

@@ -42,15 +42,15 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     }
     override val viewModel by lazy {
         DetailViewModel(
-                arguments.songId,
-                arguments.playlistId,
-                analyticsManager,
-                userPreferenceRepository,
-                downloadedSongRepository,
-                childFragmentManager,
-                playlistRepository,
-                songInfoRepository,
-                historyRepository
+            arguments.songId,
+            arguments.playlistId,
+            analyticsManager,
+            userPreferenceRepository,
+            downloadedSongRepository,
+            childFragmentManager,
+            playlistRepository,
+            songInfoRepository,
+            historyRepository
         )
     }
 
@@ -123,9 +123,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 }
             }
         }
-        viewModel.shouldNavigateBack.onEventTriggered(this) {
-            binding.appBarLayout.performAfterExpand(binding.viewPager) { if (isAdded) (activity as? MainActivity)?.navigateBack() }
-        }
+        viewModel.shouldNavigateBack.onEventTriggered(this) { (activity as? MainActivity)?.navigateBack() }
         viewModel.isAutoScrollStarted.onPropertyChanged(this) {
             if (it) {
                 binding.appBarLayout.setExpanded(false, true)
@@ -178,8 +176,8 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     private fun updateTranposeText(transposeValue: Int) {
         context?.let {
             transposeContainer.title = if (transposeValue == 0) it.getString(R.string.detail_transpose) else it.getString(
-                    R.string.detail_transpose_value,
-                    if (transposeValue < 0) "$transposeValue" else "+$transposeValue"
+                R.string.detail_transpose_value,
+                if (transposeValue < 0) "$transposeValue" else "+$transposeValue"
             )
         }
     }
