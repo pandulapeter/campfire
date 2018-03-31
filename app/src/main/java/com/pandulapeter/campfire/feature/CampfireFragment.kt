@@ -4,10 +4,7 @@ import android.content.Context
 import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
 import android.os.Bundle
-import android.support.annotation.CallSuper
-import android.support.annotation.DrawableRes
-import android.support.annotation.LayoutRes
-import android.support.annotation.StringRes
+import android.support.annotation.*
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.support.v7.widget.AppCompatTextView
@@ -31,6 +28,8 @@ abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layo
     protected val defaultToolbar by lazy { AppCompatTextView(context).apply { gravity = Gravity.CENTER_VERTICAL } }
     protected lateinit var binding: T
     protected val mainActivity get() = (activity as? CampfireActivity) ?: throw IllegalStateException("The Fragment is not attached to CampfireActivity.")
+    @MenuRes
+    protected open val navigationMenu: Int? = null
 
     final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)
@@ -45,6 +44,7 @@ abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layo
             setOnClickListener { onFloatingActionButtonClicked?.invoke() }
             if (onFloatingActionButtonClicked == null) hide() else show()
         }
+        mainActivity.setSecondaryNavigationDrawerEnabled(navigationMenu)
     }
 
     open fun onBackPressed() = false

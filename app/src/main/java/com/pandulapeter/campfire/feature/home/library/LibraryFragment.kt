@@ -18,6 +18,7 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
     private val drawableCloseToSearch by lazy { AnimatedVectorDrawableCompat.create(context, R.drawable.avd_close_to_search_24dp) }
     private val drawableSearchToClose by lazy { AnimatedVectorDrawableCompat.create(context, R.drawable.avd_search_to_close_24dp) }
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
+    override val navigationMenu = R.menu.library
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

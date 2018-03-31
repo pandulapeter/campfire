@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
+import android.support.annotation.MenuRes
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat
@@ -141,6 +142,15 @@ class CampfireActivity : AppCompatActivity() {
 
     fun transformMainToolbarButton(shouldShowBackButton: Boolean) {
         binding.toolbarMainButton.setImageDrawable((if (shouldShowBackButton) drawableMenuToBack else drawableBackToMenu).apply { this?.start() })
+        binding.drawerLayout.setDrawerLockMode(if (shouldShowBackButton) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
+    }
+
+    fun setSecondaryNavigationDrawerEnabled(@MenuRes menuResourceId: Int?) {
+        binding.drawerLayout.setDrawerLockMode(if (menuResourceId == null) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.END)
+        menuResourceId?.let {
+            binding.secondaryNavigation.menu.clear()
+            binding.secondaryNavigation.inflateMenu(it)
+        }
     }
 
     private inline fun <reified T : Fragment> FragmentManager.handleReplace(crossinline newInstance: () -> T) {
