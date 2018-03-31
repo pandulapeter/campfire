@@ -7,9 +7,9 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.HomeViewModel" />
+            type="com.pandulapeter.campfire.old.feature.home.HomeViewModel" />
 
-        <import type="com.pandulapeter.campfire.feature.home.HomeViewModel.HomeNavigationItem" />
+        <import type="com.pandulapeter.campfire.old.feature.home.HomeViewModel.HomeNavigationItem" />
 
     </data>
 

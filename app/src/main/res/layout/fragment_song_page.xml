@@ -8,7 +8,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.detail.songPage.SongPageViewModel" />
+            type="com.pandulapeter.campfire.old.feature.detail.songPage.SongPageViewModel" />
 
     </data>
 
@@ -39,7 +39,7 @@
                 app:visibility="@{viewModel.text.length > 0 &amp;&amp; !viewModel.isLoading &amp;&amp; !viewModel.shouldShowPlaceholder}"
                 tools:context=".feature.detail.DetailFragment" />
 
-            <com.pandulapeter.campfire.feature.shared.widget.PlaceholderView
+            <com.pandulapeter.campfire.old.feature.shared.widget.PlaceholderView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:onClick="@{() -> viewModel.loadSong()}"

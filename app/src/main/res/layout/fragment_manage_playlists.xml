@@ -8,13 +8,13 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.managePlaylists.ManagePlaylistsViewModel" />
+            type="com.pandulapeter.campfire.old.feature.home.managePlaylists.ManagePlaylistsViewModel" />
 
         <import type="com.pandulapeter.campfire.R" />
 
     </data>
 
-    <com.pandulapeter.campfire.feature.shared.widget.ContainerView
+    <com.pandulapeter.campfire.old.feature.shared.widget.ContainerView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:transitionGroup="false">
@@ -44,7 +44,7 @@
                         android:layout_height="0dp"
                         app:layout_constraintEnd_toStartOf="parent" />
 
-                    <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                    <com.pandulapeter.campfire.old.feature.shared.widget.AppBarButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/first_keyline"
@@ -101,6 +101,6 @@
 
         </android.support.design.widget.CoordinatorLayout>
 
-    </com.pandulapeter.campfire.feature.shared.widget.ContainerView>
+    </com.pandulapeter.campfire.old.feature.shared.widget.ContainerView>
 
 </layout>

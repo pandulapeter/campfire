@@ -7,7 +7,7 @@
 
     <!--TODO: Handle backups. -->
     <application
-        android:name=".CampfireApplication"
+        android:name=".NewCampfireApplication"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/campfire"
@@ -17,7 +17,7 @@
         tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
 
         <activity
-            android:name=".feature.MainActivity"
+            android:name=".feature.CampfireActivity"
             android:launchMode="singleTop"
             android:theme="@style/Splash"
             android:windowSoftInputMode="adjustResize">

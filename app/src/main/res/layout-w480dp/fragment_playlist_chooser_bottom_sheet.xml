@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetViewModel" />
+            type="com.pandulapeter.campfire.old.feature.shared.dialog.PlaylistChooserBottomSheetViewModel" />
 
     </data>
 

@@ -8,13 +8,13 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.history.HistoryViewModel" />
+            type="com.pandulapeter.campfire.old.feature.home.history.HistoryViewModel" />
 
         <import type="com.pandulapeter.campfire.R" />
 
     </data>
 
-    <com.pandulapeter.campfire.feature.shared.widget.ContainerView
+    <com.pandulapeter.campfire.old.feature.shared.widget.ContainerView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:transitionGroup="false">
@@ -46,7 +46,7 @@
                         android:layout_height="0dp"
                         app:layout_constraintEnd_toStartOf="parent" />
 
-                    <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                    <com.pandulapeter.campfire.old.feature.shared.widget.AppBarButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/first_keyline"
@@ -60,7 +60,7 @@
                         app:layout_constraintTop_toTopOf="parent"
                         tools:src="@drawable/avd_menu_to_back_24dp" />
 
-                    <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                    <com.pandulapeter.campfire.old.feature.shared.widget.AppBarButton
                         android:id="@+id/clear"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -99,7 +99,7 @@
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 tools:listitem="@layout/item_song_info" />
 
-            <com.pandulapeter.campfire.feature.shared.widget.PlaceholderView
+            <com.pandulapeter.campfire.old.feature.shared.widget.PlaceholderView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:onClick="@{() -> viewModel.navigateToLibrary()}"
@@ -110,6 +110,6 @@
 
         </android.support.design.widget.CoordinatorLayout>
 
-    </com.pandulapeter.campfire.feature.shared.widget.ContainerView>
+    </com.pandulapeter.campfire.old.feature.shared.widget.ContainerView>
 
 </layout>

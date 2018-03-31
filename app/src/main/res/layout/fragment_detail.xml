@@ -8,7 +8,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.detail.DetailViewModel" />
+            type="com.pandulapeter.campfire.old.feature.detail.DetailViewModel" />
 
         <import type="com.pandulapeter.campfire.R" />
 
@@ -53,7 +53,7 @@
                             android:layout_height="0dp"
                             app:layout_constraintEnd_toStartOf="parent" />
 
-                        <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                        <com.pandulapeter.campfire.old.feature.shared.widget.AppBarButton
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="@dimen/first_keyline"
@@ -65,7 +65,7 @@
                             app:layout_constraintTop_toTopOf="parent"
                             tools:src="@drawable/avd_back_to_menu_24dp" />
 
-                        <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                        <com.pandulapeter.campfire.old.feature.shared.widget.AppBarButton
                             android:id="@+id/song_options"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -76,7 +76,7 @@
                             app:layout_constraintTop_toTopOf="parent"
                             app:srcCompat="@drawable/ic_song_options_24dp" />
 
-                        <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                        <com.pandulapeter.campfire.old.feature.shared.widget.AppBarButton
                             android:id="@+id/playlist_action"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"

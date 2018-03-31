@@ -8,11 +8,11 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.shared.songInfoList.SongInfoViewModel" />
+            type="com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoViewModel" />
 
         <import type="com.pandulapeter.campfire.R" />
 
-        <import type="com.pandulapeter.campfire.data.repository.DownloadedSongRepository.DownloadState" />
+        <import type="com.pandulapeter.campfire.old.data.repository.DownloadedSongRepository.DownloadState" />
 
     </data>
 
