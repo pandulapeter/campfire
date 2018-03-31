@@ -110,11 +110,13 @@
                         app:layout_constraintEnd_toStartOf="parent" />
 
                     <EditText
+                        android:id="@+id/input"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/content_padding"
                         android:layout_marginStart="@dimen/second_keyline"
                         android:hint="@string/playlist_enter_title"
+                        android:imeOptions="actionDone"
                         android:inputType="textCapSentences"
                         android:maxLength="@integer/playlist_name_length_limit"
                         android:maxLines="1"

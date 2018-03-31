@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
@@ -50,6 +51,12 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
         super.onViewCreated(view, savedInstanceState)
         // Set up the side navigation drawer.
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { hideKeyboard(activity?.currentFocus) })
+        binding.query.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                activity?.currentFocus?.let { hideKeyboard(it) }
+            }
+            false
+        }
         context?.let { binding.drawerLayout.setStatusBarBackgroundColor(it.color(R.color.primary)) }
         binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
@@ -63,7 +70,11 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
                 else -> consume { viewModel.languageFilters.get()?.filterKeys { language -> language.nameResource == it.itemId }?.values?.first()?.toggle() }
             }
         }
-        viewModel.sortingMode.onPropertyChanged { binding.recyclerView.invalidateItemDecorations() }
+        viewModel.sortingMode.onPropertyChanged {
+            binding.recyclerView.invalidateItemDecorations()
+            scrollToTop()
+        }
+        viewModel.searchQuery.onPropertyChanged { scrollToTop() }
         viewModel.languageFilters.onPropertyChanged(this) {
             if (isAdded) {
                 binding.navigationView.menu.findItem(R.id.filter_by_language).subMenu.run {
@@ -80,7 +91,10 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
         (binding.navigationView.menu.findItem(R.id.downloaded_only).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowDownloadedOnly)
         (binding.navigationView.menu.findItem(R.id.show_work_in_progress).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowWorkInProgress)
         (binding.navigationView.menu.findItem(R.id.show_explicit).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowExplicit)
-        (binding.navigationView.menu.findItem(R.id.sort_by_popularity).actionView as CompoundButton).setupWithBackingField(viewModel.sortingMode, LibraryViewModel.SortingMode.POPULARITY)
+        (binding.navigationView.menu.findItem(R.id.sort_by_popularity).actionView as CompoundButton).setupWithBackingField(
+            viewModel.sortingMode,
+            LibraryViewModel.SortingMode.POPULARITY
+        )
         (binding.navigationView.menu.findItem(R.id.sort_by_title).actionView as CompoundButton).setupWithBackingField(viewModel.sortingMode, LibraryViewModel.SortingMode.TITLE)
         (binding.navigationView.menu.findItem(R.id.sort_by_artist).actionView as CompoundButton).setupWithBackingField(viewModel.sortingMode, LibraryViewModel.SortingMode.ARTIST)
         // Set up keyboard handling for the search view.
@@ -164,6 +178,8 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
         }
         return false
     }
+
+    private fun scrollToTop() = binding.recyclerView.run { postDelayed({ smoothScrollToPosition(0) }, 500) }
 
     private fun updateDrawerLockMode(shouldAllowViewOptions: Boolean) =
         binding.drawerLayout.setDrawerLockMode(if (shouldAllowViewOptions) DrawerLayout.LOCK_MODE_UNDEFINED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED)

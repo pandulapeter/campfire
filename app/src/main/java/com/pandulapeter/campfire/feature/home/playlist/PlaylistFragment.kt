@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.FirstTimeUserExperienceRepository
@@ -90,6 +91,13 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
             }
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
+
+        binding.input.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                activity?.currentFocus?.let { hideKeyboard(it) }
+            }
+            false
+        }
         // Set up list item click listeners.
         viewModel.adapter.itemClickListener = {
             (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[it].songInfo.id, arguments.playlistId))
