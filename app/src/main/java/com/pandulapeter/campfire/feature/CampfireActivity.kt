@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature
 
 import android.app.ActivityManager
+import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v4.app.Fragment
@@ -19,12 +20,13 @@ import com.pandulapeter.campfire.feature.settings.SettingsFragment
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.consume
 
-class MainActivity : AppCompatActivity() {
+class CampfireActivity : AppCompatActivity() {
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
     val floatingActionButton get() = binding.floatingActionButton
+    val toolbarContext: Context get() = binding.toolbar.context
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setTheme(R.style.DarkTheme)
+        setTheme(R.style.LightTheme)
         @Suppress("ConstantConditionIf")
         setTaskDescription(
             ActivityManager.TaskDescription(
@@ -43,6 +45,7 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             supportFragmentManager.handleReplace { LibraryFragment() }
         }
+        binding.toolbarMainButton.setOnClickListener { binding.drawerLayout.openDrawer(Gravity.START) }
     }
 
     fun navigateToLibrary() = supportFragmentManager.handleReplace { LibraryFragment() }

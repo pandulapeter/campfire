@@ -2,7 +2,7 @@
 <resources>
 
     <!-- General -->
-    <color name="primary">#689F38</color>
+    <color name="primary">#558B2F</color>
     <color name="accent">#8BC34A</color>
 
 </resources>

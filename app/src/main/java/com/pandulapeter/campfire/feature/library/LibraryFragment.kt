@@ -15,7 +15,7 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         updateToolbarTitle(R.string.home_library)
-        binding.root.setOnClickListener { mainActivity?.navigateToSettings() }
+        binding.root.setOnClickListener { mainActivity.navigateToSettings() }
     }
 
     override fun inflateToolbarButtons(context: Context) = listOf<View>(

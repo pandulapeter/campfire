@@ -15,7 +15,7 @@ import kotlin.reflect.KProperty
 class PreferenceStorageManager(context: Context) {
     private val preferences = context.applicationContext.getSharedPreferences("preference_storage", Context.MODE_PRIVATE)
     var lastUpdateTimestamp by PreferenceFieldDelegate.Long("last_update_timestamp")
-    var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("should_use_dark_theme", true)
+    var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("should_use_dark_theme", false)
     var sortingMode by PreferenceFieldDelegate.Int("sortingMode", LibraryViewModel.SortingMode.TITLE.intValue)
     var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("should_show_downloaded_only")
     var shouldShowExplicit by PreferenceFieldDelegate.Boolean("should_show_explicit", false)

@@ -2,6 +2,12 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <data>
+
+        <import type="com.pandulapeter.campfire.R" />
+
+    </data>
+
     <android.support.v4.widget.DrawerLayout
         android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
@@ -28,12 +34,23 @@
                     android:outlineProvider="paddedBounds"
                     android:theme="@style/ActionBar">
 
+                    <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                        android:id="@+id/toolbar_main_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/first_keyline"
+                        app:animation="@{R.drawable.avd_back_to_menu_24dp}"
+                        app:lastFrame="@{@drawable/ic_menu_24dp}"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
                     <FrameLayout
                         android:id="@+id/toolbar_title_container"
                         android:layout_width="0dp"
                         android:layout_height="0dp"
                         android:layout_marginEnd="@dimen/content_padding"
-                        android:animateLayoutChanges="true"
+                        android:layout_marginStart="@dimen/second_keyline"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toStartOf="@+id/toolbar_button_container"
                         app:layout_constraintStart_toStartOf="parent"
