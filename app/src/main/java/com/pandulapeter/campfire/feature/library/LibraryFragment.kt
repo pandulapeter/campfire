@@ -8,6 +8,8 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentLibraryBinding
 import com.pandulapeter.campfire.feature.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.drawable
 
 class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragment_library) {
 
@@ -15,10 +17,21 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
     private val searchToggle by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) { toggleTextInputVisibility() } }
     private val drawableCloseToSearch by lazy { AnimatedVectorDrawableCompat.create(context, R.drawable.avd_close_to_search_24dp) }
     private val drawableSearchToClose by lazy { AnimatedVectorDrawableCompat.create(context, R.drawable.avd_search_to_close_24dp) }
+    private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.root.setOnClickListener { mainActivity.navigateToSettings() }
+        savedInstanceState?.let {
+            if (it.isTextInputVisible) {
+                searchToggle.setImageDrawable(context.drawable(R.drawable.ic_close_24dp))
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+        outState?.isTextInputVisible = toolbarTextInputView.isTextInputVisible
     }
 
     override fun inflateToolbarTitle(context: Context) = toolbarTextInputView

@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.old.util
+package com.pandulapeter.campfire.util
 
 import android.content.Intent
 import android.os.Bundle

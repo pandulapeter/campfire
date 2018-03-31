@@ -20,7 +20,7 @@
             android:layout_gravity="center_vertical"
             android:layout_marginStart="@dimen/edit_text_fix_negative"
             android:gravity="center_vertical"
-            android:visibility="invisible"
+            android:inputType="textEmailSubject"
             tools:ignore="LabelFor,TextFields" />
 
     </merge>

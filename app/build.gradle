@@ -1,4 +1,5 @@
 apply plugin: "com.android.application"
+apply plugin: "kotlin-android-extensions"
 apply plugin: "kotlin-android"
 apply plugin: "kotlin-kapt"
 
@@ -51,6 +52,9 @@ repositories {
         url "https://maven.google.com"
     }
 }
+androidExtensions {
+    experimental = true
+}
 kotlin {
     experimental {
         coroutines "enable"
@@ -70,7 +74,7 @@ dependencies {
     // Networking
     implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
     implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
-    implementation "com.squareup.okhttp3:logging-interceptor:3.9.1"
+    implementation "com.squareup.okhttp3:logging-interceptor:3.10.0"
 
     // Support library
     //noinspection GradleDependency,GradleCompatible

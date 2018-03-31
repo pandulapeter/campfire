@@ -26,16 +26,30 @@ fun Context.obtainColor(@AttrRes colorAttribute: Int): Int {
     return color
 }
 
+@set:BindingAdapter("visibility")
+var View.visibleOrGone
+    get() = visibility == View.VISIBLE
+    set(value) {
+        visibility = if (value) View.VISIBLE else View.GONE
+    }
+
+@set:BindingAdapter("invisibility")
+var View.visibleOrInvisible
+    get() = visibility == View.VISIBLE
+    set(value) {
+        visibility = if (value) View.VISIBLE else View.INVISIBLE
+    }
+
+@set:BindingAdapter("animatedVisibilityStart")
 var View.animatedVisibilityStart: Boolean
     get() = visibility == View.VISIBLE
-    @BindingAdapter("animatedVisibilityStart")
     set(value) {
         animateCircularReveal(value, true)
     }
 
+@set:BindingAdapter("animatedVisibilityEnd")
 var View.animatedVisibilityEnd: Boolean
     get() = visibility == View.VISIBLE
-    @BindingAdapter("animatedVisibilityEnd")
     set(value) {
         animateCircularReveal(value, false)
     }

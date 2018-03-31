@@ -15,6 +15,8 @@ import com.pandulapeter.campfire.old.feature.home.HomeFragment
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.old.util.*
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.IntentExtraDelegate
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
