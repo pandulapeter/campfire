@@ -5,6 +5,7 @@ import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
 import android.os.Bundle
 import android.support.annotation.CallSuper
+import android.support.annotation.DrawableRes
 import android.support.annotation.LayoutRes
 import android.support.annotation.StringRes
 import android.support.design.widget.Snackbar
@@ -20,7 +21,9 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.shared.EllipsizeLineSpan
+import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.obtainColor
 
 abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layoutResourceId: Int) : Fragment() {
@@ -44,9 +47,16 @@ abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layo
         }
     }
 
+    open fun onBackPressed() = false
+
     protected open fun inflateToolbarTitle(context: Context): View = defaultToolbar
 
     protected open fun inflateToolbarButtons(context: Context): List<View> = listOf()
+
+    protected inline fun Context.createToolbarButton(@DrawableRes drawableRes: Int, crossinline onClickListener: (View) -> Unit) = ToolbarButton(this).apply {
+        setImageDrawable(drawable(drawableRes))
+        setOnClickListener { onClickListener(it) }
+    }
 
     protected fun TextView.updateToolbarTitle(@StringRes titleRes: Int, subtitle: String? = null) = updateToolbarTitle(context.getString(titleRes), subtitle)
 

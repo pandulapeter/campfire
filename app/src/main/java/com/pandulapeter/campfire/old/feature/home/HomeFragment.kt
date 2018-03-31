@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.old.integration.AppShortcutManager
 import com.pandulapeter.campfire.old.util.*
+import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
 import kotlinx.coroutines.experimental.CommonPool

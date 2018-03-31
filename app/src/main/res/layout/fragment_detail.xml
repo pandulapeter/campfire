@@ -123,7 +123,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="@dimen/detail_auto_scroll_control_margin"
                     android:visibility="invisible"
-                    app:animatedVisibility="@{viewModel.isAutoScrollStarted}"
+                    app:animatedVisibilityEnd="@{viewModel.isAutoScrollStarted}"
                     app:contentPadding="@dimen/detail_auto_scroll_control_padding"
                     app:layout_anchor="@+id/auto_scroll_button"
                     app:layout_anchorGravity="center_vertical|end"

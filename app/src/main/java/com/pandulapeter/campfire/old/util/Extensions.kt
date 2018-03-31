@@ -11,8 +11,6 @@ import android.os.Bundle
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
-import android.support.v4.widget.DrawerLayout
-import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.old.data.model.Language
 import retrofit2.Call
@@ -152,17 +150,3 @@ fun String.replaceSpecialCharacters() = this
     .replace("ű", "u")
     .replace("Ű", "U")
 
-fun DrawerLayout.addDrawerListener(
-    onDrawerStateChanged: () -> Unit = {},
-    onDrawerSlide: () -> Unit = {},
-    onDrawerClosed: () -> Unit = {},
-    onDrawerOpened: () -> Unit = {}
-) = addDrawerListener(object : DrawerLayout.DrawerListener {
-    override fun onDrawerStateChanged(newState: Int) = onDrawerStateChanged()
-
-    override fun onDrawerSlide(drawerView: View, slideOffset: Float) = onDrawerSlide()
-
-    override fun onDrawerClosed(drawerView: View) = onDrawerClosed()
-
-    override fun onDrawerOpened(drawerView: View) = onDrawerOpened()
-})

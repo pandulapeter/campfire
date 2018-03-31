@@ -9,7 +9,9 @@ import android.view.inputmethod.EditorInfo
 import android.widget.FrameLayout
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewToolbarTextInputBinding
-import com.pandulapeter.campfire.util.animatedVisibility
+import com.pandulapeter.campfire.util.animatedVisibilityEnd
+import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.showKeyboard
 
 class ToolbarTextInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : FrameLayout(context, attrs, defStyleAttr) {
 
@@ -21,13 +23,18 @@ class ToolbarTextInputView @JvmOverloads constructor(context: Context, attrs: At
         }
     }
 
-    val toolbarTextView = binding.title
+    val title = binding.title
     var isTextInputVisible = false
         set(value) {
             if (field != value) {
                 field = value
-                binding.title.animatedVisibility = !value
-                binding.textInput.animatedVisibility = value
+                binding.title.animatedVisibilityEnd = !value
+                binding.textInput.animatedVisibilityEnd = value
+                if (value) {
+                    showKeyboard(binding.textInput)
+                } else {
+                    hideKeyboard(binding.textInput)
+                }
             }
         }
 }

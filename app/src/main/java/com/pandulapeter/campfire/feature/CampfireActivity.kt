@@ -17,11 +17,14 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ActivityCampfireBinding
 import com.pandulapeter.campfire.feature.library.LibraryFragment
 import com.pandulapeter.campfire.feature.settings.SettingsFragment
+import com.pandulapeter.campfire.util.addDrawerListener
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.hideKeyboard
 
 class CampfireActivity : AppCompatActivity() {
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
+    private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as CampfireFragment<*>
     val floatingActionButton get() = binding.floatingActionButton
     val toolbarContext: Context get() = binding.toolbar.context
 
@@ -35,6 +38,12 @@ class CampfireActivity : AppCompatActivity() {
             )
         )
         super.onCreate(savedInstanceState)
+        binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
+            currentFocus?.also {
+                it.clearFocus()
+                hideKeyboard(it)
+            }
+        })
         binding.primaryNavigation.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.library -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { LibraryFragment() } }
@@ -48,9 +57,17 @@ class CampfireActivity : AppCompatActivity() {
         binding.toolbarMainButton.setOnClickListener { binding.drawerLayout.openDrawer(Gravity.START) }
     }
 
+    override fun onBackPressed() {
+        if (!currentFragment.onBackPressed()) {
+            super.onBackPressed()
+        }
+    }
+
     fun navigateToLibrary() = supportFragmentManager.handleReplace { LibraryFragment() }
 
     fun navigateToSettings() = supportFragmentManager.handleReplace { SettingsFragment() }
+
+    fun openSecondaryNavigationDrawer() = binding.drawerLayout.openDrawer(Gravity.END)
 
     fun changeToolbarTitle(toolbar: View) {
         binding.toolbarTitleContainer.removeAllViews()

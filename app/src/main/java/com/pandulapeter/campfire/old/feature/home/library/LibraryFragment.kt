@@ -8,10 +8,6 @@ import android.view.inputmethod.EditorInfo
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.util.consume
-import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.util.showKeyboard
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.repository.LanguageRepository
 import com.pandulapeter.campfire.old.feature.MainActivity
@@ -20,6 +16,7 @@ import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoLi
 import com.pandulapeter.campfire.old.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.old.integration.AppShortcutManager
 import com.pandulapeter.campfire.old.util.*
+import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
 /**

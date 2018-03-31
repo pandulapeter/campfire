@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.old.data.repository.*
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.old.util.*
+import com.pandulapeter.campfire.util.addDrawerListener
 import org.koin.android.ext.android.inject
 import java.net.URLEncoder
 
