@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature
+package com.pandulapeter.campfire.feature.shared.widget
 
 import android.app.Activity
 import android.content.Context

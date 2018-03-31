@@ -4,6 +4,8 @@ import android.app.ActivityManager
 import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
+import android.support.design.internal.NavigationMenuView
+import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
@@ -12,7 +14,9 @@ import android.support.v7.app.AppCompatActivity
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ActivityCampfireBinding
@@ -47,6 +51,8 @@ class CampfireActivity : AppCompatActivity() {
                 }
             }
         })
+        (binding.primaryNavigation.getHeaderView(0).findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
+        binding.primaryNavigation.disableScrollbars()
         binding.primaryNavigation.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.library -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { LibraryFragment() } }
@@ -54,15 +60,22 @@ class CampfireActivity : AppCompatActivity() {
                 else -> false
             }
         }
+        binding.secondaryNavigation.disableScrollbars()
         if (savedInstanceState == null) {
             supportFragmentManager.handleReplace { LibraryFragment() }
+            binding.primaryNavigation.setCheckedItem(R.id.library)
         }
-        binding.toolbarMainButton.setOnClickListener { binding.drawerLayout.openDrawer(Gravity.START) }
+        binding.toolbarMainButton.setOnClickListener {
+            hideKeyboard(currentFocus)
+            binding.drawerLayout.openDrawer(Gravity.START)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        binding.drawerLayout.run { post { closeDrawers() } }
+        if (currentFocus is EditText) {
+            binding.drawerLayout.run { post { closeDrawers() } }
+        }
     }
 
     override fun onBackPressed() {
@@ -109,5 +122,10 @@ class CampfireActivity : AppCompatActivity() {
     private inline fun consumeAndCloseDrawers(crossinline action: () -> Unit) = consume {
         action()
         binding.drawerLayout.closeDrawers()
+    }
+
+
+    private fun NavigationView.disableScrollbars() {
+        (getChildAt(0) as? NavigationMenuView)?.isVerticalScrollBarEnabled = false
     }
 }

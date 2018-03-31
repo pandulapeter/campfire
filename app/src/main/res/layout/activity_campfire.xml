@@ -14,7 +14,7 @@
         android:layout_height="match_parent"
         android:fitsSystemWindows="true">
 
-        <com.pandulapeter.campfire.feature.RootCoordinatorLayout
+        <com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout
             android:id="@+id/coordinator_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
@@ -83,14 +83,13 @@
                 android:layout_gravity="bottom|end"
                 android:layout_margin="@dimen/large_content_padding" />
 
-        </com.pandulapeter.campfire.feature.RootCoordinatorLayout>
+        </com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout>
 
         <android.support.design.widget.NavigationView
             android:id="@+id/primary_navigation"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:fitsSystemWindows="true"
             app:headerLayout="@layout/view_menu_header"
             app:itemBackground="?attr/selectableItemBackground"
             app:itemIconTint="@color/accent"
@@ -101,8 +100,7 @@
             android:id="@+id/secondary_navigation"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_gravity="end"
-            android:fitsSystemWindows="true" />
+            android:layout_gravity="end" />
 
     </android.support.v4.widget.DrawerLayout>
 

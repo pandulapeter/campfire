@@ -12,7 +12,6 @@
 
         <item
             android:id="@+id/history"
-            android:enabled="false"
             android:icon="@drawable/ic_history_24dp"
             android:title="@string/home_history" />
 
@@ -32,8 +31,7 @@
 
             <group
                 android:id="@+id/playlist_container"
-                android:checkableBehavior="single"
-                android:enabled="false">
+                android:checkableBehavior="single">
 
             </group>
 
@@ -47,13 +45,11 @@
 
         <item
             android:id="@+id/manage_playlists"
-            android:title="@string/home_manage_playlists"
-            android:visible="false" />
+            android:title="@string/home_manage_playlists" />
 
         <item
             android:id="@+id/manage_downloads"
-            android:title="@string/home_manage_downloads"
-            android:visible="false" />
+            android:title="@string/home_manage_downloads" />
 
     </group>
 

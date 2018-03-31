@@ -14,7 +14,7 @@
 
     </data>
 
-    <com.pandulapeter.campfire.feature.RootCoordinatorLayout
+    <com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:transitionGroup="false">
@@ -152,6 +152,6 @@
 
         </android.support.design.widget.CoordinatorLayout>
 
-    </com.pandulapeter.campfire.feature.RootCoordinatorLayout>
+    </com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout>
 
 </layout>

@@ -17,7 +17,7 @@ import org.koin.android.ext.android.inject
  *
  * Controlled by [SettingsViewModel].
  */
-class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R.layout.fragment_settings), AlertDialogFragment.OnDialogItemsSelectedListener {
+class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R.layout.fragment_settings_old), AlertDialogFragment.OnDialogItemsSelectedListener {
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
 
