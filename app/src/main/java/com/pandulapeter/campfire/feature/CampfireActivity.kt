@@ -135,7 +135,6 @@ class CampfireActivity : AppCompatActivity() {
         currentFocus?.also { hideKeyboard(it) }
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, DetailFragment(), DetailFragment::class.java.name)
-            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
             .addToBackStack(null)
             .commit()
     }
@@ -157,7 +156,7 @@ class CampfireActivity : AppCompatActivity() {
         currentFocus?.also { hideKeyboard(it) }
         beginTransaction()
             .replace(R.id.fragment_container, findFragmentByTag(T::class.java.name) ?: newInstance.invoke(), T::class.java.name)
-            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+//            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
             .commit()
     }
 

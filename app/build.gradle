@@ -1,5 +1,4 @@
 apply plugin: "com.android.application"
-apply plugin: "kotlin-android-extensions"
 apply plugin: "kotlin-android"
 apply plugin: "kotlin-kapt"
 
@@ -51,9 +50,6 @@ repositories {
     maven {
         url "https://maven.google.com"
     }
-}
-androidExtensions {
-    experimental = true
 }
 kotlin {
     experimental {

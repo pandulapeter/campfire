@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.feature.shared.widget
 
 import android.content.Context
 import android.databinding.DataBindingUtil
-import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
@@ -10,7 +9,6 @@ import android.widget.FrameLayout
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewToolbarTextInputBinding
 import com.pandulapeter.campfire.util.*
-import kotlinx.android.parcel.Parcelize
 
 
 class ToolbarTextInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : FrameLayout(context, attrs, defStyleAttr) {
@@ -28,33 +26,23 @@ class ToolbarTextInputView @JvmOverloads constructor(context: Context, attrs: At
     }
 
     val title = binding.title
+    val textInput = binding.textInput
     var isTextInputVisible: Boolean
-        get() = binding.textInput.visibleOrInvisible
+        get() = textInput.visibleOrInvisible
         set(value) {
             if (isTextInputVisible != value) {
-                binding.title.animatedVisibilityStart = !value
-                binding.textInput.animatedVisibilityEnd = value
+                title.animatedVisibilityStart = !value
+                textInput.animatedVisibilityEnd = value
                 if (value) {
-                    binding.textInput.setText("")
-                    showKeyboard(binding.textInput)
+                    showKeyboard(textInput)
                 } else {
-                    hideKeyboard(binding.textInput)
+                    hideKeyboard(textInput)
                 }
             }
         }
 
-    override fun onSaveInstanceState(): Parcelable = State(super.onSaveInstanceState(), isTextInputVisible)
-
-    override fun onRestoreInstanceState(state: Parcelable) {
-        (state as? State)?.let {
-            super.onRestoreInstanceState(state.superParcelable)
-            if (it.isTextInputVisible) {
-                binding.textInput.visibleOrInvisible = true
-                binding.title.visibleOrInvisible = false
-            }
-        } ?: super.onRestoreInstanceState(state)
+    fun showTextInput() {
+        textInput.visibleOrInvisible = true
+        title.visibleOrInvisible = false
     }
-
-    @Parcelize
-    private data class State(val superParcelable: Parcelable?, val isTextInputVisible: Boolean) : BaseSavedState(superParcelable)
 }
