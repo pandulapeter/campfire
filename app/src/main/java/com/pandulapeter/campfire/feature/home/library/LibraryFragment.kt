@@ -70,11 +70,8 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
                 else -> consume { viewModel.languageFilters.get()?.filterKeys { language -> language.nameResource == it.itemId }?.values?.first()?.toggle() }
             }
         }
-        viewModel.sortingMode.onPropertyChanged {
-            binding.recyclerView.invalidateItemDecorations()
-            scrollToTop()
-        }
-        viewModel.searchQuery.onPropertyChanged { scrollToTop() }
+        viewModel.sortingMode.onPropertyChanged { binding.recyclerView.invalidateItemDecorations() }
+        viewModel.adapter.onListUpdatedCallback = { binding.recyclerView.run { postDelayed({ smoothScrollToPosition(0) }, 500) } }
         viewModel.languageFilters.onPropertyChanged(this) {
             if (isAdded) {
                 binding.navigationView.menu.findItem(R.id.filter_by_language).subMenu.run {
@@ -178,8 +175,6 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
         }
         return false
     }
-
-    private fun scrollToTop() = binding.recyclerView.run { postDelayed({ smoothScrollToPosition(0) }, 500) }
 
     private fun updateDrawerLockMode(shouldAllowViewOptions: Boolean) =
         binding.drawerLayout.setDrawerLockMode(if (shouldAllowViewOptions) DrawerLayout.LOCK_MODE_UNDEFINED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED)

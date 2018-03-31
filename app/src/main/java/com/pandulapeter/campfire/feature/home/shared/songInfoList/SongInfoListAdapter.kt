@@ -21,6 +21,7 @@ import kotlin.coroutines.experimental.CoroutineContext
  */
 class SongInfoListAdapter : RecyclerView.Adapter<SongInfoListAdapter.SongInfoViewHolder>() {
     private var coroutine: CoroutineContext? = null
+    var onListUpdatedCallback: (() -> Unit)? = null
     var items = mutableListOf<SongInfoViewModel>()
         set(newItems) {
             if (field.isEmpty()) {
@@ -44,6 +45,7 @@ class SongInfoListAdapter : RecyclerView.Adapter<SongInfoListAdapter.SongInfoVie
                             override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
                         })
                     }.await().dispatchUpdatesTo(this@SongInfoListAdapter)
+                    onListUpdatedCallback?.invoke()
                     field = newItems
                 }
             }
