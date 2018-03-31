@@ -31,8 +31,6 @@ class AppShortcutManager(
 
     fun onLibraryOpened() = implementation.trackAppShortcutUsage(LIBRARY_ID)
 
-    fun onCollectionsOpened() = implementation.trackAppShortcutUsage(COLLECTIONS_ID)
-
     fun onPlaylistOpened(playlistId: Int) {
         implementation.trackAppShortcutUsage(PLAYLIST_ID + playlistId.toString())
         val list = dataStorageManager.playlistHistory.toMutableList().apply { add(0, playlistId.toString()) }.distinct()
@@ -75,14 +73,6 @@ class AppShortcutManager(
                     HomeViewModel.HomeNavigationItem.Library
                 )
             )
-            shortcuts.add(
-                createAppShortcut(
-                    COLLECTIONS_ID,
-                    context.getString(R.string.home_collections),
-                    R.drawable.ic_shortcut_collections_48dp,
-                    HomeViewModel.HomeNavigationItem.Collections
-                )
-            )
             if (dataStorageManager.playlistHistory.isEmpty()) {
                 dataStorageManager.playlistHistory = dataStorageManager.playlistHistory.toMutableList().apply { add(Playlist.FAVORITES_ID.toString()) }
             }
@@ -115,7 +105,6 @@ class AppShortcutManager(
 
     private companion object {
         const val LIBRARY_ID = "library"
-        const val COLLECTIONS_ID = "collections"
         const val PLAYLIST_ID = "playlist_"
     }
 }

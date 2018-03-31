@@ -8,7 +8,6 @@ import com.pandulapeter.campfire.old.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
-import com.pandulapeter.campfire.old.feature.home.collections.CollectionsFragment
 import com.pandulapeter.campfire.old.feature.home.history.HistoryFragment
 import com.pandulapeter.campfire.old.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.old.feature.home.manageDownloads.ManageDownloadsFragment
@@ -80,10 +79,6 @@ class HomeViewModel(
             override fun getFragment() = LibraryFragment()
         }
 
-        object Collections : HomeNavigationItem(VALUE_COLLECTIONS) {
-            override fun getFragment() = CollectionsFragment()
-        }
-
         object History : HomeNavigationItem(VALUE_HISTORY) {
             override fun getFragment() = HistoryFragment()
         }
@@ -106,7 +101,6 @@ class HomeViewModel(
 
         companion object {
             private const val VALUE_LIBRARY = "library"
-            private const val VALUE_COLLECTIONS = "collections"
             private const val VALUE_HISTORY = "history"
             private const val VALUE_SETTINGS = "settings"
             private const val VALUE_PLAYLIST = "playlist_"
@@ -115,7 +109,6 @@ class HomeViewModel(
 
             fun fromStringValue(string: String?) = when (string) {
                 null, "", VALUE_LIBRARY -> Library
-                VALUE_COLLECTIONS -> Collections
                 VALUE_HISTORY -> History
                 VALUE_SETTINGS -> Settings
                 VALUE_MANAGE_PLAYLISTS -> ManagePlaylists

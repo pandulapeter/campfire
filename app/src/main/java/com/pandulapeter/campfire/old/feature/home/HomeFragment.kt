@@ -9,8 +9,6 @@ import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.util.consume
-import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
@@ -23,6 +21,8 @@ import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.old.integration.AppShortcutManager
 import com.pandulapeter.campfire.old.util.*
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.hideKeyboard
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -44,7 +44,6 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
     override val viewModel by lazy { HomeViewModel(analyticsManager, downloadedSongRepository, userPreferenceRepository, appShortcutManager) }
     private var coroutine: CoroutineContext? = null
     private val playlistsContainerItem by lazy { binding.navigationView.menu.findItem(R.id.playlists).subMenu }
-    private val collectionsItem by lazy { binding.navigationView.menu.findItem(R.id.collections) }
     private val historyItem by lazy { binding.navigationView.menu.findItem(R.id.history) }
     private val managePlaylistsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_playlists) }
     private val manageDownloadsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_downloads) }
@@ -66,7 +65,6 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.library -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Library) }
-                R.id.collections -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Collections) }
                 R.id.history -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.History) }
                 R.id.settings -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Settings) }
                 R.id.playlists -> {
@@ -100,7 +98,6 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             updateCheckedItem()
         }
         viewModel.isLibraryReady.onPropertyChanged(this) { isLibraryReady ->
-            collectionsItem.isEnabled = false //TODO: Only enable this after the feature is implemented.
             historyItem.isEnabled = isLibraryReady
             playlistsContainerItem.run {
                 viewModel.playlists.get()?.forEach {
@@ -155,7 +152,6 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         binding.navigationView.setCheckedItem(
             when (it) {
                 HomeViewModel.HomeNavigationItem.Library -> R.id.library
-                HomeViewModel.HomeNavigationItem.Collections -> R.id.collections
                 HomeViewModel.HomeNavigationItem.History -> R.id.history
                 HomeViewModel.HomeNavigationItem.Settings -> R.id.settings
                 is HomeViewModel.HomeNavigationItem.Playlist -> it.id
