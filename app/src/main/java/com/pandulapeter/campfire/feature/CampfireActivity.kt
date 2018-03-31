@@ -13,6 +13,7 @@ import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
+import android.transition.Fade
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -30,7 +31,7 @@ import com.pandulapeter.campfire.util.*
 class CampfireActivity : AppCompatActivity() {
     private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
-    private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as CampfireFragment<*>
+    private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as CampfireFragment<*>?
     private val drawableMenuToBack by lazy { AnimatedVectorDrawableCompat.create(this, R.drawable.avd_menu_to_back_24dp) }
     private val drawableBackToMenu by lazy { AnimatedVectorDrawableCompat.create(this, R.drawable.avd_back_to_menu_24dp) }
     val floatingActionButton get() = binding.floatingActionButton
@@ -97,7 +98,7 @@ class CampfireActivity : AppCompatActivity() {
                 binding.drawerLayout.closeDrawer(Gravity.END)
             } else {
                 val fragment = currentFragment
-                if (!fragment.onBackPressed()) {
+                if (fragment == null || !fragment.onBackPressed()) {
                     if (fragment is DetailFragment) {
                         transformMainToolbarButton(false)
                     }
@@ -133,6 +134,7 @@ class CampfireActivity : AppCompatActivity() {
 
     fun openDetailScreen() {
         currentFocus?.also { hideKeyboard(it) }
+        currentFragment?.exitTransition = Fade()
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, DetailFragment(), DetailFragment::class.java.name)
             .addToBackStack(null)
@@ -154,9 +156,10 @@ class CampfireActivity : AppCompatActivity() {
 
     private inline fun <reified T : Fragment> FragmentManager.handleReplace(crossinline newInstance: () -> T) {
         currentFocus?.also { hideKeyboard(it) }
+        currentFragment?.exitTransition = null
         beginTransaction()
             .replace(R.id.fragment_container, findFragmentByTag(T::class.java.name) ?: newInstance.invoke(), T::class.java.name)
-//            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
             .commit()
     }
 
