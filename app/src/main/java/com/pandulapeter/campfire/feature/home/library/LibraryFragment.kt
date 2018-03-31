@@ -49,10 +49,7 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Set up the side navigation drawer.
-        binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
-            hideKeyboard(activity?.currentFocus)
-            expandAppBar()
-        })
+        binding.drawerLayout.addDrawerListener(onDrawerStateChanged = { hideKeyboard(activity?.currentFocus) })
         context?.let { binding.drawerLayout.setStatusBarBackgroundColor(it.color(R.color.primary)) }
         binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
@@ -60,12 +57,13 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
                 R.id.downloaded_only -> consume { viewModel.shouldShowDownloadedOnly.toggle() }
                 R.id.show_work_in_progress -> consume { viewModel.shouldShowWorkInProgress.toggle() }
                 R.id.show_explicit -> consume { viewModel.shouldShowExplicit.toggle() }
-                R.id.sort_by_popularity -> consume { } //TODO: Implement sorting by popularity.
-                R.id.sort_by_title -> consume { if (!viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(true) }
-                R.id.sort_by_artist -> consume { if (viewModel.isSortedByTitle.get()) viewModel.isSortedByTitle.set(false) }
+                R.id.sort_by_popularity -> consume { if (viewModel.sortingMode.get() != LibraryViewModel.SortingMode.POPULARITY) viewModel.sortingMode.set(LibraryViewModel.SortingMode.POPULARITY) }
+                R.id.sort_by_title -> consume { if (viewModel.sortingMode.get() != LibraryViewModel.SortingMode.TITLE) viewModel.sortingMode.set(LibraryViewModel.SortingMode.TITLE) }
+                R.id.sort_by_artist -> consume { if (viewModel.sortingMode.get() != LibraryViewModel.SortingMode.ARTIST) viewModel.sortingMode.set(LibraryViewModel.SortingMode.ARTIST) }
                 else -> consume { viewModel.languageFilters.get()?.filterKeys { language -> language.nameResource == it.itemId }?.values?.first()?.toggle() }
             }
         }
+        viewModel.sortingMode.onPropertyChanged { binding.recyclerView.invalidateItemDecorations() }
         viewModel.languageFilters.onPropertyChanged(this) {
             if (isAdded) {
                 binding.navigationView.menu.findItem(R.id.filter_by_language).subMenu.run {
@@ -82,7 +80,9 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
         (binding.navigationView.menu.findItem(R.id.downloaded_only).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowDownloadedOnly)
         (binding.navigationView.menu.findItem(R.id.show_work_in_progress).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowWorkInProgress)
         (binding.navigationView.menu.findItem(R.id.show_explicit).actionView as CompoundButton).setupWithBackingField(viewModel.shouldShowExplicit)
-        (binding.navigationView.menu.findItem(R.id.sort_by_title).actionView as CompoundButton).setupWithBackingField(viewModel.isSortedByTitle)
+        (binding.navigationView.menu.findItem(R.id.sort_by_popularity).actionView as CompoundButton).setupWithBackingField(viewModel.sortingMode, LibraryViewModel.SortingMode.POPULARITY)
+        (binding.navigationView.menu.findItem(R.id.sort_by_title).actionView as CompoundButton).setupWithBackingField(viewModel.sortingMode, LibraryViewModel.SortingMode.TITLE)
+        (binding.navigationView.menu.findItem(R.id.sort_by_artist).actionView as CompoundButton).setupWithBackingField(viewModel.sortingMode, LibraryViewModel.SortingMode.ARTIST)
         // Set up keyboard handling for the search view.
         viewModel.isSearchInputVisible.onPropertyChanged(this) {
             if (it) {
@@ -94,7 +94,6 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
                 hideKeyboard(activity?.currentFocus)
             }
         }
-        (binding.navigationView.menu.findItem(R.id.sort_by_artist).actionView as CompoundButton).setupWithBackingField(viewModel.isSortedByTitle, true)
         // Initialize the pull-to-refresh functionality.
         binding.swipeRefreshLayout.run {
             setOnRefreshListener { viewModel.forceRefresh() }

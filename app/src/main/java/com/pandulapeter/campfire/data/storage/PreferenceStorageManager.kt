@@ -4,6 +4,7 @@ import android.content.Context
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.feature.home.HomeViewModel
+import com.pandulapeter.campfire.feature.home.library.LibraryViewModel
 import java.util.*
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -15,7 +16,7 @@ class PreferenceStorageManager(context: Context) {
     private val preferences = context.applicationContext.getSharedPreferences("preference_storage", Context.MODE_PRIVATE)
     var lastUpdateTimestamp by PreferenceFieldDelegate.Long("last_update_timestamp")
     var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("should_use_dark_theme", true)
-    var isSortedByTitle by PreferenceFieldDelegate.Boolean("is_sorted_by_title", true)
+    var sortingMode by PreferenceFieldDelegate.Int("sortingMode", LibraryViewModel.SortingMode.POPULARITY.intValue)
     var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("should_show_downloaded_only")
     var shouldShowExplicit by PreferenceFieldDelegate.Boolean("should_show_explicit", false)
     var shouldShowWorkInProgress by PreferenceFieldDelegate.Boolean("should_show_work_in_progress", BuildConfig.DEBUG)
@@ -67,6 +68,14 @@ class PreferenceStorageManager(context: Context) {
 
             override fun setValue(thisRef: PreferenceStorageManager, property: KProperty<*>, value: kotlin.Boolean) =
                 thisRef.preferences.edit().putBoolean(key, value).apply()
+        }
+
+        class Int(key: String, defaultValue: kotlin.Int = 0) : PreferenceFieldDelegate<kotlin.Int>(key, defaultValue) {
+
+            override fun getValue(thisRef: PreferenceStorageManager, property: KProperty<*>) = thisRef.preferences.getInt(key, defaultValue)
+
+            override fun setValue(thisRef: PreferenceStorageManager, property: KProperty<*>, value: kotlin.Int) =
+                thisRef.preferences.edit().putInt(key, value).apply()
         }
 
         class Long(key: String, defaultValue: kotlin.Long = 0) : PreferenceFieldDelegate<kotlin.Long>(key, defaultValue) {

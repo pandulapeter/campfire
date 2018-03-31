@@ -24,10 +24,10 @@ class UserPreferenceRepository(private val preferenceStorageManager: PreferenceS
             preferenceStorageManager.homeNavigationItem = new
         }
     }
-    var isSortedByTitle by Delegates.observable(preferenceStorageManager.isSortedByTitle) { _: KProperty<*>, old: Boolean, new: Boolean ->
+    var isSortedByTitle by Delegates.observable(preferenceStorageManager.sortingMode) { _: KProperty<*>, old: Int, new: Int ->
         if (old != new) {
-            notifySubscribers(UpdateType.IsSortedByTitleUpdated)
-            preferenceStorageManager.isSortedByTitle = new
+            notifySubscribers(UpdateType.SortingModeUpdated)
+            preferenceStorageManager.sortingMode = new
         }
     }
     var shouldShowDownloadedOnly by Delegates.observable(preferenceStorageManager.shouldShowDownloadedOnly) { _: KProperty<*>, old: Boolean, new: Boolean ->
@@ -85,7 +85,7 @@ class UserPreferenceRepository(private val preferenceStorageManager: PreferenceS
     override fun subscribe(subscriber: Subscriber) {
         super.subscribe(subscriber)
         subscriber.onUpdate(UpdateType.NavigationItemUpdated)
-        subscriber.onUpdate(UpdateType.IsSortedByTitleUpdated)
+        subscriber.onUpdate(UpdateType.SortingModeUpdated)
         subscriber.onUpdate(UpdateType.ShouldShowDownloadedOnlyUpdated)
         subscriber.onUpdate(UpdateType.ShouldHideExplicitUpdated)
         subscriber.onUpdate(UpdateType.ShouldHideWorkInProgressUpdated)

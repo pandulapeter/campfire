@@ -38,8 +38,6 @@ abstract class HomeChildFragment<B : ViewDataBinding, out VM : HomeChildViewMode
 
     protected abstract fun getAppBarLayout(): AppBarLayout
 
-    fun expandAppBar() = getAppBarLayout().setExpanded(true, true)
-
     interface HomeCallbacks {
 
         fun showMenu()

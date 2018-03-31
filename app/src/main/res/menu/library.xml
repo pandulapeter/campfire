@@ -8,9 +8,8 @@
 
             <item
                 android:id="@+id/sort_by_popularity"
-                android:enabled="false"
                 android:title="@string/library_sort_by_popularity"
-                app:actionLayout="@layout/widget_radio_button_disabled" />
+                app:actionLayout="@layout/widget_radio_button" />
 
             <item
                 android:id="@+id/sort_by_title"

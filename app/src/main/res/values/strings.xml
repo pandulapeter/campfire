@@ -53,7 +53,7 @@
     <string name="library_sort_by">Sort by</string>
     <string name="library_filter_by_type">Filter by type</string>
     <string name="library_sort_by_popularity">Popularity</string>
-    <string name="library_sort_by_title">Song title</string>
+    <string name="library_sort_by_title">Title</string>
     <string name="library_sort_by_artist">Artist</string>
     <string name="library_filter_by_language">Filter by language</string>
     <string name="library_downloaded_only">Downloaded only</string>

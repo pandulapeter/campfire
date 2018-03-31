@@ -62,7 +62,7 @@ sealed class UpdateType {
     // UserPreferenceRepository
     object NavigationItemUpdated : UpdateType()
 
-    object IsSortedByTitleUpdated : UpdateType()
+    object SortingModeUpdated : UpdateType()
 
     object ShouldShowDownloadedOnlyUpdated : UpdateType()
 

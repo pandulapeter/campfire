@@ -12,6 +12,7 @@ data class SongInfo(
     @SerializedName("artist") val artist: String = "",
     @SerializedName("language") val language: String? = null,
     @SerializedName("version") val version: Int? = 0,
+    @SerializedName("popularity") val popularity: Int? = 0,
     @SerializedName("isExplicit") val isExplicit: Boolean? = false
 ) {
     @delegate:Transient

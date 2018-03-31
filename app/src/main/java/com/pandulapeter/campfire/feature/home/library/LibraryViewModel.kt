@@ -40,7 +40,7 @@ class LibraryViewModel(
     val shouldShowDownloadedOnly = ObservableBoolean(userPreferenceRepository.shouldShowDownloadedOnly)
     val shouldShowExplicit = ObservableBoolean(userPreferenceRepository.shouldShowExplicit)
     val shouldShowWorkInProgress = ObservableBoolean(userPreferenceRepository.shouldShowWorkInProgress)
-    val isSortedByTitle = ObservableBoolean(userPreferenceRepository.isSortedByTitle)
+    val sortingMode = ObservableField<SortingMode>(SortingMode.fromIntValue(userPreferenceRepository.isSortedByTitle))
     val languageFilters = ObservableField(HashMap<Language, ObservableBoolean>())
     val shouldShowPlaceholderButton = ObservableBoolean(true)
     val filteredItemCount = ObservableField("")
@@ -60,7 +60,7 @@ class LibraryViewModel(
         shouldShowDownloadedOnly.onPropertyChanged { userPreferenceRepository.shouldShowDownloadedOnly = it }
         shouldShowExplicit.onPropertyChanged { userPreferenceRepository.shouldShowExplicit = it }
         shouldShowWorkInProgress.onPropertyChanged { userPreferenceRepository.shouldShowWorkInProgress = it }
-        isSortedByTitle.onPropertyChanged { userPreferenceRepository.isSortedByTitle = it }
+        sortingMode.onPropertyChanged { userPreferenceRepository.isSortedByTitle = it.intValue }
         isLoading.onPropertyChanged { if (it || songInfoRepository.getLibrarySongs().isEmpty()) updatePlaceholderState() }
         isSearchInputVisible.onPropertyChanged { updatePlaceholderState() }
         appShortcutManager.onLibraryOpened()
@@ -111,7 +111,7 @@ class LibraryViewModel(
             is UpdateType.LibraryCacheUpdated,
             is UpdateType.PlaylistsUpdated,
             UpdateType.HistoryUpdated,
-            UpdateType.IsSortedByTitleUpdated,
+            UpdateType.SortingModeUpdated,
             UpdateType.ShouldShowDownloadedOnlyUpdated,
             UpdateType.ShouldHideExplicitUpdated,
             UpdateType.ShouldHideWorkInProgressUpdated,
@@ -194,15 +194,17 @@ class LibraryViewModel(
 
     fun showViewOptions() = shouldShowViewOptions.set(true)
 
-    fun isHeader(position: Int) = position == 0 ||
-            if (isSortedByTitle.get()) {
-                adapter.items[position].songInfo.titleWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.titleWithSpecialCharactersRemoved[0]
-            } else {
-                adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.artistWithSpecialCharactersRemoved[0]
-            }
+    fun isHeader(position: Int) = when (sortingMode.get()) {
+        LibraryViewModel.SortingMode.TITLE -> position == 0 || adapter.items[position].songInfo.titleWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.titleWithSpecialCharactersRemoved[0]
+        LibraryViewModel.SortingMode.ARTIST -> position == 0 || adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0] != adapter.items[position - 1].songInfo.artistWithSpecialCharactersRemoved[0]
+        else -> false
+    }
 
-    fun getHeaderTitle(position: Int) =
-        (if (isSortedByTitle.get()) adapter.items[position].songInfo.titleWithSpecialCharactersRemoved[0] else adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0]).toString().toUpperCase()
+    fun getHeaderTitle(position: Int) = when (sortingMode.get()) {
+        LibraryViewModel.SortingMode.TITLE -> adapter.items[position].songInfo.titleWithSpecialCharactersRemoved[0].toString().toUpperCase()
+        LibraryViewModel.SortingMode.ARTIST -> adapter.items[position].songInfo.artistWithSpecialCharactersRemoved[0].toString().toUpperCase()
+        else -> ""
+    }
 
     private fun updatePlaceholderState() {
         if (shouldShowPlaceholder.get()) {
@@ -232,10 +234,24 @@ class LibraryViewModel(
         } ?: this
     } else this
 
-    private fun Sequence<SongInfo>.sort() =
-        sortedBy { if (isSortedByTitle.get()) it.titleWithSpecialCharactersRemoved else it.artistWithSpecialCharactersRemoved }
+    private fun Sequence<SongInfo>.sort() = when (sortingMode.get()) {
+        SortingMode.POPULARITY -> sortedBy { it.artistWithSpecialCharactersRemoved }.sortedBy { it.titleWithSpecialCharactersRemoved }.sortedByDescending { it.popularity }
+        SortingMode.TITLE -> sortedBy { it.artistWithSpecialCharactersRemoved }.sortedBy { it.titleWithSpecialCharactersRemoved }
+        SortingMode.ARTIST -> sortedBy { it.titleWithSpecialCharactersRemoved }.sortedBy { it.artistWithSpecialCharactersRemoved }
+        else -> this
+    }
 
     private fun Sequence<SongInfo>.filterWorkInProgress() = if (!shouldShowWorkInProgress.get()) filter { it.version ?: 0 >= 0 } else this
 
     private fun Sequence<SongInfo>.filterExplicit() = if (!shouldShowExplicit.get()) filter { it.isExplicit != true } else this
+
+    enum class SortingMode(val intValue: Int) {
+        POPULARITY(0),
+        TITLE(1),
+        ARTIST(2);
+
+        companion object {
+            fun fromIntValue(value: Int) = SortingMode.values().find { it.intValue == value } ?: POPULARITY
+        }
+    }
 }

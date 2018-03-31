@@ -103,10 +103,16 @@ inline fun <T> ObservableField<T>.onPropertyChanged(fragment: Fragment? = null, 
     })
 }
 
-fun CompoundButton.setupWithBackingField(backingField: ObservableBoolean, shouldNegate: Boolean = false) {
-    isChecked = backingField.get().let { if (shouldNegate) !it else it }
-    setOnCheckedChangeListener { _, isChecked -> backingField.set(if (shouldNegate) !isChecked else isChecked) }
-    backingField.onPropertyChanged { isChecked = if (shouldNegate) !it else it }
+fun CompoundButton.setupWithBackingField(backingField: ObservableBoolean) {
+    isChecked = backingField.get()
+    setOnCheckedChangeListener { _, isChecked -> backingField.set(isChecked) }
+    backingField.onPropertyChanged { isChecked = it }
+}
+
+fun <T> CompoundButton.setupWithBackingField(backingField: ObservableField<T>, value: T) {
+    isChecked = backingField.get() == value
+    setOnCheckedChangeListener { _, isChecked -> if (isChecked) { backingField.set(value) } }
+    backingField.onPropertyChanged { isChecked = it == value }
 }
 
 fun <T> Call<T>.enqueueCall(onSuccess: (T) -> Unit, onFailure: () -> Unit) {
