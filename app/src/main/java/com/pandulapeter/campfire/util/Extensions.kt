@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.util
 
 import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.content.Context
 import android.databinding.BindingAdapter
 import android.support.annotation.*
@@ -60,24 +59,11 @@ private fun View.animateCircularReveal(isVisible: Boolean, start: Boolean) {
         val cy = height / 2
         val maxRadius = Math.hypot(width.toDouble(), height.toDouble()).toFloat()
         visibleOrGone = true
-        val animator = if (isVisible) {
-            ViewAnimationUtils.createCircularReveal(this, cx, cy, 0f, maxRadius).apply {
-                addListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        visibleOrGone = true
-                        tag = null
-                    }
-                })
-            }
-        } else {
-            ViewAnimationUtils.createCircularReveal(this, cx, cy, maxRadius, 0f).apply {
-                addListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        visibleOrGone = false
-                        tag = null
-                    }
-                })
-            }
+        val animator = ViewAnimationUtils.createCircularReveal(this, cx, cy, if (isVisible) 0f else maxRadius, if (isVisible) maxRadius else 0f).apply {
+            addListener(onAnimationEnd = {
+                visibleOrGone = isVisible
+                tag = null
+            })
         }
         tag = animator
         animator.start()
@@ -85,16 +71,31 @@ private fun View.animateCircularReveal(isVisible: Boolean, start: Boolean) {
 }
 
 fun DrawerLayout.addDrawerListener(
-    onDrawerStateChanged: () -> Unit = {},
+    onDrawerStateChanged: (newState: Int) -> Unit = {},
     onDrawerSlide: () -> Unit = {},
     onDrawerClosed: () -> Unit = {},
     onDrawerOpened: () -> Unit = {}
 ) = addDrawerListener(object : DrawerLayout.DrawerListener {
-    override fun onDrawerStateChanged(newState: Int) = onDrawerStateChanged()
+    override fun onDrawerStateChanged(newState: Int) = onDrawerStateChanged(newState)
 
     override fun onDrawerSlide(drawerView: View, slideOffset: Float) = onDrawerSlide()
 
     override fun onDrawerClosed(drawerView: View) = onDrawerClosed()
 
     override fun onDrawerOpened(drawerView: View) = onDrawerOpened()
+})
+
+fun Animator.addListener(
+    onAnimationRepeat: () -> Unit = {},
+    onAnimationEnd: () -> Unit = {},
+    onAnimationCancel: () -> Unit = {},
+    onAnimationStart: () -> Unit = {}
+) = addListener(object : Animator.AnimatorListener {
+    override fun onAnimationRepeat(animation: Animator?) = onAnimationRepeat()
+
+    override fun onAnimationEnd(animation: Animator?) = onAnimationEnd()
+
+    override fun onAnimationCancel(animation: Animator?) = onAnimationCancel()
+
+    override fun onAnimationStart(animation: Animator?) = onAnimationStart()
 })

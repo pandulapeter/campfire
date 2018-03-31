@@ -35,6 +35,7 @@ class ToolbarTextInputView @JvmOverloads constructor(context: Context, attrs: At
                 binding.title.animatedVisibilityStart = !value
                 binding.textInput.animatedVisibilityEnd = value
                 if (value) {
+                    binding.textInput.setText("")
                     showKeyboard(binding.textInput)
                 } else {
                     hideKeyboard(binding.textInput)

@@ -21,7 +21,6 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.root.setOnClickListener { mainActivity.navigateToSettings() }
         savedInstanceState?.let {
             if (it.isTextInputVisible) {
                 searchToggle.setImageDrawable(context.drawable(R.drawable.ic_close_24dp))

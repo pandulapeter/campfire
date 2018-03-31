@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
+import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
 import android.view.Gravity
 import android.view.View
@@ -39,10 +40,11 @@ class CampfireActivity : AppCompatActivity() {
         )
         super.onCreate(savedInstanceState)
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
-            currentFocus?.also {
-                it.clearFocus()
-                hideKeyboard(it)
-                //TODO: Keyboard visibility bug when restoring instance state.
+            if (it == DrawerLayout.STATE_DRAGGING) {
+                currentFocus?.also {
+                    it.clearFocus()
+                    hideKeyboard(it)
+                }
             }
         })
         binding.primaryNavigation.setNavigationItemSelectedListener { menuItem ->
@@ -56,6 +58,11 @@ class CampfireActivity : AppCompatActivity() {
             supportFragmentManager.handleReplace { LibraryFragment() }
         }
         binding.toolbarMainButton.setOnClickListener { binding.drawerLayout.openDrawer(Gravity.START) }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.drawerLayout.run { post { closeDrawers() } }
     }
 
     override fun onBackPressed() {
@@ -72,11 +79,10 @@ class CampfireActivity : AppCompatActivity() {
         }
     }
 
-    fun navigateToLibrary() = supportFragmentManager.handleReplace { LibraryFragment() }
-
-    fun navigateToSettings() = supportFragmentManager.handleReplace { SettingsFragment() }
-
-    fun openSecondaryNavigationDrawer() = binding.drawerLayout.openDrawer(Gravity.END)
+    fun openSecondaryNavigationDrawer() {
+        hideKeyboard(currentFocus)
+        binding.drawerLayout.openDrawer(Gravity.END)
+    }
 
     fun changeToolbarTitle(toolbar: View) {
         binding.toolbarTitleContainer.removeAllViews()
@@ -93,6 +99,7 @@ class CampfireActivity : AppCompatActivity() {
     }
 
     private inline fun <reified T : Fragment> FragmentManager.handleReplace(crossinline newInstance: () -> T) {
+        currentFocus?.also { hideKeyboard(it) }
         beginTransaction()
             .replace(R.id.fragment_container, findFragmentByTag(T::class.java.name) ?: newInstance.invoke(), T::class.java.name)
             .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
