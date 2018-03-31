@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.old.feature.shared
+package com.pandulapeter.campfire.feature.shared
 
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -24,7 +24,8 @@ class EllipsizeLineSpan(@ColorInt private val color: Int? = null) : ReplacementS
 
     override fun getSize(paint: Paint, text: CharSequence, start: Int, end: Int, fontMetricsInt: Paint.FontMetricsInt?): Int {
         fontMetricsInt?.let {
-            it.top = paint.getFontMetricsInt(it)
+            it.ascent = paint.getFontMetricsInt(it)
+            it.leading = paint.getFontMetricsInt(it)
         }
         return Math.round(paint.measureText(text, start, start))
     }

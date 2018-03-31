@@ -7,9 +7,12 @@ import android.os.Build
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewPager
+import android.support.v4.widget.DrawerLayout
 import android.view.View
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.old.data.repository.*
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
@@ -180,6 +183,11 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 if (transposeValue < 0) "$transposeValue" else "+$transposeValue"
             )
         }
+    }
+
+    private inline fun consumeAndCloseDrawer(drawerLayout: DrawerLayout, crossinline action: () -> Unit) = consume {
+        action()
+        drawerLayout.closeDrawers()
     }
 
     companion object {

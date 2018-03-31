@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity
 import android.view.Window
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.feature.detail.DetailFragment
 import com.pandulapeter.campfire.old.feature.home.HomeFragment

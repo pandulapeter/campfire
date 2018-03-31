@@ -3,7 +3,7 @@ package com.pandulapeter.campfire.old.feature.shared.widget
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
-import com.pandulapeter.campfire.old.util.obtainColor
+import com.pandulapeter.campfire.util.obtainColor
 
 
 /**

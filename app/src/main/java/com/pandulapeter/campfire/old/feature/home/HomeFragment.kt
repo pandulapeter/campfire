@@ -2,12 +2,15 @@ package com.pandulapeter.campfire.old.feature.home
 
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
+import android.support.v4.widget.DrawerLayout
 import android.view.SubMenu
 import android.view.View
 import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
@@ -187,6 +190,12 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
                 }
             }
         }
+    }
+
+
+    private inline fun consumeAndCloseDrawer(drawerLayout: DrawerLayout, crossinline action: () -> Unit) = consume {
+        action()
+        drawerLayout.closeDrawers()
     }
 
     private fun SubMenu.addPlaylistItem(id: Int, index: Int, title: String, shouldUseAddIcon: Boolean = false) =

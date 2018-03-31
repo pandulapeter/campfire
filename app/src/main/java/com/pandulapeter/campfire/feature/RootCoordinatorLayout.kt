@@ -1,23 +1,18 @@
-package com.pandulapeter.campfire.old.feature.shared.widget
+package com.pandulapeter.campfire.feature
 
 import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
+import android.support.design.widget.CoordinatorLayout
 import android.util.AttributeSet
 import android.view.View
 import android.view.Window
-import android.widget.FrameLayout
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.old.util.color
+import com.pandulapeter.campfire.util.color
 
-
-/**
- * Fixes fitsSystemWindow and status bar color problems introduced by multiple drawers and dynamic theming.
- */
-class ContainerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
-    FrameLayout(context, attrs, defStyleAttr) {
+class RootCoordinatorLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : CoordinatorLayout(context, attrs, defStyleAttr) {
 
     private val statusBarHeight by lazy {
         val rectangle = Rect()

@@ -8,6 +8,10 @@ import android.view.inputmethod.EditorInfo
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.showKeyboard
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.repository.LanguageRepository
 import com.pandulapeter.campfire.old.feature.MainActivity
@@ -26,7 +30,7 @@ import org.koin.android.ext.android.inject
  *
  * Controlled by [LibraryViewModel].
  */
-class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library) {
+class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R.layout.fragment_library_old) {
     private val languageRepository by inject<LanguageRepository>()
     private val appShortcutManager by inject<AppShortcutManager>()
 
@@ -64,10 +68,24 @@ class LibraryFragment : SongInfoListFragment<LibraryBinding, LibraryViewModel>(R
                 R.id.downloaded_only -> consume { viewModel.shouldShowDownloadedOnly.toggle() }
                 R.id.show_work_in_progress -> consume { viewModel.shouldShowWorkInProgress.toggle() }
                 R.id.show_explicit -> consume { viewModel.shouldShowExplicit.toggle() }
-                R.id.sort_by_popularity -> consume { if (viewModel.sortingMode.get() != LibraryViewModel.SortingMode.POPULARITY) viewModel.sortingMode.set(LibraryViewModel.SortingMode.POPULARITY) }
-                R.id.sort_by_title -> consume { if (viewModel.sortingMode.get() != LibraryViewModel.SortingMode.TITLE) viewModel.sortingMode.set(LibraryViewModel.SortingMode.TITLE) }
-                R.id.sort_by_artist -> consume { if (viewModel.sortingMode.get() != LibraryViewModel.SortingMode.ARTIST) viewModel.sortingMode.set(LibraryViewModel.SortingMode.ARTIST) }
-                else -> consume { viewModel.languageFilters.get()?.filterKeys { language -> language.nameResource == it.itemId }?.values?.first()?.toggle() }
+                R.id.sort_by_popularity -> consume {
+                    if (viewModel.sortingMode.get() != LibraryViewModel.SortingMode.POPULARITY) viewModel.sortingMode.set(
+                        LibraryViewModel.SortingMode.POPULARITY
+                    )
+                }
+                R.id.sort_by_title -> consume {
+                    if (viewModel.sortingMode.get() != LibraryViewModel.SortingMode.TITLE) viewModel.sortingMode.set(
+                        LibraryViewModel.SortingMode.TITLE
+                    )
+                }
+                R.id.sort_by_artist -> consume {
+                    if (viewModel.sortingMode.get() != LibraryViewModel.SortingMode.ARTIST) viewModel.sortingMode.set(
+                        LibraryViewModel.SortingMode.ARTIST
+                    )
+                }
+                else -> consume {
+                    viewModel.languageFilters.get()?.filterKeys { language -> language.nameResource == it.itemId }?.values?.first()?.toggle()
+                }
             }
         }
         viewModel.sortingMode.onPropertyChanged { binding.recyclerView.invalidateItemDecorations() }

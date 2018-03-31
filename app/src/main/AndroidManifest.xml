@@ -7,7 +7,7 @@
 
     <!--TODO: Handle backups. -->
     <application
-        android:name=".NewCampfireApplication"
+        android:name=".CampfireApplication"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/campfire"

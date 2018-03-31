@@ -14,9 +14,9 @@ import com.pandulapeter.campfire.NewPlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
-import com.pandulapeter.campfire.old.util.consume
-import com.pandulapeter.campfire.old.util.hideKeyboard
-import com.pandulapeter.campfire.old.util.showKeyboard
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.showKeyboard
 import org.koin.android.ext.android.inject
 
 /**

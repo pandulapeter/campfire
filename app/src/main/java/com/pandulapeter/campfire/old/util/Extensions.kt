@@ -12,10 +12,8 @@ import android.support.annotation.*
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
-import android.support.v4.content.ContextCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.content.res.AppCompatResources
-import android.util.TypedValue
 import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.old.data.model.Language
@@ -24,19 +22,9 @@ import retrofit2.Callback
 import retrofit2.Response
 import kotlin.reflect.KClass
 
-fun Context.color(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
-
 fun Context.dimension(@DimenRes dimensionId: Int) = resources.getDimensionPixelSize(dimensionId)
 
 fun Context.drawable(@DrawableRes drawableId: Int) = AppCompatResources.getDrawable(this, drawableId)
-
-@ColorInt
-fun Context.obtainColor(@AttrRes colorAttribute: Int): Int {
-    val attributes = obtainStyledAttributes(TypedValue().data, intArrayOf(colorAttribute))
-    val color = attributes.getColor(0, 0)
-    attributes.recycle()
-    return color
-}
 
 fun ObservableBoolean.toggle() = set(!get())
 

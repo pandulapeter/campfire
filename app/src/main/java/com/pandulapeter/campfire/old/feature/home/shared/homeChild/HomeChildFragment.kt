@@ -36,7 +36,7 @@ abstract class HomeChildFragment<B : ViewDataBinding, out VM : HomeChildViewMode
 
     protected abstract fun createViewModel(): VM
 
-    protected abstract fun getAppBarLayout(): AppBarLayout
+    protected abstract fun getAppBarLayout(): AppBarLayout?
 
     interface HomeCallbacks {
 

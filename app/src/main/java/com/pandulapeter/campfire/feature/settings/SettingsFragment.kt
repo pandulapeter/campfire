@@ -1,0 +1,19 @@
+package com.pandulapeter.campfire.feature.settings
+
+import android.os.Bundle
+import android.view.View
+import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.SettingsBinding
+import com.pandulapeter.campfire.feature.CampfireFragment
+
+class SettingsFragment : CampfireFragment<SettingsBinding>(R.layout.fragment_settings) {
+
+    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        updateToolbarTitle(R.string.home_settings)
+    }
+
+    override var onFloatingActionButtonClicked: (() -> Unit)? = {
+        mainActivity?.navigateToLibrary()
+    }
+}

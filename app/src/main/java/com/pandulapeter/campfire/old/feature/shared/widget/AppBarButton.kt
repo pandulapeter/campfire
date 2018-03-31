@@ -12,7 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.old.util.dimension
-import com.pandulapeter.campfire.old.util.obtainColor
+import com.pandulapeter.campfire.util.obtainColor
 
 
 /**

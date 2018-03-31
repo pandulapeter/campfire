@@ -13,7 +13,7 @@ import android.view.ViewGroup
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.old.networking.AnalyticsManager
-import com.pandulapeter.campfire.old.util.color
+import com.pandulapeter.campfire.util.color
 import org.koin.android.ext.android.inject
 
 /**

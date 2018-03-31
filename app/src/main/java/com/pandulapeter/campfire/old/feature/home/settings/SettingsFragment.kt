@@ -23,7 +23,7 @@ class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R
 
     override fun createViewModel() = SettingsViewModel(analyticsManager, firstTimeUserExperienceRepository, userPreferenceRepository)
 
-    override fun getAppBarLayout() = binding.appBarLayout
+    override fun getAppBarLayout() = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -36,7 +36,7 @@ class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R
                 R.string.cancel
             )
         }
-        viewModel.shouldShowHintsResetSnackbar.onEventTriggered(this) { binding.coordinatorLayout.showSnackbar(R.string.settings_reset_hints_message) }
+        viewModel.shouldShowHintsResetSnackbar.onEventTriggered(this) { binding.root.showSnackbar(R.string.settings_reset_hints_message) }
         viewModel.shouldUseDarkTheme.onPropertyChanged(this) { activity?.recreate() }
     }
 

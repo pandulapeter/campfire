@@ -2,43 +2,59 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <data>
-
-        <variable
-            name="viewModel"
-            type="com.pandulapeter.campfire.feature.MainViewModel" />
-
-    </data>
-
     <android.support.v4.widget.DrawerLayout
         android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true">
 
-        <android.support.design.widget.CoordinatorLayout
+        <com.pandulapeter.campfire.feature.RootCoordinatorLayout
             android:id="@+id/coordinator_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fitsSystemWindows="true">
+            android:layout_height="match_parent">
 
-            <android.support.design.widget.AppBarLayout
-                android:id="@+id/app_bar_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <android.support.v7.widget.Toolbar
-                    android:id="@+id/toolbar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:title="@string/campfire" />
-
-            </android.support.design.widget.AppBarLayout>
-
-            <FrameLayout
-                android:id="@+id/fragment_container"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+                android:orientation="vertical">
+
+                <android.support.constraint.ConstraintLayout
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/toolbar_height"
+                    android:background="@color/primary"
+                    android:elevation="@dimen/toolbar_elevation"
+                    android:outlineProvider="paddedBounds"
+                    android:theme="@style/ActionBar">
+
+                    <FrameLayout
+                        android:id="@+id/toolbar_title_container"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/toolbar_button_container"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <LinearLayout
+                        android:id="@id/toolbar_button_container"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/toolbar_title_container"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                </android.support.constraint.ConstraintLayout>
+
+                <FrameLayout
+                    android:id="@+id/fragment_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+            </LinearLayout>
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/floating_action_button"
@@ -47,13 +63,14 @@
                 android:layout_gravity="bottom|end"
                 android:layout_margin="@dimen/large_content_padding" />
 
-        </android.support.design.widget.CoordinatorLayout>
+        </com.pandulapeter.campfire.feature.RootCoordinatorLayout>
 
         <android.support.design.widget.NavigationView
-            android:id="@+id/navigation_view_start"
+            android:id="@+id/primary_navigation"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
+            android:fitsSystemWindows="true"
             app:headerLayout="@layout/view_menu_header"
             app:itemBackground="?attr/selectableItemBackground"
             app:itemIconTint="@color/accent"
@@ -61,10 +78,11 @@
             app:menu="@menu/home" />
 
         <android.support.design.widget.NavigationView
-            android:id="@+id/navigation_view_end"
+            android:id="@+id/secondary_navigation"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_gravity="end" />
+            android:layout_gravity="end"
+            android:fitsSystemWindows="true" />
 
     </android.support.v4.widget.DrawerLayout>
 

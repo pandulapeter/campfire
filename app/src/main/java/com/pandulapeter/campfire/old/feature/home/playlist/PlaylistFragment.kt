@@ -7,6 +7,8 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.MainViewModel
@@ -72,13 +74,14 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
                     ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                 ) else 0
 
-            override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = consume {
-                viewHolder?.adapterPosition?.let { originalPosition ->
-                    target?.adapterPosition?.let { targetPosition ->
-                        viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
+            override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) =
+                consume {
+                    viewHolder?.adapterPosition?.let { originalPosition ->
+                        target?.adapterPosition?.let { targetPosition ->
+                            viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
+                        }
                     }
                 }
-            }
 
             //TODO: Add confirmation snackbars with Undo action.
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
