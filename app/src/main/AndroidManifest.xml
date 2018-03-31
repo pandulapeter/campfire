@@ -17,7 +17,7 @@
         tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
 
         <activity
-            android:name=".feature.CampfireActivity"
+            android:name=".feature.MainActivity"
             android:launchMode="singleTop"
             android:theme="@style/Splash"
             android:windowSoftInputMode="adjustResize">
