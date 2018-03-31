@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.obtainColor
 
-class AppBarButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : AppCompatImageView(context, attrs, defStyleAttr) {
+class ToolbarButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : AppCompatImageView(context, attrs, defStyleAttr) {
 
     init {
         val padding = context.dimension(R.dimen.toolbar_action_button_padding)
@@ -33,7 +33,7 @@ class AppBarButton @JvmOverloads constructor(context: Context, attrs: AttributeS
                 bounds.bottom += extraTouchArea
                 //TODO: Does not seem to be working for all children.
                 parent.touchDelegate = (parent.touchDelegate as? TouchDelegateComposite) ?: TouchDelegateComposite(this).apply {
-                    addDelegate(TouchDelegate(bounds, this@AppBarButton))
+                    addDelegate(TouchDelegate(bounds, this@ToolbarButton))
                 }
             }
         }

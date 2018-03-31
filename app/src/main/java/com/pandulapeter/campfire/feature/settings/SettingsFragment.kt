@@ -12,6 +12,6 @@ class SettingsFragment : CampfireFragment<SettingsBinding>(R.layout.fragment_set
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        updateToolbarTitle(R.string.home_settings)
+        defaultToolbar.updateToolbarTitle(R.string.home_settings)
     }
 }

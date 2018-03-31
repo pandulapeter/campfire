@@ -1,7 +1,5 @@
 package com.pandulapeter.campfire.old.feature.shared
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.databinding.BindingAdapter
 import android.graphics.drawable.Drawable
 import android.support.annotation.ColorInt
@@ -15,7 +13,6 @@ import android.text.style.ForegroundColorSpan
 import android.text.style.TextAppearanceSpan
 import android.text.style.TypefaceSpan
 import android.view.View
-import android.view.ViewAnimationUtils
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
@@ -75,28 +72,6 @@ fun setVisibility(view: FloatingActionButton, isVisible: Boolean) {
         view.visibility = View.VISIBLE
     } else {
         view.hide()
-    }
-}
-
-@BindingAdapter("animatedVisibility")
-fun setAnimatedVisibility(view: View, isVisible: Boolean) {
-    if (view.isAttachedToWindow) {
-        val cx = view.width
-        val cy = view.height / 2
-        val maxRadius = Math.hypot(cx.toDouble(), cy.toDouble()).toFloat()
-        if (isVisible) {
-            view.visibility = View.VISIBLE
-            ViewAnimationUtils.createCircularReveal(view, cx, cy, 0f, maxRadius).start()
-        } else {
-            ViewAnimationUtils.createCircularReveal(view, cx, cy, maxRadius, 0f).apply {
-                addListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        super.onAnimationEnd(animation)
-                        view.visibility = View.INVISIBLE
-                    }
-                })
-            }.start()
-        }
     }
 }
 

@@ -34,7 +34,7 @@
                     android:outlineProvider="paddedBounds"
                     android:theme="@style/ActionBar">
 
-                    <com.pandulapeter.campfire.feature.shared.widget.AppBarButton
+                    <com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
                         android:id="@+id/toolbar_main_button"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
