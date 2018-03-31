@@ -29,7 +29,7 @@ import java.net.URLEncoder
  *
  * Controlled by [DetailViewModel].
  */
-class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout.fragment_detail) {
+class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout.fragment_detail_old) {
     private val songInfoRepository by inject<SongInfoRepository>()
     private val historyRepository by inject<HistoryRepository>()
     private val downloadedSongRepository by inject<DownloadedSongRepository>()

@@ -60,7 +60,7 @@ abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layo
 
     protected fun TextView.updateToolbarTitle(@StringRes titleRes: Int, subtitle: String? = null) = updateToolbarTitle(context.getString(titleRes), subtitle)
 
-    private fun TextView.updateToolbarTitle(title: String, subtitle: String? = null) {
+    protected fun TextView.updateToolbarTitle(title: String, subtitle: String? = null) {
         mainActivity.toolbarContext.let { context ->
             text = SpannableString("$title${subtitle?.let { "\n$it" } ?: ""}").apply {
                 setSpan(TextAppearanceSpan(context, R.style.TextAppearance_AppCompat_Title), 0, title.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)

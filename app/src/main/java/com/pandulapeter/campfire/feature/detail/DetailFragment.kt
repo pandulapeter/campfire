@@ -1,17 +1,18 @@
-package com.pandulapeter.campfire.feature.settings
+package com.pandulapeter.campfire.feature.detail
 
 import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.databinding.FragmentSettingsBinding
+import com.pandulapeter.campfire.databinding.FragmentDetailBinding
 import com.pandulapeter.campfire.feature.CampfireFragment
 
-class SettingsFragment : CampfireFragment<FragmentSettingsBinding>(R.layout.fragment_settings) {
+class DetailFragment : CampfireFragment<FragmentDetailBinding>(R.layout.fragment_detail) {
 
     override var onFloatingActionButtonClicked: (() -> Unit)? = { binding.root.makeSnackbar("Work in progress").show() }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        defaultToolbar.updateToolbarTitle(R.string.home_settings)
+        defaultToolbar.updateToolbarTitle("Detail")
+        mainActivity.transformMainToolbarButton(true)
     }
 }

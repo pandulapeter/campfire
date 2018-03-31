@@ -6,6 +6,7 @@ import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
+import android.support.graphics.drawable.AnimatedVectorDrawableCompat
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
@@ -20,16 +21,17 @@ import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ActivityCampfireBinding
-import com.pandulapeter.campfire.feature.library.LibraryFragment
-import com.pandulapeter.campfire.feature.settings.SettingsFragment
-import com.pandulapeter.campfire.util.addDrawerListener
-import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.util.consume
-import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.feature.detail.DetailFragment
+import com.pandulapeter.campfire.feature.home.library.LibraryFragment
+import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
+import com.pandulapeter.campfire.util.*
 
 class CampfireActivity : AppCompatActivity() {
+    private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
     private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as CampfireFragment<*>
+    private val drawableMenuToBack by lazy { AnimatedVectorDrawableCompat.create(this, R.drawable.avd_menu_to_back_24dp) }
+    private val drawableBackToMenu by lazy { AnimatedVectorDrawableCompat.create(this, R.drawable.avd_back_to_menu_24dp) }
     val floatingActionButton get() = binding.floatingActionButton
     val toolbarContext: Context get() = binding.toolbar.context
 
@@ -64,10 +66,18 @@ class CampfireActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             supportFragmentManager.handleReplace { LibraryFragment() }
             binding.primaryNavigation.setCheckedItem(R.id.library)
+        } else {
+            if (savedInstanceState.isOnDetailScreen) {
+                binding.toolbarMainButton.setImageDrawable(drawable(R.drawable.ic_back_24dp))
+            }
         }
         binding.toolbarMainButton.setOnClickListener {
-            hideKeyboard(currentFocus)
-            binding.drawerLayout.openDrawer(Gravity.START)
+            if (currentFragment is DetailFragment) {
+                onBackPressed()
+            } else {
+                hideKeyboard(currentFocus)
+                binding.drawerLayout.openDrawer(Gravity.START)
+            }
         }
     }
 
@@ -85,11 +95,20 @@ class CampfireActivity : AppCompatActivity() {
             if (binding.drawerLayout.isDrawerOpen(Gravity.END)) {
                 binding.drawerLayout.closeDrawer(Gravity.END)
             } else {
-                if (!currentFragment.onBackPressed()) {
+                val fragment = currentFragment
+                if (!fragment.onBackPressed()) {
+                    if (fragment is DetailFragment) {
+                        transformMainToolbarButton(false)
+                    }
                     super.onBackPressed()
                 }
             }
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+        outState?.isOnDetailScreen = currentFragment is DetailFragment
     }
 
     fun openSecondaryNavigationDrawer() {
@@ -109,6 +128,19 @@ class CampfireActivity : AppCompatActivity() {
         buttons.forEach {
             binding.toolbarButtonContainer.addView(it, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
+    }
+
+    fun openDetailScreen() {
+        currentFocus?.also { hideKeyboard(it) }
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, DetailFragment(), DetailFragment::class.java.name)
+            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    fun transformMainToolbarButton(shouldShowBackButton: Boolean) {
+        binding.toolbarMainButton.setImageDrawable((if (shouldShowBackButton) drawableMenuToBack else drawableBackToMenu).apply { this?.start() })
     }
 
     private inline fun <reified T : Fragment> FragmentManager.handleReplace(crossinline newInstance: () -> T) {

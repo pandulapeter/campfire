@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.library
+package com.pandulapeter.campfire.feature.home.library
 
 import android.content.Context
 import android.os.Bundle
@@ -26,6 +26,7 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
                 searchToggle.setImageDrawable(context.drawable(R.drawable.ic_close_24dp))
             }
         }
+        binding.root.setOnClickListener { mainActivity.openDetailScreen() }
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
