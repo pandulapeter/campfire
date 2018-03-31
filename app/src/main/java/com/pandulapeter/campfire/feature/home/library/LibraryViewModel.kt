@@ -246,12 +246,12 @@ class LibraryViewModel(
     private fun Sequence<SongInfo>.filterExplicit() = if (!shouldShowExplicit.get()) filter { it.isExplicit != true } else this
 
     enum class SortingMode(val intValue: Int) {
-        POPULARITY(0),
-        TITLE(1),
-        ARTIST(2);
+        TITLE(0),
+        ARTIST(1),
+        POPULARITY(2);
 
         companion object {
-            fun fromIntValue(value: Int) = SortingMode.values().find { it.intValue == value } ?: POPULARITY
+            fun fromIntValue(value: Int) = SortingMode.values().find { it.intValue == value } ?: TITLE
         }
     }
 }
