@@ -49,7 +49,7 @@ var View.animatedVisibilityStart: Boolean
 
 @set:BindingAdapter("animatedVisibilityEnd")
 var View.animatedVisibilityEnd: Boolean
-    get() = visibility == View.VISIBLE
+    get() = visibleOrGone
     set(value) {
         animateCircularReveal(value, false)
     }
@@ -58,20 +58,29 @@ private fun View.animateCircularReveal(isVisible: Boolean, start: Boolean) {
     if (isAttachedToWindow) {
         val cx = if (start) 0 else width
         val cy = height / 2
-        val maxRadius = Math.hypot(cx.toDouble(), cy.toDouble()).toFloat()
-        if (isVisible) {
-            visibility = View.VISIBLE
-            ViewAnimationUtils.createCircularReveal(this, cx, cy, 0f, maxRadius).start()
+        val maxRadius = Math.hypot(width.toDouble(), height.toDouble()).toFloat()
+        visibleOrGone = true
+        val animator = if (isVisible) {
+            ViewAnimationUtils.createCircularReveal(this, cx, cy, 0f, maxRadius).apply {
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        visibleOrGone = true
+                        tag = null
+                    }
+                })
+            }
         } else {
             ViewAnimationUtils.createCircularReveal(this, cx, cy, maxRadius, 0f).apply {
                 addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator) {
-                        super.onAnimationEnd(animation)
-                        visibility = View.INVISIBLE
+                        visibleOrGone = false
+                        tag = null
                     }
                 })
-            }.start()
+            }
         }
+        tag = animator
+        animator.start()
     }
 }
 

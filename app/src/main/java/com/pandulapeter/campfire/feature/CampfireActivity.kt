@@ -42,6 +42,7 @@ class CampfireActivity : AppCompatActivity() {
             currentFocus?.also {
                 it.clearFocus()
                 hideKeyboard(it)
+                //TODO: Keyboard visibility bug when restoring instance state.
             }
         })
         binding.primaryNavigation.setNavigationItemSelectedListener { menuItem ->
@@ -58,8 +59,16 @@ class CampfireActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (!currentFragment.onBackPressed()) {
-            super.onBackPressed()
+        if (binding.drawerLayout.isDrawerOpen(Gravity.START)) {
+            binding.drawerLayout.closeDrawer(Gravity.START)
+        } else {
+            if (binding.drawerLayout.isDrawerOpen(Gravity.END)) {
+                binding.drawerLayout.closeDrawer(Gravity.END)
+            } else {
+                if (!currentFragment.onBackPressed()) {
+                    super.onBackPressed()
+                }
+            }
         }
     }
 

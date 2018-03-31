@@ -9,10 +9,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.FrameLayout
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewToolbarTextInputBinding
-import com.pandulapeter.campfire.util.animatedVisibilityEnd
-import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.util.showKeyboard
-import com.pandulapeter.campfire.util.visibleOrInvisible
+import com.pandulapeter.campfire.util.*
 import kotlinx.android.parcel.Parcelize
 
 
@@ -35,7 +32,7 @@ class ToolbarTextInputView @JvmOverloads constructor(context: Context, attrs: At
         get() = binding.textInput.visibleOrInvisible
         set(value) {
             if (isTextInputVisible != value) {
-                binding.title.animatedVisibilityEnd = !value
+                binding.title.animatedVisibilityStart = !value
                 binding.textInput.animatedVisibilityEnd = value
                 if (value) {
                     showKeyboard(binding.textInput)

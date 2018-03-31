@@ -47,7 +47,11 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
     } else false
 
     private fun toggleTextInputVisibility() {
-        searchToggle.setImageDrawable((if (toolbarTextInputView.isTextInputVisible) drawableCloseToSearch else drawableSearchToClose).apply { this?.start() })
-        toolbarTextInputView.run { isTextInputVisible = !isTextInputVisible }
+        toolbarTextInputView.run {
+            if (title.tag == null) {
+                searchToggle.setImageDrawable((if (toolbarTextInputView.isTextInputVisible) drawableCloseToSearch else drawableSearchToClose).apply { this?.start() })
+                isTextInputVisible = !isTextInputVisible
+            }
+        }
     }
 }
