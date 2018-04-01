@@ -40,7 +40,6 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
                 toolbarTextInputView.showTextInput()
             }
         } ?: appShortcutManager.onLibraryOpened()
-        binding.root.setOnClickListener { mainActivity.openDetailScreen() }
         binding.swipeRefreshLayout.setColorSchemeColors(context.color(R.color.accent))
         binding.swipeRefreshLayout.setOnRefreshListener { songRepository.updateData() }
     }

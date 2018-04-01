@@ -12,9 +12,10 @@ class HistoryFragment : CampfireFragment<FragmentHistoryBinding>(R.layout.fragme
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_history)
+        binding.root.setOnClickListener { mainActivity.openDetailScreen() }
     }
 
     override fun inflateToolbarButtons(context: Context) = listOf<View>(
-        context.createToolbarButton(R.drawable.ic_delete_24dp) { showSnackbar("Work in progress") }
+        context.createToolbarButton(R.drawable.ic_delete_24dp) { showSnackbar(R.string.work_in_progress) }
     )
 }

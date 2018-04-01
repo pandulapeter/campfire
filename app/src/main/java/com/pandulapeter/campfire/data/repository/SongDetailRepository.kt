@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.data.repository
 
+import com.pandulapeter.campfire.data.dao.SongDetailDao
 import com.pandulapeter.campfire.data.database.SongDetailDatabase
 import com.pandulapeter.campfire.data.model.Song
 import com.pandulapeter.campfire.data.model.SongDetail
@@ -16,31 +17,40 @@ class SongDetailRepository(
     private val songDetailDatabase: SongDetailDatabase
 ) : Repository<SongDetailRepository.Subscriber>() {
     private var isInitialized = false
-    private val data: MutableList<Pair<String, Int>> = mutableListOf()
+    private val data = mutableListOf<SongDetailDao.SongDetailMetadata>()
+    private val downloading = mutableListOf<String>()
 
     init {
         refreshDataSet()
     }
 
     fun downloadSong(song: Song) {
+        downloading.add(song.id)
         networkManager.service.getSong(song.id).enqueueCall(
             onSuccess = { songDetail ->
+                songDetail.version = song.version ?: 0
                 async(UI) {
                     async(CommonPool) { songDetailDatabase.songDetailDao().insert(songDetail) }.await()
                     refreshDataSet()
+                    downloading.remove(song.id)
                     subscribers.forEach { it.onSuccess(songDetail) }
                 }
             },
-            onFailure = { subscribers.forEach { it.onError(song) } }
+            onFailure = {
+                downloading.remove(song.id)
+                subscribers.forEach { it.onError(song) }
+            }
         )
     }
 
-    fun isSongDownloaded(songId: String) = data.find { it.first == songId } != null
+    fun isSongDownloading(songId: String) = downloading.contains(songId)
 
-    fun getSongVersion(songId: String) = data.find { it.first == songId }?.second
+    fun isSongDownloaded(songId: String) = data.find { it.id == songId } != null
+
+    fun getSongVersion(songId: String) = data.find { it.id == songId }?.version
 
     fun deleteSong(songId: String) {
-        data.swap(data.filter { it.first == songId })
+        data.swap(data.filter { it.id == songId })
         async(CommonPool) {
             songDetailDatabase.songDetailDao().delete(songId)
         }
@@ -56,7 +66,7 @@ class SongDetailRepository(
     private fun refreshDataSet() {
         async(UI) {
             async(CommonPool) {
-                songDetailDatabase.songDetailDao().getAllMetadata().map { Pair(it.id, it.version) }
+                songDetailDatabase.songDetailDao().getAllMetadata()
             }.await().let {
                 data.swap(it)
                 isInitialized = true
