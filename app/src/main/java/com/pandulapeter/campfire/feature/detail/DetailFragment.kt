@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.detail
 
+import android.animation.Animator
 import android.content.Context
 import android.os.Bundle
 import android.transition.Slide
@@ -37,6 +38,16 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding>(R.layout.fragment
         if (mainActivity.autoScrollControl.visibleOrInvisible) {
             toggleAutoScroll()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        (mainActivity.autoScrollControl.tag as? Animator)?.let {
+            it.cancel()
+            mainActivity.autoScrollControl.tag = null
+        }
+        mainActivity.autoScrollControl.visibleOrInvisible = false
+        mainActivity.floatingActionButton.setImageDrawable(context.drawable(R.drawable.ic_play_24dp))
     }
 
     override fun onBackPressed() = if (mainActivity.autoScrollControl.visibleOrInvisible) {
