@@ -72,15 +72,15 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
         true
     } else super.onBackPressed()
 
-    override fun onDataChanged(data: List<Song>) {
+    override fun onSongRepositoryDataUpdated(data: List<Song>) {
         binding.textView.text = data.joinToString(", ") { it.title }
     }
 
-    override fun onLoadingStateChanged(isLoading: Boolean) {
+    override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {
         binding.swipeRefreshLayout.isRefreshing = isLoading
     }
 
-    override fun onError() = showSnackbar(R.string.library_update_error)
+    override fun onSongRepositoryUpdateError() = showSnackbar(R.string.library_update_error, View.OnClickListener { songRepository.updateData() })
 
     private fun toggleTextInputVisibility() {
         toolbarTextInputView.run {

@@ -1,9 +1,9 @@
 package com.pandulapeter.campfire.data.repository
 
-import com.pandulapeter.campfire.data.dao.SongDetailDao
 import com.pandulapeter.campfire.data.database.SongDetailDatabase
 import com.pandulapeter.campfire.data.model.Song
 import com.pandulapeter.campfire.data.model.SongDetail
+import com.pandulapeter.campfire.data.model.SongDetailMetadata
 import com.pandulapeter.campfire.data.repository.shared.Repository
 import com.pandulapeter.campfire.networking.NetworkManager
 import com.pandulapeter.campfire.util.enqueueCall
@@ -16,12 +16,17 @@ class SongDetailRepository(
     private val networkManager: NetworkManager,
     private val songDetailDatabase: SongDetailDatabase
 ) : Repository<SongDetailRepository.Subscriber>() {
-    private var isInitialized = false
-    private val data = mutableListOf<SongDetailDao.SongDetailMetadata>()
+    private val data = mutableListOf<SongDetailMetadata>()
     private val downloadQueue = mutableListOf<String>()
 
     init {
         refreshDataSet()
+    }
+
+    override fun subscribe(subscriber: Subscriber) {
+        super.subscribe(subscriber)
+        subscriber.onSongDetailRepositoryUpdated(data)
+        subscriber.onSongDetailRepositoryDownloadQueueChanged(downloadQueue)
     }
 
     fun downloadSong(song: Song) {
@@ -33,15 +38,15 @@ class SongDetailRepository(
                 async(UI) {
                     async(CommonPool) { songDetailDatabase.songDetailDao().insert(songDetail) }.await()
                     refreshDataSet()
+                    subscribers.forEach { it.onSongDetailRepositoryDownloadSuccess(songDetail) }
                     downloadQueue.remove(song.id)
                     notifyDownloadQueChanged()
-                    subscribers.forEach { it.onSuccess(songDetail) }
                 }
             },
             onFailure = {
                 downloadQueue.remove(song.id)
                 notifyDownloadQueChanged()
-                subscribers.forEach { it.onError(song) }
+                subscribers.forEach { it.onSongDetailRepositoryDownloadError(song) }
             }
         )
     }
@@ -72,19 +77,23 @@ class SongDetailRepository(
                 songDetailDatabase.songDetailDao().getAllMetadata()
             }.await().let {
                 data.swap(it)
-                isInitialized = true
+                notifyDataChanged()
             }
         }
     }
 
-    private fun notifyDownloadQueChanged() = subscribers.forEach { it.onDownloadQueueChanged(downloadQueue) }
+    private fun notifyDataChanged() = subscribers.forEach { it.onSongDetailRepositoryUpdated(data) }
+
+    private fun notifyDownloadQueChanged() = subscribers.forEach { it.onSongDetailRepositoryDownloadQueueChanged(downloadQueue) }
 
     interface Subscriber {
 
-        fun onSuccess(songDetail: SongDetail)
+        fun onSongDetailRepositoryUpdated(downloadedSongs: List<SongDetailMetadata>)
 
-        fun onDownloadQueueChanged(songIds: List<String>)
+        fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail)
 
-        fun onError(song: Song)
+        fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>)
+
+        fun onSongDetailRepositoryDownloadError(song: Song)
     }
 }

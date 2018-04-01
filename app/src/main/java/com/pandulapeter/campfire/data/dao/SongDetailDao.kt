@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.data.dao
 import android.arch.persistence.room.*
 import com.pandulapeter.campfire.data.model.Song
 import com.pandulapeter.campfire.data.model.SongDetail
+import com.pandulapeter.campfire.data.model.SongDetailMetadata
 
 @Dao
 interface SongDetailDao {
@@ -21,10 +22,4 @@ interface SongDetailDao {
 
     @Query("DELETE FROM ${SongDetail.TABLE_NAME}")
     fun deleteAll()
-
-    @Entity
-    data class SongDetailMetadata(
-        @PrimaryKey() @ColumnInfo(name = Song.ID) val id: String,
-        @ColumnInfo(name = SongDetail.VERSION) val version: Int = 0
-    )
 }

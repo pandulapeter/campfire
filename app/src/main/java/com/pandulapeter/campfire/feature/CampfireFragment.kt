@@ -94,9 +94,11 @@ abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layo
         }
     }
 
-    protected fun showSnackbar(@StringRes message: Int) = binding.root.makeSnackbar(getString(message)).show()
+    protected fun showSnackbar(@StringRes message: Int, retryAction: View.OnClickListener? = null) = showSnackbar(getString(message), retryAction)
 
-    protected fun showSnackbar(message: String) = binding.root.makeSnackbar(message).show()
+    protected fun showSnackbar(message: String, retryAction: View.OnClickListener? = null) = binding.root.makeSnackbar(message)
+        .apply { retryAction?.let { setAction(R.string.try_again, it) } }
+        .show()
 
     private fun View.makeSnackbar(message: String, duration: Int = Snackbar.LENGTH_SHORT, dismissListener: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {
         view.setBackgroundColor(context.color(R.color.primary))

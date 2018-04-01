@@ -22,7 +22,7 @@ class SongRepository(
         set(value) {
             if (field != value) {
                 field = value
-                subscribers.forEach { it.onLoadingStateChanged(value) }
+                subscribers.forEach { it.onSongRepositoryLoadingStateChanged(value) }
             }
         }
 
@@ -44,8 +44,8 @@ class SongRepository(
 
     override fun subscribe(subscriber: Subscriber) {
         super.subscribe(subscriber)
-        subscriber.onDataChanged(data)
-        subscriber.onLoadingStateChanged(isLoading)
+        subscriber.onSongRepositoryDataUpdated(data)
+        subscriber.onSongRepositoryLoadingStateChanged(isLoading)
     }
 
     fun updateData() {
@@ -60,19 +60,19 @@ class SongRepository(
             },
             onFailure = {
                 isLoading = false
-                subscribers.forEach { it.onError() }
+                subscribers.forEach { it.onSongRepositoryUpdateError() }
             })
     }
 
-    private fun notifyDataChanged() = subscribers.forEach { it.onDataChanged(data) }
+    private fun notifyDataChanged() = subscribers.forEach { it.onSongRepositoryDataUpdated(data) }
 
     interface Subscriber {
 
-        fun onDataChanged(data: List<Song>)
+        fun onSongRepositoryDataUpdated(data: List<Song>)
 
-        fun onLoadingStateChanged(isLoading: Boolean)
+        fun onSongRepositoryLoadingStateChanged(isLoading: Boolean)
 
-        fun onError()
+        fun onSongRepositoryUpdateError()
     }
 
     companion object {

@@ -47,7 +47,7 @@ class SongInfoRepository(
     fun updateDataSet(onError: () -> Unit = {}) {
         isLoading = true
 //        networkManager.service.getLibrary().enqueueCall(
-//            onSuccess = {
+//            onSongDetailRepositoryDownloadSuccess = {
 //                dataSet = it.associateBy { it.id }
 //                isLoading = false
 //                preferenceStorageManager.lastUpdateTimestamp = System.currentTimeMillis()
@@ -55,7 +55,7 @@ class SongInfoRepository(
 //            },
 //            onFailure = {
 //                isLoading = false
-//                onError()
+//                onSongRepositoryUpdateError()
 //            })
     }
 
