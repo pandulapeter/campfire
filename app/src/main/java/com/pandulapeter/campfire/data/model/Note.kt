@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.old.data.model
+package com.pandulapeter.campfire.data.model
 
 /**
  * Defines all possible musical notes and their relations.

@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.old.feature.shared.dialog
+package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.app.Dialog
 import android.os.Bundle
@@ -8,22 +8,19 @@ import android.support.v4.app.FragmentManager
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatDialogFragment
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.data.database.PreferenceDatabase
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject
 
-/**
- * Wrapper for [AlertDialog] with that handles state saving.
- */
 class AlertDialogFragment : AppCompatDialogFragment() {
-    private val userPreferenceRepository by inject<UserPreferenceRepository>()
+    private val preferenceDatabase by inject<PreferenceDatabase>()
     private val onDialogItemsSelectedListener get() = parentFragment as? OnDialogItemsSelectedListener ?: activity as? OnDialogItemsSelectedListener
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         context?.let { context ->
             arguments?.let { arguments ->
-                return AlertDialog.Builder(context, if (userPreferenceRepository.shouldUseDarkTheme) R.style.DarkAlertDialog else R.style.LightAlertDialog)
+                return AlertDialog.Builder(context, if (preferenceDatabase.shouldUseDarkTheme) R.style.DarkAlertDialog else R.style.LightAlertDialog)
                     .setTitle(arguments.title)
                     .setMessage(arguments.message)
                     .setPositiveButton(arguments.positiveButton, { _, _ -> onDialogItemsSelectedListener?.onPositiveButtonSelected() })

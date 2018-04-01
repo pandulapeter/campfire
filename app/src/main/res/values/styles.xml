@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="WindowAnimationTransition">
-        <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
-    </style>
-
     <style name="Section">
         <item name="android:fontFamily">sans-serif-light</item>
     </style>

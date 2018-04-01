@@ -1,10 +1,191 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <TextView
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.pandulapeter.campfire.feature.home.options.pages.PreferencesViewModel" />
+
+    </data>
+
+    <ScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:text="Preferences" />
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingBottom="@dimen/content_padding"
+        android:scrollbars="none"
+        android:transitionGroup="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingEnd="@dimen/content_padding"
+            android:paddingStart="@dimen/content_padding">
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding"
+                app:contentPadding="@dimen/content_padding">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/settings_label_margin"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/settings_chords"
+                        android:textColor="@color/accent" />
+
+                    <CheckBox
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/settings_checkbox_margin"
+                        android:checked="@={viewModel.shouldShowChords}"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/touch_target"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:paddingStart="@dimen/settings_checkbox_padding"
+                        app:description="@{viewModel.shouldShowChords ? @string/settings_show_chords_checked : @string/settings_show_chords_unchecked}"
+                        app:title="@{@string/settings_should_show_chords}"
+                        tools:text="@string/settings_should_show_chords" />
+
+                    <com.pandulapeter.campfire.old.feature.shared.widget.DividerView
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/divider_height"
+                        android:layout_marginStart="@dimen/settings_divider_margin" />
+
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/settings_checkbox_margin"
+                        android:checked="@={!viewModel.shouldUseGermanNotation}"
+                        android:enabled="@{viewModel.shouldShowChords}"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/touch_target"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:paddingStart="@dimen/settings_checkbox_padding"
+                        app:description="@{viewModel.englishNotationExample}"
+                        app:title="@{@string/settings_english_notation}"
+                        tools:text="@string/settings_english_notation" />
+
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/settings_checkbox_margin"
+                        android:checked="@={viewModel.shouldUseGermanNotation}"
+                        android:enabled="@{viewModel.shouldShowChords}"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/touch_target"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:paddingStart="@dimen/settings_checkbox_padding"
+                        app:description="@{viewModel.germanNotationExample}"
+                        app:title="@{@string/settings_german_notation}"
+                        tools:text="@string/settings_german_notation" />
+
+                </LinearLayout>
+
+            </android.support.v7.widget.CardView>
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding"
+                app:contentPadding="@dimen/content_padding">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/settings_label_margin"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/settings_appearance_and_behavior"
+                        android:textColor="@color/accent" />
+
+                    <android.support.v7.widget.SwitchCompat
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/content_padding"
+                        android:checked="@={viewModel.shouldUseDarkTheme}"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/touch_target"
+                        app:description="@{viewModel.shouldUseDarkTheme ? @string/settings_use_dark_theme_enabled : @string/settings_use_dark_theme_disabled}"
+                        app:title="@{@string/settings_use_dark_theme}"
+                        tools:text="@string/settings_use_dark_theme" />
+
+                    <android.support.v7.widget.SwitchCompat
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/content_padding"
+                        android:checked="@={viewModel.shouldShowExitConfirmation}"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/touch_target"
+                        app:description="@{viewModel.shouldShowExitConfirmation ? @string/settings_exit_confirmation_enabled : @string/settings_exit_confirmation_disabled}"
+                        app:title="@{@string/settings_exit_confirmation}"
+                        tools:text="@string/settings_exit_confirmation" />
+
+                </LinearLayout>
+
+            </android.support.v7.widget.CardView>
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/settings_label_margin"
+                        android:fontFamily="sans-serif-medium"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:paddingStart="@dimen/content_padding"
+                        android:paddingTop="@dimen/content_padding"
+                        android:text="@string/settings_other"
+                        android:textColor="@color/accent" />
+
+                    <TextView
+                        style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/content_padding"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/touch_target"
+                        android:onClick="@{() -> viewModel.onResetHintsClicked()}"
+                        android:padding="@dimen/content_padding"
+                        app:description="@{@string/settings_reset_hints_description}"
+                        app:title="@{@string/settings_reset_hints}"
+                        tools:text="@string/settings_reset_hints" />
+
+                </LinearLayout>
+
+            </android.support.v7.widget.CardView>
+
+        </LinearLayout>
+
+    </ScrollView>
 
 </layout>

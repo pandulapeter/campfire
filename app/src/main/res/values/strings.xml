@@ -89,6 +89,7 @@
     <string name="settings_show_chords_unchecked">Display lyrics only</string>
     <string name="settings_english_notation">English notation</string>
     <string name="settings_german_notation">German notation</string>
+    <string name="settings_appearance_and_behavior">Appearance and behavior</string>
     <string name="settings_behavior">Behavior</string>
     <string name="settings_auto_scroll">Auto-scroll</string>
     <string name="settings_auto_scroll_enabled">Auto-scroll controls are enabled</string>

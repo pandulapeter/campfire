@@ -1,5 +1,7 @@
 package com.pandulapeter.campfire.old.data.model
 
+import com.pandulapeter.campfire.data.model.Note
+
 /**
  * Represents a single chord.
  */

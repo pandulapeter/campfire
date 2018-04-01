@@ -6,7 +6,7 @@ import android.text.Spanned
 import android.text.style.TextAppearanceSpan
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.old.data.model.Chord
-import com.pandulapeter.campfire.old.data.model.Note
+import com.pandulapeter.campfire.data.model.Note
 import com.pandulapeter.campfire.old.data.model.Section
 import com.pandulapeter.campfire.old.data.model.SectionType
 

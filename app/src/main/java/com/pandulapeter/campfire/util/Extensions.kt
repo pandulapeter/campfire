@@ -2,7 +2,7 @@ package com.pandulapeter.campfire.util
 
 import android.animation.Animator
 import android.content.Context
-import android.databinding.BindingAdapter
+import android.databinding.*
 import android.os.Bundle
 import android.support.annotation.*
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat
@@ -84,6 +84,36 @@ private fun View.animateCircularReveal(isVisible: Boolean, start: Boolean) {
         tag = animator
         animator.start()
     }
+}
+
+inline fun ObservableBoolean.onPropertyChanged(fragment: Fragment? = null, crossinline callback: (Boolean) -> Unit) {
+    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+            if (fragment?.isAdded != false) {
+                callback(get())
+            }
+        }
+    })
+}
+
+inline fun ObservableInt.onPropertyChanged(fragment: Fragment? = null, crossinline callback: (Int) -> Unit) {
+    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+            if (fragment?.isAdded != false) {
+                callback(get())
+            }
+        }
+    })
+}
+
+inline fun <T> ObservableField<T>.onPropertyChanged(fragment: Fragment? = null, crossinline callback: (T) -> Unit) {
+    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+            if (fragment?.isAdded != false) {
+                get()?.let { callback(it) }
+            }
+        }
+    })
 }
 
 fun DrawerLayout.addDrawerListener(

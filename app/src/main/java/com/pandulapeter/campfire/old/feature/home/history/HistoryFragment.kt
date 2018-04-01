@@ -14,11 +14,11 @@ import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.library.HeaderItemDecoration
 import com.pandulapeter.campfire.old.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListFragment
-import com.pandulapeter.campfire.old.feature.shared.dialog.AlertDialogFragment
+import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.old.util.onEventTriggered
-import com.pandulapeter.campfire.old.util.onPropertyChanged
+import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
 /**

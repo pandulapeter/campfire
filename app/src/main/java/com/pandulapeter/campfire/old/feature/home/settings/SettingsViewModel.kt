@@ -2,12 +2,12 @@ package com.pandulapeter.campfire.old.feature.home.settings
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
-import com.pandulapeter.campfire.old.data.model.Note
+import com.pandulapeter.campfire.data.model.Note
+import com.pandulapeter.campfire.networking.AnalyticsManager
 import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildViewModel
-import com.pandulapeter.campfire.networking.AnalyticsManager
-import com.pandulapeter.campfire.old.util.onPropertyChanged
+import com.pandulapeter.campfire.util.onPropertyChanged
 
 /**
  * Handles events and logic for [SettingsFragment].

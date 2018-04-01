@@ -21,7 +21,7 @@ import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFrag
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.old.util.disableScrollbars
-import com.pandulapeter.campfire.old.util.onPropertyChanged
+import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI

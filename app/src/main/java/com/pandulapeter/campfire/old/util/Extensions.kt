@@ -7,15 +7,12 @@ import android.databinding.Observable
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
-import android.os.Bundle
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.data.model.Language
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.pandulapeter.campfire.util.onPropertyChanged
 import kotlin.reflect.KClass
 
 fun ObservableBoolean.toggle() = set(!get())
@@ -48,36 +45,6 @@ inline fun <T> ObservableField<T>.onEventTriggered(fragment: Fragment? = null, c
             if (get() != null && fragment?.isAdded != false) {
                 get()?.let { callback(it) }
                 set(null)
-            }
-        }
-    })
-}
-
-inline fun ObservableBoolean.onPropertyChanged(fragment: Fragment? = null, crossinline callback: (Boolean) -> Unit) {
-    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            if (fragment?.isAdded != false) {
-                callback(get())
-            }
-        }
-    })
-}
-
-inline fun ObservableInt.onPropertyChanged(fragment: Fragment? = null, crossinline callback: (Int) -> Unit) {
-    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            if (fragment?.isAdded != false) {
-                callback(get())
-            }
-        }
-    })
-}
-
-inline fun <T> ObservableField<T>.onPropertyChanged(fragment: Fragment? = null, crossinline callback: (T) -> Unit) {
-    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            if (fragment?.isAdded != false) {
-                get()?.let { callback(it) }
             }
         }
     })

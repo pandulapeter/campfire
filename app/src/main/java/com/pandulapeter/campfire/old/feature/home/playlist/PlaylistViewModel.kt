@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoVi
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.networking.AnalyticsManager
-import com.pandulapeter.campfire.old.util.onPropertyChanged
+import com.pandulapeter.campfire.util.onPropertyChanged
 import java.util.*
 
 /**

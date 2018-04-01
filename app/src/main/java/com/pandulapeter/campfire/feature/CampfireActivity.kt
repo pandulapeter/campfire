@@ -20,6 +20,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.database.PreferenceDatabase
 import com.pandulapeter.campfire.databinding.ActivityCampfireBinding
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
@@ -27,11 +28,12 @@ import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.home.manageDownloads.ManageDownloadsFragment
 import com.pandulapeter.campfire.feature.home.managePlaylists.ManagePlaylistsFragment
 import com.pandulapeter.campfire.feature.home.options.OptionsFragment
+import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
-class CampfireActivity : AppCompatActivity() {
+class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelectedListener {
 
     private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
@@ -39,13 +41,14 @@ class CampfireActivity : AppCompatActivity() {
     private val drawableMenuToBack by lazy { animatedDrawable(R.drawable.avd_menu_to_back_24dp) }
     private val drawableBackToMenu by lazy { animatedDrawable(R.drawable.avd_back_to_menu_24dp) }
     private val appShortcutManager by inject<AppShortcutManager>()
+    private val preferenceDatabase by inject<PreferenceDatabase>()
     val floatingActionButton get() = binding.floatingActionButton
     val autoScrollControl get() = binding.autoScrollControl
     val tabLayout get() = binding.tabLayout
     val toolbarContext: Context get() = binding.toolbar.context
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setTheme(R.style.LightTheme)
+        setTheme(if (preferenceDatabase.shouldUseDarkTheme) R.style.DarkTheme else R.style.LightTheme)
         @Suppress("ConstantConditionIf")
         setTaskDescription(
             ActivityManager.TaskDescription(
@@ -114,8 +117,20 @@ class CampfireActivity : AppCompatActivity() {
                 if (fragment == null || !fragment.onBackPressed()) {
                     if (fragment is DetailFragment) {
                         transformMainToolbarButton(false)
+                        super.onBackPressed()
+                    } else {
+                        if (preferenceDatabase.shouldShowExitConfirmation) {
+                            AlertDialogFragment.show(
+                                supportFragmentManager,
+                                R.string.home_exit_confirmation_title,
+                                R.string.home_exit_confirmation_message,
+                                R.string.home_exit_confirmation_close,
+                                R.string.cancel
+                            )
+                        } else {
+                            onPositiveButtonSelected()
+                        }
                     }
-                    super.onBackPressed()
                 }
             }
         }
@@ -125,6 +140,8 @@ class CampfireActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
         outState?.isOnDetailScreen = currentFragment is DetailFragment
     }
+
+    override fun onPositiveButtonSelected() = supportFinishAfterTransition()
 
     fun openSecondaryNavigationDrawer() {
         hideKeyboard(currentFocus)

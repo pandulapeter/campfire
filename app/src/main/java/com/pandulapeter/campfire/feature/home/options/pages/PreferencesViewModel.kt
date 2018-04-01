@@ -1,0 +1,40 @@
+package com.pandulapeter.campfire.feature.home.options.pages
+
+import android.databinding.ObservableBoolean
+import com.pandulapeter.campfire.data.database.PreferenceDatabase
+import com.pandulapeter.campfire.data.model.Note
+import com.pandulapeter.campfire.util.onPropertyChanged
+
+class PreferencesViewModel(private val preferenceDatabase: PreferenceDatabase) {
+    val shouldShowChords = ObservableBoolean(preferenceDatabase.shouldShowChords)
+    val shouldShowExitConfirmation = ObservableBoolean(preferenceDatabase.shouldShowExitConfirmation)
+    val shouldUseDarkTheme = ObservableBoolean(preferenceDatabase.shouldUseDarkTheme)
+    val shouldUseGermanNotation = ObservableBoolean(preferenceDatabase.shouldUseGermanNotation)
+    val englishNotationExample = generateNotationExample(false)
+    val germanNotationExample = generateNotationExample(true)
+
+    init {
+        shouldShowChords.onPropertyChanged { preferenceDatabase.shouldShowChords = it }
+        shouldUseDarkTheme.onPropertyChanged { preferenceDatabase.shouldUseDarkTheme = it }
+        shouldShowExitConfirmation.onPropertyChanged { preferenceDatabase.shouldShowExitConfirmation = it }
+        shouldUseGermanNotation.onPropertyChanged {
+            preferenceDatabase.shouldUseGermanNotation = it
+        }
+    }
+
+    fun onResetHintsClicked() = Unit
+
+    private fun generateNotationExample(shouldUseGermanNotation: Boolean) =
+        Note.C.getName(shouldUseGermanNotation) + ", " +
+                Note.CSharp.getName(shouldUseGermanNotation) + ", " +
+                Note.D.getName(shouldUseGermanNotation) + ", " +
+                Note.DSharp.getName(shouldUseGermanNotation) + ", " +
+                Note.E.getName(shouldUseGermanNotation) + ", " +
+                Note.F.getName(shouldUseGermanNotation) + ", " +
+                Note.FSharp.getName(shouldUseGermanNotation) + ", " +
+                Note.G.getName(shouldUseGermanNotation) + ", " +
+                Note.GSharp.getName(shouldUseGermanNotation) + ", " +
+                Note.A.getName(shouldUseGermanNotation) + ", " +
+                Note.ASharp.getName(shouldUseGermanNotation) + ", " +
+                Note.B.getName(shouldUseGermanNotation)
+}

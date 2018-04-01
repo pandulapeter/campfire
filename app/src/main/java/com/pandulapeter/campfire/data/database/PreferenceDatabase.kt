@@ -6,8 +6,11 @@ import kotlin.reflect.KProperty
 
 class PreferenceDatabase(context: Context) {
     private val preferences = context.applicationContext.getSharedPreferences("preferences", Context.MODE_PRIVATE)
-    var lastUpdateTimestamp by PreferenceFieldDelegate.Long("last_update_timestamp")
-    var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("should_use_dark_theme", false)
+    var lastUpdateTimestamp by PreferenceFieldDelegate.Long("lastUpdateTimestamp")
+    var shouldShowChords by PreferenceFieldDelegate.Boolean("shouldShowChords", true)
+    var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("shouldUseGermanNotation", false)
+    var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("shouldUseDarkTheme", false)
+    var shouldShowExitConfirmation by PreferenceFieldDelegate.Boolean("shouldShowExitConfirmation", true)
 
     private sealed class PreferenceFieldDelegate<T>(protected val key: String, protected val defaultValue: T) : ReadWriteProperty<PreferenceDatabase, T> {
 

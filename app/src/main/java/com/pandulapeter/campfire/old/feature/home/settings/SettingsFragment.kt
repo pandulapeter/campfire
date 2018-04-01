@@ -7,9 +7,9 @@ import com.pandulapeter.campfire.SettingsBinding
 import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
-import com.pandulapeter.campfire.old.feature.shared.dialog.AlertDialogFragment
+import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.old.util.onEventTriggered
-import com.pandulapeter.campfire.old.util.onPropertyChanged
+import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
 /**
