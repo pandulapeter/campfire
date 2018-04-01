@@ -81,6 +81,9 @@
     <string name="history_placeholder">The list of songs you opened will appear here in chronological order</string>
 
     <!-- Settings screen -->
+    <string name="settings_preferences">Preferences</string>
+    <string name="settings_changelog">Changelog</string>
+    <string name="settings_about">About</string>
     <string name="settings_chords">Chords</string>
     <string name="settings_should_show_chords">Show chords</string>
     <string name="settings_show_chords_checked">Display both lyrics and chords</string>

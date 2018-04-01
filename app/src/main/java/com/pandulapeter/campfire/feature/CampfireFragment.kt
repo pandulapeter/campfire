@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.support.annotation.*
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentPagerAdapter
 import android.support.v7.widget.AppCompatTextView
 import android.text.Spannable
 import android.text.SpannableString
@@ -29,7 +30,7 @@ abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layo
     protected lateinit var binding: T
     protected val mainActivity get() = (activity as? CampfireActivity) ?: throw IllegalStateException("The Fragment is not attached to CampfireActivity.")
     protected open val onFloatingActionButtonClicked: (() -> Unit)? = null
-    protected open val hasTabLayout = false
+    protected open val fragmentPagerAdapter: FragmentPagerAdapter? = null
     protected val defaultToolbar by lazy { AppCompatTextView(context).apply { gravity = Gravity.CENTER_VERTICAL } }
     @MenuRes
     protected open val navigationMenu: Int? = null
@@ -43,12 +44,15 @@ abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layo
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         mainActivity.changeToolbarTitle(inflateToolbarTitle(mainActivity.toolbarContext))
         mainActivity.changeToolbarButtons(inflateToolbarButtons(mainActivity.toolbarContext))
+        mainActivity.tabLayout.visibleOrGone = fragmentPagerAdapter != null
+        if (fragmentPagerAdapter == null) {
+            mainActivity.tabLayout.setupWithViewPager(null)
+        }
         mainActivity.floatingActionButton.setOnClickListener { onFloatingActionButtonClicked?.invoke() }
         mainActivity.setSecondaryNavigationDrawerEnabled(navigationMenu)
         if (onFloatingActionButtonClicked == null) {
             setFloatingActionButtonVisibility(false)
         }
-        mainActivity.tabLayout.visibleOrGone = hasTabLayout
     }
 
     open fun onBackPressed() = false

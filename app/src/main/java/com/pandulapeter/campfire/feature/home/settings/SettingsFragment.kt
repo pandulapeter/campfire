@@ -8,10 +8,12 @@ import com.pandulapeter.campfire.feature.CampfireFragment
 
 class SettingsFragment : CampfireFragment<FragmentSettingsBinding>(R.layout.fragment_settings) {
 
-    override val hasTabLayout = true
+    override val fragmentPagerAdapter by lazy { SettingsFragmentPagerAdapter(context, childFragmentManager) }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_settings)
+        binding.viewPager.adapter = fragmentPagerAdapter
+        mainActivity.tabLayout.setupWithViewPager(binding.viewPager)
     }
 }

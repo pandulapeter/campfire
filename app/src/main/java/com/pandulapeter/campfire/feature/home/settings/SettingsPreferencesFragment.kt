@@ -1,0 +1,6 @@
+package com.pandulapeter.campfire.feature.home.settings
+
+import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.databinding.FragmentSettingsPreferencesBinding
+
+class SettingsPreferencesFragment : SettingsPageFragment<FragmentSettingsPreferencesBinding>(R.layout.fragment_settings_preferences)
