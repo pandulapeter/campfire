@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.settings
+package com.pandulapeter.campfire.feature.home.options
 
 import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
@@ -9,7 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 
-abstract class SettingsPageFragment<T : ViewDataBinding>(@LayoutRes private val layoutResourceId: Int) : Fragment() {
+abstract class OptionsPageFragment<T : ViewDataBinding>(@LayoutRes private val layoutResourceId: Int) : Fragment() {
 
     protected lateinit var binding: T
 

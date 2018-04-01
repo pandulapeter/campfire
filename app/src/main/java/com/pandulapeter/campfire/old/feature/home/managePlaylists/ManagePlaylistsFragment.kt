@@ -26,7 +26,7 @@ import org.koin.android.ext.android.inject
  *
  * Controlled by [ManagePlaylistsViewModel].
  */
-class ManagePlaylistsFragment : HomeChildFragment<ManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists) {
+class ManagePlaylistsFragment : HomeChildFragment<ManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists_old) {
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
     private val appShortcutManager by inject<AppShortcutManager>()

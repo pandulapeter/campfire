@@ -16,9 +16,9 @@
             android:title="@string/home_history" />
 
         <item
-            android:id="@+id/settings"
+            android:id="@+id/options"
             android:icon="@drawable/ic_settings_24dp"
-            android:title="@string/home_settings" />
+            android:title="@string/home_options" />
 
     </group>
 

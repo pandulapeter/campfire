@@ -68,7 +68,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             when (menuItem.itemId) {
                 R.id.library -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Library) }
                 R.id.history -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.History) }
-                R.id.settings -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Settings) }
+                R.id.options -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Settings) }
                 R.id.playlists -> {
                     NewPlaylistDialogFragment.show(childFragmentManager)
                     false
@@ -155,7 +155,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             when (it) {
                 HomeViewModel.HomeNavigationItem.Library -> R.id.library
                 HomeViewModel.HomeNavigationItem.History -> R.id.history
-                HomeViewModel.HomeNavigationItem.Settings -> R.id.settings
+                HomeViewModel.HomeNavigationItem.Settings -> R.id.options
                 is HomeViewModel.HomeNavigationItem.Playlist -> it.id
                 HomeViewModel.HomeNavigationItem.ManagePlaylists -> R.id.manage_playlists
                 HomeViewModel.HomeNavigationItem.ManageDownloads -> R.id.manage_downloads

@@ -26,7 +26,9 @@ import com.pandulapeter.campfire.databinding.ActivityCampfireBinding
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
-import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
+import com.pandulapeter.campfire.feature.home.manageDownloads.ManageDownloadsFragment
+import com.pandulapeter.campfire.feature.home.managePlaylists.ManagePlaylistsFragment
+import com.pandulapeter.campfire.feature.home.options.OptionsFragment
 import com.pandulapeter.campfire.util.*
 
 class CampfireActivity : AppCompatActivity() {
@@ -64,7 +66,9 @@ class CampfireActivity : AppCompatActivity() {
             when (menuItem.itemId) {
                 R.id.library -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { LibraryFragment() } }
                 R.id.history -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { HistoryFragment() } }
-                R.id.settings -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { SettingsFragment() } }
+                R.id.options -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { OptionsFragment() } }
+                R.id.manage_playlists -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManagePlaylistsFragment() } }
+                R.id.manage_downloads -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManageDownloadsFragment() } }
                 else -> false
             }
         }

@@ -25,7 +25,7 @@ import org.koin.android.ext.android.inject
  * Controlled by [ManageDownloadsViewModel].
  */
 class ManageDownloadsFragment :
-    SongInfoListFragment<ManageDownloadsBinding, ManageDownloadsViewModel>(R.layout.fragment_manage_downloads),
+    SongInfoListFragment<ManageDownloadsBinding, ManageDownloadsViewModel>(R.layout.fragment_manage_downloads_old),
     AlertDialogFragment.OnDialogItemsSelectedListener {
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
 
