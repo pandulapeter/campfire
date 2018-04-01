@@ -22,7 +22,7 @@ class ToolbarTextInputView @JvmOverloads constructor(context: Context, attrs: At
     }
 
     init {
-        id = R.id.toolbar_text_input_view
+        clipChildren = false
     }
 
     val title = binding.title

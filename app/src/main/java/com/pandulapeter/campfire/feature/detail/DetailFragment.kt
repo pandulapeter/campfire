@@ -10,7 +10,7 @@ import com.pandulapeter.campfire.databinding.FragmentDetailBinding
 import com.pandulapeter.campfire.feature.CampfireFragment
 
 class DetailFragment : CampfireFragment<FragmentDetailBinding>(R.layout.fragment_detail) {
-    override var onFloatingActionButtonClicked: (() -> Unit)? = { binding.root.makeSnackbar("Work in progress").show() }
+    override var onFloatingActionButtonClicked: (() -> Unit)? = { showSnackbar("Work in progress") }
     override val navigationMenu = R.menu.detail
 
     override fun onCreate(savedInstanceState: Bundle?) {

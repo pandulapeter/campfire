@@ -26,7 +26,7 @@ import org.koin.android.ext.android.inject
  *
  * Controlled by [HistoryViewModel].
  */
-class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R.layout.fragment_history), AlertDialogFragment.OnDialogItemsSelectedListener {
+class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R.layout.fragment_history_old), AlertDialogFragment.OnDialogItemsSelectedListener {
     private val historyRepository by inject<HistoryRepository>()
     private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
 

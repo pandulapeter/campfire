@@ -24,6 +24,7 @@
                     android:layout_height="@dimen/toolbar_height"
                     android:animateLayoutChanges="true"
                     android:background="@color/primary"
+                    android:clipChildren="false"
                     android:elevation="@dimen/toolbar_elevation"
                     android:outlineProvider="paddedBounds"
                     android:theme="@style/ActionBar">
@@ -44,6 +45,7 @@
                         android:layout_height="0dp"
                         android:layout_marginEnd="@dimen/content_padding"
                         android:layout_marginStart="@dimen/second_keyline"
+                        android:clipChildren="false"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toStartOf="@+id/toolbar_button_container"
                         app:layout_constraintStart_toStartOf="parent"

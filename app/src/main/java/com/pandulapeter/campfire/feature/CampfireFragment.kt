@@ -72,7 +72,9 @@ abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layo
         }
     }
 
-    protected fun View.makeSnackbar(message: String, duration: Int = Snackbar.LENGTH_SHORT, dismissListener: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {
+    protected fun showSnackbar(message: String) = binding.root.makeSnackbar(message).show()
+
+    private fun View.makeSnackbar(message: String, duration: Int = Snackbar.LENGTH_SHORT, dismissListener: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {
         view.setBackgroundColor(context.color(R.color.primary))
         dismissListener?.let {
             addCallback(object : Snackbar.Callback() {
