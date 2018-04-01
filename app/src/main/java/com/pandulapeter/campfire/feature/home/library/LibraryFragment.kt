@@ -2,18 +2,23 @@ package com.pandulapeter.campfire.feature.home.library
 
 import android.content.Context
 import android.os.Bundle
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Song
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentLibraryBinding
 import com.pandulapeter.campfire.feature.CampfireFragment
+import com.pandulapeter.campfire.feature.home.shared.SongAdapter
+import com.pandulapeter.campfire.feature.home.shared.SongViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.util.BundleArgumentDelegate
-import com.pandulapeter.campfire.util.animatedDrawable
-import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
+import com.pandulapeter.campfire.util.*
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
 import org.koin.android.ext.android.inject
 
 class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragment_library), SongRepository.Subscriber {
@@ -26,6 +31,7 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
     private val drawableSearchToClose by lazy { context.animatedDrawable(R.drawable.avd_search_to_close_24dp) }
     private val appShortcutManager by inject<AppShortcutManager>()
     private val songRepository by inject<SongRepository>()
+    private val adapter = SongAdapter()
     override val navigationMenu = R.menu.library
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
@@ -42,6 +48,19 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
         } ?: appShortcutManager.onLibraryOpened()
         binding.swipeRefreshLayout.setColorSchemeColors(context.color(R.color.accent))
         binding.swipeRefreshLayout.setOnRefreshListener { songRepository.updateData() }
+        binding.recyclerView.run {
+            layoutManager = LinearLayoutManager(context)
+            adapter = this@LibraryFragment.adapter
+            setHasFixedSize(true)
+            addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
+                    if (dy > 0) {
+                        hideKeyboard(activity?.currentFocus)
+                    }
+                }
+            })
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -73,7 +92,11 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
     } else super.onBackPressed()
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
-        binding.textView.text = data.joinToString(", ") { it.title }
+        async(UI) {
+            adapter.items = async(CommonPool) {
+                data.map { SongViewModel(it)}
+            }.await()
+        }
     }
 
     override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {

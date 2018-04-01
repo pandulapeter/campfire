@@ -19,8 +19,8 @@ import kotlin.coroutines.experimental.CoroutineContext
 class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
 
     private var coroutine: CoroutineContext? = null
-    var onListUpdatedCallback: (() -> Unit)? = null
-    var items = mutableListOf<SongViewModel>()
+    private var onListUpdatedCallback: (() -> Unit)? = null
+    var items = listOf<SongViewModel>()
         set(newItems) {
             if (field.isEmpty()) {
                 if (newItems.isNotEmpty()) {
@@ -81,8 +81,8 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
     }
 
     override fun getItemCount() = items.size
-    
-    
+
+
     class SongInfoViewHolder(val binding: ItemSongBinding) : RecyclerView.ViewHolder(binding.root) {
 
         fun setItemClickListener(itemClickListener: (position: Int) -> Unit) {
