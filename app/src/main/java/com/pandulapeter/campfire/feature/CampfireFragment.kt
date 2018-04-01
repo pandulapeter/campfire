@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature
 
+import android.animation.Animator
 import android.content.Context
 import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
@@ -20,10 +21,7 @@ import android.widget.TextView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.shared.EllipsizeLineSpan
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
-import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.util.drawable
-import com.pandulapeter.campfire.util.obtainColor
-import com.pandulapeter.campfire.util.visibleOrGone
+import com.pandulapeter.campfire.util.*
 
 abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layoutResourceId: Int) : Fragment() {
 
@@ -51,13 +49,25 @@ abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layo
         mainActivity.floatingActionButton.setOnClickListener { onFloatingActionButtonClicked?.invoke() }
         mainActivity.setSecondaryNavigationDrawerEnabled(navigationMenu)
         if (onFloatingActionButtonClicked == null) {
-            setFloatingActionButtonVisibility(false)
+            mainActivity.autoScrollControl.run {
+                if (animatedVisibilityEnd) {
+                    animatedVisibilityEnd = false
+                    (tag as? Animator)?.let {
+                        it.addListener(onAnimationEnd = {
+                            mainActivity.floatingActionButton.hide()
+                            tag = null
+                            visibleOrGone = false
+
+                        })
+                    }
+                } else {
+                    mainActivity.floatingActionButton.hide()
+                }
+            }
         }
     }
 
     open fun onBackPressed() = false
-
-    protected fun setFloatingActionButtonVisibility(isVisible: Boolean) = mainActivity.floatingActionButton.run { if (isVisible) show() else hide() }
 
     protected open fun inflateToolbarTitle(context: Context): View = defaultToolbar
 

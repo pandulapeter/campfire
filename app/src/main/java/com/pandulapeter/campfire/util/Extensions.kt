@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.content.Context
 import android.databinding.BindingAdapter
 import android.support.annotation.*
+import android.support.graphics.drawable.AnimatedVectorDrawableCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.content.res.AppCompatResources
@@ -16,6 +17,8 @@ fun Context.color(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId
 fun Context.dimension(@DimenRes dimensionId: Int) = resources.getDimensionPixelSize(dimensionId)
 
 fun Context.drawable(@DrawableRes drawableId: Int) = AppCompatResources.getDrawable(this, drawableId)
+
+fun Context.animatedDrawable(@DrawableRes drawableId: Int) = AnimatedVectorDrawableCompat.create(this, drawableId)
 
 @ColorInt
 fun Context.obtainColor(@AttrRes colorAttribute: Int): Int {
@@ -41,7 +44,7 @@ var View.visibleOrInvisible
 
 @set:BindingAdapter("animatedVisibilityStart")
 var View.animatedVisibilityStart: Boolean
-    get() = visibility == View.VISIBLE
+    get() = visibleOrGone
     set(value) {
         animateCircularReveal(value, true)
     }

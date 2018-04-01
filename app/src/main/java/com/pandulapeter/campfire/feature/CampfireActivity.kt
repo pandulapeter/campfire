@@ -39,6 +39,7 @@ class CampfireActivity : AppCompatActivity() {
     private val drawableMenuToBack by lazy { AnimatedVectorDrawableCompat.create(this, R.drawable.avd_menu_to_back_24dp) }
     private val drawableBackToMenu by lazy { AnimatedVectorDrawableCompat.create(this, R.drawable.avd_back_to_menu_24dp) }
     val floatingActionButton get() = binding.floatingActionButton
+    val autoScrollControl get() = binding.autoScrollControl
     val tabLayout get() = binding.tabLayout
     val toolbarContext: Context get() = binding.toolbar.context
 

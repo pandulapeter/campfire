@@ -16,6 +16,7 @@ class ToolbarTextInputView @JvmOverloads constructor(context: Context, attrs: At
     private val binding = DataBindingUtil.inflate<ViewToolbarTextInputBinding>(LayoutInflater.from(context), R.layout.view_toolbar_text_input, this, true).apply {
         textInput.run {
             hint = context.getString(R.string.library_search)
+            //TODO: Set maximum string length.
             imeOptions = EditorInfo.IME_ACTION_SEARCH
             visibleOrInvisible = false
         }

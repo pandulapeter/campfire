@@ -2,13 +2,13 @@ package com.pandulapeter.campfire.feature.home.library
 
 import android.content.Context
 import android.os.Bundle
-import android.support.graphics.drawable.AnimatedVectorDrawableCompat
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentLibraryBinding
 import com.pandulapeter.campfire.feature.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.animatedDrawable
 import com.pandulapeter.campfire.util.drawable
 
 class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragment_library) {
@@ -17,8 +17,8 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
     private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
     private val toolbarTextInputView by lazy { ToolbarTextInputView(mainActivity.toolbarContext).apply { title.updateToolbarTitle(R.string.home_library) } }
     private val searchToggle by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) { toggleTextInputVisibility() } }
-    private val drawableCloseToSearch by lazy { AnimatedVectorDrawableCompat.create(context, R.drawable.avd_close_to_search_24dp) }
-    private val drawableSearchToClose by lazy { AnimatedVectorDrawableCompat.create(context, R.drawable.avd_search_to_close_24dp) }
+    private val drawableCloseToSearch by lazy { context.animatedDrawable(R.drawable.avd_close_to_search_24dp) }
+    private val drawableSearchToClose by lazy { context.animatedDrawable(R.drawable.avd_search_to_close_24dp) }
     override val navigationMenu = R.menu.library
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {

@@ -91,7 +91,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/detail_auto_scroll_control_margin"
-                android:visibility="gone"
+                android:visibility="invisible"
                 app:contentPadding="@dimen/detail_auto_scroll_control_padding"
                 app:layout_anchor="@+id/floating_action_button"
                 app:layout_anchorGravity="center_vertical|end">
@@ -111,6 +111,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
                 android:layout_margin="@dimen/large_content_padding"
+                android:theme="@style/ActionBar"
+                android:tint="?android:attr/textColorPrimary"
                 android:visibility="invisible" />
 
         </com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout>
