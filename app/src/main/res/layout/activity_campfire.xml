@@ -90,16 +90,18 @@
                 android:id="@+id/auto_scroll_control"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/detail_auto_scroll_control_margin"
+                android:layout_marginEnd="48dp"
+                app:cardCornerRadius="16dp"
                 android:visibility="invisible"
                 app:contentPadding="@dimen/detail_auto_scroll_control_padding"
                 app:layout_anchor="@+id/floating_action_button"
                 app:layout_anchorGravity="center_vertical|end">
 
                 <SeekBar
+                    android:id="@+id/auto_scroll_seek_bar"
                     android:layout_width="@dimen/detail_auto_scroll_control_width"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/large_content_padding"
+                    android:layout_marginEnd="24dp"
                     android:max="14"
                     android:padding="@dimen/content_padding" />
 
