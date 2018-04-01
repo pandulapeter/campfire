@@ -30,12 +30,14 @@ import com.pandulapeter.campfire.feature.home.settings.SettingsFragment
 import com.pandulapeter.campfire.util.*
 
 class CampfireActivity : AppCompatActivity() {
+
     private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
     private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as CampfireFragment<*>?
     private val drawableMenuToBack by lazy { AnimatedVectorDrawableCompat.create(this, R.drawable.avd_menu_to_back_24dp) }
     private val drawableBackToMenu by lazy { AnimatedVectorDrawableCompat.create(this, R.drawable.avd_back_to_menu_24dp) }
     val floatingActionButton get() = binding.floatingActionButton
+    val tabLayout get() = binding.tabLayout
     val toolbarContext: Context get() = binding.toolbar.context
 
     override fun onCreate(savedInstanceState: Bundle?) {

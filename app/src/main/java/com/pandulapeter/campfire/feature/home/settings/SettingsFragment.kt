@@ -8,6 +8,8 @@ import com.pandulapeter.campfire.feature.CampfireFragment
 
 class SettingsFragment : CampfireFragment<FragmentSettingsBinding>(R.layout.fragment_settings) {
 
+    override val hasTabLayout = true
+
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_settings)

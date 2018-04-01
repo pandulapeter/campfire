@@ -20,8 +20,9 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding>(R.layout.fragment
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        defaultToolbar.updateToolbarTitle("Detail")
+        defaultToolbar.updateToolbarTitle("Title", "Subtitle")
         mainActivity.transformMainToolbarButton(true)
+        setFloatingActionButtonVisibility(true)
     }
 
     override fun inflateToolbarButtons(context: Context) = listOf<View>(

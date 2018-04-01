@@ -21,7 +21,7 @@
                 <android.support.constraint.ConstraintLayout
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/toolbar_height"
+                    android:layout_height="wrap_content"
                     android:animateLayoutChanges="true"
                     android:background="@color/primary"
                     android:clipChildren="false"
@@ -29,12 +29,18 @@
                     android:outlineProvider="paddedBounds"
                     android:theme="@style/ActionBar">
 
+                    <android.support.v4.widget.Space
+                        android:id="@+id/toolbar_bottom"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/toolbar_height"
+                        app:layout_constraintTop_toTopOf="parent" />
+
                     <com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
                         android:id="@+id/toolbar_main_button"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/first_keyline"
-                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
                         app:srcCompat="@drawable/ic_menu_24dp" />
@@ -46,7 +52,7 @@
                         android:layout_marginEnd="@dimen/content_padding"
                         android:layout_marginStart="@dimen/second_keyline"
                         android:clipChildren="false"
-                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
                         app:layout_constraintEnd_toStartOf="@+id/toolbar_button_container"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
@@ -58,9 +64,18 @@
                         android:animateLayoutChanges="true"
                         android:gravity="center_vertical|end"
                         android:orientation="horizontal"
-                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
+
+                    <android.support.design.widget.TabLayout
+                        android:id="@+id/tab_layout"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/toolbar_bottom"
+                        app:tabMode="fixed" />
 
                 </android.support.constraint.ConstraintLayout>
 
@@ -95,7 +110,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
-                android:layout_margin="@dimen/large_content_padding" />
+                android:layout_margin="@dimen/large_content_padding"
+                android:visibility="invisible" />
 
         </com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout>
 

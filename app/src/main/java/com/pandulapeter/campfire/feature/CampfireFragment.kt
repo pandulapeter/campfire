@@ -22,12 +22,15 @@ import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.obtainColor
+import com.pandulapeter.campfire.util.visibleOrGone
 
 abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layoutResourceId: Int) : Fragment() {
-    protected open val onFloatingActionButtonClicked: (() -> Unit)? = null
-    protected val defaultToolbar by lazy { AppCompatTextView(context).apply { gravity = Gravity.CENTER_VERTICAL } }
+
     protected lateinit var binding: T
     protected val mainActivity get() = (activity as? CampfireActivity) ?: throw IllegalStateException("The Fragment is not attached to CampfireActivity.")
+    protected open val onFloatingActionButtonClicked: (() -> Unit)? = null
+    protected open val hasTabLayout = false
+    protected val defaultToolbar by lazy { AppCompatTextView(context).apply { gravity = Gravity.CENTER_VERTICAL } }
     @MenuRes
     protected open val navigationMenu: Int? = null
 
@@ -40,14 +43,17 @@ abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layo
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         mainActivity.changeToolbarTitle(inflateToolbarTitle(mainActivity.toolbarContext))
         mainActivity.changeToolbarButtons(inflateToolbarButtons(mainActivity.toolbarContext))
-        mainActivity.floatingActionButton.run {
-            setOnClickListener { onFloatingActionButtonClicked?.invoke() }
-            if (onFloatingActionButtonClicked == null) hide() else show()
-        }
+        mainActivity.floatingActionButton.setOnClickListener { onFloatingActionButtonClicked?.invoke() }
         mainActivity.setSecondaryNavigationDrawerEnabled(navigationMenu)
+        if (onFloatingActionButtonClicked == null) {
+            setFloatingActionButtonVisibility(false)
+        }
+        mainActivity.tabLayout.visibleOrGone = hasTabLayout
     }
 
     open fun onBackPressed() = false
+
+    protected fun setFloatingActionButtonVisibility(isVisible: Boolean) = mainActivity.floatingActionButton.run { if (isVisible) show() else hide() }
 
     protected open fun inflateToolbarTitle(context: Context): View = defaultToolbar
 
