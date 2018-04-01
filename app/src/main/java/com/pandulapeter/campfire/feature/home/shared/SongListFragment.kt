@@ -28,6 +28,7 @@ abstract class SongListFragment<T : ViewDataBinding>(@LayoutRes layoutResourceId
     private val adapter = SongAdapter().apply {
         itemClickListener = { mainActivity.openDetailScreen(items[it].song.id) }
     }
+    private var librarySongs = listOf<Song>()
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -71,12 +72,15 @@ abstract class SongListFragment<T : ViewDataBinding>(@LayoutRes layoutResourceId
 
     protected abstract fun List<Song>.createViewModels(): List<SongViewModel>
 
-    override fun onSongRepositoryDataUpdated(data: List<Song>) {
+    protected fun updateAdapterItems() {
         async(UI) {
-            adapter.items = async(CommonPool) {
-                data.createViewModels()
-            }.await()
+            adapter.items = async(CommonPool) { librarySongs.createViewModels() }.await()
         }
+    }
+
+    override fun onSongRepositoryDataUpdated(data: List<Song>) {
+        librarySongs = data
+        updateAdapterItems()
     }
 
     override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {

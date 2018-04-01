@@ -10,9 +10,12 @@ import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.content.res.AppCompatResources
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewAnimationUtils
+import android.widget.EditText
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -111,6 +114,24 @@ fun Animator.addListener(
     override fun onAnimationCancel(animation: Animator?) = onAnimationCancel()
 
     override fun onAnimationStart(animation: Animator?) = onAnimationStart()
+})
+
+inline fun EditText.onTextChanged(crossinline callback: (String) -> Unit) = addTextChangedListener(object : TextWatcher {
+    private var previousText = ""
+
+    override fun afterTextChanged(s: Editable?) = Unit
+
+    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+        previousText = s?.toString() ?: ""
+    }
+
+    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+        (s?.toString() ?: "").let {
+            if (previousText != it) {
+                callback(it)
+            }
+        }
+    }
 })
 
 fun <T> Call<T>.enqueueCall(onSuccess: (T) -> Unit, onFailure: () -> Unit) {

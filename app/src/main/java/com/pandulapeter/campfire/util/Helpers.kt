@@ -10,9 +10,11 @@ fun consume(action: () -> Unit): Boolean {
 }
 
 fun showKeyboard(focusedView: View?) = focusedView?.let {
+    it.requestFocus()
     (it.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(it, 0)
 }
 
 fun hideKeyboard(focusedView: View?) = focusedView?.let {
+    it.clearFocus()
     (it.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(it.windowToken, 0)
 }
