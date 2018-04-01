@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.old.data.model
 
 import com.google.gson.annotations.SerializedName
-import com.pandulapeter.campfire.util.replaceSpecialCharacters
+import com.pandulapeter.campfire.util.normalize
 
 /**
  * Contains basic metadata about a song.
@@ -16,7 +16,7 @@ data class SongInfo(
     @SerializedName("isExplicit") val isExplicit: Boolean? = false
 ) {
     @delegate:Transient
-    val titleWithSpecialCharactersRemoved by lazy { title.replaceSpecialCharacters() }
+    val titleWithSpecialCharactersRemoved by lazy { title.normalize() }
     @delegate:Transient
-    val artistWithSpecialCharactersRemoved by lazy { artist.replaceSpecialCharacters() }
+    val artistWithSpecialCharactersRemoved by lazy { artist.normalize() }
 }

@@ -37,6 +37,7 @@ abstract class SongListFragment<T : ViewDataBinding>(@LayoutRes layoutResourceId
         super.onViewCreated(view, savedInstanceState)
         swipeRefreshLayout.run {
             setOnRefreshListener { songRepository.updateData() }
+            setColorSchemeColors(context.color(R.color.accent))
         }
         recyclerView.run {
             layoutManager = LinearLayoutManager(context)
@@ -56,17 +57,13 @@ abstract class SongListFragment<T : ViewDataBinding>(@LayoutRes layoutResourceId
     override fun onStart() {
         super.onStart()
         songRepository.subscribe(this)
-        swipeRefreshLayout.setColorSchemeColors(context.color(R.color.accent))
     }
 
     override fun onStop() {
         super.onStop()
         songRepository.unsubscribe(this)
-        swipeRefreshLayout.run {
-            isRefreshing = false
-            destroyDrawingCache()
-            clearAnimation()
-        }
+        swipeRefreshLayout.isRefreshing = false
+        swipeRefreshLayout.clearAnimation()
     }
 
     protected abstract fun Sequence<Song>.createViewModels(): List<SongViewModel>

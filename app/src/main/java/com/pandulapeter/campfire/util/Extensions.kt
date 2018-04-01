@@ -134,7 +134,7 @@ fun <T> Call<T>.enqueueCall(onSuccess: (T) -> Unit, onFailure: () -> Unit) {
     })
 }
 
-fun String.replaceSpecialCharacters() = this
+fun String.normalize() = this
     .replace("á", "a")
     .replace("Á", "A")
     .replace("ă", "a")

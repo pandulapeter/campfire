@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.networking.AnalyticsManager
 import com.pandulapeter.campfire.old.util.mapToLanguage
 import com.pandulapeter.campfire.old.util.onPropertyChanged
 import com.pandulapeter.campfire.old.util.toggle
-import com.pandulapeter.campfire.util.replaceSpecialCharacters
+import com.pandulapeter.campfire.util.normalize
 
 /**
  * Handles events and logic for [LibraryFragment].
@@ -185,7 +185,7 @@ class LibraryViewModel(
 
     //TODO: Prioritize results that begin with the searchQuery.
     private fun Sequence<SongInfo>.filterByQuery() = if (isSearchInputVisible.get()) {
-        searchQuery.get()?.trim()?.replaceSpecialCharacters()?.let { query ->
+        searchQuery.get()?.trim()?.normalize()?.let { query ->
             filter { it.titleWithSpecialCharactersRemoved.contains(query, true) || it.artistWithSpecialCharactersRemoved.contains(query, true) }
         } ?: this
     } else this

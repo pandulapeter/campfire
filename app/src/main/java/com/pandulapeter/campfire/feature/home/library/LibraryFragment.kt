@@ -90,8 +90,8 @@ class LibraryFragment : SongListFragment<FragmentLibraryBinding>(R.layout.fragme
 
     //TODO: Prioritize results that begin with the searchQuery.
     private fun Sequence<Song>.filterByQuery() = if (toolbarTextInputView.isTextInputVisible) {
-        query.trim().replaceSpecialCharacters().let { query ->
-            filter { it.titleWithSpecialCharactersRemoved.contains(query, true) || it.artistWithSpecialCharactersRemoved.contains(query, true) }
+        query.trim().normalize().let { query ->
+            filter { it.getNormalizedTitle().contains(query, true) || it.getNormalizedArtist().contains(query, true) }
         }
     } else this
 

@@ -2,9 +2,10 @@ package com.pandulapeter.campfire.data.model
 
 import android.arch.persistence.room.ColumnInfo
 import android.arch.persistence.room.Entity
+import android.arch.persistence.room.Ignore
 import android.arch.persistence.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
-import com.pandulapeter.campfire.util.replaceSpecialCharacters
+import com.pandulapeter.campfire.util.normalize
 
 @Entity(tableName = Song.TABLE_NAME)
 data class Song(
@@ -16,10 +17,26 @@ data class Song(
     @SerializedName("popularity") val popularity: Int? = 0,
     @SerializedName("isExplicit") val isExplicit: Boolean? = false
 ) {
-    @delegate:Transient
-    val titleWithSpecialCharactersRemoved by lazy { title.replaceSpecialCharacters() }
-    @delegate:Transient
-    val artistWithSpecialCharactersRemoved by lazy { artist.replaceSpecialCharacters() }
+    @Ignore
+    @Transient
+    private var normalizedTitle: String? = null
+    @Ignore
+    @Transient
+    private var normalizedArtist: String? = null
+
+    fun getNormalizedTitle(): String {
+        if (normalizedTitle == null) {
+            normalizedTitle = title.normalize()
+        }
+        return normalizedTitle ?: ""
+    }
+
+    fun getNormalizedArtist(): String {
+        if (normalizedArtist == null) {
+            normalizedArtist = artist.normalize()
+        }
+        return normalizedArtist ?: ""
+    }
 
     companion object {
         const val TABLE_NAME = "songs"
