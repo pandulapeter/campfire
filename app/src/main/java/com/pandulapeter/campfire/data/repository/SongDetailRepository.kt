@@ -18,32 +18,35 @@ class SongDetailRepository(
 ) : Repository<SongDetailRepository.Subscriber>() {
     private var isInitialized = false
     private val data = mutableListOf<SongDetailDao.SongDetailMetadata>()
-    private val downloading = mutableListOf<String>()
+    private val downloadQueue = mutableListOf<String>()
 
     init {
         refreshDataSet()
     }
 
     fun downloadSong(song: Song) {
-        downloading.add(song.id)
+        downloadQueue.add(song.id)
+        notifyDownloadQueChanged()
         networkManager.service.getSong(song.id).enqueueCall(
             onSuccess = { songDetail ->
                 songDetail.version = song.version ?: 0
                 async(UI) {
                     async(CommonPool) { songDetailDatabase.songDetailDao().insert(songDetail) }.await()
                     refreshDataSet()
-                    downloading.remove(song.id)
+                    downloadQueue.remove(song.id)
+                    notifyDownloadQueChanged()
                     subscribers.forEach { it.onSuccess(songDetail) }
                 }
             },
             onFailure = {
-                downloading.remove(song.id)
+                downloadQueue.remove(song.id)
+                notifyDownloadQueChanged()
                 subscribers.forEach { it.onError(song) }
             }
         )
     }
 
-    fun isSongDownloading(songId: String) = downloading.contains(songId)
+    fun isSongDownloading(songId: String) = downloadQueue.contains(songId)
 
     fun isSongDownloaded(songId: String) = data.find { it.id == songId } != null
 
@@ -74,9 +77,13 @@ class SongDetailRepository(
         }
     }
 
+    private fun notifyDownloadQueChanged() = subscribers.forEach { it.onDownloadQueueChanged(downloadQueue) }
+
     interface Subscriber {
 
         fun onSuccess(songDetail: SongDetail)
+
+        fun onDownloadQueueChanged(songIds: List<String>)
 
         fun onError(song: Song)
     }
