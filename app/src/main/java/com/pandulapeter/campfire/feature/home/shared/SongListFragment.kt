@@ -18,22 +18,24 @@ import com.pandulapeter.campfire.util.hideKeyboard
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.cancel
 import org.koin.android.ext.android.inject
+import kotlin.coroutines.experimental.CoroutineContext
 
 abstract class SongListFragment<T : ViewDataBinding>(@LayoutRes layoutResourceId: Int) : CampfireFragment<T>(layoutResourceId), SongRepository.Subscriber {
 
     abstract val recyclerView: RecyclerView
     abstract val swipeRefreshLayout: SwipeRefreshLayout
+    private var coroutine: CoroutineContext? = null
     private val songRepository by inject<SongRepository>()
     private val adapter = SongAdapter().apply {
         itemClickListener = { mainActivity.openDetailScreen(items[it].song.id) }
     }
-    private var librarySongs = listOf<Song>()
+    private var librarySongs = sequenceOf<Song>()
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         swipeRefreshLayout.run {
-            setColorSchemeColors(context.color(R.color.accent))
             setOnRefreshListener { songRepository.updateData() }
         }
         recyclerView.run {
@@ -54,10 +56,12 @@ abstract class SongListFragment<T : ViewDataBinding>(@LayoutRes layoutResourceId
     override fun onStart() {
         super.onStart()
         songRepository.subscribe(this)
+        swipeRefreshLayout.setColorSchemeColors(context.color(R.color.accent))
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
+        songRepository.unsubscribe(this)
         swipeRefreshLayout.run {
             isRefreshing = false
             destroyDrawingCache()
@@ -65,21 +69,18 @@ abstract class SongListFragment<T : ViewDataBinding>(@LayoutRes layoutResourceId
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        songRepository.unsubscribe(this)
-    }
+    protected abstract fun Sequence<Song>.createViewModels(): List<SongViewModel>
 
-    protected abstract fun List<Song>.createViewModels(): List<SongViewModel>
-
-    protected fun updateAdapterItems() {
-        async(UI) {
+    protected fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
+        coroutine?.cancel()
+        coroutine = async(UI) {
+            adapter.shouldScrollToTop = shouldScrollToTop
             adapter.items = async(CommonPool) { librarySongs.createViewModels() }.await()
         }
     }
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
-        librarySongs = data
+        librarySongs = data.asSequence()
         updateAdapterItems()
     }
 

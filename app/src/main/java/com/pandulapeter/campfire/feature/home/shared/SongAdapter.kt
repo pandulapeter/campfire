@@ -19,7 +19,8 @@ import kotlin.coroutines.experimental.CoroutineContext
 class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
 
     private var coroutine: CoroutineContext? = null
-    private var onListUpdatedCallback: (() -> Unit)? = null
+    private var recyclerView: RecyclerView? = null
+    var shouldScrollToTop = false
     var items = listOf<SongViewModel>()
         set(newItems) {
             if (field.isEmpty()) {
@@ -43,7 +44,10 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
                             override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
                         })
                     }.await().dispatchUpdatesTo(this@SongAdapter)
-                    onListUpdatedCallback?.invoke()
+                    if (shouldScrollToTop) {
+                        recyclerView?.smoothScrollToPosition(0)
+                        shouldScrollToTop = false
+                    }
                     field = newItems
                 }
             }
@@ -52,6 +56,14 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
     var dragHandleTouchListener: ((position: Int) -> Unit)? = null
     var playlistActionClickListener: ((position: Int) -> Unit)? = null
     var downloadActionClickListener: ((position: Int) -> Unit)? = null
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView?) {
+        this.recyclerView = recyclerView
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView?) {
+        this.recyclerView = null
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): SongInfoViewHolder {
         val viewHolder = SongInfoViewHolder.create(parent)

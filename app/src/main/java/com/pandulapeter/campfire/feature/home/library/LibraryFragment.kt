@@ -22,7 +22,7 @@ class LibraryFragment : SongListFragment<FragmentLibraryBinding>(R.layout.fragme
     private val toolbarTextInputView by lazy {
         ToolbarTextInputView(mainActivity.toolbarContext).apply {
             title.updateToolbarTitle(R.string.home_library)
-            textInput.onTextChanged { updateAdapterItems() }
+            textInput.onTextChanged { updateAdapterItems(true) }
         }
     }
     private val searchToggle by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) { toggleTextInputVisibility() } }
@@ -63,8 +63,7 @@ class LibraryFragment : SongListFragment<FragmentLibraryBinding>(R.layout.fragme
         true
     } else super.onBackPressed()
 
-    override fun List<Song>.createViewModels() = asSequence()
-        .filterByQuery()
+    override fun Sequence<Song>.createViewModels() = filterByQuery()
         .map { SongViewModel(it) }
         .toList()
 
@@ -76,7 +75,7 @@ class LibraryFragment : SongListFragment<FragmentLibraryBinding>(R.layout.fragme
                 }
                 searchToggle.setImageDrawable((if (toolbarTextInputView.isTextInputVisible) drawableCloseToSearch else drawableSearchToClose).apply { this?.start() })
                 isTextInputVisible = !isTextInputVisible
-                updateAdapterItems()
+                updateAdapterItems(true)
             }
         }
     }
