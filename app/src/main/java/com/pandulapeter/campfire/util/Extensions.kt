@@ -117,21 +117,11 @@ fun Animator.addListener(
 })
 
 inline fun EditText.onTextChanged(crossinline callback: (String) -> Unit) = addTextChangedListener(object : TextWatcher {
-    private var previousText = ""
-
     override fun afterTextChanged(s: Editable?) = Unit
 
-    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-        previousText = s?.toString() ?: ""
-    }
+    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
 
-    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-        (s?.toString() ?: "").let {
-            if (previousText != it) {
-                callback(it)
-            }
-        }
-    }
+    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = callback(s?.toString() ?: "")
 })
 
 fun <T> Call<T>.enqueueCall(onSuccess: (T) -> Unit, onFailure: () -> Unit) {

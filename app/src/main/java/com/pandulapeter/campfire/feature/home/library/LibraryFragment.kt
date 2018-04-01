@@ -19,10 +19,17 @@ class LibraryFragment : SongListFragment<FragmentLibraryBinding>(R.layout.fragme
     override val swipeRefreshLayout get() = binding.swipeRefreshLayout
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
     private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
+    private var query = ""
+        set(value) {
+            if (field != value) {
+                field = value
+                updateAdapterItems(true)
+            }
+        }
     private val toolbarTextInputView by lazy {
         ToolbarTextInputView(mainActivity.toolbarContext).apply {
             title.updateToolbarTitle(R.string.home_library)
-            textInput.onTextChanged { updateAdapterItems(true) }
+            textInput.onTextChanged { if (isTextInputVisible) query = it }
         }
     }
     private val searchToggle by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) { toggleTextInputVisibility() } }
@@ -48,7 +55,7 @@ class LibraryFragment : SongListFragment<FragmentLibraryBinding>(R.layout.fragme
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
         outState?.isTextInputVisible = toolbarTextInputView.isTextInputVisible
-        outState?.searchQuery = toolbarTextInputView.textInput.text.toString()
+        outState?.searchQuery = query
     }
 
     override fun inflateToolbarTitle(context: Context) = toolbarTextInputView
@@ -70,20 +77,20 @@ class LibraryFragment : SongListFragment<FragmentLibraryBinding>(R.layout.fragme
     private fun toggleTextInputVisibility() {
         toolbarTextInputView.run {
             if (title.tag == null) {
-                val shouldUpdate = !textInput.text.isEmpty()
-                if (!isTextInputVisible) {
+                val shouldScrollToTop = !query.isEmpty()
+                animateTextInputVisibility(!isTextInputVisible)
+                if (isTextInputVisible) {
                     textInput.setText("")
                 }
-                searchToggle.setImageDrawable((if (toolbarTextInputView.isTextInputVisible) drawableCloseToSearch else drawableSearchToClose).apply { this?.start() })
-                animateTextInputVisibility(!isTextInputVisible)
-                updateAdapterItems(!isTextInputVisible && shouldUpdate)
+                searchToggle.setImageDrawable((if (toolbarTextInputView.isTextInputVisible) drawableSearchToClose else drawableCloseToSearch).apply { this?.start() })
+                updateAdapterItems(!isTextInputVisible && shouldScrollToTop)
             }
         }
     }
 
     //TODO: Prioritize results that begin with the searchQuery.
     private fun Sequence<Song>.filterByQuery() = if (toolbarTextInputView.isTextInputVisible) {
-        toolbarTextInputView.textInput.text.toString().trim().replaceSpecialCharacters().let { query ->
+        query.trim().replaceSpecialCharacters().let { query ->
             filter { it.titleWithSpecialCharactersRemoved.contains(query, true) || it.artistWithSpecialCharactersRemoved.contains(query, true) }
         }
     } else this

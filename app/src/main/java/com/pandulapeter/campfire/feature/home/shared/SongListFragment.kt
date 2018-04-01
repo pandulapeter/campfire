@@ -45,7 +45,7 @@ abstract class SongListFragment<T : ViewDataBinding>(@LayoutRes layoutResourceId
             addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
-                    if (dy > 0) {
+                    if (dy > 0 && recyclerView?.isAnimating == false) {
                         hideKeyboard(activity?.currentFocus)
                     }
                 }
@@ -76,6 +76,7 @@ abstract class SongListFragment<T : ViewDataBinding>(@LayoutRes layoutResourceId
         coroutine = async(UI) {
             adapter.shouldScrollToTop = shouldScrollToTop
             adapter.items = async(CommonPool) { librarySongs.createViewModels() }.await()
+            coroutine = null
         }
     }
 

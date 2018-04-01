@@ -10,47 +10,29 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ItemSongBinding
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.cancel
-import kotlin.coroutines.experimental.CoroutineContext
 
 class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
 
-    private var coroutine: CoroutineContext? = null
     private var recyclerView: RecyclerView? = null
     var shouldScrollToTop = false
     var items = listOf<SongViewModel>()
         set(newItems) {
-            if (field.isEmpty()) {
-                if (newItems.isNotEmpty()) {
-                    field = newItems
-                    notifyDataSetChanged()
-                }
-            } else {
-                coroutine?.cancel()
-                coroutine = async(UI) {
-                    val oldItems = items
-                    async(CommonPool) {
-                        DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-                            override fun getOldListSize() = oldItems.size
+            val oldItems = items
+            DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+                override fun getOldListSize() = oldItems.size
 
-                            override fun getNewListSize() = newItems.size
+                override fun getNewListSize() = newItems.size
 
-                            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int) =
-                                oldItems[oldItemPosition].song.id == newItems[newItemPosition].song.id
+                override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int) =
+                    oldItems[oldItemPosition].song.id == newItems[newItemPosition].song.id
 
-                            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
-                        })
-                    }.await().dispatchUpdatesTo(this@SongAdapter)
-                    if (shouldScrollToTop) {
-                        recyclerView?.smoothScrollToPosition(0)
-                        shouldScrollToTop = false
-                    }
-                    field = newItems
-                }
+                override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
+            }).dispatchUpdatesTo(this@SongAdapter)
+            if (shouldScrollToTop) {
+                recyclerView?.run { postOnAnimation { smoothScrollToPosition(0) } }
+                shouldScrollToTop = false
             }
+            field = newItems
         }
     var itemClickListener: (position: Int) -> Unit = { _ -> }
     var dragHandleTouchListener: ((position: Int) -> Unit)? = null
