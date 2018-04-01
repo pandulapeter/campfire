@@ -11,16 +11,7 @@ import com.pandulapeter.campfire.feature.CampfireFragment
 import com.pandulapeter.campfire.util.*
 
 class DetailFragment : CampfireFragment<FragmentDetailBinding>(R.layout.fragment_detail) {
-    override var onFloatingActionButtonClicked: (() -> Unit)? = {
-        mainActivity.autoScrollControl.run {
-            if (tag == null) {
-                val drawable = if (visibleOrInvisible) drawablePauseToPlay else drawablePlayToPause
-                mainActivity.floatingActionButton.setImageDrawable(drawable)
-                animatedVisibilityEnd = !animatedVisibilityEnd
-                drawable?.start()
-            }
-        }
-    }
+    override var onFloatingActionButtonClicked: (() -> Unit)? = { toggleAutoScroll() }
     override val navigationMenu = R.menu.detail
     private val drawablePlayToPause by lazy { context.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { context.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
@@ -41,7 +32,29 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding>(R.layout.fragment
         mainActivity.autoScrollControl.visibleOrGone = false
     }
 
+    override fun onPause() {
+        super.onPause()
+        if (mainActivity.autoScrollControl.visibleOrInvisible) {
+            toggleAutoScroll()
+        }
+    }
+
     override fun inflateToolbarButtons(context: Context) = listOf<View>(
         context.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }
     )
+
+    override fun onDrawerStateChanged(state: Int) {
+        if (mainActivity.autoScrollControl.visibleOrInvisible) {
+            toggleAutoScroll()
+        }
+    }
+
+    private fun toggleAutoScroll() = mainActivity.autoScrollControl.run {
+        if (tag == null) {
+            val drawable = if (visibleOrInvisible) drawablePauseToPlay else drawablePlayToPause
+            mainActivity.floatingActionButton.setImageDrawable(drawable)
+            animatedVisibilityEnd = !animatedVisibilityEnd
+            drawable?.start()
+        }
+    }
 }

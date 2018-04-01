@@ -69,6 +69,8 @@ abstract class CampfireFragment<T : ViewDataBinding>(@LayoutRes private var layo
 
     open fun onBackPressed() = false
 
+    open fun onDrawerStateChanged(state: Int) = Unit
+
     protected open fun inflateToolbarTitle(context: Context): View = defaultToolbar
 
     protected open fun inflateToolbarButtons(context: Context): List<View> = listOf()

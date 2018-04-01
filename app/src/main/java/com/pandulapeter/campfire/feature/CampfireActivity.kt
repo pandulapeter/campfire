@@ -54,6 +54,7 @@ class CampfireActivity : AppCompatActivity() {
         )
         super.onCreate(savedInstanceState)
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
+            currentFragment?.onDrawerStateChanged(it)
             if (it == DrawerLayout.STATE_DRAGGING) {
                 currentFocus?.also {
                     it.clearFocus()
