@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire.data.repository.shared
 
-abstract class Repository<T> {
+abstract class Repository<out T> {
 
     private var subscribers = mutableSetOf<Subscriber<T>>()
     protected abstract val data: T
@@ -9,7 +9,8 @@ abstract class Repository<T> {
         if (!subscribers.contains(subscriber)) {
             subscribers.add(subscriber)
         }
-        subscriber.onUpdate(data)
+        subscriber.onLoadingStateChanged()
+        subscriber.onDataChanged(data)
     }
 
     fun unsubscribe(subscriber: Subscriber<T>) {
@@ -18,5 +19,9 @@ abstract class Repository<T> {
         }
     }
 
-    protected fun notifySubscribers() = subscribers.forEach { it.onUpdate(data) }
+    protected fun notifyDataChanged() = subscribers.forEach { it.onDataChanged(data) }
+
+    protected fun notifyLoadingStateChanged() = subscribers.forEach { it.onLoadingStateChanged() }
+
+    protected fun notifyError() = subscribers.forEach { it.onError() }
 }

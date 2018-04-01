@@ -1,9 +1,6 @@
 package com.pandulapeter.campfire.data.dao
 
-import android.arch.persistence.room.Dao
-import android.arch.persistence.room.Insert
-import android.arch.persistence.room.Query
-import android.arch.persistence.room.Transaction
+import android.arch.persistence.room.*
 import com.pandulapeter.campfire.data.model.Song
 
 @Dao
@@ -18,8 +15,8 @@ interface SongDao {
         insertAll(songs)
     }
 
-    @Insert
-    abstract fun insertAll(songs: List<Song>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertAll(songs: List<Song>)
 
     @Query("DELETE from ${Song.TABLE_NAME}")
     fun deleteAll()

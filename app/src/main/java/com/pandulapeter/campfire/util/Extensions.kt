@@ -23,6 +23,11 @@ fun Context.drawable(@DrawableRes drawableId: Int) = AppCompatResources.getDrawa
 
 fun Context.animatedDrawable(@DrawableRes drawableId: Int) = AnimatedVectorDrawableCompat.create(this, drawableId)
 
+fun <T> MutableCollection<T>.swap(newItems: Collection<T>) {
+    clear()
+    addAll(newItems)
+}
+
 @ColorInt
 fun Context.obtainColor(@AttrRes colorAttribute: Int): Int {
     val attributes = obtainStyledAttributes(TypedValue().data, intArrayOf(colorAttribute))

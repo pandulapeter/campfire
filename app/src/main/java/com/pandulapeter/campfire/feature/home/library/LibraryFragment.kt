@@ -41,6 +41,7 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
             }
         } ?: appShortcutManager.onLibraryOpened()
         binding.root.setOnClickListener { mainActivity.openDetailScreen() }
+        binding.swipeRefreshLayout.setOnRefreshListener { songRepository.updateData() }
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -52,11 +53,6 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
     override fun onStart() {
         super.onStart()
         songRepository.subscribe(this)
-        if (!songRepository.isDataAvailable()) {
-            songRepository.updateData {
-                showSnackbar(R.string.library_placeholder_loading_failed)
-            }
-        }
     }
 
     override fun onStop() {
@@ -76,9 +72,15 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
         true
     } else super.onBackPressed()
 
-    override fun onUpdate(data: List<Song>) {
+    override fun onDataChanged(data: List<Song>) {
         binding.textView.text = data.joinToString(", ") { it.title }
     }
+
+    override fun onLoadingStateChanged() {
+        binding.swipeRefreshLayout.isRefreshing = songRepository.isLoading
+    }
+
+    override fun onError() = showSnackbar(R.string.library_update_error)
 
     private fun toggleTextInputVisibility() {
         toolbarTextInputView.run {

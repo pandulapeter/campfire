@@ -51,7 +51,7 @@ class SongInfoRepository(
 //                dataSet = it.associateBy { it.id }
 //                isLoading = false
 //                preferenceStorageManager.lastUpdateTimestamp = System.currentTimeMillis()
-//                notifySubscribers(UpdateType.LibraryCacheUpdated(getLibrarySongs()))
+//                notifyDataChanged(UpdateType.LibraryCacheUpdated(getLibrarySongs()))
 //            },
 //            onFailure = {
 //                isLoading = false
