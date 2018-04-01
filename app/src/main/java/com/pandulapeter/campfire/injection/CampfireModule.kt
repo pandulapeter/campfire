@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder
 import com.pandulapeter.campfire.data.database.PreferenceDatabase
 import com.pandulapeter.campfire.data.database.SongDatabase
 import com.pandulapeter.campfire.data.database.SongDetailDatabase
+import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
@@ -26,6 +27,7 @@ val networkingModule: Module = applicationContext {
 
 val repositoryModule: Module = applicationContext {
     provide { SongRepository(get(), get(), get()) }
+    provide { SongDetailRepository(get(), get()) }
 }
 
 val persistenceModule: Module = applicationContext {

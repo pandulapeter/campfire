@@ -6,7 +6,7 @@ import com.pandulapeter.campfire.data.model.Song
 @Dao
 interface SongDao {
 
-    @Query("SELECT * from ${Song.TABLE_NAME}")
+    @Query("SELECT * FROM ${Song.TABLE_NAME}")
     fun getAll(): List<Song>
 
     @Transaction
@@ -18,6 +18,6 @@ interface SongDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAll(songs: List<Song>)
 
-    @Query("DELETE from ${Song.TABLE_NAME}")
+    @Query("DELETE FROM ${Song.TABLE_NAME}")
     fun deleteAll()
 }

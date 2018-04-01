@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.networking
 
 import com.pandulapeter.campfire.data.model.Song
-import com.pandulapeter.campfire.old.data.model.SongDetail
+import com.pandulapeter.campfire.data.model.SongDetail
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.PUT

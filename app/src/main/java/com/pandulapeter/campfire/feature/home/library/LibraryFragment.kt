@@ -6,17 +6,17 @@ import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Song
 import com.pandulapeter.campfire.data.repository.SongRepository
-import com.pandulapeter.campfire.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.databinding.FragmentLibraryBinding
 import com.pandulapeter.campfire.feature.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.animatedDrawable
+import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.drawable
 import org.koin.android.ext.android.inject
 
-class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragment_library), Subscriber<List<Song>> {
+class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragment_library), SongRepository.Subscriber {
 
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
     private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
@@ -41,6 +41,7 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
             }
         } ?: appShortcutManager.onLibraryOpened()
         binding.root.setOnClickListener { mainActivity.openDetailScreen() }
+        binding.swipeRefreshLayout.setColorSchemeColors(context.color(R.color.accent))
         binding.swipeRefreshLayout.setOnRefreshListener { songRepository.updateData() }
     }
 
@@ -76,8 +77,8 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
         binding.textView.text = data.joinToString(", ") { it.title }
     }
 
-    override fun onLoadingStateChanged() {
-        binding.swipeRefreshLayout.isRefreshing = songRepository.isLoading
+    override fun onLoadingStateChanged(isLoading: Boolean) {
+        binding.swipeRefreshLayout.isRefreshing = isLoading
     }
 
     override fun onError() = showSnackbar(R.string.library_update_error)

@@ -102,9 +102,9 @@ class DownloadedSongRepository(
         notifySubscribers(UpdateType.Download.Started(songInfo.id))
         networkManager.service.getSong(songInfo.id).enqueueCall(
             onSuccess = {
-                addSongToDownloadsWithoutNotifications(DownloadedSong(it.id, songInfo.version ?: 0), it) {
-                    notifySubscribers(UpdateType.Download.Successful(songInfo.id, it.song))
-                }
+//                addSongToDownloadsWithoutNotifications(DownloadedSong(it.id, songInfo.version ?: 0), it) {
+//                    notifySubscribers(UpdateType.Download.Successful(songInfo.id, it.song))
+//                }
             },
             onFailure = {
                 notifySubscribers(UpdateType.Download.Failed(songInfo.id))

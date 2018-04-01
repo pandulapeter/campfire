@@ -15,14 +15,14 @@ class SongRepository(
     private val preferenceDatabase: PreferenceDatabase,
     private val networkManager: NetworkManager,
     private val songDatabase: SongDatabase
-) : Repository<List<Song>>() {
+) : Repository<SongRepository.Subscriber>() {
 
-    override val data = mutableListOf<Song>()
-    var isLoading = true
+    private val data = mutableListOf<Song>()
+    private var isLoading = true
         set(value) {
             if (field != value) {
                 field = value
-                notifyLoadingStateChanged()
+                subscribers.forEach { it.onLoadingStateChanged(value) }
             }
         }
 
@@ -32,7 +32,7 @@ class SongRepository(
                 songDatabase.songDao().getAll()
             }.await().let {
                 data.swap(it)
-                if (shouldUpdateData()) {
+                if (System.currentTimeMillis() - preferenceDatabase.lastUpdateTimestamp > UPDATE_LIMIT) {
                     updateData()
                 } else {
                     isLoading = false
@@ -40,6 +40,12 @@ class SongRepository(
                 notifyDataChanged()
             }
         }
+    }
+
+    override fun subscribe(subscriber: Subscriber) {
+        super.subscribe(subscriber)
+        subscriber.onDataChanged(data)
+        subscriber.onLoadingStateChanged(isLoading)
     }
 
     fun updateData() {
@@ -54,11 +60,20 @@ class SongRepository(
             },
             onFailure = {
                 isLoading = false
-                notifyError()
+                subscribers.forEach { it.onError() }
             })
     }
 
-    private fun shouldUpdateData() = System.currentTimeMillis() - preferenceDatabase.lastUpdateTimestamp > UPDATE_LIMIT
+    private fun notifyDataChanged() = subscribers.forEach { it.onDataChanged(data) }
+
+    interface Subscriber {
+
+        fun onDataChanged(data: List<Song>)
+
+        fun onLoadingStateChanged(isLoading: Boolean)
+
+        fun onError()
+    }
 
     companion object {
         private const val UPDATE_LIMIT = 24 * 60 * 60 * 1000

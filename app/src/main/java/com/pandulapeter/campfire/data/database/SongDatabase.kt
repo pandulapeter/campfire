@@ -5,7 +5,7 @@ import android.arch.persistence.room.RoomDatabase
 import com.pandulapeter.campfire.data.dao.SongDao
 import com.pandulapeter.campfire.data.model.Song
 
-@Database(entities = [(Song::class)], version = 1)
+@Database(entities = [(Song::class)], version = 1, exportSchema = false)
 abstract class SongDatabase : RoomDatabase() {
 
     abstract fun songDao(): SongDao
