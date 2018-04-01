@@ -32,19 +32,20 @@ class ToolbarTextInputView @JvmOverloads constructor(context: Context, attrs: At
     val title = binding.title
     val textInput = binding.textInput
     var isTextInputVisible = false
-        set(value) {
-            if (isTextInputVisible != value) {
-                field = value
-                title.animatedVisibilityStart = !value
-                textInput.animatedVisibilityEnd = value
-                if (value) {
-                    textInput.requestFocus()
-                    showKeyboard(textInput)
-                } else {
-                    hideKeyboard(textInput)
-                }
+
+    fun animateTextInputVisibility(isVisible: Boolean) {
+        if (isTextInputVisible != isVisible) {
+            isTextInputVisible = isVisible
+            title.animatedVisibilityStart = !isVisible
+            textInput.animatedVisibilityEnd = isVisible
+            if (isVisible) {
+                textInput.requestFocus()
+                showKeyboard(textInput)
+            } else {
+                hideKeyboard(textInput)
             }
         }
+    }
 
     fun showTextInput() {
         textInput.visibleOrInvisible = true

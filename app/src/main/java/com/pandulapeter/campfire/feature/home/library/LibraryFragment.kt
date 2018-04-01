@@ -70,12 +70,13 @@ class LibraryFragment : SongListFragment<FragmentLibraryBinding>(R.layout.fragme
     private fun toggleTextInputVisibility() {
         toolbarTextInputView.run {
             if (title.tag == null) {
+                val shouldUpdate = !textInput.text.isEmpty()
                 if (!isTextInputVisible) {
                     textInput.setText("")
                 }
                 searchToggle.setImageDrawable((if (toolbarTextInputView.isTextInputVisible) drawableCloseToSearch else drawableSearchToClose).apply { this?.start() })
-                isTextInputVisible = !isTextInputVisible
-                updateAdapterItems(true)
+                animateTextInputVisibility(!isTextInputVisible)
+                updateAdapterItems(!isTextInputVisible && shouldUpdate)
             }
         }
     }
