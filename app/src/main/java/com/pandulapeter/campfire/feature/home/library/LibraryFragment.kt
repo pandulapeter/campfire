@@ -52,7 +52,7 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
     override fun onBackPressed() = if (toolbarTextInputView.isTextInputVisible) {
         toggleTextInputVisibility()
         true
-    } else false
+    } else super.onBackPressed()
 
     private fun toggleTextInputVisibility() {
         toolbarTextInputView.run {

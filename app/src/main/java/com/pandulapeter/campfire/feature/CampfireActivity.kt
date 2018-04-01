@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.support.annotation.MenuRes
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
-import android.support.graphics.drawable.AnimatedVectorDrawableCompat
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
@@ -35,9 +34,9 @@ class CampfireActivity : AppCompatActivity() {
 
     private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
-    private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as CampfireFragment<*>?
-    private val drawableMenuToBack by lazy { AnimatedVectorDrawableCompat.create(this, R.drawable.avd_menu_to_back_24dp) }
-    private val drawableBackToMenu by lazy { AnimatedVectorDrawableCompat.create(this, R.drawable.avd_back_to_menu_24dp) }
+    private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? CampfireFragment<*>?
+    private val drawableMenuToBack by lazy { animatedDrawable(R.drawable.avd_menu_to_back_24dp) }
+    private val drawableBackToMenu by lazy { animatedDrawable(R.drawable.avd_back_to_menu_24dp) }
     val floatingActionButton get() = binding.floatingActionButton
     val autoScrollControl get() = binding.autoScrollControl
     val tabLayout get() = binding.tabLayout
@@ -85,7 +84,8 @@ class CampfireActivity : AppCompatActivity() {
         }
         binding.toolbarMainButton.setOnClickListener {
             if (currentFragment is DetailFragment) {
-                onBackPressed()
+                supportFragmentManager.popBackStack()
+                transformMainToolbarButton(false)
             } else {
                 hideKeyboard(currentFocus)
                 binding.drawerLayout.openDrawer(Gravity.START)
