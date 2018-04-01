@@ -1,13 +1,12 @@
 package com.pandulapeter.campfire.old.data.repository
 
+import com.pandulapeter.campfire.networking.NetworkManager
 import com.pandulapeter.campfire.old.data.model.SongInfo
 import com.pandulapeter.campfire.old.data.repository.shared.Repository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.data.storage.DataStorageManager
 import com.pandulapeter.campfire.old.data.storage.PreferenceStorageManager
-import com.pandulapeter.campfire.old.networking.NetworkManager
-import com.pandulapeter.campfire.old.util.enqueueCall
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
@@ -47,17 +46,17 @@ class SongInfoRepository(
 
     fun updateDataSet(onError: () -> Unit = {}) {
         isLoading = true
-        networkManager.service.getLibrary().enqueueCall(
-            onSuccess = {
-                dataSet = it.associateBy { it.id }
-                isLoading = false
-                preferenceStorageManager.lastUpdateTimestamp = System.currentTimeMillis()
-                notifySubscribers(UpdateType.LibraryCacheUpdated(getLibrarySongs()))
-            },
-            onFailure = {
-                isLoading = false
-                onError()
-            })
+//        networkManager.service.getLibrary().enqueueCall(
+//            onSuccess = {
+//                dataSet = it.associateBy { it.id }
+//                isLoading = false
+//                preferenceStorageManager.lastUpdateTimestamp = System.currentTimeMillis()
+//                notifySubscribers(UpdateType.LibraryCacheUpdated(getLibrarySongs()))
+//            },
+//            onFailure = {
+//                isLoading = false
+//                onError()
+//            })
     }
 
     private companion object {

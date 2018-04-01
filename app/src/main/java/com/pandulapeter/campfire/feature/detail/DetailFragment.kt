@@ -56,6 +56,7 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding>(R.layout.fragment
     } else super.onBackPressed()
 
     override fun inflateToolbarButtons(context: Context) = listOf<View>(
+        context.createToolbarButton(R.drawable.ic_playlist_border_24dp) { showSnackbar("Work in progress") },
         context.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }
     )
 

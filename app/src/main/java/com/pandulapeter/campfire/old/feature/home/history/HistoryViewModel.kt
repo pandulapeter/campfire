@@ -8,7 +8,7 @@ import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListAdapter
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoViewModel
-import com.pandulapeter.campfire.old.networking.AnalyticsManager
+import com.pandulapeter.campfire.networking.AnalyticsManager
 import java.util.*
 
 /**

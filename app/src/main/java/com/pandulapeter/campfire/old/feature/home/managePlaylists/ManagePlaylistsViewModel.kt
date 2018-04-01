@@ -5,12 +5,11 @@ import android.databinding.ObservableInt
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildViewModel
-import com.pandulapeter.campfire.old.integration.AppShortcutManager
-import com.pandulapeter.campfire.old.networking.AnalyticsManager
+import com.pandulapeter.campfire.integration.AppShortcutManager
+import com.pandulapeter.campfire.networking.AnalyticsManager
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -70,7 +69,6 @@ class ManagePlaylistsViewModel(
 
     fun deletePlaylist(playlistId: Int) {
         playlistRepository.deletePlaylist(playlistId)
-        appShortcutManager.onPlaylistDeleted(playlistId)
     }
 
     private fun getAdapterItems(): List<PlaylistInfoViewModel> {

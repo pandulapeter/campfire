@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.PlaylistChooserBottomSheetFragment
-import com.pandulapeter.campfire.old.integration.AppShortcutManager
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.old.util.*
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject

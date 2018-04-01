@@ -5,19 +5,19 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.old.data.model.Language
+import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.old.data.model.SongInfo
 import com.pandulapeter.campfire.old.data.repository.*
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListAdapter
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoViewModel
-import com.pandulapeter.campfire.old.integration.AppShortcutManager
-import com.pandulapeter.campfire.old.networking.AnalyticsManager
+import com.pandulapeter.campfire.integration.AppShortcutManager
+import com.pandulapeter.campfire.networking.AnalyticsManager
 import com.pandulapeter.campfire.old.util.mapToLanguage
 import com.pandulapeter.campfire.old.util.onPropertyChanged
-import com.pandulapeter.campfire.old.util.replaceSpecialCharacters
 import com.pandulapeter.campfire.old.util.toggle
+import com.pandulapeter.campfire.util.replaceSpecialCharacters
 
 /**
  * Handles events and logic for [LibraryFragment].

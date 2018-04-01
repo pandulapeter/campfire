@@ -1,11 +1,8 @@
-package com.pandulapeter.campfire.old.data.model
+package com.pandulapeter.campfire.data.model
 
 import android.support.annotation.StringRes
 import com.pandulapeter.campfire.R
 
-/**
- * Connects a language to the localised string resource.
- */
 sealed class Language(@StringRes val nameResource: Int) {
 
     sealed class Known(val id: String, @StringRes nameResource: Int) : Language(nameResource) {

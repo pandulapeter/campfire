@@ -2,7 +2,7 @@ package com.pandulapeter.campfire.old.data.storage
 
 import android.content.Context
 import com.pandulapeter.campfire.BuildConfig
-import com.pandulapeter.campfire.old.data.model.Language
+import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.old.feature.home.HomeViewModel
 import com.pandulapeter.campfire.old.feature.home.library.LibraryViewModel
 import java.util.*

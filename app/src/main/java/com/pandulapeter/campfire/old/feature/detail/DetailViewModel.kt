@@ -10,7 +10,7 @@ import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.old.feature.shared.dialog.PlaylistChooserBottomSheetFragment
-import com.pandulapeter.campfire.old.networking.AnalyticsManager
+import com.pandulapeter.campfire.networking.AnalyticsManager
 import com.pandulapeter.campfire.old.util.onPropertyChanged
 import com.pandulapeter.campfire.old.util.toggle
 

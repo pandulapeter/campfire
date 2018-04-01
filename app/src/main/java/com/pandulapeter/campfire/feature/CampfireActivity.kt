@@ -28,7 +28,9 @@ import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.home.manageDownloads.ManageDownloadsFragment
 import com.pandulapeter.campfire.feature.home.managePlaylists.ManagePlaylistsFragment
 import com.pandulapeter.campfire.feature.home.options.OptionsFragment
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.*
+import org.koin.android.ext.android.inject
 
 class CampfireActivity : AppCompatActivity() {
 
@@ -37,6 +39,7 @@ class CampfireActivity : AppCompatActivity() {
     private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? CampfireFragment<*>?
     private val drawableMenuToBack by lazy { animatedDrawable(R.drawable.avd_menu_to_back_24dp) }
     private val drawableBackToMenu by lazy { animatedDrawable(R.drawable.avd_back_to_menu_24dp) }
+    private val appShortcutManager by inject<AppShortcutManager>()
     val floatingActionButton get() = binding.floatingActionButton
     val autoScrollControl get() = binding.autoScrollControl
     val tabLayout get() = binding.tabLayout
@@ -52,6 +55,7 @@ class CampfireActivity : AppCompatActivity() {
             )
         )
         super.onCreate(savedInstanceState)
+        appShortcutManager.updateAppShortcuts()
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
             currentFragment?.onDrawerStateChanged(it)
             if (it == DrawerLayout.STATE_DRAGGING) {

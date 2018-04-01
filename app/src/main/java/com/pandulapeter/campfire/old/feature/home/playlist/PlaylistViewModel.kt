@@ -13,9 +13,9 @@ import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListAdapter
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoViewModel
-import com.pandulapeter.campfire.old.integration.AppShortcutManager
-import com.pandulapeter.campfire.old.integration.DeepLinkManager
-import com.pandulapeter.campfire.old.networking.AnalyticsManager
+import com.pandulapeter.campfire.integration.AppShortcutManager
+import com.pandulapeter.campfire.integration.DeepLinkManager
+import com.pandulapeter.campfire.networking.AnalyticsManager
 import com.pandulapeter.campfire.old.util.onPropertyChanged
 import java.util.*
 
@@ -46,7 +46,6 @@ class PlaylistViewModel(
     init {
         title.onPropertyChanged { editedTitle.set(it) }
         isInEditMode.onPropertyChanged { onUpdate(UpdateType.EditModeChanged(playlistId, it)) }
-        appShortcutManager.onPlaylistOpened(playlistId)
     }
 
     override fun getAdapterItems(): List<SongInfoViewModel> {

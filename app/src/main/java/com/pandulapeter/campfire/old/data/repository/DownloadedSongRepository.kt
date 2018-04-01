@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.old.data.repository
 
+import com.pandulapeter.campfire.networking.NetworkManager
 import com.pandulapeter.campfire.old.data.model.DownloadedSong
 import com.pandulapeter.campfire.old.data.model.SongDetail
 import com.pandulapeter.campfire.old.data.model.SongInfo
@@ -8,8 +9,7 @@ import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.data.storage.DataStorageManager
 import com.pandulapeter.campfire.old.data.storage.FileStorageManager
-import com.pandulapeter.campfire.old.networking.NetworkManager
-import com.pandulapeter.campfire.old.util.enqueueCall
+import com.pandulapeter.campfire.util.enqueueCall
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async

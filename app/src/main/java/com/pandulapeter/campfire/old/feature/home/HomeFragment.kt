@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.NewPlaylistDialogFragment
-import com.pandulapeter.campfire.old.integration.AppShortcutManager
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.old.util.*
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.addDrawerListener

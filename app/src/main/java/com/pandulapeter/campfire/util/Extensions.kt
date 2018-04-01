@@ -11,6 +11,9 @@ import android.support.v7.content.res.AppCompatResources
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewAnimationUtils
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 fun Context.color(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
 
@@ -102,3 +105,41 @@ fun Animator.addListener(
 
     override fun onAnimationStart(animation: Animator?) = onAnimationStart()
 })
+
+fun <T> Call<T>.enqueueCall(onSuccess: (T) -> Unit, onFailure: () -> Unit) {
+    enqueue(object : Callback<T> {
+        override fun onResponse(call: Call<T>?, response: Response<T>?) {
+            if (response?.isSuccessful == true) response.body()?.let { onSuccess(it) } else onFailure()
+        }
+
+        override fun onFailure(call: Call<T>?, t: Throwable?) = onFailure()
+    })
+}
+
+fun String.replaceSpecialCharacters() = this
+    .replace("á", "a")
+    .replace("Á", "A")
+    .replace("ă", "a")
+    .replace("Ă", "A")
+    .replace("â", "a")
+    .replace("Â", "A")
+    .replace("é", "e")
+    .replace("É", "E")
+    .replace("í", "i")
+    .replace("Í", "I")
+    .replace("î", "i")
+    .replace("Î", "I")
+    .replace("ó", "o")
+    .replace("Ó", "O")
+    .replace("ö", "o")
+    .replace("Ö", "O")
+    .replace("ő", "o")
+    .replace("Ő", "O")
+    .replace("ș", "s")
+    .replace("Ș", "S")
+    .replace("ț", "t")
+    .replace("Ț", "T")
+    .replace("ú", "u")
+    .replace("Ú", "U")
+    .replace("ű", "u")
+    .replace("Ű", "U")

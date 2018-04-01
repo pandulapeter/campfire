@@ -14,8 +14,8 @@ import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListFragment
-import com.pandulapeter.campfire.old.integration.AppShortcutManager
-import com.pandulapeter.campfire.old.integration.DeepLinkManager
+import com.pandulapeter.campfire.integration.AppShortcutManager
+import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.old.util.*
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.dimension

@@ -12,7 +12,7 @@ import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
 import android.widget.CompoundButton
-import com.pandulapeter.campfire.old.data.model.Language
+import com.pandulapeter.campfire.data.model.Language
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -91,18 +91,12 @@ fun CompoundButton.setupWithBackingField(backingField: ObservableBoolean) {
 
 fun <T> CompoundButton.setupWithBackingField(backingField: ObservableField<T>, value: T) {
     isChecked = backingField.get() == value
-    setOnCheckedChangeListener { _, isChecked -> if (isChecked) { backingField.set(value) } }
-    backingField.onPropertyChanged { isChecked = it == value }
-}
-
-fun <T> Call<T>.enqueueCall(onSuccess: (T) -> Unit, onFailure: () -> Unit) {
-    enqueue(object : Callback<T> {
-        override fun onResponse(call: Call<T>?, response: Response<T>?) {
-            if (response?.isSuccessful == true) response.body()?.let { onSuccess(it) } else onFailure()
+    setOnCheckedChangeListener { _, isChecked ->
+        if (isChecked) {
+            backingField.set(value)
         }
-
-        override fun onFailure(call: Call<T>?, t: Throwable?) = onFailure()
-    })
+    }
+    backingField.onPropertyChanged { isChecked = it == value }
 }
 
 fun String?.mapToLanguage() = when (this) {
@@ -121,32 +115,3 @@ inline fun <T : Fragment> T.withArguments(bundleOperations: (Bundle) -> Unit): T
 
 fun Context.getIntentFor(activityClass: KClass<out Activity>, extraOperations: (Intent) -> Unit = {}) =
     Intent(this, activityClass.java).apply { extraOperations(this) }
-
-fun String.replaceSpecialCharacters() = this
-    .replace("á", "a")
-    .replace("Á", "A")
-    .replace("ă", "a")
-    .replace("Ă", "A")
-    .replace("â", "a")
-    .replace("Â", "A")
-    .replace("é", "e")
-    .replace("É", "E")
-    .replace("í", "i")
-    .replace("Í", "I")
-    .replace("î", "i")
-    .replace("Î", "I")
-    .replace("ó", "o")
-    .replace("Ó", "O")
-    .replace("ö", "o")
-    .replace("Ö", "O")
-    .replace("ő", "o")
-    .replace("Ő", "O")
-    .replace("ș", "s")
-    .replace("Ș", "S")
-    .replace("ț", "t")
-    .replace("Ț", "T")
-    .replace("ú", "u")
-    .replace("Ú", "U")
-    .replace("ű", "u")
-    .replace("Ű", "U")
-

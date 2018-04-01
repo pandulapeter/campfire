@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.old.data.repository.shared
 
 import com.pandulapeter.campfire.old.data.model.History
-import com.pandulapeter.campfire.old.data.model.Language
+import com.pandulapeter.campfire.data.model.Language
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.model.SongInfo
 
