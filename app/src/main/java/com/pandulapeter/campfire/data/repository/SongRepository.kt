@@ -1,11 +1,12 @@
 package com.pandulapeter.campfire.data.repository
 
+import com.pandulapeter.campfire.data.database.SongDatabase
 import com.pandulapeter.campfire.data.model.Song
 import com.pandulapeter.campfire.data.repository.shared.Repository
 import com.pandulapeter.campfire.networking.NetworkManager
 import com.pandulapeter.campfire.util.enqueueCall
 
-class SongRepository(private val networkManager: NetworkManager) : Repository<List<Song>>() {
+class SongRepository(private val networkManager: NetworkManager, private val songDatabase: SongDatabase) : Repository<List<Song>>() {
 
     override val data = mutableListOf<Song>()
 

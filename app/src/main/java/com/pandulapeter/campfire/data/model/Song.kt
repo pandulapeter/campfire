@@ -1,10 +1,13 @@
 package com.pandulapeter.campfire.data.model
 
+import android.arch.persistence.room.Entity
+import android.arch.persistence.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import com.pandulapeter.campfire.util.replaceSpecialCharacters
 
+@Entity(tableName = Song.TABLE_NAME)
 data class Song(
-    @SerializedName("id") val id: String = "",
+    @PrimaryKey() @SerializedName("id") val id: String,
     @SerializedName("title") val title: String = "",
     @SerializedName("artist") val artist: String = "",
     @SerializedName("language") val language: String? = null,
@@ -17,4 +20,8 @@ data class Song(
     val titleWithSpecialCharactersRemoved by lazy { title.replaceSpecialCharacters() }
     @delegate:Transient
     val artistWithSpecialCharactersRemoved by lazy { artist.replaceSpecialCharacters() }
+
+    companion object {
+        const val TABLE_NAME = "songs"
+    }
 }

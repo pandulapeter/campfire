@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire
 
 import android.app.Application
+import com.pandulapeter.campfire.injection.databaseModule
 import com.pandulapeter.campfire.injection.integrationModule
 import com.pandulapeter.campfire.injection.networkingModule
 import com.pandulapeter.campfire.injection.repositoryModule
@@ -10,6 +11,6 @@ class CampfireApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        startKoin(this, listOf(integrationModule, networkingModule, repositoryModule))
+        startKoin(this, listOf(integrationModule, networkingModule, repositoryModule, databaseModule))
     }
 }
