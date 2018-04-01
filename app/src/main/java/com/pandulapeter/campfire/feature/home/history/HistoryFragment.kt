@@ -12,7 +12,6 @@ class HistoryFragment : CampfireFragment<FragmentHistoryBinding>(R.layout.fragme
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_history)
-        binding.root.setOnClickListener { mainActivity.openDetailScreen() }
     }
 
     override fun inflateToolbarButtons(context: Context) = listOf<View>(

@@ -7,18 +7,16 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.util.consume
-import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.integration.AppShortcutManager
+import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListFragment
-import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.integration.DeepLinkManager
-import com.pandulapeter.campfire.old.util.*
-import com.pandulapeter.campfire.util.BundleArgumentDelegate
-import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.old.util.onEventTriggered
+import com.pandulapeter.campfire.old.util.onPropertyChanged
+import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
 

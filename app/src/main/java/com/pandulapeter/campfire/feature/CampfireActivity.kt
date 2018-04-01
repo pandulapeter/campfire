@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.support.annotation.MenuRes
 import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
-import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
 import android.support.v4.widget.DrawerLayout
@@ -146,11 +145,11 @@ class CampfireActivity : AppCompatActivity() {
         }
     }
 
-    fun openDetailScreen() {
+    fun openDetailScreen(songId: String, playlistId: String = "") {
         currentFocus?.also { hideKeyboard(it) }
         currentFragment?.exitTransition = Fade()
         supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, DetailFragment(), DetailFragment::class.java.name)
+            .replace(R.id.fragment_container, DetailFragment.newInstance(songId, playlistId), DetailFragment::class.java.name)
             .addToBackStack(null)
             .commit()
     }
@@ -168,7 +167,7 @@ class CampfireActivity : AppCompatActivity() {
         }
     }
 
-    private inline fun <reified T : Fragment> FragmentManager.handleReplace(crossinline newInstance: () -> T) {
+    private inline fun <reified T : CampfireFragment<*>> FragmentManager.handleReplace(crossinline newInstance: () -> T) {
         currentFocus?.also { hideKeyboard(it) }
         currentFragment?.exitTransition = null
         beginTransaction()

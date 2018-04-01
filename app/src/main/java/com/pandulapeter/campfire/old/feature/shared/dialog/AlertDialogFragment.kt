@@ -10,7 +10,7 @@ import android.support.v7.app.AppCompatDialogFragment
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
-import com.pandulapeter.campfire.old.util.withArguments
+import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject
 
 /**

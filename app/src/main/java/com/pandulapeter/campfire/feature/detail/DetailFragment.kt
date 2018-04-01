@@ -12,6 +12,17 @@ import com.pandulapeter.campfire.feature.CampfireFragment
 import com.pandulapeter.campfire.util.*
 
 class DetailFragment : CampfireFragment<FragmentDetailBinding>(R.layout.fragment_detail) {
+
+    companion object {
+        private var Bundle.songId by BundleArgumentDelegate.String("songId")
+        private var Bundle.playlistId by BundleArgumentDelegate.String("playlistId")
+
+        fun newInstance(songId: String, playlistId: String = "") = DetailFragment().withArguments {
+            it.songId = songId
+            it.playlistId = playlistId
+        }
+    }
+
     override var onFloatingActionButtonClicked: (() -> Unit)? = { toggleAutoScroll() }
     override val navigationMenu = R.menu.detail
     private val drawablePlayToPause by lazy { context.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
@@ -31,6 +42,7 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding>(R.layout.fragment
             show()
         }
         mainActivity.autoScrollControl.visibleOrGone = false
+        binding.textView.text = "Song: ${arguments.songId}\nPlaylist: ${arguments.playlistId}"
     }
 
     override fun onPause() {

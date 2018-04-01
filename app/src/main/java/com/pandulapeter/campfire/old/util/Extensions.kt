@@ -109,9 +109,5 @@ fun NavigationView.disableScrollbars() {
     (getChildAt(0) as? NavigationMenuView)?.isVerticalScrollBarEnabled = false
 }
 
-inline fun <T : Fragment> T.withArguments(bundleOperations: (Bundle) -> Unit): T = apply {
-    arguments = Bundle().apply { bundleOperations(this) }
-}
-
 fun Context.getIntentFor(activityClass: KClass<out Activity>, extraOperations: (Intent) -> Unit = {}) =
     Intent(this, activityClass.java).apply { extraOperations(this) }

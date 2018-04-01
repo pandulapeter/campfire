@@ -19,13 +19,15 @@ import android.util.TypedValue
 import android.view.*
 import com.pandulapeter.campfire.PlaylistChooserBottomSheetBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.util.obtainColor
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.old.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.old.util.*
+import com.pandulapeter.campfire.old.util.onEventTriggered
+import com.pandulapeter.campfire.old.util.onPropertyChanged
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.util.obtainColor
+import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject
 
 
@@ -56,16 +58,16 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
         CustomWidthBottomSheetDialog(context, theme).apply {
             binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_playlist_chooser_bottom_sheet, null, false)
             viewModel = PlaylistChooserBottomSheetViewModel(
-                    songInfoRepository,
-                    playlistRepository,
-                    savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId,
-                    binding.container?.toolbar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
-                    binding.container?.fakeAppBar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
-                    binding.container?.toolbar?.context?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
-                    binding.container?.fakeAppBar?.context?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
-                    context.dimension(R.dimen.content_padding),
-                    context.dimension(R.dimen.bottom_sheet_toolbar_elevation),
-                    context.dimension(R.dimen.bottom_sheet_toolbar_margin)
+                songInfoRepository,
+                playlistRepository,
+                savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId,
+                binding.container?.toolbar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
+                binding.container?.fakeAppBar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
+                binding.container?.toolbar?.context?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
+                binding.container?.fakeAppBar?.context?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
+                context.dimension(R.dimen.content_padding),
+                context.dimension(R.dimen.bottom_sheet_toolbar_elevation),
+                context.dimension(R.dimen.bottom_sheet_toolbar_margin)
             )
             binding.viewModel = viewModel
             setContentView(binding.root)

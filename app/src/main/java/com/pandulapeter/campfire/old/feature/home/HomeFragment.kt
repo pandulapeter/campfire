@@ -9,6 +9,7 @@ import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.HomeBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
@@ -19,12 +20,9 @@ import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.NewPlaylistDialogFragment
-import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.old.util.*
-import com.pandulapeter.campfire.util.BundleArgumentDelegate
-import com.pandulapeter.campfire.util.addDrawerListener
-import com.pandulapeter.campfire.util.consume
-import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.old.util.disableScrollbars
+import com.pandulapeter.campfire.old.util.onPropertyChanged
+import com.pandulapeter.campfire.util.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async

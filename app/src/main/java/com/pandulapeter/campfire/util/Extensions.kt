@@ -3,8 +3,10 @@ package com.pandulapeter.campfire.util
 import android.animation.Animator
 import android.content.Context
 import android.databinding.BindingAdapter
+import android.os.Bundle
 import android.support.annotation.*
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat
+import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.content.res.AppCompatResources
@@ -148,3 +150,8 @@ fun String.replaceSpecialCharacters() = this
     .replace("Ú", "U")
     .replace("ű", "u")
     .replace("Ű", "U")
+
+
+inline fun <T : Fragment> T.withArguments(bundleOperations: (Bundle) -> Unit): T = apply {
+    arguments = Bundle().apply { bundleOperations(this) }
+}

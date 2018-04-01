@@ -11,14 +11,11 @@ import android.support.v4.widget.DrawerLayout
 import android.view.View
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.old.data.repository.*
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.old.util.*
-import com.pandulapeter.campfire.util.BundleArgumentDelegate
-import com.pandulapeter.campfire.util.addDrawerListener
+import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 import java.net.URLEncoder
 

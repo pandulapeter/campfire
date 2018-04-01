@@ -2,27 +2,23 @@ package com.pandulapeter.campfire.feature.home.library
 
 import android.content.Context
 import android.os.Bundle
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Song
-import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentLibraryBinding
-import com.pandulapeter.campfire.feature.CampfireFragment
-import com.pandulapeter.campfire.feature.home.shared.SongAdapter
+import com.pandulapeter.campfire.feature.home.shared.SongListFragment
 import com.pandulapeter.campfire.feature.home.shared.SongViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
-import com.pandulapeter.campfire.util.*
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.animatedDrawable
+import com.pandulapeter.campfire.util.drawable
 import org.koin.android.ext.android.inject
 
-class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragment_library), SongRepository.Subscriber {
+class LibraryFragment : SongListFragment<FragmentLibraryBinding>(R.layout.fragment_library) {
 
+    override val recyclerView get() = binding.recyclerView
+    override val swipeRefreshLayout get() = binding.swipeRefreshLayout
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
     private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
     private val toolbarTextInputView by lazy { ToolbarTextInputView(mainActivity.toolbarContext).apply { title.updateToolbarTitle(R.string.home_library) } }
@@ -30,8 +26,6 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
     private val drawableCloseToSearch by lazy { context.animatedDrawable(R.drawable.avd_close_to_search_24dp) }
     private val drawableSearchToClose by lazy { context.animatedDrawable(R.drawable.avd_search_to_close_24dp) }
     private val appShortcutManager by inject<AppShortcutManager>()
-    private val songRepository by inject<SongRepository>()
-    private val adapter = SongAdapter()
     override val navigationMenu = R.menu.library
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
@@ -46,37 +40,12 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
                 toolbarTextInputView.showTextInput()
             }
         } ?: appShortcutManager.onLibraryOpened()
-        binding.swipeRefreshLayout.setColorSchemeColors(context.color(R.color.accent))
-        binding.swipeRefreshLayout.setOnRefreshListener { songRepository.updateData() }
-        binding.recyclerView.run {
-            layoutManager = LinearLayoutManager(context)
-            adapter = this@LibraryFragment.adapter
-            setHasFixedSize(true)
-            addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
-                    if (dy > 0) {
-                        hideKeyboard(activity?.currentFocus)
-                    }
-                }
-            })
-        }
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
         outState?.isTextInputVisible = toolbarTextInputView.isTextInputVisible
         outState?.searchQuery = toolbarTextInputView.textInput.text.toString()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        songRepository.subscribe(this)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        songRepository.unsubscribe(this)
     }
 
     override fun inflateToolbarTitle(context: Context) = toolbarTextInputView
@@ -91,19 +60,7 @@ class LibraryFragment : CampfireFragment<FragmentLibraryBinding>(R.layout.fragme
         true
     } else super.onBackPressed()
 
-    override fun onSongRepositoryDataUpdated(data: List<Song>) {
-        async(UI) {
-            adapter.items = async(CommonPool) {
-                data.map { SongViewModel(it)}
-            }.await()
-        }
-    }
-
-    override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {
-        binding.swipeRefreshLayout.isRefreshing = isLoading
-    }
-
-    override fun onSongRepositoryUpdateError() = showSnackbar(R.string.library_update_error, View.OnClickListener { songRepository.updateData() })
+    override fun List<Song>.createViewModels() = map { SongViewModel(it) }
 
     private fun toggleTextInputVisibility() {
         toolbarTextInputView.run {
