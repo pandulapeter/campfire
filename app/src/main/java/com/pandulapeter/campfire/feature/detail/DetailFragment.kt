@@ -3,8 +3,14 @@ package com.pandulapeter.campfire.feature.detail
 import android.animation.Animator
 import android.content.Context
 import android.os.Bundle
-import android.transition.Fade
+import android.transition.ChangeBounds
+import android.transition.ChangeImageTransform
+import android.transition.ChangeTransform
+import android.transition.TransitionSet
+import android.transition.TransitionSet.ORDERING_TOGETHER
 import android.view.View
+import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
@@ -23,18 +29,25 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
     }
 
-    override val viewModel = DetailViewModel()
+    override val viewModel by lazy { DetailViewModel(arguments.songId) }
     override var onFloatingActionButtonClicked: (() -> Unit)? = { toggleAutoScroll() }
     override val navigationMenu = R.menu.detail
     private val drawablePlayToPause by lazy { context.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { context.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
+    private val transition get() = TransitionSet()
+        .addTransition(ChangeBounds())
+        .addTransition(ChangeTransform())
+        .addTransition(ChangeImageTransform())
+        .apply { ordering = ORDERING_TOGETHER }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enterTransition = Fade()
+        sharedElementEnterTransition = transition.apply { startDelay = 100 }
+        sharedElementReturnTransition = transition.apply { startDelay = 0 }
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+        postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle("Title", "Subtitle")
         if (savedInstanceState == null) {
@@ -46,6 +59,15 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
         mainActivity.autoScrollControl.visibleOrGone = false
         binding.textView.text = "Song: ${arguments.songId}\nPlaylist: ${arguments.playlistId}"
+        (view?.parent as? ViewGroup)?.run {
+            viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+                override fun onPreDraw(): Boolean {
+                    viewTreeObserver?.removeOnPreDrawListener(this)
+                    startPostponedEnterTransition()
+                    return true
+                }
+            })
+        }
     }
 
     override fun onPause() {

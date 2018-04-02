@@ -20,6 +20,7 @@
         android:layout_height="wrap_content"
         android:foreground="?attr/selectableItemBackground"
         android:transitionGroup="true"
+        android:transitionName="@{viewModel.song.id}"
         app:contentPadding="@dimen/content_padding">
 
         <android.support.constraint.ConstraintLayout

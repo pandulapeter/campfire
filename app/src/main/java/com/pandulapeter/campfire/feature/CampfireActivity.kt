@@ -183,9 +183,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun changeToolbarButtons(buttons: List<View>) {
         binding.toolbarButtonContainer.removeAllViews()
-        buttons.forEach {
-            binding.toolbarButtonContainer.addView(it, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        }
+        buttons.forEach { binding.toolbarButtonContainer.addView(it, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
     }
 
     fun openDetailScreen(clickedView: View, songId: String, playlistId: String = "") {
@@ -193,14 +191,18 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         currentFocus?.also { hideKeyboard(it) }
         val positionOnScreen = IntArray(2) { 0 }
         clickedView.getLocationOnScreen(positionOnScreen)
-        currentFragment?.exitTransition = Explode().apply {
-            excludeTarget(clickedView, true)
-            epicenterCallback = object : Transition.EpicenterCallback() {
-                override fun onGetEpicenter(transition: Transition?) = Rect(clickedView.left, positionOnScreen[1], clickedView.right, positionOnScreen[1] + clickedView.height)
+        currentFragment?.run {
+            exitTransition = Explode().apply {
+//                excludeTarget(clickedView, true)
+                epicenterCallback = object : Transition.EpicenterCallback() {
+                    override fun onGetEpicenter(transition: Transition?) = Rect(clickedView.left, positionOnScreen[1], clickedView.right, positionOnScreen[1] + clickedView.height)
+                }
             }
         }
         supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, DetailFragment.newInstance(songId, playlistId), DetailFragment::class.java.name)
+            .setAllowOptimization(true)
+            .replace(R.id.fragment_container, DetailFragment.newInstance(songId, playlistId))
+            .addSharedElement(clickedView, clickedView.transitionName)
             .addToBackStack(null)
             .commit()
     }
