@@ -93,6 +93,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             }
         }
         binding.secondaryNavigation.disableScrollbars()
+        binding.secondaryNavigation.setNavigationItemSelectedListener { currentFragment?.onNavigationItemSelected(it.itemId) ?: false }
         if (savedInstanceState == null) {
             supportFragmentManager.handleReplace { LibraryFragment() }
             binding.primaryNavigation.setCheckedItem(R.id.library)

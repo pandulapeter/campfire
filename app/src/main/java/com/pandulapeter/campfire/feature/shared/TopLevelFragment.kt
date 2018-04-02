@@ -62,6 +62,8 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     open fun onDrawerStateChanged(state: Int) = Unit
 
+    open fun onNavigationItemSelected(menuItemId: Int) = false
+
     protected open fun inflateToolbarTitle(context: Context): View = defaultToolbar
 
     protected open fun inflateToolbarButtons(context: Context): List<View> = listOf()

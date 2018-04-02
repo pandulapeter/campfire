@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.animatedDrawable
+import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
 
 class LibraryFragment : SongListFragment<LibraryViewModel>() {
@@ -43,6 +44,16 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         super.onSaveInstanceState(outState)
         outState?.isTextInputVisible = viewModel.toolbarTextInputView.isTextInputVisible
         outState?.searchQuery = viewModel.query
+    }
+
+    override fun onNavigationItemSelected(menuItemId: Int) = when (menuItemId) {
+        R.id.downloaded_only -> consume { viewModel.shouldShowDownloadedOnly = !viewModel.shouldShowDownloadedOnly }
+        R.id.show_work_in_progress -> consume { viewModel.shouldShowWorkInProgress = !viewModel.shouldShowWorkInProgress }
+        R.id.show_explicit -> consume { viewModel.shouldShowExplicit = !viewModel.shouldShowExplicit }
+        R.id.sort_by_popularity -> consume { viewModel.sortingMode = LibraryViewModel.SortingMode.POPULARITY }
+        R.id.sort_by_title -> consume { viewModel.sortingMode = LibraryViewModel.SortingMode.TITLE }
+        R.id.sort_by_artist -> consume { viewModel.sortingMode = LibraryViewModel.SortingMode.ARTIST }
+        else -> consume { showSnackbar(R.string.work_in_progress) }//viewModel.languageFilters.get()?.filterKeys { language -> language.nameResource == it.itemId }?.values?.first()?.toggle()
     }
 
     override fun inflateToolbarTitle(context: Context) = viewModel.toolbarTextInputView
