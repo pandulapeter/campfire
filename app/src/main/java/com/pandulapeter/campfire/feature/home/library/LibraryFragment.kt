@@ -12,8 +12,9 @@ import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
-class LibraryFragment : SongListFragment() {
+class LibraryFragment : SongListFragment<LibraryViewModel>() {
 
+    override val viewModel = LibraryViewModel()
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
     private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
     private var query = ""

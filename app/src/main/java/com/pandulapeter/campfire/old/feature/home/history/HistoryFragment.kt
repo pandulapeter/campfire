@@ -43,6 +43,7 @@ class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R
         super.onViewCreated(view, savedInstanceState)
         viewModel.shouldShowConfirmationDialog.onEventTriggered(this) {
             AlertDialogFragment.show(
+                0,
                 childFragmentManager,
                 R.string.history_clear_confirmation_title,
                 R.string.history_clear_confirmation_message,
@@ -125,7 +126,7 @@ class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R
         historyRepository.unsubscribe(viewModel)
     }
 
-    override fun onPositiveButtonSelected() {
+    override fun onPositiveButtonSelected(id: Int) {
         viewModel.clearHistory()
         dismissHintSnackbar()
     }

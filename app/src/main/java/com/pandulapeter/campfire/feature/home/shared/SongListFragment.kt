@@ -20,9 +20,8 @@ import kotlinx.coroutines.experimental.cancel
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.experimental.CoroutineContext
 
-abstract class SongListFragment : TopLevelFragment<FragmentSongListBinding, SongListViewModel>(R.layout.fragment_song_list), SongRepository.Subscriber {
+abstract class SongListFragment<VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, SongListViewModel>(R.layout.fragment_song_list), SongRepository.Subscriber {
 
-    override val viewModel = SongListViewModel()
     private var coroutine: CoroutineContext? = null
     private val songRepository by inject<SongRepository>()
     private val adapter = SongAdapter().apply {

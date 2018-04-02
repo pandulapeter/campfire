@@ -6,16 +6,16 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.ManageDownloadsBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListFragment
-import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.PlaylistChooserBottomSheetFragment
-import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.old.util.onEventTriggered
+import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
@@ -41,6 +41,7 @@ class ManageDownloadsFragment :
         super.onViewCreated(view, savedInstanceState)
         viewModel.shouldShowConfirmationDialog.onEventTriggered(this) {
             AlertDialogFragment.show(
+                0,
                 childFragmentManager,
                 R.string.manage_downloads_delete_all_confirmation_title,
                 R.string.manage_downloads_delete_all_confirmation_message,
@@ -94,7 +95,7 @@ class ManageDownloadsFragment :
         }
     }
 
-    override fun onPositiveButtonSelected() {
+    override fun onPositiveButtonSelected(id: Int) {
         viewModel.deleteAllDownloads()
         dismissHintSnackbar()
     }

@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelec
     override fun onBackPressed() {
         if (currentFragment?.onBackPressed() != true) {
             if (userPreferenceRepository.shouldShowExitConfirmation) {
-                AlertDialogFragment.show(
+                AlertDialogFragment.show(0,
                     supportFragmentManager,
                     R.string.home_exit_confirmation_title,
                     R.string.home_exit_confirmation_message,
@@ -80,12 +80,12 @@ class MainActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelec
                     R.string.cancel
                 )
             } else {
-                onPositiveButtonSelected()
+                onPositiveButtonSelected(0)
             }
         }
     }
 
-    override fun onPositiveButtonSelected() = supportFinishAfterTransition()
+    override fun onPositiveButtonSelected(id: Int) = supportFinishAfterTransition()
 
     fun setNavigationItem(navigationItem: MainViewModel.MainNavigationItem) {
         viewModel.mainNavigationItem.set(navigationItem)

@@ -35,6 +35,11 @@ import org.koin.android.ext.android.inject
 
 class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelectedListener {
 
+    companion object {
+        private const val DIALOG_ID_EXIT_CONFIRMATION = 1
+        private const val DIALOG_ID_PRIVACY_POLICY = 2
+    }
+
     private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
     private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? TopLevelFragment<*, *>?
@@ -95,6 +100,17 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 binding.drawerLayout.openDrawer(Gravity.START)
             }
         }
+        if (preferenceDatabase.shouldShowPrivacyPolicy) {
+            AlertDialogFragment.show(
+                DIALOG_ID_PRIVACY_POLICY,
+                supportFragmentManager,
+                R.string.home_privacy_policy_title,
+                R.string.home_privacy_policy_message,
+                R.string.home_privacy_policy_positive,
+                R.string.home_privacy_policy_negative
+            )
+            preferenceDatabase.shouldShowPrivacyPolicy = false
+        }
     }
 
     override fun onResume() {
@@ -119,6 +135,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                     } else {
                         if (preferenceDatabase.shouldShowExitConfirmation) {
                             AlertDialogFragment.show(
+                                DIALOG_ID_EXIT_CONFIRMATION,
                                 supportFragmentManager,
                                 R.string.home_exit_confirmation_title,
                                 R.string.home_exit_confirmation_message,
@@ -126,7 +143,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                                 R.string.cancel
                             )
                         } else {
-                            onPositiveButtonSelected()
+                            onPositiveButtonSelected(DIALOG_ID_EXIT_CONFIRMATION)
                         }
                     }
                 }
@@ -139,7 +156,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         outState?.isOnDetailScreen = currentFragment is DetailFragment
     }
 
-    override fun onPositiveButtonSelected() = supportFinishAfterTransition()
+    override fun onPositiveButtonSelected(id: Int) {
+        when (id) {
+            DIALOG_ID_EXIT_CONFIRMATION -> supportFinishAfterTransition()
+            DIALOG_ID_PRIVACY_POLICY -> preferenceDatabase.shouldShareUsageData = true
+        }
+    }
 
     fun openSecondaryNavigationDrawer() {
         hideKeyboard(currentFocus)

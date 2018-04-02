@@ -4,10 +4,10 @@ import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SettingsBinding
+import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
-import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.old.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
@@ -29,6 +29,7 @@ class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R
         super.onViewCreated(view, savedInstanceState)
         viewModel.shouldShowHintsResetConfirmation.onEventTriggered(this) {
             AlertDialogFragment.show(
+                0,
                 childFragmentManager,
                 R.string.settings_reset_hints_confirmation_title,
                 R.string.settings_reset_hints_confirmation_message,
@@ -40,5 +41,5 @@ class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R
         viewModel.shouldUseDarkTheme.onPropertyChanged(this) { activity?.recreate() }
     }
 
-    override fun onPositiveButtonSelected() = viewModel.resetHints()
+    override fun onPositiveButtonSelected(id: Int) = viewModel.resetHints()
 }
