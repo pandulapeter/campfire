@@ -206,7 +206,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
         currentFragment?.run {
             exitTransition = createExplodeTransition(0)
-            reenterTransition = createExplodeTransition(50)
+            reenterTransition = createExplodeTransition(60)
         }
         supportFragmentManager.beginTransaction()
             .setAllowOptimization(true)

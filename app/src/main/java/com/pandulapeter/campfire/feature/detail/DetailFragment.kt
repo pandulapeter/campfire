@@ -37,6 +37,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         fun createTransition(delay: Long) = TransitionSet()
+            .addTransition(FadeInTransition())
             .addTransition(ChangeBounds())
             .addTransition(ChangeTransform())
             .addTransition(ChangeImageTransform())
@@ -44,7 +45,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 ordering = TransitionSet.ORDERING_TOGETHER
                 startDelay = delay
             }
-        sharedElementEnterTransition = createTransition(50)
+        sharedElementEnterTransition = createTransition(60)
         sharedElementReturnTransition = createTransition(0)
     }
 
