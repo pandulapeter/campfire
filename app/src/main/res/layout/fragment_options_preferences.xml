@@ -127,6 +127,7 @@
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
                         app:description="@{viewModel.shouldUseDarkTheme ? @string/settings_use_dark_theme_enabled : @string/settings_use_dark_theme_disabled}"
+                        app:switchPadding="@dimen/content_padding"
                         app:title="@{@string/settings_use_dark_theme}"
                         tools:text="@string/settings_use_dark_theme" />
 
@@ -138,6 +139,7 @@
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
                         app:description="@{viewModel.shouldShowExitConfirmation ? @string/settings_exit_confirmation_enabled : @string/settings_exit_confirmation_disabled}"
+                        app:switchPadding="@dimen/content_padding"
                         app:title="@{@string/settings_exit_confirmation}"
                         tools:text="@string/settings_exit_confirmation" />
 
@@ -163,14 +165,13 @@
                         android:paddingEnd="@dimen/content_padding"
                         android:paddingStart="@dimen/content_padding"
                         android:paddingTop="@dimen/content_padding"
-                        android:text="@string/settings_other"
+                        android:text="@string/settings_user_data"
                         android:textColor="@color/accent" />
 
                     <TextView
                         style="@style/Widget.AppCompat.CompoundButton.CheckBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/content_padding"
                         android:background="?attr/selectableItemBackground"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
@@ -179,6 +180,20 @@
                         app:description="@{@string/settings_reset_hints_description}"
                         app:title="@{@string/settings_reset_hints}"
                         tools:text="@string/settings_reset_hints" />
+
+                    <android.support.v7.widget.SwitchCompat
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/content_padding"
+                        android:layout_marginEnd="@dimen/large_content_padding"
+                        android:layout_marginStart="@dimen/content_padding"
+                        android:checked="@={viewModel.shouldShareUsageData}"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/touch_target"
+                        app:description="@{viewModel.shouldShareUsageData ? @string/settings_share_usage_data_enabled : @string/settings_share_usage_data_disabled}"
+                        app:switchPadding="@dimen/content_padding"
+                        app:title="@{@string/settings_share_usage_data}"
+                        tools:text="@string/settings_share_usage_data" />
 
                 </LinearLayout>
 

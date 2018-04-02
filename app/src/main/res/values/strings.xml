@@ -104,13 +104,16 @@
     <string name="settings_allow_toolbar_scroll">Toolbar slide</string>
     <string name="settings_allow_toolbar_scroll_enabled">Toolbars slide out when scrolling</string>
     <string name="settings_allow_toolbar_scroll_disabled">Toolbars always remain on top of the screen</string>
-    <string name="settings_other">Other</string>
+    <string name="settings_user_data">User data</string>
     <string name="settings_reset_hints">Reset hints</string>
     <string name="settings_reset_hints_description">The hints you dismissed in the past will appear again</string>
     <string name="settings_reset_hints_message">Tutorial progress reset</string>
     <string name="settings_reset_hints_confirmation_title">Are you sure?</string>
     <string name="settings_reset_hints_confirmation_message">This will reset your progress in the tutorial.</string>
     <string name="settings_reset_hints_confirmation_reset">Reset</string>
+    <string name="settings_share_usage_data">Share usage data</string>
+    <string name="settings_share_usage_data_enabled">Sending analytics data and crash reports anonymously to the developer</string>
+    <string name="settings_share_usage_data_disabled">Analytics data and crash reports are not being sent to the developer</string>
 
     <!-- Playlist screen -->
     <plurals name="playlist_song_count">

@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.data.database
 
 import android.content.Context
+import java.util.*
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -8,9 +9,15 @@ class PreferenceDatabase(context: Context) {
     private val preferences = context.applicationContext.getSharedPreferences("preferences", Context.MODE_PRIVATE)
     var lastUpdateTimestamp by PreferenceFieldDelegate.Long("lastUpdateTimestamp")
     var shouldShowChords by PreferenceFieldDelegate.Boolean("shouldShowChords", true)
-    var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("shouldUseGermanNotation", false)
+    var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("shouldUseGermanNotation", shouldEnableGermanNotationByDefault())
     var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("shouldUseDarkTheme", false)
     var shouldShowExitConfirmation by PreferenceFieldDelegate.Boolean("shouldShowExitConfirmation", true)
+    var shouldShareUsageData by PreferenceFieldDelegate.Boolean("shouldShareUsageData", false)
+
+    private fun shouldEnableGermanNotationByDefault() = when (Locale.getDefault().isO3Country.toUpperCase()) {
+        "AUT", "CZE", "DEU", "SWE", "DNK", "EST", "FIN", "HUN", "LVA", "NOR", "POL", "SRB", "SVK" -> true
+        else -> false
+    }
 
     private sealed class PreferenceFieldDelegate<T>(protected val key: String, protected val defaultValue: T) : ReadWriteProperty<PreferenceDatabase, T> {
 

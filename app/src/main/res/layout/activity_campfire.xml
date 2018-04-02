@@ -35,13 +35,20 @@
                         android:layout_height="@dimen/toolbar_height"
                         app:layout_constraintTop_toTopOf="parent" />
 
+                    <android.support.v4.widget.Space
+                        android:id="@+id/first_keyline_fix"
+                        android:layout_width="2dp"
+                        android:layout_height="0dp"
+                        android:orientation="vertical"
+                        app:layout_constraintEnd_toStartOf="parent" />
+
                     <com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
                         android:id="@+id/toolbar_main_button"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/first_keyline"
                         app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
-                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintStart_toStartOf="@id/first_keyline_fix"
                         app:layout_constraintTop_toTopOf="parent"
                         app:srcCompat="@drawable/ic_menu_24dp" />
 
@@ -91,8 +98,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="48dp"
-                app:cardCornerRadius="16dp"
                 android:visibility="invisible"
+                app:cardCornerRadius="16dp"
                 app:contentPadding="@dimen/detail_auto_scroll_control_padding"
                 app:layout_anchor="@+id/floating_action_button"
                 app:layout_anchorGravity="center_vertical|end">
@@ -115,7 +122,8 @@
                 android:layout_margin="@dimen/large_content_padding"
                 android:theme="@style/ActionBar"
                 android:tint="?android:attr/textColorPrimary"
-                android:visibility="invisible" />
+                android:visibility="invisible"
+                app:fabSize="normal" />
 
         </com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout>
 

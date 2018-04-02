@@ -201,7 +201,7 @@
                         android:paddingEnd="@dimen/content_padding"
                         android:paddingStart="@dimen/content_padding"
                         android:paddingTop="@dimen/content_padding"
-                        android:text="@string/settings_other"
+                        android:text="@string/settings_user_data"
                         android:textColor="@color/accent" />
 
                     <TextView

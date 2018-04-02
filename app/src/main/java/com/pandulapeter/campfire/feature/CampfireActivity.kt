@@ -84,9 +84,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             supportFragmentManager.handleReplace { LibraryFragment() }
             binding.primaryNavigation.setCheckedItem(R.id.library)
         } else {
-            if (savedInstanceState.isOnDetailScreen) {
-                binding.toolbarMainButton.setImageDrawable(drawable(R.drawable.ic_back_24dp))
-            }
+            binding.toolbarMainButton.setImageDrawable(drawable(if (savedInstanceState.isOnDetailScreen) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp))
         }
         binding.toolbarMainButton.setOnClickListener {
             if (currentFragment is DetailFragment) {
