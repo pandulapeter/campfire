@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature
 
 import android.app.ActivityManager
-import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.annotation.MenuRes
@@ -51,7 +50,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     val floatingActionButton get() = binding.floatingActionButton
     val autoScrollControl get() = binding.autoScrollControl
     val tabLayout get() = binding.tabLayout
-    val toolbarContext: Context get() = binding.toolbar.context
+    val toolbarContext get() = binding.appBarLayout.context!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(if (preferenceDatabase.shouldUseDarkTheme) R.style.DarkTheme else R.style.LightTheme)
@@ -65,6 +64,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         super.onCreate(savedInstanceState)
         appShortcutManager.updateAppShortcuts()
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
+            binding.appBarLayout.setExpanded(true, true)
             currentFragment?.onDrawerStateChanged(it)
             if (it == DrawerLayout.STATE_DRAGGING) {
                 currentFocus?.also {
@@ -184,6 +184,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     fun openDetailScreen(songId: String, playlistId: String = "") {
+        binding.appBarLayout.setExpanded(true, true)
         currentFocus?.also { hideKeyboard(it) }
         currentFragment?.exitTransition = Fade()
         supportFragmentManager.beginTransaction()
@@ -193,6 +194,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     fun transformMainToolbarButton(shouldShowBackButton: Boolean) {
+        binding.appBarLayout.setExpanded(true, true)
         binding.toolbarMainButton.setImageDrawable((if (shouldShowBackButton) drawableMenuToBack else drawableBackToMenu).apply { this?.start() })
         binding.drawerLayout.setDrawerLockMode(if (shouldShowBackButton) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
     }

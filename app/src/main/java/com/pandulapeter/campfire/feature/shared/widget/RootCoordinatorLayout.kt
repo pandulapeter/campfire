@@ -27,7 +27,7 @@ class RootCoordinatorLayout @JvmOverloads constructor(context: Context, attrs: A
     }
 
     override fun dispatchDraw(canvas: Canvas?) {
-        canvas?.run { drawRect(0f, 0f, width.toFloat(), statusBarHeight, paint) }
         super.dispatchDraw(canvas)
+        canvas?.run { drawRect(0f, 0f, width.toFloat(), statusBarHeight, paint) }
     }
 }

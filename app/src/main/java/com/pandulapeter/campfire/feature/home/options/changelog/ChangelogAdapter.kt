@@ -20,6 +20,7 @@ class ChangelogAdapter(private val items: List<ChangelogItem>) : RecyclerView.Ad
 
         fun bind(changelogItem: ChangelogItem) {
             binding.model = changelogItem
+            binding.executePendingBindings()
         }
 
         companion object {

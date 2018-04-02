@@ -13,21 +13,18 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <LinearLayout
+            <android.support.design.widget.AppBarLayout
+                android:id="@+id/app_bar_layout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
+                android:layout_height="wrap_content"
+                android:theme="@style/ActionBar">
 
                 <android.support.constraint.ConstraintLayout
-                    android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:animateLayoutChanges="true"
-                    android:background="@color/primary"
                     android:clipChildren="false"
-                    android:elevation="@dimen/toolbar_elevation"
-                    android:outlineProvider="paddedBounds"
-                    android:theme="@style/ActionBar">
+                    app:layout_scrollFlags="scroll|snap|exitUntilCollapsed|enterAlways">
 
                     <android.support.v4.widget.Space
                         android:id="@+id/toolbar_bottom"
@@ -75,23 +72,22 @@
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
-                    <android.support.design.widget.TabLayout
-                        android:id="@+id/tab_layout"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/toolbar_bottom"
-                        app:tabMode="scrollable" />
-
                 </android.support.constraint.ConstraintLayout>
 
-                <FrameLayout
-                    android:id="@+id/fragment_container"
+                <android.support.design.widget.TabLayout
+                    android:id="@+id/tab_layout"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="wrap_content"
+                    app:tabMode="scrollable" />
 
-            </LinearLayout>
+            </android.support.design.widget.AppBarLayout>
+
+            <FrameLayout
+                android:id="@+id/fragment_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:transitionGroup="true"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
             <android.support.v7.widget.CardView
                 android:id="@+id/auto_scroll_control"

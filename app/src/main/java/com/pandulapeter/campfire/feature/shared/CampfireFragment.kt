@@ -25,6 +25,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         viewModel.componentCallbacks = this
         binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)
         binding.setVariable(BR.viewModel, viewModel)
+        binding.executePendingBindings()
         return binding.root
     }
 

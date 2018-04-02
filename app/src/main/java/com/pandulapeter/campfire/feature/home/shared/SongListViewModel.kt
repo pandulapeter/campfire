@@ -25,10 +25,7 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
     override fun subscribe() = songRepository.subscribe(this)
 
     @CallSuper
-    override fun unsubscribe() {
-        songRepository.unsubscribe(this)
-        isLoading.set(false)
-    }
+    override fun unsubscribe() = songRepository.unsubscribe(this)
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
         librarySongs = data.asSequence()

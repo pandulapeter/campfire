@@ -79,6 +79,7 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
 
         fun bind(song: SongViewModel) {
             binding.viewModel = song
+            binding.executePendingBindings()
         }
 
         fun setItemClickListener(itemClickListener: (position: Int) -> Unit) {

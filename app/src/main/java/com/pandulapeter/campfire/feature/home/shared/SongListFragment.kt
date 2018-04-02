@@ -37,8 +37,16 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         }
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onResume() {
+        super.onResume()
+        binding.swipeRefreshLayout.isRefreshing = viewModel.isLoading.get()
+    }
+
+    override fun onPause() {
+        //TODO: Bug: start refreshing and quickly open the options screen.
+        binding.swipeRefreshLayout.isRefreshing = false
         binding.swipeRefreshLayout.clearAnimation()
+        binding.swipeRefreshLayout.destroyDrawingCache()
+        super.onPause()
     }
 }
