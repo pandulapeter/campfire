@@ -6,6 +6,7 @@ import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ItemSongBinding
@@ -33,7 +34,7 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
             }
             field = newItems
         }
-    var itemClickListener: (position: Int) -> Unit = { _ -> }
+    var itemClickListener: (position: Int, clickedView: View) -> Unit = { _, _ -> }
     var dragHandleTouchListener: ((position: Int) -> Unit)? = null
     var playlistActionClickListener: ((position: Int) -> Unit)? = null
     var downloadActionClickListener: ((position: Int) -> Unit)? = null
@@ -82,10 +83,10 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
             binding.executePendingBindings()
         }
 
-        fun setItemClickListener(itemClickListener: (position: Int) -> Unit) {
+        fun setItemClickListener(itemClickListener: (position: Int, clickedView: View) -> Unit) {
             binding.root.setOnClickListener {
                 if (adapterPosition != RecyclerView.NO_POSITION) {
-                    itemClickListener(adapterPosition)
+                    itemClickListener(adapterPosition, it)
                 }
             }
         }

@@ -47,7 +47,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
 
     override fun inflateToolbarTitle(context: Context) = viewModel.toolbarTextInputView
 
-    override fun inflateToolbarButtons(context: Context) = listOf<View>(
+    override fun inflateToolbarButtons(context: Context) = listOf(
         searchToggle,
         context.createToolbarButton(R.drawable.ic_view_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }
     )

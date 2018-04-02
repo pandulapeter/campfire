@@ -3,13 +3,13 @@ package com.pandulapeter.campfire.feature.detail
 import android.animation.Animator
 import android.content.Context
 import android.os.Bundle
-import android.transition.Slide
-import android.view.Gravity
+import android.transition.Fade
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.util.*
+
 
 class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail) {
 
@@ -31,7 +31,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enterTransition = Slide(Gravity.BOTTOM)
+        enterTransition = Fade()
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
@@ -70,7 +70,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         true
     } else super.onBackPressed()
 
-    override fun inflateToolbarButtons(context: Context) = listOf<View>(
+    override fun inflateToolbarButtons(context: Context) = listOf(
         context.createToolbarButton(R.drawable.ic_playlist_border_24dp) { showSnackbar("Work in progress") },
         context.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }
     )

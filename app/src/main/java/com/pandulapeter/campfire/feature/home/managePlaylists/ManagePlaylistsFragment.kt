@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.managePlaylists
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
@@ -20,4 +21,8 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             show()
         }
     }
+
+    override fun inflateToolbarButtons(context: Context) = listOf(
+        context.createToolbarButton(R.drawable.ic_delete_24dp) { showSnackbar(R.string.work_in_progress) }
+    )
 }

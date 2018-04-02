@@ -9,7 +9,7 @@
     <dimen name="touch_target">48dp</dimen>
     <dimen name="toolbar_height">56dp</dimen>
     <dimen name="divider_height">1dp</dimen>
-    <dimen name="toolbar_elevation">6dp</dimen>
+    <dimen name="toolbar_elevation">4dp</dimen>
     <dimen name="list_fab_content_bottom_margin">72dp</dimen>
 
     <!-- Toolbar -->

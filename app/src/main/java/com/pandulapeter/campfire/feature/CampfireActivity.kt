@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature
 
 import android.app.ActivityManager
 import android.databinding.DataBindingUtil
+import android.graphics.Rect
 import android.os.Bundle
 import android.support.annotation.MenuRes
 import android.support.design.internal.NavigationMenuView
@@ -11,7 +12,8 @@ import android.support.v4.app.FragmentTransaction
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
-import android.transition.Fade
+import android.transition.Explode
+import android.transition.Transition
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -186,10 +188,17 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    fun openDetailScreen(songId: String, playlistId: String = "") {
+    fun openDetailScreen(clickedView: View, songId: String, playlistId: String = "") {
         binding.appBarLayout.setExpanded(true, true)
         currentFocus?.also { hideKeyboard(it) }
-        currentFragment?.exitTransition = Fade()
+        val positionOnScreen = IntArray(2) { 0 }
+        clickedView.getLocationOnScreen(positionOnScreen)
+        currentFragment?.exitTransition = Explode().apply {
+            excludeTarget(clickedView, true)
+            epicenterCallback = object : Transition.EpicenterCallback() {
+                override fun onGetEpicenter(transition: Transition?) = Rect(clickedView.left, positionOnScreen[1], clickedView.right, positionOnScreen[1] + clickedView.height)
+            }
+        }
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, DetailFragment.newInstance(songId, playlistId), DetailFragment::class.java.name)
             .addToBackStack(null)

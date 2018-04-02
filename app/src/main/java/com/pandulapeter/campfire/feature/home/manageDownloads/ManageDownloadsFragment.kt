@@ -17,6 +17,6 @@ class ManageDownloadsFragment : TopLevelFragment<FragmentManageDownloadsBinding,
     }
 
     override fun inflateToolbarButtons(context: Context) = listOf<View>(
-        context.createToolbarButton(R.drawable.ic_delete_24dp) { showSnackbar("Work in progress") }
+        context.createToolbarButton(R.drawable.ic_delete_24dp) { showSnackbar(R.string.work_in_progress) }
     )
 }

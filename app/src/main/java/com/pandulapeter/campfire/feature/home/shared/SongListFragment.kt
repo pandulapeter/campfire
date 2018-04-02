@@ -17,7 +17,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.adapter.run { itemClickListener = { mainActivity.openDetailScreen(items[it].song.id) } }
+        viewModel.adapter.run { itemClickListener = { position, clickedView ->  mainActivity.openDetailScreen(clickedView, items[position].song.id) } }
         viewModel.shouldShowErrorSnackbar.onEventTriggered { showSnackbar(R.string.library_update_error, View.OnClickListener { viewModel.updateData() }) }
         viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
         binding.swipeRefreshLayout.run {

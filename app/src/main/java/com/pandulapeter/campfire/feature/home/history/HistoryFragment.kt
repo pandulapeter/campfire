@@ -16,7 +16,7 @@ class HistoryFragment : TopLevelFragment<FragmentHistoryBinding, HistoryViewMode
         defaultToolbar.updateToolbarTitle(R.string.home_history)
     }
 
-    override fun inflateToolbarButtons(context: Context) = listOf<View>(
+    override fun inflateToolbarButtons(context: Context) = listOf(
         context.createToolbarButton(R.drawable.ic_delete_24dp) { showSnackbar(R.string.work_in_progress) }
     )
 }
