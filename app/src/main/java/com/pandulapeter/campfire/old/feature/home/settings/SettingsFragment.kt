@@ -31,13 +31,13 @@ class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R
             AlertDialogFragment.show(
                 0,
                 childFragmentManager,
-                R.string.settings_reset_hints_confirmation_title,
-                R.string.settings_reset_hints_confirmation_message,
-                R.string.settings_reset_hints_confirmation_reset,
+                R.string.options_preferences_reset_hints_confirmation_title,
+                R.string.options_preferences_reset_hints_confirmation_message,
+                R.string.options_preferences_reset_hints_confirmation_reset,
                 R.string.cancel
             )
         }
-        viewModel.shouldShowHintsResetSnackbar.onEventTriggered(this) { binding.root.showSnackbar(R.string.settings_reset_hints_message) }
+        viewModel.shouldShowHintsResetSnackbar.onEventTriggered(this) { binding.root.showSnackbar(R.string.options_preferences_reset_hints_message) }
         viewModel.shouldUseDarkTheme.onPropertyChanged(this) { activity?.recreate() }
     }
 

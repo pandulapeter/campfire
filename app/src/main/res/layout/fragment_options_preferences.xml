@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.options.pages.preferences.PreferencesViewModel" />
+            type="com.pandulapeter.campfire.feature.home.options.preferences.PreferencesViewModel" />
 
     </data>
 
@@ -45,56 +45,56 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_margin="@dimen/settings_label_margin"
+                        android:layout_margin="@dimen/options_preferences_label_margin"
                         android:fontFamily="sans-serif-medium"
-                        android:text="@string/settings_chords"
+                        android:text="@string/options_preferences_chords"
                         android:textColor="@color/accent" />
 
                     <CheckBox
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/settings_checkbox_margin"
+                        android:layout_marginStart="@dimen/options_preferences_checkbox_margin"
                         android:checked="@={viewModel.shouldShowChords}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
                         android:paddingEnd="@dimen/content_padding"
-                        android:paddingStart="@dimen/settings_checkbox_padding"
-                        app:description="@{viewModel.shouldShowChords ? @string/settings_show_chords_checked : @string/settings_show_chords_unchecked}"
-                        app:title="@{@string/settings_should_show_chords}"
-                        tools:text="@string/settings_should_show_chords" />
+                        android:paddingStart="@dimen/options_preferences_checkbox_padding"
+                        app:description="@{viewModel.shouldShowChords ? @string/options_preferences_show_chords_checked : @string/options_preferences_show_chords_unchecked}"
+                        app:title="@{@string/options_preferences_should_show_chords}"
+                        tools:text="@string/options_preferences_should_show_chords" />
 
                     <com.pandulapeter.campfire.old.feature.shared.widget.DividerView
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/divider_height"
-                        android:layout_marginStart="@dimen/settings_divider_margin" />
+                        android:layout_marginStart="@dimen/options_preferences_divider_margin" />
 
                     <RadioButton
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/settings_checkbox_margin"
+                        android:layout_marginStart="@dimen/options_preferences_checkbox_margin"
                         android:checked="@={!viewModel.shouldUseGermanNotation}"
                         android:enabled="@{viewModel.shouldShowChords}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
                         android:paddingEnd="@dimen/content_padding"
-                        android:paddingStart="@dimen/settings_checkbox_padding"
+                        android:paddingStart="@dimen/options_preferences_checkbox_padding"
                         app:description="@{viewModel.englishNotationExample}"
-                        app:title="@{@string/settings_english_notation}"
-                        tools:text="@string/settings_english_notation" />
+                        app:title="@{@string/options_preferences_english_notation}"
+                        tools:text="@string/options_preferences_english_notation" />
 
                     <RadioButton
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/settings_checkbox_margin"
+                        android:layout_marginStart="@dimen/options_preferences_checkbox_margin"
                         android:checked="@={viewModel.shouldUseGermanNotation}"
                         android:enabled="@{viewModel.shouldShowChords}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
                         android:paddingEnd="@dimen/content_padding"
-                        android:paddingStart="@dimen/settings_checkbox_padding"
+                        android:paddingStart="@dimen/options_preferences_checkbox_padding"
                         app:description="@{viewModel.germanNotationExample}"
-                        app:title="@{@string/settings_german_notation}"
-                        tools:text="@string/settings_german_notation" />
+                        app:title="@{@string/options_preferences_german_notation}"
+                        tools:text="@string/options_preferences_german_notation" />
 
                 </LinearLayout>
 
@@ -114,9 +114,9 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_margin="@dimen/settings_label_margin"
+                        android:layout_margin="@dimen/options_preferences_label_margin"
                         android:fontFamily="sans-serif-medium"
-                        android:text="@string/settings_appearance_and_behavior"
+                        android:text="@string/options_preferences_appearance_and_behavior"
                         android:textColor="@color/accent" />
 
                     <android.support.v7.widget.SwitchCompat
@@ -127,10 +127,10 @@
                         android:checked="@={viewModel.shouldUseDarkTheme}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
-                        app:description="@{viewModel.shouldUseDarkTheme ? @string/settings_use_dark_theme_enabled : @string/settings_use_dark_theme_disabled}"
+                        app:description="@{viewModel.shouldUseDarkTheme ? @string/options_preferences_use_dark_theme_enabled : @string/options_preferences_use_dark_theme_disabled}"
                         app:switchPadding="@dimen/content_padding"
-                        app:title="@{@string/settings_use_dark_theme}"
-                        tools:text="@string/settings_use_dark_theme" />
+                        app:title="@{@string/options_preferences_use_dark_theme}"
+                        tools:text="@string/options_preferences_use_dark_theme" />
 
                     <android.support.v7.widget.SwitchCompat
                         android:layout_width="match_parent"
@@ -140,10 +140,10 @@
                         android:checked="@={viewModel.shouldShowExitConfirmation}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
-                        app:description="@{viewModel.shouldShowExitConfirmation ? @string/settings_exit_confirmation_enabled : @string/settings_exit_confirmation_disabled}"
+                        app:description="@{viewModel.shouldShowExitConfirmation ? @string/options_preferences_exit_confirmation_enabled : @string/options_preferences_exit_confirmation_disabled}"
                         app:switchPadding="@dimen/content_padding"
-                        app:title="@{@string/settings_exit_confirmation}"
-                        tools:text="@string/settings_exit_confirmation" />
+                        app:title="@{@string/options_preferences_exit_confirmation}"
+                        tools:text="@string/options_preferences_exit_confirmation" />
 
                 </LinearLayout>
 
@@ -162,12 +162,12 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_margin="@dimen/settings_label_margin"
+                        android:layout_margin="@dimen/options_preferences_label_margin"
                         android:fontFamily="sans-serif-medium"
                         android:paddingEnd="@dimen/content_padding"
                         android:paddingStart="@dimen/content_padding"
                         android:paddingTop="@dimen/content_padding"
-                        android:text="@string/settings_user_data"
+                        android:text="@string/options_preferences_user_data"
                         android:textColor="@color/accent" />
 
                     <TextView
@@ -182,9 +182,9 @@
                         android:paddingEnd="@dimen/content_padding"
                         android:paddingStart="@dimen/switch_content_padding"
                         android:paddingTop="@dimen/content_padding"
-                        app:description="@{@string/settings_reset_hints_description}"
-                        app:title="@{@string/settings_reset_hints}"
-                        tools:text="@string/settings_reset_hints" />
+                        app:description="@{@string/options_preferences_reset_hints_description}"
+                        app:title="@{@string/options_preferences_reset_hints}"
+                        tools:text="@string/options_preferences_reset_hints" />
 
                     <android.support.v7.widget.SwitchCompat
                         android:layout_width="match_parent"
@@ -195,10 +195,10 @@
                         android:checked="@={viewModel.shouldShareUsageData}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
-                        app:description="@{viewModel.shouldShareUsageData ? @string/settings_share_usage_data_enabled : @string/settings_share_usage_data_disabled}"
+                        app:description="@{viewModel.shouldShareUsageData ? @string/options_preferences_share_usage_data_enabled : @string/options_preferences_share_usage_data_disabled}"
                         app:switchPadding="@dimen/content_padding"
-                        app:title="@{@string/settings_share_usage_data}"
-                        tools:text="@string/settings_share_usage_data" />
+                        app:title="@{@string/options_preferences_share_usage_data}"
+                        tools:text="@string/options_preferences_share_usage_data" />
 
                 </LinearLayout>
 

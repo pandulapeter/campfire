@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.options.pages.preferences
+package com.pandulapeter.campfire.feature.home.options.preferences
 
 import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.model.local.Note

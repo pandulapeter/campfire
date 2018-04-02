@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.feature.home.shared
 
 import android.annotation.SuppressLint
 import android.databinding.DataBindingUtil
-import android.support.annotation.LayoutRes
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -47,7 +46,7 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
         this.recyclerView = null
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): SongInfoViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongInfoViewHolder {
         val viewHolder = SongInfoViewHolder.create(parent)
         viewHolder.setItemClickListener(itemClickListener)
         viewHolder.setDragHandleTouchListener(dragHandleTouchListener)
@@ -70,14 +69,17 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
                 }
             }
         }
-        holder.binding.viewModel = items[position]
-        holder.binding.executePendingBindings()
+        holder.bind(items[position])
     }
 
     override fun getItemCount() = items.size
 
 
-    class SongInfoViewHolder(val binding: ItemSongBinding) : RecyclerView.ViewHolder(binding.root) {
+    class SongInfoViewHolder(private val binding: ItemSongBinding) : RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(song: SongViewModel) {
+            binding.viewModel = song
+        }
 
         fun setItemClickListener(itemClickListener: (position: Int) -> Unit) {
             binding.root.setOnClickListener {
@@ -116,8 +118,7 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
         }
 
         companion object {
-            fun create(parent: ViewGroup): SongInfoViewHolder =
-                SongInfoViewHolder(DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_song, parent, false))
+            fun create(parent: ViewGroup) = SongInfoViewHolder(DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_song, parent, false))
         }
     }
 

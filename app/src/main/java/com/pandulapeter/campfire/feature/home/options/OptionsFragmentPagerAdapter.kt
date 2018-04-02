@@ -4,9 +4,9 @@ import android.content.Context
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.home.options.pages.about.AboutFragment
-import com.pandulapeter.campfire.feature.home.options.pages.changelog.ChangelogFragment
-import com.pandulapeter.campfire.feature.home.options.pages.preferences.PreferencesFragment
+import com.pandulapeter.campfire.feature.home.options.about.AboutFragment
+import com.pandulapeter.campfire.feature.home.options.changelog.ChangelogFragment
+import com.pandulapeter.campfire.feature.home.options.preferences.PreferencesFragment
 
 class OptionsFragmentPagerAdapter(private val context: Context, fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
 
@@ -21,9 +21,9 @@ class OptionsFragmentPagerAdapter(private val context: Context, fragmentManager:
 
     override fun getPageTitle(position: Int): CharSequence = context.getString(
         when (position) {
-            0 -> R.string.settings_preferences
-            1 -> R.string.settings_changelog
-            2 -> R.string.settings_about
+            0 -> R.string.options_preferences_preferences
+            1 -> R.string.options_preferences_changelog
+            2 -> R.string.options_preferences_about
             else -> throw IllegalArgumentException("The pager has no Fragment for position $position.")
         }
     )

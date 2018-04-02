@@ -1,18 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.options.pages.changelog.ChangelogViewModel" />
+            type="com.pandulapeter.campfire.feature.home.options.changelog.ChangelogViewModel" />
 
     </data>
 
-    <TextView
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:text="Changelog" />
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/large_content_padding"
+        app:adapter="@{viewModel.adapter}"
+        app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
 
 </layout>

@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.options.pages.about
+package com.pandulapeter.campfire.feature.home.options.about
 
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsAboutBinding

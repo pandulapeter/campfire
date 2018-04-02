@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature.home.shared
 
 import android.os.Bundle
-import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import com.pandulapeter.campfire.R
@@ -26,8 +25,6 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             setColorSchemeColors(context.color(R.color.accent))
         }
         binding.recyclerView.run {
-            layoutManager = LinearLayoutManager(context)
-            adapter = viewModel.adapter
             setHasFixedSize(true)
             addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
             addOnScrollListener(object : RecyclerView.OnScrollListener() {

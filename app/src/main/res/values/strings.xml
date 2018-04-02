@@ -83,41 +83,45 @@
     <string name="history_hint">Swipe items away to remove them from your history</string>
     <string name="history_placeholder">The list of songs you opened will appear here in chronological order</string>
 
-    <!-- Options screen -->
-    <string name="settings_preferences">Preferences</string>
-    <string name="settings_changelog">Changelog</string>
-    <string name="settings_about">About</string>
-    <string name="settings_chords">Chords</string>
-    <string name="settings_should_show_chords">Show chords</string>
-    <string name="settings_show_chords_checked">Display both lyrics and chords</string>
-    <string name="settings_show_chords_unchecked">Display lyrics only</string>
-    <string name="settings_english_notation">English notation</string>
-    <string name="settings_german_notation">German notation</string>
-    <string name="settings_appearance_and_behavior">Appearance and behavior</string>
-    <string name="settings_behavior">Behavior</string>
-    <string name="settings_auto_scroll">Auto-scroll</string>
-    <string name="settings_auto_scroll_enabled">Auto-scroll controls are enabled</string>
-    <string name="settings_auto_scroll_disabled">Auto-scroll controls are disabled</string>
-    <string name="settings_exit_confirmation">Exit confirmation</string>
-    <string name="settings_exit_confirmation_enabled">Display confirmation dialog before closing the app</string>
-    <string name="settings_exit_confirmation_disabled">Close the app without confirmation</string>
-    <string name="settings_appearance">Appearance</string>
-    <string name="settings_use_dark_theme">Use dark theme</string>
-    <string name="settings_use_dark_theme_enabled">The app uses the dark theme</string>
-    <string name="settings_use_dark_theme_disabled">The app uses the light theme</string>
-    <string name="settings_allow_toolbar_scroll">Toolbar slide</string>
-    <string name="settings_allow_toolbar_scroll_enabled">Toolbars slide out when scrolling</string>
-    <string name="settings_allow_toolbar_scroll_disabled">Toolbars always remain on top of the screen</string>
-    <string name="settings_user_data">User data</string>
-    <string name="settings_reset_hints">Reset hints</string>
-    <string name="settings_reset_hints_description">The hints you dismissed in the past will appear again</string>
-    <string name="settings_reset_hints_message">Tutorial progress reset</string>
-    <string name="settings_reset_hints_confirmation_title">Are you sure?</string>
-    <string name="settings_reset_hints_confirmation_message">This will reset your progress in the tutorial.</string>
-    <string name="settings_reset_hints_confirmation_reset">Reset</string>
-    <string name="settings_share_usage_data">Share usage data</string>
-    <string name="settings_share_usage_data_enabled">Sending analytics data and crash reports anonymously to the developer</string>
-    <string name="settings_share_usage_data_disabled">Analytics data and crash reports are not being sent to the developer</string>
+    <!-- Options screen / Preferences -->
+    <string name="options_preferences_preferences">Preferences</string>
+    <string name="options_preferences_changelog">Changelog</string>
+    <string name="options_preferences_about">About</string>
+    <string name="options_preferences_chords">Chords</string>
+    <string name="options_preferences_should_show_chords">Show chords</string>
+    <string name="options_preferences_show_chords_checked">Display both lyrics and chords</string>
+    <string name="options_preferences_show_chords_unchecked">Display lyrics only</string>
+    <string name="options_preferences_english_notation">English notation</string>
+    <string name="options_preferences_german_notation">German notation</string>
+    <string name="options_preferences_appearance_and_behavior">Appearance and behavior</string>
+    <string name="options_preferences_behavior">Behavior</string>
+    <string name="options_preferences_auto_scroll">Auto-scroll</string>
+    <string name="options_preferences_auto_scroll_enabled">Auto-scroll controls are enabled</string>
+    <string name="options_preferences_auto_scroll_disabled">Auto-scroll controls are disabled</string>
+    <string name="options_preferences_exit_confirmation">Exit confirmation</string>
+    <string name="options_preferences_exit_confirmation_enabled">Display confirmation dialog before closing the app</string>
+    <string name="options_preferences_exit_confirmation_disabled">Close the app without confirmation</string>
+    <string name="options_preferences_appearance">Appearance</string>
+    <string name="options_preferences_use_dark_theme">Use dark theme</string>
+    <string name="options_preferences_use_dark_theme_enabled">The app uses the dark theme</string>
+    <string name="options_preferences_use_dark_theme_disabled">The app uses the light theme</string>
+    <string name="options_preferences_allow_toolbar_scroll">Toolbar slide</string>
+    <string name="options_preferences_allow_toolbar_scroll_enabled">Toolbars slide out when scrolling</string>
+    <string name="options_preferences_allow_toolbar_scroll_disabled">Toolbars always remain on top of the screen</string>
+    <string name="options_preferences_user_data">User data</string>
+    <string name="options_preferences_reset_hints">Reset hints</string>
+    <string name="options_preferences_reset_hints_description">The hints you dismissed in the past will appear again</string>
+    <string name="options_preferences_reset_hints_message">Tutorial progress reset</string>
+    <string name="options_preferences_reset_hints_confirmation_title">Are you sure?</string>
+    <string name="options_preferences_reset_hints_confirmation_message">This will reset your progress in the tutorial.</string>
+    <string name="options_preferences_reset_hints_confirmation_reset">Reset</string>
+    <string name="options_preferences_share_usage_data">Share usage data</string>
+    <string name="options_preferences_share_usage_data_enabled">Sending analytics data and crash reports anonymously to the developer</string>
+    <string name="options_preferences_share_usage_data_disabled">Analytics data and crash reports are not being sent to the developer</string>
+
+    <!-- Options screen / Changelog -->
+    <string name="options_changelog_1_0_0_version_name">v1.0.0</string>
+    <string name="options_changelog_1_0_0_description">Initial release</string>
 
     <!-- Playlist screen -->
     <plurals name="playlist_song_count">

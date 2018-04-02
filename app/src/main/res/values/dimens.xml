@@ -37,10 +37,10 @@
     <dimen name="header_height">36dp</dimen>
 
     <!-- Settings screen -->
-    <dimen name="settings_label_margin">2dp</dimen>
-    <dimen name="settings_checkbox_margin">-4dp</dimen>
-    <dimen name="settings_checkbox_padding">28dp</dimen>
-    <dimen name="settings_divider_margin">56dp</dimen>
+    <dimen name="options_preferences_label_margin">2dp</dimen>
+    <dimen name="options_preferences_checkbox_margin">-4dp</dimen>
+    <dimen name="options_preferences_checkbox_padding">28dp</dimen>
+    <dimen name="options_preferences_divider_margin">56dp</dimen>
 
     <!-- New playlist dialog -->
     <dimen name="new_playlist_input_padding_start">20dp</dimen> <!-- large_content_padding + edit_text_fix -->

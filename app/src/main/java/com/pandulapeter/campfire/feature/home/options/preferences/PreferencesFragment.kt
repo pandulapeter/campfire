@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.options.pages.preferences
+package com.pandulapeter.campfire.feature.home.options.preferences
 
 import android.os.Bundle
 import android.view.View
@@ -24,13 +24,13 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
             AlertDialogFragment.show(
                 DIALOG_ID_RESET_HINTS_CONFIRMATION,
                 childFragmentManager,
-                R.string.settings_reset_hints_confirmation_title,
-                R.string.settings_reset_hints_confirmation_message,
-                R.string.settings_reset_hints_confirmation_reset,
+                R.string.options_preferences_reset_hints_confirmation_title,
+                R.string.options_preferences_reset_hints_confirmation_message,
+                R.string.options_preferences_reset_hints_confirmation_reset,
                 R.string.cancel
             )
         }
-        viewModel.shouldShowHintsResetSnackbar.onEventTriggered(this) { showSnackbar(R.string.settings_reset_hints_message) }
+        viewModel.shouldShowHintsResetSnackbar.onEventTriggered(this) { showSnackbar(R.string.options_preferences_reset_hints_message) }
     }
 
     override fun onPositiveButtonSelected(id: Int) {
