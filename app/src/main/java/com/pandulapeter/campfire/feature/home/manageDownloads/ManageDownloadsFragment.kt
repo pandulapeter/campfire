@@ -5,9 +5,11 @@ import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentManageDownloadsBinding
-import com.pandulapeter.campfire.feature.CampfireFragment
+import com.pandulapeter.campfire.feature.TopLevelFragment
 
-class ManageDownloadsFragment : CampfireFragment<FragmentManageDownloadsBinding>(R.layout.fragment_manage_downloads) {
+class ManageDownloadsFragment : TopLevelFragment<FragmentManageDownloadsBinding, ManageDownloadsViewModel>(R.layout.fragment_manage_downloads) {
+
+    override val viewModel = ManageDownloadsViewModel()
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

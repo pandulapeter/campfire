@@ -21,6 +21,8 @@
     <!-- Fixes -->
     <dimen name="edit_text_fix">4dp</dimen>
     <dimen name="edit_text_fix_negative">-4dp</dimen>
+    <dimen name="switch_content_padding">10dp</dimen>
+    <dimen name="switch_fix">2dp</dimen>
     <dimen name="navigation_view_top_padding">@dimen/content_padding</dimen>
 
     <!-- List items -->

@@ -4,9 +4,11 @@ import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsBinding
-import com.pandulapeter.campfire.feature.CampfireFragment
+import com.pandulapeter.campfire.feature.TopLevelFragment
 
-class OptionsFragment : CampfireFragment<FragmentOptionsBinding>(R.layout.fragment_options) {
+class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewModel>(R.layout.fragment_options) {
+
+    override val viewModel = OptionsViewModel()
 
     override val fragmentPagerAdapter by lazy { OptionsFragmentPagerAdapter(context, childFragmentManager) }
 

@@ -8,10 +8,10 @@ import android.view.Gravity
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
-import com.pandulapeter.campfire.feature.CampfireFragment
+import com.pandulapeter.campfire.feature.TopLevelFragment
 import com.pandulapeter.campfire.util.*
 
-class DetailFragment : CampfireFragment<FragmentDetailBinding>(R.layout.fragment_detail) {
+class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail) {
 
     companion object {
         private var Bundle.songId by BundleArgumentDelegate.String("songId")
@@ -23,6 +23,7 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding>(R.layout.fragment
         }
     }
 
+    override val viewModel = DetailViewModel()
     override var onFloatingActionButtonClicked: (() -> Unit)? = { toggleAutoScroll() }
     override val navigationMenu = R.menu.detail
     private val drawablePlayToPause by lazy { context.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
@@ -36,7 +37,7 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding>(R.layout.fragment
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle("Title", "Subtitle")
-        if (savedInstanceState==null) {
+        if (savedInstanceState == null) {
             mainActivity.transformMainToolbarButton(true)
         }
         mainActivity.floatingActionButton.run {

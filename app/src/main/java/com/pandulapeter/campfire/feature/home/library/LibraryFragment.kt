@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.Song
-import com.pandulapeter.campfire.databinding.FragmentLibraryBinding
 import com.pandulapeter.campfire.feature.home.shared.SongListFragment
 import com.pandulapeter.campfire.feature.home.shared.SongViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
@@ -13,10 +12,8 @@ import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
-class LibraryFragment : SongListFragment<FragmentLibraryBinding>(R.layout.fragment_library) {
+class LibraryFragment : SongListFragment() {
 
-    override val recyclerView get() = binding.recyclerView
-    override val swipeRefreshLayout get() = binding.swipeRefreshLayout
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
     private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
     private var query = ""

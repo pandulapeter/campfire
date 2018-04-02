@@ -5,9 +5,11 @@ import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentHistoryBinding
-import com.pandulapeter.campfire.feature.CampfireFragment
+import com.pandulapeter.campfire.feature.TopLevelFragment
 
-class HistoryFragment : CampfireFragment<FragmentHistoryBinding>(R.layout.fragment_history) {
+class HistoryFragment : TopLevelFragment<FragmentHistoryBinding, HistoryViewModel>(R.layout.fragment_history) {
+
+    override val viewModel = HistoryViewModel()
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

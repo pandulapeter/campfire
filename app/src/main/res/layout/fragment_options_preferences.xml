@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.options.pages.PreferencesViewModel" />
+            type="com.pandulapeter.campfire.feature.home.options.pages.preferences.PreferencesViewModel" />
 
     </data>
 
@@ -123,6 +123,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/content_padding"
+                        android:layout_marginStart="@dimen/switch_fix"
                         android:checked="@={viewModel.shouldUseDarkTheme}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
@@ -135,6 +136,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/content_padding"
+                        android:layout_marginStart="@dimen/switch_fix"
                         android:checked="@={viewModel.shouldShowExitConfirmation}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
@@ -176,7 +178,10 @@
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
                         android:onClick="@{() -> viewModel.onResetHintsClicked()}"
-                        android:padding="@dimen/content_padding"
+                        android:paddingBottom="@dimen/content_padding"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:paddingStart="@dimen/switch_content_padding"
+                        android:paddingTop="@dimen/content_padding"
                         app:description="@{@string/settings_reset_hints_description}"
                         app:title="@{@string/settings_reset_hints}"
                         tools:text="@string/settings_reset_hints" />
@@ -186,7 +191,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/content_padding"
                         android:layout_marginEnd="@dimen/large_content_padding"
-                        android:layout_marginStart="@dimen/content_padding"
+                        android:layout_marginStart="@dimen/switch_content_padding"
                         android:checked="@={viewModel.shouldShareUsageData}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"

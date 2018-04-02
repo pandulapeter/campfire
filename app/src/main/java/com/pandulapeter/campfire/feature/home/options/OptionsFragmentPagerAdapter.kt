@@ -4,9 +4,9 @@ import android.content.Context
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.home.options.pages.AboutFragment
-import com.pandulapeter.campfire.feature.home.options.pages.ChangelogFragment
-import com.pandulapeter.campfire.feature.home.options.pages.PreferencesFragment
+import com.pandulapeter.campfire.feature.home.options.pages.about.AboutFragment
+import com.pandulapeter.campfire.feature.home.options.pages.changelog.ChangelogFragment
+import com.pandulapeter.campfire.feature.home.options.pages.preferences.PreferencesFragment
 
 class OptionsFragmentPagerAdapter(private val context: Context, fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
 
