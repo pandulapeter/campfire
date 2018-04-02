@@ -7,7 +7,6 @@ import android.transition.ChangeBounds
 import android.transition.ChangeImageTransform
 import android.transition.ChangeTransform
 import android.transition.TransitionSet
-import android.transition.TransitionSet.ORDERING_TOGETHER
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -34,16 +33,19 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override val navigationMenu = R.menu.detail
     private val drawablePlayToPause by lazy { context.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { context.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
-    private val transition get() = TransitionSet()
-        .addTransition(ChangeBounds())
-        .addTransition(ChangeTransform())
-        .addTransition(ChangeImageTransform())
-        .apply { ordering = ORDERING_TOGETHER }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sharedElementEnterTransition = transition.apply { startDelay = 50 }
-        sharedElementReturnTransition = transition.apply { startDelay = 0 }
+        fun createTransition(delay: Long) = TransitionSet()
+            .addTransition(ChangeBounds())
+            .addTransition(ChangeTransform())
+            .addTransition(ChangeImageTransform())
+            .apply {
+                ordering = TransitionSet.ORDERING_TOGETHER
+                startDelay = delay
+            }
+        sharedElementEnterTransition = createTransition(50)
+        sharedElementReturnTransition = createTransition(0)
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {

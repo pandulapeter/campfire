@@ -195,15 +195,18 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             clickedView.getLocationInWindow(it)
             it[1]
         }
-        currentFragment?.run {
-            exitTransition = Explode().apply {
-                propagation = object : VisibilityPropagation() {
-                    override fun getStartDelay(sceneRoot: ViewGroup?, transition: Transition?, startValues: TransitionValues?, endValues: TransitionValues?) = 0L
-                }
-                epicenterCallback = object : Transition.EpicenterCallback() {
-                    override fun onGetEpicenter(transition: Transition?) = Rect(clickedView.left, y, clickedView.right, y)
-                }
+
+        fun createExplodeTransition(delay: Long) = Explode().apply {
+            propagation = object : VisibilityPropagation() {
+                override fun getStartDelay(sceneRoot: ViewGroup?, transition: Transition?, startValues: TransitionValues?, endValues: TransitionValues?) = 0L
             }
+            epicenterCallback = object : Transition.EpicenterCallback() {
+                override fun onGetEpicenter(transition: Transition?) = Rect(0, y, clickedView.width, y)
+            }.apply { startDelay = delay }
+        }
+        currentFragment?.run {
+            exitTransition = createExplodeTransition(0)
+            reenterTransition = createExplodeTransition(50)
         }
         supportFragmentManager.beginTransaction()
             .setAllowOptimization(true)
