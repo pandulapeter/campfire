@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire.old.data.repository
 
-import com.pandulapeter.campfire.networking.NetworkManager
+import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.old.data.model.DownloadedSong
 import com.pandulapeter.campfire.old.data.model.SongDetail
 import com.pandulapeter.campfire.old.data.model.SongInfo

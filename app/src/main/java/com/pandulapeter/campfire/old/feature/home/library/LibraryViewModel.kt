@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoLi
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoViewModel
 import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.networking.AnalyticsManager
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.old.util.mapToLanguage
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.old.util.toggle

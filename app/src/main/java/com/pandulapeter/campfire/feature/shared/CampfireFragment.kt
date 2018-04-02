@@ -28,6 +28,16 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         return binding.root
     }
 
+    override fun onStart() {
+        super.onStart()
+        viewModel.subscribe()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        viewModel.unsubscribe()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         viewModel.componentCallbacks = null

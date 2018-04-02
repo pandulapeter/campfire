@@ -5,39 +5,29 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.model.remote.Song
-import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentSongListBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
+import com.pandulapeter.campfire.old.util.onEventTriggered
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.hideKeyboard
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.cancel
-import org.koin.android.ext.android.inject
-import kotlin.coroutines.experimental.CoroutineContext
+import com.pandulapeter.campfire.util.onPropertyChanged
 
-abstract class SongListFragment<VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, SongListViewModel>(R.layout.fragment_song_list), SongRepository.Subscriber {
-
-    private var coroutine: CoroutineContext? = null
-    private val songRepository by inject<SongRepository>()
-    private val adapter = SongAdapter().apply {
-        itemClickListener = { mainActivity.openDetailScreen(items[it].song.id) }
-    }
-    private var librarySongs = sequenceOf<Song>()
+abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, VM>(R.layout.fragment_song_list) {
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel.adapter.run { itemClickListener = { mainActivity.openDetailScreen(items[it].song.id) } }
+        viewModel.shouldShowErrorSnackbar.onEventTriggered { showSnackbar(R.string.library_update_error, View.OnClickListener { viewModel.updateData() }) }
+        viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
         binding.swipeRefreshLayout.run {
-            setOnRefreshListener { songRepository.updateData() }
+            setOnRefreshListener { viewModel.updateData() }
             setColorSchemeColors(context.color(R.color.accent))
         }
         binding.recyclerView.run {
             layoutManager = LinearLayoutManager(context)
-            adapter = this@SongListFragment.adapter
+            adapter = viewModel.adapter
             setHasFixedSize(true)
             addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -50,39 +40,8 @@ abstract class SongListFragment<VM : SongListViewModel> : TopLevelFragment<Fragm
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        songRepository.subscribe(this)
-    }
-
     override fun onStop() {
         super.onStop()
-        songRepository.unsubscribe(this)
-        binding.swipeRefreshLayout.run {
-            isRefreshing = false
-            clearAnimation()
-        }
+        binding.swipeRefreshLayout.clearAnimation()
     }
-
-    protected abstract fun Sequence<Song>.createViewModels(): List<SongViewModel>
-
-    protected fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
-        coroutine?.cancel()
-        coroutine = async(UI) {
-            adapter.shouldScrollToTop = shouldScrollToTop
-            adapter.items = async(CommonPool) { librarySongs.createViewModels() }.await()
-            coroutine = null
-        }
-    }
-
-    override fun onSongRepositoryDataUpdated(data: List<Song>) {
-        librarySongs = data.asSequence()
-        updateAdapterItems()
-    }
-
-    override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {
-        binding.swipeRefreshLayout.isRefreshing = isLoading
-    }
-
-    override fun onSongRepositoryUpdateError() = showSnackbar(R.string.library_update_error, View.OnClickListener { songRepository.updateData() })
 }

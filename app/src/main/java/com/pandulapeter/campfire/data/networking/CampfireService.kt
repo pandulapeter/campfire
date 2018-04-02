@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.networking
+package com.pandulapeter.campfire.data.networking
 
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.model.remote.SongDetail

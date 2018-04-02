@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.old.feature.home.settings.SettingsFragment
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.old.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.networking.AnalyticsManager
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 
 /**

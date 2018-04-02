@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.networking
+package com.pandulapeter.campfire.integration
 
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 

@@ -12,7 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.networking.AnalyticsManager
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.color
 import org.koin.android.ext.android.inject
 

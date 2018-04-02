@@ -14,4 +14,8 @@ abstract class CampfireViewModel : ComponentCallbacks {
     override fun onConfigurationChanged(newConfig: Configuration?) {
         componentCallbacks?.onConfigurationChanged(newConfig)
     }
+
+    open fun subscribe() = Unit
+
+    open fun unsubscribe() = Unit
 }

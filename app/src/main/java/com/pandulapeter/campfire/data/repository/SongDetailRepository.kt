@@ -5,7 +5,7 @@ import com.pandulapeter.campfire.data.model.remote.SongDetail
 import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
 import com.pandulapeter.campfire.data.persistence.SongDatabase
 import com.pandulapeter.campfire.data.repository.shared.Repository
-import com.pandulapeter.campfire.networking.NetworkManager
+import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.util.enqueueCall
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool

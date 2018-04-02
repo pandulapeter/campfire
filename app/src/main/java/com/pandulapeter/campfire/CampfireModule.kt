@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.injection
+package com.pandulapeter.campfire
 
 import android.arch.persistence.room.Room
 import com.google.gson.GsonBuilder
@@ -9,29 +9,28 @@ import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
-import com.pandulapeter.campfire.networking.AnalyticsManager
-import com.pandulapeter.campfire.networking.NetworkManager
-import org.koin.dsl.module.Module
+import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.data.networking.NetworkManager
 import org.koin.dsl.module.applicationContext
 
-val integrationModule: Module = applicationContext {
+val integrationModule = applicationContext {
     provide { AppShortcutManager(get()) }
     provide { DeepLinkManager() }
     provide { FirstTimeUserExperienceManager(get()) }
 }
 
-val networkingModule: Module = applicationContext {
+val networkingModule = applicationContext {
     provide { GsonBuilder().create() }
     provide { AnalyticsManager(get()) }
     provide { NetworkManager(get()) }
 }
 
-val repositoryModule: Module = applicationContext {
+val repositoryModule = applicationContext {
     provide { SongRepository(get(), get(), get()) }
     provide { SongDetailRepository(get(), get()) }
 }
 
-val persistenceModule: Module = applicationContext {
+val persistenceModule = applicationContext {
     provide { PreferenceDatabase(get()) }
     provide { Room.databaseBuilder(get(), SongDatabase::class.java, "songDatabase.db").build() }
 }

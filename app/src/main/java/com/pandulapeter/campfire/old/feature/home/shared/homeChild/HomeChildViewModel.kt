@@ -2,7 +2,7 @@ package com.pandulapeter.campfire.old.feature.home.shared.homeChild
 
 import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.old.feature.shared.CampfireViewModel
-import com.pandulapeter.campfire.networking.AnalyticsManager
+import com.pandulapeter.campfire.integration.AnalyticsManager
 
 /**
  * Parent class for view models that handle the Fragments that can be seen on the main screen.

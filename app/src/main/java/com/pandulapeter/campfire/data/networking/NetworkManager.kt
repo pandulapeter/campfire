@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.networking
+package com.pandulapeter.campfire.data.networking
 
 import com.google.gson.Gson
 import com.pandulapeter.campfire.BuildConfig
