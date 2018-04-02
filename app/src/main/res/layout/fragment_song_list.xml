@@ -10,18 +10,25 @@
 
     </data>
 
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipe_refresh_layout"
+    <!-- The apparently useless container is needed to fix a bug in SwipeRefreshLayout that occurs when replacing the Fragment while an animation is in progress. -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/recycler_view"
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/swipe_refresh_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:adapter="@{viewModel.adapter}"
-            app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
+            android:layout_height="match_parent">
 
-    </android.support.v4.widget.SwipeRefreshLayout>
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:adapter="@{viewModel.adapter}"
+                app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
+
+        </android.support.v4.widget.SwipeRefreshLayout>
+
+    </FrameLayout>
 
 </layout>
