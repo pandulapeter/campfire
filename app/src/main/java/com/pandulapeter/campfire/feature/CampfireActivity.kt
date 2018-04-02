@@ -8,6 +8,7 @@ import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
+import android.support.v4.view.ViewCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
 import android.transition.Fade
@@ -73,6 +74,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 }
             }
         })
+        val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
+        binding.appBarLayout.addOnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) }
         (binding.primaryNavigation.getHeaderView(0).findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
         binding.primaryNavigation.disableScrollbars()
         binding.primaryNavigation.setNavigationItemSelectedListener { menuItem ->
