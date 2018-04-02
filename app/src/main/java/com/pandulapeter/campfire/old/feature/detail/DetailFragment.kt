@@ -11,6 +11,7 @@ import android.support.v4.widget.DrawerLayout
 import android.view.View
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.data.repository.*
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
@@ -32,7 +33,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     private val downloadedSongRepository by inject<DownloadedSongRepository>()
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
-    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
+    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceManager>()
     private val detailEventBus by inject<DetailEventBus>()
     private val transposeContainer by lazy { binding.navigationView.menu.findItem(R.id.transpose_container) }
     private val transposeHigher by lazy { binding.navigationView.menu.findItem(R.id.transpose_higher) }
@@ -73,7 +74,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
 
             override fun onPageSelected(position: Int) {
                 viewModel.onPageSelected(position)
-                firstTimeUserExperienceRepository.shouldShowDetailSwipeHint = false
+//                firstTimeUserExperienceRepository.shouldShowDetailSwipeHint = false
                 dismissHintSnackbar()
             }
         })
@@ -85,11 +86,11 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 viewModel.onPageSelected(currentItem)
             }
         }
-        if (viewModel.songIds.size > 1 && firstTimeUserExperienceRepository.shouldShowDetailSwipeHint) {
-            binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.detail_swipe_hint) {
-                firstTimeUserExperienceRepository.shouldShowDetailSwipeHint = false
-            }
-        }
+//        if (viewModel.songIds.size > 1 && firstTimeUserExperienceRepository.shouldShowDetailSwipeHint) {
+//            binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.detail_swipe_hint) {
+//                firstTimeUserExperienceRepository.shouldShowDetailSwipeHint = false
+//            }
+//        }
         // Set up the side navigation drawer.
         transposeContainer.isVisible = userPreferenceRepository.shouldShowChords
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {

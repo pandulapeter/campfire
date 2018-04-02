@@ -3,7 +3,7 @@ package com.pandulapeter.campfire.old.feature.home.managePlaylists
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableInt
 import com.pandulapeter.campfire.old.data.model.Playlist
-import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
+import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
@@ -23,7 +23,7 @@ import kotlin.coroutines.experimental.CoroutineContext
 class ManagePlaylistsViewModel(
     analyticsManager: AnalyticsManager,
     private val appShortcutManager: AppShortcutManager,
-    private val firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository,
+    private val firstTimeUserExperienceManager: FirstTimeUserExperienceManager,
     private val playlistRepository: PlaylistRepository
 ) : HomeChildViewModel(analyticsManager), Subscriber {
     val adapter = ManagePlaylistsListAdapter()
@@ -44,7 +44,7 @@ class ManagePlaylistsViewModel(
                     adapter.items = async(CommonPool) { getAdapterItems() }.await().toMutableList()
                     itemCount.set(playlistRepository.getPlaylists().size)
                     //TODO: It might be a good idea to show separate hints for rearrange and delete.
-                    shouldShowHintSnackbar.set(firstTimeUserExperienceRepository.shouldShowManagePlaylistsHint && itemCount.get() > 2)
+//                    shouldShowHintSnackbar.set(firstTimeUserExperienceManager.shouldShowManagePlaylistsHint && itemCount.get() > 2)
                     shouldShowNewPlaylistButton.set(itemCount.get() < Playlist.MAXIMUM_PLAYLIST_COUNT)
                 }
             }

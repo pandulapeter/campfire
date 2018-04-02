@@ -5,7 +5,7 @@ import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.SettingsBinding
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
-import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
+import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.old.util.onEventTriggered
@@ -19,7 +19,7 @@ import org.koin.android.ext.android.inject
  */
 class SettingsFragment : HomeChildFragment<SettingsBinding, SettingsViewModel>(R.layout.fragment_settings_old), AlertDialogFragment.OnDialogItemsSelectedListener {
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
-    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
+    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceManager>()
 
     override fun createViewModel() = SettingsViewModel(analyticsManager, firstTimeUserExperienceRepository, userPreferenceRepository)
 

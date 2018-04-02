@@ -22,9 +22,15 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected val mainActivity get() = (activity as? CampfireActivity) ?: throw IllegalStateException("The Fragment is not attached to CampfireActivity.")
 
     final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        viewModel.componentCallbacks = this
         binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)
         binding.setVariable(BR.viewModel, viewModel)
         return binding.root
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewModel.componentCallbacks = null
     }
 
     open fun onBackPressed() = false

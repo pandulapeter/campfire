@@ -4,7 +4,7 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import com.pandulapeter.campfire.data.model.local.Note
 import com.pandulapeter.campfire.networking.AnalyticsManager
-import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
+import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildViewModel
 import com.pandulapeter.campfire.util.onPropertyChanged
@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.util.onPropertyChanged
  */
 class SettingsViewModel(
     analyticsManager: AnalyticsManager,
-    private val firstTimeUserExperienceRepository: FirstTimeUserExperienceRepository,
+    private val firstTimeUserExperienceManager: FirstTimeUserExperienceManager,
     private val userPreferenceRepository: UserPreferenceRepository
 ) : HomeChildViewModel(analyticsManager) {
     val shouldShowHintsResetConfirmation = ObservableBoolean()
@@ -42,7 +42,7 @@ class SettingsViewModel(
     }
 
     fun resetHints() {
-        firstTimeUserExperienceRepository.resetAll()
+        firstTimeUserExperienceManager.resetAll()
         shouldShowHintsResetSnackbar.set(true)
     }
 

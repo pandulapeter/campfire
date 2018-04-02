@@ -7,7 +7,7 @@ import android.view.View
 import com.pandulapeter.campfire.HistoryBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.old.data.model.Playlist
-import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
+import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.data.repository.HistoryRepository
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.MainViewModel
@@ -28,7 +28,7 @@ import org.koin.android.ext.android.inject
  */
 class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R.layout.fragment_history_old), AlertDialogFragment.OnDialogItemsSelectedListener {
     private val historyRepository by inject<HistoryRepository>()
-    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
+    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceManager>()
 
     override fun createViewModel() =
         HistoryViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository, userPreferenceRepository, historyRepository)
@@ -63,7 +63,7 @@ class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R
                 viewHolder?.adapterPosition?.let { position ->
                     val songInfo = viewModel.adapter.items[position].songInfo
                     viewModel.removeSongFromHistory(songInfo.id)
-                    firstTimeUserExperienceRepository.shouldShowHistoryHint = false
+//                    firstTimeUserExperienceRepository.shouldShowHistoryHint = false
                     dismissHintSnackbar()
                 }
             }
@@ -108,11 +108,11 @@ class HistoryFragment : SongInfoListFragment<HistoryBinding, HistoryViewModel>(R
         }
         // Display first-time user experience hint.
         viewModel.shouldShowHintSnackbar.onPropertyChanged(this) {
-            if (firstTimeUserExperienceRepository.shouldShowHistoryHint) {
-                binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.history_hint) {
-                    firstTimeUserExperienceRepository.shouldShowHistoryHint = false
-                }
-            }
+//            if (firstTimeUserExperienceRepository.shouldShowHistoryHint) {
+//                binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.history_hint) {
+//                    firstTimeUserExperienceRepository.shouldShowHistoryHint = false
+//                }
+//            }
         }
     }
 

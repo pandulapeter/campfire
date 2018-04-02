@@ -9,13 +9,12 @@ import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
-import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
+import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListFragment
 import com.pandulapeter.campfire.old.util.onEventTriggered
-import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
@@ -28,7 +27,7 @@ import org.koin.android.ext.android.inject
  * Controlled by [PlaylistViewModel].
  */
 class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist) {
-    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
+    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceManager>()
     private val appShortcutManager by inject<AppShortcutManager>()
     private val deepLinkManager by inject<DeepLinkManager>()
 
@@ -55,11 +54,11 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
         super.onViewCreated(view, savedInstanceState)
         viewModel.isInEditMode.onPropertyChanged(this) {
             if (it) {
-                if (viewModel.adapter.items.isNotEmpty() && firstTimeUserExperienceRepository.shouldShowPlaylistHint) {
-                    binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.playlist_hint) {
-                        firstTimeUserExperienceRepository.shouldShowPlaylistHint = false
-                    }
-                }
+//                if (viewModel.adapter.items.isNotEmpty() && firstTimeUserExperienceRepository.shouldShowPlaylistHint) {
+//                    binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.playlist_hint) {
+//                        firstTimeUserExperienceRepository.shouldShowPlaylistHint = false
+//                    }
+//                }
             } else {
                 dismissHintSnackbar()
                 hideKeyboard(activity?.currentFocus)
@@ -88,7 +87,7 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
                 viewHolder?.adapterPosition?.let { position ->
                     val songInfo = viewModel.adapter.items[position].songInfo
                     viewModel.removeSongFromPlaylist(songInfo.id)
-                    firstTimeUserExperienceRepository.shouldShowPlaylistHint = false
+//                    firstTimeUserExperienceRepository.shouldShowPlaylistHint = false
                     dismissHintSnackbar()
                 }
             }

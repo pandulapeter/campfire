@@ -8,7 +8,7 @@ import com.pandulapeter.campfire.ManageDownloadsBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.old.data.model.Playlist
-import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
+import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.ElevationItemTouchHelperCallback
@@ -27,7 +27,7 @@ import org.koin.android.ext.android.inject
 class ManageDownloadsFragment :
     SongInfoListFragment<ManageDownloadsBinding, ManageDownloadsViewModel>(R.layout.fragment_manage_downloads_old),
     AlertDialogFragment.OnDialogItemsSelectedListener {
-    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
+    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceManager>()
 
     override fun createViewModel() = ManageDownloadsViewModel(context, analyticsManager, songInfoRepository, downloadedSongRepository, playlistRepository, userPreferenceRepository)
 
@@ -61,7 +61,7 @@ class ManageDownloadsFragment :
                 viewHolder?.adapterPosition?.let { position ->
                     val songInfo = viewModel.adapter.items[position].songInfo
                     viewModel.removeSongFromDownloads(songInfo.id)
-                    firstTimeUserExperienceRepository.shouldShowManageDownloadsHint = false
+//                    firstTimeUserExperienceRepository.shouldShowManageDownloadsHint = false
                     dismissHintSnackbar()
                 }
             }
@@ -87,11 +87,11 @@ class ManageDownloadsFragment :
         // Display first-time user experience hint.
         viewModel.shouldShowHintSnackbar.onPropertyChanged(this) {
             //TODO: Move to viewModel.
-            if (firstTimeUserExperienceRepository.shouldShowManageDownloadsHint) {
-                binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.manage_downloads_hint) {
-                    firstTimeUserExperienceRepository.shouldShowManageDownloadsHint = false
-                }
-            }
+//            if (firstTimeUserExperienceRepository.shouldShowManageDownloadsHint) {
+//                binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.manage_downloads_hint) {
+//                    firstTimeUserExperienceRepository.shouldShowManageDownloadsHint = false
+//                }
+//            }
         }
     }
 

@@ -1,12 +1,15 @@
 package com.pandulapeter.campfire.feature.home.options.pages.preferences
 
 import android.databinding.ObservableBoolean
-import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.model.local.Note
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.util.onPropertyChanged
+import org.koin.android.ext.android.inject
 
-class PreferencesViewModel(private val preferenceDatabase: PreferenceDatabase) : CampfireViewModel() {
+class PreferencesViewModel : CampfireViewModel() {
+
+    private val preferenceDatabase by inject<PreferenceDatabase>()
     val shouldShowChords = ObservableBoolean(preferenceDatabase.shouldShowChords)
     val shouldUseGermanNotation = ObservableBoolean(preferenceDatabase.shouldUseGermanNotation)
     val englishNotationExample = generateNotationExample(false)

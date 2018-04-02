@@ -8,7 +8,7 @@ import android.view.View
 import com.pandulapeter.campfire.ManagePlaylistsBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.old.data.repository.FirstTimeUserExperienceRepository
+import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.old.feature.home.HomeViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.ElevationItemTouchHelperCallback
@@ -28,7 +28,7 @@ import org.koin.android.ext.android.inject
  * Controlled by [ManagePlaylistsViewModel].
  */
 class ManagePlaylistsFragment : HomeChildFragment<ManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists_old) {
-    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceRepository>()
+    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceManager>()
     private val playlistRepository by inject<PlaylistRepository>()
     private val appShortcutManager by inject<AppShortcutManager>()
 
@@ -81,7 +81,7 @@ class ManagePlaylistsFragment : HomeChildFragment<ManagePlaylistsBinding, Manage
                 viewHolder?.adapterPosition?.let { position ->
                     val playlist = viewModel.adapter.items[position].playlist
                     viewModel.deletePlaylist(playlist.id)
-                    firstTimeUserExperienceRepository.shouldShowManagePlaylistsHint = false
+//                    firstTimeUserExperienceRepository.shouldShowManagePlaylistsHint = false
                     dismissHintSnackbar()
                 }
             }
@@ -98,11 +98,11 @@ class ManagePlaylistsFragment : HomeChildFragment<ManagePlaylistsBinding, Manage
             itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
         }
         // Display first-time user experience hint.
-        viewModel.shouldShowHintSnackbar.onPropertyChanged(this) {
-            binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.manage_playlists_hint) {
-                firstTimeUserExperienceRepository.shouldShowManagePlaylistsHint = false
-            }
-        }
+//        viewModel.shouldShowHintSnackbar.onPropertyChanged(this) {
+//            binding.coordinatorLayout.showFirstTimeUserExperienceSnackbar(R.string.manage_playlists_hint) {
+//                firstTimeUserExperienceRepository.shouldShowManagePlaylistsHint = false
+//            }
+//        }
         viewModel.shouldShowNewPlaylistDialog.onEventTriggered(this) {
             NewPlaylistDialogFragment.show(childFragmentManager)
         }
