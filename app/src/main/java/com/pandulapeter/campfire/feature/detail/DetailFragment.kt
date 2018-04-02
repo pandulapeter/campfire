@@ -42,7 +42,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sharedElementEnterTransition = transition.apply { startDelay = 100 }
+        sharedElementEnterTransition = transition.apply { startDelay = 50 }
         sharedElementReturnTransition = transition.apply { startDelay = 0 }
     }
 

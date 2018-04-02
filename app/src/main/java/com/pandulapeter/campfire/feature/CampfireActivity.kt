@@ -14,6 +14,8 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
 import android.transition.Explode
 import android.transition.Transition
+import android.transition.TransitionValues
+import android.transition.VisibilityPropagation
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -189,13 +191,17 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     fun openDetailScreen(clickedView: View, songId: String, playlistId: String = "") {
         binding.appBarLayout.setExpanded(true, true)
         currentFocus?.also { hideKeyboard(it) }
-        val positionOnScreen = IntArray(2) { 0 }
-        clickedView.getLocationOnScreen(positionOnScreen)
+        val y = IntArray(2) { 0 }.let {
+            clickedView.getLocationInWindow(it)
+            it[1]
+        }
         currentFragment?.run {
             exitTransition = Explode().apply {
-//                excludeTarget(clickedView, true)
+                propagation = object : VisibilityPropagation() {
+                    override fun getStartDelay(sceneRoot: ViewGroup?, transition: Transition?, startValues: TransitionValues?, endValues: TransitionValues?) = 0L
+                }
                 epicenterCallback = object : Transition.EpicenterCallback() {
-                    override fun onGetEpicenter(transition: Transition?) = Rect(clickedView.left, positionOnScreen[1], clickedView.right, positionOnScreen[1] + clickedView.height)
+                    override fun onGetEpicenter(transition: Transition?) = Rect(clickedView.left, y, clickedView.right, y)
                 }
             }
         }
