@@ -5,10 +5,10 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.model.Song
+import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentSongListBinding
-import com.pandulapeter.campfire.feature.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.dimension

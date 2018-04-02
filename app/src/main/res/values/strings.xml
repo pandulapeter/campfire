@@ -99,7 +99,7 @@
     <string name="settings_auto_scroll_enabled">Auto-scroll controls are enabled</string>
     <string name="settings_auto_scroll_disabled">Auto-scroll controls are disabled</string>
     <string name="settings_exit_confirmation">Exit confirmation</string>
-    <string name="settings_exit_confirmation_enabled">Display confirmation dialog when closing the app</string>
+    <string name="settings_exit_confirmation_enabled">Display confirmation dialog before closing the app</string>
     <string name="settings_exit_confirmation_disabled">Close the app without confirmation</string>
     <string name="settings_appearance">Appearance</string>
     <string name="settings_use_dark_theme">Use dark theme</string>

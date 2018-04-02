@@ -8,7 +8,7 @@ import android.view.Gravity
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
-import com.pandulapeter.campfire.feature.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.util.*
 
 class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail) {

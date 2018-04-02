@@ -1,9 +1,9 @@
 package com.pandulapeter.campfire.feature.home.options.pages.preferences
 
 import android.databinding.ObservableBoolean
-import com.pandulapeter.campfire.data.database.PreferenceDatabase
-import com.pandulapeter.campfire.data.model.Note
-import com.pandulapeter.campfire.feature.CampfireViewModel
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.model.local.Note
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.util.onPropertyChanged
 
 class PreferencesViewModel(private val preferenceDatabase: PreferenceDatabase) : CampfireViewModel() {

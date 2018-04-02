@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentManagePlaylistsBinding
-import com.pandulapeter.campfire.feature.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.util.drawable
 
 class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists) {

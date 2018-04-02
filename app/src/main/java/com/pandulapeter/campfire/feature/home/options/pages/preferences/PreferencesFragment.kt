@@ -3,9 +3,9 @@ package com.pandulapeter.campfire.feature.home.options.pages.preferences
 import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.database.PreferenceDatabase
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.databinding.FragmentOptionsPreferencesBinding
-import com.pandulapeter.campfire.feature.CampfireFragment
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 

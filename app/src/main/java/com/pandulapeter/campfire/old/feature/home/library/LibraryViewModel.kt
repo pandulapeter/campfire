@@ -5,7 +5,7 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.model.Language
+import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.old.data.model.SongInfo
 import com.pandulapeter.campfire.old.data.repository.*
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType

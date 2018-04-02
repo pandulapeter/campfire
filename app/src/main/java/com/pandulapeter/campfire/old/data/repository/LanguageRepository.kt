@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire.old.data.repository
 
-import com.pandulapeter.campfire.data.model.Language
+import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.old.data.model.SongInfo
 import com.pandulapeter.campfire.old.data.repository.shared.Repository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber

@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.data.model
+package com.pandulapeter.campfire.data.model.remote
 
 import android.arch.persistence.room.ColumnInfo
 import android.arch.persistence.room.Entity

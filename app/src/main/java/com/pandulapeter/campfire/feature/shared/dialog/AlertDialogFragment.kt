@@ -7,7 +7,7 @@ import android.support.v4.app.FragmentManager
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatDialogFragment
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.database.PreferenceDatabase
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject

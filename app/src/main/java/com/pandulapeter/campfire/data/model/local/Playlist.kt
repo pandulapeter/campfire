@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.data.model
+package com.pandulapeter.campfire.data.model.local
 
 data class Playlist(
     val id: String = FAVORITES_ID,

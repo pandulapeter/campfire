@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.data.model
+package com.pandulapeter.campfire.data.model.local
 
 import android.support.annotation.StringRes
 import com.pandulapeter.campfire.R

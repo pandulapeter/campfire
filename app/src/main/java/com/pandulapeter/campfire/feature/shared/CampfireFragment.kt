@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature
+package com.pandulapeter.campfire.feature.shared
 
 import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.util.color
 
 abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : Fragment() {

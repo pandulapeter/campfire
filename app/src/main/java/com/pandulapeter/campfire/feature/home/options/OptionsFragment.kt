@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsBinding
-import com.pandulapeter.campfire.feature.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 
 class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewModel>(R.layout.fragment_options) {
 

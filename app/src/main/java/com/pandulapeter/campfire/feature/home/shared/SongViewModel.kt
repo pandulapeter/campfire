@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire.feature.home.shared
 
-import com.pandulapeter.campfire.data.model.Song
+import com.pandulapeter.campfire.data.model.remote.Song
 
 data class SongViewModel(
     val song: Song,

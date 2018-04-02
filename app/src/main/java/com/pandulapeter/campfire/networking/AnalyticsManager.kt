@@ -1,3 +1,5 @@
 package com.pandulapeter.campfire.networking
 
-class AnalyticsManager
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+
+class AnalyticsManager(preferenceDatabase: PreferenceDatabase)

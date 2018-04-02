@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.data.database
+package com.pandulapeter.campfire.data.persistence
 
 import android.content.Context
 import java.util.*
@@ -28,14 +28,6 @@ class PreferenceDatabase(context: Context) {
 
             override fun setValue(thisRef: PreferenceDatabase, property: KProperty<*>, value: kotlin.Boolean) =
                 thisRef.preferences.edit().putBoolean(key, value).apply()
-        }
-
-        class Int(key: String, defaultValue: kotlin.Int = 0) : PreferenceFieldDelegate<kotlin.Int>(key, defaultValue) {
-
-            override fun getValue(thisRef: PreferenceDatabase, property: KProperty<*>) = thisRef.preferences.getInt(key, defaultValue)
-
-            override fun setValue(thisRef: PreferenceDatabase, property: KProperty<*>, value: kotlin.Int) =
-                thisRef.preferences.edit().putInt(key, value).apply()
         }
 
         class Long(key: String, defaultValue: kotlin.Long = 0) : PreferenceFieldDelegate<kotlin.Long>(key, defaultValue) {

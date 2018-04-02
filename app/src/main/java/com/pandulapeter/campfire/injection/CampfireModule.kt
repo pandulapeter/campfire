@@ -2,9 +2,8 @@ package com.pandulapeter.campfire.injection
 
 import android.arch.persistence.room.Room
 import com.google.gson.GsonBuilder
-import com.pandulapeter.campfire.data.database.PreferenceDatabase
-import com.pandulapeter.campfire.data.database.SongDatabase
-import com.pandulapeter.campfire.data.database.SongDetailDatabase
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.persistence.SongDatabase
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.integration.AppShortcutManager
@@ -21,7 +20,7 @@ val integrationModule: Module = applicationContext {
 
 val networkingModule: Module = applicationContext {
     provide { GsonBuilder().create() }
-    provide { AnalyticsManager() }
+    provide { AnalyticsManager(get()) }
     provide { NetworkManager(get()) }
 }
 
@@ -32,6 +31,5 @@ val repositoryModule: Module = applicationContext {
 
 val persistenceModule: Module = applicationContext {
     provide { PreferenceDatabase(get()) }
-    provide { Room.databaseBuilder(get(), SongDatabase::class.java, "song.db").build() }
-    provide { Room.databaseBuilder(get(), SongDetailDatabase::class.java, "songDetail.db").build() }
+    provide { Room.databaseBuilder(get(), SongDatabase::class.java, "songDatabase.db").build() }
 }

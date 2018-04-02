@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.model.Song
+import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.feature.home.shared.SongListFragment
 import com.pandulapeter.campfire.feature.home.shared.SongViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView

@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.old.feature.shared
+package com.pandulapeter.campfire.feature.shared
 
 import android.databinding.BindingAdapter
 import android.graphics.drawable.Drawable
@@ -17,7 +17,6 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.shared.EllipsizeLineSpan
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.obtainColor
@@ -98,15 +97,6 @@ fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?, @ColorIn
     view.text = SpannableString("${title ?: ""}\n${subtitle ?: ""}").apply {
         title?.let {
             setSpan(TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Title), 0, it.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-            setSpan(EllipsizeLineSpan(titleColor), 0, it.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-        subtitle?.let {
-            setSpan(
-                EllipsizeLineSpan(subtitleColor ?: view.context.obtainColor(android.R.attr.textColorSecondary)),
-                (title?.length ?: 0) + 1,
-                length,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
         }
     }
 }

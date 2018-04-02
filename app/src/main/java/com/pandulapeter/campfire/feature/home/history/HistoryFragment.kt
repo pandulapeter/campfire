@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentHistoryBinding
-import com.pandulapeter.campfire.feature.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 
 class HistoryFragment : TopLevelFragment<FragmentHistoryBinding, HistoryViewModel>(R.layout.fragment_history) {
 

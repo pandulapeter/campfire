@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentManageDownloadsBinding
-import com.pandulapeter.campfire.feature.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 
 class ManageDownloadsFragment : TopLevelFragment<FragmentManageDownloadsBinding, ManageDownloadsViewModel>(R.layout.fragment_manage_downloads) {
 

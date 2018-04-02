@@ -11,7 +11,7 @@ import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.NavigationView
 import android.support.v4.app.Fragment
 import android.widget.CompoundButton
-import com.pandulapeter.campfire.data.model.Language
+import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.util.onPropertyChanged
 import kotlin.reflect.KClass
 

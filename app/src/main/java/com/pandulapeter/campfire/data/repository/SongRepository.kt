@@ -1,8 +1,8 @@
 package com.pandulapeter.campfire.data.repository
 
-import com.pandulapeter.campfire.data.database.PreferenceDatabase
-import com.pandulapeter.campfire.data.database.SongDatabase
-import com.pandulapeter.campfire.data.model.Song
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.persistence.SongDatabase
+import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.shared.Repository
 import com.pandulapeter.campfire.networking.NetworkManager
 import com.pandulapeter.campfire.util.enqueueCall
