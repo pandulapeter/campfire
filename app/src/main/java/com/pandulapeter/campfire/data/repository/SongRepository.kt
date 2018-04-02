@@ -1,10 +1,10 @@
 package com.pandulapeter.campfire.data.repository
 
+import com.pandulapeter.campfire.data.model.remote.Song
+import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.persistence.SongDatabase
-import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.shared.Repository
-import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.util.enqueueCall
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
@@ -51,8 +51,15 @@ class SongRepository(
     fun updateData() {
         isLoading = true
         networkManager.service.getLibrary().enqueueCall(
-            onSuccess = {
-                data.swap(it)
+            onSuccess = { newData ->
+                if (data.isNotEmpty()) {
+                    newData.forEach { song ->
+                        if (data.find { it.id == song.id } == null) {
+                            song.isNew = true
+                        }
+                    }
+                }
+                data.swap(newData)
                 async(CommonPool) { songDatabase.songDao().updateData(data) }
                 isLoading = false
                 notifyDataChanged()
