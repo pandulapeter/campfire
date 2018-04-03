@@ -58,6 +58,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private val preferenceDatabase by inject<PreferenceDatabase>()
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
+    val secondaryNavigationMenu get() = binding.secondaryNavigation.menu
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -115,7 +116,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
         // Initialize the secondary side navigation drawer.
         binding.secondaryNavigation.disableScrollbars()
-        binding.secondaryNavigation.setNavigationItemSelectedListener { currentFragment?.onNavigationItemSelected(it.itemId) ?: false }
+        binding.secondaryNavigation.setNavigationItemSelectedListener { currentFragment?.onNavigationItemSelected(it) ?: false }
 
         // Initialize the floating action button.
         binding.floatingActionButton.setOnClickListener { currentFragment?.onFloatingActionButtonPressed() }
@@ -210,6 +211,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         })
     }
 
+    //TODO: Find a better way to enforce animations than delaying.
     fun updateToolbarButtons(buttons: List<View>) = binding.toolbarButtonContainer.run {
         postDelayed({
             removeAllViews()

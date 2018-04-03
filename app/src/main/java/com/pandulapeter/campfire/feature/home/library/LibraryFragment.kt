@@ -2,7 +2,11 @@ package com.pandulapeter.campfire.feature.home.library
 
 import android.content.Context
 import android.os.Bundle
+import android.support.annotation.IdRes
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
+import android.widget.CompoundButton
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.home.shared.SongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
@@ -55,14 +59,31 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         outState?.searchQuery = viewModel.query
     }
 
-    override fun onNavigationItemSelected(menuItemId: Int) = when (menuItemId) {
-        R.id.downloaded_only -> consume { viewModel.shouldShowDownloadedOnly = !viewModel.shouldShowDownloadedOnly }
-        R.id.show_work_in_progress -> consume { viewModel.shouldShowWorkInProgress = !viewModel.shouldShowWorkInProgress }
-        R.id.show_explicit -> consume { viewModel.shouldShowExplicit = !viewModel.shouldShowExplicit }
-        R.id.sort_by_popularity -> consume { viewModel.sortingMode = LibraryViewModel.SortingMode.POPULARITY }
-        R.id.sort_by_title -> consume { viewModel.sortingMode = LibraryViewModel.SortingMode.TITLE }
-        R.id.sort_by_artist -> consume { viewModel.sortingMode = LibraryViewModel.SortingMode.ARTIST }
-        else -> consume { showSnackbar(R.string.work_in_progress) }//viewModel.languageFilters.get()?.filterKeys { language -> language.nameResource == it.itemId }?.values?.first()?.toggle()
+    //TODO: Set up checkedChangeListeners for the CompoundButtons.
+    override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
+        when (menuItem.itemId) {
+            R.id.downloaded_only -> consumeAndUpdateBoolean(menuItem, { shouldShowDownloadedOnly = it }, { shouldShowDownloadedOnly })
+            R.id.show_work_in_progress -> consumeAndUpdateBoolean(menuItem, { shouldShowWorkInProgress = it }, { shouldShowWorkInProgress })
+            R.id.show_explicit -> consumeAndUpdateBoolean(menuItem, { shouldShowExplicit = it }, { shouldShowExplicit })
+            R.id.sort_by_title -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.TITLE) { sortingMode = it }
+            R.id.sort_by_artist -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.ARTIST) { sortingMode = it }
+            R.id.sort_by_popularity -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.POPULARITY) { sortingMode = it }
+            else -> consume { showSnackbar(R.string.work_in_progress) }//viewModel.languageFilters.get()?.filterKeys { language -> language.nameResource == it.itemId }?.values?.first()?.toggle()
+        }
+    }
+
+    private inline fun consumeAndUpdateBoolean(menuItem: MenuItem, crossinline setValue: (Boolean) -> Unit, crossinline getValue: () -> Boolean) = consume {
+        setValue(!getValue())
+        (menuItem.actionView as? CompoundButton)?.isChecked = getValue()
+    }
+
+    private operator fun Menu.get(@IdRes id: Int) = findItem(id)
+
+    private inline fun consumeAndUpdateSortingMode(sortingMode: LibraryViewModel.SortingMode, crossinline setValue: (LibraryViewModel.SortingMode) -> Unit) = consume {
+        setValue(sortingMode)
+        (mainActivity.secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton)?.isChecked = sortingMode == LibraryViewModel.SortingMode.TITLE
+        (mainActivity.secondaryNavigationMenu[R.id.sort_by_artist].actionView as? CompoundButton)?.isChecked = sortingMode == LibraryViewModel.SortingMode.ARTIST
+        (mainActivity.secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.isChecked = sortingMode == LibraryViewModel.SortingMode.POPULARITY
     }
 
     override fun inflateToolbarTitle(context: Context) = viewModel.toolbarTextInputView

@@ -14,6 +14,7 @@ import android.text.style.LineBackgroundSpan
 import android.text.style.ReplacementSpan
 import android.text.style.TextAppearanceSpan
 import android.view.Gravity
+import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import com.pandulapeter.campfire.R
@@ -33,7 +34,7 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     open fun onDrawerStateChanged(state: Int) = Unit
 
-    open fun onNavigationItemSelected(menuItemId: Int) = false
+    open fun onNavigationItemSelected(menuItem: MenuItem) = false
 
     open fun onFloatingActionButtonPressed() = Unit
 

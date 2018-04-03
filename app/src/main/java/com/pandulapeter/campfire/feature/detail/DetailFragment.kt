@@ -6,6 +6,7 @@ import android.transition.ChangeBounds
 import android.transition.ChangeImageTransform
 import android.transition.ChangeTransform
 import android.transition.TransitionSet
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -103,12 +104,12 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
     }
 
-    override fun onNavigationItemSelected(menuItemId: Int) = when (menuItemId) {
+    override fun onNavigationItemSelected(menuItem: MenuItem) = when (menuItem.itemId) {
         R.id.transpose_higher -> consume { }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), 1) }
         R.id.transpose_lower -> consume { }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), -1) }
         R.id.play_in_youtube -> consume { showSnackbar(R.string.work_in_progress) } //consumeAndCloseDrawer(binding.drawerLayout) { viewModel.onPlayOnYouTubeClicked() }
         R.id.share -> consume { showSnackbar(R.string.work_in_progress) } //consumeAndCloseDrawer(binding.drawerLayout) { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
-        else -> super.onNavigationItemSelected(menuItemId)
+        else -> super.onNavigationItemSelected(menuItem)
     }
 
     override fun onFloatingActionButtonPressed() = toggleAutoScroll()
