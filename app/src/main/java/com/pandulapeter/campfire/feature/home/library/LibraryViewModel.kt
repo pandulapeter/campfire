@@ -13,11 +13,12 @@ import org.koin.android.ext.android.inject
 class LibraryViewModel(
     val toolbarTextInputView: ToolbarTextInputView,
     private val updateSearchToggleDrawable: (Boolean) -> Unit,
-    private val onDataLoaded: () -> Unit
+    private val onDataLoadedForTheFirstTime: () -> Unit
 ) : SongListViewModel() {
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private val songDetailRepository by inject<SongDetailRepository>()
+    private var hasBeenInitialized = false
     var query = ""
         set(value) {
             if (field != value) {
@@ -54,7 +55,7 @@ class LibraryViewModel(
             if (field != value) {
                 field = value
                 preferenceDatabase.sortingMode = value.intValue
-                updateAdapterItems()
+                updateAdapterItems(true)
             }
         }
 
@@ -66,8 +67,9 @@ class LibraryViewModel(
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
         super.onSongRepositoryDataUpdated(data)
-        if (data.isNotEmpty()) {
-            onDataLoaded()
+        if (data.isNotEmpty() && !hasBeenInitialized) {
+            onDataLoadedForTheFirstTime()
+            hasBeenInitialized = true
         }
     }
 

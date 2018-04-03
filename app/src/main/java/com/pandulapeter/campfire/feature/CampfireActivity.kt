@@ -221,6 +221,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun enableSecondaryNavigationDrawer(@MenuRes menuResourceId: Int) {
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.END)
+        binding.secondaryNavigation.menu.clear()
         binding.secondaryNavigation.inflateMenu(menuResourceId)
     }
 

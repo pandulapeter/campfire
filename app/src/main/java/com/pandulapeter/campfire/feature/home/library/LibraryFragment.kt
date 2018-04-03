@@ -18,18 +18,24 @@ import com.pandulapeter.campfire.util.drawable
 
 class LibraryFragment : SongListFragment<LibraryViewModel>() {
 
-    override val viewModel by lazy {
+    override val viewModel: LibraryViewModel by lazy {
         LibraryViewModel(
             toolbarTextInputView = ToolbarTextInputView(mainActivity.toolbarContext).apply { title.updateToolbarTitle(R.string.home_library) },
             updateSearchToggleDrawable = { searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { this?.start() }) },
-            onDataLoaded = {
-                mainActivity.enableSecondaryNavigationDrawer(R.menu.library)
+            onDataLoadedForTheFirstTime = {
                 mainActivity.toolbarContext.let { context ->
                     mainActivity.updateToolbarButtons(listOf(
                         searchToggle,
                         context.createToolbarButton(R.drawable.ic_view_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }
                     ))
                 }
+                mainActivity.enableSecondaryNavigationDrawer(R.menu.library)
+                initializeCompoundButton(R.id.downloaded_only) { viewModel.shouldShowDownloadedOnly }
+                initializeCompoundButton(R.id.show_work_in_progress) { viewModel.shouldShowWorkInProgress }
+                initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
+                initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == LibraryViewModel.SortingMode.TITLE }
+                initializeCompoundButton(R.id.sort_by_artist) { viewModel.sortingMode == LibraryViewModel.SortingMode.ARTIST }
+                initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == LibraryViewModel.SortingMode.POPULARITY }
             }
         )
     }
@@ -59,7 +65,6 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         outState?.searchQuery = viewModel.query
     }
 
-    //TODO: Set up checkedChangeListeners for the CompoundButtons.
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
         when (menuItem.itemId) {
             R.id.downloaded_only -> consumeAndUpdateBoolean(menuItem, { shouldShowDownloadedOnly = it }, { shouldShowDownloadedOnly })
@@ -72,12 +77,30 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         }
     }
 
+    override fun inflateToolbarTitle(context: Context) = viewModel.toolbarTextInputView
+
+    override fun onBackPressed() = if (viewModel.toolbarTextInputView.isTextInputVisible) {
+        viewModel.toggleTextInputVisibility()
+        true
+    } else super.onBackPressed()
+
+    private inline fun initializeCompoundButton(@IdRes itemId: Int, crossinline getValue: () -> Boolean) = consume {
+        mainActivity.secondaryNavigationMenu.findItem(itemId)?.let {
+            (it.actionView as? CompoundButton)?.run {
+                isChecked = getValue()
+                setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked != getValue()) {
+                        onNavigationItemSelected(it)
+                    }
+                }
+            }
+        }
+    }
+
     private inline fun consumeAndUpdateBoolean(menuItem: MenuItem, crossinline setValue: (Boolean) -> Unit, crossinline getValue: () -> Boolean) = consume {
         setValue(!getValue())
         (menuItem.actionView as? CompoundButton)?.isChecked = getValue()
     }
-
-    private operator fun Menu.get(@IdRes id: Int) = findItem(id)
 
     private inline fun consumeAndUpdateSortingMode(sortingMode: LibraryViewModel.SortingMode, crossinline setValue: (LibraryViewModel.SortingMode) -> Unit) = consume {
         setValue(sortingMode)
@@ -86,10 +109,5 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         (mainActivity.secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.isChecked = sortingMode == LibraryViewModel.SortingMode.POPULARITY
     }
 
-    override fun inflateToolbarTitle(context: Context) = viewModel.toolbarTextInputView
-
-    override fun onBackPressed() = if (viewModel.toolbarTextInputView.isTextInputVisible) {
-        viewModel.toggleTextInputVisibility()
-        true
-    } else super.onBackPressed()
+    private operator fun Menu.get(@IdRes id: Int) = findItem(id)
 }
