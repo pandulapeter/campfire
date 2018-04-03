@@ -18,7 +18,7 @@ class PreferenceDatabase(context: Context) {
     var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("shouldShowDownloadedOnly", false)
     var shouldShowWorkInProgress by PreferenceFieldDelegate.Boolean("shouldShowWorkInProgress", false)
     var shouldShowExplicit by PreferenceFieldDelegate.Boolean("shouldShowExplicit", false)
-    var sortingMode by PreferenceFieldDelegate.Int("shouldShowExplicit", LibraryViewModel.SortingMode.TITLE.intValue)
+    var sortingMode by PreferenceFieldDelegate.Int("sortingMode", LibraryViewModel.SortingMode.TITLE.intValue)
 
     private fun shouldEnableGermanNotationByDefault() = when (Locale.getDefault().isO3Country.toUpperCase()) {
         "AUT", "CZE", "DEU", "SWE", "DNK", "EST", "FIN", "HUN", "LVA", "NOR", "POL", "SRB", "SVK" -> true
