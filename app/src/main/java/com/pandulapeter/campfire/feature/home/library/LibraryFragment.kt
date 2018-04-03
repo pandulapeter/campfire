@@ -22,7 +22,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         LibraryViewModel(
             toolbarTextInputView = ToolbarTextInputView(mainActivity.toolbarContext).apply { title.updateToolbarTitle(R.string.home_library) },
             updateSearchToggleDrawable = { searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { this?.start() }) },
-            onDataLoadedForTheFirstTime = {
+            onDataLoaded = {
                 mainActivity.toolbarContext.let { context ->
                     mainActivity.updateToolbarButtons(listOf(
                         searchToggle,
