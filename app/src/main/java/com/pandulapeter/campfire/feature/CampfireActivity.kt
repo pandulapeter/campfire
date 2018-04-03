@@ -46,6 +46,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     companion object {
         private const val DIALOG_ID_EXIT_CONFIRMATION = 1
         private const val DIALOG_ID_PRIVACY_POLICY = 2
+        private const val ANIMATION_DELAY = 300L
     }
 
     private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
@@ -197,7 +198,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         if (shouldShowBackButton) {
             changeDrawable()
         } else {
-            binding.toolbarMainButton.postDelayed({ changeDrawable() }, 200)
+            binding.toolbarMainButton.postDelayed({ changeDrawable() }, ANIMATION_DELAY)
         }
         binding.drawerLayout.setDrawerLockMode(if (shouldShowBackButton) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
     }
@@ -213,7 +214,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         postDelayed({
             removeAllViews()
             buttons.forEach { addView(it, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
-        }, 200)
+        }, ANIMATION_DELAY)
     }
 
     fun enableSecondaryNavigationDrawer(@MenuRes menuResourceId: Int) {

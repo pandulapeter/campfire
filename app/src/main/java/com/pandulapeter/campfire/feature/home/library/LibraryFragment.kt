@@ -16,9 +16,17 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
 
     override val viewModel by lazy {
         LibraryViewModel(
-            ToolbarTextInputView(mainActivity.toolbarContext).apply { title.updateToolbarTitle(R.string.home_library) },
-            { searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { this?.start() }) },
-            { mainActivity.enableSecondaryNavigationDrawer(R.menu.library) }
+            toolbarTextInputView = ToolbarTextInputView(mainActivity.toolbarContext).apply { title.updateToolbarTitle(R.string.home_library) },
+            updateSearchToggleDrawable = { searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { this?.start() }) },
+            onDataLoaded = {
+                mainActivity.enableSecondaryNavigationDrawer(R.menu.library)
+                mainActivity.toolbarContext.let { context ->
+                    mainActivity.updateToolbarButtons(listOf(
+                        searchToggle,
+                        context.createToolbarButton(R.drawable.ic_view_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }
+                    ))
+                }
+            }
         )
     }
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
@@ -58,11 +66,6 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     }
 
     override fun inflateToolbarTitle(context: Context) = viewModel.toolbarTextInputView
-
-    override fun inflateToolbarButtons(context: Context) = listOf(
-        searchToggle,
-        context.createToolbarButton(R.drawable.ic_view_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }
-    )
 
     override fun onBackPressed() = if (viewModel.toolbarTextInputView.isTextInputVisible) {
         viewModel.toggleTextInputVisibility()

@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature.detail
 
 import android.animation.Animator
-import android.content.Context
 import android.os.Bundle
 import android.transition.ChangeBounds
 import android.transition.ChangeImageTransform
@@ -66,6 +65,13 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 }
             })
         }
+        mainActivity.toolbarContext.let { context ->
+            mainActivity.updateToolbarButtons(
+                listOf(
+                    context.createToolbarButton(R.drawable.ic_playlist_border_24dp) { showSnackbar(R.string.work_in_progress) },
+                    context.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() })
+            )
+        }
         onDataLoaded()
     }
 
@@ -90,11 +96,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         toggleAutoScroll()
         true
     } else super.onBackPressed()
-
-    override fun inflateToolbarButtons(context: Context) = listOf(
-        context.createToolbarButton(R.drawable.ic_playlist_border_24dp) { showSnackbar("Work in progress") },
-        context.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }
-    )
 
     override fun onDrawerStateChanged(state: Int) {
         if (mainActivity.autoScrollControl.visibleOrInvisible) {
