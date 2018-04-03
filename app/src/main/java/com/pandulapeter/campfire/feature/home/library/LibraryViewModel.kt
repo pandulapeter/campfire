@@ -12,7 +12,8 @@ import org.koin.android.ext.android.inject
 
 class LibraryViewModel(
     val toolbarTextInputView: ToolbarTextInputView,
-    private val updateSearchToggleDrawable: (Boolean) -> Unit
+    private val updateSearchToggleDrawable: (Boolean) -> Unit,
+    private val onDataLoaded: () -> Unit
 ) : SongListViewModel() {
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
@@ -60,6 +61,13 @@ class LibraryViewModel(
     init {
         toolbarTextInputView.apply {
             textInput.onTextChanged { if (isTextInputVisible) query = it }
+        }
+    }
+
+    override fun onSongRepositoryDataUpdated(data: List<Song>) {
+        super.onSongRepositoryDataUpdated(data)
+        if (data.isNotEmpty()) {
+            onDataLoaded()
         }
     }
 

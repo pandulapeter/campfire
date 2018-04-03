@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.feature.shared
 
-import android.animation.Animator
 import android.content.Context
 import android.databinding.ViewDataBinding
 import android.graphics.Canvas
@@ -8,7 +7,6 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Bundle
 import android.support.annotation.*
-import android.support.v4.app.FragmentPagerAdapter
 import android.support.v7.widget.AppCompatTextView
 import android.text.Spannable
 import android.text.SpannableString
@@ -20,49 +18,24 @@ import android.view.View
 import android.widget.TextView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.obtainColor
 import kotlin.math.ceil
 
 abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes layoutResourceId: Int) : CampfireFragment<B, VM>(layoutResourceId) {
 
-    protected open val onFloatingActionButtonClicked: (() -> Unit)? = null
-    protected open val fragmentPagerAdapter: FragmentPagerAdapter? = null
     protected val defaultToolbar by lazy { AppCompatTextView(context).apply { gravity = Gravity.CENTER_VERTICAL } }
-    @MenuRes
-    protected open val navigationMenu: Int? = null
 
     @CallSuper
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
-        mainActivity.changeToolbarTitle(inflateToolbarTitle(mainActivity.toolbarContext))
-        mainActivity.changeToolbarButtons(inflateToolbarButtons(mainActivity.toolbarContext))
-        mainActivity.tabLayout.visibleOrGone = fragmentPagerAdapter != null
-        if (fragmentPagerAdapter == null) {
-            mainActivity.tabLayout.setupWithViewPager(null)
-        }
-        mainActivity.floatingActionButton.setOnClickListener { onFloatingActionButtonClicked?.invoke() }
-        mainActivity.setSecondaryNavigationDrawerEnabled(navigationMenu)
-        if (onFloatingActionButtonClicked == null) {
-            mainActivity.autoScrollControl.run {
-                if (animatedVisibilityEnd) {
-                    animatedVisibilityEnd = false
-                    (tag as? Animator)?.let {
-                        it.addListener(onAnimationEnd = {
-                            mainActivity.floatingActionButton.hide()
-                            tag = null
-                            visibleOrGone = false
-
-                        })
-                    }
-                } else {
-                    mainActivity.floatingActionButton.hide()
-                }
-            }
-        }
+        mainActivity.updateToolbarTitle(inflateToolbarTitle(mainActivity.toolbarContext))
     }
 
     open fun onDrawerStateChanged(state: Int) = Unit
 
     open fun onNavigationItemSelected(menuItemId: Int) = false
+
+    open fun onFloatingActionButtonPressed() = Unit
 
     protected open fun inflateToolbarTitle(context: Context): View = defaultToolbar
 

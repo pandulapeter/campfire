@@ -11,18 +11,17 @@ import com.pandulapeter.campfire.util.drawable
 class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists) {
 
     override val viewModel = ManagePlaylistsViewModel()
-    override var onFloatingActionButtonClicked: (() -> Unit)? = { showSnackbar(R.string.work_in_progress) }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_manage_playlists)
-        mainActivity.floatingActionButton.run {
-            setImageDrawable(context.drawable(R.drawable.ic_add_24dp))
-            show()
-        }
+        mainActivity.updateFloatingActionButtonDrawable(context.drawable(R.drawable.ic_add_24dp))
+        mainActivity.enableFloatingActionButton()
     }
 
     override fun inflateToolbarButtons(context: Context) = listOf(
         context.createToolbarButton(R.drawable.ic_delete_24dp) { showSnackbar(R.string.work_in_progress) }
     )
+
+    override fun onFloatingActionButtonPressed() = showSnackbar(R.string.work_in_progress)
 }

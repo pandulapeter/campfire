@@ -1,8 +1,10 @@
 package com.pandulapeter.campfire.feature
 
+import android.animation.Animator
 import android.app.ActivityManager
 import android.databinding.DataBindingUtil
 import android.graphics.Rect
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.annotation.MenuRes
 import android.support.design.internal.NavigationMenuView
@@ -10,6 +12,7 @@ import android.support.design.widget.NavigationView
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
 import android.support.v4.view.ViewCompat
+import android.support.v4.view.ViewPager
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
 import android.transition.Explode
@@ -52,12 +55,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private val drawableBackToMenu by lazy { animatedDrawable(R.drawable.avd_back_to_menu_24dp) }
     private val appShortcutManager by inject<AppShortcutManager>()
     private val preferenceDatabase by inject<PreferenceDatabase>()
-    val floatingActionButton get() = binding.floatingActionButton
     val autoScrollControl get() = binding.autoScrollControl
-    val tabLayout get() = binding.tabLayout
     val toolbarContext get() = binding.appBarLayout.context!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        // Set the theme and the task description.
         setTheme(if (preferenceDatabase.shouldUseDarkTheme) R.style.DarkTheme else R.style.LightTheme)
         @Suppress("ConstantConditionIf")
         setTaskDescription(
@@ -67,21 +70,37 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             )
         )
         super.onCreate(savedInstanceState)
+
+        // Update the app shortcuts
         appShortcutManager.updateAppShortcuts()
+
+
+        // Initialize the app bar.
+        val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
+        binding.toolbarMainButton.setOnClickListener {
+            if (currentFragment is DetailFragment) {
+                beforeScreenChanged()
+                supportFragmentManager.popBackStack()
+                updateMainToolbarButton(false)
+            } else {
+                hideKeyboard(currentFocus)
+                binding.drawerLayout.openDrawer(Gravity.START)
+            }
+        }
+        binding.appBarLayout.addOnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) }
+
+        // Initialize the drawer layout.
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
             binding.appBarLayout.setExpanded(true, true)
             currentFragment?.onDrawerStateChanged(it)
             if (it == DrawerLayout.STATE_DRAGGING) {
-                currentFocus?.also {
-                    it.clearFocus()
-                    hideKeyboard(it)
-                }
+                hideKeyboard(currentFocus)
             }
         })
-        val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
-        binding.appBarLayout.addOnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) }
-        (binding.primaryNavigation.getHeaderView(0).findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
+
+        // Initialize the primary side navigation drawer.
         binding.primaryNavigation.disableScrollbars()
+        (binding.primaryNavigation.getHeaderView(0)?.findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
         binding.primaryNavigation.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.library -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { LibraryFragment() } }
@@ -92,23 +111,23 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 else -> false
             }
         }
+
+        // Initialize the secondary side navigation drawer.
         binding.secondaryNavigation.disableScrollbars()
         binding.secondaryNavigation.setNavigationItemSelectedListener { currentFragment?.onNavigationItemSelected(it.itemId) ?: false }
+
+        // Initialize the floating action button.
+        binding.floatingActionButton.setOnClickListener { currentFragment?.onFloatingActionButtonPressed() }
+
+        // Restore instance state if possible.
         if (savedInstanceState == null) {
             supportFragmentManager.handleReplace { LibraryFragment() }
             binding.primaryNavigation.setCheckedItem(R.id.library)
         } else {
             binding.toolbarMainButton.setImageDrawable(drawable(if (savedInstanceState.isOnDetailScreen) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp))
         }
-        binding.toolbarMainButton.setOnClickListener {
-            if (currentFragment is DetailFragment) {
-                supportFragmentManager.popBackStack()
-                transformMainToolbarButton(false)
-            } else {
-                hideKeyboard(currentFocus)
-                binding.drawerLayout.openDrawer(Gravity.START)
-            }
-        }
+
+        // Show the privacy consent dialog if needed.
         if (preferenceDatabase.shouldShowPrivacyPolicy) {
             AlertDialogFragment.show(
                 DIALOG_ID_PRIVACY_POLICY,
@@ -139,7 +158,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 val fragment = currentFragment
                 if (fragment == null || !fragment.onBackPressed()) {
                     if (fragment is DetailFragment) {
-                        transformMainToolbarButton(false)
+                        beforeScreenChanged()
+                        updateMainToolbarButton(false)
                         super.onBackPressed()
                     } else {
                         if (preferenceDatabase.shouldShowExitConfirmation) {
@@ -172,26 +192,51 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    fun openSecondaryNavigationDrawer() {
-        hideKeyboard(currentFocus)
-        binding.drawerLayout.openDrawer(Gravity.END)
+    fun updateMainToolbarButton(shouldShowBackButton: Boolean) {
+        fun changeDrawable() = binding.toolbarMainButton.setImageDrawable((if (shouldShowBackButton) drawableMenuToBack else drawableBackToMenu).apply { this?.start() })
+        if (shouldShowBackButton) {
+            changeDrawable()
+        } else {
+            binding.toolbarMainButton.postDelayed({ changeDrawable() }, 200)
+        }
+        binding.drawerLayout.setDrawerLockMode(if (shouldShowBackButton) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
     }
 
-    fun changeToolbarTitle(toolbar: View) {
+    fun updateToolbarTitle(toolbar: View) {
         binding.toolbarTitleContainer.removeAllViews()
         binding.toolbarTitleContainer.addView(toolbar, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).apply {
             gravity = Gravity.CENTER_VERTICAL
         })
     }
 
-    fun changeToolbarButtons(buttons: List<View>) {
-        binding.toolbarButtonContainer.removeAllViews()
-        buttons.forEach { binding.toolbarButtonContainer.addView(it, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
+    fun updateToolbarButtons(buttons: List<View>) = binding.toolbarButtonContainer.run {
+        postDelayed({
+            removeAllViews()
+            buttons.forEach { addView(it, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
+        }, 200)
+    }
+
+    fun enableSecondaryNavigationDrawer(@MenuRes menuResourceId: Int) {
+        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.END)
+        binding.secondaryNavigation.inflateMenu(menuResourceId)
+    }
+
+    fun openSecondaryNavigationDrawer() {
+        hideKeyboard(currentFocus)
+        binding.drawerLayout.openDrawer(Gravity.END)
+    }
+
+    fun enableFloatingActionButton() = binding.floatingActionButton.show()
+
+    fun updateFloatingActionButtonDrawable(drawable: Drawable?) = binding.floatingActionButton.setImageDrawable(drawable)
+
+    fun enableTabLayout(viewPager: ViewPager) {
+        binding.tabLayout.setupWithViewPager(viewPager)
+        binding.tabLayout.visibleOrGone = true
     }
 
     fun openDetailScreen(clickedView: View, songId: String, playlistId: String = "") {
-        binding.appBarLayout.setExpanded(true, true)
-        currentFocus?.also { hideKeyboard(it) }
+        beforeScreenChanged()
         val y = IntArray(2) { 0 }.let {
             clickedView.getLocationInWindow(it)
             it[1]
@@ -217,22 +262,43 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             .commit()
     }
 
-    fun transformMainToolbarButton(shouldShowBackButton: Boolean) {
-        binding.appBarLayout.setExpanded(true, true)
-        binding.toolbarMainButton.setImageDrawable((if (shouldShowBackButton) drawableMenuToBack else drawableBackToMenu).apply { this?.start() })
-        binding.drawerLayout.setDrawerLockMode(if (shouldShowBackButton) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
-    }
+    private fun beforeScreenChanged() {
 
-    fun setSecondaryNavigationDrawerEnabled(@MenuRes menuResourceId: Int?) {
-        binding.drawerLayout.setDrawerLockMode(if (menuResourceId == null) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.END)
-        menuResourceId?.let {
-            binding.secondaryNavigation.menu.clear()
-            binding.secondaryNavigation.inflateMenu(it)
+        // Hide the keyboard.
+        hideKeyboard(currentFocus)
+
+        // Reset the app bar.
+        binding.toolbarButtonContainer.removeAllViews()
+        binding.appBarLayout.setExpanded(true, true)
+
+        // Reset the tab layout.
+        binding.tabLayout.visibleOrGone = false
+        binding.tabLayout.setupWithViewPager(null)
+
+        // Reset the secondary navigation drawer.
+        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.END)
+        binding.secondaryNavigation.menu.clear()
+
+        // Reset the floating action button.
+        binding.autoScrollControl.run {
+            if (animatedVisibilityEnd) {
+                animatedVisibilityEnd = false
+                (tag as? Animator)?.let {
+                    it.addListener(onAnimationEnd = {
+                        binding.floatingActionButton.hide()
+                        tag = null
+                        visibleOrGone = false
+
+                    })
+                }
+            } else {
+                binding.floatingActionButton.hide()
+            }
         }
     }
 
     private inline fun <reified T : TopLevelFragment<*, *>> FragmentManager.handleReplace(crossinline newInstance: () -> T) {
-        currentFocus?.also { hideKeyboard(it) }
+        beforeScreenChanged()
         currentFragment?.exitTransition = null
         beginTransaction()
             .replace(R.id.fragment_container, findFragmentByTag(T::class.java.name) ?: newInstance.invoke(), T::class.java.name)
@@ -244,7 +310,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         action()
         binding.drawerLayout.closeDrawers()
     }
-
 
     private fun NavigationView.disableScrollbars() {
         (getChildAt(0) as? NavigationMenuView)?.isVerticalScrollBarEnabled = false

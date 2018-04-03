@@ -29,8 +29,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     }
 
     override val viewModel by lazy { DetailViewModel(arguments.songId) }
-    override var onFloatingActionButtonClicked: (() -> Unit)? = { toggleAutoScroll() }
-    override val navigationMenu = R.menu.detail
     private val drawablePlayToPause by lazy { context.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { context.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
 
@@ -54,12 +52,9 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle("Title", "Subtitle")
         if (savedInstanceState == null) {
-            mainActivity.transformMainToolbarButton(true)
+            mainActivity.updateMainToolbarButton(true)
         }
-        mainActivity.floatingActionButton.run {
-            setImageDrawable(context.drawable(R.drawable.ic_play_24dp))
-            show()
-        }
+        mainActivity.updateFloatingActionButtonDrawable(context.drawable(R.drawable.ic_play_24dp))
         mainActivity.autoScrollControl.visibleOrGone = false
         binding.textView.text = "Song: ${arguments.songId}\nPlaylist: ${arguments.playlistId}"
         (view?.parent as? ViewGroup)?.run {
@@ -71,6 +66,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 }
             })
         }
+        onDataLoaded()
     }
 
     override fun onPause() {
@@ -87,7 +83,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             mainActivity.autoScrollControl.tag = null
         }
         mainActivity.autoScrollControl.visibleOrInvisible = false
-        mainActivity.floatingActionButton.setImageDrawable(context.drawable(R.drawable.ic_play_24dp))
+        mainActivity.updateFloatingActionButtonDrawable(context.drawable(R.drawable.ic_play_24dp))
     }
 
     override fun onBackPressed() = if (mainActivity.autoScrollControl.visibleOrInvisible) {
@@ -100,6 +96,12 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         context.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }
     )
 
+    override fun onDrawerStateChanged(state: Int) {
+        if (mainActivity.autoScrollControl.visibleOrInvisible) {
+            toggleAutoScroll()
+        }
+    }
+
     override fun onNavigationItemSelected(menuItemId: Int) = when (menuItemId) {
         R.id.transpose_higher -> consume { }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), 1) }
         R.id.transpose_lower -> consume { }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), -1) }
@@ -108,16 +110,17 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         else -> super.onNavigationItemSelected(menuItemId)
     }
 
-    override fun onDrawerStateChanged(state: Int) {
-        if (mainActivity.autoScrollControl.visibleOrInvisible) {
-            toggleAutoScroll()
-        }
+    override fun onFloatingActionButtonPressed() = toggleAutoScroll()
+
+    private fun onDataLoaded() {
+        mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
+        mainActivity.enableFloatingActionButton()
     }
 
     private fun toggleAutoScroll() = mainActivity.autoScrollControl.run {
         if (tag == null) {
             val drawable = if (visibleOrInvisible) drawablePauseToPlay else drawablePlayToPause
-            mainActivity.floatingActionButton.setImageDrawable(drawable)
+            mainActivity.updateFloatingActionButtonDrawable(drawable)
             animatedVisibilityEnd = !animatedVisibilityEnd
             drawable?.start()
         }

@@ -10,12 +10,11 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
 
     override val viewModel = OptionsViewModel()
 
-    override val fragmentPagerAdapter by lazy { OptionsFragmentPagerAdapter(context, childFragmentManager) }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_options)
-        binding.viewPager.adapter = fragmentPagerAdapter
-        mainActivity.tabLayout.setupWithViewPager(binding.viewPager)
+        binding.viewPager.adapter = OptionsFragmentPagerAdapter(context, childFragmentManager)
+        mainActivity.enableTabLayout(binding.viewPager)
     }
 }
