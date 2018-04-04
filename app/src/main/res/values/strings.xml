@@ -39,7 +39,7 @@
     <string name="home_exit_confirmation_message">Are you sure you want to close the app?</string>
     <string name="home_exit_confirmation_close">Close</string>
     <string name="home_privacy_policy_title">Improve Campfire</string>
-    <string name="home_privacy_policy_message">Thanks for downloading the app! To track the popularity of various features as well as to simplify fixing any possible issues, the app would like to send anonymous analytics data and crash reports back to the developer. Do you allow this?</string>
+    <string name="home_privacy_policy_message">Thanks for downloading the app! To track the popularity of various features as well as to simplify fixing any possible issues, the app would like to send anonymous analytics data and crash reports back to the developer. None of this information will be shared with third parties. Do you allow this?</string>
     <string name="home_privacy_policy_positive">Yes</string>
     <string name="home_privacy_policy_negative">No</string>
 

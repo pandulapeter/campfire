@@ -34,17 +34,12 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        fun createTransition(delay: Long) = TransitionSet()
+        sharedElementEnterTransition = TransitionSet()
             .addTransition(FadeInTransition())
             .addTransition(ChangeBounds())
             .addTransition(ChangeTransform())
             .addTransition(ChangeImageTransform())
-            .apply {
-                ordering = TransitionSet.ORDERING_TOGETHER
-                startDelay = delay
-            }
-        sharedElementEnterTransition = createTransition(60)
-        sharedElementReturnTransition = createTransition(0)
+            .apply { ordering = TransitionSet.ORDERING_TOGETHER }
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
@@ -73,6 +68,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                     context.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() })
             )
         }
+        mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
         onDataLoaded()
     }
 
@@ -115,7 +111,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override fun onFloatingActionButtonPressed() = toggleAutoScroll()
 
     private fun onDataLoaded() {
-        mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
         mainActivity.enableFloatingActionButton()
     }
 

@@ -17,8 +17,6 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
 import android.transition.Explode
 import android.transition.Transition
-import android.transition.TransitionValues
-import android.transition.VisibilityPropagation
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -58,7 +56,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private val preferenceDatabase by inject<PreferenceDatabase>()
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
-    val secondaryNavigationMenu get() = binding.secondaryNavigation.menu
+    val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -127,6 +125,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         } else {
             binding.toolbarMainButton.setImageDrawable(drawable(if (savedInstanceState.isOnDetailScreen) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp))
         }
+        binding.drawerLayout.setDrawerLockMode(if (currentFragment is DetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
 
         // Show the privacy consent dialog if needed.
         if (preferenceDatabase.shouldShowPrivacyPolicy) {
@@ -240,22 +239,11 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun openDetailScreen(clickedView: View, songId: String, playlistId: String = "") {
         beforeScreenChanged()
-        val y = IntArray(2) { 0 }.let {
-            clickedView.getLocationInWindow(it)
-            it[1]
-        }
-
-        fun createExplodeTransition(delay: Long) = Explode().apply {
-            propagation = object : VisibilityPropagation() {
-                override fun getStartDelay(sceneRoot: ViewGroup?, transition: Transition?, startValues: TransitionValues?, endValues: TransitionValues?) = 0L
-            }
+        currentFragment?.enterTransition = Explode().apply {
+            propagation = null
             epicenterCallback = object : Transition.EpicenterCallback() {
-                override fun onGetEpicenter(transition: Transition?) = Rect(0, y, clickedView.width, y)
-            }.apply { startDelay = delay }
-        }
-        currentFragment?.run {
-            exitTransition = createExplodeTransition(0)
-            reenterTransition = createExplodeTransition(60)
+                override fun onGetEpicenter(transition: Transition?) = Rect().apply { clickedView.getGlobalVisibleRect(this) }
+            }
         }
         supportFragmentManager.beginTransaction()
             .setAllowOptimization(true)
