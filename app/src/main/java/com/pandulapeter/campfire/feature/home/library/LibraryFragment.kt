@@ -18,6 +18,10 @@ import com.pandulapeter.campfire.util.drawable
 
 class LibraryFragment : SongListFragment<LibraryViewModel>() {
 
+    companion object {
+        private const val COMPOUND_BUTTON_TRANSITION_DELAY = 10L
+    }
+
     override val viewModel: LibraryViewModel by lazy {
         LibraryViewModel(
             toolbarTextInputView = ToolbarTextInputView(mainActivity.toolbarContext).apply { title.updateToolbarTitle(R.string.home_library) },
@@ -97,16 +101,20 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         }
     }
 
+    private fun CompoundButton?.updateCheckedStateWithDelay(checked: Boolean) {
+        this?.postDelayed({ isChecked = checked }, COMPOUND_BUTTON_TRANSITION_DELAY)
+    }
+
     private inline fun consumeAndUpdateBoolean(menuItem: MenuItem, crossinline setValue: (Boolean) -> Unit, crossinline getValue: () -> Boolean) = consume {
         setValue(!getValue())
-        (menuItem.actionView as? CompoundButton)?.isChecked = getValue()
+        (menuItem.actionView as? CompoundButton).updateCheckedStateWithDelay(getValue())
     }
 
     private inline fun consumeAndUpdateSortingMode(sortingMode: LibraryViewModel.SortingMode, crossinline setValue: (LibraryViewModel.SortingMode) -> Unit) = consume {
         setValue(sortingMode)
-        (mainActivity.secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton)?.isChecked = sortingMode == LibraryViewModel.SortingMode.TITLE
-        (mainActivity.secondaryNavigationMenu[R.id.sort_by_artist].actionView as? CompoundButton)?.isChecked = sortingMode == LibraryViewModel.SortingMode.ARTIST
-        (mainActivity.secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.isChecked = sortingMode == LibraryViewModel.SortingMode.POPULARITY
+        (mainActivity.secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == LibraryViewModel.SortingMode.TITLE)
+        (mainActivity.secondaryNavigationMenu[R.id.sort_by_artist].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == LibraryViewModel.SortingMode.ARTIST)
+        (mainActivity.secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.updateCheckedStateWithDelay(sortingMode == LibraryViewModel.SortingMode.POPULARITY)
     }
 
     private operator fun Menu.get(@IdRes id: Int) = findItem(id)
