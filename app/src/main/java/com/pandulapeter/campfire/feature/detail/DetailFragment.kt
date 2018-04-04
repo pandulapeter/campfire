@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.util.*
 class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail) {
 
     companion object {
+        const val TRANSITION_DELAY = 50L
         private var Bundle.songId by BundleArgumentDelegate.String("songId")
         private var Bundle.playlistId by BundleArgumentDelegate.String("playlistId")
 
@@ -34,12 +35,17 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sharedElementEnterTransition = TransitionSet()
+        fun createTransition(delay: Long) = TransitionSet()
             .addTransition(FadeInTransition())
             .addTransition(ChangeBounds())
             .addTransition(ChangeTransform())
             .addTransition(ChangeImageTransform())
-            .apply { ordering = TransitionSet.ORDERING_TOGETHER }
+            .apply {
+                ordering = TransitionSet.ORDERING_TOGETHER
+                startDelay = delay
+            }
+        sharedElementEnterTransition = createTransition(TRANSITION_DELAY)
+        sharedElementReturnTransition = createTransition(0)
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {

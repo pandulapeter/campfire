@@ -239,11 +239,16 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun openDetailScreen(clickedView: View, songId: String, playlistId: String = "") {
         beforeScreenChanged()
-        currentFragment?.enterTransition = Explode().apply {
+        fun createTransition(delay: Long) = Explode().apply {
             propagation = null
             epicenterCallback = object : Transition.EpicenterCallback() {
                 override fun onGetEpicenter(transition: Transition?) = Rect().apply { clickedView.getGlobalVisibleRect(this) }
             }
+            startDelay = delay
+        }
+        currentFragment?.run {
+            exitTransition = createTransition(0)
+            reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
         }
         supportFragmentManager.beginTransaction()
             .setAllowOptimization(true)
