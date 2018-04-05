@@ -80,7 +80,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
         binding.toolbarMainButton.setOnClickListener {
             if (currentFragment is DetailFragment) {
-                beforeScreenChanged()
                 supportFragmentManager.popBackStack()
                 updateMainToolbarButton(false)
             } else {
@@ -168,7 +167,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 val fragment = currentFragment
                 if (fragment == null || !fragment.onBackPressed()) {
                     if (fragment is DetailFragment) {
-                        beforeScreenChanged()
                         updateMainToolbarButton(false)
                         super.onBackPressed()
                     } else {
@@ -252,28 +250,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    fun openDetailScreen(clickedView: View, songId: String, playlistId: String = "") {
-        beforeScreenChanged()
-        fun createTransition(delay: Long) = Explode().apply {
-            propagation = null
-            epicenterCallback = object : Transition.EpicenterCallback() {
-                override fun onGetEpicenter(transition: Transition?) = Rect().apply { clickedView.getGlobalVisibleRect(this) }
-            }
-            startDelay = delay
-        }
-        currentFragment?.run {
-            exitTransition = createTransition(0)
-            reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
-        }
-        supportFragmentManager.beginTransaction()
-            .setAllowOptimization(true)
-            .replace(R.id.fragment_container, DetailFragment.newInstance(songId, playlistId))
-            .addSharedElement(clickedView, clickedView.transitionName)
-            .addToBackStack(null)
-            .commit()
-    }
-
-    private fun beforeScreenChanged() {
+    fun beforeScreenChanged() {
 
         // Hide the keyboard.
         hideKeyboard(currentFocus)
@@ -312,8 +289,27 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
+    fun openDetailScreen(clickedView: View, songId: String, playlistId: String = "") {
+        fun createTransition(delay: Long) = Explode().apply {
+            propagation = null
+            epicenterCallback = object : Transition.EpicenterCallback() {
+                override fun onGetEpicenter(transition: Transition?) = Rect().apply { clickedView.getGlobalVisibleRect(this) }
+            }
+            startDelay = delay
+        }
+        currentFragment?.run {
+            exitTransition = createTransition(0)
+            reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
+        }
+        supportFragmentManager.beginTransaction()
+            .setAllowOptimization(true)
+            .replace(R.id.fragment_container, DetailFragment.newInstance(songId, playlistId))
+            .addSharedElement(clickedView, clickedView.transitionName)
+            .addToBackStack(null)
+            .commit()
+    }
+
     private inline fun <reified T : TopLevelFragment<*, *>> FragmentManager.handleReplace(crossinline newInstance: () -> T) {
-        beforeScreenChanged()
         currentFragment?.exitTransition = null
         beginTransaction()
             .replace(R.id.fragment_container, findFragmentByTag(T::class.java.name) ?: newInstance.invoke(), T::class.java.name)
