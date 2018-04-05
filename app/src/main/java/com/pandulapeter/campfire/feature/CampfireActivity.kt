@@ -48,12 +48,14 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
+    private var Bundle.currentScreenId by BundleArgumentDelegate.Int("currentScreenId")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
     private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? TopLevelFragment<*, *>?
     private val drawableMenuToBack by lazy { animatedDrawable(R.drawable.avd_menu_to_back_24dp) }
     private val drawableBackToMenu by lazy { animatedDrawable(R.drawable.avd_back_to_menu_24dp) }
     private val appShortcutManager by inject<AppShortcutManager>()
     private val preferenceDatabase by inject<PreferenceDatabase>()
+    private var currentScreenId = R.id.library
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
     val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
@@ -101,13 +103,18 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         binding.primaryNavigation.disableScrollbars()
         (binding.primaryNavigation.getHeaderView(0)?.findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
         binding.primaryNavigation.setNavigationItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.library -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { LibraryFragment() } }
-                R.id.history -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { HistoryFragment() } }
-                R.id.options -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { OptionsFragment() } }
-                R.id.manage_playlists -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManagePlaylistsFragment() } }
-                R.id.manage_downloads -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManageDownloadsFragment() } }
-                else -> false
+            if (currentScreenId == menuItem.itemId) {
+                consumeAndCloseDrawers()
+            } else {
+                currentScreenId = menuItem.itemId
+                return@setNavigationItemSelectedListener when (menuItem.itemId) {
+                    R.id.library -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { LibraryFragment() } }
+                    R.id.history -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { HistoryFragment() } }
+                    R.id.options -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { OptionsFragment() } }
+                    R.id.manage_playlists -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManagePlaylistsFragment() } }
+                    R.id.manage_downloads -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManageDownloadsFragment() } }
+                    else -> false
+                }
             }
         }
 
@@ -124,6 +131,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             binding.primaryNavigation.setCheckedItem(R.id.library)
         } else {
             binding.toolbarMainButton.setImageDrawable(drawable(if (savedInstanceState.isOnDetailScreen) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp))
+            currentScreenId = savedInstanceState.currentScreenId
         }
         binding.drawerLayout.setDrawerLockMode(if (currentFragment is DetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
 
@@ -183,6 +191,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
         outState?.isOnDetailScreen = currentFragment is DetailFragment
+        outState?.currentScreenId = currentScreenId
     }
 
     override fun onPositiveButtonSelected(id: Int) {
@@ -302,7 +311,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             .commit()
     }
 
-    private inline fun consumeAndCloseDrawers(crossinline action: () -> Unit) = consume {
+    private inline fun consumeAndCloseDrawers(crossinline action: () -> Unit = {}) = consume {
         action()
         binding.drawerLayout.closeDrawers()
     }

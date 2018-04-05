@@ -10,7 +10,6 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
 
     override val viewModel = OptionsViewModel()
 
-
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_options)
