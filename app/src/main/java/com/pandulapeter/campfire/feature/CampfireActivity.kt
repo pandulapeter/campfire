@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature
 
 import android.animation.Animator
+import android.animation.LayoutTransition
 import android.app.ActivityManager
 import android.databinding.DataBindingUtil
 import android.graphics.Rect
@@ -89,6 +90,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             }
         }
         binding.appBarLayout.addOnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) }
+        binding.appBarLayout.layoutTransition.setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
+        binding.coordinatorLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
         // Initialize the drawer layout.
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
@@ -242,8 +245,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     fun updateFloatingActionButtonDrawable(drawable: Drawable?) = binding.floatingActionButton.setImageDrawable(drawable)
 
     fun enableTabLayout(viewPager: ViewPager) {
-        binding.tabLayout.setupWithViewPager(viewPager)
-        binding.tabLayout.visibleOrGone = true
+        binding.tabLayout.run {
+            post {
+                setupWithViewPager(viewPager)
+                visibleOrGone = true
+            }
+        }
     }
 
     fun openDetailScreen(clickedView: View, songId: String, playlistId: String = "") {
@@ -277,8 +284,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         binding.appBarLayout.setExpanded(true, true)
 
         // Reset the tab layout.
-        binding.tabLayout.visibleOrGone = false
-        binding.tabLayout.setupWithViewPager(null)
+        binding.tabLayout.run {
+            post {
+                visibleOrGone = false
+                setupWithViewPager(null)
+            }
+        }
 
         // Reset the secondary navigation drawer.
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.END)
