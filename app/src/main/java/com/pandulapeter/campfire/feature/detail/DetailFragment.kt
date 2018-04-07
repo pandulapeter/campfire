@@ -35,6 +35,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override val viewModel by lazy { DetailViewModel((arguments.songs[arguments.index] as Song).id) }
     private val drawablePlayToPause by lazy { context.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { context.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
+    private val transposeHigher by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_higher) }
+    private val transposeLower by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_lower) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,7 +80,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             )
         }
         mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
-        onDataLoaded()
+        binding.viewPager.adapter = DetailPagerAdapter(childFragmentManager, songs.map { it.id })
+        binding.viewPager.onPageSelected { onPageChanged() }
     }
 
     override fun onPause() {
@@ -119,8 +122,15 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     override fun onFloatingActionButtonPressed() = toggleAutoScroll()
 
-    private fun onDataLoaded() {
+    fun onDataLoaded() {
         mainActivity.enableFloatingActionButton()
+        transposeHigher.isEnabled = true
+        transposeLower.isEnabled = true
+    }
+
+    private fun onPageChanged() {
+        mainActivity.expandAppBar()
+        mainActivity.disableFloatingActionButton()
     }
 
     private fun toggleAutoScroll() = mainActivity.autoScrollControl.run {

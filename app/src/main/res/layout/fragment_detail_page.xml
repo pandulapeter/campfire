@@ -5,7 +5,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.options.about.AboutViewModel" />
+            type="com.pandulapeter.campfire.feature.detail.page.DetailPageViewModel" />
 
     </data>
 
@@ -13,17 +13,13 @@
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipChildren="false"
-        android:clipToPadding="false"
-        android:fillViewport="true"
-        android:paddingBottom="@dimen/content_padding"
-        android:scrollbars="none">
+        android:fillViewport="true">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="@string/options_preferences_about" />
+            android:text="@{viewModel.songId}" />
 
     </android.support.v4.widget.NestedScrollView>
 

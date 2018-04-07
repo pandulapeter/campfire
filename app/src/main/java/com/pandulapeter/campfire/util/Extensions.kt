@@ -8,6 +8,7 @@ import android.support.annotation.*
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
+import android.support.v4.view.ViewPager
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.content.res.AppCompatResources
 import android.text.Editable
@@ -196,3 +197,12 @@ fun String.normalize() = this
 inline fun <T : Fragment> T.withArguments(bundleOperations: (Bundle) -> Unit): T = apply {
     arguments = Bundle().apply { bundleOperations(this) }
 }
+
+inline fun ViewPager.onPageSelected(crossinline onPageSelected: () -> Unit) = addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+
+    override fun onPageScrollStateChanged(state: Int) = Unit
+
+    override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) = Unit
+
+    override fun onPageSelected(position: Int) = onPageSelected()
+})

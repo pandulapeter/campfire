@@ -95,7 +95,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
         // Initialize the drawer layout.
         binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
-            binding.appBarLayout.setExpanded(true, true)
+            expandAppBar()
             currentFragment?.onDrawerStateChanged(it)
             if (it == DrawerLayout.STATE_DRAGGING) {
                 hideKeyboard(currentFocus)
@@ -256,6 +256,22 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun enableFloatingActionButton() = binding.floatingActionButton.show()
 
+    fun disableFloatingActionButton() = binding.autoScrollControl.run {
+        if (animatedVisibilityEnd) {
+            animatedVisibilityEnd = false
+            (tag as? Animator)?.let {
+                it.addListener(onAnimationEnd = {
+                    binding.floatingActionButton.hide()
+                    tag = null
+                    visibleOrGone = false
+
+                })
+            }
+        } else {
+            binding.floatingActionButton.hide()
+        }
+    }
+
     fun updateFloatingActionButtonDrawable(drawable: Drawable?) = binding.floatingActionButton.setImageDrawable(drawable)
 
     fun enableTabLayout(viewPager: ViewPager) {
@@ -265,6 +281,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
+    fun expandAppBar() = binding.appBarLayout.setExpanded(true, true)
+
     fun beforeScreenChanged() {
 
         // Hide the keyboard.
@@ -272,7 +290,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
         // Reset the app bar.
         binding.toolbarButtonContainer.removeAllViews()
-        binding.appBarLayout.setExpanded(true, true)
+        expandAppBar()
 
         // Reset the tab layout.
         binding.tabLayout.run {
@@ -285,21 +303,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         binding.secondaryNavigation.menu.clear()
 
         // Reset the floating action button.
-        binding.autoScrollControl.run {
-            if (animatedVisibilityEnd) {
-                animatedVisibilityEnd = false
-                (tag as? Animator)?.let {
-                    it.addListener(onAnimationEnd = {
-                        binding.floatingActionButton.hide()
-                        tag = null
-                        visibleOrGone = false
-
-                    })
-                }
-            } else {
-                binding.floatingActionButton.hide()
-            }
-        }
+        disableFloatingActionButton()
     }
 
     fun openDetailScreen(clickedView: View, songs: List<Song>, index: Int = 0, shouldShowManagePlaylist: Boolean = true) {
