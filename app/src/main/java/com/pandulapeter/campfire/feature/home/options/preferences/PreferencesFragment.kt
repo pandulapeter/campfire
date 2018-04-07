@@ -18,7 +18,7 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
 
     override val viewModel = PreferencesViewModel()
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel.shouldUseDarkTheme.onPropertyChanged(this) { activity?.recreate() }
         viewModel.shouldShowHintsResetConfirmation.onEventTriggered(this) {
             AlertDialogFragment.show(

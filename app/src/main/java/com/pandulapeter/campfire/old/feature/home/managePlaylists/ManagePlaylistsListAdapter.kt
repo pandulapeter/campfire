@@ -39,7 +39,7 @@ class ManagePlaylistsListAdapter : RecyclerView.Adapter<ManagePlaylistsListAdapt
                             override fun getNewListSize() = newItems.size
 
                             override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int) =
-                                    oldItems[oldItemPosition].playlist.id == newItems[newItemPosition].playlist.id
+                                oldItems[oldItemPosition].playlist.id == newItems[newItemPosition].playlist.id
 
                             override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
                         })
@@ -57,9 +57,9 @@ class ManagePlaylistsListAdapter : RecyclerView.Adapter<ManagePlaylistsListAdapt
         setDragHandleTouchListener(dragHandleTouchListener)
     }
 
-    override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) = onBindViewHolder(holder, position, null)
+    override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) = onBindViewHolder(holder, position, listOf())
 
-    override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int, payloads: List<Any>?) {
+    override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int, payloads: List<Any>) {
         holder.binding.viewModel = items[position]
         holder.binding.executePendingBindings()
     }
@@ -90,7 +90,7 @@ class ManagePlaylistsListAdapter : RecyclerView.Adapter<ManagePlaylistsListAdapt
 
         companion object {
             fun create(parent: ViewGroup): PlaylistViewHolder =
-                    PlaylistViewHolder(DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_playlist, parent, false))
+                PlaylistViewHolder(DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_playlist, parent, false))
         }
     }
 

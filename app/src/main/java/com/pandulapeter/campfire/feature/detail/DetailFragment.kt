@@ -37,10 +37,10 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
     }
 
-    override val viewModel by lazy { DetailViewModel(songs[arguments.index].id) }
-    private val songs by lazy { arguments.songs.filterIsInstance<Song>() }
-    private val drawablePlayToPause by lazy { context.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
-    private val drawablePauseToPlay by lazy { context.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
+    override val viewModel by lazy { DetailViewModel(songs[arguments?.index ?: 0].id) }
+    private val songs by lazy { arguments?.songs?.filterIsInstance<Song>() ?: listOf() }
+    private val drawablePlayToPause by lazy { mainActivity.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
+    private val drawablePauseToPlay by lazy { mainActivity.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
     private val transposeHigher by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_higher) }
     private val transposeLower by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_lower) }
     private val multiWindowFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -64,16 +64,16 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         sharedElementReturnTransition = createTransition(0)
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
-        defaultToolbar.updateToolbarTitle(songs[arguments.index].title, songs[arguments.index].artist)
+        defaultToolbar.updateToolbarTitle(songs[arguments?.index ?: 0].title, songs[arguments?.index ?: 0].artist)
         if (savedInstanceState == null) {
             mainActivity.updateMainToolbarButton(true)
         }
-        mainActivity.updateFloatingActionButtonDrawable(context.drawable(R.drawable.ic_play_24dp))
+        mainActivity.updateFloatingActionButtonDrawable(mainActivity.drawable(R.drawable.ic_play_24dp))
         mainActivity.autoScrollControl.visibleOrGone = false
-        (view?.parent as? ViewGroup)?.run {
+        (view.parent as? ViewGroup)?.run {
             viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
                     viewTreeObserver?.removeOnPreDrawListener(this)
@@ -108,7 +108,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             mainActivity.autoScrollControl.tag = null
         }
         mainActivity.autoScrollControl.visibleOrInvisible = false
-        mainActivity.updateFloatingActionButtonDrawable(context.drawable(R.drawable.ic_play_24dp))
+        mainActivity.updateFloatingActionButtonDrawable(mainActivity.drawable(R.drawable.ic_play_24dp))
     }
 
     override fun onBackPressed() = if (mainActivity.autoScrollControl.visibleOrInvisible) {
@@ -126,7 +126,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         R.id.transpose_higher -> consume { }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), 1) }
         R.id.transpose_lower -> consume { }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), -1) }
         R.id.play_in_youtube -> consumeAndCloseDrawer {
-            "${songs[arguments.index].title} - ${songs[arguments.index].artist}".let {
+            "${songs[arguments?.index ?: 0].title} - ${songs[arguments?.index ?: 0].artist}".let {
                 try {
                     startActivity(getYouTubeIntent("com.lara.android.youtube", it))
                 } catch (_: ActivityNotFoundException) {

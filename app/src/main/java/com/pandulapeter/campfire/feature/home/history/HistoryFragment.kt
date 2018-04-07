@@ -10,7 +10,7 @@ class HistoryFragment : TopLevelFragment<FragmentHistoryBinding, HistoryViewMode
 
     override val viewModel = HistoryViewModel()
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_history)
         mainActivity.toolbarContext.let { context ->

@@ -39,11 +39,11 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
     var playlistActionClickListener: ((position: Int) -> Unit)? = null
     var downloadActionClickListener: ((position: Int) -> Unit)? = null
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView?) {
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         this.recyclerView = recyclerView
     }
 
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView?) {
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         this.recyclerView = null
     }
 
@@ -56,10 +56,10 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
         return viewHolder
     }
 
-    override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int) = onBindViewHolder(holder, position, null)
+    override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int) = onBindViewHolder(holder, position, listOf())
 
-    override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int, payloads: List<Any>?) {
-        if (payloads?.isNotEmpty() == true) {
+    override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int, payloads: List<Any>) {
+        if (payloads.isNotEmpty()) {
             payloads.forEach { payload ->
                 items[position].run {
                     when (payload) {

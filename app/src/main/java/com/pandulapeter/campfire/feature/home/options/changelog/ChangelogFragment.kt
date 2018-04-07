@@ -10,7 +10,7 @@ class ChangelogFragment : CampfireFragment<FragmentOptionsChangelogBinding, Chan
 
     override val viewModel = ChangelogViewModel()
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.recyclerView.setHasFixedSize(true)
     }
 }

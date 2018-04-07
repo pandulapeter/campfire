@@ -28,7 +28,7 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected val defaultToolbar by lazy { AppCompatTextView(context).apply { gravity = Gravity.CENTER_VERTICAL } }
 
     @CallSuper
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         mainActivity.beforeScreenChanged()
         mainActivity.updateToolbarTitle(inflateToolbarTitle(mainActivity.toolbarContext))
     }

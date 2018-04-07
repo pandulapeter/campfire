@@ -11,7 +11,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
 
     override val viewModel = ManagePlaylistsViewModel()
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_manage_playlists)
         mainActivity.toolbarContext.let { context ->
@@ -20,7 +20,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
                     context.createToolbarButton(R.drawable.ic_delete_24dp) { showSnackbar(R.string.work_in_progress) })
             )
         }
-        mainActivity.updateFloatingActionButtonDrawable(context.drawable(R.drawable.ic_add_24dp))
+        mainActivity.updateFloatingActionButtonDrawable(mainActivity.drawable(R.drawable.ic_add_24dp))
         mainActivity.enableFloatingActionButton()
     }
 

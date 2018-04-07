@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.util.onPropertyChanged
 
 abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, VM>(R.layout.fragment_song_list) {
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
         viewModel.adapter.run { itemClickListener = { position, clickedView -> mainActivity.openDetailScreen(clickedView, listOf(items[position].song)) } }

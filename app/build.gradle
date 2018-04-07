@@ -91,7 +91,7 @@ dependencies {
     implementation "com.android.support:cardview-v7:$supportLibraryVersion"
     implementation "com.android.support.constraint:constraint-layout:1.0.2"
 }
-
+// Blockers in newer support library versions: app bar snapping bug and snackbar swipe behavior.
 configurations.all {
     resolutionStrategy.eachDependency { DependencyResolveDetails details ->
         if (details.requested.group == "com.android.support") {

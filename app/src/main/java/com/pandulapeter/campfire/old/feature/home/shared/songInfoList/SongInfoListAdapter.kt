@@ -66,10 +66,10 @@ class SongInfoListAdapter : RecyclerView.Adapter<SongInfoListAdapter.SongInfoVie
         return viewHolder
     }
 
-    override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int) = onBindViewHolder(holder, position, null)
+    override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int) = onBindViewHolder(holder, position, listOf())
 
-    override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int, payloads: List<Any>?) {
-        if (payloads?.isNotEmpty() == true) {
+    override fun onBindViewHolder(holder: SongInfoViewHolder, position: Int, payloads: List<Any>) {
+        if (payloads.isNotEmpty()) {
             payloads.forEach { payload ->
                 items[position].run {
                     when (payload) {

@@ -55,14 +55,14 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
     private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
     private val searchToggle: ToolbarButton by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) { viewModel.toggleTextInputVisibility() } }
-    private val drawableCloseToSearch by lazy { context.animatedDrawable(R.drawable.avd_close_to_search_24dp) }
-    private val drawableSearchToClose by lazy { context.animatedDrawable(R.drawable.avd_search_to_close_24dp) }
+    private val drawableCloseToSearch by lazy { mainActivity.animatedDrawable(R.drawable.avd_close_to_search_24dp) }
+    private val drawableSearchToClose by lazy { mainActivity.animatedDrawable(R.drawable.avd_search_to_close_24dp) }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         savedInstanceState?.let {
             if (it.isTextInputVisible) {
-                searchToggle.setImageDrawable(context.drawable(R.drawable.ic_close_24dp))
+                searchToggle.setImageDrawable(mainActivity.drawable(R.drawable.ic_close_24dp))
                 viewModel.toolbarTextInputView.textInput.run {
                     setText(savedInstanceState.searchQuery)
                     setSelection(text.length)
@@ -73,10 +73,10 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
-        super.onSaveInstanceState(outState)
-        outState?.isTextInputVisible = viewModel.toolbarTextInputView.isTextInputVisible
-        outState?.searchQuery = viewModel.query
+    override fun onSaveInstanceState(outState: Bundle) = outState.run {
+        super.onSaveInstanceState(this)
+        isTextInputVisible = viewModel.toolbarTextInputView.isTextInputVisible
+        searchQuery = viewModel.query
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
