@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.home.shared
 
 import android.os.Bundle
+import android.support.annotation.CallSuper
 import android.support.v7.widget.RecyclerView
 import android.transition.Transition
 import android.view.View
@@ -18,6 +19,7 @@ import com.pandulapeter.campfire.util.onPropertyChanged
 
 abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, VM>(R.layout.fragment_song_list), Transition.TransitionListener {
 
+    @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
