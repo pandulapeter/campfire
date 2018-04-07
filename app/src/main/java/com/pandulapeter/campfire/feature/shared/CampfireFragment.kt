@@ -48,18 +48,26 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     open fun onBackPressed() = false
 
-    protected fun showSnackbar(@StringRes message: Int, isRetry: Boolean = true, action: (() -> Unit)? = null, dismissAction: (() -> Unit)? = null) =
-        showSnackbar(getString(message), isRetry, action, dismissAction)
-
-    protected fun showSnackbar(message: String, isRetry: Boolean = true, action: (() -> Unit)? = null, dismissAction: (() -> Unit)? = null) {
+    protected fun showHint(@StringRes message: Int, action: () -> Unit) {
         snackbar?.dismiss()
         snackbar = mainActivity.snackbarRoot
-            .makeSnackbar(message, if (action == null && dismissAction == null) Snackbar.LENGTH_SHORT else Snackbar.LENGTH_LONG, dismissAction)
-            .apply { action?.let { setAction(if (isRetry) R.string.try_again else R.string.undo, { action() }) } }
+            .makeSnackbar(getString(message), Snackbar.LENGTH_INDEFINITE)
+            .apply { setAction(R.string.got_it, { action() }) }
         snackbar?.show()
     }
 
-    private fun View.makeSnackbar(message: String, duration: Int, dismissAction: (() -> Unit)?) = Snackbar.make(this, message, duration).apply {
+    protected fun showSnackbar(@StringRes message: Int, @StringRes actionText: Int = R.string.try_again, action: (() -> Unit)? = null, dismissAction: (() -> Unit)? = null) =
+        showSnackbar(getString(message), actionText, action, dismissAction)
+
+    protected fun showSnackbar(message: String, @StringRes actionText: Int = R.string.try_again, action: (() -> Unit)? = null, dismissAction: (() -> Unit)? = null) {
+        snackbar?.dismiss()
+        snackbar = mainActivity.snackbarRoot
+            .makeSnackbar(message, if (action == null && dismissAction == null) Snackbar.LENGTH_SHORT else Snackbar.LENGTH_LONG, dismissAction)
+            .apply { action?.let { setAction(actionText, { action() }) } }
+        snackbar?.show()
+    }
+
+    private fun View.makeSnackbar(message: String, duration: Int, dismissAction: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {
         view.setBackgroundColor(context.color(R.color.primary))
         dismissAction?.let {
             addCallback(object : Snackbar.Callback() {
