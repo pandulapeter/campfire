@@ -250,18 +250,9 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         })
     }
 
-    //TODO: Find a better way to enforce animations than delaying.
     fun updateToolbarButtons(buttons: List<View>) = binding.toolbarButtonContainer.run {
-        fun addViews() = buttons.forEach { addView(it, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
         if (childCount == 0) {
-            if (binding.appBarLayout.height - binding.appBarLayout.bottom != 0) {
-                addViews()
-            } else {
-                postDelayed({
-                    removeAllViews()
-                    addViews()
-                }, 400)
-            }
+            buttons.forEach { addView(it, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
         }
     }
 
