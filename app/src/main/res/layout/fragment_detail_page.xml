@@ -13,9 +13,11 @@
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:animateLayoutChanges="true"
         android:fillViewport="true">
 
         <TextView
+            android:id="@+id/text_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
@@ -23,7 +25,8 @@
             android:paddingEnd="@dimen/first_keyline"
             android:paddingStart="@dimen/first_keyline"
             android:paddingTop="@dimen/large_content_padding"
-            android:text="@{viewModel.text}" />
+            android:text="@{viewModel.text}"
+            android:visibility="invisible" />
 
     </android.support.v4.widget.NestedScrollView>
 

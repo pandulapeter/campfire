@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.databinding.FragmentDetailPageBinding
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.visibleOrInvisible
 import com.pandulapeter.campfire.util.withArguments
 
 class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPageViewModel>(R.layout.fragment_detail_page) {
@@ -24,5 +25,10 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         (parentFragment as? DetailFragment)?.onDataLoaded()
+        if (savedInstanceState == null) {
+            binding.root.postDelayed({ if (isAdded) binding.textView.visibleOrInvisible = true }, 200)
+        } else {
+            binding.textView.visibleOrInvisible = true
+        }
     }
 }
