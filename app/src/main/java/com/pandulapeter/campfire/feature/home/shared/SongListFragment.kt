@@ -27,12 +27,16 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             itemClickListener = { position, clickedView -> mainActivity.openDetailScreen(clickedView, listOf(items[position].song)) }
             downloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.song) } }
         }
-        viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered { showSnackbar(R.string.library_update_error, View.OnClickListener { viewModel.updateData() }) }
+        viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered {
+            showSnackbar(
+                message = R.string.library_update_error,
+                action = View.OnClickListener { viewModel.updateData() })
+        }
         viewModel.downloadSongError.onEventTriggered { song ->
             song?.let {
                 showSnackbar(
-                    mainActivity.getString(R.string.library_song_download_error, song.title),
-                    View.OnClickListener { viewModel.downloadSong(song) })
+                    message = mainActivity.getString(R.string.library_song_download_error, song.title),
+                    action = View.OnClickListener { viewModel.downloadSong(song) })
             }
         }
         viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }

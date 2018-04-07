@@ -7,11 +7,11 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.ManagePlaylistsBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.old.feature.home.HomeViewModel
-import com.pandulapeter.campfire.old.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.NewPlaylistDialogFragment
@@ -19,7 +19,6 @@ import com.pandulapeter.campfire.old.util.onEventTriggered
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
 /**

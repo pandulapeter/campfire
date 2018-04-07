@@ -2,9 +2,7 @@ package com.pandulapeter.campfire.feature.home.manageDownloads
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableInt
-import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
 import com.pandulapeter.campfire.data.model.remote.Song
-import com.pandulapeter.campfire.data.model.remote.SongDetail
 import com.pandulapeter.campfire.feature.home.shared.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.SongViewModel
 
@@ -12,27 +10,34 @@ class ManageDownloadsViewModel : SongListViewModel() {
 
     val shouldShowDeleteAll = ObservableBoolean()
     val songCount = ObservableInt()
+    private var songToDeleteId: String? = null
 
     override fun Sequence<Song>.createViewModels() = filter { songDetailRepository.isSongDownloaded(it.id) }
+        .filter { it.id != songToDeleteId }
         .map { SongViewModel(songDetailRepository, it) }
         .toList()
 
+    override fun onListUpdated(items: List<SongViewModel>) {
+        songCount.set(items.size)
+        shouldShowDeleteAll.set(items.isNotEmpty())
+    }
+
     fun deleteAllSongs() = songDetailRepository.deleteAllSongs()
 
-    override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) {
-        super.onSongDetailRepositoryDownloadSuccess(songDetail)
-        shouldShowDeleteAll.set(true)
-        songCount.set(songDetailRepository.getDownloadedSongCount())
+    fun deleteSongTemporarily(songId: String) {
+        songToDeleteId = songId
+        updateAdapterItems()
     }
 
-    override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) {
-        super.onSongDetailRepositoryDownloadQueueChanged(songIds)
-        songCount.set(songDetailRepository.getDownloadedSongCount())
+    fun cancelDeleteSong() {
+        songToDeleteId = null
+        updateAdapterItems()
     }
 
-    override fun onSongDetailRepositoryUpdated(downloadedSongs: List<SongDetailMetadata>) {
-        super.onSongDetailRepositoryUpdated(downloadedSongs)
-        shouldShowDeleteAll.set(downloadedSongs.isNotEmpty())
-        songCount.set(songDetailRepository.getDownloadedSongCount())
+    fun deleteSongPermanently() {
+        songToDeleteId?.let {
+            songDetailRepository.deleteSong(it)
+            songToDeleteId = null
+        }
     }
 }

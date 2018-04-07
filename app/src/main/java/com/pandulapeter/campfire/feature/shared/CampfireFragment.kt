@@ -20,6 +20,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected lateinit var binding: B
     protected abstract val viewModel: VM
     protected val mainActivity get() = (activity as? CampfireActivity) ?: throw IllegalStateException("The Fragment is not attached to CampfireActivity.")
+    private var snackbar: Snackbar? = null
 
     final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         viewModel.componentCallbacks = this
@@ -36,6 +37,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     override fun onPause() {
         super.onPause()
+        snackbar?.dismiss()
         viewModel.unsubscribe()
     }
 
@@ -46,19 +48,22 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     open fun onBackPressed() = false
 
-    protected fun showSnackbar(@StringRes message: Int, retryAction: View.OnClickListener? = null) = showSnackbar(getString(message), retryAction)
+    protected fun showSnackbar(@StringRes message: Int, isRetry: Boolean = true, action: View.OnClickListener? = null, dismissAction: (() -> Unit)? = null) =
+        showSnackbar(getString(message), isRetry, action, dismissAction)
 
-    protected fun showSnackbar(message: String, retryAction: View.OnClickListener? = null) = mainActivity.snackbarRoot
-        .makeSnackbar(message, if (retryAction == null) Snackbar.LENGTH_SHORT else Snackbar.LENGTH_LONG)
-        .apply { retryAction?.let { setAction(R.string.try_again, it) } }
+    protected fun showSnackbar(message: String, isRetry: Boolean = true, action: View.OnClickListener? = null, dismissAction: (() -> Unit)? = null) = mainActivity.snackbarRoot
+        .makeSnackbar(message, if (action == null) Snackbar.LENGTH_SHORT else Snackbar.LENGTH_LONG, dismissAction)
+        .apply { action?.let { setAction(if (isRetry) R.string.try_again else R.string.undo, it) } }
         .show()
 
-    private fun View.makeSnackbar(message: String, duration: Int, dismissListener: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {
+    private fun View.makeSnackbar(message: String, duration: Int, dismissAction: (() -> Unit)?) = Snackbar.make(this, message, duration).apply {
         view.setBackgroundColor(context.color(R.color.primary))
-        dismissListener?.let {
+        dismissAction?.let {
             addCallback(object : Snackbar.Callback() {
                 override fun onDismissed(transientBottomBar: Snackbar?, event: Int) = it()
             })
         }
+        snackbar?.dismiss()
+        snackbar = this
     }
 }

@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.old.feature.home.shared
+package com.pandulapeter.campfire.feature.home.shared
 
 import android.animation.ObjectAnimator
 import android.graphics.Canvas
@@ -6,9 +6,6 @@ import android.support.v4.view.ViewCompat
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 
-/**
- * Provides support for specifying the elevation to use when an item is being dragged.
- */
 abstract class ElevationItemTouchHelperCallback(
     private val activeElevationChange: Float,
     dragDirs: Int = 0,

@@ -87,6 +87,8 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
         }
     }
 
+    protected open fun onListUpdated(items: List<SongViewModel>) = Unit
+
     fun updateData() = songRepository.updateData()
 
     fun downloadSong(song: Song) = songDetailRepository.getSongDetail(song)
@@ -97,7 +99,10 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
         coroutine?.cancel()
         coroutine = async(UI) {
             adapter.shouldScrollToTop = shouldScrollToTop
-            adapter.items = async(CommonPool) { librarySongs.createViewModels() }.await()
+            async(CommonPool) { librarySongs.createViewModels() }.await().let {
+                adapter.items = it
+                onListUpdated(it)
+            }
             coroutine = null
         }
     }
