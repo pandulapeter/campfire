@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.util.animatedDrawable
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
 
+
 class LibraryFragment : SongListFragment<LibraryViewModel>() {
 
     companion object {
@@ -25,7 +26,10 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     override val viewModel: LibraryViewModel by lazy {
         LibraryViewModel(
             toolbarTextInputView = ToolbarTextInputView(mainActivity.toolbarContext).apply { title.updateToolbarTitle(R.string.home_library) },
-            updateSearchToggleDrawable = { searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { this?.start() }) },
+            updateSearchToggleDrawable = {
+                searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { this?.start() })
+                mainActivity.shouldAllowAppBarScrolling = !it
+            },
             onDataLoaded = { languages ->
                 mainActivity.toolbarContext.let { context ->
                     mainActivity.updateToolbarButtons(listOf(
@@ -71,6 +75,11 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                 viewModel.toolbarTextInputView.showTextInput()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mainActivity.shouldAllowAppBarScrolling = !viewModel.toolbarTextInputView.isTextInputVisible
     }
 
     override fun onSaveInstanceState(outState: Bundle) = outState.run {

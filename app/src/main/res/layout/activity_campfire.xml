@@ -31,6 +31,7 @@
 
                     <android.support.constraint.ConstraintLayout
                         android:layout_width="match_parent"
+                        android:id="@+id/toolbar_container"
                         android:layout_height="wrap_content"
                         android:animateLayoutChanges="true"
                         android:clipChildren="false"

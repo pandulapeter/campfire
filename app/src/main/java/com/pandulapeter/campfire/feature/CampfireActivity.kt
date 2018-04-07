@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.annotation.MenuRes
 import android.support.design.internal.NavigationMenuView
+import android.support.design.widget.AppBarLayout
 import android.support.design.widget.NavigationView
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
@@ -51,6 +52,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
     private var Bundle.currentScreenId by BundleArgumentDelegate.Int("currentScreenId")
     private var Bundle.isAppBarExpanded by BundleArgumentDelegate.Boolean("isAppBarExpanded")
+    private var Bundle.toolbarContainerScrollFlags by BundleArgumentDelegate.Boolean("shouldAllowAppBarScrolling")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
     private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? TopLevelFragment<*, *>?
     private val drawableMenuToBack by lazy { animatedDrawable(R.drawable.avd_menu_to_back_24dp) }
@@ -63,6 +65,16 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     val toolbarContext get() = binding.appBarLayout.context!!
     val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
     val snackbarRoot get() = binding.rootCoordinatorLayout
+    var shouldAllowAppBarScrolling
+        get() = (binding.toolbarContainer.layoutParams as AppBarLayout.LayoutParams).scrollFlags != 0
+        set(value) {
+            (binding.toolbarContainer.layoutParams as AppBarLayout.LayoutParams).scrollFlags = if (value) {
+                AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or
+                        AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or
+                        AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or
+                        AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
+            } else 0
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -94,6 +106,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         binding.appBarLayout.addOnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) }
         binding.appBarLayout.layoutTransition.setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
         binding.coordinatorLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        shouldAllowAppBarScrolling = true
 
         // Initialize the drawer layout.
         binding.drawerLayout.addDrawerListener(
@@ -140,6 +153,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         } else {
             binding.toolbarMainButton.setImageDrawable(drawable(if (savedInstanceState.isOnDetailScreen) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp))
             currentScreenId = savedInstanceState.currentScreenId
+            shouldAllowAppBarScrolling = savedInstanceState.toolbarContainerScrollFlags
             if (currentScreenId == R.id.options) {
                 binding.appBarLayout.run {
                     forceExpandAppBar = savedInstanceState.isAppBarExpanded
@@ -209,6 +223,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         outState?.isOnDetailScreen = currentFragment is DetailFragment
         outState?.currentScreenId = currentScreenId
         outState?.isAppBarExpanded = binding.appBarLayout.height - binding.appBarLayout.bottom == 0
+        outState?.toolbarContainerScrollFlags = shouldAllowAppBarScrolling
     }
 
     override fun onPositiveButtonSelected(id: Int) {
@@ -301,6 +316,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         hideKeyboard(currentFocus)
 
         // Reset the app bar.
+        shouldAllowAppBarScrolling = true
         binding.toolbarButtonContainer.removeAllViews()
         expandAppBar()
 
