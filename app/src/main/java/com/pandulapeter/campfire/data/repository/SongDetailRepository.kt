@@ -81,8 +81,9 @@ class SongDetailRepository(
 
     fun deleteAllSongs() {
         data.clear()
-        async(CommonPool) {
-            songDatabase.songDetailDao().deleteAll()
+        async(UI) {
+            async(CommonPool) { songDatabase.songDetailDao().deleteAll() }.await()
+            notifyDataChanged()
         }
     }
 

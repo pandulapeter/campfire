@@ -58,6 +58,7 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
                 adapter.notifyItemChanged(index, SongViewModel.DownloadState.Downloaded.UpToDate)
             }
         }
+        updateAdapterItems()
     }
 
     override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) {
