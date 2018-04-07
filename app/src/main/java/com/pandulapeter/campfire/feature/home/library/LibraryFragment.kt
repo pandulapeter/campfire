@@ -31,6 +31,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                 mainActivity.shouldAllowAppBarScrolling = !it
                 binding.swipeRefreshLayout.isEnabled = !it
                 mainActivity.setTransitionsEnabled(it)
+                binding.swipeRefreshLayout.isRefreshing = viewModel.isLoading.get()
             },
             onDataLoaded = { languages ->
                 mainActivity.toolbarContext.let { context ->

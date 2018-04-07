@@ -55,17 +55,16 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
     override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) {
         adapter.items.indexOfLast { it.song.id == songDetail.id }.let { index ->
             if (index != RecyclerView.NO_POSITION) {
-                adapter.notifyItemChanged(index, SongViewModel.DownloadState.Downloaded.UpToDate)
+                adapter.notifyItemChanged(index, SongAdapter.Payload.DownloadStateChanged(SongViewModel.DownloadState.Downloaded.UpToDate))
             }
         }
-        updateAdapterItems()
     }
 
     override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) {
         songIds.forEach { songId ->
             adapter.items.indexOfLast { it.song.id == songId }.let { index ->
                 if (index != RecyclerView.NO_POSITION) {
-                    adapter.notifyItemChanged(index, SongViewModel.DownloadState.Downloading)
+                    adapter.notifyItemChanged(index, SongAdapter.Payload.DownloadStateChanged(SongViewModel.DownloadState.Downloading))
                 }
             }
         }
@@ -77,11 +76,13 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
             if (index != RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
-                    when {
-                        songDetailRepository.isSongDownloaded(song.id) -> SongViewModel.DownloadState.Downloaded.Deprecated
-                        song.isNew -> SongViewModel.DownloadState.NotDownloaded.New
-                        else -> SongViewModel.DownloadState.NotDownloaded.Old
-                    }
+                    SongAdapter.Payload.DownloadStateChanged(
+                        when {
+                            songDetailRepository.isSongDownloaded(song.id) -> SongViewModel.DownloadState.Downloaded.Deprecated
+                            song.isNew -> SongViewModel.DownloadState.NotDownloaded.New
+                            else -> SongViewModel.DownloadState.NotDownloaded.Old
+                        }
+                    )
                 )
             }
         }
