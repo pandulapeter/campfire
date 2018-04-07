@@ -11,7 +11,7 @@ data class SongViewModel(
     val shouldShowPlaylistButton: Boolean = true,
     var downloadState: DownloadState = when {
         songDetailRepository.isSongDownloading(song.id) -> DownloadState.Downloading
-        songDetailRepository.isSongDownloaded(song.id) -> if (songDetailRepository.getSongVersion(song.id) != song.version) DownloadState.Downloaded.Deprecated else DownloadState.Downloaded.UpToDate
+        songDetailRepository.isSongDownloaded(song.id) -> if (songDetailRepository.getSongVersion(song.id) != song.version ?: 0) DownloadState.Downloaded.Deprecated else DownloadState.Downloaded.UpToDate
         else -> if (song.isNew) DownloadState.NotDownloaded.New else DownloadState.NotDownloaded.Old
     }
 ) {

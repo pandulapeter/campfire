@@ -1,11 +1,11 @@
 package com.pandulapeter.campfire.data.repository
 
+import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.model.remote.SongDetail
-import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
+import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.SongDatabase
 import com.pandulapeter.campfire.data.repository.shared.Repository
-import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.util.enqueueCall
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
@@ -29,33 +29,48 @@ class SongDetailRepository(
         subscriber.onSongDetailRepositoryDownloadQueueChanged(downloadQueue)
     }
 
-    fun downloadSong(song: Song) {
-        downloadQueue.add(song.id)
-        notifyDownloadQueChanged()
-        networkManager.service.getSong(song.id).enqueueCall(
-            onSuccess = { songDetail ->
-                songDetail.version = song.version ?: 0
+    fun getSongDetail(song: Song) {
+        if (!isSongDownloading(song.id)) {
+            if (isSongDownloaded(song.id)) {
                 async(UI) {
-                    async(CommonPool) { songDatabase.songDetailDao().insert(songDetail) }.await()
-                    refreshDataSet()
-                    subscribers.forEach { it.onSongDetailRepositoryDownloadSuccess(songDetail) }
-                    downloadQueue.remove(song.id)
-                    notifyDownloadQueChanged()
+                    async(CommonPool) { songDatabase.songDetailDao().get(song.id) }.await().let { songDetail ->
+                        if (songDetail == null) {
+                            deleteSong(song.id)
+                            getSongDetail(song)
+                        } else {
+                            subscribers.forEach { it.onSongDetailRepositoryDownloadSuccess(songDetail) }
+                        }
+                    }
                 }
-            },
-            onFailure = {
-                downloadQueue.remove(song.id)
+            } else {
+                downloadQueue.add(song.id)
                 notifyDownloadQueChanged()
-                subscribers.forEach { it.onSongDetailRepositoryDownloadError(song) }
+                networkManager.service.getSong(song.id).enqueueCall(
+                    onSuccess = { songDetail ->
+                        songDetail.version = song.version ?: 0
+                        async(UI) {
+                            async(CommonPool) { songDatabase.songDetailDao().insert(songDetail) }.await()
+                            refreshDataSet()
+                            subscribers.forEach { it.onSongDetailRepositoryDownloadSuccess(songDetail) }
+                            downloadQueue.remove(song.id)
+                            notifyDownloadQueChanged()
+                        }
+                    },
+                    onFailure = {
+                        downloadQueue.remove(song.id)
+                        notifyDownloadQueChanged()
+                        subscribers.forEach { it.onSongDetailRepositoryDownloadError(song) }
+                    }
+                )
             }
-        )
+        }
     }
 
     fun isSongDownloading(songId: String) = downloadQueue.contains(songId)
 
     fun isSongDownloaded(songId: String) = data.find { it.id == songId } != null
 
-    fun getSongVersion(songId: String) = data.find { it.id == songId }?.version
+    fun getSongVersion(songId: String) = data.find { it.id == songId }?.version ?: 0
 
     fun deleteSong(songId: String) {
         data.swap(data.filter { it.id == songId })

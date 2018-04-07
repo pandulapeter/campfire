@@ -59,7 +59,7 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
 
     fun updateData() = songRepository.updateData()
 
-    fun downloadSong(song: Song) = songDetailRepository.downloadSong(song)
+    fun downloadSong(song: Song) = songDetailRepository.getSongDetail(song)
 
     protected abstract fun Sequence<Song>.createViewModels(): List<SongViewModel>
 
