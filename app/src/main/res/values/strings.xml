@@ -155,6 +155,7 @@
         <item quantity="other">%1$d songs (total size: %2$s)</item>
     </plurals>
     <string name="manage_downloads_subtitle_calculating">Calculating…</string>
+    <string name="manage_downloads_no_downloads">No downloads</string>
     <string name="manage_downloads_delete_all">Delete all</string>
     <string name="manage_downloads_delete_all_confirmation_title">Are you sure?</string>
     <string name="manage_downloads_delete_all_confirmation_message">This will remove all downloaded songs</string>

@@ -35,29 +35,26 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.swipeRefreshLayout.isEnabled = false
-        defaultToolbar.updateToolbarTitle(R.string.home_manage_downloads)
+        updateToolbarTitle(viewModel.songCount.get())
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))
         viewModel.shouldShowDeleteAll.onPropertyChanged(this) { deleteAllButton.visibleOrGone = it }
-        viewModel.songCount.onPropertyChanged(this) {
-            defaultToolbar.updateToolbarTitle(
-                R.string.home_manage_downloads,
-                if (it == 0) null else mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, it, it)
-            )
-        }
+        viewModel.songCount.onPropertyChanged(this) { updateToolbarTitle(it) }
         ItemTouchHelper(object : ElevationItemTouchHelperCallback((mainActivity.dimension(R.dimen.content_padding)).toFloat(), 0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = false
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
                 viewHolder?.adapterPosition?.let { position ->
-                    val song = viewModel.adapter.items[position].song
-                    viewModel.deleteSongTemporarily(song.id)
-                    showSnackbar(
-                        message = getString(R.string.manage_downloads_song_deleted_message, song.title),
-                        isRetry = false,
-                        action = View.OnClickListener { viewModel.cancelDeleteSong() },
-                        dismissAction = { viewModel.deleteSongPermanently() }
-                    )
+                    if (position != RecyclerView.NO_POSITION) {
+                        val song = viewModel.adapter.items[position].song
+                        showSnackbar(
+                            message = getString(R.string.manage_downloads_song_deleted_message, song.title),
+                            isRetry = false,
+                            action = { viewModel.cancelDeleteSong() },
+                            dismissAction = { viewModel.deleteSongPermanently() }
+                        )
+                        binding.root.post { viewModel.deleteSongTemporarily(song.id) }
+                    }
                 }
             }
         }).attachToRecyclerView(binding.recyclerView)
@@ -69,4 +66,9 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
             showSnackbar(R.string.manage_downloads_delete_all_message)
         }
     }
+
+    private fun updateToolbarTitle(songCount: Int) = defaultToolbar.updateToolbarTitle(
+        R.string.home_manage_downloads,
+        if (songCount == 0) getString(R.string.manage_downloads_no_downloads) else mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
+    )
 }

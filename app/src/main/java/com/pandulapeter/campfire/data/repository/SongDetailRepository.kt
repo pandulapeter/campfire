@@ -73,7 +73,7 @@ class SongDetailRepository(
     fun getSongVersion(songId: String) = data.find { it.id == songId }?.version ?: 0
 
     fun deleteSong(songId: String) {
-        data.swap(data.filter { it.id == songId })
+        data.swap(data.filter { it.id != songId })
         async(UI) {
             async(CommonPool) { songDatabase.songDetailDao().delete(songId) }.await()
             notifyDataChanged()

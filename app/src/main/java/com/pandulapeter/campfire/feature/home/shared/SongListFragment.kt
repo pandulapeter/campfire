@@ -30,13 +30,13 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered {
             showSnackbar(
                 message = R.string.library_update_error,
-                action = View.OnClickListener { viewModel.updateData() })
+                action = { viewModel.updateData() })
         }
         viewModel.downloadSongError.onEventTriggered { song ->
             song?.let {
                 showSnackbar(
                     message = mainActivity.getString(R.string.library_song_download_error, song.title),
-                    action = View.OnClickListener { viewModel.downloadSong(song) })
+                    action = { viewModel.downloadSong(song) })
             }
         }
         viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
