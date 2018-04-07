@@ -157,7 +157,8 @@
     <string name="manage_downloads_delete_all">Delete all</string>
     <string name="manage_downloads_delete_all_confirmation_title">Are you sure?</string>
     <string name="manage_downloads_delete_all_confirmation_message">This will remove all downloaded songs</string>
-    <string name="manage_downloads_delete_all_confirmation_clear">Clear</string>
+    <string name="manage_downloads_delete_all_confirmation_clear">Delete all</string>
+    <string name="manage_downloads_delete_all_message">All downloaded songs deleted</string>
     <string name="manage_downloads_hint">Swipe items away to remove them from your downloads</string>
     <string name="manage_downloads_placeholder">You don\'t have any downloaded songs</string>
 

@@ -32,12 +32,19 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_manage_downloads)
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))
-        viewModel.shouldShowDeleteAll.onPropertyChanged { deleteAllButton.visibleOrGone = it }
+        viewModel.shouldShowDeleteAll.onPropertyChanged(this) { deleteAllButton.visibleOrGone = it }
+        viewModel.songCount.onPropertyChanged(this) {
+            defaultToolbar.updateToolbarTitle(
+                R.string.home_manage_downloads,
+                if (it == 0) null else mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, it, it)
+            )
+        }
     }
 
     override fun onPositiveButtonSelected(id: Int) {
         if (id == DIALOG_ID_DELETE_ALL_CONFIRMATION) {
             viewModel.deleteAllSongs()
+            showSnackbar(R.string.manage_downloads_delete_all_message)
         }
     }
 }

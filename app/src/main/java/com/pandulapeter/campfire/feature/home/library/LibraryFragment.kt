@@ -127,7 +127,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     }
 
     private fun CompoundButton?.updateCheckedStateWithDelay(checked: Boolean) {
-        this?.postDelayed({ isChecked = checked }, COMPOUND_BUTTON_TRANSITION_DELAY)
+        this?.postDelayed({ if (isAdded) isChecked = checked }, COMPOUND_BUTTON_TRANSITION_DELAY)
     }
 
     private fun consumeAndUpdateLanguageFilter(menuItem: MenuItem, languageId: String) = consume {
