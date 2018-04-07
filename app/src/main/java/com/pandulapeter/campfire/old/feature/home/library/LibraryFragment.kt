@@ -8,14 +8,18 @@ import android.view.inputmethod.EditorInfo
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.LibraryBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.feature.home.library.HeaderItemDecoration
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.repository.LanguageRepository
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.PlaylistChooserBottomSheetFragment
-import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.old.util.*
+import com.pandulapeter.campfire.old.util.disableScrollbars
+import com.pandulapeter.campfire.old.util.onEventTriggered
+import com.pandulapeter.campfire.old.util.setupWithBackingField
+import com.pandulapeter.campfire.old.util.toggle
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 

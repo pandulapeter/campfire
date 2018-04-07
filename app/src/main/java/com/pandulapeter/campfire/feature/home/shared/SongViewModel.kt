@@ -8,7 +8,12 @@ data class SongViewModel(
     val song: Song,
     var isOnAnyPlaylists: Boolean = false,
     var shouldShowDragHandle: Boolean = false,
-    val shouldShowPlaylistButton: Boolean = true
+    val shouldShowPlaylistButton: Boolean = true,
+    var downloadState: DownloadState = when {
+        songDetailRepository.isSongDownloading(song.id) -> DownloadState.Downloading
+        songDetailRepository.isSongDownloaded(song.id) -> if (songDetailRepository.getSongVersion(song.id) != song.version) DownloadState.Downloaded.Deprecated else DownloadState.Downloaded.UpToDate
+        else -> if (song.isNew) DownloadState.NotDownloaded.New else DownloadState.NotDownloaded.Old
+    }
 ) {
     val alertText
         get() = when (downloadState) {
@@ -16,11 +21,7 @@ data class SongViewModel(
             DownloadState.NotDownloaded.New -> "New"
             else -> null
         }
-    var downloadState: DownloadState = when {
-        songDetailRepository.isSongDownloading(song.id) -> DownloadState.Downloading
-        songDetailRepository.isSongDownloaded(song.id) -> if (songDetailRepository.getSongVersion(song.id) != song.version) DownloadState.Downloaded.Deprecated else DownloadState.Downloaded.UpToDate
-        else -> if (song.isNew) DownloadState.NotDownloaded.New else DownloadState.NotDownloaded.Old
-    }
+
 
     sealed class DownloadState {
 

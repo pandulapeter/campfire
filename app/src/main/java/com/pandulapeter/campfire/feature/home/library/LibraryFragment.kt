@@ -64,6 +64,12 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(mainActivity) {
+
+            override fun isHeader(position: Int) = position >= 0 && viewModel.isHeader(position)
+
+            override fun getHeaderTitle(position: Int) = if (position >= 0) viewModel.getHeaderTitle(position) else ""
+        })
         savedInstanceState?.let {
             if (it.isTextInputVisible) {
                 searchToggle.setImageDrawable(mainActivity.drawable(R.drawable.ic_close_24dp))

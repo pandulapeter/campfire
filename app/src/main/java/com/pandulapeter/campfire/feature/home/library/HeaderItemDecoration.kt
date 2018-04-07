@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.old.feature.home.library
+package com.pandulapeter.campfire.feature.home.library
 
 import android.content.Context
 import android.databinding.DataBindingUtil

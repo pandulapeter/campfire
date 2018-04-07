@@ -18,7 +18,7 @@ import kotlin.coroutines.experimental.CoroutineContext
 
 abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscriber, SongDetailRepository.Subscriber {
 
-    protected val songRepository by inject<SongRepository>()
+    private val songRepository by inject<SongRepository>()
     protected val songDetailRepository by inject<SongDetailRepository>()
     private var librarySongs = sequenceOf<Song>()
     private var coroutine: CoroutineContext? = null
@@ -51,7 +51,7 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
 
     override fun onSongDetailRepositoryUpdated(downloadedSongs: List<SongDetailMetadata>) = updateAdapterItems()
 
-    override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) = Unit
+    override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) = updateAdapterItems()
 
     override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) = updateAdapterItems()
 

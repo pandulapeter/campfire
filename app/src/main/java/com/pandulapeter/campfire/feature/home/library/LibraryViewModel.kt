@@ -135,6 +135,17 @@ class LibraryViewModel(
         }
     }
 
+    fun isHeader(position: Int) = when (sortingMode) {
+        SortingMode.TITLE -> position == 0 || adapter.items[position].song.getNormalizedTitle()[0] != adapter.items[position - 1].song.getNormalizedTitle()[0]
+        SortingMode.ARTIST -> position == 0 || adapter.items[position].song.getNormalizedArtist()[0] != adapter.items[position - 1].song.getNormalizedArtist()[0]
+        else -> false
+    }
+
+    fun getHeaderTitle(position: Int) = when (sortingMode) {
+        SortingMode.TITLE -> adapter.items[position].song.getNormalizedTitle()[0].toString().toUpperCase()
+        SortingMode.ARTIST -> adapter.items[position].song.getNormalizedArtist()[0].toString().toUpperCase()
+        else -> ""
+    }
 
     enum class SortingMode(val intValue: Int) {
         TITLE(0),
