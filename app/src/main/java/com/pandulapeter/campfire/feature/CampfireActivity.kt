@@ -96,13 +96,16 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         binding.coordinatorLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
 
         // Initialize the drawer layout.
-        binding.drawerLayout.addDrawerListener(onDrawerStateChanged = {
-            expandAppBar()
-            currentFragment?.onDrawerStateChanged(it)
-            if (it == DrawerLayout.STATE_DRAGGING) {
-                hideKeyboard(currentFocus)
-            }
-        })
+        binding.drawerLayout.addDrawerListener(
+            onDrawerStateChanged = {
+                if (it == DrawerLayout.STATE_DRAGGING) {
+                    expandAppBar()
+                }
+                currentFragment?.onDrawerStateChanged(it)
+                if (it == DrawerLayout.STATE_DRAGGING) {
+                    hideKeyboard(currentFocus)
+                }
+            })
 
         // Initialize the primary side navigation drawer.
         binding.primaryNavigation.disableScrollbars()
