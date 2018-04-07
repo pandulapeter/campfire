@@ -50,6 +50,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
     private var Bundle.currentScreenId by BundleArgumentDelegate.Int("currentScreenId")
+    private var Bundle.isAppBarExpanded by BundleArgumentDelegate.Boolean("isAppBarExpanded")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
     private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? TopLevelFragment<*, *>?
     private val drawableMenuToBack by lazy { animatedDrawable(R.drawable.avd_menu_to_back_24dp) }
@@ -57,6 +58,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private val appShortcutManager by inject<AppShortcutManager>()
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private var currentScreenId = R.id.library
+    private var forceExpandAppBar = true
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
     val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
@@ -137,6 +139,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             currentScreenId = savedInstanceState.currentScreenId
             if (currentScreenId == R.id.options) {
                 binding.appBarLayout.run {
+                    forceExpandAppBar = savedInstanceState.isAppBarExpanded
                     layoutTransition = null
                     post {
                         layoutTransition = LayoutTransition().apply { setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0) }
@@ -202,6 +205,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         super.onSaveInstanceState(outState)
         outState?.isOnDetailScreen = currentFragment is DetailFragment
         outState?.currentScreenId = currentScreenId
+        outState?.isAppBarExpanded = binding.appBarLayout.height - binding.appBarLayout.bottom == 0
     }
 
     override fun onPositiveButtonSelected(id: Int) {
@@ -283,7 +287,10 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    fun expandAppBar() = binding.appBarLayout.setExpanded(true, true)
+    fun expandAppBar() {
+        binding.appBarLayout.setExpanded(forceExpandAppBar, forceExpandAppBar)
+        forceExpandAppBar = true
+    }
 
     fun beforeScreenChanged() {
 
