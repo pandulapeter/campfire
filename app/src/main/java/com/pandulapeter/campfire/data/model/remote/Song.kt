@@ -4,9 +4,13 @@ import android.arch.persistence.room.ColumnInfo
 import android.arch.persistence.room.Entity
 import android.arch.persistence.room.Ignore
 import android.arch.persistence.room.PrimaryKey
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
 import com.pandulapeter.campfire.util.normalize
+import kotlinx.android.parcel.IgnoredOnParcel
+import kotlinx.android.parcel.Parcelize
 
+@Parcelize
 @Entity(tableName = Song.TABLE_NAME)
 data class Song(
     @PrimaryKey() @ColumnInfo(name = ID) @SerializedName("id") val id: String,
@@ -16,7 +20,7 @@ data class Song(
     @ColumnInfo(name = VERSION) @SerializedName(VERSION) val version: Int? = 0,
     @ColumnInfo(name = POPULARITY) @SerializedName(POPULARITY) val popularity: Int? = 0,
     @ColumnInfo(name = IS_EXPLICIT) @SerializedName(IS_EXPLICIT) val isExplicit: Boolean? = false
-) {
+) : Parcelable {
 
     companion object {
         const val TABLE_NAME = "songs"
@@ -29,12 +33,15 @@ data class Song(
         private const val IS_EXPLICIT = "isExplicit"
     }
 
+    @IgnoredOnParcel
     @Ignore
     @Transient
     private var normalizedTitle: String? = null
+    @IgnoredOnParcel
     @Ignore
     @Transient
     private var normalizedArtist: String? = null
+    @IgnoredOnParcel
     @Ignore
     @Transient
     var isNew = false

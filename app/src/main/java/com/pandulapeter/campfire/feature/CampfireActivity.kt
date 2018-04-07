@@ -26,6 +26,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.databinding.ActivityCampfireBinding
 import com.pandulapeter.campfire.feature.detail.DetailFragment
@@ -300,7 +301,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    fun openDetailScreen(clickedView: View, songId: String, playlistId: String = "") {
+    fun openDetailScreen(clickedView: View, songs: List<Song>, index: Int = 0, shouldShowManagePlaylist: Boolean = true) {
         fun createTransition(delay: Long) = Explode().apply {
             propagation = null
             epicenterCallback = object : Transition.EpicenterCallback() {
@@ -314,7 +315,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
         supportFragmentManager.beginTransaction()
             .setAllowOptimization(true)
-            .replace(R.id.fragment_container, DetailFragment.newInstance(songId, playlistId))
+            .replace(R.id.fragment_container, DetailFragment.newInstance(songs, index, shouldShowManagePlaylist))
             .addSharedElement(clickedView, clickedView.transitionName)
             .addToBackStack(null)
             .commit()

@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.util.*
@@ -20,16 +21,18 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     companion object {
         const val TRANSITION_DELAY = 50L
-        private var Bundle.songId by BundleArgumentDelegate.String("songId")
-        private var Bundle.playlistId by BundleArgumentDelegate.String("playlistId")
+        private var Bundle.songs by BundleArgumentDelegate.ParcelableArrayList("songs")
+        private var Bundle.index by BundleArgumentDelegate.Int("index")
+        private var Bundle.shouldShowManagePlaylist by BundleArgumentDelegate.Boolean("shouldShowManagePlaylist")
 
-        fun newInstance(songId: String, playlistId: String = "") = DetailFragment().withArguments {
-            it.songId = songId
-            it.playlistId = playlistId
+        fun newInstance(songs: List<Song>, index: Int, shouldShowManagePlaylist: Boolean) = DetailFragment().withArguments {
+            it.songs = ArrayList(songs)
+            it.index = index
+            it.shouldShowManagePlaylist = shouldShowManagePlaylist
         }
     }
 
-    override val viewModel by lazy { DetailViewModel(arguments.songId) }
+    override val viewModel by lazy { DetailViewModel((arguments.songs[arguments.index] as Song).id) }
     private val drawablePlayToPause by lazy { context.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { context.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
 
@@ -51,13 +54,13 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
-        defaultToolbar.updateToolbarTitle("Title", "Subtitle")
+        val songs = arguments.songs.filterIsInstance<Song>()
+        defaultToolbar.updateToolbarTitle(songs[arguments.index].title, songs[arguments.index].artist)
         if (savedInstanceState == null) {
             mainActivity.updateMainToolbarButton(true)
         }
         mainActivity.updateFloatingActionButtonDrawable(context.drawable(R.drawable.ic_play_24dp))
         mainActivity.autoScrollControl.visibleOrGone = false
-        binding.textView.text = "Song: ${arguments.songId}\nPlaylist: ${arguments.playlistId}"
         (view?.parent as? ViewGroup)?.run {
             viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
