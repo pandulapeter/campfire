@@ -105,7 +105,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
         binding.appBarLayout.addOnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) }
         binding.appBarLayout.layoutTransition.setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
-        binding.coordinatorLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
         shouldAllowAppBarScrolling = true
 
         // Initialize the drawer layout.
@@ -157,10 +156,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             if (currentScreenId == R.id.options) {
                 binding.appBarLayout.run {
                     forceExpandAppBar = savedInstanceState.isAppBarExpanded
-                    layoutTransition = null
-                    post {
-                        layoutTransition = LayoutTransition().apply { setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0) }
-                    }
+                    post { setTransitionsEnabled() }
                 }
             }
         }
@@ -178,6 +174,10 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             )
             preferenceDatabase.shouldShowPrivacyPolicy = false
         }
+    }
+
+    fun setTransitionsEnabled(enabled: Boolean = true) {
+        binding.coordinatorLayout.layoutTransition = if (enabled) LayoutTransition().apply { setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0) } else null
     }
 
     override fun onResume() {
@@ -321,6 +321,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         expandAppBar()
 
         // Reset the tab layout.
+        setTransitionsEnabled()
         binding.tabLayout.run {
             visibleOrGone = false
             setupWithViewPager(null)
