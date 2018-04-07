@@ -133,6 +133,14 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         } else {
             binding.toolbarMainButton.setImageDrawable(drawable(if (savedInstanceState.isOnDetailScreen) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp))
             currentScreenId = savedInstanceState.currentScreenId
+            if (currentScreenId == R.id.options) {
+                binding.appBarLayout.run {
+                    layoutTransition = null
+                    post {
+                        layoutTransition = LayoutTransition().apply { setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0) }
+                    }
+                }
+            }
         }
         binding.drawerLayout.setDrawerLockMode(if (currentFragment is DetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
 
@@ -220,10 +228,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     //TODO: Find a better way to enforce animations than delaying.
     fun updateToolbarButtons(buttons: List<View>) = binding.toolbarButtonContainer.run {
-        postDelayed({
-            removeAllViews()
-            buttons.forEach { addView(it, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
-        }, 400)
+        if (childCount == 0) {
+            postDelayed({
+                removeAllViews()
+                buttons.forEach { addView(it, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
+            }, 400)
+        }
     }
 
     fun enableSecondaryNavigationDrawer(@MenuRes menuResourceId: Int) {
@@ -243,10 +253,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun enableTabLayout(viewPager: ViewPager) {
         binding.tabLayout.run {
-            post {
-                setupWithViewPager(viewPager)
-                visibleOrGone = true
-            }
+            setupWithViewPager(viewPager)
+            visibleOrGone = true
         }
     }
 
@@ -261,10 +269,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
         // Reset the tab layout.
         binding.tabLayout.run {
-            post {
-                visibleOrGone = false
-                setupWithViewPager(null)
-            }
+            visibleOrGone = false
+            setupWithViewPager(null)
         }
 
         // Reset the secondary navigation drawer.
