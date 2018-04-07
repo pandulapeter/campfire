@@ -66,6 +66,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                 viewModel.toolbarTextInputView.textInput.run {
                     setText(savedInstanceState.searchQuery)
                     setSelection(text.length)
+                    viewModel.query = text.toString()
                 }
                 viewModel.toolbarTextInputView.showTextInput()
             }
