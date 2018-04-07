@@ -22,7 +22,6 @@ data class SongViewModel(
             else -> null
         }
 
-
     sealed class DownloadState {
 
         sealed class NotDownloaded : DownloadState() {

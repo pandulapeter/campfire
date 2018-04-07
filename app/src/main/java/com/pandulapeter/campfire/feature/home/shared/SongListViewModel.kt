@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.home.shared
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.support.annotation.CallSuper
+import android.support.v7.widget.RecyclerView
 import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.model.remote.SongDetail
@@ -51,11 +52,39 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
 
     override fun onSongDetailRepositoryUpdated(downloadedSongs: List<SongDetailMetadata>) = updateAdapterItems()
 
-    override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) = updateAdapterItems()
+    override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) {
+        adapter.items.indexOfLast { it.song.id == songDetail.id }.let { index ->
+            if (index != RecyclerView.NO_POSITION) {
+                adapter.notifyItemChanged(index, SongViewModel.DownloadState.Downloaded.UpToDate)
+            }
+        }
+    }
 
-    override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) = updateAdapterItems()
+    override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) {
+        songIds.forEach { songId ->
+            adapter.items.indexOfLast { it.song.id == songId }.let { index ->
+                if (index != RecyclerView.NO_POSITION) {
+                    adapter.notifyItemChanged(index, SongViewModel.DownloadState.Downloading)
+                }
+            }
+        }
+    }
 
-    override fun onSongDetailRepositoryDownloadError(song: Song) = downloadSongError.set(song)
+    override fun onSongDetailRepositoryDownloadError(song: Song) {
+        downloadSongError.set(song)
+        adapter.items.indexOfLast { it.song.id == song.id }.let { index ->
+            if (index != RecyclerView.NO_POSITION) {
+                adapter.notifyItemChanged(
+                    index,
+                    when {
+                        songDetailRepository.isSongDownloaded(song.id) -> SongViewModel.DownloadState.Downloaded.Deprecated
+                        song.isNew -> SongViewModel.DownloadState.NotDownloaded.New
+                        else -> SongViewModel.DownloadState.NotDownloaded.Old
+                    }
+                )
+            }
+        }
+    }
 
     fun updateData() = songRepository.updateData()
 
