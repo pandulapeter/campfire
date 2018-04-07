@@ -5,6 +5,8 @@ import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.home.shared.SongListFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
+import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.visibleOrGone
 
 class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), AlertDialogFragment.OnDialogItemsSelectedListener {
 
@@ -13,22 +15,24 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
     }
 
     override val viewModel = ManageDownloadsViewModel()
+    private val deleteAllButton by lazy {
+        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
+            AlertDialogFragment.show(
+                DIALOG_ID_DELETE_ALL_CONFIRMATION,
+                childFragmentManager,
+                R.string.manage_downloads_delete_all_confirmation_title,
+                R.string.manage_downloads_delete_all_confirmation_message,
+                R.string.manage_downloads_delete_all_confirmation_clear,
+                R.string.cancel
+            )
+        }.apply { visibleOrGone = false }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_manage_downloads)
-        mainActivity.toolbarContext.let { context ->
-            mainActivity.updateToolbarButtons(listOf(context.createToolbarButton(R.drawable.ic_delete_24dp) {
-                AlertDialogFragment.show(
-                    DIALOG_ID_DELETE_ALL_CONFIRMATION,
-                    childFragmentManager,
-                    R.string.manage_downloads_delete_all_confirmation_title,
-                    R.string.manage_downloads_delete_all_confirmation_message,
-                    R.string.manage_downloads_delete_all_confirmation_clear,
-                    R.string.cancel
-                )
-            }))
-        }
+        mainActivity.updateToolbarButtons(listOf(deleteAllButton))
+        viewModel.shouldShowDeleteAll.onPropertyChanged { deleteAllButton.visibleOrGone = it }
     }
 
     override fun onPositiveButtonSelected(id: Int) {
