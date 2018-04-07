@@ -19,6 +19,7 @@ class PreferenceDatabase(context: Context) {
     var shouldShowWorkInProgress by PreferenceFieldDelegate.Boolean("shouldShowWorkInProgress", false)
     var shouldShowExplicit by PreferenceFieldDelegate.Boolean("shouldShowExplicit", false)
     var sortingMode by PreferenceFieldDelegate.Int("sortingMode", LibraryViewModel.SortingMode.TITLE.intValue)
+    var disabledLanguageFilters by PreferenceFieldDelegate.StringSet("disabledLanguageFilters")
 
     private fun shouldEnableGermanNotationByDefault() = when (Locale.getDefault().isO3Country.toUpperCase()) {
         "AUT", "CZE", "DEU", "SWE", "DNK", "EST", "FIN", "HUN", "LVA", "NOR", "POL", "SRB", "SVK" -> true
@@ -49,6 +50,14 @@ class PreferenceDatabase(context: Context) {
 
             override fun setValue(thisRef: PreferenceDatabase, property: KProperty<*>, value: kotlin.Long) =
                 thisRef.preferences.edit().putLong(key, value).apply()
+        }
+
+        class StringSet(key: String, defaultValue: Set<String> = setOf()) : PreferenceFieldDelegate<Set<String>>(key, defaultValue) {
+
+            override fun getValue(thisRef: PreferenceDatabase, property: KProperty<*>) = thisRef.preferences.getStringSet(key, defaultValue)
+
+            override fun setValue(thisRef: PreferenceDatabase, property: KProperty<*>, value: Set<String>) =
+                thisRef.preferences.edit().putStringSet(key, value).apply()
         }
     }
 }

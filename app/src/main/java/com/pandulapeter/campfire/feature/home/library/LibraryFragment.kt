@@ -26,11 +26,11 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         LibraryViewModel(
             toolbarTextInputView = ToolbarTextInputView(mainActivity.toolbarContext).apply { title.updateToolbarTitle(R.string.home_library) },
             updateSearchToggleDrawable = { searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { this?.start() }) },
-            onDataLoaded = {
+            onDataLoaded = { languages ->
                 mainActivity.toolbarContext.let { context ->
                     mainActivity.updateToolbarButtons(listOf(
                         searchToggle,
-                        context.createToolbarButton(R.drawable.ic_view_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }
+                        context.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { mainActivity.openSecondaryNavigationDrawer() }
                     ))
                 }
                 mainActivity.enableSecondaryNavigationDrawer(R.menu.library)
@@ -40,6 +40,15 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                 initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == LibraryViewModel.SortingMode.TITLE }
                 initializeCompoundButton(R.id.sort_by_artist) { viewModel.sortingMode == LibraryViewModel.SortingMode.ARTIST }
                 initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == LibraryViewModel.SortingMode.POPULARITY }
+                mainActivity.secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
+                    clear()
+                    languages.forEachIndexed { index, language ->
+                        add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
+                            setActionView(R.layout.widget_checkbox)
+                            initializeCompoundButton(language.nameResource) { !viewModel.disabledLanguageFilters.contains(language.id) }
+                        }
+                    }
+                }
             }
         )
     }
@@ -77,7 +86,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             R.id.sort_by_title -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.TITLE) { sortingMode = it }
             R.id.sort_by_artist -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.ARTIST) { sortingMode = it }
             R.id.sort_by_popularity -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.POPULARITY) { sortingMode = it }
-            else -> consume { showSnackbar(R.string.work_in_progress) }//viewModel.languageFilters.get()?.filterKeys { language -> language.nameResource == it.itemId }?.values?.first()?.toggle()
+            else -> consumeAndUpdateLanguageFilter(menuItem, viewModel.languages.find { it.nameResource == menuItem.itemId }?.id ?: "")
         }
     }
 
@@ -88,7 +97,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         true
     } else super.onBackPressed()
 
-    private inline fun initializeCompoundButton(@IdRes itemId: Int, crossinline getValue: () -> Boolean) = consume {
+    private inline fun initializeCompoundButton(itemId: Int, crossinline getValue: () -> Boolean) = consume {
         mainActivity.secondaryNavigationMenu.findItem(itemId)?.let {
             (it.actionView as? CompoundButton)?.run {
                 isChecked = getValue()
@@ -103,6 +112,13 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
 
     private fun CompoundButton?.updateCheckedStateWithDelay(checked: Boolean) {
         this?.postDelayed({ isChecked = checked }, COMPOUND_BUTTON_TRANSITION_DELAY)
+    }
+
+    private fun consumeAndUpdateLanguageFilter(menuItem: MenuItem, languageId: String) = consume {
+        viewModel.disabledLanguageFilters.run {
+            viewModel.disabledLanguageFilters = toMutableSet().apply { if (contains(languageId)) remove(languageId) else add(languageId) }
+            (menuItem.actionView as? CompoundButton).updateCheckedStateWithDelay(contains(languageId))
+        }
     }
 
     private inline fun consumeAndUpdateBoolean(menuItem: MenuItem, crossinline setValue: (Boolean) -> Unit, crossinline getValue: () -> Boolean) = consume {

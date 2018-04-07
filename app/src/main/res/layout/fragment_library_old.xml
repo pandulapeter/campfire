@@ -76,7 +76,7 @@
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/ic_view_options_24dp"
+                            app:srcCompat="@drawable/ic_filter_and_sort_24dp"
                             app:visibility="@{viewModel.isLibraryNotEmpty}" />
 
                         <com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
