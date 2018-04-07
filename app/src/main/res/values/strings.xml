@@ -49,6 +49,7 @@
     <string name="library_placeholder_search">No results found</string>
     <string name="library_placeholder_filters">No matching songs in the library. Double-check the filters you set up</string>
     <string name="library_update_error">Error updating library</string>
+    <string name="library_song_download_error">Error downloading %s</string>
     <string name="library_search">Search</string>
     <string name="library_close">Close</string>
     <string name="library_filters">Filters</string>

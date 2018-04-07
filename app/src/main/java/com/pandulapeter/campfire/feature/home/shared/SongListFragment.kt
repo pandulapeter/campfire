@@ -20,8 +20,18 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
-        viewModel.adapter.run { itemClickListener = { position, clickedView -> mainActivity.openDetailScreen(clickedView, listOf(items[position].song)) } }
-        viewModel.shouldShowErrorSnackbar.onEventTriggered { showSnackbar(R.string.library_update_error, View.OnClickListener { viewModel.updateData() }) }
+        viewModel.adapter.run {
+            itemClickListener = { position, clickedView -> mainActivity.openDetailScreen(clickedView, listOf(items[position].song)) }
+            downloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.song) } }
+        }
+        viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered { showSnackbar(R.string.library_update_error, View.OnClickListener { viewModel.updateData() }) }
+        viewModel.downloadSongError.onEventTriggered { song ->
+            song?.let {
+                showSnackbar(
+                    mainActivity.getString(R.string.library_song_download_error, song.title),
+                    View.OnClickListener { viewModel.downloadSong(song) })
+            }
+        }
         viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
         binding.swipeRefreshLayout.run {
             setOnRefreshListener { viewModel.updateData() }
@@ -38,7 +48,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 }
             })
         }
-        (view?.parent as? ViewGroup)?.run {
+        (view.parent as? ViewGroup)?.run {
             viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
                     viewTreeObserver?.removeOnPreDrawListener(this)

@@ -3,7 +3,6 @@ package com.pandulapeter.campfire.feature.home.library
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.feature.home.shared.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.SongViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
@@ -19,7 +18,6 @@ class LibraryViewModel(
 ) : SongListViewModel() {
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
-    private val songDetailRepository by inject<SongDetailRepository>()
     var query = ""
         set(value) {
             if (field != value) {
@@ -99,7 +97,7 @@ class LibraryViewModel(
         .filterWorkInProgress()
         .filterExplicit()
         .sort()
-        .map { SongViewModel(it) }
+        .map { SongViewModel(songDetailRepository, it) }
         .toList()
 
     //TODO: Prioritize results that begin with the searchQuery.

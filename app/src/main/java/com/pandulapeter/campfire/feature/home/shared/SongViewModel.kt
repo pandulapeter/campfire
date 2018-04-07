@@ -1,11 +1,12 @@
 package com.pandulapeter.campfire.feature.home.shared
 
 import com.pandulapeter.campfire.data.model.remote.Song
+import com.pandulapeter.campfire.data.repository.SongDetailRepository
 
 data class SongViewModel(
+    private val songDetailRepository: SongDetailRepository,
     val song: Song,
     var isOnAnyPlaylists: Boolean = false,
-    var downloadState: DownloadState = if (song.isNew) DownloadState.NotDownloaded.New else DownloadState.NotDownloaded.Old,
     var shouldShowDragHandle: Boolean = false,
     val shouldShowPlaylistButton: Boolean = true
 ) {
@@ -15,6 +16,11 @@ data class SongViewModel(
             DownloadState.NotDownloaded.New -> "New"
             else -> null
         }
+    var downloadState: DownloadState = when {
+        songDetailRepository.isSongDownloading(song.id) -> DownloadState.Downloading
+        songDetailRepository.isSongDownloaded(song.id) -> if (songDetailRepository.getSongVersion(song.id) != song.version) DownloadState.Downloaded.Deprecated else DownloadState.Downloaded.UpToDate
+        else -> if (song.isNew) DownloadState.NotDownloaded.New else DownloadState.NotDownloaded.Old
+    }
 
     sealed class DownloadState {
 
