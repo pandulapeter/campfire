@@ -11,6 +11,7 @@
         <!-- The nested CoordinatorLayouts are needed to avoid some animation glitches. -->
 
         <com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout
+            android:id="@+id/root_coordinator_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 

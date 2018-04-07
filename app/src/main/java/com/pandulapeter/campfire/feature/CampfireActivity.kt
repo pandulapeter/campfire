@@ -60,6 +60,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
     val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
+    val snackbarRoot get() = binding.rootCoordinatorLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
