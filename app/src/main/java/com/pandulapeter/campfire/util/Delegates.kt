@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.util
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Parcelable
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -29,11 +28,18 @@ sealed class BundleArgumentDelegate<T>(protected val key: kotlin.String, protect
         override fun setValue(thisRef: Bundle?, property: KProperty<*>, value: kotlin.String) = thisRef?.putString(key, value) ?: Unit
     }
 
-    class ParcelableArrayList(key: kotlin.String) : BundleArgumentDelegate<ArrayList<out Parcelable>>(key, arrayListOf()) {
+    class Parcelable(key: kotlin.String) : BundleArgumentDelegate<android.os.Parcelable?>(key, null) {
+
+        override fun getValue(thisRef: Bundle?, property: KProperty<*>) = thisRef?.getParcelable(key) ?: defaultValue
+
+        override fun setValue(thisRef: Bundle?, property: KProperty<*>, value: android.os.Parcelable?) = thisRef?.putParcelable(key, value) ?: Unit
+    }
+
+    class ParcelableArrayList(key: kotlin.String) : BundleArgumentDelegate<ArrayList<out android.os.Parcelable>>(key, arrayListOf()) {
 
         override fun getValue(thisRef: Bundle?, property: KProperty<*>) = thisRef?.getParcelableArrayList(key) ?: defaultValue
 
-        override fun setValue(thisRef: Bundle?, property: KProperty<*>, value: ArrayList<out Parcelable>) = thisRef?.putParcelableArrayList(key, value) ?: Unit
+        override fun setValue(thisRef: Bundle?, property: KProperty<*>, value: ArrayList<out android.os.Parcelable>) = thisRef?.putParcelableArrayList(key, value) ?: Unit
     }
 }
 

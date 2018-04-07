@@ -88,7 +88,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             )
         }
         mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
-        binding.viewPager.adapter = DetailPagerAdapter(childFragmentManager, songs.map { it.id })
+        binding.viewPager.adapter = DetailPagerAdapter(childFragmentManager, songs)
         binding.viewPager.onPageSelected { onPageChanged() }
     }
 

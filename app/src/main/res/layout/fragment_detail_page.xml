@@ -19,7 +19,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="@{viewModel.songId}" />
+            android:paddingBottom="@dimen/list_fab_content_bottom_margin"
+            android:paddingEnd="@dimen/first_keyline"
+            android:paddingStart="@dimen/first_keyline"
+            android:paddingTop="@dimen/large_content_padding"
+            android:text="@{viewModel.text}" />
 
     </android.support.v4.widget.NestedScrollView>
 
