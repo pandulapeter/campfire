@@ -1,6 +1,10 @@
 package com.pandulapeter.campfire.feature.detail
 
 import android.animation.Animator
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.transition.ChangeBounds
 import android.transition.ChangeImageTransform
@@ -15,6 +19,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.util.*
+import java.net.URLEncoder
 
 
 class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail) {
@@ -32,11 +37,17 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
     }
 
-    override val viewModel by lazy { DetailViewModel((arguments.songs[arguments.index] as Song).id) }
+    override val viewModel by lazy { DetailViewModel(songs[arguments.index].id) }
+    private val songs by lazy { arguments.songs.filterIsInstance<Song>() }
     private val drawablePlayToPause by lazy { context.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { context.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
     private val transposeHigher by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_higher) }
     private val transposeLower by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_lower) }
+    private val multiWindowFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
+    } else {
+        Intent.FLAG_ACTIVITY_NEW_TASK
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +67,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
-        val songs = arguments.songs.filterIsInstance<Song>()
         defaultToolbar.updateToolbarTitle(songs[arguments.index].title, songs[arguments.index].artist)
         if (savedInstanceState == null) {
             mainActivity.updateMainToolbarButton(true)
@@ -115,8 +125,20 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override fun onNavigationItemSelected(menuItem: MenuItem) = when (menuItem.itemId) {
         R.id.transpose_higher -> consume { }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), 1) }
         R.id.transpose_lower -> consume { }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), -1) }
-        R.id.play_in_youtube -> consume { showSnackbar(R.string.work_in_progress) } //consumeAndCloseDrawer(binding.drawerLayout) { viewModel.onPlayOnYouTubeClicked() }
-        R.id.share -> consume { showSnackbar(R.string.work_in_progress) } //consumeAndCloseDrawer(binding.drawerLayout) { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
+        R.id.play_in_youtube -> consumeAndCloseDrawer {
+            "${songs[arguments.index].title} - ${songs[arguments.index].artist}".let {
+                try {
+                    startActivity(getYouTubeIntent("com.lara.android.youtube", it))
+                } catch (_: ActivityNotFoundException) {
+                    try {
+                        startActivity(getYouTubeIntent("com.google.android.youtube", it))
+                    } catch (_: ActivityNotFoundException) {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com/#q=" + URLEncoder.encode(it, "UTF-8"))).apply { flags = multiWindowFlags })
+                    }
+                }
+            }
+        }
+        R.id.share -> consumeAndCloseDrawer { showSnackbar(R.string.work_in_progress) } //consumeAndCloseDrawer(binding.drawerLayout) { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
         else -> super.onNavigationItemSelected(menuItem)
     }
 
@@ -126,6 +148,16 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         mainActivity.enableFloatingActionButton()
         transposeHigher.isEnabled = true
         transposeLower.isEnabled = true
+    }
+
+    private fun getYouTubeIntent(packageName: String, query: String) = Intent(Intent.ACTION_SEARCH).apply {
+        `package` = packageName
+        flags = multiWindowFlags
+    }.putExtra("query", query)
+
+    private inline fun consumeAndCloseDrawer(crossinline action: () -> Unit) = consume {
+        mainActivity.closeSecondaryNavigationDrawer()
+        action()
     }
 
     private fun onPageChanged() {
