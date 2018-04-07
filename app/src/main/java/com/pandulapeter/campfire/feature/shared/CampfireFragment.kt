@@ -54,7 +54,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected fun showSnackbar(message: String, isRetry: Boolean = true, action: (() -> Unit)? = null, dismissAction: (() -> Unit)? = null) {
         snackbar?.dismiss()
         snackbar = mainActivity.snackbarRoot
-            .makeSnackbar(message, if (action == null) Snackbar.LENGTH_SHORT else Snackbar.LENGTH_LONG, dismissAction)
+            .makeSnackbar(message, if (action == null && dismissAction == null) Snackbar.LENGTH_SHORT else Snackbar.LENGTH_LONG, dismissAction)
             .apply { action?.let { setAction(if (isRetry) R.string.try_again else R.string.undo, { action() }) } }
         snackbar?.show()
     }
