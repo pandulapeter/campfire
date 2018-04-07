@@ -9,13 +9,11 @@
 
             <item
                 android:id="@+id/transpose_higher"
-                android:enabled="false"
                 android:icon="@drawable/ic_increment_24dp"
                 android:title="@string/detail_transpose_higher" />
 
             <item
                 android:id="@+id/transpose_lower"
-                android:enabled="false"
                 android:icon="@drawable/ic_decrement_24dp"
                 android:title="@string/detail_transpose_lower" />
 

@@ -62,7 +62,7 @@ class LibraryViewModel(
             if (field != value) {
                 field = value
                 preferenceDatabase.disabledLanguageFilters = value
-                updateAdapterItems()
+                updateAdapterItems(true)
             }
         }
     var languages = mutableListOf<Language>()

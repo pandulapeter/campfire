@@ -41,8 +41,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val songs by lazy { arguments?.songs?.filterIsInstance<Song>() ?: listOf() }
     private val drawablePlayToPause by lazy { mainActivity.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { mainActivity.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
-    private val transposeHigher by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_higher) }
-    private val transposeLower by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_lower) }
     private val multiWindowFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
     } else {
@@ -146,8 +144,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     fun onDataLoaded() {
         mainActivity.enableFloatingActionButton()
-        transposeHigher.isEnabled = true
-        transposeLower.isEnabled = true
     }
 
     private fun getYouTubeIntent(packageName: String, query: String) = Intent(Intent.ACTION_SEARCH).apply {
