@@ -346,7 +346,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         disableFloatingActionButton()
     }
 
-    fun openDetailScreen(clickedView: View, songs: List<Song>, index: Int = 0, shouldShowManagePlaylist: Boolean = true) {
+    fun openDetailScreen(clickedView: View, songs: List<Song>, shouldExplode: Boolean, index: Int = 0, shouldShowManagePlaylist: Boolean = true) {
         fun createTransition(delay: Long) = Explode().apply {
             propagation = null
             epicenterCallback = object : Transition.EpicenterCallback() {
@@ -354,9 +354,11 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             }
             startDelay = delay
         }
-        currentFragment?.run {
-            exitTransition = createTransition(0)
-            reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
+        if (shouldExplode) {
+            currentFragment?.run {
+                exitTransition = createTransition(0)
+                reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
+            }
         }
         supportFragmentManager.beginTransaction()
             .setAllowOptimization(true)

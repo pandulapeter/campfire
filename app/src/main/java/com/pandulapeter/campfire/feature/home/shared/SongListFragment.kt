@@ -29,7 +29,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         viewModel.adapter.run {
             itemClickListener = { position, clickedView ->
                 viewModel.isDetailScreenOpen = true
-                mainActivity.openDetailScreen(clickedView, listOf(items[position].song))
+                mainActivity.openDetailScreen(clickedView, listOf(items[position].song), items.size > 1)
             }
             downloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.song) } }
         }

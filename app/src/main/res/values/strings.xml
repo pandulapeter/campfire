@@ -130,7 +130,7 @@
     <string name="options_changelog_0_0_2_description">
         <Data><![CDATA[
         • Users can now create local <strong>playlists</strong> which are collections of songs for different occasions.<br>
-        • Playlist detail screens are <strong>paginated</strong>, swiping horizontally cycles through all the songs in the selected playlist.<br>
+        • Playlist detail screens are <strong>paginated</strong> - swiping horizontally cycles through all the songs in the selected playlist.<br>
         • <strong>History</strong> screen which shows the last time different songs have been opened.<br>
         • Support for <strong>app shortcuts</strong> on and above Android 7.1.
         ]]></Data>
