@@ -49,17 +49,17 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
     }
 
     override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {
-        if (adapter.items.isEmpty()) {
+        this.isLoading.set(isLoading)
+        if (librarySongs.toList().isEmpty() && isLoading) {
             state.set(StateLayout.State.LOADING)
         }
-        this.isLoading.set(isLoading)
     }
 
     override fun onSongRepositoryUpdateError() {
-        if (state.get() == StateLayout.State.NORMAL) {
-            shouldShowUpdateErrorSnackbar.set(true)
-        } else {
+        if (librarySongs.toList().isEmpty()) {
             state.set(StateLayout.State.ERROR)
+        } else {
+            shouldShowUpdateErrorSnackbar.set(true)
         }
     }
 
@@ -103,7 +103,11 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
 
     @CallSuper
     protected open fun onListUpdated(items: List<SongViewModel>) {
-        if (!isLoading.get()) {
+        if (state.get() == StateLayout.State.LOADING) {
+            if (items.isNotEmpty()) {
+                state.set(StateLayout.State.NORMAL)
+            }
+        } else {
             state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
         }
     }

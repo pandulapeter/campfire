@@ -47,6 +47,15 @@ class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSe
     }
 
     enum class State(val childIndex: Int) {
-        LOADING(0), ERROR(1), NORMAL(2)
+        LOADING(0), ERROR(1), NORMAL(2);
+
+        companion object {
+            fun fromInt(int: Int) = when (int) {
+                0 -> LOADING
+                1 -> ERROR
+                2 -> NORMAL
+                else -> throw IllegalArgumentException("Invalid child index: $int")
+            }
+        }
     }
 }
