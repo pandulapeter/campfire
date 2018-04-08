@@ -16,7 +16,8 @@ class AboutViewModel : CampfireViewModel() {
         private const val EMAIL_ADDRESS = "pandulapeter@gmail.com"
     }
 
-    val shouldErrorShowSnackbar = ObservableBoolean()
+    val shouldShowErrorShowSnackbar = ObservableBoolean()
+    val shouldShowNoEasterEggSnackbar = ObservableBoolean()
 
     fun onGooglePlayClicked(context: Context) = context.tryToOpenIntent(PLAY_STORE_URL.toUrlIntent())
 
@@ -41,11 +42,13 @@ class AboutViewModel : CampfireViewModel() {
         )
     )
 
+    fun onLogoClicked() = shouldShowNoEasterEggSnackbar.set(true)
+
     private fun Context.tryToOpenIntent(intent: Intent) {
         try {
             startActivity(intent)
         } catch (exception: ActivityNotFoundException) {
-            shouldErrorShowSnackbar.set(true)
+            shouldShowErrorShowSnackbar.set(true)
         }
     }
 

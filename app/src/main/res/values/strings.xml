@@ -163,6 +163,7 @@
     <string name="options_about_share">Share the app</string>
     <string name="options_about_contact">Contact me</string>
     <string name="options_about_error">Looks like no app can handle this request</string>
+    <string name="options_about_no_easter_egg">No Easter Eggs in this version</string>
 
     <!-- Playlist screen -->
     <plurals name="playlist_song_count">
