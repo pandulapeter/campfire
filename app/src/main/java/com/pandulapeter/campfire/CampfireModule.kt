@@ -23,7 +23,7 @@ val integrationModule = applicationContext {
 
 val networkingModule = applicationContext {
     provide { GsonBuilder().create() }
-    provide { AnalyticsManager(get()) }
+    provide { AnalyticsManager(get(), get()) }
     provide { NetworkManager(get()) }
 }
 

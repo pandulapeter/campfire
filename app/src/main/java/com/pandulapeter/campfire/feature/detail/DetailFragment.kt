@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.HistoryItem
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.HistoryRepository
+import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.util.*
@@ -29,6 +30,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     companion object {
         const val TRANSITION_DELAY = 50L
+        private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
         private var Bundle.songs by BundleArgumentDelegate.ParcelableArrayList("songs")
         private var Bundle.index by BundleArgumentDelegate.Int("index")
         private var Bundle.shouldShowManagePlaylist by BundleArgumentDelegate.Boolean("shouldShowManagePlaylist")
@@ -42,6 +44,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     override val viewModel by lazy { DetailViewModel(songs[arguments.index].id) }
     private val historyRepository by inject<HistoryRepository>()
+    private val songRepository by inject<SongRepository>()
     private val songs by lazy { arguments?.songs?.filterIsInstance<Song>() ?: listOf() }
     private val drawablePlayToPause by lazy { mainActivity.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { mainActivity.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
@@ -50,6 +53,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     } else {
         Intent.FLAG_ACTIVITY_NEW_TASK
     }
+    private var lastSongId = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,6 +79,9 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
         mainActivity.updateFloatingActionButtonDrawable(mainActivity.drawable(R.drawable.ic_play_24dp))
         mainActivity.autoScrollControl.visibleOrGone = false
+        if (savedInstanceState != null) {
+            lastSongId = savedInstanceState.lastSongId
+        }
         (view.parent as? ViewGroup)?.run {
             viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
@@ -122,6 +129,11 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         mainActivity.updateFloatingActionButtonDrawable(mainActivity.drawable(R.drawable.ic_play_24dp))
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.lastSongId = lastSongId
+    }
+
     override fun onBackPressed() = if (mainActivity.autoScrollControl.visibleOrInvisible) {
         toggleAutoScroll()
         true
@@ -159,6 +171,11 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         if (songs.indexOfFirst { it.id == songId } == binding.viewPager.currentItem) {
             mainActivity.enableFloatingActionButton()
             historyRepository.addHistoryItem(HistoryItem(songId, System.currentTimeMillis()))
+            if (lastSongId != songId) {
+                analyticsManager.onSongOpened(songId)
+                songRepository.onSongOpened(songId)
+                lastSongId = songId
+            }
         }
     }
 

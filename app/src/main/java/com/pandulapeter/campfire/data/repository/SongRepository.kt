@@ -76,6 +76,11 @@ class SongRepository(
             })
     }
 
+    fun onSongOpened(songId: String) {
+        data.find { it.id == songId }?.isNew = false
+        notifyDataChanged()
+    }
+
     private fun notifyDataChanged() = subscribers.forEach { it.onSongRepositoryDataUpdated(data) }
 
     interface Subscriber {
