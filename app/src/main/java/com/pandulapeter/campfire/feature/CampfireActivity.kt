@@ -163,14 +163,14 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         // Show the privacy consent dialog if needed.
         if (preferenceDatabase.shouldShowPrivacyPolicy) {
             AlertDialogFragment.show(
-                DIALOG_ID_PRIVACY_POLICY,
-                supportFragmentManager,
-                R.string.home_privacy_policy_title,
-                R.string.home_privacy_policy_message,
-                R.string.home_privacy_policy_positive,
-                R.string.home_privacy_policy_negative
+                id = DIALOG_ID_PRIVACY_POLICY,
+                fragmentManager = supportFragmentManager,
+                title = R.string.home_privacy_policy_title,
+                message = R.string.home_privacy_policy_message,
+                positiveButton = R.string.home_privacy_policy_positive,
+                negativeButton = R.string.home_privacy_policy_negative,
+                cancelable = false
             )
-            preferenceDatabase.shouldShowPrivacyPolicy = false
         }
     }
 
@@ -208,12 +208,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                     } else {
                         if (preferenceDatabase.shouldShowExitConfirmation) {
                             AlertDialogFragment.show(
-                                DIALOG_ID_EXIT_CONFIRMATION,
-                                supportFragmentManager,
-                                R.string.home_exit_confirmation_title,
-                                R.string.home_exit_confirmation_message,
-                                R.string.home_exit_confirmation_close,
-                                R.string.cancel
+                                id = DIALOG_ID_EXIT_CONFIRMATION,
+                                fragmentManager = supportFragmentManager,
+                                title = R.string.home_exit_confirmation_title,
+                                message = R.string.home_exit_confirmation_message,
+                                positiveButton = R.string.home_exit_confirmation_close,
+                                negativeButton = R.string.cancel
                             )
                         } else {
                             onPositiveButtonSelected(DIALOG_ID_EXIT_CONFIRMATION)
@@ -235,7 +235,16 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     override fun onPositiveButtonSelected(id: Int) {
         when (id) {
             DIALOG_ID_EXIT_CONFIRMATION -> supportFinishAfterTransition()
-            DIALOG_ID_PRIVACY_POLICY -> preferenceDatabase.shouldShareUsageData = true
+            DIALOG_ID_PRIVACY_POLICY -> {
+                preferenceDatabase.shouldShowPrivacyPolicy = false
+                preferenceDatabase.shouldShareUsageData = true
+            }
+        }
+    }
+
+    override fun onNegativeButtonSelected(id: Int) {
+        if (id == DIALOG_ID_PRIVACY_POLICY) {
+            preferenceDatabase.shouldShowPrivacyPolicy = false
         }
     }
 

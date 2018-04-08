@@ -27,14 +27,18 @@ class AlertDialogFragment : AppCompatDialogFragment() {
             @StringRes title: Int,
             @StringRes message: Int,
             @StringRes positiveButton: Int,
-            @StringRes negativeButton: Int
+            @StringRes negativeButton: Int,
+            cancelable: Boolean = true
         ) = AlertDialogFragment().withArguments {
             it.id = id
             it.title = title
             it.message = message
             it.positiveButton = positiveButton
             it.negativeButton = negativeButton
-        }.run { show(fragmentManager, tag) }
+        }.run {
+            isCancelable = cancelable
+            show(fragmentManager, tag)
+        }
     }
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
@@ -47,7 +51,7 @@ class AlertDialogFragment : AppCompatDialogFragment() {
                     .setTitle(arguments.title)
                     .setMessage(arguments.message)
                     .setPositiveButton(arguments.positiveButton, { _, _ -> onDialogItemsSelectedListener?.onPositiveButtonSelected(arguments.id) })
-                    .setNegativeButton(arguments.negativeButton, null)
+                    .setNegativeButton(arguments.negativeButton, { _, _ -> onDialogItemsSelectedListener?.onNegativeButtonSelected(arguments.id) })
                     .create()
             }
         }
@@ -58,5 +62,7 @@ class AlertDialogFragment : AppCompatDialogFragment() {
     interface OnDialogItemsSelectedListener {
 
         fun onPositiveButtonSelected(id: Int)
+
+        fun onNegativeButtonSelected(id: Int) = Unit
     }
 }
