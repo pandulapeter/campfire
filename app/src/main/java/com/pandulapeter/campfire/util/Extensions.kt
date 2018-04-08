@@ -89,16 +89,16 @@ private fun View.animateCircularReveal(isVisible: Boolean, start: Boolean) {
     }
 }
 
-
 @JvmOverloads
-fun View.useStyledAttributes(set: AttributeSet?, @StyleableRes attrs: IntArray, defStyleAttr: Int = 0, defStyleRes: Int = 0, block: TypedArray.() -> Unit) = set?.let {
-    val typedArray = context.theme.obtainStyledAttributes(set, attrs, defStyleAttr, defStyleRes)
-    try {
-        block(typedArray)
-    } finally {
-        typedArray.recycle()
+inline fun View.useStyledAttributes(set: AttributeSet?, @StyleableRes attrs: IntArray, defStyleAttr: Int = 0, defStyleRes: Int = 0, crossinline block: TypedArray.() -> Unit) =
+    set?.let {
+        val typedArray = context.theme.obtainStyledAttributes(set, attrs, defStyleAttr, defStyleRes)
+        try {
+            block(typedArray)
+        } finally {
+            typedArray.recycle()
+        }
     }
-}
 
 inline fun ObservableBoolean.onPropertyChanged(fragment: Fragment? = null, crossinline callback: (Boolean) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
@@ -130,11 +130,44 @@ inline fun <T> ObservableField<T>.onPropertyChanged(fragment: Fragment? = null, 
     })
 }
 
-fun DrawerLayout.addDrawerListener(
-    onDrawerStateChanged: (newState: Int) -> Unit = {},
-    onDrawerSlide: () -> Unit = {},
-    onDrawerClosed: () -> Unit = {},
-    onDrawerOpened: () -> Unit = {}
+inline fun ObservableBoolean.onEventTriggered(fragment: Fragment? = null, crossinline callback: () -> Unit) {
+    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+            if (get() && fragment?.isAdded != false) {
+                callback()
+                set(false)
+            }
+        }
+    })
+}
+
+inline fun ObservableInt.onEventTriggered(fragment: Fragment? = null, crossinline callback: (Int) -> Unit) {
+    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+            if (get() != 0 && fragment?.isAdded != false) {
+                callback(get())
+                set(0)
+            }
+        }
+    })
+}
+
+inline fun <T> ObservableField<T>.onEventTriggered(fragment: Fragment? = null, crossinline callback: (T) -> Unit) {
+    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+            if (get() != null && fragment?.isAdded != false) {
+                get()?.let { callback(it) }
+                set(null)
+            }
+        }
+    })
+}
+
+inline fun DrawerLayout.addDrawerListener(
+    crossinline onDrawerStateChanged: (newState: Int) -> Unit = {},
+    crossinline onDrawerSlide: () -> Unit = {},
+    crossinline onDrawerClosed: () -> Unit = {},
+    crossinline onDrawerOpened: () -> Unit = {}
 ) = addDrawerListener(object : DrawerLayout.DrawerListener {
     override fun onDrawerStateChanged(newState: Int) = onDrawerStateChanged(newState)
 
@@ -145,11 +178,11 @@ fun DrawerLayout.addDrawerListener(
     override fun onDrawerOpened(drawerView: View) = onDrawerOpened()
 })
 
-fun Animator.addListener(
-    onAnimationRepeat: () -> Unit = {},
-    onAnimationEnd: () -> Unit = {},
-    onAnimationCancel: () -> Unit = {},
-    onAnimationStart: () -> Unit = {}
+inline fun Animator.addListener(
+    crossinline onAnimationRepeat: () -> Unit = {},
+    crossinline onAnimationEnd: () -> Unit = {},
+    crossinline onAnimationCancel: () -> Unit = {},
+    crossinline onAnimationStart: () -> Unit = {}
 ) = addListener(object : Animator.AnimatorListener {
     override fun onAnimationRepeat(animation: Animator?) = onAnimationRepeat()
 
@@ -168,7 +201,7 @@ inline fun EditText.onTextChanged(crossinline callback: (String) -> Unit) = addT
     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = callback(s?.toString() ?: "")
 })
 
-fun <T> Call<T>.enqueueCall(onSuccess: (T) -> Unit, onFailure: () -> Unit) {
+inline fun <T> Call<T>.enqueueCall(crossinline onSuccess: (T) -> Unit, crossinline onFailure: () -> Unit) {
     enqueue(object : Callback<T> {
         override fun onResponse(call: Call<T>?, response: Response<T>?) {
             if (response?.isSuccessful == true) response.body()?.let { onSuccess(it) } else onFailure()
@@ -211,7 +244,7 @@ inline fun <T : Fragment> T.withArguments(bundleOperations: (Bundle) -> Unit): T
     arguments = Bundle().apply { bundleOperations(this) }
 }
 
-inline fun ViewPager.addPageScrollListener(crossinline onPageSelected: (Int) -> Unit, crossinline onPageScrollStateChanged: () -> Unit = {}) =
+fun ViewPager.addPageScrollListener(onPageSelected: (Int) -> Unit, onPageScrollStateChanged: () -> Unit = {}) =
     addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
 
         override fun onPageScrollStateChanged(state: Int) = onPageScrollStateChanged()

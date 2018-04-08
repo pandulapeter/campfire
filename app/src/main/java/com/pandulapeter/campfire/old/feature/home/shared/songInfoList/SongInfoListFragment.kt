@@ -12,12 +12,11 @@ import com.pandulapeter.campfire.old.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.old.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
-import com.pandulapeter.campfire.old.feature.home.HomeViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.old.util.onEventTriggered
+import com.pandulapeter.campfire.util.onEventTriggered
 import org.koin.android.ext.android.inject
 
 /**
@@ -64,10 +63,6 @@ abstract class SongInfoListFragment<B : ViewDataBinding, out VM : SongInfoListVi
                             action = { viewModel.downloadSong(songInfo) })
                     }
                 }
-            }
-            // Implement navigation from placeholder action button.
-            viewModel.shouldNavigateToLibrary.onEventTriggered(this) {
-                (parentFragment as? HomeCallbacks)?.setCheckedItem(HomeViewModel.HomeNavigationItem.Library)
             }
         }
     }

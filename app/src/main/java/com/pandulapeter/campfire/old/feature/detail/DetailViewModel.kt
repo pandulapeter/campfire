@@ -4,15 +4,14 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
 import android.support.v4.app.FragmentManager
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.repository.*
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.old.feature.shared.dialog.PlaylistChooserBottomSheetFragment
-import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
-import com.pandulapeter.campfire.old.util.toggle
 
 /**
  * Handles events and logic for [DetailFragment].
@@ -105,7 +104,7 @@ class DetailViewModel(
     }
 
     //TODO: Users should not be able to interrupt the animation.
-    fun onAutoPlayButtonClicked() = isAutoScrollStarted.toggle()
+    fun onAutoPlayButtonClicked() = isAutoScrollStarted.set(!isAutoScrollStarted.get())
 
     fun getSelectedSongId() = songIds[selectedPosition]
 

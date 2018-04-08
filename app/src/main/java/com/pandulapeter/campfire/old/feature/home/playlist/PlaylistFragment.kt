@@ -14,7 +14,6 @@ import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListFragment
-import com.pandulapeter.campfire.old.util.onEventTriggered
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 

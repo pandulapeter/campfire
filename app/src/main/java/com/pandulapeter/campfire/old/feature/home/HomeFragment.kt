@@ -20,8 +20,6 @@ import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.NewPlaylistDialogFragment
-import com.pandulapeter.campfire.old.util.disableScrollbars
-import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -59,20 +57,15 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
             HomeViewModel.HomeNavigationItem.fromStringValue(it)
         }
         // Set up the side navigation drawer.
-        binding.navigationView.disableScrollbars()
         (binding.navigationView.getHeaderView(0).findViewById<View>(R.id.version) as? TextView)?.text =
                 getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.library -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Library) }
-                R.id.history -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.History) }
-                R.id.options -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.Settings) }
                 R.id.playlists -> {
                     NewPlaylistDialogFragment.show(childFragmentManager)
                     false
                 }
                 R.id.manage_playlists -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.ManagePlaylists) }
-                R.id.manage_downloads -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.ManageDownloads) }
                 else -> consumeAndCloseDrawer(binding.drawerLayout) {
                     binding.navigationView.setCheckedItem(menuItem.itemId)
                     replaceActiveFragment(HomeViewModel.HomeNavigationItem.Playlist(menuItem.itemId))
@@ -151,12 +144,8 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
     private fun updateCheckedItem() = viewModel.homeNavigationItem.let {
         binding.navigationView.setCheckedItem(
             when (it) {
-                HomeViewModel.HomeNavigationItem.Library -> R.id.library
-                HomeViewModel.HomeNavigationItem.History -> R.id.history
-                HomeViewModel.HomeNavigationItem.Settings -> R.id.options
                 is HomeViewModel.HomeNavigationItem.Playlist -> it.id
                 HomeViewModel.HomeNavigationItem.ManagePlaylists -> R.id.manage_playlists
-                HomeViewModel.HomeNavigationItem.ManageDownloads -> R.id.manage_downloads
             }
         )
     }

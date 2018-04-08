@@ -10,8 +10,8 @@ import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCal
 import com.pandulapeter.campfire.feature.home.shared.SongListFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
-import com.pandulapeter.campfire.old.util.onEventTriggered
 import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.visibleOrInvisible
 import org.koin.android.ext.android.inject

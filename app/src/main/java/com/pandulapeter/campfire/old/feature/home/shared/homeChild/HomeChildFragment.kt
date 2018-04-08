@@ -9,7 +9,7 @@ import android.transition.Fade
 import android.view.View
 import com.pandulapeter.campfire.old.feature.home.HomeViewModel
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
-import com.pandulapeter.campfire.old.util.onEventTriggered
+import com.pandulapeter.campfire.util.onEventTriggered
 
 /**
  * Parent class for Fragments that are part of the home screen.

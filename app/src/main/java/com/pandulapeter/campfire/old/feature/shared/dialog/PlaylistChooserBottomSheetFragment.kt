@@ -22,12 +22,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.old.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.old.util.onEventTriggered
-import com.pandulapeter.campfire.util.onPropertyChanged
-import com.pandulapeter.campfire.util.BundleArgumentDelegate
-import com.pandulapeter.campfire.util.dimension
-import com.pandulapeter.campfire.util.obtainColor
-import com.pandulapeter.campfire.util.withArguments
+import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
 

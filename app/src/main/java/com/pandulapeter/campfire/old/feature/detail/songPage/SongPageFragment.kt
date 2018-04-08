@@ -9,7 +9,7 @@ import com.pandulapeter.campfire.old.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
-import com.pandulapeter.campfire.old.util.onEventTriggered
+import com.pandulapeter.campfire.util.onEventTriggered
 import org.koin.android.ext.android.inject
 
 

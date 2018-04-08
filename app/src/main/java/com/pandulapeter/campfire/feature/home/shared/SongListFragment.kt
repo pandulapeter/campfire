@@ -12,11 +12,7 @@ import com.pandulapeter.campfire.databinding.FragmentSongListBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
-import com.pandulapeter.campfire.old.util.onEventTriggered
-import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.util.dimension
-import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.*
 
 abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, VM>(R.layout.fragment_song_list) {
 

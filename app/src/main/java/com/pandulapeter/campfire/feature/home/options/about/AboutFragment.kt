@@ -7,7 +7,7 @@ import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsAboutBinding
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
-import com.pandulapeter.campfire.old.util.onEventTriggered
+import com.pandulapeter.campfire.util.onEventTriggered
 
 class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewModel>(R.layout.fragment_options_about) {
 
@@ -21,7 +21,9 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
                 .ofFloat(binding.logo, SCALE, 1f, 1.5f, 0.5f, 1.25f, 0.75f, 1.1f, 0.9f, 1f)
                 .setDuration(800)
                 .start()
-            showSnackbar(R.string.options_about_no_easter_egg)
+            if (!isSnackbarVisible()) {
+                showSnackbar(R.string.options_about_no_easter_egg)
+            }
         }
     }
 

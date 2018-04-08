@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.old.data.repository
 
-import android.text.TextUtils
 import com.pandulapeter.campfire.old.data.repository.shared.Repository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
@@ -24,30 +23,6 @@ class UserPreferenceRepository(private val preferenceStorageManager: PreferenceS
             preferenceStorageManager.homeNavigationItem = new
         }
     }
-    var isSortedByTitle by Delegates.observable(preferenceStorageManager.sortingMode) { _: KProperty<*>, old: Int, new: Int ->
-        if (old != new) {
-            notifySubscribers(UpdateType.SortingModeUpdated)
-            preferenceStorageManager.sortingMode = new
-        }
-    }
-    var shouldShowDownloadedOnly by Delegates.observable(preferenceStorageManager.shouldShowDownloadedOnly) { _: KProperty<*>, old: Boolean, new: Boolean ->
-        if (old != new) {
-            notifySubscribers(UpdateType.ShouldShowDownloadedOnlyUpdated)
-            preferenceStorageManager.shouldShowDownloadedOnly = new
-        }
-    }
-    var shouldShowExplicit by Delegates.observable(preferenceStorageManager.shouldShowExplicit) { _: KProperty<*>, old: Boolean, new: Boolean ->
-        if (old != new) {
-            notifySubscribers(UpdateType.ShouldHideExplicitUpdated)
-            preferenceStorageManager.shouldShowExplicit = new
-        }
-    }
-    var shouldShowWorkInProgress by Delegates.observable(preferenceStorageManager.shouldShowWorkInProgress) { _: KProperty<*>, old: Boolean, new: Boolean ->
-        if (old != new) {
-            notifySubscribers(UpdateType.ShouldHideWorkInProgressUpdated)
-            preferenceStorageManager.shouldShowWorkInProgress = new
-        }
-    }
     var shouldShowChords by Delegates.observable(preferenceStorageManager.shouldShowChords) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
             preferenceStorageManager.shouldShowChords = new
@@ -66,11 +41,6 @@ class UserPreferenceRepository(private val preferenceStorageManager: PreferenceS
     var shouldUseGermanNotation by Delegates.observable(preferenceStorageManager.shouldUseGermanNotation) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
             preferenceStorageManager.shouldUseGermanNotation = new
-        }
-    }
-    var searchQuery by Delegates.observable("") { _: KProperty<*>, old: String, new: String ->
-        if (!TextUtils.equals(old, new)) {
-            notifySubscribers(UpdateType.SearchQueryUpdated)
         }
     }
 

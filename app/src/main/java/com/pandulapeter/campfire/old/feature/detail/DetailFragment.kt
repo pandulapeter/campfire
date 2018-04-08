@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.data.repository.*
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
-import com.pandulapeter.campfire.old.util.*
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 import java.net.URLEncoder
@@ -98,7 +97,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             viewModel.isAutoScrollStarted.set(false)
         })
         context?.let { binding.drawerLayout.setStatusBarBackgroundColor(it.color(R.color.primary)) }
-        binding.navigationView.disableScrollbars()
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.transpose_higher -> consume { detailEventBus.transposeSong(viewModel.getSelectedSongId(), 1) }

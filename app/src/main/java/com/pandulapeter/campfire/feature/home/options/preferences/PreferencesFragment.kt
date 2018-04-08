@@ -6,7 +6,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsPreferencesBinding
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
-import com.pandulapeter.campfire.old.util.onEventTriggered
+import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 
 class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, PreferencesViewModel>(R.layout.fragment_options_preferences),

@@ -39,15 +39,6 @@
                 app:visibility="@{viewModel.text.length > 0 &amp;&amp; !viewModel.isLoading &amp;&amp; !viewModel.shouldShowPlaceholder}"
                 tools:context=".feature.detail.DetailFragment" />
 
-            <com.pandulapeter.campfire.old.feature.shared.widget.PlaceholderView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:onClick="@{() -> viewModel.loadSong()}"
-                android:visibility="gone"
-                app:buttonText="@string/try_again"
-                app:text="@string/detail_placeholder_error"
-                app:visibility="@{viewModel.shouldShowPlaceholder}" />
-
             <ProgressBar
                 android:layout_width="@dimen/list_item_loading_indicator_size"
                 android:layout_height="@dimen/list_item_loading_indicator_size"

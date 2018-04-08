@@ -6,7 +6,6 @@ import com.pandulapeter.campfire.old.data.repository.shared.Repository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.data.storage.PreferenceStorageManager
-import com.pandulapeter.campfire.old.util.mapToLanguage
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -26,9 +25,6 @@ class LanguageRepository(private val preferenceStorageManager: PreferenceStorage
         async(UI) {
             async(CommonPool) {
                 val languageFilters = HashMap<Language, Boolean>()
-                songInfoList.map { it.language.mapToLanguage() }.distinct().forEach {
-                    languageFilters[it] = isLanguageFilterEnabled(it)
-                }
                 languageFilters
             }.await().let {
                 dataSet = it

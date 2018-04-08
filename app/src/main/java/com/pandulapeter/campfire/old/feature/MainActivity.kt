@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.old.feature
 
+import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
@@ -8,12 +9,11 @@ import android.support.v7.app.AppCompatActivity
 import android.view.Window
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.feature.detail.DetailFragment
 import com.pandulapeter.campfire.old.feature.home.HomeFragment
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
-import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
-import com.pandulapeter.campfire.old.util.getIntentFor
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.IntentExtraDelegate
 import com.pandulapeter.campfire.util.color
@@ -24,6 +24,7 @@ import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.cancel
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.reflect.KClass
 
 
 /**
@@ -72,7 +73,8 @@ class MainActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelec
     override fun onBackPressed() {
         if (currentFragment?.onBackPressed() != true) {
             if (userPreferenceRepository.shouldShowExitConfirmation) {
-                AlertDialogFragment.show(0,
+                AlertDialogFragment.show(
+                    0,
                     supportFragmentManager,
                     R.string.home_exit_confirmation_title,
                     R.string.home_exit_confirmation_message,
@@ -114,6 +116,7 @@ class MainActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelec
         }
     }
 
+
     companion object {
         private var Intent.mainNavigationItem by IntentExtraDelegate.String("main_navigation_item")
 
@@ -122,5 +125,8 @@ class MainActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelec
                 mainNavigationItem?.let { intent.mainNavigationItem = it.stringValue }
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
+
+        fun Context.getIntentFor(activityClass: KClass<out Activity>, extraOperations: (Intent) -> Unit = {}) =
+            Intent(this, activityClass.java).apply { extraOperations(this) }
     }
 }

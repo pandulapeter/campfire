@@ -4,7 +4,6 @@ import android.content.Context
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.old.feature.home.HomeViewModel
-import com.pandulapeter.campfire.old.feature.home.library.LibraryViewModel
 import java.util.*
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -16,7 +15,6 @@ class PreferenceStorageManager(context: Context) {
     private val preferences = context.applicationContext.getSharedPreferences("preference_storage", Context.MODE_PRIVATE)
     var lastUpdateTimestamp by PreferenceFieldDelegate.Long("last_update_timestamp")
     var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("should_use_dark_theme", false)
-    var sortingMode by PreferenceFieldDelegate.Int("sortingMode", LibraryViewModel.SortingMode.TITLE.intValue)
     var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("should_show_downloaded_only")
     var shouldShowExplicit by PreferenceFieldDelegate.Boolean("should_show_explicit", false)
     var shouldShowWorkInProgress by PreferenceFieldDelegate.Boolean("should_show_work_in_progress", BuildConfig.DEBUG)
@@ -24,11 +22,6 @@ class PreferenceStorageManager(context: Context) {
     var shouldEnableAutoScroll by PreferenceFieldDelegate.Boolean("should_enable_auto_scroll", true)
     var shouldShowExitConfirmation by PreferenceFieldDelegate.Boolean("should_show_exit_confirmation", true)
     var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("should_use_german_notation", shouldEnableGermanNotationByDefault())
-    var shouldShowHistoryHint by PreferenceFieldDelegate.Boolean("should_show_history_hint", true)
-    var shouldShowPlaylistHint by PreferenceFieldDelegate.Boolean("should_show_playlist_hint", true)
-    var shouldShowManagePlaylistsHint by PreferenceFieldDelegate.Boolean("should_show_manage_playlists_hint", true)
-    var shouldShowManageDownloadsHint by PreferenceFieldDelegate.Boolean("should_show_manage_downloads_hint", true)
-    var shouldShowDetailSwipeHint by PreferenceFieldDelegate.Boolean("should_show_detail_swipe_hint", true)
     var homeNavigationItem: HomeViewModel.HomeNavigationItem
         get() = HomeViewModel.HomeNavigationItem.fromStringValue(preferences.getString(KEY_NAVIGATION_ITEM, null))
         set(value) = preferences.edit().putString(KEY_NAVIGATION_ITEM, value.stringValue).apply()

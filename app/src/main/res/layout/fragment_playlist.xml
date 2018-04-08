@@ -141,15 +141,6 @@
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 tools:listitem="@layout/item_song_info" />
 
-            <com.pandulapeter.campfire.old.feature.shared.widget.PlaceholderView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:onClick="@{() -> viewModel.navigateToLibrary()}"
-                app:buttonText="@string/go_to_library"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior"
-                app:text="@string/playlist_placeholder"
-                app:visibility="@{viewModel.shouldShowPlaceholder}" />
-
         </android.support.design.widget.CoordinatorLayout>
 
     </com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout>
