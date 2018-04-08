@@ -10,9 +10,6 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
-import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
-import com.pandulapeter.campfire.old.feature.MainActivity
-import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListFragment
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
@@ -26,7 +23,6 @@ import org.koin.android.ext.android.inject
  * Controlled by [PlaylistViewModel].
  */
 class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel>(R.layout.fragment_playlist) {
-    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceManager>()
     private val appShortcutManager by inject<AppShortcutManager>()
     private val deepLinkManager by inject<DeepLinkManager>()
 
@@ -100,9 +96,6 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
             false
         }
         // Set up list item click listeners.
-        viewModel.adapter.itemClickListener = {
-            (activity as? MainActivity)?.setNavigationItem(MainViewModel.MainNavigationItem.Detail(viewModel.adapter.items[it].songInfo.id, arguments.playlistId))
-        }
         viewModel.adapter.downloadActionClickListener = { position ->
             viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }
         }

@@ -16,9 +16,15 @@ class FirstTimeUserExperienceManager(private val preferenceDatabase: PreferenceD
             preferenceDatabase.ftuxManageDownloadsCompleted = new
         }
     }
+    var playlistSwipeCompleted by Delegates.observable(preferenceDatabase.ftuxPlaylistSwipeCompleted) { _: KProperty<*>, old: Boolean, new: Boolean ->
+        if (old != new) {
+            preferenceDatabase.ftuxPlaylistSwipeCompleted = new
+        }
+    }
 
     fun resetAll() {
         historyCompleted = false
         manageDownloadsCompleted = false
+        playlistSwipeCompleted = false
     }
 }

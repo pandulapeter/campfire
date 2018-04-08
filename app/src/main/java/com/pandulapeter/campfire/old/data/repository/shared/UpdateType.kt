@@ -1,7 +1,5 @@
 package com.pandulapeter.campfire.old.data.repository.shared
 
-import com.pandulapeter.campfire.old.data.model.History
-import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.model.SongInfo
 
@@ -26,20 +24,6 @@ sealed class UpdateType {
         class Failed(songId: String) : Download(songId)
 
     }
-
-    // HistoryRepository
-    object HistoryUpdated : UpdateType()
-
-    class ItemAddedToHistory(val history: History, val position: Int) : UpdateType()
-
-    class ItemRemovedFromHistory(val songId: String) : UpdateType()
-
-    object HistoryCleared : UpdateType()
-
-    // LanguageRepository
-    class LanguagesUpdated(val languageFilters: Map<Language, Boolean>) : UpdateType()
-
-    object LanguageFilterChanged : UpdateType()
 
     // PlaylistRepository
     class PlaylistsUpdated(val playlists: List<Playlist>) : UpdateType()

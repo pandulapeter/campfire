@@ -39,7 +39,7 @@ class SongInfoRepository(
 
     fun getSongInfo(id: String) = dataSet[id]
 
-    fun updateDataSet(onError: () -> Unit = {}) {
+    private fun updateDataSet() {
         isLoading = true
 //        networkManager.service.getLibrary().enqueueCall(
 //            onSongDetailRepositoryDownloadSuccess = {

@@ -3,6 +3,7 @@ package com.pandulapeter.campfire
 import android.app.Application
 import org.koin.android.ext.android.startKoin
 
+@Suppress("unused")
 class CampfireApplication : Application() {
 
     override fun onCreate() {

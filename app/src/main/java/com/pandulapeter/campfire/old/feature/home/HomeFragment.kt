@@ -15,8 +15,6 @@ import com.pandulapeter.campfire.old.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.old.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
-import com.pandulapeter.campfire.old.feature.MainActivity
-import com.pandulapeter.campfire.old.feature.MainViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.NewPlaylistDialogFragment
@@ -155,7 +153,6 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
      * the selection changed or the container was empty.
      */
     private fun replaceActiveFragment(homeNavigationItem: HomeViewModel.HomeNavigationItem) {
-        (activity as? MainActivity)?.updatePreviousNavigationItem(MainViewModel.MainNavigationItem.Home(homeNavigationItem))
         if (viewModel.homeNavigationItem != homeNavigationItem || currentFragment == null) {
             viewModel.homeNavigationItem = homeNavigationItem
             if (currentFragment == null) {

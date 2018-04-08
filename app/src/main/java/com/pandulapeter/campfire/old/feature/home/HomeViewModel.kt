@@ -81,12 +81,8 @@ class HomeViewModel(
         }
 
         companion object {
-            private const val VALUE_LIBRARY = "library"
-            private const val VALUE_HISTORY = "history"
-            private const val VALUE_SETTINGS = "settings"
             private const val VALUE_PLAYLIST = "playlist_"
             private const val VALUE_MANAGE_PLAYLISTS = "manage_playlists"
-            private const val VALUE_MANAGE_DOWNLOADS = "manage_downloads"
 
             fun fromStringValue(string: String?) = when (string) {
                 VALUE_MANAGE_PLAYLISTS -> ManagePlaylists

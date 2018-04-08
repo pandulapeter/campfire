@@ -8,8 +8,6 @@ import android.view.View
 import com.pandulapeter.campfire.ManagePlaylistsBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
-import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.old.feature.home.HomeViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
@@ -27,16 +25,9 @@ import org.koin.android.ext.android.inject
  * Controlled by [ManagePlaylistsViewModel].
  */
 class ManagePlaylistsFragment : HomeChildFragment<ManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists_old) {
-    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceManager>()
     private val playlistRepository by inject<PlaylistRepository>()
-    private val appShortcutManager by inject<AppShortcutManager>()
 
-    override fun createViewModel() = ManagePlaylistsViewModel(
-        analyticsManager,
-        appShortcutManager,
-        firstTimeUserExperienceRepository,
-        playlistRepository
-    )
+    override fun createViewModel() = ManagePlaylistsViewModel(analyticsManager, playlistRepository)
 
     override fun getAppBarLayout() = binding.appBarLayout
 

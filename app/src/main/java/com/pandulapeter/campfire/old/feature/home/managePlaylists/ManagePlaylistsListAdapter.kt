@@ -93,16 +93,4 @@ class ManagePlaylistsListAdapter : RecyclerView.Adapter<ManagePlaylistsListAdapt
                 PlaylistViewHolder(DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_playlist, parent, false))
         }
     }
-
-    enum class Payload {
-        SONG_DOWNLOADED,
-        SONG_DOWNLOAD_DELETED,
-        DOWNLOAD_STARTED,
-        DOWNLOAD_SUCCESSFUL,
-        DOWNLOAD_FAILED,
-        EDIT_MODE_OPEN,
-        EDIT_MODE_CLOSE,
-        SONG_IS_IN_A_PLAYLIST,
-        SONG_IS_NOT_IN_A_PLAYLISTS
-    }
 }

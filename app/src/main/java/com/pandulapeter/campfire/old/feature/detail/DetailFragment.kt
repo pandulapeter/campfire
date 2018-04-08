@@ -11,12 +11,10 @@ import android.support.v4.widget.DrawerLayout
 import android.view.View
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.old.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
-import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
@@ -34,7 +32,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     private val downloadedSongRepository by inject<DownloadedSongRepository>()
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
-    private val firstTimeUserExperienceRepository by inject<FirstTimeUserExperienceManager>()
     private val detailEventBus by inject<DetailEventBus>()
     private val transposeContainer by lazy { binding.navigationView.menu.findItem(R.id.transpose_container) }
     private val transposeHigher by lazy { binding.navigationView.menu.findItem(R.id.transpose_higher) }
@@ -125,7 +122,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 }
             }
         }
-        viewModel.shouldNavigateBack.onEventTriggered(this) { (activity as? MainActivity)?.navigateBack() }
         viewModel.isAutoScrollStarted.onPropertyChanged(this) {
             if (it) {
                 binding.appBarLayout.setExpanded(false, true)

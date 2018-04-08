@@ -5,6 +5,7 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.support.annotation.CallSuper
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.old.data.model.SongInfo
 import com.pandulapeter.campfire.old.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
@@ -13,7 +14,6 @@ import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildViewModel
-import com.pandulapeter.campfire.integration.AnalyticsManager
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -35,8 +35,7 @@ abstract class SongInfoListViewModel(
 ) : HomeChildViewModel(analyticsManager), Subscriber {
     val adapter = SongInfoListAdapter()
     val shouldShowDownloadErrorSnackbar = ObservableField<SongInfo?>()
-    val shouldShowPlaceholder = ObservableBoolean()
-    val shouldNavigateToLibrary = ObservableBoolean()
+    private val shouldShowPlaceholder = ObservableBoolean()
     private var coroutine: CoroutineContext? = null
     protected val newString = context?.getString(R.string.new_tag) ?: ""
     protected val updateString = context?.getString(R.string.new_version_available) ?: ""
@@ -53,8 +52,6 @@ abstract class SongInfoListViewModel(
         adapter.items = items.toMutableList()
         shouldShowPlaceholder.set(items.isEmpty())
     }
-
-    fun navigateToLibrary() = shouldNavigateToLibrary.set(true)
 
     fun downloadSong(songInfo: SongInfo) = downloadedSongRepository.startSongDownload(
         songInfo = songInfo,

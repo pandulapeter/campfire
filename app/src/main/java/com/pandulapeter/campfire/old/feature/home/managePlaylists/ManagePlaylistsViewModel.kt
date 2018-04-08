@@ -2,14 +2,12 @@ package com.pandulapeter.campfire.old.feature.home.managePlaylists
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableInt
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.old.data.model.Playlist
-import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildViewModel
-import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.integration.AnalyticsManager
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -22,12 +20,9 @@ import kotlin.coroutines.experimental.CoroutineContext
  */
 class ManagePlaylistsViewModel(
     analyticsManager: AnalyticsManager,
-    private val appShortcutManager: AppShortcutManager,
-    private val firstTimeUserExperienceManager: FirstTimeUserExperienceManager,
     private val playlistRepository: PlaylistRepository
 ) : HomeChildViewModel(analyticsManager), Subscriber {
     val adapter = ManagePlaylistsListAdapter()
-    val shouldShowHintSnackbar = ObservableBoolean()
     val itemCount = ObservableInt(playlistRepository.getPlaylists().size)
     val shouldShowNewPlaylistButton = ObservableBoolean()
     val shouldShowNewPlaylistDialog = ObservableBoolean()

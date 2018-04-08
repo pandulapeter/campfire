@@ -201,7 +201,7 @@ inline fun EditText.onTextChanged(crossinline callback: (String) -> Unit) = addT
     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = callback(s?.toString() ?: "")
 })
 
-inline fun <T> Call<T>.enqueueCall(crossinline onSuccess: (T) -> Unit, crossinline onFailure: () -> Unit) {
+fun <T> Call<T>.enqueueCall(onSuccess: (T) -> Unit, onFailure: () -> Unit) {
     enqueue(object : Callback<T> {
         override fun onResponse(call: Call<T>?, response: Response<T>?) {
             if (response?.isSuccessful == true) response.body()?.let { onSuccess(it) } else onFailure()

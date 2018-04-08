@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 import java.net.URLEncoder
@@ -45,6 +46,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override val viewModel by lazy { DetailViewModel(songs[arguments.index].id) }
     private val historyRepository by inject<HistoryRepository>()
     private val songRepository by inject<SongRepository>()
+    private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
     private val songs by lazy { arguments?.songs?.filterIsInstance<Song>() ?: listOf() }
     private val drawablePlayToPause by lazy { mainActivity.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { mainActivity.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
@@ -175,6 +177,17 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 analyticsManager.onSongOpened(songId)
                 songRepository.onSongOpened(songId)
                 lastSongId = songId
+            }
+            if (!firstTimeUserExperienceManager.playlistSwipeCompleted) {
+                if (binding.viewPager.currentItem != arguments.index) {
+                    firstTimeUserExperienceManager.playlistSwipeCompleted = true
+                    hideSnackbar()
+                } else if (songs.size > 1) {
+                    showHint(
+                        message = R.string.detail_swipe_hint,
+                        action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
+                    )
+                }
             }
         }
     }

@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.old.data.repository
 
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.old.data.model.DownloadedSong
-import com.pandulapeter.campfire.old.data.model.SongDetail
 import com.pandulapeter.campfire.old.data.model.SongInfo
 import com.pandulapeter.campfire.old.data.repository.shared.Repository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
@@ -10,9 +9,6 @@ import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.data.storage.DataStorageManager
 import com.pandulapeter.campfire.old.data.storage.FileStorageManager
 import com.pandulapeter.campfire.util.enqueueCall
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
 import kotlin.properties.Delegates
 
 /**
@@ -29,16 +25,6 @@ class DownloadedSongRepository(
     override fun subscribe(subscriber: Subscriber) {
         super.subscribe(subscriber)
         subscriber.onUpdate(UpdateType.DownloadedSongsUpdated(getDownloadedSongIds()))
-    }
-
-    fun getDownloadSize(songId: String) = fileStorageManager.getFileSize(songId)
-
-    fun getDownloadCacheSize(): Long {
-        var totalSizeInBytes = 0L
-        dataSet.keys.forEach {
-            totalSizeInBytes += fileStorageManager.getFileSize(it)
-        }
-        return totalSizeInBytes
     }
 
     fun getDownloadedSongIds(): List<String> = dataSet.keys.toList()
@@ -65,28 +51,9 @@ class DownloadedSongRepository(
 
     fun isSongLoading(songId: String) = downloadQueue.contains(songId)
 
-    fun areThereUpdatesToTheSong(songId: String) = false //TODO: Missing functionality.
+    private fun areThereUpdatesToTheSong(songId: String) = false //TODO: Missing functionality.
 
-    fun isSongNew(songId: String) = false //TODO: Missing functionality.
-
-    fun removeSongFromDownloads(songId: String) {
-        if (isSongDownloaded(songId)) {
-            fileStorageManager.deleteDownloadedSongText(songId)
-            dataSet = dataSet.toMutableMap().apply { remove(songId) }
-            notifySubscribers(UpdateType.SongRemovedFromDownloads(songId))
-        }
-    }
-
-    fun downloadedItemCount() = dataSet.keys.size
-
-    fun clearDownloads() {
-        downloadQueue.clear()
-        getDownloadedSongIds().forEach {
-            fileStorageManager.deleteDownloadedSongText(it)
-        }
-        dataSet = dataSet.toMutableMap().apply { clear() }
-        notifySubscribers(UpdateType.AllDownloadsRemoved)
-    }
+    private fun isSongNew(songId: String) = false //TODO: Missing functionality.
 
     fun startSongDownload(songInfo: SongInfo, onFailure: () -> Unit = {}) {
         //TODO: Check that the updating logic actually works. Looks like the cache is never updated.
@@ -102,7 +69,7 @@ class DownloadedSongRepository(
         notifySubscribers(UpdateType.Download.Started(songInfo.id))
         networkManager.service.getSong(songInfo.id).enqueueCall(
             onSuccess = {
-//                addSongToDownloadsWithoutNotifications(DownloadedSong(it.id, songInfo.version ?: 0), it) {
+                //                addSongToDownloadsWithoutNotifications(DownloadedSong(it.id, songInfo.version ?: 0), it) {
 //                    notifySubscribers(UpdateType.Download.Successful(songInfo.id, it.song))
 //                }
             },
@@ -118,19 +85,6 @@ class DownloadedSongRepository(
         fileStorageManager.loadDownloadedSongText(id)
     } else {
         null
-    }
-
-    private fun addSongToDownloadsWithoutNotifications(downloadedSong: DownloadedSong, songDetail: SongDetail, action: () -> Unit) {
-        if (downloadQueue.contains(downloadedSong.id)) {
-            downloadQueue.remove(downloadedSong.id)
-        }
-        async(UI) {
-            async(CommonPool) {
-                fileStorageManager.saveDownloadedSongText(downloadedSong.id, songDetail.song)
-            }.await()
-            action()
-        }
-        dataSet = dataSet.toMutableMap().apply { put(downloadedSong.id, downloadedSong) }
     }
 
     sealed class DownloadState {

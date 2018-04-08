@@ -36,7 +36,7 @@ class AppShortcutManager(context: Context) {
     }
 
     @RequiresApi(Build.VERSION_CODES.N_MR1)
-    private class RealImplementation(private val context: Context) : Implementation {
+    private class RealImplementation(context: Context) : Implementation {
         private val shortcutManager: ShortcutManager = context.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
 
         override fun updateAppShortcuts() {
