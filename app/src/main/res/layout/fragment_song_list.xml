@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:buttonText="@string/try_again"
-        app:onButtonClicked="@{() -> viewModel.updateData()}"
+        app:onButtonClicked="@{() -> viewModel.onActionButtonClicked()}"
         app:state="@{viewModel.state}"
         app:text="@string/library_initializing_error">
 

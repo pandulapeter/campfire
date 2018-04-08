@@ -44,8 +44,13 @@ class SongRepository(
 
     override fun subscribe(subscriber: Subscriber) {
         super.subscribe(subscriber)
-        subscriber.onSongRepositoryDataUpdated(data)
+        if (!isLoading) {
+            subscriber.onSongRepositoryDataUpdated(data)
+        }
         subscriber.onSongRepositoryLoadingStateChanged(isLoading)
+        if (!isLoading && data.isEmpty()) {
+            subscriber.onSongRepositoryUpdateError()
+        }
     }
 
     fun updateData() {

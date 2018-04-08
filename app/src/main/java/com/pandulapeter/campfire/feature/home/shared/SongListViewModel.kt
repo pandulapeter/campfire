@@ -63,7 +63,11 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
         }
     }
 
-    override fun onSongDetailRepositoryUpdated(downloadedSongs: List<SongDetailMetadata>) = updateAdapterItems()
+    override fun onSongDetailRepositoryUpdated(downloadedSongs: List<SongDetailMetadata>) {
+        if (librarySongs.toList().isNotEmpty()) {
+            updateAdapterItems()
+        }
+    }
 
     override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) {
         adapter.items.indexOfLast { it.song.id == songDetail.id }.let { index ->
@@ -103,12 +107,12 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
 
     @CallSuper
     protected open fun onListUpdated(items: List<SongViewModel>) {
-        if (state.get() == StateLayout.State.LOADING) {
-            if (items.isNotEmpty()) {
-                state.set(StateLayout.State.NORMAL)
-            }
-        } else {
-            state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
+        state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
+    }
+
+    fun onActionButtonClicked() {
+        when {
+            state.get() == StateLayout.State.ERROR -> updateData()
         }
     }
 
