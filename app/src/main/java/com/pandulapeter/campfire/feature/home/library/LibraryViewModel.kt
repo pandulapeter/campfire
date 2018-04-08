@@ -7,6 +7,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.home.shared.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.SongViewModel
+import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.onTextChanged
@@ -17,7 +18,8 @@ class LibraryViewModel(
     context: Context,
     val toolbarTextInputView: ToolbarTextInputView,
     private val updateSearchToggleDrawable: (Boolean) -> Unit,
-    private val onDataLoaded: (languages: List<Language>) -> Unit
+    private val onDataLoaded: (languages: List<Language>) -> Unit,
+    private val showFilters: () -> Unit
 ) : SongListViewModel() {
 
     private val newString = context.getString(R.string.new_tag)
@@ -96,6 +98,19 @@ class LibraryViewModel(
         }
     }
 
+    override fun onListUpdated(items: List<SongViewModel>) {
+        super.onListUpdated(items)
+        if (state.get() == StateLayout.State.NORMAL) {
+            updatePlaceholder()
+            buttonText.set(R.string.library_filters)
+        }
+    }
+
+    override fun onActionButtonClicked() = when {
+        librarySongs.toList().isEmpty() -> updateData()
+        else -> showFilters()
+    }
+
     override fun Sequence<Song>.createViewModels() = filterByQuery()
         .filterDownloaded()
         .filterByLanguage()
@@ -104,27 +119,6 @@ class LibraryViewModel(
         .sort()
         .map { SongViewModel(songDetailRepository, it) }
         .toList()
-
-    //TODO: Prioritize results that begin with the searchQuery.
-    private fun Sequence<Song>.filterByQuery() = if (toolbarTextInputView.isTextInputVisible) {
-        query.trim().normalize().let { query ->
-            filter { it.getNormalizedTitle().contains(query, true) || it.getNormalizedArtist().contains(query, true) }
-        }
-    } else this
-
-    private fun Sequence<Song>.filterDownloaded() = if (shouldShowDownloadedOnly) filter { songDetailRepository.isSongDownloaded(it.id) } else this
-
-    private fun Sequence<Song>.filterByLanguage() = filter { !disabledLanguageFilters.contains(it.language ?: Language.Unknown.id) }
-
-    private fun Sequence<Song>.filterWorkInProgress() = if (!shouldShowWorkInProgress) filter { it.version ?: 0 >= 0 } else this
-
-    private fun Sequence<Song>.filterExplicit() = if (!shouldShowExplicit) filter { it.isExplicit != true } else this
-
-    private fun Sequence<Song>.sort() = when (sortingMode) {
-        SortingMode.TITLE -> sortedBy { it.getNormalizedArtist() }.sortedBy { it.getNormalizedTitle() }
-        SortingMode.ARTIST -> sortedBy { it.getNormalizedTitle() }.sortedBy { it.getNormalizedArtist() }
-        SortingMode.POPULARITY -> sortedBy { it.getNormalizedArtist() }.sortedBy { it.getNormalizedTitle() }.sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
-    }
 
     fun toggleTextInputVisibility() {
         toolbarTextInputView.run {
@@ -151,6 +145,34 @@ class LibraryViewModel(
         SortingMode.ARTIST -> adapter.items[position].song.getNormalizedArtist()[0].toString().toUpperCase()
         SortingMode.POPULARITY -> if (adapter.items[position].song.isNew) newString else popularString
     }
+
+    //TODO: Prioritize results that begin with the searchQuery.
+    private fun Sequence<Song>.filterByQuery() = if (toolbarTextInputView.isTextInputVisible) {
+        query.trim().normalize().let { query ->
+            filter { it.getNormalizedTitle().contains(query, true) || it.getNormalizedArtist().contains(query, true) }
+        }
+    } else this
+
+    private fun Sequence<Song>.filterDownloaded() = if (shouldShowDownloadedOnly) filter { songDetailRepository.isSongDownloaded(it.id) } else this
+
+    private fun Sequence<Song>.filterByLanguage() = filter { !disabledLanguageFilters.contains(it.language ?: Language.Unknown.id) }
+
+    private fun Sequence<Song>.filterWorkInProgress() = if (!shouldShowWorkInProgress) filter { it.version ?: 0 >= 0 } else this
+
+    private fun Sequence<Song>.filterExplicit() = if (!shouldShowExplicit) filter { it.isExplicit != true } else this
+
+    private fun Sequence<Song>.sort() = when (sortingMode) {
+        SortingMode.TITLE -> sortedBy { it.getNormalizedArtist() }.sortedBy { it.getNormalizedTitle() }
+        SortingMode.ARTIST -> sortedBy { it.getNormalizedTitle() }.sortedBy { it.getNormalizedArtist() }
+        SortingMode.POPULARITY -> sortedBy { it.getNormalizedArtist() }.sortedBy { it.getNormalizedTitle() }.sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
+    }
+
+    private fun updatePlaceholder() = placeholderText.set(
+        when {
+            toolbarTextInputView.isTextInputVisible && query.isNotEmpty() -> R.string.library_placeholder_search
+            else -> R.string.library_placeholder_filters
+        }
+    )
 
     enum class SortingMode(val intValue: Int) {
         TITLE(0),

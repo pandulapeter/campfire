@@ -57,11 +57,14 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                         }
                     }
                 }
-            }
+            },
+            showFilters = { mainActivity.openSecondaryNavigationDrawer() }
         )
     }
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
     private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
+    private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
+    private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
     private val searchToggle: ToolbarButton by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) { viewModel.toggleTextInputVisibility() } }
     private val drawableCloseToSearch by lazy { mainActivity.animatedDrawable(R.drawable.avd_close_to_search_24dp) }
     private val drawableSearchToClose by lazy { mainActivity.animatedDrawable(R.drawable.avd_search_to_close_24dp) }
@@ -84,6 +87,8 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                 }
                 viewModel.toolbarTextInputView.showTextInput()
             }
+            viewModel.placeholderText.set(savedInstanceState.placeholderText)
+            viewModel.buttonText.set(savedInstanceState.buttonText)
         }
     }
 
@@ -96,6 +101,8 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         super.onSaveInstanceState(this)
         isTextInputVisible = viewModel.toolbarTextInputView.isTextInputVisible
         searchQuery = viewModel.query
+        placeholderText = viewModel.placeholderText.get()
+        buttonText = viewModel.buttonText.get()
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {

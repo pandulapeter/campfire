@@ -24,8 +24,8 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
 
     private val songRepository by inject<SongRepository>()
     protected val songDetailRepository by inject<SongDetailRepository>()
-    private var librarySongs = sequenceOf<Song>()
     private var coroutine: CoroutineContext? = null
+    protected var librarySongs = sequenceOf<Song>()
     val adapter = SongAdapter()
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
     val downloadSongError = ObservableField<Song?>()
@@ -114,10 +114,7 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
     }
 
-    open fun onActionButtonClicked() = when {
-        librarySongs.toList().isEmpty() -> updateData()
-        else -> Unit
-    }
+    abstract fun onActionButtonClicked()
 
     fun updateData() = songRepository.updateData()
 
