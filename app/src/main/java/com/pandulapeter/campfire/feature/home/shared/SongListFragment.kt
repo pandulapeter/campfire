@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onPropertyChanged
 
-abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, VM>(R.layout.fragment_song_list), Transition.TransitionListener {
+abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, VM>(R.layout.fragment_song_list) {
 
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
 
@@ -76,21 +76,8 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         }
     }
 
-    override fun setReenterTransition(transition: Any?) {
-        super.setReenterTransition(transition)
-        (transition as? Transition)?.let {
-            it.removeListener(this)
-            it.addListener(this)
-        }
+    override fun onTransitionEnd(transition: Transition?) {
+        super.onTransitionEnd(transition)
+        binding.recyclerView.invalidateItemDecorations()
     }
-
-    override fun onTransitionEnd(transition: Transition?) = binding.recyclerView.invalidateItemDecorations()
-
-    override fun onTransitionResume(transition: Transition?) = Unit
-
-    override fun onTransitionPause(transition: Transition?) = Unit
-
-    override fun onTransitionCancel(transition: Transition?) = Unit
-
-    override fun onTransitionStart(transition: Transition?) = Unit
 }

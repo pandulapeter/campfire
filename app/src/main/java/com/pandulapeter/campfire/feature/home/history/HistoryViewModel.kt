@@ -31,8 +31,7 @@ class HistoryViewModel(private val openLibrary: () -> Unit) : SongListViewModel(
         historyRepository.unsubscribe(this)
     }
 
-    override fun Sequence<Song>.createViewModels() = filter { songDetailRepository.isSongDownloaded(it.id) }
-        .filter { it.id != songToDeleteId }
+    override fun Sequence<Song>.createViewModels() = filter { it.id != songToDeleteId }
         .filter { song -> history.firstOrNull { it.id == song.id } != null }
         .sortedByDescending { song -> history.first { it.id == song.id }.lastOpenedAt }
         .map { SongViewModel(songDetailRepository, it) }

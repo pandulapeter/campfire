@@ -38,7 +38,7 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), AlertDialogFragmen
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.swipeRefreshLayout.isEnabled = false
-        defaultToolbar.updateToolbarTitle(R.string.home_manage_downloads)
+        defaultToolbar.updateToolbarTitle(R.string.home_history)
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))
         viewModel.shouldShowDeleteAll.onPropertyChanged(this) { deleteAllButton.visibleOrInvisible = it }
         ItemTouchHelper(object : ElevationItemTouchHelperCallback((mainActivity.dimension(R.dimen.content_padding)).toFloat(), 0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {

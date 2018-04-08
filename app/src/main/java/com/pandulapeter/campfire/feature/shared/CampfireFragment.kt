@@ -3,10 +3,12 @@ package com.pandulapeter.campfire.feature.shared
 import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
 import android.os.Bundle
+import android.support.annotation.CallSuper
 import android.support.annotation.LayoutRes
 import android.support.annotation.StringRes
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
+import android.transition.Transition
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,13 +17,14 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.util.color
 
-abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : Fragment() {
+abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : Fragment(), Transition.TransitionListener {
 
     protected lateinit var binding: B
     protected abstract val viewModel: VM
     protected open val shouldDelaySubscribing = false
     protected val mainActivity get() = (activity as? CampfireActivity) ?: throw IllegalStateException("The Fragment is not attached to CampfireActivity.")
     private var snackbar: Snackbar? = null
+    private var isResumingDelayed = false
 
     final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         viewModel.componentCallbacks = this
@@ -34,11 +37,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     override fun onResume() {
         super.onResume()
         if (shouldDelaySubscribing) {
-            binding.root.postDelayed({
-                if (isAdded) {
-                    viewModel.subscribe()
-                }
-            }, 400)
+            isResumingDelayed = true
         } else {
             viewModel.subscribe()
         }
@@ -46,6 +45,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     override fun onPause() {
         super.onPause()
+        isResumingDelayed = false
         snackbar?.dismiss()
         viewModel.unsubscribe()
     }
@@ -88,4 +88,28 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
             })
         }
     }
+
+    override fun setReenterTransition(transition: Any?) {
+        super.setReenterTransition(transition)
+        (transition as? Transition)?.let {
+            it.removeListener(this)
+            it.addListener(this)
+        }
+    }
+
+    @CallSuper
+    override fun onTransitionEnd(transition: Transition?) {
+        if (isResumingDelayed) {
+            viewModel.subscribe()
+            isResumingDelayed = false
+        }
+    }
+
+    override fun onTransitionResume(transition: Transition?) = Unit
+
+    override fun onTransitionPause(transition: Transition?) = Unit
+
+    override fun onTransitionCancel(transition: Transition?) = Unit
+
+    override fun onTransitionStart(transition: Transition?) = Unit
 }
