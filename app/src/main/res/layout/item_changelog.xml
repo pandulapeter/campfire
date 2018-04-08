@@ -3,6 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <data>
+
+        <variable
+            name="model"
+            type="com.pandulapeter.campfire.data.model.local.ChangelogItem" />
+
+    </data>
+
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -23,6 +31,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/options_preferences_label_margin"
                 android:fontFamily="sans-serif-medium"
+                android:text="@{model.versionName}"
                 android:textColor="@color/accent"
                 tools:text="Version name" />
 
@@ -31,11 +40,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/options_preferences_label_margin"
-                android:fontFamily="sans-serif-thin"
+                android:fontFamily="sans-serif"
                 android:lineSpacingMultiplier="1.1"
                 android:paddingBottom="@dimen/small_content_padding"
                 android:paddingTop="@dimen/small_content_padding"
                 android:textSize="12sp"
+                app:formattedText="@{model.description}"
                 tools:text="Description" />
 
         </LinearLayout>

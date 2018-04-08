@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
         <variable
             name="viewModel"
             type="com.pandulapeter.campfire.feature.home.options.about.AboutViewModel" />
+
+        <import type="com.pandulapeter.campfire.R" />
 
     </data>
 
@@ -19,11 +23,151 @@
         android:paddingBottom="@dimen/content_padding"
         android:scrollbars="none">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="@string/options_preferences_about" />
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingEnd="@dimen/content_padding"
+            android:paddingStart="@dimen/content_padding">
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding"
+                app:contentPadding="@dimen/large_content_padding">
+
+                <android.support.constraint.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <!-- TODO: Easter egg comes here. -->
+
+                    <ImageView
+                        android:id="@+id/logo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@string/campfire"
+                        android:src="@mipmap/ic_launcher_round"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/top"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_marginEnd="@dimen/large_content_padding"
+                        android:layout_marginTop="@dimen/content_padding"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        app:formattedText="@{R.string.options_about_description_top}"
+                        app:layout_constraintBottom_toBottomOf="@id/logo"
+                        app:layout_constraintEnd_toStartOf="@id/logo"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:text="@string/options_about_description_top" />
+
+                    <TextView
+                        android:id="@+id/bottom"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/large_content_padding"
+                        android:fontFamily="sans-serif"
+                        android:gravity="center_horizontal"
+                        android:text="@string/options_about_description_bottom"
+                        android:textSize="12sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/logo" />
+
+                </android.support.constraint.ConstraintLayout>
+
+            </android.support.v7.widget.CardView>
+
+
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingBottom="@dimen/content_padding">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/options_preferences_label_margin"
+                        android:fontFamily="sans-serif-medium"
+                        android:padding="@dimen/content_padding"
+                        android:text="@string/options_about_links"
+                        android:textColor="@color/accent" />
+
+                    <TextView
+                        style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/touch_target"
+                        android:onClick="@{() -> viewModel.onGooglePlayClicked()}"
+                        android:paddingBottom="@dimen/content_padding"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:paddingStart="@dimen/switch_content_padding"
+                        android:paddingTop="@dimen/content_padding"
+                        android:text="@string/options_about_google_play" />
+
+                    <TextView
+                        style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/touch_target"
+                        android:onClick="@{() -> viewModel.onGitHubClicked()}"
+                        android:paddingBottom="@dimen/content_padding"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:paddingStart="@dimen/switch_content_padding"
+                        android:paddingTop="@dimen/content_padding"
+                        android:text="@string/options_about_github" />
+
+                    <TextView
+                        style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/touch_target"
+                        android:onClick="@{() -> viewModel.onShareClicked()}"
+                        android:paddingBottom="@dimen/content_padding"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:paddingStart="@dimen/switch_content_padding"
+                        android:paddingTop="@dimen/content_padding"
+                        android:text="@string/options_about_share" />
+
+
+                    <TextView
+                        style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/touch_target"
+                        android:onClick="@{() -> viewModel.onContactClicked()}"
+                        android:paddingBottom="@dimen/content_padding"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:paddingStart="@dimen/switch_content_padding"
+                        android:paddingTop="@dimen/content_padding"
+                        android:text="@string/options_about_contact" />
+
+                </LinearLayout>
+
+            </android.support.v7.widget.CardView>
+
+        </LinearLayout>
 
     </android.support.v4.widget.NestedScrollView>
 

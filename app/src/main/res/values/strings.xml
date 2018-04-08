@@ -127,7 +127,7 @@
     <string name="options_changelog_0_0_2_version_name">v0.0.2</string>
     <string name="options_changelog_0_0_2_description">
         <Data><![CDATA[
-        • Users can now create local <strong>Playlists</strong> which are collections of songs for different occasions.<br>
+        • Users can now create local <strong>playlists</strong> which are collections of songs for different occasions.<br>
         • Playlist detail screens are <strong>paginated</strong>, swiping horizontally cycles through all the songs in the selected playlist.<br>
         • <strong>History</strong> screen which shows the last time different songs have been opened.<br>
         • Support for <strong>app shortcuts</strong> on and above Android 7.1.
@@ -142,6 +142,19 @@
         • <strong>Options</strong> screen with preferences like switching the app to lyrics-only mode, changing the chord notation mode, changing the theme, privacy options and more.
         ]]></Data>
     </string>
+
+    <!-- Options screen / About -->
+    <string name="options_about_description_top"><Data><![CDATA[
+        Thank you for using <strong>Campfire</strong>!<br>
+        The app was created by me, Pandula Péter as a hobby project.
+        ]]></Data>
+    </string>
+    <string name="options_about_description_bottom">I know that there aren\`t too many songs in the library - new ones are being added on a semi-regular basis. If you have suggestions on which songs to include next or any other type of feedback, feel free to drop me a line!</string>
+    <string name="options_about_links">Links</string>
+    <string name="options_about_google_play">Rate on Google Play</string>
+    <string name="options_about_github">View on GitHub</string>
+    <string name="options_about_share">Share the app</string>
+    <string name="options_about_contact">Contact me</string>
 
     <!-- Playlist screen -->
     <plurals name="playlist_song_count">
@@ -191,6 +204,7 @@
     <string name="detail_transpose_lower">Lower</string>
     <string name="detail_play_original">Play original</string>
     <string name="detail_share">Share song</string>
+    <string name="detail_report">Report a problem</string>
     <string name="detail_swipe_hint">Swipe horizontally to cycle through songs in the playlist</string>
     <string name="detail_placeholder_error">Something went wrong while\ntrying to download the song</string>
     <string name="detail_intro">Intro</string>

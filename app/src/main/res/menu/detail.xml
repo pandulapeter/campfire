@@ -29,4 +29,8 @@
         android:id="@+id/share"
         android:title="@string/detail_share" />
 
+    <item
+        android:id="@+id/report"
+        android:title="@string/detail_report" />
+
 </menu>
