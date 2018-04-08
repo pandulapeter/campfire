@@ -33,13 +33,13 @@ class DetailPageViewModel(val song: Song, private val onDataLoaded: () -> Unit) 
     }
 
     override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) {
-        if (songIds.contains(song.id)) {
+        if (songIds.contains(song.id) && text.get().isNullOrEmpty()) {
             state.set(StateLayout.State.LOADING)
         }
     }
 
     override fun onSongDetailRepositoryDownloadError(song: Song) {
-        if (song.id == this.song.id) {
+        if (song.id == this.song.id && text.get().isNullOrEmpty()) {
             state.set(StateLayout.State.ERROR)
         }
     }

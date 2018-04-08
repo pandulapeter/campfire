@@ -31,7 +31,7 @@ class SongDetailRepository(
 
     fun getSongDetail(song: Song) {
         if (!isSongDownloading(song.id)) {
-            if (isSongDownloaded(song.id) && getSongVersion(song.id) == song.version ?: 0) {
+            if (isSongDownloaded(song.id)) {
                 async(UI) {
                     async(CommonPool) { songDatabase.songDetailDao().get(song.id) }.await().let { songDetail ->
                         if (songDetail == null) {
@@ -42,27 +42,29 @@ class SongDetailRepository(
                         }
                     }
                 }
-            } else {
-                downloadQueue.add(song.id)
-                notifyDownloadQueChanged()
-                networkManager.service.getSong(song.id).enqueueCall(
-                    onSuccess = { songDetail ->
-                        songDetail.version = song.version ?: 0
-                        async(UI) {
-                            async(CommonPool) { songDatabase.songDetailDao().insert(songDetail) }.await()
-                            refreshDataSet()
-                            subscribers.forEach { it.onSongDetailRepositoryDownloadSuccess(songDetail) }
-                            downloadQueue.remove(song.id)
-                            notifyDownloadQueChanged()
-                        }
-                    },
-                    onFailure = {
+                if (getSongVersion(song.id) == song.version ?: 0) {
+                    return
+                }
+            }
+            downloadQueue.add(song.id)
+            notifyDownloadQueChanged()
+            networkManager.service.getSong(song.id).enqueueCall(
+                onSuccess = { songDetail ->
+                    songDetail.version = song.version ?: 0
+                    async(UI) {
+                        async(CommonPool) { songDatabase.songDetailDao().insert(songDetail) }.await()
+                        refreshDataSet()
+                        subscribers.forEach { it.onSongDetailRepositoryDownloadSuccess(songDetail) }
                         downloadQueue.remove(song.id)
                         notifyDownloadQueChanged()
-                        subscribers.forEach { it.onSongDetailRepositoryDownloadError(song) }
                     }
-                )
-            }
+                },
+                onFailure = {
+                    downloadQueue.remove(song.id)
+                    notifyDownloadQueChanged()
+                    subscribers.forEach { it.onSongDetailRepositoryDownloadError(song) }
+                }
+            )
         }
     }
 
