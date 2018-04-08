@@ -40,7 +40,15 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), AlertDialogFragmen
         binding.swipeRefreshLayout.isEnabled = false
         defaultToolbar.updateToolbarTitle(R.string.home_history)
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))
-        viewModel.shouldShowDeleteAll.onPropertyChanged(this) { deleteAllButton.visibleOrInvisible = it }
+        viewModel.shouldShowDeleteAll.onPropertyChanged(this) {
+            deleteAllButton.visibleOrInvisible = it
+            if (it && !firstTimeUserExperienceManager.historyCompleted) {
+                showHint(
+                    message = R.string.history_hint,
+                    action = { firstTimeUserExperienceManager.historyCompleted = true }
+                )
+            }
+        }
         ItemTouchHelper(object : ElevationItemTouchHelperCallback((mainActivity.dimension(R.dimen.content_padding)).toFloat(), 0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = false
@@ -48,7 +56,7 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), AlertDialogFragmen
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
                 viewHolder?.adapterPosition?.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
-                        firstTimeUserExperienceManager.manageDownloadsCompleted = true
+                        firstTimeUserExperienceManager.historyCompleted = true
                         val song = viewModel.adapter.items[position].song
                         showSnackbar(
                             message = getString(R.string.history_song_removed_message, song.title),

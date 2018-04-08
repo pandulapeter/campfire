@@ -28,6 +28,7 @@ class PreferenceDatabase(context: Context) {
     var shouldShareUsageData by PreferenceFieldDelegate.Boolean("shouldShareUsageData", false)
 
     // First time user experience
+    var ftuxHistoryCompleted by PreferenceFieldDelegate.Boolean("ftuxHistoryCompleted", false)
     var ftuxManageDownloadsCompleted by PreferenceFieldDelegate.Boolean("ftuxManageDownloadsCompleted", false)
 
     private fun shouldEnableGermanNotationByDefault() = when (Locale.getDefault().isO3Country.toUpperCase()) {

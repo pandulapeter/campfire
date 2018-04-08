@@ -6,6 +6,11 @@ import kotlin.reflect.KProperty
 
 class FirstTimeUserExperienceManager(private val preferenceDatabase: PreferenceDatabase) {
 
+    var historyCompleted by Delegates.observable(preferenceDatabase.ftuxHistoryCompleted) { _: KProperty<*>, old: Boolean, new: Boolean ->
+        if (old != new) {
+            preferenceDatabase.ftuxHistoryCompleted = new
+        }
+    }
     var manageDownloadsCompleted by Delegates.observable(preferenceDatabase.ftuxManageDownloadsCompleted) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
             preferenceDatabase.ftuxManageDownloadsCompleted = new
@@ -13,6 +18,7 @@ class FirstTimeUserExperienceManager(private val preferenceDatabase: PreferenceD
     }
 
     fun resetAll() {
+        historyCompleted = false
         manageDownloadsCompleted = false
     }
 }
