@@ -1,5 +1,7 @@
 package com.pandulapeter.campfire.feature.home.library
 
+import android.content.Context
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
@@ -12,11 +14,14 @@ import com.pandulapeter.campfire.util.swap
 import org.koin.android.ext.android.inject
 
 class LibraryViewModel(
+    context: Context,
     val toolbarTextInputView: ToolbarTextInputView,
     private val updateSearchToggleDrawable: (Boolean) -> Unit,
     private val onDataLoaded: (languages: List<Language>) -> Unit
 ) : SongListViewModel() {
 
+    private val newString = context.getString(R.string.new_tag)
+    private val popularString = context.getString(R.string.popular_tag)
     private val preferenceDatabase by inject<PreferenceDatabase>()
     var query = ""
         set(value) {
@@ -116,9 +121,9 @@ class LibraryViewModel(
     private fun Sequence<Song>.filterExplicit() = if (!shouldShowExplicit) filter { it.isExplicit != true } else this
 
     private fun Sequence<Song>.sort() = when (sortingMode) {
-        SortingMode.POPULARITY -> sortedBy { it.getNormalizedArtist() }.sortedBy { it.getNormalizedTitle() }.sortedByDescending { it.popularity }
         SortingMode.TITLE -> sortedBy { it.getNormalizedArtist() }.sortedBy { it.getNormalizedTitle() }
         SortingMode.ARTIST -> sortedBy { it.getNormalizedTitle() }.sortedBy { it.getNormalizedArtist() }
+        SortingMode.POPULARITY -> sortedBy { it.getNormalizedArtist() }.sortedBy { it.getNormalizedTitle() }.sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
     }
 
     fun toggleTextInputVisibility() {
@@ -138,13 +143,13 @@ class LibraryViewModel(
     fun isHeader(position: Int) = when (sortingMode) {
         SortingMode.TITLE -> position == 0 || adapter.items[position].song.getNormalizedTitle()[0] != adapter.items[position - 1].song.getNormalizedTitle()[0]
         SortingMode.ARTIST -> position == 0 || adapter.items[position].song.getNormalizedArtist()[0] != adapter.items[position - 1].song.getNormalizedArtist()[0]
-        else -> false
+        SortingMode.POPULARITY -> adapter.items[0].song.isNew && (position == 0 || adapter.items[position].song.isNew != adapter.items[position - 1].song.isNew)
     }
 
     fun getHeaderTitle(position: Int) = when (sortingMode) {
         SortingMode.TITLE -> adapter.items[position].song.getNormalizedTitle()[0].toString().toUpperCase()
         SortingMode.ARTIST -> adapter.items[position].song.getNormalizedArtist()[0].toString().toUpperCase()
-        else -> ""
+        SortingMode.POPULARITY -> if (adapter.items[position].song.isNew) newString else popularString
     }
 
     enum class SortingMode(val intValue: Int) {
