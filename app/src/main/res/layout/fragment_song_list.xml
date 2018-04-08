@@ -10,8 +10,7 @@
 
     </data>
 
-    <!-- The apparently useless container is needed to fix a bug in SwipeRefreshLayout that occurs when replacing the Fragment while an animation is in progress. -->
-    <FrameLayout
+    <com.pandulapeter.campfire.feature.shared.widget.StateLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -29,6 +28,6 @@
 
         </android.support.v4.widget.SwipeRefreshLayout>
 
-    </FrameLayout>
+    </com.pandulapeter.campfire.feature.shared.widget.StateLayout>
 
 </layout>
