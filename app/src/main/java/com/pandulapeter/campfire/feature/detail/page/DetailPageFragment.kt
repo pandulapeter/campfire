@@ -19,5 +19,6 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
         }
     }
 
-    override val viewModel by lazy { DetailPageViewModel(arguments?.song as Song) { (parentFragment as? DetailFragment)?.onDataLoaded() } }
+    private val song by lazy { arguments?.song as Song }
+    override val viewModel by lazy { DetailPageViewModel(song) { (parentFragment as? DetailFragment)?.onDataLoaded(song.id) } }
 }

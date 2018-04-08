@@ -211,11 +211,12 @@ inline fun <T : Fragment> T.withArguments(bundleOperations: (Bundle) -> Unit): T
     arguments = Bundle().apply { bundleOperations(this) }
 }
 
-inline fun ViewPager.onPageSelected(crossinline onPageSelected: () -> Unit) = addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+inline fun ViewPager.addPageScrollListener(crossinline onPageSelected: (Int) -> Unit, crossinline onPageScrollStateChanged: () -> Unit = {}) =
+    addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
 
-    override fun onPageScrollStateChanged(state: Int) = Unit
+        override fun onPageScrollStateChanged(state: Int) = onPageScrollStateChanged()
 
-    override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) = Unit
+        override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) = Unit
 
-    override fun onPageSelected(position: Int) = onPageSelected()
-})
+        override fun onPageSelected(position: Int) = onPageSelected(position)
+    })

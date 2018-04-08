@@ -37,7 +37,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
     }
 
-    override val viewModel by lazy { DetailViewModel(songs[arguments?.index ?: 0].id) }
+    override val viewModel by lazy { DetailViewModel(songs[arguments.index].id) }
     private val songs by lazy { arguments?.songs?.filterIsInstance<Song>() ?: listOf() }
     private val drawablePlayToPause by lazy { mainActivity.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { mainActivity.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
@@ -89,7 +89,16 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
         mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
         binding.viewPager.adapter = DetailPagerAdapter(childFragmentManager, songs)
-        binding.viewPager.onPageSelected { onPageChanged() }
+        binding.viewPager.addPageScrollListener(
+            onPageSelected = {
+                mainActivity.expandAppBar()
+                mainActivity.disableFloatingActionButton()
+                viewModel.songId.set(songs[it].id)
+            },
+            onPageScrollStateChanged = {
+                mainActivity.disableFloatingActionButton()
+            }
+        )
     }
 
     override fun onPause() {
@@ -142,8 +151,10 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     override fun onFloatingActionButtonPressed() = toggleAutoScroll()
 
-    fun onDataLoaded() {
-        mainActivity.enableFloatingActionButton()
+    fun onDataLoaded(songId: String) {
+        if (songs.indexOfFirst { it.id == songId } == binding.viewPager.currentItem) {
+            mainActivity.enableFloatingActionButton()
+        }
     }
 
     private fun getYouTubeIntent(packageName: String, query: String) = Intent(Intent.ACTION_SEARCH).apply {
@@ -154,11 +165,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private inline fun consumeAndCloseDrawer(crossinline action: () -> Unit) = consume {
         mainActivity.closeSecondaryNavigationDrawer()
         action()
-    }
-
-    private fun onPageChanged() {
-        mainActivity.expandAppBar()
-        mainActivity.disableFloatingActionButton()
     }
 
     private fun toggleAutoScroll() = mainActivity.autoScrollControl.run {

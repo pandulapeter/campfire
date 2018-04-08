@@ -5,7 +5,7 @@ import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
-import com.pandulapeter.campfire.util.onPageSelected
+import com.pandulapeter.campfire.util.addPageScrollListener
 
 class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewModel>(R.layout.fragment_options) {
 
@@ -15,7 +15,7 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_options)
         binding.viewPager.adapter = OptionsFragmentPagerAdapter(mainActivity, childFragmentManager)
-        binding.viewPager.onPageSelected { mainActivity.expandAppBar() }
+        binding.viewPager.addPageScrollListener({ mainActivity.expandAppBar() })
         mainActivity.enableTabLayout(binding.viewPager)
     }
 }
