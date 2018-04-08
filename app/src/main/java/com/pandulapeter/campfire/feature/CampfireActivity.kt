@@ -154,10 +154,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             currentScreenId = savedInstanceState.currentScreenId
             shouldAllowAppBarScrolling = savedInstanceState.toolbarContainerScrollFlags
             if (currentScreenId == R.id.options) {
-                binding.appBarLayout.run {
-                    forceExpandAppBar = savedInstanceState.isAppBarExpanded
-                    post { setTransitionsEnabled() }
-                }
+                binding.appBarLayout.post { setTransitionsEnabled() }
+                forceExpandAppBar = savedInstanceState.isAppBarExpanded
             }
         }
         binding.drawerLayout.setDrawerLockMode(if (currentFragment is DetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
@@ -177,7 +175,15 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     fun setTransitionsEnabled(enabled: Boolean = true) {
-        binding.coordinatorLayout.layoutTransition = if (enabled) LayoutTransition().apply { setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0) } else null
+        binding.coordinatorLayout.apply {
+            if (enabled) {
+                if (layoutTransition == null) {
+                    layoutTransition = LayoutTransition().apply { setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0) }
+                }
+            } else {
+                layoutTransition = null
+            }
+        }
     }
 
     override fun onResume() {
