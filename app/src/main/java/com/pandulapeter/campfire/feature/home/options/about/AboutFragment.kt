@@ -12,13 +12,26 @@ import com.pandulapeter.campfire.util.onEventTriggered
 class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewModel>(R.layout.fragment_options_about) {
 
     override val viewModel = AboutViewModel()
+    private val scale by lazy {
+        object : Property<View, Float>(Float::class.java, "scale") {
+
+            override fun set(view: View?, value: Float) {
+                view?.run {
+                    view.scaleX = value
+                    view.scaleY = value
+                }
+            }
+
+            override fun get(view: View) = view.scaleX
+        }
+    }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         viewModel.shouldShowErrorShowSnackbar.onEventTriggered { showSnackbar(R.string.options_about_error) }
         //TODO: Easter Egg.
         viewModel.shouldShowNoEasterEggSnackbar.onEventTriggered {
             ObjectAnimator
-                .ofFloat(binding.logo, SCALE, 1f, 1.5f, 0.5f, 1.25f, 0.75f, 1.1f, 0.9f, 1f)
+                .ofFloat(binding.logo, scale, 1f, 1.5f, 0.5f, 1.25f, 0.75f, 1.1f, 0.9f, 1f)
                 .setDuration(800)
                 .start()
             if (!isSnackbarVisible()) {
@@ -26,17 +39,4 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
             }
         }
     }
-
-    private val SCALE = object : Property<View, Float>(Float::class.java, "scale") {
-
-        override fun set(view: View?, value: Float) {
-            view?.run {
-                view.scaleX = value
-                view.scaleY = value
-            }
-        }
-
-        override fun get(view: View) = view.scaleX
-    }
-
 }

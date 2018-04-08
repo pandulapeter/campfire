@@ -12,7 +12,10 @@ import android.view.View
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
-import com.pandulapeter.campfire.old.data.repository.*
+import com.pandulapeter.campfire.old.data.repository.DownloadedSongRepository
+import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.old.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.feature.MainActivity
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.*
@@ -28,7 +31,6 @@ import java.net.URLEncoder
  */
 class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout.fragment_detail_old) {
     private val songInfoRepository by inject<SongInfoRepository>()
-    private val historyRepository by inject<HistoryRepository>()
     private val downloadedSongRepository by inject<DownloadedSongRepository>()
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
@@ -51,8 +53,7 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             downloadedSongRepository,
             childFragmentManager,
             playlistRepository,
-            songInfoRepository,
-            historyRepository
+            songInfoRepository
         )
     }
 

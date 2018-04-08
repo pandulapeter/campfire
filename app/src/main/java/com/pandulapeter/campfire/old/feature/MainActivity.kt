@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelec
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
 
-        fun Context.getIntentFor(activityClass: KClass<out Activity>, extraOperations: (Intent) -> Unit = {}) =
+        private fun Context.getIntentFor(activityClass: KClass<out Activity>, extraOperations: (Intent) -> Unit = {}) =
             Intent(this, activityClass.java).apply { extraOperations(this) }
     }
 }

@@ -22,8 +22,8 @@ class SongParser(private val context: Context) {
         val chords = mutableListOf<Chord>()
         var offset = 0
         val newText = text.replace("*", "") //TODO: This should be useless.
-        val parsedText = (if (shouldShowChords) newText else newText.replace(Regex("\\[(.*?)\\]"), ""))
-            .replace(Regex("\\{(.*?)\\}"), {
+        val parsedText = (if (shouldShowChords) newText else newText.replace(Regex("\\[(.*?)]"), ""))
+            .replace(Regex("\\{(.*?)}"), {
                 val sectionType = SectionType.fromAbbreviation(it.value[1])
                 if (sectionType != null) {
                     val index = it.value.indexOf("_").let { index -> if (index >= 0) it.value.substring(index + 1).removeSuffix("}").toInt() else 0 }
@@ -37,7 +37,7 @@ class SongParser(private val context: Context) {
                 }
             })
         if (shouldShowChords) {
-            parsedText.replace(Regex("\\[(.*?)\\]")) {
+            parsedText.replace(Regex("\\[(.*?)]")) {
                 it.value.toNote()?.let { note ->
                     chords.add(Chord(note, it.value.toSuffix(), it.range.first, it.range.last + 1))
                 }

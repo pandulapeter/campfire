@@ -24,8 +24,7 @@ class DetailViewModel(
     private val downloadedSongRepository: DownloadedSongRepository,
     private val fragmentManager: FragmentManager,
     private val playlistRepository: PlaylistRepository,
-    private val songInfoRepository: SongInfoRepository,
-    private val historyRepository: HistoryRepository
+    private val songInfoRepository: SongInfoRepository
 ) : CampfireViewModel(analyticsManager), Subscriber {
     val title = ObservableField("")
     val artist = ObservableField("")
@@ -71,7 +70,6 @@ class DetailViewModel(
     fun onPageSelected(position: Int) {
         selectedPosition = position
         onSongSelected()
-        historyRepository.addToHistory(getSelectedSongId())
         shouldShowAutoScrollButton.set(downloadedSongRepository.isSongDownloaded(getSelectedSongId()))
     }
 

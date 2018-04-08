@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.old.data.repository
 
-import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.old.data.model.SongInfo
 import com.pandulapeter.campfire.old.data.repository.shared.Repository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
@@ -14,13 +13,10 @@ import kotlin.reflect.KProperty
  * Wraps caching and updating of [SongInfo] objects.
  */
 class SongInfoRepository(
-    private val preferenceStorageManager: PreferenceStorageManager,
-    private val dataStorageManager: DataStorageManager,
-    private val networkManager: NetworkManager,
-    private val languageRepository: LanguageRepository
+    preferenceStorageManager: PreferenceStorageManager,
+    private val dataStorageManager: DataStorageManager
 ) : Repository() {
     private var dataSet by Delegates.observable(dataStorageManager.songInfoCache) { _, _, new ->
-        languageRepository.updateLanguages(getLibrarySongs())
         dataStorageManager.songInfoCache = new
     }
     var isLoading by Delegates.observable(false) { _: KProperty<*>, old: Boolean, new: Boolean ->
@@ -31,7 +27,6 @@ class SongInfoRepository(
         if (!isLoading && System.currentTimeMillis() - preferenceStorageManager.lastUpdateTimestamp > CACHE_VALIDITY_LIMIT) {
             updateDataSet()
         }
-        languageRepository.updateLanguages(getLibrarySongs())
     }
 
     override fun subscribe(subscriber: Subscriber) {

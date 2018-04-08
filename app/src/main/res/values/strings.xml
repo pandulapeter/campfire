@@ -47,8 +47,6 @@
     <string name="home_privacy_policy_negative">No</string>
 
     <!-- Library screen -->
-    <string name="library_placeholder_loading">Loading song library. This shouldn\'t take long…</string>
-    <string name="library_placeholder_loading_failed">Something went wrong while loading the library data</string>
     <string name="library_placeholder_search">No results found. Try a different query or double-check the filters you set up</string>
     <string name="library_placeholder_filters">No matching songs in the library. Double-check the filters you set up</string>
     <string name="library_initializing_error">Something went wrong while trying to load the song library</string>
@@ -67,11 +65,7 @@
     <string name="library_show_work_in_progress">Show unfinished</string>
     <string name="library_show_explicit">Show explicit</string>
 
-    <!-- Collections screen -->
-    <string name="collections_work_in_progress">Work on the Collections screen is in progress</string>
-
     <!-- History screen -->
-    <string name="history_clear">Clear</string>
     <string name="history_clear_confirmation_title">Are you sure?</string>
     <string name="history_clear_confirmation_message">This will remove all items from your history.</string>
     <string name="history_clear_confirmation_clear">Delete all</string>
@@ -101,20 +95,12 @@
     <string name="options_preferences_english_notation">English notation</string>
     <string name="options_preferences_german_notation">German notation</string>
     <string name="options_preferences_appearance_and_behavior">Appearance and behavior</string>
-    <string name="options_preferences_behavior">Behavior</string>
-    <string name="options_preferences_auto_scroll">Auto-scroll</string>
-    <string name="options_preferences_auto_scroll_enabled">Auto-scroll controls are enabled</string>
-    <string name="options_preferences_auto_scroll_disabled">Auto-scroll controls are disabled</string>
     <string name="options_preferences_exit_confirmation">Exit confirmation</string>
     <string name="options_preferences_exit_confirmation_enabled">Ask for confirmation before closing the app</string>
     <string name="options_preferences_exit_confirmation_disabled">Close the app without confirmation</string>
-    <string name="options_preferences_appearance">Appearance</string>
     <string name="options_preferences_use_dark_theme">Use dark theme</string>
     <string name="options_preferences_use_dark_theme_enabled">The app uses the dark theme</string>
     <string name="options_preferences_use_dark_theme_disabled">The app uses the light theme</string>
-    <string name="options_preferences_allow_toolbar_scroll">Toolbar slide</string>
-    <string name="options_preferences_allow_toolbar_scroll_enabled">Toolbars slide out when scrolling</string>
-    <string name="options_preferences_allow_toolbar_scroll_disabled">Toolbars always remain on top of the screen</string>
     <string name="options_preferences_user_data">User data</string>
     <string name="options_preferences_reset_hints">Reset hints</string>
     <string name="options_preferences_reset_hints_description">The hints you dismissed in the past will appear again</string>
@@ -175,7 +161,6 @@
     <string name="playlist_share">Share</string>
     <string name="playlist_enter_title">Enter playlist title</string>
     <string name="playlist_done">Done</string>
-    <string name="playlist_hint">Drag the songs to rearrange them, swipe to remove</string>
     <string name="playlist_placeholder">To start adding songs to this playlist, tap on the star icon near song titles</string>
 
     <!-- Manage playlists screen -->
@@ -191,13 +176,7 @@
     <string name="manage_playlists_hint">Drag the playlists to rearrange them, swipe to remove</string>
 
     <!-- Manage downloads screen -->
-    <plurals name="manage_downloads_subtitle">
-        <item quantity="one">%1$d song (total size: %2$s)</item>
-        <item quantity="other">%1$d songs (total size: %2$s)</item>
-    </plurals>
-    <string name="manage_downloads_subtitle_calculating">Calculating…</string>
     <string name="manage_downloads_no_downloads">No downloads</string>
-    <string name="manage_downloads_delete_all">Delete all</string>
     <string name="manage_downloads_delete_all_confirmation_title">Are you sure?</string>
     <string name="manage_downloads_delete_all_confirmation_message">This will remove all downloaded songs</string>
     <string name="manage_downloads_delete_all_confirmation_clear">Delete all</string>
