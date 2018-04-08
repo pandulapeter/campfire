@@ -33,11 +33,6 @@ class UserPreferenceRepository(private val preferenceStorageManager: PreferenceS
             preferenceStorageManager.shouldEnableAutoScroll = new
         }
     }
-    var shouldShowExitConfirmation by Delegates.observable(preferenceStorageManager.shouldShowExitConfirmation) { _: KProperty<*>, old: Boolean, new: Boolean ->
-        if (old != new) {
-            preferenceStorageManager.shouldShowExitConfirmation = new
-        }
-    }
     var shouldUseGermanNotation by Delegates.observable(preferenceStorageManager.shouldUseGermanNotation) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
             preferenceStorageManager.shouldUseGermanNotation = new

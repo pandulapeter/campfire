@@ -4,6 +4,7 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
 import android.text.SpannableString
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.old.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.old.data.repository.SongInfoRepository
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
@@ -11,7 +12,6 @@ import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.old.feature.shared.CampfireViewModel
-import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -34,7 +34,7 @@ class SongPageViewModel(
     val scrollSpeed = ObservableInt()
     val shouldScrollToTop = ObservableBoolean()
     val isLoading = ObservableBoolean(downloadedSongRepository.isSongLoading(songId))
-    val transposition = ObservableInt(userPreferenceRepository.getSongTransposition(songId))
+    private val transposition = ObservableInt(userPreferenceRepository.getSongTransposition(songId))
     private val shouldShowChords = userPreferenceRepository.shouldShowChords
     private var unformattedText: String? = null
 

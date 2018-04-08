@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
+import com.pandulapeter.campfire.feature.home.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.*
@@ -164,6 +165,22 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             }
         }
         R.id.share -> consumeAndCloseDrawer { showSnackbar(R.string.work_in_progress) } //consumeAndCloseDrawer(binding.drawerLayout) { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
+        R.id.report -> consumeAndCloseDrawer {
+            val song = songs[binding.viewPager.currentItem]
+            try {
+                startActivity(
+                    Intent.createChooser(
+                        Intent().apply {
+                            action = Intent.ACTION_SENDTO
+                            type = "text/plain"
+                            data = Uri.parse("mailto:${AboutViewModel.EMAIL_ADDRESS}?subject=${Uri.encode(getString(R.string.detail_report_subject, song.artist, song.title))}")
+                        }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), null
+                    )
+                )
+            } catch (exception: ActivityNotFoundException) {
+                showSnackbar(R.string.options_about_error)
+            }
+        }
         else -> super.onNavigationItemSelected(menuItem)
     }
 

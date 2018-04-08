@@ -19,8 +19,8 @@ class SongInfoRepository(
     private var dataSet by Delegates.observable(dataStorageManager.songInfoCache) { _, _, new ->
         dataStorageManager.songInfoCache = new
     }
-    var isLoading by Delegates.observable(false) { _: KProperty<*>, old: Boolean, new: Boolean ->
-        if (old != new) notifySubscribers(UpdateType.LoadingStateChanged(new))
+    private var isLoading by Delegates.observable(false) { _: KProperty<*>, old: Boolean, new: Boolean ->
+        if (old != new) notifySubscribers(UpdateType.LoadingStateChanged())
     }
 
     init {
@@ -32,7 +32,7 @@ class SongInfoRepository(
     override fun subscribe(subscriber: Subscriber) {
         super.subscribe(subscriber)
         subscriber.onUpdate(UpdateType.LibraryCacheUpdated(getLibrarySongs()))
-        subscriber.onUpdate(UpdateType.LoadingStateChanged(isLoading))
+        subscriber.onUpdate(UpdateType.LoadingStateChanged())
     }
 
     fun getLibrarySongs(): List<SongInfo> = dataSet.values.toList()

@@ -44,7 +44,7 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
     private val managePlaylistsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_playlists) }
     private val manageDownloadsItem by lazy { binding.navigationView.menu.findItem(R.id.manage_downloads) }
     private val currentFragment get() = childFragmentManager.findFragmentById(R.id.fragment_container) as? HomeChildFragment<*, *>
-    var shouldPlayReturnAnimation = false
+    private var shouldPlayReturnAnimation = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

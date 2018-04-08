@@ -15,7 +15,6 @@ class PreferenceStorageManager(context: Context) {
     var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("should_use_dark_theme", false)
     var shouldShowChords by PreferenceFieldDelegate.Boolean("should_show_chords", true)
     var shouldEnableAutoScroll by PreferenceFieldDelegate.Boolean("should_enable_auto_scroll", true)
-    var shouldShowExitConfirmation by PreferenceFieldDelegate.Boolean("should_show_exit_confirmation", true)
     var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("should_use_german_notation", shouldEnableGermanNotationByDefault())
     var homeNavigationItem: HomeViewModel.HomeNavigationItem
         get() = HomeViewModel.HomeNavigationItem.fromStringValue(preferences.getString(KEY_NAVIGATION_ITEM, null))

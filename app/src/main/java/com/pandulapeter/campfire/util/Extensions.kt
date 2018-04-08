@@ -201,6 +201,10 @@ inline fun EditText.onTextChanged(crossinline callback: (String) -> Unit) = addT
     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = callback(s?.toString() ?: "")
 })
 
+inline fun <T : Fragment> T.withArguments(bundleOperations: (Bundle) -> Unit): T = apply {
+    arguments = Bundle().apply { bundleOperations(this) }
+}
+
 fun <T> Call<T>.enqueueCall(onSuccess: (T) -> Unit, onFailure: () -> Unit) {
     enqueue(object : Callback<T> {
         override fun onResponse(call: Call<T>?, response: Response<T>?) {
@@ -238,11 +242,6 @@ fun String.normalize() = this
     .replace("Ú", "U")
     .replace("ű", "u")
     .replace("Ű", "U")
-
-
-inline fun <T : Fragment> T.withArguments(bundleOperations: (Bundle) -> Unit): T = apply {
-    arguments = Bundle().apply { bundleOperations(this) }
-}
 
 fun ViewPager.addPageScrollListener(onPageSelected: (Int) -> Unit, onPageScrollStateChanged: () -> Unit = {}) =
     addOnPageChangeListener(object : ViewPager.OnPageChangeListener {

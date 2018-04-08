@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewPager
-import android.support.v4.widget.DrawerLayout
 import android.view.View
 import com.pandulapeter.campfire.DetailBinding
 import com.pandulapeter.campfire.R
@@ -99,8 +98,8 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             when (it.itemId) {
                 R.id.transpose_higher -> consume { detailEventBus.transposeSong(viewModel.getSelectedSongId(), 1) }
                 R.id.transpose_lower -> consume { detailEventBus.transposeSong(viewModel.getSelectedSongId(), -1) }
-                R.id.play_in_youtube -> consumeAndCloseDrawer(binding.drawerLayout) { viewModel.onPlayOnYouTubeClicked() }
-                R.id.share -> consumeAndCloseDrawer(binding.drawerLayout) { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
+                R.id.play_in_youtube -> consumeAndCloseDrawer { viewModel.onPlayOnYouTubeClicked() }
+                R.id.share -> consumeAndCloseDrawer { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
                 else -> false
             }
         }
@@ -180,9 +179,9 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         }
     }
 
-    private inline fun consumeAndCloseDrawer(drawerLayout: DrawerLayout, crossinline action: () -> Unit) = consume {
+    private inline fun consumeAndCloseDrawer(crossinline action: () -> Unit) = consume {
         action()
-        drawerLayout.closeDrawers()
+        binding.drawerLayout.closeDrawers()
     }
 
     companion object {

@@ -27,7 +27,6 @@ class DataStorageManager(context: Context, gson: Gson) {
     var downloadedSongCache by MapDelegate(DownloadedSong::class.java, gson, downloadedSongPreferences, "ids", "song_")
     var playlists by MapDelegate(Playlist::class.java, gson, playlistPreferences, "ids", "playlist_")
     var history by MapDelegate(History::class.java, gson, historyPreferences, "ids", "history_")
-    var playlistHistory by StringListDelegate(gson, historyPreferences, "playlist_ids")
 
     private class StringListDelegate(
         private val gson: Gson,

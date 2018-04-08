@@ -143,7 +143,7 @@
         The app was created by me, Pandula Péter as a hobby project.
         ]]></Data>
     </string>
-    <string name="options_about_description_bottom">I know that there aren\'t too many songs in the library - new ones are being added on a semi-regular basis. If you have suggestions on which songs to include next or any other type of feedback, feel free to drop me a line!</string>
+    <string name="options_about_description_bottom">"I know that there aren't too many songs in the library - new ones are being added on a semi-regular basis. If you have suggestions on which songs to include next or any other type of feedback, feel free to drop me a line!</string>
     <string name="options_about_links">Links</string>
     <string name="options_about_google_play">Rate on Google Play</string>
     <string name="options_about_github">View on GitHub</string>
@@ -194,6 +194,7 @@
     <string name="detail_play_original">Play original</string>
     <string name="detail_share">Share song</string>
     <string name="detail_report">Report a problem</string>
+    <string name="detail_report_subject">Campfire: Problem with %1$s - %2$s</string>
     <string name="detail_swipe_hint">Swipe horizontally to cycle through songs in the playlist</string>
     <string name="detail_placeholder_error">Something went wrong while\ntrying to download the song</string>
     <string name="detail_intro">Intro</string>

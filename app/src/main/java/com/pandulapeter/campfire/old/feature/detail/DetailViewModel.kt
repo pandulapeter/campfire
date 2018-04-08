@@ -6,7 +6,10 @@ import android.databinding.ObservableInt
 import android.support.v4.app.FragmentManager
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.old.data.model.Playlist
-import com.pandulapeter.campfire.old.data.repository.*
+import com.pandulapeter.campfire.old.data.repository.DownloadedSongRepository
+import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.old.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.feature.shared.CampfireViewModel
@@ -30,7 +33,7 @@ class DetailViewModel(
     val artist = ObservableField("")
     val songIds = playlistRepository.getPlaylist(playlistId)?.songIds ?: listOf(songId)
     val adapter = SongPagerAdapter(fragmentManager, songIds)
-    val shouldNavigateBack = ObservableBoolean()
+    private val shouldNavigateBack = ObservableBoolean()
     val isSongOnAnyPlaylist = ObservableBoolean()
     val shouldShowSongOptions = ObservableBoolean()
     val shouldShowPlaylistAction = playlistId == DetailFragment.NO_PLAYLIST

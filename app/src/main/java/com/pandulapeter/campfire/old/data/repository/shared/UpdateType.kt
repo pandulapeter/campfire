@@ -43,7 +43,7 @@ sealed class UpdateType {
     // SongInfoRepository
     class LibraryCacheUpdated(val songInfos: List<SongInfo>) : UpdateType()
 
-    class LoadingStateChanged(val isLoading: Boolean) : UpdateType()
+    class LoadingStateChanged : UpdateType()
 
     // UserPreferenceRepository
     object NavigationItemUpdated : UpdateType()

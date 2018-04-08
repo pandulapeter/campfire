@@ -22,7 +22,7 @@ import kotlin.coroutines.experimental.CoroutineContext
  */
 class SongInfoListAdapter : RecyclerView.Adapter<SongInfoListAdapter.SongInfoViewHolder>() {
     private var coroutine: CoroutineContext? = null
-    var onListUpdatedCallback: (() -> Unit)? = null
+    private var onListUpdatedCallback: (() -> Unit)? = null
     var items = mutableListOf<SongInfoViewModel>()
         set(newItems) {
             if (field.isEmpty()) {
@@ -52,9 +52,9 @@ class SongInfoListAdapter : RecyclerView.Adapter<SongInfoListAdapter.SongInfoVie
             }
         }
 
-    var itemClickListener: (position: Int) -> Unit = { _ -> }
+    private var itemClickListener: (position: Int) -> Unit = { _ -> }
     var dragHandleTouchListener: ((position: Int) -> Unit)? = null
-    var playlistActionClickListener: ((position: Int) -> Unit)? = null
+    private var playlistActionClickListener: ((position: Int) -> Unit)? = null
     var downloadActionClickListener: ((position: Int) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int): SongInfoViewHolder {
