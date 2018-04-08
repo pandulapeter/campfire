@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.feature.home.library.HeaderItemDecoration
 import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.feature.home.shared.SongListFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
@@ -49,6 +50,12 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), AlertDialogFragmen
                 )
             }
         }
+        binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(mainActivity) {
+
+            override fun isHeader(position: Int) = position >= 0 && viewModel.isHeader(position)
+
+            override fun getHeaderTitle(position: Int) = if (position >= 0) getString(viewModel.getHeaderTitle(position)) else ""
+        })
         ItemTouchHelper(object : ElevationItemTouchHelperCallback((mainActivity.dimension(R.dimen.content_padding)).toFloat(), 0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = false
