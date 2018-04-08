@@ -7,7 +7,6 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.home.shared.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.SongViewModel
-import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.onTextChanged
@@ -100,7 +99,7 @@ class LibraryViewModel(
 
     override fun onListUpdated(items: List<SongViewModel>) {
         super.onListUpdated(items)
-        if (state.get() == StateLayout.State.NORMAL) {
+        if (librarySongs.toList().isNotEmpty()) {
             updatePlaceholder()
             buttonText.set(R.string.library_filters)
         }
