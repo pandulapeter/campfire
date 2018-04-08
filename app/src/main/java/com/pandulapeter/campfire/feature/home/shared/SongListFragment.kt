@@ -20,12 +20,17 @@ import com.pandulapeter.campfire.util.onPropertyChanged
 
 abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, VM>(R.layout.fragment_song_list), Transition.TransitionListener {
 
+    override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
+
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
         viewModel.adapter.run {
-            itemClickListener = { position, clickedView -> mainActivity.openDetailScreen(clickedView, listOf(items[position].song)) }
+            itemClickListener = { position, clickedView ->
+                viewModel.isDetailScreenOpen = true
+                mainActivity.openDetailScreen(clickedView, listOf(items[position].song))
+            }
             downloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.song) } }
         }
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered {

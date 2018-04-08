@@ -19,6 +19,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     protected lateinit var binding: B
     protected abstract val viewModel: VM
+    protected open val shouldDelaySubscribing = false
     protected val mainActivity get() = (activity as? CampfireActivity) ?: throw IllegalStateException("The Fragment is not attached to CampfireActivity.")
     private var snackbar: Snackbar? = null
 
@@ -32,7 +33,15 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     override fun onResume() {
         super.onResume()
-        viewModel.subscribe()
+        if (shouldDelaySubscribing) {
+            binding.root.postDelayed({
+                if (isAdded) {
+                    viewModel.subscribe()
+                }
+            }, 400)
+        } else {
+            viewModel.subscribe()
+        }
     }
 
     override fun onPause() {
