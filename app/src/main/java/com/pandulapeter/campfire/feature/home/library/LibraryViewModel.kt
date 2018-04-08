@@ -87,6 +87,7 @@ class LibraryViewModel(
                     when (it.language) {
                         Language.SupportedLanguages.ENGLISH.id -> Language.Known.English
                         Language.SupportedLanguages.HUNGARIAN.id -> Language.Known.Hungarian
+                        Language.SupportedLanguages.ROMANIAN.id -> Language.Known.Romanian
                         else -> Language.Unknown
                     }
                 }

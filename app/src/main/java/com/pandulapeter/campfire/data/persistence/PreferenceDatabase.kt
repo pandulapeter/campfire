@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.data.persistence
 
 import android.content.Context
+import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.feature.home.library.LibraryViewModel
 import java.util.*
 import kotlin.properties.ReadWriteProperty
@@ -8,6 +9,7 @@ import kotlin.reflect.KProperty
 
 class PreferenceDatabase(context: Context) {
     private val preferences = context.applicationContext.getSharedPreferences("preferences", Context.MODE_PRIVATE)
+    private val locale by lazy { Locale.getDefault().isO3Country.toUpperCase() }
 
     // Library updating
     var lastUpdateTimestamp by PreferenceFieldDelegate.Long("lastUpdateTimestamp")
@@ -17,7 +19,7 @@ class PreferenceDatabase(context: Context) {
     var shouldShowWorkInProgress by PreferenceFieldDelegate.Boolean("shouldShowWorkInProgress", false)
     var shouldShowExplicit by PreferenceFieldDelegate.Boolean("shouldShowExplicit", false)
     var sortingMode by PreferenceFieldDelegate.Int("sortingMode", LibraryViewModel.SortingMode.TITLE.intValue)
-    var disabledLanguageFilters by PreferenceFieldDelegate.StringSet("disabledLanguageFilters")
+    var disabledLanguageFilters by PreferenceFieldDelegate.StringSet("disabledLanguageFilters", getDefaultLanguageFilters())
 
     // Preferences
     var shouldShowChords by PreferenceFieldDelegate.Boolean("shouldShowChords", true)
@@ -31,9 +33,18 @@ class PreferenceDatabase(context: Context) {
     var ftuxHistoryCompleted by PreferenceFieldDelegate.Boolean("ftuxHistoryCompleted", false)
     var ftuxManageDownloadsCompleted by PreferenceFieldDelegate.Boolean("ftuxManageDownloadsCompleted", false)
 
-    private fun shouldEnableGermanNotationByDefault() = when (Locale.getDefault().isO3Country.toUpperCase()) {
+    private fun shouldEnableGermanNotationByDefault() = when (locale) {
         "AUT", "CZE", "DEU", "SWE", "DNK", "EST", "FIN", "HUN", "LVA", "NOR", "POL", "SRB", "SVK" -> true
         else -> false
+    }
+
+    private fun getDefaultLanguageFilters() = mutableSetOf<String>().apply {
+        if (locale != "HUN" && locale != "ROU") {
+            add(Language.Known.Hungarian.id)
+        }
+        if (locale != "ROU") {
+            add(Language.Known.Romanian.id)
+        }
     }
 
     private sealed class PreferenceFieldDelegate<T>(protected val key: String, protected val defaultValue: T) : ReadWriteProperty<PreferenceDatabase, T> {
@@ -62,7 +73,7 @@ class PreferenceDatabase(context: Context) {
                 thisRef.preferences.edit().putLong(key, value).apply()
         }
 
-        class StringSet(key: String, defaultValue: Set<String> = setOf()) : PreferenceFieldDelegate<Set<String>>(key, defaultValue) {
+        class StringSet(key: String, defaultValue: Set<String>) : PreferenceFieldDelegate<Set<String>>(key, defaultValue) {
 
             override fun getValue(thisRef: PreferenceDatabase, property: KProperty<*>): Set<String> = thisRef.preferences.getStringSet(key, defaultValue) ?: setOf()
 
