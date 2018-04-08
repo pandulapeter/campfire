@@ -126,20 +126,25 @@
     <string name="options_preferences_share_usage_data_disabled">Analytics data and crash reports are not being sent to the developer</string>
 
     <!-- Options screen / Changelog -->
-    <string name="options_changelog_0_0_2_version_name">v0.0.2</string>
-    <string name="options_changelog_0_0_2_description">
+    <string name="options_changelog_0_0_3_version_name">v0.0.3</string>
+    <string name="options_changelog_0_0_3_description">
         <Data><![CDATA[
         • Users can now create local <strong>playlists</strong> which are collections of songs for different occasions.<br>
         • Playlist detail screens are <strong>paginated</strong> - swiping horizontally cycles through all the songs in the selected playlist.<br>
-        • <strong>History</strong> screen which shows the last time different songs have been opened.<br>
         • Support for <strong>app shortcuts</strong> on and above Android 7.1.
+        ]]></Data>
+    </string>
+    <string name="options_changelog_0_0_2_version_name">v0.0.2</string>
+    <string name="options_changelog_0_0_2_description">
+        <Data><![CDATA[
+        • The ability to <strong>transpose</strong> songs, <strong>auto-scroll</strong> longer texts with adjustable speed and saving these preferences individually per song.<br>
+        • <strong>History</strong> screen which shows the last time different songs were opened.<br>
         ]]></Data>
     </string>
     <string name="options_changelog_0_0_1_version_name">v0.0.1</string>
     <string name="options_changelog_0_0_1_description">
         <Data><![CDATA[
         • <strong>Song library</strong> with options to search, sort and filter the list of songs.<br>
-        • The ability to <strong>transpose</strong> songs, <strong>auto-scroll</strong> longer texts with adjustable speed and saving these preferences individually per song.<br>
         • <strong>Offline caching</strong> with the ability to manage the downloaded files.<br>
         • <strong>Options</strong> screen with preferences like switching the app to lyrics-only mode, changing the chord notation mode, changing the theme, privacy options and more.
         ]]></Data>
@@ -151,7 +156,7 @@
         The app was created by me, Pandula Péter as a hobby project.
         ]]></Data>
     </string>
-    <string name="options_about_description_bottom">I know that there aren\`t too many songs in the library - new ones are being added on a semi-regular basis. If you have suggestions on which songs to include next or any other type of feedback, feel free to drop me a line!</string>
+    <string name="options_about_description_bottom">I know that there aren\'t too many songs in the library - new ones are being added on a semi-regular basis. If you have suggestions on which songs to include next or any other type of feedback, feel free to drop me a line!</string>
     <string name="options_about_links">Links</string>
     <string name="options_about_google_play">Rate on Google Play</string>
     <string name="options_about_github">View on GitHub</string>
