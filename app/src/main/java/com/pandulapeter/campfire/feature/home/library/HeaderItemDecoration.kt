@@ -4,17 +4,21 @@ import android.content.Context
 import android.databinding.DataBindingUtil
 import android.graphics.Canvas
 import android.graphics.Rect
+import android.support.v4.graphics.ColorUtils
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.HeaderItemBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.dimension
 
 abstract class HeaderItemDecoration(context: Context) : RecyclerView.ItemDecoration() {
     private var headerBinding: HeaderItemBinding? = null
     private val headerHeight = context.dimension(R.dimen.header_height)
+    private val visibleColor = context.color(R.color.accent)
+    private val invisibleColor = context.color(android.R.color.transparent)
 
     abstract fun isHeader(position: Int): Boolean
 
@@ -54,6 +58,13 @@ abstract class HeaderItemDecoration(context: Context) : RecyclerView.ItemDecorat
                 headerBinding?.let {
                     if (previousHeaderText != title || isHeader(position)) {
                         it.title.text = title
+                        it.title.setTextColor(
+                            if (child.alpha != 1f) {
+                                ColorUtils.blendARGB(invisibleColor, visibleColor, child.alpha)
+                            } else {
+                                visibleColor
+                            }
+                        )
                         drawHeader(canvas, child, it.root)
                         previousHeaderText = title
                     }
