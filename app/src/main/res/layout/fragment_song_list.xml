@@ -13,10 +13,10 @@
     <com.pandulapeter.campfire.feature.shared.widget.StateLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:buttonText="@string/try_again"
+        app:buttonText="@{viewModel.buttonText}"
         app:onButtonClicked="@{() -> viewModel.onActionButtonClicked()}"
         app:state="@{viewModel.state}"
-        app:text="@string/library_initializing_error">
+        app:text="@{viewModel.placeholderText}">
 
         <android.support.v4.widget.SwipeRefreshLayout
             android:id="@+id/swipe_refresh_layout"

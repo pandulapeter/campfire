@@ -2,15 +2,21 @@ package com.pandulapeter.campfire.feature.home.manageDownloads
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableInt
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.feature.home.shared.SongListViewModel
 import com.pandulapeter.campfire.feature.home.shared.SongViewModel
 
-class ManageDownloadsViewModel : SongListViewModel() {
+class ManageDownloadsViewModel(private val openLibrary: () -> Unit) : SongListViewModel() {
 
     val shouldShowDeleteAll = ObservableBoolean()
     val songCount = ObservableInt()
     private var songToDeleteId: String? = null
+
+    init {
+        placeholderText.set(R.string.manage_downloads_placeholder)
+        buttonText.set(R.string.go_to_library)
+    }
 
     override fun Sequence<Song>.createViewModels() = filter { songDetailRepository.isSongDownloaded(it.id) }
         .filter { it.id != songToDeleteId }
@@ -22,6 +28,8 @@ class ManageDownloadsViewModel : SongListViewModel() {
         songCount.set(items.size)
         shouldShowDeleteAll.set(items.isNotEmpty())
     }
+
+    override fun onActionButtonClicked() = openLibrary()
 
     fun deleteAllSongs() = songDetailRepository.deleteAllSongs()
 

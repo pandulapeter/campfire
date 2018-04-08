@@ -2,8 +2,10 @@ package com.pandulapeter.campfire.feature.home.shared
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
+import android.databinding.ObservableInt
 import android.support.annotation.CallSuper
 import android.support.v7.widget.RecyclerView
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.model.remote.SongDetail
@@ -29,6 +31,8 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
     val downloadSongError = ObservableField<Song?>()
     val isLoading = ObservableBoolean()
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
+    val placeholderText = ObservableInt(R.string.try_again)
+    val buttonText = ObservableInt(R.string.library_initializing_error)
 
     @CallSuper
     override fun subscribe() {
@@ -110,10 +114,9 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
     }
 
-    fun onActionButtonClicked() {
-        when {
-            state.get() == StateLayout.State.ERROR -> updateData()
-        }
+    open fun onActionButtonClicked() = when {
+        librarySongs.toList().isEmpty() -> updateData()
+        else -> Unit
     }
 
     fun updateData() = songRepository.updateData()

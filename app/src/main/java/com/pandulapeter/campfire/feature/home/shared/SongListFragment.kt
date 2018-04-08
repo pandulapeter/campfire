@@ -13,11 +13,12 @@ import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.old.util.onEventTriggered
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.onPropertyChanged
 
 abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, VM>(R.layout.fragment_song_list), Transition.TransitionListener {
-
-    private var Bundle.state by BundleArgumentDelegate.Int("state")
 
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -68,14 +69,6 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 }
             })
         }
-        if (savedInstanceState != null) {
-            viewModel.state.set(StateLayout.State.fromInt(savedInstanceState.state))
-        }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.state = (viewModel.state.get() ?: StateLayout.State.LOADING).childIndex
     }
 
     override fun setReenterTransition(transition: Any?) {

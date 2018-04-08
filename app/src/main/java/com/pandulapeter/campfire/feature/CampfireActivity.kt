@@ -147,8 +147,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
         // Restore instance state if possible.
         if (savedInstanceState == null) {
-            supportFragmentManager.handleReplace { LibraryFragment() }
-            binding.primaryNavigation.setCheckedItem(R.id.library)
+            openLibraryScreen()
         } else {
             binding.toolbarMainButton.setImageDrawable(drawable(if (savedInstanceState.isOnDetailScreen) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp))
             currentScreenId = savedInstanceState.currentScreenId
@@ -280,6 +279,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     fun openSecondaryNavigationDrawer() {
         hideKeyboard(currentFocus)
         binding.drawerLayout.openDrawer(Gravity.END)
+    }
+
+    fun openLibraryScreen() {
+        supportFragmentManager.handleReplace { LibraryFragment() }
+        binding.primaryNavigation.setCheckedItem(R.id.library)
+        currentScreenId = R.id.library
     }
 
     fun closeSecondaryNavigationDrawer() = binding.drawerLayout.closeDrawer(Gravity.END)

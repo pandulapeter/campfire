@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.shared.widget
 
 import android.content.Context
 import android.databinding.DataBindingUtil
+import android.support.annotation.StringRes
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.animation.AnimationUtils
@@ -42,20 +43,21 @@ class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSe
         binding.button.setOnClickListener { onButtonClicked?.onClick(this) }
         useStyledAttributes(attrs, R.styleable.StateLayout) {
             buttonText = getString(R.styleable.StateLayout_buttonText)
-            text = getString(R.styleable.StateLayout_text)
+            getString(R.styleable.StateLayout_text)?.let { text = it }
         }
     }
 
-    enum class State(val childIndex: Int) {
-        LOADING(0), ERROR(1), NORMAL(2);
+    fun setText(@StringRes stringRes: Int) {
+        text = context.getString(stringRes)
+    }
 
-        companion object {
-            fun fromInt(int: Int) = when (int) {
-                0 -> LOADING
-                1 -> ERROR
-                2 -> NORMAL
-                else -> throw IllegalArgumentException("Invalid child index: $int")
-            }
-        }
+    fun setButtonText(@StringRes stringRes: Int) {
+        buttonText = context.getString(stringRes)
+    }
+
+    enum class State(val childIndex: Int) {
+        LOADING(0),
+        ERROR(1),
+        NORMAL(2)
     }
 }
