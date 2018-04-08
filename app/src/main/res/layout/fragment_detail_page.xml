@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
 
@@ -9,25 +10,33 @@
 
     </data>
 
-    <android.support.v4.widget.NestedScrollView
-        android:id="@+id/scroll_view"
+    <com.pandulapeter.campfire.feature.shared.widget.StateLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:animateLayoutChanges="true"
-        android:fillViewport="true">
+        android:layout_height="wrap_content"
+        app:buttonText="@string/try_again"
+        app:onButtonClicked="@{() -> viewModel.loadData()}"
+        app:state="@{viewModel.state}"
+        app:text="@string/detail_placeholder_error">
 
-        <TextView
-            android:id="@+id/text_view"
+        <android.support.v4.widget.NestedScrollView
+            android:id="@+id/scroll_view"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:paddingBottom="@dimen/list_fab_content_bottom_margin"
-            android:paddingEnd="@dimen/first_keyline"
-            android:paddingStart="@dimen/first_keyline"
-            android:paddingTop="@dimen/large_content_padding"
-            android:text="@{viewModel.text}"
-            android:visibility="invisible" />
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:scrollbars="none">
 
-    </android.support.v4.widget.NestedScrollView>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingBottom="@dimen/list_fab_content_bottom_margin"
+                android:paddingEnd="@dimen/first_keyline"
+                android:paddingStart="@dimen/first_keyline"
+                android:paddingTop="@dimen/large_content_padding"
+                android:text="@{viewModel.text}" />
+
+        </android.support.v4.widget.NestedScrollView>
+
+    </com.pandulapeter.campfire.feature.shared.widget.StateLayout>
 
 </layout>

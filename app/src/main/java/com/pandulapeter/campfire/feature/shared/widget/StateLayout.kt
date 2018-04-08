@@ -39,7 +39,6 @@ class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSe
 
     init {
         inAnimation = AnimationUtils.loadAnimation(context, android.R.anim.fade_in)
-        outAnimation = AnimationUtils.loadAnimation(context, android.R.anim.fade_out)
         binding.button.setOnClickListener { onButtonClicked?.onClick(this) }
         useStyledAttributes(attrs, R.styleable.StateLayout) {
             buttonText = getString(R.styleable.StateLayout_buttonText)

@@ -31,7 +31,7 @@ class SongDetailRepository(
 
     fun getSongDetail(song: Song) {
         if (!isSongDownloading(song.id)) {
-            if (isSongDownloaded(song.id)) {
+            if (isSongDownloaded(song.id) && getSongVersion(song.id) == song.version ?: 0) {
                 async(UI) {
                     async(CommonPool) { songDatabase.songDetailDao().get(song.id) }.await().let { songDetail ->
                         if (songDetail == null) {
