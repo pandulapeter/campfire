@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.history
 
+import android.content.Context
 import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.HistoryItem
@@ -10,7 +11,7 @@ import com.pandulapeter.campfire.feature.home.shared.SongViewModel
 import org.koin.android.ext.android.inject
 import java.util.*
 
-class HistoryViewModel(private val openLibrary: () -> Unit) : SongListViewModel(), HistoryRepository.Subscriber {
+class HistoryViewModel(context: Context, private val openLibrary: () -> Unit) : SongListViewModel(context), HistoryRepository.Subscriber {
 
     private val historyRepository by inject<HistoryRepository>()
     val shouldShowDeleteAll = ObservableBoolean()
@@ -40,7 +41,7 @@ class HistoryViewModel(private val openLibrary: () -> Unit) : SongListViewModel(
     override fun Sequence<Song>.createViewModels() = filter { it.id != songToDeleteId }
         .filter { song -> history.firstOrNull { it.id == song.id } != null }
         .sortedByDescending { song -> history.first { it.id == song.id }.lastOpenedAt }
-        .map { SongViewModel(songDetailRepository, it) }
+        .map { SongViewModel(context, songDetailRepository, it) }
         .toList()
 
     override fun onListUpdated(items: List<SongViewModel>) {

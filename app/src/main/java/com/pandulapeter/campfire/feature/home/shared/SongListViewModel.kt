@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.shared
 
+import android.content.Context
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
@@ -20,7 +21,7 @@ import kotlinx.coroutines.experimental.cancel
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.experimental.CoroutineContext
 
-abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscriber, SongDetailRepository.Subscriber {
+abstract class SongListViewModel(protected val context: Context) : CampfireViewModel(), SongRepository.Subscriber, SongDetailRepository.Subscriber {
 
     private val songRepository by inject<SongRepository>()
     protected val songDetailRepository by inject<SongDetailRepository>()

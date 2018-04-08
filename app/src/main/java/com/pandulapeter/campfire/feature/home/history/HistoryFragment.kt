@@ -23,7 +23,7 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), AlertDialogFragmen
     }
 
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
-    override val viewModel = HistoryViewModel { mainActivity.openLibraryScreen() }
+    override val viewModel by lazy { HistoryViewModel(mainActivity) { mainActivity.openLibraryScreen() } }
     private val deleteAllButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
             AlertDialogFragment.show(

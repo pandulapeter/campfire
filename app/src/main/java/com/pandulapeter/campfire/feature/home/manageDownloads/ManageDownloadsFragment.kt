@@ -21,7 +21,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
     }
 
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
-    override val viewModel = ManageDownloadsViewModel { mainActivity.openLibraryScreen() }
+    override val viewModel by lazy { ManageDownloadsViewModel(mainActivity) { mainActivity.openLibraryScreen() } }
     private val deleteAllButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
             AlertDialogFragment.show(

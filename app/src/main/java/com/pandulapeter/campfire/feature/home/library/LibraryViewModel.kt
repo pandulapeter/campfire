@@ -19,7 +19,7 @@ class LibraryViewModel(
     private val updateSearchToggleDrawable: (Boolean) -> Unit,
     private val onDataLoaded: (languages: List<Language>) -> Unit,
     private val showFilters: () -> Unit
-) : SongListViewModel() {
+) : SongListViewModel(context) {
 
     private val newString = context.getString(R.string.new_tag)
     private val popularString = context.getString(R.string.popular_tag)
@@ -117,7 +117,7 @@ class LibraryViewModel(
         .filterWorkInProgress()
         .filterExplicit()
         .sort()
-        .map { SongViewModel(songDetailRepository, it) }
+        .map { SongViewModel(context, songDetailRepository, it) }
         .toList()
 
     fun toggleTextInputVisibility() {

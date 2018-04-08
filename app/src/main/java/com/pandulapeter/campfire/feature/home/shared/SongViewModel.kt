@@ -1,9 +1,12 @@
 package com.pandulapeter.campfire.feature.home.shared
 
+import android.content.Context
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 
 data class SongViewModel(
+    private val context: Context,
     private val songDetailRepository: SongDetailRepository,
     val song: Song,
     var isOnAnyPlaylists: Boolean = false,
@@ -17,8 +20,8 @@ data class SongViewModel(
 ) {
     val alertText
         get() = when (downloadState) {
-            DownloadState.Downloaded.Deprecated -> "Update me"
-            DownloadState.NotDownloaded.New -> "New"
+            DownloadState.Downloaded.Deprecated -> context.getString(R.string.new_version_available)
+            DownloadState.NotDownloaded.New -> context.getString(R.string.new_tag)
             else -> null
         }
 
