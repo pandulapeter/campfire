@@ -18,7 +18,8 @@ class RootCoordinatorLayout @JvmOverloads constructor(context: Context, attrs: A
         val rectangle = Rect()
         val window = (context as Activity).window
         window.decorView.getWindowVisibleDisplayFrame(rectangle)
-        rectangle.top.toFloat() - window.findViewById<View>(Window.ID_ANDROID_CONTENT).top
+        val top = rectangle.top
+        if (top > height / 3) 0f else top - window.findViewById<View>(Window.ID_ANDROID_CONTENT).top.toFloat()
     }
     private val paint = Paint().apply { color = context.color(R.color.primary) }
 
