@@ -18,6 +18,7 @@ class ManageDownloadsViewModel : SongListViewModel() {
         .toList()
 
     override fun onListUpdated(items: List<SongViewModel>) {
+        super.onListUpdated(items)
         songCount.set(items.size)
         shouldShowDeleteAll.set(items.isNotEmpty())
     }

@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.util
 
 import android.animation.Animator
 import android.content.Context
+import android.content.res.TypedArray
 import android.databinding.*
 import android.os.Bundle
 import android.support.annotation.*
@@ -13,6 +14,7 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.content.res.AppCompatResources
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewAnimationUtils
@@ -84,6 +86,17 @@ private fun View.animateCircularReveal(isVisible: Boolean, start: Boolean) {
         }
         tag = animator
         animator.start()
+    }
+}
+
+
+@JvmOverloads
+fun View.useStyledAttributes(set: AttributeSet?, @StyleableRes attrs: IntArray, defStyleAttr: Int = 0, defStyleRes: Int = 0, block: TypedArray.() -> Unit) = set?.let {
+    val typedArray = context.theme.obtainStyledAttributes(set, attrs, defStyleAttr, defStyleRes)
+    try {
+        block(typedArray)
+    } finally {
+        typedArray.recycle()
     }
 }
 

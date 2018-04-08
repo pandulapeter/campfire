@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.data.model.remote.SongDetail
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -27,6 +28,7 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
     val downloadSongError = ObservableField<Song?>()
     val isLoading = ObservableBoolean()
+    val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
 
     @CallSuper
     override fun subscribe() {
@@ -46,9 +48,20 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
         updateAdapterItems()
     }
 
-    override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) = this.isLoading.set(isLoading)
+    override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {
+        if (adapter.items.isEmpty()) {
+            state.set(StateLayout.State.LOADING)
+        }
+        this.isLoading.set(isLoading)
+    }
 
-    override fun onSongRepositoryUpdateError() = shouldShowUpdateErrorSnackbar.set(true)
+    override fun onSongRepositoryUpdateError() {
+        if (state.get() == StateLayout.State.NORMAL) {
+            shouldShowUpdateErrorSnackbar.set(true)
+        } else {
+            state.set(StateLayout.State.ERROR)
+        }
+    }
 
     override fun onSongDetailRepositoryUpdated(downloadedSongs: List<SongDetailMetadata>) = updateAdapterItems()
 
@@ -88,7 +101,12 @@ abstract class SongListViewModel : CampfireViewModel(), SongRepository.Subscribe
         }
     }
 
-    protected open fun onListUpdated(items: List<SongViewModel>) = Unit
+    @CallSuper
+    protected open fun onListUpdated(items: List<SongViewModel>) {
+        if (!isLoading.get()) {
+            state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
+        }
+    }
 
     fun updateData() = songRepository.updateData()
 

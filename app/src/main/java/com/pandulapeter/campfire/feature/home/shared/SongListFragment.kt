@@ -10,6 +10,7 @@ import android.view.ViewTreeObserver
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentSongListBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.old.util.onEventTriggered
 import com.pandulapeter.campfire.util.color
@@ -39,7 +40,11 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                     action = { viewModel.downloadSong(song) })
             }
         }
-        viewModel.isLoading.onPropertyChanged { binding.swipeRefreshLayout.isRefreshing = it }
+        viewModel.isLoading.onPropertyChanged {
+            if (viewModel.state.get() == StateLayout.State.NORMAL) {
+                binding.swipeRefreshLayout.isRefreshing = it
+            }
+        }
         binding.swipeRefreshLayout.run {
             setOnRefreshListener { viewModel.updateData() }
             setColorSchemeColors(context.color(R.color.accent))
