@@ -73,7 +73,9 @@
     <string name="history_clear">Clear</string>
     <string name="history_clear_confirmation_title">Are you sure?</string>
     <string name="history_clear_confirmation_message">This will remove all items from your history.</string>
-    <string name="history_clear_confirmation_clear">Clear</string>
+    <string name="history_clear_confirmation_clear">Delete all</string>
+    <string name="history_song_removed_message">%s removed</string>
+    <string name="history_all_songs_removed_message">All history items removed</string>
     <string name="history_now">Now</string>
     <string name="history_today">Earlier today</string>
     <string name="history_yesterday">Yesterday</string>
