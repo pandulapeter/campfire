@@ -14,6 +14,7 @@ class HistoryViewModel(private val openLibrary: () -> Unit) : SongListViewModel(
 
     private val historyRepository by inject<HistoryRepository>()
     val shouldShowDeleteAll = ObservableBoolean()
+    val shouldInvalidateItemDecorations = ObservableBoolean()
     private var songToDeleteId: String? = null
     private var history = listOf<HistoryItem>()
     private val Calendar.year get() = get(Calendar.YEAR)
@@ -45,6 +46,7 @@ class HistoryViewModel(private val openLibrary: () -> Unit) : SongListViewModel(
     override fun onListUpdated(items: List<SongViewModel>) {
         super.onListUpdated(items)
         shouldShowDeleteAll.set(items.isNotEmpty())
+        shouldInvalidateItemDecorations.set(true)
     }
 
     override fun onActionButtonClicked() = openLibrary()

@@ -55,6 +55,14 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         viewModel.componentCallbacks = null
     }
 
+    override fun setReenterTransition(transition: Any?) {
+        super.setReenterTransition(transition)
+        (transition as? Transition)?.let {
+            it.removeListener(this)
+            it.addListener(this)
+        }
+    }
+
     open fun onBackPressed() = false
 
     protected fun showHint(@StringRes message: Int, action: () -> Unit) {
@@ -89,16 +97,9 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         }
     }
 
-    override fun setReenterTransition(transition: Any?) {
-        super.setReenterTransition(transition)
-        (transition as? Transition)?.let {
-            it.removeListener(this)
-            it.addListener(this)
-        }
-    }
-
     @CallSuper
     override fun onTransitionEnd(transition: Transition?) {
+        transition?.removeListener(this)
         if (isResumingDelayed) {
             viewModel.subscribe()
             isResumingDelayed = false
@@ -109,7 +110,10 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     override fun onTransitionPause(transition: Transition?) = Unit
 
-    override fun onTransitionCancel(transition: Transition?) = Unit
+    @CallSuper
+    override fun onTransitionCancel(transition: Transition?) {
+        transition?.removeListener(this)
+    }
 
     override fun onTransitionStart(transition: Transition?) = Unit
 }
