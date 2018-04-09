@@ -3,7 +3,6 @@ package com.pandulapeter.campfire.feature.home.shared
 import android.os.Bundle
 import android.support.annotation.CallSuper
 import android.support.v7.widget.RecyclerView
-import android.transition.Transition
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -46,6 +45,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 binding.swipeRefreshLayout.isRefreshing = it
             }
         }
+        viewModel.shouldInvalidateItemDecorations.onEventTriggered { binding.recyclerView.invalidateItemDecorations() }
         binding.swipeRefreshLayout.run {
             setOnRefreshListener { viewModel.updateData() }
             setColorSchemeColors(context.color(R.color.accent))
@@ -70,10 +70,5 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 }
             })
         }
-    }
-
-    override fun onTransitionEnd(transition: Transition?) {
-        super.onTransitionEnd(transition)
-        binding.recyclerView.invalidateItemDecorations()
     }
 }

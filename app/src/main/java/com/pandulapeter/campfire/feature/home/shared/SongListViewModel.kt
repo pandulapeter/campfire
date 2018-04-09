@@ -35,6 +35,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     val placeholderText = ObservableInt(R.string.library_initializing_error)
     val buttonText = ObservableInt(R.string.try_again)
     var isDetailScreenOpen = false
+    val shouldInvalidateItemDecorations = ObservableBoolean()
 
     @CallSuper
     override fun subscribe() {
@@ -125,6 +126,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     @CallSuper
     protected open fun onListUpdated(items: List<SongViewModel>) {
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
+        shouldInvalidateItemDecorations.set(true)
     }
 
     protected fun updateAdapterItems(shouldScrollToTop: Boolean = false) {

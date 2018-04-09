@@ -11,7 +11,6 @@ import com.pandulapeter.campfire.feature.home.shared.SongListFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.dimension
-import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.visibleOrInvisible
 import org.koin.android.ext.android.inject
@@ -51,7 +50,6 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), AlertDialogFragmen
                 )
             }
         }
-        viewModel.shouldInvalidateItemDecorations.onEventTriggered { binding.recyclerView.invalidateItemDecorations() }
         binding.recyclerView.addItemDecoration(object : HeaderItemDecoration(mainActivity) {
 
             override fun isHeader(position: Int) = position >= 0 && viewModel.isHeader(position)
