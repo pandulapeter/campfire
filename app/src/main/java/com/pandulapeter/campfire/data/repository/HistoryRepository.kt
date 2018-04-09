@@ -10,6 +10,7 @@ import kotlinx.coroutines.experimental.async
 
 class HistoryRepository(private val songDatabase: SongDatabase) : Repository<HistoryRepository.Subscriber>() {
     private val data = mutableListOf<HistoryItem>()
+    private var isCacheLoaded = false
 
     init {
         refreshDataSet()
@@ -19,6 +20,8 @@ class HistoryRepository(private val songDatabase: SongDatabase) : Repository<His
         super.subscribe(subscriber)
         subscriber.onHistoryUpdated(data)
     }
+
+    fun isCacheLoaded() = isCacheLoaded
 
     fun addHistoryItem(historyItem: HistoryItem) {
         async(UI) {
@@ -51,6 +54,7 @@ class HistoryRepository(private val songDatabase: SongDatabase) : Repository<His
                 songDatabase.historyDao().getAllHistory()
             }.await().let {
                 data.swap(it)
+                isCacheLoaded = true
                 notifyDataChanged()
             }
         }

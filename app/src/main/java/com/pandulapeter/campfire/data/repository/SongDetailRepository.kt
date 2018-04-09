@@ -18,6 +18,7 @@ class SongDetailRepository(
 ) : Repository<SongDetailRepository.Subscriber>() {
     private val data = mutableListOf<SongDetailMetadata>()
     private val downloadQueue = mutableListOf<String>()
+    private var isCacheLoaded = false
 
     init {
         refreshDataSet()
@@ -28,6 +29,8 @@ class SongDetailRepository(
         subscriber.onSongDetailRepositoryUpdated(data)
         subscriber.onSongDetailRepositoryDownloadQueueChanged(downloadQueue)
     }
+
+    fun isCacheLoaded() = isCacheLoaded
 
     fun getSongDetail(song: Song) {
         if (!isSongDownloading(song.id)) {
@@ -96,6 +99,7 @@ class SongDetailRepository(
                 songDatabase.songDetailDao().getAllMetadata()
             }.await().let {
                 data.swap(it)
+                isCacheLoaded = true
                 notifyDataChanged()
             }
         }

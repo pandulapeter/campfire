@@ -72,7 +72,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
 
     override fun onSongDetailRepositoryUpdated(downloadedSongs: List<SongDetailMetadata>) {
         if (librarySongs.toList().isNotEmpty()) {
-            updateAdapterItems()
+            updateAdapterItems(true)
         }
     }
 
@@ -112,28 +112,32 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
         }
     }
 
-    @CallSuper
-    protected open fun onListUpdated(items: List<SongViewModel>) {
-        state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
-    }
-
     abstract fun onActionButtonClicked()
 
     fun updateData() = songRepository.updateData()
 
     fun downloadSong(song: Song) = songDetailRepository.getSongDetail(song)
 
+    protected open fun canUpdateUI() = true
+
     protected abstract fun Sequence<Song>.createViewModels(): List<SongViewModel>
 
+    @CallSuper
+    protected open fun onListUpdated(items: List<SongViewModel>) {
+        state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
+    }
+
     protected fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
-        coroutine?.cancel()
-        coroutine = async(UI) {
-            adapter.shouldScrollToTop = shouldScrollToTop
-            async(CommonPool) { librarySongs.createViewModels() }.await().let {
-                adapter.items = it
-                onListUpdated(it)
+        if (canUpdateUI() && songRepository.isCacheLoaded() && songDetailRepository.isCacheLoaded()) {
+            coroutine?.cancel()
+            coroutine = async(UI) {
+                adapter.shouldScrollToTop = shouldScrollToTop
+                async(CommonPool) { librarySongs.createViewModels() }.await().let {
+                    adapter.items = it
+                    onListUpdated(it)
+                }
+                coroutine = null
             }
-            coroutine = null
         }
     }
 }

@@ -38,6 +38,8 @@ class HistoryViewModel(context: Context, private val openLibrary: () -> Unit) : 
         historyRepository.unsubscribe(this)
     }
 
+    override fun canUpdateUI() = historyRepository.isCacheLoaded()
+
     override fun Sequence<Song>.createViewModels() = filter { it.id != songToDeleteId }
         .filter { song -> history.firstOrNull { it.id == song.id } != null }
         .sortedByDescending { song -> history.first { it.id == song.id }.lastOpenedAt }

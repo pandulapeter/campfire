@@ -18,6 +18,7 @@ class SongRepository(
 ) : Repository<SongRepository.Subscriber>() {
 
     private val data = mutableListOf<Song>()
+    private var isCacheLoaded = false
     private var isLoading = true
         set(value) {
             if (field != value) {
@@ -32,6 +33,7 @@ class SongRepository(
                 songDatabase.songDao().getAll()
             }.await().let {
                 data.swap(it)
+                isCacheLoaded = true
                 if (System.currentTimeMillis() - preferenceDatabase.lastUpdateTimestamp > UPDATE_LIMIT) {
                     updateData()
                 } else {
@@ -52,6 +54,8 @@ class SongRepository(
             subscriber.onSongRepositoryUpdateError()
         }
     }
+
+    fun isCacheLoaded() = isCacheLoaded
 
     fun updateData() {
         isLoading = true
