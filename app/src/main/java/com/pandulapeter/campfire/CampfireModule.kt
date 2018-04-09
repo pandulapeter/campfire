@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.data.repository.ChangelogRepository
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
+import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
@@ -37,4 +38,8 @@ val repositoryModule = applicationContext {
 val persistenceModule = applicationContext {
     provide { PreferenceDatabase(get()) }
     provide { Room.databaseBuilder(get(), SongDatabase::class.java, "songDatabase.db").build() }
+}
+
+val eventBusModule = applicationContext {
+    provide { DetailEventBus() }
 }

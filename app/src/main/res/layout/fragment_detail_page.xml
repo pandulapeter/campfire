@@ -11,8 +11,10 @@
     </data>
 
     <com.pandulapeter.campfire.feature.shared.widget.StateLayout
+        android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:alpha="0"
         app:buttonText="@string/try_again"
         app:onButtonClicked="@{() -> viewModel.loadData()}"
         app:state="@{viewModel.state}"
@@ -22,6 +24,7 @@
             android:id="@+id/scroll_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:animateLayoutChanges="true"
             android:fillViewport="true"
             android:scrollbars="none">
 

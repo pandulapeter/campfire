@@ -17,7 +17,9 @@ class DetailPageViewModel(val song: Song, private val onDataLoaded: () -> Unit) 
 
     override fun subscribe() {
         songDetailRepository.subscribe(this)
-        loadData()
+        if (text.get().isNullOrEmpty()) {
+            loadData()
+        }
     }
 
     override fun unsubscribe() = songDetailRepository.unsubscribe(this)

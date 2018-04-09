@@ -6,10 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.transition.ChangeBounds
-import android.transition.ChangeImageTransform
-import android.transition.ChangeTransform
-import android.transition.TransitionSet
+import android.transition.*
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
@@ -48,6 +45,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val historyRepository by inject<HistoryRepository>()
     private val songRepository by inject<SongRepository>()
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
+    private val detailEventBus by inject<DetailEventBus>()
     private val songs by lazy { arguments?.songs?.filterIsInstance<Song>() ?: listOf() }
     private val drawablePlayToPause by lazy { mainActivity.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { mainActivity.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
@@ -89,6 +87,25 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
                     viewTreeObserver?.removeOnPreDrawListener(this)
+                    (sharedElementEnterTransition as? Transition)?.addListener(object : Transition.TransitionListener {
+
+                        override fun onTransitionStart(transition: Transition?) = Unit
+
+                        override fun onTransitionResume(transition: Transition?) = Unit
+
+                        override fun onTransitionPause(transition: Transition?) = Unit
+
+                        override fun onTransitionEnd(transition: Transition?) {
+                            detailEventBus.notifyTransitionEnd()
+                            transition?.removeListener(this)
+                        }
+
+                        override fun onTransitionCancel(transition: Transition?) {
+                            detailEventBus.notifyTransitionEnd()
+                            transition?.removeListener(this)
+                        }
+
+                    })
                     startPostponedEnterTransition()
                     return true
                 }

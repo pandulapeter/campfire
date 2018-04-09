@@ -13,7 +13,8 @@ class CampfireApplication : Application() {
                 integrationModule,
                 networkingModule,
                 repositoryModule,
-                persistenceModule
+                persistenceModule,
+                eventBusModule
             )
         )
     }
