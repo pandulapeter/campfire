@@ -45,6 +45,16 @@ class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSe
             buttonText = getString(R.styleable.StateLayout_buttonText)
             getString(R.styleable.StateLayout_text)?.let { text = it }
         }
+        postDelayed({
+            if (isAttachedToWindow) {
+                if (displayedChild == 0) {
+                    binding.loadingIndicator.animate().scaleX(1f).scaleY(1f).start()
+                } else {
+                    binding.loadingIndicator.scaleX = 1f
+                    binding.loadingIndicator.scaleY = 1f
+                }
+            }
+        }, 200)
     }
 
     fun setText(@StringRes stringRes: Int) {
