@@ -121,14 +121,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
         binding.viewPager.adapter = DetailPagerAdapter(childFragmentManager, songs)
         binding.viewPager.addPageScrollListener(
-            onPageSelected = {
-                mainActivity.expandAppBar()
-                mainActivity.disableFloatingActionButton()
-                viewModel.songId.set(songs[it].id)
-            },
-            onPageScrollStateChanged = {
-                mainActivity.disableFloatingActionButton()
-            }
+            onPageSelected = { viewModel.songId.set(songs[it].id) },
+            onPageScrollStateChanged = { mainActivity.expandAppBar() }
         )
     }
 
