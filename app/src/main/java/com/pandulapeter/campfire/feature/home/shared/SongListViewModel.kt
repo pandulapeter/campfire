@@ -52,7 +52,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     @CallSuper
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
         librarySongs = data.asSequence()
-        updateAdapterItems()
+        updateAdapterItems(true)
     }
 
     override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {
@@ -72,7 +72,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
 
     override fun onSongDetailRepositoryUpdated(downloadedSongs: List<SongDetailMetadata>) {
         if (librarySongs.toList().isNotEmpty()) {
-            updateAdapterItems(true)
+            updateAdapterItems()
         }
     }
 
