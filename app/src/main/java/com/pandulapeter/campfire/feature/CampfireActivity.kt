@@ -354,12 +354,15 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             }
             startDelay = delay
         }
-        if (shouldExplode) {
             currentFragment?.run {
-                exitTransition = createTransition(0)
-                reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
+                if (shouldExplode) {
+                    exitTransition = createTransition(0)
+                    reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
+                } else {
+                    exitTransition = null
+                    reenterTransition = null
+                }
             }
-        }
         supportFragmentManager.beginTransaction()
             .setAllowOptimization(true)
             .replace(R.id.fragment_container, DetailFragment.newInstance(songs, index, shouldShowManagePlaylist))
