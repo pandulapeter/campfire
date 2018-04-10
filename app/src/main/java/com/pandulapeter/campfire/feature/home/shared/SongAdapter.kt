@@ -29,7 +29,7 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
                 override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
             }).dispatchUpdatesTo(this@SongAdapter)
             if (shouldScrollToTop) {
-                recyclerView?.run { postOnAnimation { smoothScrollToPosition(0) } }
+                recyclerView?.run { postDelayed({ smoothScrollToPosition(0) }, 50) }
                 shouldScrollToTop = false
             }
             field = newItems

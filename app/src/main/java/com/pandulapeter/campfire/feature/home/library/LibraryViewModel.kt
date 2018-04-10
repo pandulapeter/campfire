@@ -143,7 +143,7 @@ class LibraryViewModel(
     fun getHeaderTitle(position: Int) = when (sortingMode) {
         SortingMode.TITLE -> adapter.items[position].song.getNormalizedTitle()[0].toString().toUpperCase()
         SortingMode.ARTIST -> adapter.items[position].song.getNormalizedArtist()[0].toString().toUpperCase()
-        SortingMode.POPULARITY -> if (adapter.items[position].song.isNew) newString else popularString
+        SortingMode.POPULARITY -> if (!adapter.items[0].song.isNew) "" else if (adapter.items[position].song.isNew) newString else popularString
     }
 
     //TODO: Prioritize results that begin with the searchQuery.

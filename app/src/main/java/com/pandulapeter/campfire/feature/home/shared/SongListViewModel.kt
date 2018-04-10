@@ -133,8 +133,8 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
         if (canUpdateUI() && songRepository.isCacheLoaded() && songDetailRepository.isCacheLoaded()) {
             coroutine?.cancel()
             coroutine = async(UI) {
-                adapter.shouldScrollToTop = shouldScrollToTop
                 async(CommonPool) { librarySongs.createViewModels() }.await().let {
+                    adapter.shouldScrollToTop = shouldScrollToTop
                     adapter.items = it
                     onListUpdated(it)
                 }
