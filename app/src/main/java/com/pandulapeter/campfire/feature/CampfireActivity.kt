@@ -65,8 +65,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private val colorWhite by lazy {
         val typedValue = TypedValue()
         theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
-        val arr = obtainStyledAttributes(typedValue.data, intArrayOf(android.R.attr.textColorPrimary))
-        arr.getColor(0, -1)
+        obtainStyledAttributes(typedValue.data, intArrayOf(android.R.attr.textColorPrimary)).getColor(0, -1)
     }
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!

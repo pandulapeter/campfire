@@ -92,13 +92,13 @@
                     app:visibility="@{viewModel.downloadState instanceof DownloadState.NotDownloaded || viewModel.downloadState instanceof DownloadState.Downloading ||viewModel.downloadState instanceof DownloadState.Downloaded.Deprecated}">
 
                     <ProgressBar
+                        android:id="@+id/loading_indicator"
                         android:layout_width="@dimen/list_item_loading_indicator_size"
                         android:layout_height="@dimen/list_item_loading_indicator_size"
                         android:layout_gravity="center"
                         android:clipChildren="false"
                         android:clipToPadding="false"
                         android:foreground="@null"
-                        android:indeterminateTint="?android:attr/textColorSecondary"
                         android:padding="@dimen/content_padding" />
 
                     <ImageView
