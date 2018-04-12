@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.shared.widget
 import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Parcelable
+import android.text.InputFilter
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
@@ -19,7 +20,7 @@ class ToolbarTextInputView @JvmOverloads constructor(context: Context, attrs: At
         textInput.run {
             hint = context.getString(R.string.library_search)
             imeOptions = EditorInfo.IME_ACTION_SEARCH
-            maxWidth = context.resources.getInteger(R.integer.search_query_limit)
+            filters = arrayOfNulls<InputFilter>(1).apply { this[0] = InputFilter.LengthFilter(context.resources.getInteger(R.integer.search_query_limit)) }
             visibleOrInvisible = false
             setOnEditorActionListener { _, actionId, _ ->
                 if (actionId == imeOptions) {
