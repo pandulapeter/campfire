@@ -20,7 +20,7 @@
             android:name=".feature.CampfireActivity"
             android:launchMode="singleTop"
             android:theme="@style/Splash"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustNothing">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

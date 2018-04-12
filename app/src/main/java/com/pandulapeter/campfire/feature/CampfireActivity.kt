@@ -105,6 +105,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
         binding.appBarLayout.addOnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) }
         binding.appBarLayout.layoutTransition.setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
+        binding.coordinatorLayout.layoutTransition.setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
         shouldAllowAppBarScrolling = true
 
         // Initialize the drawer layout.
@@ -153,7 +154,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             currentScreenId = savedInstanceState.currentScreenId
             shouldAllowAppBarScrolling = savedInstanceState.toolbarContainerScrollFlags
             if (currentScreenId == R.id.options) {
-                binding.appBarLayout.post { setTransitionsEnabled() }
                 forceExpandAppBar = savedInstanceState.isAppBarExpanded
             }
         }
@@ -170,18 +170,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 negativeButton = R.string.home_privacy_policy_negative,
                 cancelable = false
             )
-        }
-    }
-
-    fun setTransitionsEnabled(enabled: Boolean = true) {
-        binding.coordinatorLayout.apply {
-            if (enabled) {
-                if (layoutTransition == null) {
-                    layoutTransition = LayoutTransition().apply { setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0) }
-                }
-            } else {
-                layoutTransition = null
-            }
         }
     }
 
@@ -332,7 +320,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         expandAppBar()
 
         // Reset the tab layout.
-        setTransitionsEnabled()
         binding.tabLayout.run {
             visibleOrGone = false
             setupWithViewPager(null)
@@ -354,15 +341,15 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             }
             startDelay = delay
         }
-            currentFragment?.run {
-                if (shouldExplode) {
-                    exitTransition = createTransition(0)
-                    reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
-                } else {
-                    exitTransition = null
-                    reenterTransition = null
-                }
+        currentFragment?.run {
+            if (shouldExplode) {
+                exitTransition = createTransition(0)
+                reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
+            } else {
+                exitTransition = null
+                reenterTransition = null
             }
+        }
         supportFragmentManager.beginTransaction()
             .setAllowOptimization(true)
             .replace(R.id.fragment_container, DetailFragment.newInstance(songs, index, shouldShowManagePlaylist))
