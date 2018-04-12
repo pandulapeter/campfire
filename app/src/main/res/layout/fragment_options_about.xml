@@ -46,30 +46,31 @@
                     android:clipChildren="false"
                     android:clipToPadding="false">
 
-                    <ImageView
-                        android:id="@+id/logo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:contentDescription="@string/campfire"
-                        android:onClick="@{() -> viewModel.onLogoClicked()}"
-                        android:src="@mipmap/ic_launcher_round"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
                     <TextView
                         android:id="@+id/top"
                         android:layout_width="0dp"
-                        android:layout_height="0dp"
+                        android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/large_content_padding"
                         android:layout_marginTop="@dimen/content_padding"
                         android:fontFamily="sans-serif-medium"
                         android:gravity="center"
                         app:formattedText="@{R.string.options_about_description_top}"
-                        app:layout_constraintBottom_toBottomOf="@id/logo"
-                        app:layout_constraintEnd_toStartOf="@id/logo"
+                        app:layout_constraintEnd_toStartOf="@+id/logo"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
                         tools:text="@string/options_about_description_top" />
+
+                    <ImageView
+                        android:id="@id/logo"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:contentDescription="@string/campfire"
+                        android:onClick="@{() -> viewModel.onLogoClicked()}"
+                        android:src="@mipmap/ic_launcher_round"
+                        app:layout_constraintBottom_toBottomOf="@id/top"
+                        app:layout_constraintDimensionRatio="1"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
                         android:id="@+id/bottom"
@@ -82,7 +83,7 @@
                         android:textSize="12sp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/logo" />
+                        app:layout_constraintTop_toBottomOf="@id/top" />
 
                 </android.support.constraint.ConstraintLayout>
 
