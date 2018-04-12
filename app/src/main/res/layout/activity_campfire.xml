@@ -130,7 +130,6 @@
                 android:layout_gravity="bottom|end"
                 android:layout_margin="@dimen/large_content_padding"
                 android:theme="@style/ActionBar"
-                android:tint="?android:attr/textColorPrimary"
                 android:visibility="invisible"
                 app:fabSize="normal" />
 

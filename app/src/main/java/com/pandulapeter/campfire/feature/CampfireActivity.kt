@@ -19,6 +19,7 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
 import android.transition.Explode
 import android.transition.Transition
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -61,6 +62,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private var currentScreenId = R.id.library
     private var forceExpandAppBar = true
+    private val colorWhite by lazy {
+        val typedValue = TypedValue()
+        theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
+        val arr = obtainStyledAttributes(typedValue.data, intArrayOf(android.R.attr.textColorPrimary))
+        arr.getColor(0, -1)
+    }
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
     val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
@@ -295,7 +302,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    fun updateFloatingActionButtonDrawable(drawable: Drawable?) = binding.floatingActionButton.setImageDrawable(drawable)
+    fun updateFloatingActionButtonDrawable(drawable: Drawable?) = binding.floatingActionButton.setImageDrawable(drawable.apply { this?.setTint(colorWhite) })
 
     fun enableTabLayout(viewPager: ViewPager) {
         binding.tabLayout.run {
