@@ -56,8 +56,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                         }
                     }
                 }
-            },
-            showFilters = { mainActivity.openSecondaryNavigationDrawer() }
+            }
         )
     }
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")

@@ -61,7 +61,7 @@ class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSe
     }
 
     fun setButtonText(@StringRes stringRes: Int) {
-        buttonText = context.getString(stringRes)
+        buttonText = if (stringRes == 0) null else context.getString(stringRes)
     }
 
     enum class State(val childIndex: Int) {

@@ -17,8 +17,7 @@ class LibraryViewModel(
     context: Context,
     val toolbarTextInputView: ToolbarTextInputView,
     private val updateSearchToggleDrawable: (Boolean) -> Unit,
-    private val onDataLoaded: (languages: List<Language>) -> Unit,
-    private val showFilters: () -> Unit
+    private val onDataLoaded: (languages: List<Language>) -> Unit
 ) : SongListViewModel(context) {
 
     private val newString = context.getString(R.string.new_tag)
@@ -101,15 +100,12 @@ class LibraryViewModel(
     override fun onListUpdated(items: List<SongViewModel>) {
         super.onListUpdated(items)
         if (librarySongs.toList().isNotEmpty()) {
-            updatePlaceholder()
-            buttonText.set(R.string.library_filters)
+            placeholderText.set(R.string.library_placeholder_filters)
+            buttonText.set(0)
         }
     }
 
-    override fun onActionButtonClicked() = when {
-        librarySongs.toList().isEmpty() -> updateData()
-        else -> showFilters()
-    }
+    override fun onActionButtonClicked() = updateData()
 
     override fun Sequence<Song>.createViewModels() = filterByQuery()
         .filterDownloaded()
@@ -166,13 +162,6 @@ class LibraryViewModel(
         SortingMode.ARTIST -> sortedBy { it.getNormalizedTitle() }.sortedBy { it.getNormalizedArtist() }
         SortingMode.POPULARITY -> sortedBy { it.getNormalizedArtist() }.sortedBy { it.getNormalizedTitle() }.sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
     }
-
-    private fun updatePlaceholder() = placeholderText.set(
-        when {
-            toolbarTextInputView.isTextInputVisible && query.isNotEmpty() -> R.string.library_placeholder_search
-            else -> R.string.library_placeholder_filters
-        }
-    )
 
     enum class SortingMode(val intValue: Int) {
         TITLE(0),
