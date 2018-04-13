@@ -15,6 +15,8 @@ class PreferenceDatabase(context: Context) {
     var lastUpdateTimestamp by PreferenceFieldDelegate.Long("lastUpdateTimestamp")
 
     // Library filters
+    var shouldSearchInArtists by PreferenceFieldDelegate.Boolean("shouldSearchInArtists", true)
+    var shouldSearchInTitles by PreferenceFieldDelegate.Boolean("shouldSearchInTitles", true)
     var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("shouldShowDownloadedOnly", false)
     var shouldShowWorkInProgress by PreferenceFieldDelegate.Boolean("shouldShowWorkInProgress", false)
     var shouldShowExplicit by PreferenceFieldDelegate.Boolean("shouldShowExplicit", false)

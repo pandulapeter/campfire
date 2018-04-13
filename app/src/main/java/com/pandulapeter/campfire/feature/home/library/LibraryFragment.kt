@@ -14,10 +14,7 @@ import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
 import com.pandulapeter.campfire.feature.home.shared.SongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
-import com.pandulapeter.campfire.util.BundleArgumentDelegate
-import com.pandulapeter.campfire.util.animatedDrawable
-import com.pandulapeter.campfire.util.consume
-import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.*
 
 
 class LibraryFragment : SongListFragment<LibraryViewModel>() {
@@ -101,6 +98,8 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
         }
         mainActivity.addViewToAppBar(searchControlsBinding.root)
+        searchControlsViewModel.searchInTitles.onPropertyChanged { viewModel.shouldSearchInTitles = it }
+        searchControlsViewModel.searchInArtists.onPropertyChanged { viewModel.shouldSearchInArtists = it }
     }
 
     override fun onResume() {

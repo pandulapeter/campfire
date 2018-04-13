@@ -71,6 +71,16 @@ class LibraryViewModel(
             }
         }
     var languages = mutableListOf<Language>()
+    var shouldSearchInTitles = preferenceDatabase.shouldSearchInTitles
+        set(value) {
+            field = value
+            updateAdapterItems(true)
+        }
+    var shouldSearchInArtists = preferenceDatabase.shouldSearchInArtists
+        set(value) {
+            field = value
+            updateAdapterItems(true)
+        }
 
     init {
         toolbarTextInputView.apply {
@@ -147,7 +157,9 @@ class LibraryViewModel(
     //TODO: Prioritize results that begin with the searchQuery.
     private fun Sequence<Song>.filterByQuery() = if (toolbarTextInputView.isTextInputVisible) {
         query.trim().normalize().let { query ->
-            filter { it.getNormalizedTitle().contains(query, true) || it.getNormalizedArtist().contains(query, true) }
+            filter {
+                (it.getNormalizedTitle().contains(query, true) && shouldSearchInTitles) || (it.getNormalizedArtist().contains(query, true) && shouldSearchInArtists)
+            }
         }
     } else this
 
