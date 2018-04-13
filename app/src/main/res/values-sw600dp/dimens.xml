@@ -6,4 +6,7 @@
     <dimen name="second_keyline">80dp</dimen>
     <dimen name="toolbar_height">64dp</dimen>
 
+    <!-- Fixes -->
+    <dimen name="second_keyline_fix">72dp</dimen>
+
 </resources>

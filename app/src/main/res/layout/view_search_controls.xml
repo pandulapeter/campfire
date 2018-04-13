@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?><!--suppress AndroidElementNotAllowed -->
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.pandulapeter.campfire.feature.home.library.SearchControlsViewModel" />
+
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingBottom="@dimen/content_padding"
+        android:paddingEnd="@dimen/first_keyline"
+        android:paddingStart="@dimen/second_keyline_fix"
+        app:visibility="@{viewModel.isVisible}">
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="@={viewModel.searchInArtists}"
+            android:text="@string/library_search_in_artists" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/large_content_padding"
+            android:checked="@={viewModel.searchInTitles}"
+            android:text="@string/library_search_in_titles" />
+
+    </LinearLayout>
+
+</layout>

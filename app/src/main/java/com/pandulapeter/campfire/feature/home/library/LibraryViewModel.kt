@@ -125,7 +125,9 @@ class LibraryViewModel(
                     textInput.setText("")
                 }
                 updateSearchToggleDrawable(toolbarTextInputView.isTextInputVisible)
-                updateAdapterItems(!isTextInputVisible && shouldScrollToTop)
+                if (shouldScrollToTop) {
+                    updateAdapterItems(!isTextInputVisible)
+                }
             }
         }
     }

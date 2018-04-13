@@ -4,5 +4,6 @@
     <!-- General -->
     <color name="primary">#558B2F</color>
     <color name="accent">#8BC34A</color>
+    <color name="white">#FFFFFF</color>
 
 </resources>

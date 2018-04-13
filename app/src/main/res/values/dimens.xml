@@ -24,6 +24,7 @@
     <dimen name="edit_text_fix_negative">-4dp</dimen>
     <dimen name="switch_content_padding">10dp</dimen>
     <dimen name="switch_fix">2dp</dimen>
+    <dimen name="second_keyline_fix">64dp</dimen>
 
     <!-- List items -->
     <dimen name="list_item_minimum_height">40dp</dimen>
