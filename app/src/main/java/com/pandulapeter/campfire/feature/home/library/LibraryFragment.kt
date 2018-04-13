@@ -3,18 +3,17 @@ package com.pandulapeter.campfire.feature.home.library
 import android.content.Context
 import android.os.Bundle
 import android.support.annotation.IdRes
+import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.CompoundButton
+import android.widget.TextView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.home.shared.SongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
-import com.pandulapeter.campfire.util.BundleArgumentDelegate
-import com.pandulapeter.campfire.util.animatedDrawable
-import com.pandulapeter.campfire.util.consume
-import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.*
 
 
 class LibraryFragment : SongListFragment<LibraryViewModel>() {
@@ -32,6 +31,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                 mainActivity.shouldAllowAppBarScrolling = !it
                 binding.swipeRefreshLayout.isEnabled = !it
                 binding.swipeRefreshLayout.isRefreshing = viewModel.isLoading.get()
+                searchOptionsView.visibleOrGone = it
             },
             onDataLoaded = { languages ->
                 mainActivity.toolbarContext.let { context ->
@@ -56,6 +56,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                         }
                     }
                 }
+                mainActivity.addViewToAppBar(searchOptionsView)
             }
         )
     }
@@ -66,6 +67,14 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     private val searchToggle: ToolbarButton by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) { viewModel.toggleTextInputVisibility() } }
     private val drawableCloseToSearch by lazy { mainActivity.animatedDrawable(R.drawable.avd_close_to_search_24dp) }
     private val drawableSearchToClose by lazy { mainActivity.animatedDrawable(R.drawable.avd_search_to_close_24dp) }
+    private val searchOptionsView by lazy {
+        TextView(mainActivity.toolbarContext).apply {
+            text = "Search controls"
+            gravity = Gravity.CENTER
+            context.dimension(R.dimen.content_padding).let { setPadding(it, it, it, it) }
+            visibleOrGone = false
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -87,6 +96,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             }
             viewModel.placeholderText.set(savedInstanceState.placeholderText)
             viewModel.buttonText.set(savedInstanceState.buttonText)
+            searchOptionsView.visibleOrGone = savedInstanceState.isTextInputVisible
         }
     }
 
