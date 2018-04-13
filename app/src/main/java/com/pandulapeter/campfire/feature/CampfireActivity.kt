@@ -109,8 +109,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             }
         }
         binding.appBarLayout.addOnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) }
-        binding.appBarLayout.layoutTransition.setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
-        binding.coordinatorLayout.layoutTransition.setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
+        toggleTransitionMode(false)
         shouldAllowAppBarScrolling = true
 
         // Initialize the drawer layout.
@@ -178,6 +177,15 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
+    fun toggleTransitionMode(boolean: Boolean) {
+        binding.appBarLayout.layoutTransition.setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
+        if (boolean) {
+            binding.coordinatorLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+        } else {
+            binding.coordinatorLayout.layoutTransition.disableTransitionType(LayoutTransition.CHANGING)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         if (currentFocus is EditText) {
@@ -238,6 +246,25 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         if (id == DIALOG_ID_PRIVACY_POLICY) {
             preferenceDatabase.shouldShowPrivacyPolicy = false
         }
+    }
+
+    private fun removeViewFromAppBar() {
+        toggleTransitionMode(false)
+        binding.appBarLayout.run {
+            while (childCount > 1) {
+                removeViewAt(1)
+            }
+        }
+    }
+
+    fun addViewToAppBar(view: View) {
+        removeViewFromAppBar()
+        binding.appBarLayout.addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    }
+
+    fun expandAppBar() {
+        binding.appBarLayout.setExpanded(forceExpandAppBar, forceExpandAppBar)
+        forceExpandAppBar = true
     }
 
     fun updateMainToolbarButton(shouldShowBackButton: Boolean) {
@@ -301,24 +328,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     fun updateFloatingActionButtonDrawable(drawable: Drawable?) = binding.floatingActionButton.setImageDrawable(drawable.apply { this?.setTint(colorWhite) })
-
-    private fun removeViewFromAppBar() {
-        binding.appBarLayout.run {
-            while (childCount > 1) {
-                removeViewAt(1)
-            }
-        }
-    }
-
-    fun addViewToAppBar(view: View) {
-        removeViewFromAppBar()
-        binding.appBarLayout.addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-    }
-
-    fun expandAppBar() {
-        binding.appBarLayout.setExpanded(forceExpandAppBar, forceExpandAppBar)
-        forceExpandAppBar = true
-    }
 
     fun beforeScreenChanged() {
 

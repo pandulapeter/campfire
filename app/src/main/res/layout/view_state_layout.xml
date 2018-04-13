@@ -17,9 +17,9 @@
                 android:layout_width="@dimen/list_item_loading_indicator_size"
                 android:layout_height="@dimen/list_item_loading_indicator_size"
                 android:layout_gravity="center"
+                android:indeterminateTint="@color/accent"
                 android:scaleX="0"
-                android:scaleY="0"
-                android:indeterminateTint="@color/accent" />
+                android:scaleY="0" />
 
         </FrameLayout>
 
@@ -33,7 +33,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="?android:attr/textColorPrimary"
-                android:theme="@style/ActionBar"
+                android:theme="@style/DarkTheme"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

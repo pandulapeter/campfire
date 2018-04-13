@@ -11,7 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ItemSongBinding
-import com.pandulapeter.campfire.util.obtainColor
+import com.pandulapeter.campfire.util.color
 
 class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
 
@@ -81,7 +81,7 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
     class SongInfoViewHolder(private val binding: ItemSongBinding) : RecyclerView.ViewHolder(binding.root) {
 
         init {
-            binding.loadingIndicator.run { indeterminateDrawable.setColorFilter(context.obtainColor(android.R.attr.textColorPrimary), PorterDuff.Mode.SRC_IN) }
+            binding.loadingIndicator.run { indeterminateDrawable.setColorFilter(context.color(R.color.white), PorterDuff.Mode.SRC_IN) }
         }
 
         fun bind(song: SongViewModel) {
