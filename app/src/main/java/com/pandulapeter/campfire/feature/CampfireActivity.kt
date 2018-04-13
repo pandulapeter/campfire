@@ -14,7 +14,6 @@ import android.support.design.widget.NavigationView
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
 import android.support.v4.view.ViewCompat
-import android.support.v4.view.ViewPager
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
 import android.transition.Explode
@@ -303,11 +302,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun updateFloatingActionButtonDrawable(drawable: Drawable?) = binding.floatingActionButton.setImageDrawable(drawable.apply { this?.setTint(colorWhite) })
 
-    fun enableTabLayout(viewPager: ViewPager) {
-        binding.tabLayout.run {
-            setupWithViewPager(viewPager)
-            visibleOrGone = true
-        }
+    fun addViewToAppBar(view: View) {
+        binding.appBarLayout.addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
     }
 
     fun expandAppBar() {
@@ -323,13 +319,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         // Reset the app bar.
         shouldAllowAppBarScrolling = true
         binding.toolbarButtonContainer.removeAllViews()
-        expandAppBar()
-
-        // Reset the tab layout.
-        binding.tabLayout.run {
-            visibleOrGone = false
-            setupWithViewPager(null)
+        binding.appBarLayout.run {
+            while (childCount > 1) {
+                removeViewAt(1)
+            }
         }
+        expandAppBar()
 
         // Reset the secondary navigation drawer.
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.END)

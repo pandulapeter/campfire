@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.home.options
 
 import android.os.Bundle
+import android.support.design.widget.TabLayout
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsBinding
@@ -16,6 +17,9 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
         defaultToolbar.updateToolbarTitle(R.string.home_options)
         binding.viewPager.adapter = OptionsFragmentPagerAdapter(mainActivity, childFragmentManager)
         binding.viewPager.addPageScrollListener({ mainActivity.expandAppBar() })
-        mainActivity.enableTabLayout(binding.viewPager)
+        mainActivity.addViewToAppBar(TabLayout(mainActivity.toolbarContext).apply {
+            tabMode = TabLayout.MODE_SCROLLABLE
+            setupWithViewPager(binding.viewPager)
+        })
     }
 }
