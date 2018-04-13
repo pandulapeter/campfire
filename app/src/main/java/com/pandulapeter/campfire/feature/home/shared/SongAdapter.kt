@@ -5,13 +5,13 @@ import android.databinding.DataBindingUtil
 import android.graphics.PorterDuff
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ItemSongBinding
+import com.pandulapeter.campfire.util.obtainColor
 
 class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
 
@@ -81,11 +81,7 @@ class SongAdapter : RecyclerView.Adapter<SongAdapter.SongInfoViewHolder>() {
     class SongInfoViewHolder(private val binding: ItemSongBinding) : RecyclerView.ViewHolder(binding.root) {
 
         init {
-            binding.loadingIndicator.indeterminateDrawable.setColorFilter(binding.loadingIndicator.context.run {
-                val typedValue = TypedValue()
-                theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
-                obtainStyledAttributes(typedValue.data, intArrayOf(android.R.attr.textColorPrimary)).getColor(0, -1)
-            }, PorterDuff.Mode.SRC_IN)
+            binding.loadingIndicator.run { indeterminateDrawable.setColorFilter(context.obtainColor(android.R.attr.textColorPrimary), PorterDuff.Mode.SRC_IN) }
         }
 
         fun bind(song: SongViewModel) {

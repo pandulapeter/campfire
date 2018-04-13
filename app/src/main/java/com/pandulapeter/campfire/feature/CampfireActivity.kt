@@ -284,7 +284,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun enableFloatingActionButton() = binding.floatingActionButton.show()
 
-    fun disableFloatingActionButton() = binding.autoScrollControl.run {
+    private fun disableFloatingActionButton() = binding.autoScrollControl.run {
         if (animatedVisibilityEnd) {
             animatedVisibilityEnd = false
             (tag as? Animator)?.let {
@@ -302,7 +302,16 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun updateFloatingActionButtonDrawable(drawable: Drawable?) = binding.floatingActionButton.setImageDrawable(drawable.apply { this?.setTint(colorWhite) })
 
+    private fun removeViewFromAppBar() {
+        binding.appBarLayout.run {
+            while (childCount > 1) {
+                removeViewAt(1)
+            }
+        }
+    }
+
     fun addViewToAppBar(view: View) {
+        removeViewFromAppBar()
         binding.appBarLayout.addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
     }
 
@@ -319,11 +328,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         // Reset the app bar.
         shouldAllowAppBarScrolling = true
         binding.toolbarButtonContainer.removeAllViews()
-        binding.appBarLayout.run {
-            while (childCount > 1) {
-                removeViewAt(1)
-            }
-        }
+        removeViewFromAppBar()
         expandAppBar()
 
         // Reset the secondary navigation drawer.

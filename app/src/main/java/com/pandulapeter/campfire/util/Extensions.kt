@@ -18,6 +18,7 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewAnimationUtils
+import android.view.ViewTreeObserver
 import android.widget.EditText
 import retrofit2.Call
 import retrofit2.Callback
@@ -252,3 +253,12 @@ fun ViewPager.addPageScrollListener(onPageSelected: (Int) -> Unit, onPageScrollS
 
         override fun onPageSelected(position: Int) = onPageSelected(position)
     })
+
+inline fun View.waitForLayout(crossinline action: () -> Unit) = with(viewTreeObserver) {
+    addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+        override fun onGlobalLayout() {
+            viewTreeObserver.removeOnGlobalLayoutListener(this)
+            action()
+        }
+    })
+}
