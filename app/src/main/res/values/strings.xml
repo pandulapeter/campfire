@@ -174,6 +174,7 @@
         <item quantity="other">Contains %d songs</item>
     </plurals>
     <string name="manage_playlists_hint_swipe">Swipe the items away horizontally to delete playlists</string>
+    <string name="manage_playlists_hint_drag">Drag the playlists vertically to rearrange them</string>
     <string name="manage_playlists_delete_all_confirmation_title">Are you sure?</string>
     <string name="manage_playlists_delete_all_confirmation_message">This will remove all playlists except for Favorites</string>
     <string name="manage_playlists_delete_all_confirmation_clear">Delete all</string>

@@ -34,6 +34,8 @@ class FirstTimeUserExperienceManager(private val preferenceDatabase: PreferenceD
 
     fun resetAll() {
         historyCompleted = false
+        managePlaylistsSwipeCompleted = false
+        managePlaylistsDragCompleted = false
         manageDownloadsCompleted = false
         playlistSwipeCompleted = false
     }

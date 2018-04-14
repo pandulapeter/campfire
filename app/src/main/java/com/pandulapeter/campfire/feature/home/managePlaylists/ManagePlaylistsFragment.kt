@@ -49,7 +49,15 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(mainActivity)
         }
-        viewModel.playlistCount.onPropertyChanged { updateToolbarTitle(it) }
+        viewModel.playlistCount.onPropertyChanged {
+            updateToolbarTitle(it)
+            if (it > 2 && !firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
+                showHint(
+                    message = R.string.manage_playlists_hint_drag,
+                    action = { firstTimeUserExperienceManager.managePlaylistsDragCompleted = true }
+                )
+            }
+        }
         viewModel.shouldShowDeleteAllButton.onPropertyChanged {
             deleteAllButton.visibleOrGone = it
             if (it && !firstTimeUserExperienceManager.managePlaylistsSwipeCompleted && firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
@@ -73,7 +81,10 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
                     viewHolder?.adapterPosition?.let { originalPosition ->
                         target?.adapterPosition?.let { targetPosition ->
                             if (originalPosition > 0 && targetPosition > 0) {
-                                firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
+                                if (!firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
+                                    firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
+                                    hideSnackbar()
+                                }
                                 //TODO: viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
                             }
                         }

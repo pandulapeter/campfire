@@ -11,7 +11,7 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
 
     private val playlistRepository by inject<PlaylistRepository>()
     private var playlistToDeleteId: String? = null
-    val adapter = ManagePlaylistsListAdapter()
+    val adapter = ManagePlaylistListAdapter()
     val shouldShowDeleteAllButton = ObservableBoolean()
     val playlistCount = ObservableInt()
 
@@ -42,6 +42,7 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
 
     private fun updateAdapterItems(playlists: List<Playlist>) {
         playlists.filter { it.id != playlistToDeleteId }.map { PlaylistViewModel(it) }.run {
+            forEach { it.shouldShowDragHandle = size > 2 }
             adapter.items = this
             shouldShowDeleteAllButton.set(size > 1)
             playlistCount.set(size)

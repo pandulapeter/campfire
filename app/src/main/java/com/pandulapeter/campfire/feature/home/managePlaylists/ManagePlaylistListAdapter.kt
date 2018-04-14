@@ -16,7 +16,7 @@ import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.cancel
 import kotlin.coroutines.experimental.CoroutineContext
 
-class ManagePlaylistsListAdapter : RecyclerView.Adapter<ManagePlaylistsListAdapter.PlaylistViewHolder>() {
+class ManagePlaylistListAdapter : RecyclerView.Adapter<ManagePlaylistListAdapter.PlaylistViewHolder>() {
     private var coroutine: CoroutineContext? = null
     var items = listOf<PlaylistViewModel>()
         set(newItems) {
@@ -34,7 +34,7 @@ class ManagePlaylistsListAdapter : RecyclerView.Adapter<ManagePlaylistsListAdapt
 
                         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
                     })
-                }.await().dispatchUpdatesTo(this@ManagePlaylistsListAdapter)
+                }.await().dispatchUpdatesTo(this@ManagePlaylistListAdapter)
                 field = newItems
             }
         }
