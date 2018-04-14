@@ -12,6 +12,7 @@ import java.util.*
 class PlaylistRepository(private val songDatabase: SongDatabase) : Repository<PlaylistRepository.Subscriber>() {
     private val data = mutableListOf<Playlist>()
     private var isCacheLoaded = false
+    val cache get() = data.toList()
 
     init {
         refreshDataSet()
@@ -26,10 +27,14 @@ class PlaylistRepository(private val songDatabase: SongDatabase) : Repository<Pl
 
     fun deleteAllPlaylists() {
         data.swap(data.filter { it.id == Playlist.FAVORITES_ID })
-        async(UI) {
-            async(CommonPool) { songDatabase.playlistDao().deleteAll() }.await()
-            notifyDataChanged()
-        }
+        async(UI) { async(CommonPool) { songDatabase.playlistDao().deleteAll() }.await() }
+        notifyDataChanged()
+    }
+
+    fun deletePlaylist(playlistId: String) {
+        data.swap(data.filter { it.id != playlistId })
+        async(UI) { async(CommonPool) { songDatabase.playlistDao().delete(playlistId) }.await() }
+        notifyDataChanged()
     }
 
     fun createNewPlaylist(title: String) {
@@ -54,9 +59,7 @@ class PlaylistRepository(private val songDatabase: SongDatabase) : Repository<Pl
                     order = 0
                 )
                 if (newData.isEmpty()) {
-                    async(CommonPool) {
-                        songDatabase.playlistDao().insert(favorites)
-                    }.await()
+                    async(CommonPool) { songDatabase.playlistDao().insert(favorites) }.await()
                     finalNewData.add(favorites)
                 }
                 data.swap(finalNewData.sortedBy { it.order })

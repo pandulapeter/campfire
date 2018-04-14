@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.visibleOrGone
 import com.pandulapeter.campfire.util.visibleOrInvisible
 import org.koin.android.ext.android.inject
 
@@ -42,7 +43,7 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), AlertDialogFragmen
         defaultToolbar.updateToolbarTitle(R.string.home_history)
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))
         viewModel.shouldShowDeleteAll.onPropertyChanged(this) {
-            deleteAllButton.visibleOrInvisible = it
+            deleteAllButton.visibleOrGone = it
             if (it && !firstTimeUserExperienceManager.historyCompleted) {
                 showHint(
                     message = R.string.history_hint,

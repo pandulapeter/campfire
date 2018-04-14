@@ -10,6 +10,7 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
 
     private val playlistRepository by inject<PlaylistRepository>()
     val adapter = ManagePlaylistsListAdapter()
+    private var playlistToDeleteId: String? = null
     val shouldShowDeleteAllButton = ObservableBoolean()
 
     override fun subscribe() {
@@ -20,10 +21,29 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
         playlistRepository.unsubscribe(this)
     }
 
-    override fun onPlaylistsUpdated(playlists: List<Playlist>) {
-        adapter.items = playlists.map { PlaylistViewModel(it) }
-        shouldShowDeleteAllButton.set(playlists.size > 1)
-    }
+    override fun onPlaylistsUpdated(playlists: List<Playlist>) = updateAdapterItems(playlists)
 
     fun deleteAllPlaylists() = playlistRepository.deleteAllPlaylists()
+
+    fun deletePlaylistTemporarily(playlistId: String) {
+        playlistToDeleteId = playlistId
+        updateAdapterItems(playlistRepository.cache)
+    }
+
+    fun cancelDeletePlaylist() {
+        playlistToDeleteId = null
+        updateAdapterItems(playlistRepository.cache)
+    }
+
+    fun deletePlaylistPermanently() {
+        playlistToDeleteId?.let {
+            playlistRepository.deletePlaylist(it)
+            playlistToDeleteId = null
+        }
+    }
+
+    private fun updateAdapterItems(playlists: List<Playlist>) {
+        adapter.items = playlists.filter { it.id != playlistToDeleteId }.map { PlaylistViewModel(it) }
+        shouldShowDeleteAllButton.set(playlists.size > 1)
+    }
 }

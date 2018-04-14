@@ -5,8 +5,6 @@ import android.os.Bundle
 import android.support.v4.app.FragmentManager
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatDialogFragment
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
@@ -16,6 +14,7 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.onTextChanged
 import com.pandulapeter.campfire.util.showKeyboard
 import org.koin.android.ext.android.inject
 
@@ -27,16 +26,7 @@ class NewPlaylistDialogFragment : AppCompatDialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->
         binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.dialog_new_playlist, null, false)
-        binding.inputField.addTextChangedListener(object : TextWatcher {
-
-            override fun afterTextChanged(text: Editable?) {
-                positiveButton.isEnabled = text.isTextValid()
-            }
-
-            override fun beforeTextChanged(text: CharSequence?, p1: Int, p2: Int, p3: Int) = Unit
-
-            override fun onTextChanged(text: CharSequence?, p1: Int, p2: Int, p3: Int) = Unit
-        })
+        binding.inputField.onTextChanged { positiveButton.isEnabled = it.isTextValid() }
         AlertDialog.Builder(context, if (preferenceDatabase.shouldUseDarkTheme) R.style.DarkAlertDialog else R.style.LightAlertDialog)
             .setView(binding.root)
             .setTitle(R.string.home_new_playlist)

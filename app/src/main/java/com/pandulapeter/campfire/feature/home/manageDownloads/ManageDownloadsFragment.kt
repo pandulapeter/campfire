@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.visibleOrGone
 import com.pandulapeter.campfire.util.visibleOrInvisible
 import org.koin.android.ext.android.inject
 
@@ -41,7 +42,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
         binding.swipeRefreshLayout.isEnabled = false
         updateToolbarTitle(viewModel.songCount.get())
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))
-        viewModel.shouldShowDeleteAll.onPropertyChanged(this) { deleteAllButton.visibleOrInvisible = it }
+        viewModel.shouldShowDeleteAll.onPropertyChanged(this) { deleteAllButton.visibleOrGone = it }
         viewModel.songCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
             if (it > 0 && !firstTimeUserExperienceManager.manageDownloadsCompleted) {

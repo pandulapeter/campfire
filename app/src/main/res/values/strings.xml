@@ -173,11 +173,12 @@
         <item quantity="one">Contains %d song</item>
         <item quantity="other">Contains %d songs</item>
     </plurals>
-    <string name="manage_playlists_hint">Drag the playlists to rearrange them, swipe to remove</string>
+    <string name="manage_playlists_hint_swipe">Swipe the items away horizontally to delete playlists</string>
     <string name="manage_playlists_delete_all_confirmation_title">Are you sure?</string>
     <string name="manage_playlists_delete_all_confirmation_message">This will remove all playlists except for Favorites</string>
     <string name="manage_playlists_delete_all_confirmation_clear">Delete all</string>
     <string name="manage_playlists_all_playlists_deleted">All playlists deleted</string>
+    <string name="manage_playlists_playlist_deleted_message">%s deleted</string>
 
     <!-- Manage downloads screen -->
     <string name="manage_downloads_no_downloads">No downloads</string>
