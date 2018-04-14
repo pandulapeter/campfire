@@ -10,7 +10,6 @@ import com.pandulapeter.campfire.old.data.repository.DownloadedSongRepository
 import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
-import com.pandulapeter.campfire.old.feature.home.managePlaylists.ManagePlaylistsFragment
 import com.pandulapeter.campfire.old.feature.home.playlist.PlaylistFragment
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.old.feature.shared.CampfireViewModel
@@ -76,18 +75,11 @@ class HomeViewModel(
             override fun getFragment() = PlaylistFragment.newInstance(id)
         }
 
-        object ManagePlaylists : HomeNavigationItem(VALUE_MANAGE_PLAYLISTS) {
-            override fun getFragment() = ManagePlaylistsFragment()
-        }
-
         companion object {
             private const val VALUE_PLAYLIST = "playlist_"
             private const val VALUE_MANAGE_PLAYLISTS = "manage_playlists"
 
-            fun fromStringValue(string: String?) = when (string) {
-                VALUE_MANAGE_PLAYLISTS -> ManagePlaylists
-                else -> Playlist(Integer.parseInt(string?.removePrefix(VALUE_PLAYLIST)))
-            }
+            fun fromStringValue(string: String?) = Playlist(Integer.parseInt(string?.removePrefix(VALUE_PLAYLIST)))
         }
     }
 }

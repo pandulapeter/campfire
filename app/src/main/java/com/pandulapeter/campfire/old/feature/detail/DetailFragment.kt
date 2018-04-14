@@ -3,7 +3,6 @@ package com.pandulapeter.campfire.old.feature.detail
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewPager
@@ -35,11 +34,8 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     private val transposeContainer by lazy { binding.navigationView.menu.findItem(R.id.transpose_container) }
     private val transposeHigher by lazy { binding.navigationView.menu.findItem(R.id.transpose_higher) }
     private val transposeLower by lazy { binding.navigationView.menu.findItem(R.id.transpose_lower) }
-    private val multiWindowFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
-    } else {
-        Intent.FLAG_ACTIVITY_NEW_TASK
-    }
+    private val multiWindowFlags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
+
     override val viewModel by lazy {
         DetailViewModel(
             arguments.songId,

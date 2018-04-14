@@ -63,7 +63,6 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
                     NewPlaylistDialogFragment.show(childFragmentManager)
                     false
                 }
-                R.id.manage_playlists -> consumeAndCloseDrawer(binding.drawerLayout) { replaceActiveFragment(HomeViewModel.HomeNavigationItem.ManagePlaylists) }
                 else -> consumeAndCloseDrawer(binding.drawerLayout) {
                     binding.navigationView.setCheckedItem(menuItem.itemId)
                     replaceActiveFragment(HomeViewModel.HomeNavigationItem.Playlist(menuItem.itemId))
@@ -143,7 +142,6 @@ class HomeFragment : CampfireFragment<HomeBinding, HomeViewModel>(R.layout.fragm
         binding.navigationView.setCheckedItem(
             when (it) {
                 is HomeViewModel.HomeNavigationItem.Playlist -> it.id
-                HomeViewModel.HomeNavigationItem.ManagePlaylists -> R.id.manage_playlists
             }
         )
     }

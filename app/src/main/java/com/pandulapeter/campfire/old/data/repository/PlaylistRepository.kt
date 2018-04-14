@@ -41,26 +41,6 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager) : R
         return false
     }
 
-    fun createNewPlaylist(title: String) {
-        if (getPlaylists().size < Playlist.MAXIMUM_PLAYLIST_COUNT) {
-            var id = Playlist.FAVORITES_ID
-            while (dataSet.containsKey(id.toString())) {
-                id++
-            }
-            val playlist = Playlist(id, title)
-            dataSet = dataSet.toMutableMap().apply { put(id.toString(), playlist) }
-            notifySubscribers(UpdateType.NewPlaylistsCreated(playlist))
-        }
-    }
-
-    fun deletePlaylist(playlistId: Int) {
-        if (playlistId != Playlist.FAVORITES_ID && dataSet.containsKey(playlistId.toString())) {
-            val position = getPlaylists().indexOfFirst { it.id == playlistId }
-            dataSet = dataSet.toMutableMap().apply { remove(playlistId.toString()) }
-            notifySubscribers(UpdateType.PlaylistDeleted(position))
-        }
-    }
-
     fun updatePlaylist(playlistId: Int, songIds: List<String>) {
         dataSet = dataSet.toMutableMap().apply {
             getPlaylist(playlistId)?.let {
@@ -70,14 +50,6 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager) : R
                 }))
             }
         }
-    }
-
-    fun updatePlaylistOrder(playlists: List<Playlist>) {
-        dataSet = dataSet.toMutableMap().apply {
-            clear()
-            playlists.forEach { put(it.id.toString(), it) }
-        }
-        notifySubscribers(UpdateType.PlaylistsOrderUpdated(getPlaylists()))
     }
 
     fun addSongToPlaylist(playlistId: Int, songId: String, position: Int? = null) {
