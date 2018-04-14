@@ -6,15 +6,30 @@ import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentManagePlaylistsBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.visibleOrGone
 
-class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists) {
+class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists),
+    AlertDialogFragment.OnDialogItemsSelectedListener {
+
+    companion object {
+        private const val DIALOG_ID_DELETE_ALL_CONFIRMATION = 6
+    }
 
     override val viewModel = ManagePlaylistsViewModel()
     private val deleteAllButton by lazy {
-        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) { showSnackbar(R.string.work_in_progress) }.apply {
+        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
+            AlertDialogFragment.show(
+                DIALOG_ID_DELETE_ALL_CONFIRMATION,
+                childFragmentManager,
+                R.string.manage_playlists_delete_all_confirmation_title,
+                R.string.manage_playlists_delete_all_confirmation_message,
+                R.string.manage_playlists_delete_all_confirmation_clear,
+                R.string.cancel
+            )
+        }.apply {
             visibleOrGone = false
         }
     }
@@ -35,4 +50,11 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
     }
 
     override fun onFloatingActionButtonPressed() = showSnackbar(R.string.work_in_progress)
+
+    override fun onPositiveButtonSelected(id: Int) {
+        if (id == DIALOG_ID_DELETE_ALL_CONFIRMATION) {
+            viewModel.deleteAllPlaylists()
+            showSnackbar(R.string.manage_playlists_all_playlists_deleted)
+        }
+    }
 }

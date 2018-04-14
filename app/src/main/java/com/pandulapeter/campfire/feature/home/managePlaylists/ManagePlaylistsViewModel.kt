@@ -24,4 +24,6 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
         adapter.items = playlists.map { PlaylistViewModel(it) }
         shouldShowDeleteAllButton.set(playlists.size > 1)
     }
+
+    fun deleteAllPlaylists() = playlistRepository.deleteAllPlaylists()
 }
