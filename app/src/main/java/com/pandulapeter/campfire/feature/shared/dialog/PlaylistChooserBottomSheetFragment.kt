@@ -69,7 +69,7 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
             setContentView(binding.root)
             viewModel.shouldDismissDialog.onEventTriggered(this@PlaylistChooserBottomSheetFragment) { dismiss() }
             viewModel.shouldShowNewPlaylistDialog.onEventTriggered(this@PlaylistChooserBottomSheetFragment) { NewPlaylistDialogFragment.show(childFragmentManager) }
-            viewModel.playlists.onPropertyChanged(this@PlaylistChooserBottomSheetFragment) { refreshPlaylistCheckboxes(it) }
+            viewModel.shouldUpdatePlaylists.onEventTriggered(this@PlaylistChooserBottomSheetFragment) { refreshPlaylistCheckboxes() }
             behavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
 
                 @SuppressLint("ResourceAsColor")
@@ -132,10 +132,10 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
         outState.songId = viewModel.songId
     }
 
-    private fun refreshPlaylistCheckboxes(playlists: List<Playlist>) {
+    private fun refreshPlaylistCheckboxes() {
         context?.let { context ->
             binding.container?.playlistContainer?.removeAllViews()
-            playlists.forEach { playlist ->
+            playlistRepository.cache.forEach { playlist ->
                 binding.container?.playlistContainer?.addView(AppCompatCheckBox(context).apply {
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(contentPadding, contentPadding, contentPadding, contentPadding)
@@ -150,7 +150,7 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
                     }
                 }, ViewGroup.LayoutParams.MATCH_PARENT, checkBoxHeight)
             }
-            binding.container?.newPlaylist?.visibility = if (playlists.size < Playlist.MAXIMUM_PLAYLIST_COUNT) View.VISIBLE else View.GONE
+            binding.container?.newPlaylist?.visibility = if (playlistRepository.cache.size < Playlist.MAXIMUM_PLAYLIST_COUNT) View.VISIBLE else View.GONE
             checkIfToolbarTransformationIsNeeded()
         }
     }

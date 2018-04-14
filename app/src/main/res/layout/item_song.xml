@@ -101,7 +101,7 @@
                         android:clipChildren="false"
                         android:clipToPadding="false"
                         android:foreground="@null"
-                        android:indeterminateTint="@color/white"
+                        android:indeterminateTint="?android:attr/textColorSecondary"
                         android:padding="@dimen/content_padding" />
 
                     <ImageView

@@ -33,7 +33,7 @@ class PlaylistChooserBottomSheetViewModel(
     val appBarElevation = ObservableFloat()
     val containerAlpha = ObservableFloat()
     val containerPadding = ObservableInt(initialToolbarContainerPadding)
-    val playlists = ObservableField(listOf<Playlist>())
+    val shouldUpdatePlaylists = ObservableBoolean()
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) = songInfo.set(data.first { it.id == songId })
 
@@ -41,9 +41,9 @@ class PlaylistChooserBottomSheetViewModel(
 
     override fun onSongRepositoryUpdateError() = Unit
 
-    override fun onPlaylistsUpdated(playlists: List<Playlist>) = this.playlists.set(playlists)
+    override fun onPlaylistsUpdated(playlists: List<Playlist>) = shouldUpdatePlaylists.set(true)
 
-    override fun onPlaylistOrderChanged(playlists: List<Playlist>) = this.playlists.set(playlists)
+    override fun onPlaylistOrderChanged(playlists: List<Playlist>) = shouldUpdatePlaylists.set(true)
 
     override fun onSongAddedToPlaylistForTheFirstTime(songId: String) = Unit
 
