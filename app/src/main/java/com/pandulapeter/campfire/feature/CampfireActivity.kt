@@ -18,16 +18,16 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
 import android.transition.Explode
 import android.transition.Transition
-import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.databinding.ActivityCampfireBinding
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
@@ -41,7 +41,7 @@ import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
-class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelectedListener {
+class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelectedListener, PlaylistRepository.Subscriber {
 
     companion object {
         private const val DIALOG_ID_EXIT_CONFIRMATION = 1
@@ -58,9 +58,11 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private val drawableBackToMenu by lazy { animatedDrawable(R.drawable.avd_back_to_menu_24dp) }
     private val appShortcutManager by inject<AppShortcutManager>()
     private val preferenceDatabase by inject<PreferenceDatabase>()
+    private val playlistRepository by inject<PlaylistRepository>()
     private var currentScreenId = R.id.library
     private var forceExpandAppBar = true
     private val colorWhite by lazy { color(R.color.white) }
+    private val playlistsContainerItem by lazy { binding.primaryNavigation.menu.findItem(R.id.playlists).subMenu }
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
     val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
@@ -196,9 +198,15 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     override fun onResume() {
         super.onResume()
+        playlistRepository.subscribe(this)
         if (currentFocus is EditText) {
             binding.drawerLayout.run { post { closeDrawers() } }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        playlistRepository.unsubscribe(this)
     }
 
     override fun onBackPressed() {
@@ -256,13 +264,9 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    private fun removeViewFromAppBar() {
-        binding.appBarLayout.run {
-            if (childCount > 1) {
-                getChildAt(1).run { postDelayed({ removeView(this) }, 150) }
-            }
-        }
-    }
+    override fun onPlaylistsUpdated(playlists: List<Playlist>) = updatePlaylists(playlists)
+
+    override fun onPlaylistOrderChanged(playlists: List<Playlist>) = updatePlaylists(playlists)
 
     fun addViewToAppBar(view: View) {
         removeViewFromAppBar()
@@ -327,7 +331,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun enableFloatingActionButton() = binding.floatingActionButton.show()
 
-    private fun disableFloatingActionButton() = binding.autoScrollControl.run {
+    fun disableFloatingActionButton() = binding.autoScrollControl.run {
         if (animatedVisibilityEnd) {
             animatedVisibilityEnd = false
             (tag as? Animator)?.let {
@@ -388,6 +392,35 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             .addSharedElement(clickedView, clickedView.transitionName)
             .addToBackStack(null)
             .commit()
+    }
+
+    private fun updatePlaylists(playlists: List<Playlist>) {
+        playlistsContainerItem.run {
+            clear()
+            playlists
+                .sortedBy { it.order }
+                .forEachIndexed { index, playlist ->
+                    addPlaylistItem(index, playlist.title ?: getString(R.string.home_favorites))
+                }
+            if (playlists.size < Playlist.MAXIMUM_PLAYLIST_COUNT) {
+                addPlaylistItem(playlists.size, getString(R.string.home_new_playlist), true)
+            }
+            setGroupCheckable(R.id.playlist_container, true, true)
+            //TODO updateCheckedItem()
+        }
+    }
+
+    private fun SubMenu.addPlaylistItem(index: Int, title: String, shouldUseAddIcon: Boolean = false) =
+        add(R.id.playlist_container, Menu.NONE, index, title).run {
+            setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist_24dp else R.drawable.ic_playlist_24dp)
+        }
+
+    private fun removeViewFromAppBar() {
+        binding.appBarLayout.run {
+            if (childCount > 1) {
+                getChildAt(1).run { postDelayed({ removeView(this) }, 150) }
+            }
+        }
     }
 
     private inline fun <reified T : TopLevelFragment<*, *>> FragmentManager.handleReplace(crossinline newInstance: () -> T) {

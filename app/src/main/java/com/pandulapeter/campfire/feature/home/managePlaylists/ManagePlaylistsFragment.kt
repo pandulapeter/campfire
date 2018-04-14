@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.databinding.FragmentManagePlaylistsBinding
 import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
@@ -44,7 +45,6 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         defaultToolbar.updateToolbarTitle(R.string.home_manage_playlists)
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))
         mainActivity.updateFloatingActionButtonDrawable(mainActivity.drawable(R.drawable.ic_add_24dp))
-        mainActivity.enableFloatingActionButton()
         binding.recyclerView.run {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(mainActivity)
@@ -56,6 +56,11 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
                     message = R.string.manage_playlists_hint_drag,
                     action = { firstTimeUserExperienceManager.managePlaylistsDragCompleted = true }
                 )
+            }
+            if (it < Playlist.MAXIMUM_PLAYLIST_COUNT) {
+                mainActivity.enableFloatingActionButton()
+            } else {
+                mainActivity.disableFloatingActionButton()
             }
         }
         viewModel.shouldShowDeleteAllButton.onPropertyChanged {

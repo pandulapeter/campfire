@@ -16,5 +16,6 @@ data class Playlist(
         const val TABLE_NAME = "playlists"
         const val ID = "id"
         const val ORDER = "order"
+        const val MAXIMUM_PLAYLIST_COUNT = 20
     }
 }
