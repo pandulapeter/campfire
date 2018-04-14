@@ -93,7 +93,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             viewModel.buttonText.set(savedInstanceState.buttonText)
             searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
         }
-        mainActivity.addViewToAppBar(searchControlsBinding.root)
+        mainActivity.addViewToAppBar(searchControlsBinding.root, savedInstanceState != null)
         viewModel.toolbarTextInputView.textInput.requestFocus()
         searchControlsViewModel.searchInTitles.onPropertyChanged {
             binding.root.postDelayed(
