@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.home.manageDownloads.ManageDownloadsFragment
 import com.pandulapeter.campfire.feature.home.managePlaylists.ManagePlaylistsFragment
 import com.pandulapeter.campfire.feature.home.options.OptionsFragment
+import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
@@ -54,6 +55,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
     private var Bundle.currentScreenId by BundleArgumentDelegate.Int("currentScreenId")
+    private var Bundle.currentPlaylistId by BundleArgumentDelegate.String("currentPlaylistId")
     private var Bundle.isAppBarExpanded by BundleArgumentDelegate.Boolean("isAppBarExpanded")
     private var Bundle.toolbarContainerScrollFlags by BundleArgumentDelegate.Boolean("shouldAllowAppBarScrolling")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
@@ -63,6 +65,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private val appShortcutManager by inject<AppShortcutManager>()
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private val playlistRepository by inject<PlaylistRepository>()
+    private var currentPlaylistId = ""
     private var currentScreenId = R.id.library
     private var forceExpandAppBar = true
     private val colorWhite by lazy { color(R.color.white) }
@@ -151,7 +154,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                         binding.drawerLayout.closeDrawers()
                         false
                     }
-                    else -> false
+                    else -> consumeAndCloseDrawers { playlistIdMap[menuItem.itemId]?.let { openPlaylistScreen(it) } }
                 }
             }
         }
@@ -169,6 +172,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         } else {
             binding.toolbarMainButton.setImageDrawable(drawable(if (savedInstanceState.isOnDetailScreen) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp))
             currentScreenId = savedInstanceState.currentScreenId
+            currentPlaylistId = savedInstanceState.currentPlaylistId
             shouldAllowAppBarScrolling = savedInstanceState.toolbarContainerScrollFlags
             if (currentScreenId == R.id.options) {
                 forceExpandAppBar = savedInstanceState.isAppBarExpanded
@@ -260,6 +264,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         outState?.currentScreenId = currentScreenId
         outState?.isAppBarExpanded = binding.appBarLayout.height - binding.appBarLayout.bottom == 0
         outState?.toolbarContainerScrollFlags = shouldAllowAppBarScrolling
+        outState?.currentPlaylistId = playlistIdMap[currentScreenId] ?: ""
     }
 
     override fun onPositiveButtonSelected(id: Int) {
@@ -350,13 +355,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         binding.drawerLayout.openDrawer(Gravity.END)
     }
 
-    fun openLibraryScreen() {
-        supportFragmentManager.handleReplace { LibraryFragment() }
-        binding.primaryNavigation.setCheckedItem(R.id.library)
-        currentScreenId = R.id.library
-        appShortcutManager.onLibraryOpened()
-    }
-
     fun closeSecondaryNavigationDrawer() = binding.drawerLayout.closeDrawer(Gravity.END)
 
     fun enableFloatingActionButton() = binding.floatingActionButton.show()
@@ -399,6 +397,20 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         disableFloatingActionButton()
     }
 
+    fun openLibraryScreen() {
+        supportFragmentManager.handleReplace { LibraryFragment() }
+        binding.primaryNavigation.setCheckedItem(R.id.library)
+        currentScreenId = R.id.library
+        appShortcutManager.onLibraryOpened()
+    }
+
+    fun openPlaylistScreen(playlistId: String) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, PlaylistFragment.newInstance(playlistId))
+            .commit()
+        appShortcutManager.onPlaylistDeleted(playlistId)
+    }
+
     fun openDetailScreen(clickedView: View, songs: List<Song>, shouldExplode: Boolean, index: Int = 0, shouldShowManagePlaylist: Boolean = true) {
         fun createTransition(delay: Long) = Explode().apply {
             propagation = null
@@ -425,6 +437,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     private fun updatePlaylists(playlists: List<Playlist>) {
+        val isLookingForUpdatedId = currentFragment is PlaylistFragment
         playlistsContainerItem.run {
             clear()
             playlistIdMap.clear()
@@ -434,6 +447,10 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 .forEachIndexed { index, playlist ->
                     val id = View.generateViewId()
                     playlistIdMap[id] = playlist.id
+                    if (isLookingForUpdatedId && playlist.id == currentPlaylistId) {
+                        currentScreenId = id
+                        binding.primaryNavigation.run { post { setCheckedItem(id) } }
+                    }
                     addPlaylistItem(index, id, playlist.title ?: getString(R.string.home_favorites))
                 }
             if (playlists.size < Playlist.MAXIMUM_PLAYLIST_COUNT) {
