@@ -287,15 +287,24 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     override fun onPlaylistOrderChanged(playlists: List<Playlist>) = updatePlaylists(playlists)
 
-    fun addViewToAppBar(view: View) {
+    fun addViewToAppBar(view: View, immediately: Boolean = false) {
         binding.appBarLayout.run {
-            postDelayed({
-                if (childCount > 1) {
+            if (immediately) {
+                layoutTransition = null
+                while (childCount > 1) {
                     getChildAt(1).run { removeView(this) }
                 }
-                toggleTransitionMode(true)
+                post { toggleTransitionMode(true) }
                 addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            }, 150)
+            } else {
+                postDelayed({
+                    while (childCount > 1) {
+                        getChildAt(1).run { removeView(this) }
+                    }
+                    toggleTransitionMode(true)
+                    addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                }, 150)
+            }
         }
     }
 

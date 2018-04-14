@@ -20,6 +20,6 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
         mainActivity.addViewToAppBar(TabLayout(mainActivity.toolbarContext).apply {
             tabMode = TabLayout.MODE_SCROLLABLE
             setupWithViewPager(binding.viewPager)
-        })
+        }, savedInstanceState != null)
     }
 }
