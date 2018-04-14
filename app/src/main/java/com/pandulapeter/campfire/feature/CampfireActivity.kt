@@ -104,7 +104,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             }
         }
         binding.appBarLayout.addOnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) }
-        toggleTransitionMode(false)
         shouldAllowAppBarScrolling = true
 
         // Initialize the drawer layout.
@@ -173,11 +172,22 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     fun toggleTransitionMode(boolean: Boolean) {
-        binding.appBarLayout.layoutTransition.setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
         if (boolean) {
-            binding.coordinatorLayout.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+            binding.appBarLayout.layoutTransition = LayoutTransition().apply {
+                setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
+            }
+            binding.coordinatorLayout.layoutTransition = LayoutTransition().apply {
+                enableTransitionType(LayoutTransition.CHANGING)
+            }
         } else {
-            binding.coordinatorLayout.layoutTransition.disableTransitionType(LayoutTransition.CHANGING)
+            binding.appBarLayout.layoutTransition = LayoutTransition().apply {
+                disableTransitionType(LayoutTransition.CHANGE_APPEARING)
+                disableTransitionType(LayoutTransition.DISAPPEARING)
+                setStartDelay(LayoutTransition.APPEARING, 0)
+            }
+            binding.coordinatorLayout.layoutTransition = LayoutTransition().apply {
+                disableTransitionType(LayoutTransition.CHANGE_DISAPPEARING)
+            }
         }
     }
 
@@ -244,7 +254,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     private fun removeViewFromAppBar() {
-        toggleTransitionMode(false)
         binding.appBarLayout.run {
             while (childCount > 1) {
                 removeViewAt(1)
@@ -330,6 +339,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         hideKeyboard(currentFocus)
 
         // Reset the app bar.
+        toggleTransitionMode(false)
         shouldAllowAppBarScrolling = true
         binding.toolbarButtonContainer.removeAllViews()
         removeViewFromAppBar()
