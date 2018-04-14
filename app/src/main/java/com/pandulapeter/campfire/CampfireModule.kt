@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import org.koin.dsl.module.applicationContext
 
 val integrationModule = applicationContext {
-    provide { AppShortcutManager(get()) }
+    provide { AppShortcutManager(get(), get(), get()) }
     provide { DeepLinkManager() }
     provide { FirstTimeUserExperienceManager(get()) }
 }

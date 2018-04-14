@@ -3,6 +3,8 @@ package com.pandulapeter.campfire.feature
 import android.animation.Animator
 import android.animation.LayoutTransition
 import android.app.ActivityManager
+import android.content.Context
+import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
@@ -51,6 +53,17 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     companion object {
         private const val DIALOG_ID_EXIT_CONFIRMATION = 1
         private const val DIALOG_ID_PRIVACY_POLICY = 2
+        private const val SCREEN_TO_OPEN_LIBRARY = "library"
+
+        private var Intent.screenToOpen by IntentExtraDelegate.String("screenToOpen")
+
+        fun getLibraryIntent(context: Context) = Intent(context, CampfireActivity::class.java).apply {
+            screenToOpen = SCREEN_TO_OPEN_LIBRARY
+        }
+
+        fun getPlaylistIntent(context: Context, playlistId: String) = Intent(context, CampfireActivity::class.java).apply {
+            screenToOpen = playlistId
+        }
     }
 
     private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
@@ -99,9 +112,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             )
         )
         super.onCreate(savedInstanceState)
-
-        // Update the app shortcuts
-        appShortcutManager.updateAppShortcuts()
 
         // Initialize the app bar.
         val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
@@ -168,7 +178,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
         // Restore instance state if possible.
         if (savedInstanceState == null) {
-            openLibraryScreen()
+            handleNewIntent()
         } else {
             binding.toolbarMainButton.setImageDrawable(drawable(if (savedInstanceState.isOnDetailScreen) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp))
             currentScreenId = savedInstanceState.currentScreenId
@@ -194,23 +204,16 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    fun toggleTransitionMode(boolean: Boolean) {
-        if (boolean) {
-            binding.appBarLayout.layoutTransition = LayoutTransition().apply {
-                setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
-            }
-            binding.coordinatorLayout.layoutTransition = LayoutTransition().apply {
-                enableTransitionType(LayoutTransition.CHANGING)
-            }
-        } else {
-            binding.appBarLayout.layoutTransition = LayoutTransition().apply {
-                disableTransitionType(LayoutTransition.DISAPPEARING)
-                enableTransitionType(LayoutTransition.CHANGING)
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        this.intent = intent
+        handleNewIntent()
+    }
 
-            }
-            binding.coordinatorLayout.layoutTransition = LayoutTransition().apply {
-                disableTransitionType(LayoutTransition.CHANGE_DISAPPEARING)
-            }
+    fun handleNewIntent() {
+        when (intent.screenToOpen) {
+            "", SCREEN_TO_OPEN_LIBRARY -> openLibraryScreen()
+            else -> openPlaylistScreen(intent.screenToOpen)
         }
     }
 
@@ -334,7 +337,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     fun updateToolbarTitleView(toolbar: View, width: Int = 0) {
-        val oldView = binding.toolbarTitleContainer.run { if (childCount > 0) getChildAt(0) else null }
+        val oldView = binding.toolbarTitleContainer.run {
+            while (childCount > 1) {
+                removeViewAt(1)
+            }
+            if (childCount > 0) getChildAt(0) else null
+        }
         binding.toolbarTitleContainer.addView(
             toolbar.apply { visibleOrGone = oldView?.id == R.id.default_toolbar },
             FrameLayout.LayoutParams(if (width == 0) ViewGroup.LayoutParams.MATCH_PARENT else width, ViewGroup.LayoutParams.MATCH_PARENT).apply {
@@ -406,6 +414,26 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         disableFloatingActionButton()
     }
 
+    fun toggleTransitionMode(boolean: Boolean) {
+        if (boolean) {
+            binding.appBarLayout.layoutTransition = LayoutTransition().apply {
+                setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
+            }
+            binding.coordinatorLayout.layoutTransition = LayoutTransition().apply {
+                enableTransitionType(LayoutTransition.CHANGING)
+            }
+        } else {
+            binding.appBarLayout.layoutTransition = LayoutTransition().apply {
+                disableTransitionType(LayoutTransition.DISAPPEARING)
+                enableTransitionType(LayoutTransition.CHANGING)
+
+            }
+            binding.coordinatorLayout.layoutTransition = LayoutTransition().apply {
+                disableTransitionType(LayoutTransition.CHANGE_DISAPPEARING)
+            }
+        }
+    }
+
     fun openLibraryScreen() {
         supportFragmentManager.handleReplace { LibraryFragment() }
         binding.primaryNavigation.setCheckedItem(R.id.library)
@@ -414,10 +442,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     fun openPlaylistScreen(playlistId: String) {
+        beforeScreenChanged()
+        currentPlaylistId = playlistId
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, PlaylistFragment.newInstance(playlistId))
             .commit()
-        appShortcutManager.onPlaylistDeleted(playlistId)
+        appShortcutManager.onPlaylistOpened(playlistId)
     }
 
     fun openDetailScreen(clickedView: View, songs: List<Song>, shouldExplode: Boolean, index: Int = 0, shouldShowManagePlaylist: Boolean = true) {
@@ -467,6 +497,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 addPlaylistItem(playlists.size, newPlaylistId, getString(R.string.home_new_playlist), true)
             }
             setGroupCheckable(R.id.playlist_container, true, true)
+            appShortcutManager.updateAppShortcuts()
         }
     }
 

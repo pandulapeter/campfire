@@ -30,6 +30,7 @@ class PreferenceDatabase(context: Context) {
     var shouldShowExitConfirmation by PreferenceFieldDelegate.Boolean("shouldShowExitConfirmation", true)
     var shouldShowPrivacyPolicy by PreferenceFieldDelegate.Boolean("shouldShowPrivacyPolicy", true)
     var shouldShareUsageData by PreferenceFieldDelegate.Boolean("shouldShareUsageData", false)
+    var playlistHistory by PreferenceFieldDelegate.StringSet("playlistHistory", setOf())
 
     // First time user experience
     var ftuxHistoryCompleted by PreferenceFieldDelegate.Boolean("ftuxHistoryCompleted", false)

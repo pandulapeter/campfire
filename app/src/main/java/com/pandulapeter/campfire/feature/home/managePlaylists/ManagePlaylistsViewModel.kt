@@ -7,12 +7,14 @@ import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import org.koin.android.ext.android.inject
 import java.util.*
 
 class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscriber {
 
     private val playlistRepository by inject<PlaylistRepository>()
+    private val appShortcutManager by inject<AppShortcutManager>()
     private var playlistToDeleteId: String? = null
         set(value) {
             field = value
@@ -51,6 +53,7 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
     fun deletePlaylistPermanently() {
         playlistToDeleteId?.let {
             playlistRepository.deletePlaylist(it)
+            appShortcutManager.onPlaylistDeleted(it)
             playlistToDeleteId = null
         }
     }
