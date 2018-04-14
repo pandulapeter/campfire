@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.home.managePlaylists
 
+import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
@@ -9,6 +10,7 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
 
     private val playlistRepository by inject<PlaylistRepository>()
     val adapter = ManagePlaylistsListAdapter()
+    val shouldShowDeleteAllButton = ObservableBoolean()
 
     override fun subscribe() {
         playlistRepository.subscribe(this)
@@ -20,5 +22,6 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
 
     override fun onPlaylistsUpdated(playlists: List<Playlist>) {
         adapter.items = playlists.map { PlaylistViewModel(it) }
+        shouldShowDeleteAllButton.set(playlists.size > 1)
     }
 }
