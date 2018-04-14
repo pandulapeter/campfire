@@ -30,7 +30,7 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         mainActivity.beforeScreenChanged()
-        mainActivity.updateToolbarTitle(inflateToolbarTitle(mainActivity.toolbarContext))
+        mainActivity.updateToolbarTitleView(inflateToolbarTitle(mainActivity.toolbarContext))
     }
 
     open fun onDrawerStateChanged(state: Int) = Unit

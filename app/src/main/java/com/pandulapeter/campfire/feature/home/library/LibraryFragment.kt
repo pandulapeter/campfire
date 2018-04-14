@@ -21,6 +21,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
 
     companion object {
         private const val COMPOUND_BUTTON_TRANSITION_DELAY = 10L
+        private const val COMPOUND_BUTTON_LONG_TRANSITION_DELAY = 300L
     }
 
     override val viewModel: LibraryViewModel by lazy {
@@ -93,8 +94,8 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
         }
         mainActivity.addViewToAppBar(searchControlsBinding.root)
-        searchControlsViewModel.searchInTitles.onPropertyChanged { viewModel.shouldSearchInTitles = it }
-        searchControlsViewModel.searchInArtists.onPropertyChanged { viewModel.shouldSearchInArtists = it }
+        searchControlsViewModel.searchInTitles.onPropertyChanged { binding.root.postDelayed({ viewModel.shouldSearchInTitles = it }, COMPOUND_BUTTON_LONG_TRANSITION_DELAY) }
+        searchControlsViewModel.searchInArtists.onPropertyChanged { binding.root.postDelayed({ viewModel.shouldSearchInArtists = it }, COMPOUND_BUTTON_LONG_TRANSITION_DELAY) }
     }
 
     override fun onResume() {

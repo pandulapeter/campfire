@@ -255,8 +255,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     private fun removeViewFromAppBar() {
         binding.appBarLayout.run {
-            while (childCount > 1) {
-                removeViewAt(1)
+            if (childCount > 1) {
+                getChildAt(1).run { postDelayed({ removeView(this) }, 100) }
             }
         }
     }
@@ -281,11 +281,16 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         binding.drawerLayout.setDrawerLockMode(if (shouldShowBackButton) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
     }
 
-    fun updateToolbarTitle(toolbar: View) {
-        binding.toolbarTitleContainer.removeAllViews()
-        binding.toolbarTitleContainer.addView(toolbar, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).apply {
-            gravity = Gravity.CENTER_VERTICAL
-        })
+    fun updateToolbarTitleView(toolbar: View) {
+        val oldView = binding.toolbarTitleContainer.run { if (childCount > 0) getChildAt(0) else null }
+        binding.toolbarTitleContainer.addView(
+            toolbar.apply { visibleOrGone = false },
+            FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).apply { gravity = Gravity.CENTER_VERTICAL })
+        oldView?.run {
+            visibleOrGone = false
+            postOnAnimation { binding.toolbarTitleContainer.removeView(this) }
+        }
+        toolbar.run { postOnAnimation { visibleOrGone = true } }
     }
 
     fun updateToolbarButtons(buttons: List<View>) = binding.toolbarButtonContainer.run {
