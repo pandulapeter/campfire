@@ -18,6 +18,8 @@
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/content_padding"
+        android:layout_marginTop="@dimen/content_padding"
         android:foreground="?attr/selectableItemBackground"
         android:transitionGroup="true"
         android:transitionName="@{viewModel.song.id}"

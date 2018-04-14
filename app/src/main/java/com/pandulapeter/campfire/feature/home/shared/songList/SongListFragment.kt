@@ -10,8 +10,10 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentSongListBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
-import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.onEventTriggered
+import com.pandulapeter.campfire.util.onPropertyChanged
 
 abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, VM>(R.layout.fragment_song_list) {
 
@@ -53,7 +55,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         }
         binding.recyclerView.run {
             setHasFixedSize(true)
-            addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
+//            addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
                     if (dy > 0 && recyclerView?.isAnimating == false) {
