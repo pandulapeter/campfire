@@ -48,6 +48,15 @@ class PlaylistRepository(private val songDatabase: SongDatabase) : Repository<Pl
         async(UI) { async(CommonPool) { songDatabase.playlistDao().insert(playlist) }.await() }
     }
 
+    fun updatePlaylistOrder(playlistId: String, order: Int) {
+        val playlist = data.find { it.id == playlistId }
+        playlist?.let {
+            it.order = order
+            subscribers.forEach { it.onPlaylistOrderChanged(data) }
+            async(UI) { async(CommonPool) { songDatabase.playlistDao().insert(it) }.await() }
+        }
+    }
+
     private fun refreshDataSet() {
         async(UI) {
             async(CommonPool) {
@@ -62,7 +71,7 @@ class PlaylistRepository(private val songDatabase: SongDatabase) : Repository<Pl
                     async(CommonPool) { songDatabase.playlistDao().insert(favorites) }.await()
                     finalNewData.add(favorites)
                 }
-                data.swap(finalNewData.sortedBy { it.order })
+                data.swap(finalNewData)
                 isCacheLoaded = true
                 notifyDataChanged()
             }
@@ -74,5 +83,7 @@ class PlaylistRepository(private val songDatabase: SongDatabase) : Repository<Pl
     interface Subscriber {
 
         fun onPlaylistsUpdated(playlists: List<Playlist>)
+
+        fun onPlaylistOrderChanged(playlists: List<Playlist>)
     }
 }

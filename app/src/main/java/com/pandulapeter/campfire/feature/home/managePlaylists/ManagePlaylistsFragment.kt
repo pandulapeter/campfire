@@ -81,11 +81,9 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
                     viewHolder?.adapterPosition?.let { originalPosition ->
                         target?.adapterPosition?.let { targetPosition ->
                             if (originalPosition > 0 && targetPosition > 0) {
-                                if (!firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
-                                    firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
-                                    hideSnackbar()
-                                }
-                                //TODO: viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
+                                hideSnackbar()
+                                firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
+                                viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
                             }
                         }
                     }

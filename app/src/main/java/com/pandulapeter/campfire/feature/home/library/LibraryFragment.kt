@@ -94,8 +94,11 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
         }
         binding.root.postDelayed({
-            mainActivity.addViewToAppBar(searchControlsBinding.root)
-            viewModel.toolbarTextInputView.textInput.requestFocus()
+            try {
+                mainActivity.addViewToAppBar(searchControlsBinding.root)
+                viewModel.toolbarTextInputView.textInput.requestFocus()
+            } catch (_: IllegalStateException) {
+            }
         }, 100)
         searchControlsViewModel.searchInTitles.onPropertyChanged {
             binding.root.postDelayed(
