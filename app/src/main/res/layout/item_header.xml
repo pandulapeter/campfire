@@ -2,17 +2,22 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!--suppress AndroidUnknownAttribute -->
-    <data class=".HeaderItemBinding" />
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel.HeaderViewModel" />
+
+    </data>
 
     <TextView
         android:id="@+id/title"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/header_height"
-        android:background="?android:attr/windowBackground"
-        android:gravity="center_vertical"
-        android:paddingEnd="@dimen/first_keyline"
-        android:paddingStart="@dimen/first_keyline"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/content_padding"
+        android:paddingEnd="@dimen/content_padding"
+        android:paddingStart="@dimen/content_padding"
+        android:text="@{viewModel.title}"
         android:textColor="@color/accent"
         tools:text="A" />
 

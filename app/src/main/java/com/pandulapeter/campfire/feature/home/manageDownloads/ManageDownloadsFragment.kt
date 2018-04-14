@@ -6,7 +6,8 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
-import com.pandulapeter.campfire.feature.home.shared.SongListFragment
+import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
+import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.dimension
@@ -54,11 +55,20 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
 
             override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = false
 
+            override fun getSwipeDirs(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?): Int {
+                viewHolder?.adapterPosition?.let { position ->
+                    if (position != RecyclerView.NO_POSITION && viewModel.adapter.items[position] is SongListItemViewModel.SongViewModel) {
+                        return ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                    }
+                }
+                return 0
+            }
+
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
                 viewHolder?.adapterPosition?.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
                         firstTimeUserExperienceManager.manageDownloadsCompleted = true
-                        val song = viewModel.adapter.items[position].song
+                        val song = (viewModel.adapter.items[position] as SongListItemViewModel.SongViewModel).song
                         showSnackbar(
                             message = getString(R.string.manage_downloads_song_deleted_message, song.title),
                             actionText = R.string.undo,

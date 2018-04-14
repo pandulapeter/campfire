@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.shared
+package com.pandulapeter.campfire.feature.home.shared.songList
 
 import android.os.Bundle
 import android.support.annotation.CallSuper
@@ -23,10 +23,12 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         super.onViewCreated(view, savedInstanceState)
         viewModel.adapter.run {
             itemClickListener = { position, clickedView ->
-                viewModel.isDetailScreenOpen = true
-                mainActivity.openDetailScreen(clickedView, listOf(items[position].song), items.size > 1)
+                (items[position] as? SongListItemViewModel.SongViewModel)?.let {
+                    viewModel.isDetailScreenOpen = true
+                    mainActivity.openDetailScreen(clickedView, listOf(it.song), items.size > 1)
+                }
             }
-            downloadActionClickListener = { position -> viewModel.adapter.items[position].let { viewModel.downloadSong(it.song) } }
+            downloadActionClickListener = { position -> (viewModel.adapter.items[position] as? SongListItemViewModel.SongViewModel)?.let { viewModel.downloadSong(it.song) } }
         }
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered {
             showSnackbar(
@@ -45,7 +47,6 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 binding.swipeRefreshLayout.isRefreshing = it
             }
         }
-        viewModel.shouldInvalidateItemDecorations.onEventTriggered { binding.recyclerView.invalidateItemDecorations() }
         binding.swipeRefreshLayout.run {
             setOnRefreshListener { viewModel.updateData() }
             setColorSchemeColors(context.color(R.color.accent))

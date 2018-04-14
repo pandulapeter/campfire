@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.shared
+package com.pandulapeter.campfire.feature.home.shared.songList
 
 import android.content.Context
 import android.databinding.ObservableBoolean
@@ -35,7 +35,6 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     val placeholderText = ObservableInt(R.string.library_initializing_error)
     val buttonText = ObservableInt(R.string.try_again)
     var isDetailScreenOpen = false
-    val shouldInvalidateItemDecorations = ObservableBoolean()
 
     @CallSuper
     override fun subscribe() {
@@ -78,18 +77,24 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     }
 
     override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) {
-        adapter.items.indexOfLast { it.song.id == songDetail.id }.let { index ->
+        adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songDetail.id }.let { index ->
             if (index != RecyclerView.NO_POSITION) {
-                adapter.notifyItemChanged(index, SongAdapter.Payload.DownloadStateChanged(SongViewModel.DownloadState.Downloaded.UpToDate))
+                adapter.notifyItemChanged(
+                    index,
+                    SongAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloaded.UpToDate)
+                )
             }
         }
     }
 
     override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) {
         songIds.forEach { songId ->
-            adapter.items.indexOfLast { it.song.id == songId }.let { index ->
+            adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
                 if (index != RecyclerView.NO_POSITION) {
-                    adapter.notifyItemChanged(index, SongAdapter.Payload.DownloadStateChanged(SongViewModel.DownloadState.Downloading))
+                    adapter.notifyItemChanged(
+                        index,
+                        SongAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloading)
+                    )
                 }
             }
         }
@@ -97,15 +102,15 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
 
     override fun onSongDetailRepositoryDownloadError(song: Song) {
         downloadSongError.set(song)
-        adapter.items.indexOfLast { it.song.id == song.id }.let { index ->
+        adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == song.id }.let { index ->
             if (index != RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
                     SongAdapter.Payload.DownloadStateChanged(
                         when {
-                            songDetailRepository.isSongDownloaded(song.id) -> SongViewModel.DownloadState.Downloaded.Deprecated
-                            song.isNew -> SongViewModel.DownloadState.NotDownloaded.New
-                            else -> SongViewModel.DownloadState.NotDownloaded.Old
+                            songDetailRepository.isSongDownloaded(song.id) -> SongListItemViewModel.SongViewModel.DownloadState.Downloaded.Deprecated
+                            song.isNew -> SongListItemViewModel.SongViewModel.DownloadState.NotDownloaded.New
+                            else -> SongListItemViewModel.SongViewModel.DownloadState.NotDownloaded.Old
                         }
                     )
                 )
@@ -121,13 +126,10 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
 
     protected open fun canUpdateUI() = true
 
-    protected abstract fun Sequence<Song>.createViewModels(): List<SongViewModel>
+    protected abstract fun Sequence<Song>.createViewModels(): List<SongListItemViewModel>
 
     @CallSuper
-    protected open fun onListUpdated(items: List<SongViewModel>) {
-        state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
-        shouldInvalidateItemDecorations.set(true)
-    }
+    protected open fun onListUpdated(items: List<SongListItemViewModel>) = state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
 
     protected fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
         if (canUpdateUI() && songRepository.isCacheLoaded() && songDetailRepository.isCacheLoaded()) {

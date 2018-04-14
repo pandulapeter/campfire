@@ -5,8 +5,8 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.feature.home.shared.SongListViewModel
-import com.pandulapeter.campfire.feature.home.shared.SongViewModel
+import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
+import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.onTextChanged
@@ -107,7 +107,7 @@ class LibraryViewModel(
         }
     }
 
-    override fun onListUpdated(items: List<SongViewModel>) {
+    override fun onListUpdated(items: List<SongListItemViewModel>) {
         super.onListUpdated(items)
         if (librarySongs.toList().isNotEmpty()) {
             placeholderText.set(R.string.library_placeholder_filters)
@@ -123,8 +123,34 @@ class LibraryViewModel(
         .filterWorkInProgress()
         .filterExplicit()
         .sort()
-        .map { SongViewModel(context, songDetailRepository, it) }
-        .toList()
+        .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, it) }
+        .toMutableList<SongListItemViewModel>()
+        .apply {
+            val headerIndices = mutableListOf<Int>()
+            val songsOnly = filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song }
+            songsOnly.forEachIndexed { index, song ->
+                if (when (sortingMode) {
+                        SortingMode.TITLE -> index == 0 || song.getNormalizedTitle()[0] != songsOnly[index - 1].getNormalizedTitle()[0]
+                        SortingMode.ARTIST -> index == 0 || song.getNormalizedArtist()[0] != songsOnly[index - 1].getNormalizedArtist()[0]
+                        SortingMode.POPULARITY -> songsOnly[0].isNew && (index == 0 || songsOnly[index].isNew != songsOnly[index - 1].isNew)
+                    }
+                ) {
+                    headerIndices.add(index)
+                }
+            }
+            (headerIndices.size - 1 downTo 0).forEach { position ->
+                val index = headerIndices[position]
+                add(
+                    index, SongListItemViewModel.HeaderViewModel(
+                        when (sortingMode) {
+                            SortingMode.TITLE -> songsOnly[index].getNormalizedTitle()[0].toString().toUpperCase()
+                            SortingMode.ARTIST -> songsOnly[index].getNormalizedArtist()[0].toString().toUpperCase()
+                            SortingMode.POPULARITY -> if (!songsOnly[0].isNew) "" else if (songsOnly[index].isNew) newString else popularString
+                        }
+                    )
+                )
+            }
+        }
 
     fun toggleTextInputVisibility() {
         toolbarTextInputView.run {
@@ -140,18 +166,6 @@ class LibraryViewModel(
                 }
             }
         }
-    }
-
-    fun isHeader(position: Int) = when (sortingMode) {
-        SortingMode.TITLE -> position == 0 || adapter.items[position].song.getNormalizedTitle()[0] != adapter.items[position - 1].song.getNormalizedTitle()[0]
-        SortingMode.ARTIST -> position == 0 || adapter.items[position].song.getNormalizedArtist()[0] != adapter.items[position - 1].song.getNormalizedArtist()[0]
-        SortingMode.POPULARITY -> adapter.items[0].song.isNew && (position == 0 || adapter.items[position].song.isNew != adapter.items[position - 1].song.isNew)
-    }
-
-    fun getHeaderTitle(position: Int) = when (sortingMode) {
-        SortingMode.TITLE -> adapter.items[position].song.getNormalizedTitle()[0].toString().toUpperCase()
-        SortingMode.ARTIST -> adapter.items[position].song.getNormalizedArtist()[0].toString().toUpperCase()
-        SortingMode.POPULARITY -> if (!adapter.items[0].song.isNew) "" else if (adapter.items[position].song.isNew) newString else popularString
     }
 
     //TODO: Prioritize results that begin with the searchQuery.

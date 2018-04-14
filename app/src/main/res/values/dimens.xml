@@ -34,9 +34,6 @@
     <!-- Home screen -->
     <dimen name="view_options_width">216dp</dimen>
 
-    <!-- Library screen -->
-    <dimen name="header_height">36dp</dimen>
-
     <!-- Options screen / Preferences -->
     <dimen name="options_preferences_label_margin">2dp</dimen>
     <dimen name="options_preferences_checkbox_margin">-4dp</dimen>
