@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.home.managePlaylists
 
 import android.databinding.ObservableBoolean
+import android.databinding.ObservableInt
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
@@ -9,17 +10,14 @@ import org.koin.android.ext.android.inject
 class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscriber {
 
     private val playlistRepository by inject<PlaylistRepository>()
-    val adapter = ManagePlaylistsListAdapter()
     private var playlistToDeleteId: String? = null
+    val adapter = ManagePlaylistsListAdapter()
     val shouldShowDeleteAllButton = ObservableBoolean()
+    val playlistCount = ObservableInt()
 
-    override fun subscribe() {
-        playlistRepository.subscribe(this)
-    }
+    override fun subscribe() = playlistRepository.subscribe(this)
 
-    override fun unsubscribe() {
-        playlistRepository.unsubscribe(this)
-    }
+    override fun unsubscribe() = playlistRepository.unsubscribe(this)
 
     override fun onPlaylistsUpdated(playlists: List<Playlist>) = updateAdapterItems(playlists)
 
@@ -43,7 +41,10 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
     }
 
     private fun updateAdapterItems(playlists: List<Playlist>) {
-        adapter.items = playlists.filter { it.id != playlistToDeleteId }.map { PlaylistViewModel(it) }
-        shouldShowDeleteAllButton.set(playlists.size > 1)
+        playlists.filter { it.id != playlistToDeleteId }.map { PlaylistViewModel(it) }.run {
+            adapter.items = this
+            shouldShowDeleteAllButton.set(size > 1)
+            playlistCount.set(size)
+        }
     }
 }

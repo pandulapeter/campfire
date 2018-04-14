@@ -49,6 +49,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(mainActivity)
         }
+        viewModel.playlistCount.onPropertyChanged { updateToolbarTitle(it) }
         viewModel.shouldShowDeleteAllButton.onPropertyChanged {
             deleteAllButton.visibleOrGone = it
             if (it && !firstTimeUserExperienceManager.managePlaylistsSwipeCompleted && firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
@@ -107,4 +108,9 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             showSnackbar(R.string.manage_playlists_all_playlists_deleted)
         }
     }
+
+    private fun updateToolbarTitle(playlistCount: Int) = defaultToolbar.updateToolbarTitle(
+        R.string.home_manage_playlists,
+        mainActivity.resources.getQuantityString(R.plurals.manage_playlists_subtitle, playlistCount, playlistCount)
+    )
 }
