@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.home.shared.songList
 import android.content.Context
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Song
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 
 sealed class SongListItemViewModel {
@@ -12,8 +13,8 @@ sealed class SongListItemViewModel {
     data class SongViewModel(
         private val context: Context,
         private val songDetailRepository: SongDetailRepository,
+        private val playlistRepository: PlaylistRepository,
         val song: Song,
-        var isOnAnyPlaylists: Boolean = false,
         var shouldShowDragHandle: Boolean = false,
         val shouldShowPlaylistButton: Boolean = true,
         var downloadState: DownloadState = when {
@@ -23,6 +24,7 @@ sealed class SongListItemViewModel {
         }
     ) : SongListItemViewModel() {
 
+        var isOnAnyPlaylists = playlistRepository.isSongInAnyPlaylist(song.id)
         val alertText
             get() = when (downloadState) {
                 DownloadState.Downloaded.Deprecated -> context.getString(R.string.new_version_available)

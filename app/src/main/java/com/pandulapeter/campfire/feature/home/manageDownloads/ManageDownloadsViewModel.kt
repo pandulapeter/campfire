@@ -23,7 +23,7 @@ class ManageDownloadsViewModel(context: Context, private val openLibrary: () -> 
 
     override fun Sequence<Song>.createViewModels() = filter { songDetailRepository.isSongDownloaded(it.id) }
         .filter { it.id != songToDeleteId }
-        .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, it) }
+        .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
         .toList()
 
     override fun onListUpdated(items: List<SongListItemViewModel>) {

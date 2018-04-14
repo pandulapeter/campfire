@@ -286,6 +286,10 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     override fun onPlaylistOrderChanged(playlists: List<Playlist>) = updatePlaylists(playlists)
 
+    override fun onSongAddedToPlaylistForTheFirstTime(songId: String) = Unit
+
+    override fun onSongRemovedFromAllPlaylists(songId: String) = Unit
+
     fun addViewToAppBar(view: View, immediately: Boolean) {
         binding.appBarLayout.run {
             if (immediately || System.currentTimeMillis() - startTime < 300) {

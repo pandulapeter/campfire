@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.old.feature.shared.dialog
+package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
@@ -6,20 +6,12 @@ import android.databinding.ObservableFloat
 import android.databinding.ObservableInt
 import android.graphics.Color
 import android.support.annotation.ColorInt
-import com.pandulapeter.campfire.old.data.model.Playlist
-import com.pandulapeter.campfire.old.data.model.SongInfo
-import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.old.data.repository.SongInfoRepository
-import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
-import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
+import com.pandulapeter.campfire.data.model.local.Playlist
+import com.pandulapeter.campfire.data.model.remote.Song
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.SongRepository
 
-
-/**
- * ViewModel for [PlaylistChooserBottomSheetFragment].
- */
 class PlaylistChooserBottomSheetViewModel(
-    private val songInfoRepository: SongInfoRepository,
-    private val playlistRepository: PlaylistRepository,
     val songId: String,
     @ColorInt private val titleCollapsedColor: Int,
     @ColorInt private val titleExpandedColor: Int,
@@ -28,8 +20,9 @@ class PlaylistChooserBottomSheetViewModel(
     private val initialToolbarContainerPadding: Int,
     private val finalToolbarElevation: Int,
     private val finalToolbarMargin: Int
-) : Subscriber {
-    val songInfo = ObservableField<SongInfo>()
+) : SongRepository.Subscriber, PlaylistRepository.Subscriber {
+
+    val songInfo = ObservableField<Song>()
     val shouldDismissDialog = ObservableBoolean()
     val shouldShowNewPlaylistDialog = ObservableBoolean()
     val closeAlpha = ObservableFloat()
@@ -42,15 +35,19 @@ class PlaylistChooserBottomSheetViewModel(
     val containerPadding = ObservableInt(initialToolbarContainerPadding)
     val playlists = ObservableField(listOf<Playlist>())
 
-    override fun onUpdate(updateType: UpdateType) {
-        when (updateType) {
-            is UpdateType.LibraryCacheUpdated -> songInfo.set(songInfoRepository.getLibrarySongs().first { it.id == songId })
-            is UpdateType.PlaylistsUpdated,
-            is UpdateType.NewPlaylistsCreated,
-            is UpdateType.PlaylistRenamed,
-            is UpdateType.PlaylistDeleted -> playlists.set(playlistRepository.getPlaylists())
-        }
-    }
+    override fun onSongRepositoryDataUpdated(data: List<Song>) = songInfo.set(data.first { it.id == songId })
+
+    override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) = Unit
+
+    override fun onSongRepositoryUpdateError() = Unit
+
+    override fun onPlaylistsUpdated(playlists: List<Playlist>) = this.playlists.set(playlists)
+
+    override fun onPlaylistOrderChanged(playlists: List<Playlist>) = this.playlists.set(playlists)
+
+    override fun onSongAddedToPlaylistForTheFirstTime(songId: String) = Unit
+
+    override fun onSongRemovedFromAllPlaylists(songId: String) = Unit
 
     fun updateSlideState(slideOffset: Float, scrollViewOffset: Int) = Math.max(0f, 2 * slideOffset - 1).let { closenessToTop ->
         closeAlpha.set(closenessToTop)

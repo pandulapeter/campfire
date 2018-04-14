@@ -32,6 +32,7 @@ class PlaylistViewModel(
             SongListItemViewModel.SongViewModel(
                 context = context,
                 songDetailRepository = songDetailRepository,
+                playlistRepository = playlistRepository,
                 song = it,
                 shouldShowPlaylistButton = false
             )

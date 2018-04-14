@@ -122,7 +122,7 @@ class LibraryViewModel(
         .filterWorkInProgress()
         .filterExplicit()
         .sort()
-        .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, it) }
+        .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
         .toMutableList<SongListItemViewModel>()
         .apply {
             val headerIndices = mutableListOf<Int>()

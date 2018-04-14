@@ -9,7 +9,7 @@ data class Playlist(
     @PrimaryKey() @ColumnInfo(name = ID) var id: String = FAVORITES_ID,
     @ColumnInfo(name = "title") var title: String? = null,
     @ColumnInfo(name = ORDER) var order: Int = 0,
-    @ColumnInfo(name = "songIds") var songIds: List<String> = listOf()
+    @ColumnInfo(name = "songIds") var songIds: MutableList<String> = mutableListOf()
 ) {
     companion object {
         const val FAVORITES_ID = "favorites"

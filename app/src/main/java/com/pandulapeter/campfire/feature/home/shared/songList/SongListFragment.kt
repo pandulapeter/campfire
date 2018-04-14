@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentSongListBinding
 import com.pandulapeter.campfire.feature.home.shared.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.hideKeyboard
@@ -33,7 +34,12 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                     mainActivity.openDetailScreen(clickedView, listOf(it.song), items.size > 1)
                 }
             }
-            downloadActionClickListener = { position -> (viewModel.adapter.items[position] as? SongListItemViewModel.SongViewModel)?.let { viewModel.downloadSong(it.song) } }
+            downloadActionClickListener = { position -> (items[position] as? SongListItemViewModel.SongViewModel)?.let { viewModel.downloadSong(it.song) } }
+            playlistActionClickListener = { position ->
+                (items[position] as? SongListItemViewModel.SongViewModel)?.let {
+                    PlaylistChooserBottomSheetFragment.show(childFragmentManager, it.song.id)
+                }
+            }
         }
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered {
             showSnackbar(

@@ -45,6 +45,10 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
 
     override fun onPlaylistOrderChanged(playlists: List<Playlist>) = Unit
 
+    override fun onSongAddedToPlaylistForTheFirstTime(songId: String) = Unit
+
+    override fun onSongRemovedFromAllPlaylists(songId: String) = Unit
+
     fun deleteAllPlaylists() = playlistRepository.deleteAllPlaylists()
 
     fun deletePlaylistTemporarily(playlistId: String) {

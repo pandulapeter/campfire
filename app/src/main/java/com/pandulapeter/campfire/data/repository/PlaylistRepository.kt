@@ -30,6 +30,55 @@ class PlaylistRepository(private val songDatabase: SongDatabase) : Repository<Pl
 
     fun isCacheLoaded() = isCacheLoaded
 
+    fun isSongInAnyPlaylist(songId: String): Boolean {
+        data.forEach {
+            if (isSongInPlaylist(it.id, songId)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun isSongInPlaylist(playlistId: String, songId: String) = data.find { it.id == playlistId }?.songIds?.contains(songId) ?: false
+
+    fun addSongToPlaylist(playlistId: String, songId: String) {
+        async(UI) {
+            var shouldNotify = false
+            async(CommonPool) {
+                shouldNotify = !isSongInAnyPlaylist(songId)
+                val playlist = data.find { it.id == playlistId }
+                if (playlist?.songIds?.contains(songId) == false) {
+                    playlist.songIds.add(songId)
+                }
+                playlist
+            }.await()?.let { playlist ->
+                if (shouldNotify) {
+                    subscribers.forEach { it.onSongAddedToPlaylistForTheFirstTime(songId) }
+                }
+                async(CommonPool) { songDatabase.playlistDao().insert(playlist) }.await()
+            }
+        }
+    }
+
+    fun removeSongFromPlaylist(playlistId: String, songId: String) {
+        async(UI) {
+            var shouldNotify = false
+            async(CommonPool) {
+                val playlist = data.find { it.id == playlistId }
+                if (playlist?.songIds?.contains(songId) == true) {
+                    playlist.songIds.remove(songId)
+                }
+                shouldNotify = !isSongInAnyPlaylist(songId)
+                playlist
+            }.await()?.let { playlist ->
+                if (shouldNotify) {
+                    subscribers.forEach { it.onSongRemovedFromAllPlaylists(songId) }
+                }
+                async(CommonPool) { songDatabase.playlistDao().insert(playlist) }.await()
+            }
+        }
+    }
+
     fun deleteAllPlaylists() {
         data.swap(data.filter { it.id == Playlist.FAVORITES_ID })
         async(UI) { async(CommonPool) { songDatabase.playlistDao().deleteAll() }.await() }
@@ -90,5 +139,9 @@ class PlaylistRepository(private val songDatabase: SongDatabase) : Repository<Pl
         fun onPlaylistsUpdated(playlists: List<Playlist>)
 
         fun onPlaylistOrderChanged(playlists: List<Playlist>)
+
+        fun onSongAddedToPlaylistForTheFirstTime(songId: String)
+
+        fun onSongRemovedFromAllPlaylists(songId: String)
     }
 }

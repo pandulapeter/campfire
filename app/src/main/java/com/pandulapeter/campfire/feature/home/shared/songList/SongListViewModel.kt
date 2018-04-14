@@ -131,6 +131,28 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
         }
     }
 
+    override fun onSongAddedToPlaylistForTheFirstTime(songId: String) {
+        adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
+            if (index != RecyclerView.NO_POSITION) {
+                adapter.notifyItemChanged(
+                    index,
+                    SongListAdapter.Payload.IsSongInAPlaylistChanged(true)
+                )
+            }
+        }
+    }
+
+    override fun onSongRemovedFromAllPlaylists(songId: String) {
+        adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
+            if (index != RecyclerView.NO_POSITION) {
+                adapter.notifyItemChanged(
+                    index,
+                    SongListAdapter.Payload.IsSongInAPlaylistChanged(false)
+                )
+            }
+        }
+    }
+
     override fun onPlaylistOrderChanged(playlists: List<Playlist>) = Unit
 
     abstract fun onActionButtonClicked()

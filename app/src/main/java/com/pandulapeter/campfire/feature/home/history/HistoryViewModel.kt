@@ -44,7 +44,7 @@ class HistoryViewModel(context: Context, private val openLibrary: () -> Unit) : 
     override fun Sequence<Song>.createViewModels() = filter { it.id != songToDeleteId }
         .filter { song -> history.firstOrNull { it.id == song.id } != null }
         .sortedByDescending { song -> history.first { it.id == song.id }.lastOpenedAt }
-        .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, it) }
+        .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
         .toMutableList<SongListItemViewModel>()
         .apply {
             val headerIndices = mutableListOf<Int>()

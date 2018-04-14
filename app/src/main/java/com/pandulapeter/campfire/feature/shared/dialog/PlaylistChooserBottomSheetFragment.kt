@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.old.feature.shared.dialog
+package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -19,21 +19,23 @@ import android.util.TypedValue
 import android.view.*
 import com.pandulapeter.campfire.PlaylistChooserBottomSheetBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
-import com.pandulapeter.campfire.old.data.model.Playlist
-import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.old.data.repository.SongInfoRepository
+import com.pandulapeter.campfire.data.model.local.Playlist
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
-
-/**
- * A bottom sheet that allows the user to set the positionSource of the avatar image (gallery or camera).
- *
- * Controlled by [PlaylistChooserBottomSheetViewModel].
- */
 class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
-    private val songInfoRepository by inject<SongInfoRepository>()
+
+    companion object {
+        private var Bundle?.songId by BundleArgumentDelegate.String("songId")
+
+        fun show(fragmentManager: FragmentManager, songId: String) {
+            PlaylistChooserBottomSheetFragment().withArguments { it.songId = songId }.run { (this as DialogFragment).show(fragmentManager, tag) }
+        }
+    }
+
+    private val songInfoRepository by inject<SongRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
     private lateinit var binding: PlaylistChooserBottomSheetBinding
     private lateinit var viewModel: PlaylistChooserBottomSheetViewModel
@@ -54,8 +56,6 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
         CustomWidthBottomSheetDialog(context, theme).apply {
             binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_playlist_chooser_bottom_sheet, null, false)
             viewModel = PlaylistChooserBottomSheetViewModel(
-                songInfoRepository,
-                playlistRepository,
                 savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId,
                 binding.container?.toolbar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
                 binding.container?.fakeAppBar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
@@ -184,14 +184,6 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
                 window.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
                 window.setGravity(Gravity.BOTTOM)
             }
-        }
-    }
-
-    companion object {
-        private var Bundle?.songId by BundleArgumentDelegate.String("song_id")
-
-        fun show(fragmentManager: FragmentManager, songId: String) {
-            PlaylistChooserBottomSheetFragment().withArguments { it.songId = songId }.run { (this as DialogFragment).show(fragmentManager, tag) }
         }
     }
 }
