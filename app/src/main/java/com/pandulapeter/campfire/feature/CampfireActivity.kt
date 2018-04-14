@@ -266,6 +266,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun addViewToAppBar(view: View) {
         removeViewFromAppBar()
+        toggleTransitionMode(true)
         binding.appBarLayout.addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
     }
 
