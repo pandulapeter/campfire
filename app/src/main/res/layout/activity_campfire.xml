@@ -71,7 +71,18 @@
                             app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
                             app:layout_constraintEnd_toStartOf="@+id/toolbar_button_container"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
+                            app:layout_constraintTop_toTopOf="parent">
+
+                            <TextView
+                                android:id="@+id/default_toolbar"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:text="@string/campfire"
+                                android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                                android:textColor="?android:attr/textColorPrimary" />
+
+                        </FrameLayout>
 
                         <LinearLayout
                             android:id="@id/toolbar_button_container"
