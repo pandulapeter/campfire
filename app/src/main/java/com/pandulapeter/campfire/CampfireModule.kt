@@ -5,10 +5,7 @@ import com.google.gson.GsonBuilder
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.persistence.SongDatabase
-import com.pandulapeter.campfire.data.repository.ChangelogRepository
-import com.pandulapeter.campfire.data.repository.HistoryRepository
-import com.pandulapeter.campfire.data.repository.SongDetailRepository
-import com.pandulapeter.campfire.data.repository.SongRepository
+import com.pandulapeter.campfire.data.repository.*
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
@@ -33,6 +30,7 @@ val repositoryModule = applicationContext {
     provide { SongDetailRepository(get(), get()) }
     provide { ChangelogRepository() }
     provide { HistoryRepository(get()) }
+    provide { PlaylistRepository(get()) }
 }
 
 val persistenceModule = applicationContext {

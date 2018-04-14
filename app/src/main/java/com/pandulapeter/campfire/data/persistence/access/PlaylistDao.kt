@@ -18,6 +18,6 @@ interface PlaylistDao {
     @Query("DELETE FROM ${Playlist.TABLE_NAME} WHERE ${Playlist.ID} IN(:playlistId)")
     fun delete(playlistId: String)
 
-    @Query("DELETE FROM ${Playlist.TABLE_NAME}")
+    @Query("DELETE FROM ${Playlist.TABLE_NAME} WHERE ${Playlist.ID} NOT IN ('${Playlist.FAVORITES_ID}')")
     fun deleteAll()
 }
