@@ -15,7 +15,6 @@ import android.support.v4.app.FragmentManager
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.app.AppCompatDialogFragment
 import android.support.v7.widget.AppCompatCheckBox
-import android.util.TypedValue
 import android.view.*
 import com.pandulapeter.campfire.PlaylistChooserBottomSheetBinding
 import com.pandulapeter.campfire.R
@@ -46,21 +45,18 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
     private var shouldTransformTopToAppBar = false
     private var scrollViewOffset = 0
     private var originalStatusBarColor = 0
-    private val updatedStatusBarColor by lazy {
-        val outValue = TypedValue()
-        binding.container?.background?.context?.theme?.resolveAttribute(android.R.attr.colorPrimaryDark, outValue, true)
-        outValue.resourceId
-    }
+    private val updatedStatusBarColor by lazy { context.color(R.color.primary) }
+    private val headerContext by lazy { binding.container?.toolbar?.context }
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->
         CustomWidthBottomSheetDialog(context, theme).apply {
             binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.fragment_playlist_chooser_bottom_sheet, null, false)
             viewModel = PlaylistChooserBottomSheetViewModel(
                 savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId,
-                binding.container?.toolbar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
-                binding.container?.fakeAppBar?.context?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
-                binding.container?.toolbar?.context?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
-                binding.container?.fakeAppBar?.context?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
+                headerContext?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
+                context.obtainColor(android.R.attr.textColorPrimary),
+                headerContext?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
+                context.obtainColor(android.R.attr.textColorSecondary),
                 context.dimension(R.dimen.content_padding),
                 context.dimension(R.dimen.bottom_sheet_toolbar_elevation),
                 context.dimension(R.dimen.bottom_sheet_toolbar_margin)
@@ -81,7 +77,7 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
                                 if (statusBarColor != updatedStatusBarColor) {
                                     clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
                                     originalStatusBarColor = statusBarColor
-                                    statusBarColor = updatedStatusBarColor
+                                    statusBarColor = updatedStatusBarColor ?: Color.BLACK
                                 }
                             } else {
                                 if (statusBarColor != originalStatusBarColor) {

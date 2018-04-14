@@ -104,6 +104,14 @@ fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?, @ColorIn
     view.text = SpannableString("${title ?: ""}\n${subtitle ?: ""}").apply {
         title?.let {
             setSpan(TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Title), 0, it.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+            if (titleColor != null) {
+                setSpan(ForegroundColorSpan(titleColor), 0, it.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+            }
+        }
+        subtitle?.let {
+            if (subtitleColor != null) {
+                setSpan(ForegroundColorSpan(subtitleColor), length - it.length, length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+            }
         }
     }
 }
