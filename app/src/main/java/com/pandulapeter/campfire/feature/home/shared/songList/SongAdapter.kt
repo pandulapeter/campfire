@@ -45,6 +45,10 @@ class SongAdapter : RecyclerView.Adapter<SongListViewHolder<*, *>>() {
     var playlistActionClickListener: ((position: Int) -> Unit)? = null
     var downloadActionClickListener: ((position: Int) -> Unit)? = null
 
+    init {
+        setHasStableIds(true)
+    }
+
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         this.recyclerView = recyclerView
     }
@@ -91,6 +95,8 @@ class SongAdapter : RecyclerView.Adapter<SongListViewHolder<*, *>>() {
     }
 
     override fun getItemCount() = items.size
+
+    override fun getItemId(position: Int) = items[position].getItemId()
 
     sealed class Payload {
         class DownloadStateChanged(val downloadState: SongListItemViewModel.SongViewModel.DownloadState) : Payload()

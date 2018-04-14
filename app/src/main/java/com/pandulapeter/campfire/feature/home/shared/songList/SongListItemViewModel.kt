@@ -7,6 +7,8 @@ import com.pandulapeter.campfire.data.repository.SongDetailRepository
 
 sealed class SongListItemViewModel {
 
+    abstract fun getItemId(): Long
+
     data class SongViewModel(
         private val context: Context,
         private val songDetailRepository: SongDetailRepository,
@@ -20,12 +22,15 @@ sealed class SongListItemViewModel {
             else -> if (song.isNew) DownloadState.NotDownloaded.New else DownloadState.NotDownloaded.Old
         }
     ) : SongListItemViewModel() {
+
         val alertText
             get() = when (downloadState) {
                 DownloadState.Downloaded.Deprecated -> context.getString(R.string.new_version_available)
                 DownloadState.NotDownloaded.New -> context.getString(R.string.new_tag)
                 else -> null
             }
+
+        override fun getItemId() = song.id.hashCode().toLong()
 
         sealed class DownloadState {
 
@@ -43,5 +48,8 @@ sealed class SongListItemViewModel {
         }
     }
 
-    data class HeaderViewModel(val title: String) : SongListItemViewModel()
+    data class HeaderViewModel(val title: String) : SongListItemViewModel() {
+
+        override fun getItemId() = title.hashCode().toLong()
+    }
 }
