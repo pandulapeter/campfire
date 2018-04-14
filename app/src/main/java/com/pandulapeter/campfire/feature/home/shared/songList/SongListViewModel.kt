@@ -7,10 +7,12 @@ import android.databinding.ObservableInt
 import android.support.annotation.CallSuper
 import android.support.v7.widget.RecyclerView
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.model.remote.SongDetail
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
@@ -22,11 +24,12 @@ import kotlinx.coroutines.experimental.cancel
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.experimental.CoroutineContext
 
-abstract class SongListViewModel(protected val context: Context) : CampfireViewModel(), SongRepository.Subscriber, SongDetailRepository.Subscriber {
+abstract class SongListViewModel(protected val context: Context) : CampfireViewModel(), SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
 
     private val songRepository by inject<SongRepository>()
     protected val songDetailRepository by inject<SongDetailRepository>()
     protected val preferenceDatabase by inject<PreferenceDatabase>()
+    protected val playlistRepository by inject<PlaylistRepository>()
     private var coroutine: CoroutineContext? = null
     protected var librarySongs = sequenceOf<Song>()
     val adapter = SongListAdapter()
@@ -42,6 +45,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     override fun subscribe() {
         songRepository.subscribe(this)
         songDetailRepository.subscribe(this)
+        playlistRepository.subscribe(this)
         isDetailScreenOpen = false
     }
 
@@ -49,6 +53,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     override fun unsubscribe() {
         songRepository.unsubscribe(this)
         songDetailRepository.unsubscribe(this)
+        playlistRepository.unsubscribe(this)
     }
 
     @CallSuper
@@ -120,6 +125,14 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
         }
     }
 
+    override fun onPlaylistsUpdated(playlists: List<Playlist>) {
+        if (librarySongs.toList().isNotEmpty()) {
+            updateAdapterItems()
+        }
+    }
+
+    override fun onPlaylistOrderChanged(playlists: List<Playlist>) = Unit
+
     abstract fun onActionButtonClicked()
 
     fun updateData() = songRepository.updateData()
@@ -134,7 +147,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     protected open fun onListUpdated(items: List<SongListItemViewModel>) = state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
 
     protected fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
-        if (canUpdateUI() && songRepository.isCacheLoaded() && songDetailRepository.isCacheLoaded()) {
+        if (canUpdateUI() && playlistRepository.isCacheLoaded() && songRepository.isCacheLoaded() && songDetailRepository.isCacheLoaded()) {
             coroutine?.cancel()
             coroutine = async(UI) {
                 async(CommonPool) { librarySongs.createViewModels() }.await().let {

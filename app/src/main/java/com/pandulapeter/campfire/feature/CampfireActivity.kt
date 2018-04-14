@@ -302,7 +302,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                     }
                     toggleTransitionMode(true)
                     addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                }, 160)
+                }, 120)
             }
         }
     }
@@ -311,7 +311,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         binding.appBarLayout.run {
             if (childCount > 1) {
                 getChildAt(1).run {
-                    postDelayed({ if (isAttachedToWindow) removeView(this) }, 130)
+                    postDelayed({
+                        if (isAttachedToWindow) {
+                            layoutTransition = LayoutTransition()
+                            removeView(this)
+                        }
+                    }, 100)
                 }
             }
         }

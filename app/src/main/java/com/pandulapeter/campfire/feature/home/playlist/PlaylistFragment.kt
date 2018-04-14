@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature.home.playlist
 
 import android.os.Bundle
-import android.view.View
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.withArguments
@@ -18,11 +17,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         PlaylistViewModel(
             context = mainActivity,
             playlistId = arguments.playlistId,
-            openLibrary = { mainActivity.openLibraryScreen() })
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        defaultToolbar.updateToolbarTitle(arguments.playlistId)
+            openLibrary = { mainActivity.openLibraryScreen() },
+            updateToolbar = { defaultToolbar.updateToolbarTitle(it) })
     }
 }
