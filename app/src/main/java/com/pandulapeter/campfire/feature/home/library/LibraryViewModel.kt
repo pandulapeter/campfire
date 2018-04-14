@@ -152,6 +152,12 @@ class LibraryViewModel(
             }
         }
 
+    fun restoreToolbarButtons() {
+        if (languages.isNotEmpty()) {
+            onDataLoaded(languages)
+        }
+    }
+
     fun toggleTextInputVisibility() {
         toolbarTextInputView.run {
             if (title.tag == null) {

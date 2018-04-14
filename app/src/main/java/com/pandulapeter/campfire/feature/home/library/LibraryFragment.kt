@@ -101,6 +101,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     override fun onResume() {
         super.onResume()
         mainActivity.shouldAllowAppBarScrolling = !viewModel.toolbarTextInputView.isTextInputVisible
+        viewModel.restoreToolbarButtons()
     }
 
     override fun onSaveInstanceState(outState: Bundle) = outState.run {
