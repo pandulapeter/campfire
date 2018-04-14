@@ -82,7 +82,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     protected fun isSnackbarVisible() = snackbar?.isShownOrQueued ?: false
 
-    protected fun hideSnackbar() = snackbar?.dismiss()
+    fun hideSnackbar() = snackbar?.dismiss()
 
     protected fun showSnackbar(@StringRes message: Int, @StringRes actionText: Int = R.string.try_again, action: (() -> Unit)? = null, dismissAction: (() -> Unit)? = null) =
         showSnackbar(getString(message), actionText, action, dismissAction)
