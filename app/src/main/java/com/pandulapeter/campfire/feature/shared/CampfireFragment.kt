@@ -42,7 +42,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         if (shouldDelaySubscribing) {
             isResumingDelayed = true
         } else {
-            viewModel.subscribe()
+            updateUI()
         }
     }
 
@@ -65,6 +65,9 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
             it.addListener(this)
         }
     }
+
+    @CallSuper
+    open fun updateUI() = viewModel.subscribe()
 
     open fun onBackPressed() = false
 
@@ -109,7 +112,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     override fun onTransitionEnd(transition: Transition?) {
         transition?.removeListener(this)
         if (isResumingDelayed) {
-            viewModel.subscribe()
+            updateUI()
             isResumingDelayed = false
         }
     }

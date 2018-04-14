@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentSongListBinding
+import com.pandulapeter.campfire.feature.home.shared.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.util.color
@@ -18,6 +19,7 @@ import com.pandulapeter.campfire.util.onPropertyChanged
 abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, VM>(R.layout.fragment_song_list) {
 
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
+    private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
 
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -27,6 +29,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             itemClickListener = { position, clickedView ->
                 (items[position] as? SongListItemViewModel.SongViewModel)?.let {
                     viewModel.isDetailScreenOpen = true
+                    linearLayoutManager.isScrollEnabled = false
                     mainActivity.openDetailScreen(clickedView, listOf(it.song), items.size > 1)
                 }
             }
@@ -55,7 +58,8 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         }
         binding.recyclerView.run {
             setHasFixedSize(true)
-//            addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
+            linearLayoutManager = DisableScrollLinearLayoutManager(mainActivity)
+            layoutManager = linearLayoutManager
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
                     if (dy > 0 && recyclerView?.isAnimating == false) {
@@ -73,5 +77,10 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 }
             })
         }
+    }
+
+    override fun updateUI() {
+        super.updateUI()
+        linearLayoutManager.isScrollEnabled = true
     }
 }
