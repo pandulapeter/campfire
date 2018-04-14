@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.home.managePlaylists
 
 import android.os.Bundle
+import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentManagePlaylistsBinding
@@ -22,6 +23,10 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         }
         mainActivity.updateFloatingActionButtonDrawable(mainActivity.drawable(R.drawable.ic_add_24dp))
         mainActivity.enableFloatingActionButton()
+        binding.recyclerView.run {
+            setHasFixedSize(true)
+            layoutManager = LinearLayoutManager(mainActivity)
+        }
     }
 
     override fun onFloatingActionButtonPressed() = showSnackbar(R.string.work_in_progress)

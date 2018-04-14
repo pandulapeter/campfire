@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.old.feature.home.managePlaylists
+package com.pandulapeter.campfire.feature.home.managePlaylists
 
 import android.annotation.SuppressLint
 import android.databinding.DataBindingUtil
@@ -10,48 +10,41 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import com.pandulapeter.campfire.PlaylistItemBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.home.managePlaylists.PlaylistViewModel
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.cancel
 import kotlin.coroutines.experimental.CoroutineContext
 
-/**
- * Custom [RecyclerView.Adapter] that handles a a list of [PlaylistViewModel] objects.
- */
 class ManagePlaylistsListAdapter : RecyclerView.Adapter<ManagePlaylistsListAdapter.PlaylistViewHolder>() {
     private var coroutine: CoroutineContext? = null
-    var items = mutableListOf<PlaylistViewModel>()
+    var items = listOf<PlaylistViewModel>()
         set(newItems) {
-            if (field.isEmpty()) {
-                if (newItems.isNotEmpty()) {
-                    field = newItems
-                    notifyDataSetChanged()
-                }
-            } else {
-                coroutine?.cancel()
-                coroutine = async(UI) {
-                    val oldItems = items
-                    async(CommonPool) {
-                        DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-                            override fun getOldListSize() = oldItems.size
+            coroutine?.cancel()
+            coroutine = async(UI) {
+                val oldItems = items
+                async(CommonPool) {
+                    DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+                        override fun getOldListSize() = oldItems.size
 
-                            override fun getNewListSize() = newItems.size
+                        override fun getNewListSize() = newItems.size
 
-                            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int) =
-                                oldItems[oldItemPosition].playlist.id == newItems[newItemPosition].playlist.id
+                        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int) =
+                            oldItems[oldItemPosition].playlist.id == newItems[newItemPosition].playlist.id
 
-                            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
-                        })
-                    }.await().dispatchUpdatesTo(this@ManagePlaylistsListAdapter)
-                    field = newItems
-                }
+                        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
+                    })
+                }.await().dispatchUpdatesTo(this@ManagePlaylistsListAdapter)
+                field = newItems
             }
         }
 
     var itemClickListener: (position: Int) -> Unit = { _ -> }
     var dragHandleTouchListener: ((position: Int) -> Unit)? = null
+
+    init {
+        setHasStableIds(true)
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int) = PlaylistViewHolder.create(parent).apply {
         setItemClickListener(itemClickListener)
@@ -66,6 +59,8 @@ class ManagePlaylistsListAdapter : RecyclerView.Adapter<ManagePlaylistsListAdapt
     }
 
     override fun getItemCount() = items.size
+
+    override fun getItemId(position: Int) = items[position].playlist.id.hashCode().toLong()
 
     class PlaylistViewHolder(val binding: PlaylistItemBinding) : RecyclerView.ViewHolder(binding.root) {
 

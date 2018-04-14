@@ -9,7 +9,6 @@ import com.pandulapeter.campfire.ManagePlaylistsBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.old.feature.home.HomeViewModel
 import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.old.feature.shared.dialog.NewPlaylistDialogFragment
@@ -70,7 +69,7 @@ class ManagePlaylistsFragment : HomeChildFragment<ManagePlaylistsBinding, Manage
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
                 viewHolder?.adapterPosition?.let { position ->
                     val playlist = viewModel.adapter.items[position].playlist
-                    viewModel.deletePlaylist(playlist.id)
+//                    viewModel.deletePlaylist(playlist.id)
 //                    firstTimeUserExperienceRepository.shouldShowManagePlaylistsHint = false
                     dismissHintSnackbar()
                 }
@@ -81,7 +80,7 @@ class ManagePlaylistsFragment : HomeChildFragment<ManagePlaylistsBinding, Manage
         viewModel.adapter.itemClickListener = { position ->
             if (isAdded) {
                 //TODO: Transition glitch.
-                (parentFragment as? HomeCallbacks)?.setCheckedItem(HomeViewModel.HomeNavigationItem.Playlist(viewModel.adapter.items[position].playlist.id))
+//                (parentFragment as? HomeCallbacks)?.setCheckedItem(HomeViewModel.HomeNavigationItem.Playlist(viewModel.adapter.items[position].playlist.id))
             }
         }
         viewModel.adapter.dragHandleTouchListener = { position ->

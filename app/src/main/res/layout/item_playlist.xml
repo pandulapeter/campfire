@@ -8,13 +8,15 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.old.feature.home.managePlaylists.PlaylistInfoViewModel" />
+            type="com.pandulapeter.campfire.feature.home.managePlaylists.PlaylistViewModel" />
 
     </data>
 
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/content_padding"
+        android:layout_marginTop="@dimen/content_padding"
         android:foreground="?attr/selectableItemBackground"
         app:contentPadding="@dimen/content_padding">
 

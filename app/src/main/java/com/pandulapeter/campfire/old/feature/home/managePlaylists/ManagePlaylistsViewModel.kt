@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.old.feature.home.managePlaylists
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableInt
+import com.pandulapeter.campfire.feature.home.managePlaylists.PlaylistViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.old.data.model.Playlist
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
@@ -59,21 +60,22 @@ class ManagePlaylistsViewModel(
             }
         }
         adapter.notifyItemMoved(originalPosition, targetPosition)
-        playlistRepository.updatePlaylistOrder(adapter.items.map { it.playlist })
+//        playlistRepository.updatePlaylistOrder(adapter.items.map { it.playlist })
     }
 
     fun deletePlaylist(playlistId: Int) {
         playlistRepository.deletePlaylist(playlistId)
     }
 
-    private fun getAdapterItems(): List<PlaylistInfoViewModel> {
-        val playlists = playlistRepository.getPlaylists()
-        return playlists.map {
-            PlaylistInfoViewModel(
-                playlist = it,
-                shouldShowDragHandle = it.id != Playlist.FAVORITES_ID && playlists.size > 2,
-                itemCount = playlistRepository.getPlaylistSongIds(it.id).size
-            )
-        }
+    private fun getAdapterItems(): List<PlaylistViewModel> {
+//        val playlists = playlistRepository.getPlaylists()
+//        return playlists.map {
+//            PlaylistViewModel(
+////                playlist = it,
+//                shouldShowDragHandle = it.id != Playlist.FAVORITES_ID && playlists.size > 2,
+//                itemCount = playlistRepository.getPlaylistSongIds(it.id).size
+//            )
+//        }
+        return listOf()
     }
 }
