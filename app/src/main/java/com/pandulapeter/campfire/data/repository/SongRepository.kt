@@ -69,7 +69,7 @@ class SongRepository(
                     }
                 }
                 data.swap(newData)
-                async(CommonPool) { songDatabase.songDao().updateData(data) }
+                async(CommonPool) { songDatabase.songDao().updateAll(data) }
                 isLoading = false
                 notifyDataChanged()
                 preferenceDatabase.lastUpdateTimestamp = System.currentTimeMillis()

@@ -6,10 +6,10 @@ import android.arch.persistence.room.PrimaryKey
 
 @Entity(tableName = Playlist.TABLE_NAME)
 data class Playlist(
-    @PrimaryKey() @ColumnInfo(name = ID) val id: String = FAVORITES_ID,
-    @ColumnInfo(name = "title") val title: String? = null,
-    @ColumnInfo(name = ORDER) val order: Int = 0,
-    @ColumnInfo(name = "songIds") val songIds: List<String> = listOf()
+    @PrimaryKey() @ColumnInfo(name = ID) var id: String = FAVORITES_ID,
+    @ColumnInfo(name = "title") var title: String? = null,
+    @ColumnInfo(name = ORDER) var order: Int = 0,
+    @ColumnInfo(name = "songIds") var songIds: List<String> = listOf()
 ) {
     companion object {
         const val FAVORITES_ID = "favorites"

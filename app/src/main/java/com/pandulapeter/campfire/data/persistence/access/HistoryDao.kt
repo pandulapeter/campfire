@@ -11,7 +11,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 interface HistoryDao {
 
     @Query("SELECT * FROM ${HistoryItem.TABLE_NAME}")
-    fun getAllHistory(): List<HistoryItem>
+    fun getAll(): List<HistoryItem>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(historyItem: HistoryItem)

@@ -10,7 +10,7 @@ interface SongDao {
     fun getAll(): List<Song>
 
     @Transaction
-    fun updateData(songs: List<Song>) {
+    fun updateAll(songs: List<Song>) {
         deleteAll()
         insertAll(songs)
     }

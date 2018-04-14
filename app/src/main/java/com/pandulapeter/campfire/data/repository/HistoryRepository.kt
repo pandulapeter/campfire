@@ -51,7 +51,7 @@ class HistoryRepository(private val songDatabase: SongDatabase) : Repository<His
     private fun refreshDataSet() {
         async(UI) {
             async(CommonPool) {
-                songDatabase.historyDao().getAllHistory()
+                songDatabase.historyDao().getAll()
             }.await().let {
                 data.swap(it)
                 isCacheLoaded = true
