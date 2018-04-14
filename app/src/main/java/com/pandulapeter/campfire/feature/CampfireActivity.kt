@@ -284,11 +284,13 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         binding.drawerLayout.setDrawerLockMode(if (shouldShowBackButton) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
     }
 
-    fun updateToolbarTitleView(toolbar: View) {
+    fun updateToolbarTitleView(toolbar: View, width: Int = 0) {
         val oldView = binding.toolbarTitleContainer.run { if (childCount > 0) getChildAt(0) else null }
         binding.toolbarTitleContainer.addView(
             toolbar.apply { visibleOrGone = oldView?.id == R.id.default_toolbar },
-            FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).apply { gravity = Gravity.CENTER_VERTICAL })
+            FrameLayout.LayoutParams(if (width == 0) ViewGroup.LayoutParams.MATCH_PARENT else width, ViewGroup.LayoutParams.MATCH_PARENT).apply {
+                gravity = Gravity.CENTER_VERTICAL
+            })
         oldView?.run {
             visibleOrGone = false
             postOnAnimation { binding.toolbarTitleContainer.removeView(this) }

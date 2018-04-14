@@ -104,6 +104,11 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         viewModel.restoreToolbarButtons()
     }
 
+    override fun onPause() {
+        super.onPause()
+        toolbarWidth = viewModel.toolbarTextInputView.width
+    }
+
     override fun onSaveInstanceState(outState: Bundle) = outState.run {
         super.onSaveInstanceState(this)
         isTextInputVisible = viewModel.toolbarTextInputView.isTextInputVisible
