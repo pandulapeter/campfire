@@ -259,7 +259,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private fun removeViewFromAppBar() {
         binding.appBarLayout.run {
             if (childCount > 1) {
-                getChildAt(1).run { postDelayed({ removeView(this) }, 100) }
+                getChildAt(1).run { postDelayed({ removeView(this) }, 150) }
             }
         }
     }
@@ -379,7 +379,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 reenterTransition = null
             }
         }
-        binding.coordinatorLayout.layoutTransition.disableTransitionType(LayoutTransition.CHANGING)
         supportFragmentManager.beginTransaction()
             .setAllowOptimization(true)
             .replace(R.id.fragment_container, DetailFragment.newInstance(songs, index, shouldShowManagePlaylist))
