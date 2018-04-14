@@ -482,8 +482,14 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    private fun openPlaylistScreen(playlistId: String) {
+    fun openPlaylistScreen(playlistId: String) {
         if (currentFragment !is PlaylistFragment || currentPlaylistId != playlistId) {
+            playlistIdMap.forEach {
+                if (it.value == playlistId) {
+                    currentScreenId = it.key
+                    binding.primaryNavigation.setCheckedItem(it.key)
+                }
+            }
             beforeScreenChanged()
             currentPlaylistId = playlistId
             supportFragmentManager.beginTransaction()
