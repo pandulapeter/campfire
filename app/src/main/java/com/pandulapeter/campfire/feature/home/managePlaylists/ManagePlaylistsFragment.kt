@@ -114,7 +114,10 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         viewModel.adapter.dragHandleTouchListener = { position -> itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position)) }
     }
 
-    override fun onFloatingActionButtonPressed() = NewPlaylistDialogFragment.show(childFragmentManager)
+    override fun onFloatingActionButtonPressed() {
+        hideSnackbar()
+        NewPlaylistDialogFragment.show(childFragmentManager)
+    }
 
     override fun onPositiveButtonSelected(id: Int) {
         if (id == DIALOG_ID_DELETE_ALL_CONFIRMATION) {

@@ -99,7 +99,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                 viewModel.toolbarTextInputView.textInput.requestFocus()
             } catch (_: IllegalStateException) {
             }
-        }, 100)
+        }, 150)
         searchControlsViewModel.searchInTitles.onPropertyChanged {
             binding.root.postDelayed(
                 { if (isAdded) viewModel.shouldSearchInTitles = it },

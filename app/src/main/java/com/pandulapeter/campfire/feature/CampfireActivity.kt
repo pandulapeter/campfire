@@ -269,9 +269,23 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     override fun onPlaylistOrderChanged(playlists: List<Playlist>) = updatePlaylists(playlists)
 
     fun addViewToAppBar(view: View) {
-        removeViewFromAppBar()
+        binding.appBarLayout.run {
+            if (childCount > 1) {
+                getChildAt(1).run { removeView(this) }
+            }
+        }
         toggleTransitionMode(true)
         binding.appBarLayout.addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    }
+
+    private fun removeViewFromAppBar() {
+        binding.appBarLayout.run {
+            if (childCount > 1) {
+                getChildAt(1).run {
+                    postDelayed({ if (isAttachedToWindow) removeView(this) }, 200)
+                }
+            }
+        }
     }
 
     fun expandAppBar() {
@@ -414,14 +428,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         add(R.id.playlist_container, Menu.NONE, index, title).run {
             setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist_24dp else R.drawable.ic_playlist_24dp)
         }
-
-    private fun removeViewFromAppBar() {
-        binding.appBarLayout.run {
-            if (childCount > 1) {
-                getChildAt(1).run { postDelayed({ removeView(this) }, 150) }
-            }
-        }
-    }
 
     private inline fun <reified T : TopLevelFragment<*, *>> FragmentManager.handleReplace(crossinline newInstance: () -> T) {
         currentFragment?.exitTransition = null

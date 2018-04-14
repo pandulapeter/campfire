@@ -17,9 +17,14 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
         defaultToolbar.updateToolbarTitle(R.string.home_options)
         binding.viewPager.adapter = OptionsFragmentPagerAdapter(mainActivity, childFragmentManager)
         binding.viewPager.addPageScrollListener({ mainActivity.expandAppBar() })
-        mainActivity.addViewToAppBar(TabLayout(mainActivity.toolbarContext).apply {
-            tabMode = TabLayout.MODE_SCROLLABLE
-            setupWithViewPager(binding.viewPager)
-        })
+        binding.root.postDelayed({
+            try {
+                mainActivity.addViewToAppBar(TabLayout(mainActivity.toolbarContext).apply {
+                    tabMode = TabLayout.MODE_SCROLLABLE
+                    setupWithViewPager(binding.viewPager)
+                })
+            } catch (_: IllegalStateException) {
+            }
+        }, 150)
     }
 }
