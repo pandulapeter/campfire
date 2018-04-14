@@ -5,7 +5,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
 
-class SongAdapter : RecyclerView.Adapter<SongListViewHolder<*, *>>() {
+class SongListAdapter : RecyclerView.Adapter<SongListItemViewHolder<*, *>>() {
 
     companion object {
         private const val VIEW_TYPE_SONG = 0
@@ -33,7 +33,7 @@ class SongAdapter : RecyclerView.Adapter<SongListViewHolder<*, *>>() {
                 }
 
                 override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
-            }).dispatchUpdatesTo(this@SongAdapter)
+            }).dispatchUpdatesTo(this@SongListAdapter)
             if (shouldScrollToTop) {
                 recyclerView?.run { scrollToPosition(0) }
                 shouldScrollToTop = false
@@ -63,22 +63,22 @@ class SongAdapter : RecyclerView.Adapter<SongListViewHolder<*, *>>() {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = when (viewType) {
-        VIEW_TYPE_SONG -> SongListViewHolder.SongViewHolder(parent).apply {
+        VIEW_TYPE_SONG -> SongListItemViewHolder.SongViewHolder(parent).apply {
             setItemClickListener(itemClickListener)
             setDragHandleTouchListener(dragHandleTouchListener)
             setPlaylistActionClickListener(playlistActionClickListener)
             setDownloadActionClickListener(downloadActionClickListener)
         }
-        VIEW_TYPE_HEADER -> SongListViewHolder.HeaderViewHolder(parent)
+        VIEW_TYPE_HEADER -> SongListItemViewHolder.HeaderViewHolder(parent)
         else -> throw IllegalArgumentException("Unsupported item type.")
     }
 
 
-    override fun onBindViewHolder(holder: SongListViewHolder<*, *>, position: Int) = onBindViewHolder(holder, position, listOf())
+    override fun onBindViewHolder(holder: SongListItemViewHolder<*, *>, position: Int) = onBindViewHolder(holder, position, listOf())
 
-    override fun onBindViewHolder(holder: SongListViewHolder<*, *>, position: Int, payloads: List<Any>) {
+    override fun onBindViewHolder(holder: SongListItemViewHolder<*, *>, position: Int, payloads: List<Any>) {
         when (holder) {
-            is SongListViewHolder.SongViewHolder -> {
+            is SongListItemViewHolder.SongViewHolder -> {
                 (items[position] as? SongListItemViewModel.SongViewModel)?.run {
                     payloads.forEach { payload ->
                         when (payload) {
@@ -90,7 +90,7 @@ class SongAdapter : RecyclerView.Adapter<SongListViewHolder<*, *>>() {
                     holder.bind(this)
                 }
             }
-            is SongListViewHolder.HeaderViewHolder -> (items[position] as? SongListItemViewModel.HeaderViewModel)?.let { holder.bind(it) }
+            is SongListItemViewHolder.HeaderViewHolder -> (items[position] as? SongListItemViewModel.HeaderViewModel)?.let { holder.bind(it) }
         }
     }
 

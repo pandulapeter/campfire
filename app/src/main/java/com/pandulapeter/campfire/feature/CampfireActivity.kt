@@ -127,7 +127,10 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             } else {
                 currentScreenId = menuItem.itemId
                 return@setNavigationItemSelectedListener when (menuItem.itemId) {
-                    R.id.library -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { LibraryFragment() } }
+                    R.id.library -> consumeAndCloseDrawers {
+                        appShortcutManager.onLibraryOpened()
+                        supportFragmentManager.handleReplace { LibraryFragment() }
+                    }
                     R.id.history -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { HistoryFragment() } }
                     R.id.options -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { OptionsFragment() } }
                     R.id.manage_playlists -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManagePlaylistsFragment() } }
@@ -314,6 +317,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         supportFragmentManager.handleReplace { LibraryFragment() }
         binding.primaryNavigation.setCheckedItem(R.id.library)
         currentScreenId = R.id.library
+        appShortcutManager.onLibraryOpened()
     }
 
     fun closeSecondaryNavigationDrawer() = binding.drawerLayout.closeDrawer(Gravity.END)

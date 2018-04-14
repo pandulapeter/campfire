@@ -27,7 +27,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     protected val songDetailRepository by inject<SongDetailRepository>()
     private var coroutine: CoroutineContext? = null
     protected var librarySongs = sequenceOf<Song>()
-    val adapter = SongAdapter()
+    val adapter = SongListAdapter()
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
     val downloadSongError = ObservableField<Song?>()
     val isLoading = ObservableBoolean()
@@ -81,7 +81,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
             if (index != RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
-                    SongAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloaded.UpToDate)
+                    SongListAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloaded.UpToDate)
                 )
             }
         }
@@ -93,7 +93,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
                 if (index != RecyclerView.NO_POSITION) {
                     adapter.notifyItemChanged(
                         index,
-                        SongAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloading)
+                        SongListAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloading)
                     )
                 }
             }
@@ -106,7 +106,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
             if (index != RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
-                    SongAdapter.Payload.DownloadStateChanged(
+                    SongListAdapter.Payload.DownloadStateChanged(
                         when {
                             songDetailRepository.isSongDownloaded(song.id) -> SongListItemViewModel.SongViewModel.DownloadState.Downloaded.Deprecated
                             song.isNew -> SongListItemViewModel.SongViewModel.DownloadState.NotDownloaded.New
