@@ -93,7 +93,10 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             viewModel.buttonText.set(savedInstanceState.buttonText)
             searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
         }
-        binding.root.postDelayed({ mainActivity.addViewToAppBar(searchControlsBinding.root) }, 100)
+        binding.root.postDelayed({
+            mainActivity.addViewToAppBar(searchControlsBinding.root)
+            viewModel.toolbarTextInputView.textInput.requestFocus()
+        }, 100)
         searchControlsViewModel.searchInTitles.onPropertyChanged { binding.root.postDelayed({ viewModel.shouldSearchInTitles = it }, COMPOUND_BUTTON_LONG_TRANSITION_DELAY) }
         searchControlsViewModel.searchInArtists.onPropertyChanged { binding.root.postDelayed({ viewModel.shouldSearchInArtists = it }, COMPOUND_BUTTON_LONG_TRANSITION_DELAY) }
     }
