@@ -1,10 +1,12 @@
 package com.pandulapeter.campfire.feature.home.managePlaylists
 
 import android.databinding.ObservableBoolean
+import android.databinding.ObservableField
 import android.databinding.ObservableInt
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import org.koin.android.ext.android.inject
 import java.util.*
 
@@ -15,12 +17,18 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
     val adapter = ManagePlaylistListAdapter()
     val shouldShowDeleteAllButton = ObservableBoolean()
     val playlistCount = ObservableInt()
+    val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
 
     override fun subscribe() = playlistRepository.subscribe(this)
 
     override fun unsubscribe() = playlistRepository.unsubscribe(this)
 
-    override fun onPlaylistsUpdated(playlists: List<Playlist>) = updateAdapterItems(playlists)
+    override fun onPlaylistsUpdated(playlists: List<Playlist>) {
+        if (playlistRepository.isCacheLoaded()) {
+            updateAdapterItems(playlists)
+            state.set(StateLayout.State.NORMAL)
+        }
+    }
 
     override fun onPlaylistOrderChanged(playlists: List<Playlist>) = Unit
 

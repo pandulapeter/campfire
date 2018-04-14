@@ -10,12 +10,20 @@
 
     </data>
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_view"
+    <com.pandulapeter.campfire.feature.shared.widget.StateLayout
+        android:id="@+id/state_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingBottom="@dimen/list_fab_content_bottom_margin"
-        app:adapter="@{viewModel.adapter}" />
+        app:state="@{viewModel.state}">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/list_fab_content_bottom_margin"
+            app:adapter="@{viewModel.adapter}" />
+
+    </com.pandulapeter.campfire.feature.shared.widget.StateLayout>
 
 </layout>
