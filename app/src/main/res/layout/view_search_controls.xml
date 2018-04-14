@@ -17,21 +17,28 @@
         android:orientation="horizontal"
         android:paddingBottom="@dimen/content_padding"
         android:paddingEnd="@dimen/first_keyline"
-        android:paddingStart="@dimen/second_keyline_fix"
+        android:paddingStart="@dimen/second_keyline"
         app:visibility="@{viewModel.isVisible}">
 
-        <CheckBox
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="@={viewModel.searchInArtists}"
-            android:text="@string/library_search_in_artists" />
+            android:fontFamily="sans-serif-medium"
+            android:text="@string/library_search_in" />
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/large_content_padding"
+            android:layout_marginStart="@dimen/content_padding"
             android:checked="@={viewModel.searchInTitles}"
             android:text="@string/library_search_in_titles" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/content_padding"
+            android:checked="@={viewModel.searchInArtists}"
+            android:text="@string/library_search_in_artists" />
 
     </LinearLayout>
 

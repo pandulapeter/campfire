@@ -89,6 +89,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private val playlistsContainerItem by lazy { binding.primaryNavigation.menu.findItem(R.id.playlists).subMenu }
     private val playlistIdMap = mutableMapOf<Int, String>()
     private var newPlaylistId = 0
+    private var startTime = 0L
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
     val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
@@ -97,10 +98,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         get() = (binding.toolbarContainer.layoutParams as AppBarLayout.LayoutParams).scrollFlags != 0
         set(value) {
             (binding.toolbarContainer.layoutParams as AppBarLayout.LayoutParams).scrollFlags = if (value) {
-                AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or
-                        AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or
-                        AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or
-                        AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
+                AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
             } else 0
         }
 
@@ -116,6 +114,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             )
         )
         super.onCreate(savedInstanceState)
+        startTime = System.currentTimeMillis()
 
         // Initialize the app bar.
         val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
@@ -289,7 +288,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun addViewToAppBar(view: View, immediately: Boolean) {
         binding.appBarLayout.run {
-            if (immediately) {
+            if (immediately || System.currentTimeMillis() - startTime < 300) {
                 layoutTransition = null
                 while (childCount > 1) {
                     getChildAt(1).run { removeView(this) }
@@ -494,6 +493,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             currentPlaylistId = playlistId
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragment_container, PlaylistFragment.newInstance(playlistId))
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .commit()
             appShortcutManager.onPlaylistOpened(playlistId)
         }

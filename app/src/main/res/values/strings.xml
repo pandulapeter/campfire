@@ -62,8 +62,9 @@
     <string name="library_downloaded_only">Downloaded only</string>
     <string name="library_show_work_in_progress">Show unfinished</string>
     <string name="library_show_explicit">Show explicit</string>
-    <string name="library_search_in_artists">Artists</string>
+    <string name="library_search_in">Search in:</string>
     <string name="library_search_in_titles">Titles</string>
+    <string name="library_search_in_artists">Artists</string>
 
     <!-- History screen -->
     <string name="history_clear_confirmation_title">Are you sure?</string>
