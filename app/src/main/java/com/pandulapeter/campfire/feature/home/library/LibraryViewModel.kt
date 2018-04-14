@@ -4,14 +4,13 @@ import android.content.Context
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.remote.Song
-import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.onTextChanged
 import com.pandulapeter.campfire.util.swap
-import org.koin.android.ext.android.inject
 
 class LibraryViewModel(
     context: Context,
@@ -22,7 +21,6 @@ class LibraryViewModel(
 
     private val newString = context.getString(R.string.new_tag)
     private val popularString = context.getString(R.string.popular_tag)
-    private val preferenceDatabase by inject<PreferenceDatabase>()
     var query = ""
         set(value) {
             if (field != value) {
@@ -86,6 +84,7 @@ class LibraryViewModel(
         toolbarTextInputView.apply {
             textInput.onTextChanged { if (isTextInputVisible) query = it }
         }
+        preferenceDatabase.lastScreen = CampfireActivity.SCREEN_LIBRARY
     }
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {

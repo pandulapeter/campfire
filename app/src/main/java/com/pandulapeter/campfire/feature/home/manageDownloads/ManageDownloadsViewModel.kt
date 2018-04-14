@@ -5,6 +5,7 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableInt
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Song
+import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
 
@@ -17,6 +18,7 @@ class ManageDownloadsViewModel(context: Context, private val openLibrary: () -> 
     init {
         placeholderText.set(R.string.manage_downloads_placeholder)
         buttonText.set(R.string.go_to_library)
+        preferenceDatabase.lastScreen = CampfireActivity.SCREEN_MANAGE_DOWNLOADS
     }
 
     override fun Sequence<Song>.createViewModels() = filter { songDetailRepository.isSongDownloaded(it.id) }

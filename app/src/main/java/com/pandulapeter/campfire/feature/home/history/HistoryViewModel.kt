@@ -6,6 +6,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.HistoryItem
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.HistoryRepository
+import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
 import org.koin.android.ext.android.inject
@@ -25,6 +26,7 @@ class HistoryViewModel(context: Context, private val openLibrary: () -> Unit) : 
     init {
         placeholderText.set(R.string.history_placeholder)
         buttonText.set(R.string.go_to_library)
+        preferenceDatabase.lastScreen = CampfireActivity.SCREEN_HISTORY
     }
 
     override fun subscribe() {

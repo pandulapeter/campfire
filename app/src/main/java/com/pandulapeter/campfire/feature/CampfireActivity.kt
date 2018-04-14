@@ -53,12 +53,16 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     companion object {
         private const val DIALOG_ID_EXIT_CONFIRMATION = 1
         private const val DIALOG_ID_PRIVACY_POLICY = 2
-        private const val SCREEN_TO_OPEN_LIBRARY = "library"
+        const val SCREEN_LIBRARY = "library"
+        const val SCREEN_HISTORY = "history"
+        const val SCREEN_OPTIONS = "options"
+        const val SCREEN_MANAGE_PLAYLISTS = "managePlaylists"
+        const val SCREEN_MANAGE_DOWNLOADS = "manageDownloads"
 
         private var Intent.screenToOpen by IntentExtraDelegate.String("screenToOpen")
 
         fun getLibraryIntent(context: Context) = Intent(context, CampfireActivity::class.java).apply {
-            screenToOpen = SCREEN_TO_OPEN_LIBRARY
+            screenToOpen = SCREEN_LIBRARY
         }
 
         fun getPlaylistIntent(context: Context, playlistId: String) = Intent(context, CampfireActivity::class.java).apply {
@@ -208,13 +212,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         super.onNewIntent(intent)
         this.intent = intent
         handleNewIntent()
-    }
-
-    fun handleNewIntent() {
-        when (intent.screenToOpen) {
-            "", SCREEN_TO_OPEN_LIBRARY -> openLibraryScreen()
-            else -> openPlaylistScreen(intent.screenToOpen)
-        }
     }
 
     override fun onResume() {
@@ -434,11 +431,41 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
+    private fun handleNewIntent() {
+        when (intent.screenToOpen) {
+            "" -> preferenceDatabase.lastScreen.let {
+                when (it) {
+                    "" -> openLibraryScreen()
+                    SCREEN_LIBRARY -> openLibraryScreen()
+                    SCREEN_HISTORY -> openHistoryScreen()
+                    SCREEN_OPTIONS -> openOptionsScreen()
+                    SCREEN_MANAGE_PLAYLISTS -> openManagePlaylistsScreen()
+                    SCREEN_MANAGE_DOWNLOADS -> openManageDownloadsScreen()
+                    else -> openPlaylistScreen(it)
+                }
+            }
+            SCREEN_LIBRARY -> openLibraryScreen()
+            else -> openPlaylistScreen(intent.screenToOpen)
+        }
+    }
+
     fun openLibraryScreen() {
         supportFragmentManager.handleReplace { LibraryFragment() }
-        binding.primaryNavigation.setCheckedItem(R.id.library)
         currentScreenId = R.id.library
+        binding.primaryNavigation.setCheckedItem(R.id.library)
         appShortcutManager.onLibraryOpened()
+    }
+
+    fun openHistoryScreen() {
+        supportFragmentManager.handleReplace { HistoryFragment() }
+        currentScreenId = R.id.history
+        binding.primaryNavigation.setCheckedItem(R.id.history)
+    }
+
+    fun openOptionsScreen() {
+        supportFragmentManager.handleReplace { OptionsFragment() }
+        currentScreenId = R.id.options
+        binding.primaryNavigation.setCheckedItem(R.id.options)
     }
 
     fun openPlaylistScreen(playlistId: String) {
@@ -448,6 +475,18 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             .replace(R.id.fragment_container, PlaylistFragment.newInstance(playlistId))
             .commit()
         appShortcutManager.onPlaylistOpened(playlistId)
+    }
+
+    fun openManagePlaylistsScreen() {
+        currentScreenId = R.id.manage_playlists
+        supportFragmentManager.handleReplace { ManagePlaylistsFragment() }
+        binding.primaryNavigation.setCheckedItem(R.id.manage_playlists)
+    }
+
+    fun openManageDownloadsScreen() {
+        currentScreenId = R.id.manage_downloads
+        supportFragmentManager.handleReplace { ManageDownloadsFragment() }
+        binding.primaryNavigation.setCheckedItem(R.id.manage_downloads)
     }
 
     fun openDetailScreen(clickedView: View, songs: List<Song>, shouldExplode: Boolean, index: Int = 0, shouldShowManagePlaylist: Boolean = true) {

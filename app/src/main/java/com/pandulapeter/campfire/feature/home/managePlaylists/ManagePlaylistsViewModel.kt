@@ -4,7 +4,9 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableInt
 import com.pandulapeter.campfire.data.model.local.Playlist
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AppShortcutManager
@@ -15,6 +17,7 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
 
     private val playlistRepository by inject<PlaylistRepository>()
     private val appShortcutManager by inject<AppShortcutManager>()
+    private val preferenceDatabase by inject<PreferenceDatabase>()
     private var playlistToDeleteId: String? = null
         set(value) {
             field = value
@@ -24,6 +27,10 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
     val shouldShowDeleteAllButton = ObservableBoolean()
     val playlistCount = ObservableInt()
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
+
+    init {
+        preferenceDatabase.lastScreen = CampfireActivity.SCREEN_MANAGE_PLAYLISTS
+    }
 
     override fun subscribe() = playlistRepository.subscribe(this)
 

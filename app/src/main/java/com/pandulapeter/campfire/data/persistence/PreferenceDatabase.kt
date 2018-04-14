@@ -31,6 +31,7 @@ class PreferenceDatabase(context: Context) {
     var shouldShowPrivacyPolicy by PreferenceFieldDelegate.Boolean("shouldShowPrivacyPolicy", true)
     var shouldShareUsageData by PreferenceFieldDelegate.Boolean("shouldShareUsageData", false)
     var playlistHistory by PreferenceFieldDelegate.StringSet("playlistHistory", setOf())
+    var lastScreen by PreferenceFieldDelegate.String("lastScreen", "")
 
     // First time user experience
     var ftuxHistoryCompleted by PreferenceFieldDelegate.Boolean("ftuxHistoryCompleted", false)
@@ -53,9 +54,9 @@ class PreferenceDatabase(context: Context) {
         }
     }
 
-    private sealed class PreferenceFieldDelegate<T>(protected val key: String, protected val defaultValue: T) : ReadWriteProperty<PreferenceDatabase, T> {
+    private sealed class PreferenceFieldDelegate<T>(protected val key: kotlin.String, protected val defaultValue: T) : ReadWriteProperty<PreferenceDatabase, T> {
 
-        class Boolean(key: String, defaultValue: kotlin.Boolean = false) : PreferenceFieldDelegate<kotlin.Boolean>(key, defaultValue) {
+        class Boolean(key: kotlin.String, defaultValue: kotlin.Boolean = false) : PreferenceFieldDelegate<kotlin.Boolean>(key, defaultValue) {
 
             override fun getValue(thisRef: PreferenceDatabase, property: KProperty<*>) = thisRef.preferences.getBoolean(key, defaultValue)
 
@@ -63,7 +64,7 @@ class PreferenceDatabase(context: Context) {
                 thisRef.preferences.edit().putBoolean(key, value).apply()
         }
 
-        class Int(key: String, defaultValue: kotlin.Int = 0) : PreferenceFieldDelegate<kotlin.Int>(key, defaultValue) {
+        class Int(key: kotlin.String, defaultValue: kotlin.Int = 0) : PreferenceFieldDelegate<kotlin.Int>(key, defaultValue) {
 
             override fun getValue(thisRef: PreferenceDatabase, property: KProperty<*>) = thisRef.preferences.getInt(key, defaultValue)
 
@@ -71,7 +72,7 @@ class PreferenceDatabase(context: Context) {
                 thisRef.preferences.edit().putInt(key, value).apply()
         }
 
-        class Long(key: String, defaultValue: kotlin.Long = 0) : PreferenceFieldDelegate<kotlin.Long>(key, defaultValue) {
+        class Long(key: kotlin.String, defaultValue: kotlin.Long = 0) : PreferenceFieldDelegate<kotlin.Long>(key, defaultValue) {
 
             override fun getValue(thisRef: PreferenceDatabase, property: KProperty<*>) = thisRef.preferences.getLong(key, defaultValue)
 
@@ -79,11 +80,19 @@ class PreferenceDatabase(context: Context) {
                 thisRef.preferences.edit().putLong(key, value).apply()
         }
 
-        class StringSet(key: String, defaultValue: Set<String>) : PreferenceFieldDelegate<Set<String>>(key, defaultValue) {
+        class String(key: kotlin.String, defaultValue: kotlin.String = "") : PreferenceFieldDelegate<kotlin.String>(key, defaultValue) {
 
-            override fun getValue(thisRef: PreferenceDatabase, property: KProperty<*>): Set<String> = thisRef.preferences.getStringSet(key, defaultValue) ?: setOf()
+            override fun getValue(thisRef: PreferenceDatabase, property: KProperty<*>) = thisRef.preferences.getString(key, defaultValue)
 
-            override fun setValue(thisRef: PreferenceDatabase, property: KProperty<*>, value: Set<String>) =
+            override fun setValue(thisRef: PreferenceDatabase, property: KProperty<*>, value: kotlin.String) =
+                thisRef.preferences.edit().putString(key, value).apply()
+        }
+
+        class StringSet(key: kotlin.String, defaultValue: Set<kotlin.String>) : PreferenceFieldDelegate<Set<kotlin.String>>(key, defaultValue) {
+
+            override fun getValue(thisRef: PreferenceDatabase, property: KProperty<*>): Set<kotlin.String> = thisRef.preferences.getStringSet(key, defaultValue) ?: setOf()
+
+            override fun setValue(thisRef: PreferenceDatabase, property: KProperty<*>, value: Set<kotlin.String>) =
                 thisRef.preferences.edit().putStringSet(key, value).apply()
         }
     }

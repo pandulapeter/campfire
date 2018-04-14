@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.model.remote.SongDetail
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
@@ -25,6 +26,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
 
     private val songRepository by inject<SongRepository>()
     protected val songDetailRepository by inject<SongDetailRepository>()
+    protected val preferenceDatabase by inject<PreferenceDatabase>()
     private var coroutine: CoroutineContext? = null
     protected var librarySongs = sequenceOf<Song>()
     val adapter = SongListAdapter()
