@@ -284,12 +284,14 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun addViewToAppBar(view: View) {
         binding.appBarLayout.run {
-            if (childCount > 1) {
-                getChildAt(1).run { removeView(this) }
-            }
+            postDelayed({
+                if (childCount > 1) {
+                    getChildAt(1).run { removeView(this) }
+                }
+                toggleTransitionMode(true)
+                addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            }, 150)
         }
-        toggleTransitionMode(true)
-        binding.appBarLayout.addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
     }
 
     private fun removeViewFromAppBar() {
