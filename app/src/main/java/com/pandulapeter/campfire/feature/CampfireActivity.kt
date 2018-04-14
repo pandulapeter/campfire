@@ -432,6 +432,14 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     private fun handleNewIntent() {
+        if (currentFragment is DetailFragment) {
+            if (intent.screenToOpen.isEmpty()) {
+                return
+            } else {
+                supportFragmentManager.popBackStackImmediate()
+                updateMainToolbarButton(false)
+            }
+        }
         when (intent.screenToOpen) {
             "" -> preferenceDatabase.lastScreen.let {
                 when (it) {
@@ -450,43 +458,55 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     fun openLibraryScreen() {
-        supportFragmentManager.handleReplace { LibraryFragment() }
-        currentScreenId = R.id.library
-        binding.primaryNavigation.setCheckedItem(R.id.library)
-        appShortcutManager.onLibraryOpened()
+        if (currentFragment !is LibraryFragment) {
+            supportFragmentManager.handleReplace { LibraryFragment() }
+            currentScreenId = R.id.library
+            binding.primaryNavigation.setCheckedItem(R.id.library)
+            appShortcutManager.onLibraryOpened()
+        }
     }
 
-    fun openHistoryScreen() {
-        supportFragmentManager.handleReplace { HistoryFragment() }
-        currentScreenId = R.id.history
-        binding.primaryNavigation.setCheckedItem(R.id.history)
+    private fun openHistoryScreen() {
+        if (currentFragment !is HistoryFragment) {
+            supportFragmentManager.handleReplace { HistoryFragment() }
+            currentScreenId = R.id.history
+            binding.primaryNavigation.setCheckedItem(R.id.history)
+        }
     }
 
-    fun openOptionsScreen() {
-        supportFragmentManager.handleReplace { OptionsFragment() }
-        currentScreenId = R.id.options
-        binding.primaryNavigation.setCheckedItem(R.id.options)
+    private fun openOptionsScreen() {
+        if (currentFragment !is OptionsFragment) {
+            supportFragmentManager.handleReplace { OptionsFragment() }
+            currentScreenId = R.id.options
+            binding.primaryNavigation.setCheckedItem(R.id.options)
+        }
     }
 
-    fun openPlaylistScreen(playlistId: String) {
-        beforeScreenChanged()
-        currentPlaylistId = playlistId
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, PlaylistFragment.newInstance(playlistId))
-            .commit()
-        appShortcutManager.onPlaylistOpened(playlistId)
+    private fun openPlaylistScreen(playlistId: String) {
+        if (currentFragment !is PlaylistFragment || currentPlaylistId != playlistId) {
+            beforeScreenChanged()
+            currentPlaylistId = playlistId
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, PlaylistFragment.newInstance(playlistId))
+                .commit()
+            appShortcutManager.onPlaylistOpened(playlistId)
+        }
     }
 
-    fun openManagePlaylistsScreen() {
-        currentScreenId = R.id.manage_playlists
-        supportFragmentManager.handleReplace { ManagePlaylistsFragment() }
-        binding.primaryNavigation.setCheckedItem(R.id.manage_playlists)
+    private fun openManagePlaylistsScreen() {
+        if (currentFragment !is ManagePlaylistsFragment) {
+            currentScreenId = R.id.manage_playlists
+            supportFragmentManager.handleReplace { ManagePlaylistsFragment() }
+            binding.primaryNavigation.setCheckedItem(R.id.manage_playlists)
+        }
     }
 
-    fun openManageDownloadsScreen() {
-        currentScreenId = R.id.manage_downloads
-        supportFragmentManager.handleReplace { ManageDownloadsFragment() }
-        binding.primaryNavigation.setCheckedItem(R.id.manage_downloads)
+    private fun openManageDownloadsScreen() {
+        if (currentFragment !is ManageDownloadsFragment) {
+            currentScreenId = R.id.manage_downloads
+            supportFragmentManager.handleReplace { ManageDownloadsFragment() }
+            binding.primaryNavigation.setCheckedItem(R.id.manage_downloads)
+        }
     }
 
     fun openDetailScreen(clickedView: View, songs: List<Song>, shouldExplode: Boolean, index: Int = 0, shouldShowManagePlaylist: Boolean = true) {
