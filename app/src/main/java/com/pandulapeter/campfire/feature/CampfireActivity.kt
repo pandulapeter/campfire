@@ -204,9 +204,9 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             }
         } else {
             binding.appBarLayout.layoutTransition = LayoutTransition().apply {
-                disableTransitionType(LayoutTransition.CHANGE_APPEARING)
                 disableTransitionType(LayoutTransition.DISAPPEARING)
-                setStartDelay(LayoutTransition.APPEARING, 0)
+                enableTransitionType(LayoutTransition.CHANGING)
+
             }
             binding.coordinatorLayout.layoutTransition = LayoutTransition().apply {
                 disableTransitionType(LayoutTransition.CHANGE_DISAPPEARING)
@@ -303,7 +303,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                     }
                     toggleTransitionMode(true)
                     addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                }, 150)
+                }, 160)
             }
         }
     }
@@ -312,7 +312,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         binding.appBarLayout.run {
             if (childCount > 1) {
                 getChildAt(1).run {
-                    postDelayed({ if (isAttachedToWindow) removeView(this) }, 200)
+                    postDelayed({ if (isAttachedToWindow) removeView(this) }, 130)
                 }
             }
         }
