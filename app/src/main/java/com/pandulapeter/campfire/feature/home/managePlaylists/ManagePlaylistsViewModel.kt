@@ -14,6 +14,10 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
 
     private val playlistRepository by inject<PlaylistRepository>()
     private var playlistToDeleteId: String? = null
+        set(value) {
+            field = value
+            playlistRepository.hiddenPlaylistId = value
+        }
     val adapter = ManagePlaylistListAdapter()
     val shouldShowDeleteAllButton = ObservableBoolean()
     val playlistCount = ObservableInt()

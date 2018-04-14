@@ -12,6 +12,11 @@ import java.util.*
 class PlaylistRepository(private val songDatabase: SongDatabase) : Repository<PlaylistRepository.Subscriber>() {
     private val data = mutableListOf<Playlist>()
     private var isCacheLoaded = false
+    var hiddenPlaylistId: String? = null
+        set(value) {
+            field = value
+            notifyDataChanged()
+        }
     val cache get() = data.toList()
 
     init {

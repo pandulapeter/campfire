@@ -413,6 +413,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             clear()
             playlists
                 .sortedBy { it.order }
+                .filter { it.id != playlistRepository.hiddenPlaylistId }
                 .forEachIndexed { index, playlist ->
                     addPlaylistItem(index, playlist.title ?: getString(R.string.home_favorites))
                 }
@@ -420,7 +421,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 addPlaylistItem(playlists.size, getString(R.string.home_new_playlist), true)
             }
             setGroupCheckable(R.id.playlist_container, true, true)
-            //TODO updateCheckedItem()
         }
     }
 
