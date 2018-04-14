@@ -7,6 +7,7 @@ import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import java.util.*
 
 class PlaylistRepository(private val songDatabase: SongDatabase) : Repository<PlaylistRepository.Subscriber>() {
     private val data = mutableListOf<Playlist>()
@@ -24,11 +25,22 @@ class PlaylistRepository(private val songDatabase: SongDatabase) : Repository<Pl
     fun isCacheLoaded() = isCacheLoaded
 
     fun deleteAllPlaylists() {
-        data.clear()
+        data.swap(data.filter { it.id == Playlist.FAVORITES_ID })
         async(UI) {
             async(CommonPool) { songDatabase.playlistDao().deleteAll() }.await()
             notifyDataChanged()
         }
+    }
+
+    fun createNewPlaylist(title: String) {
+        val playlist = Playlist(
+            id = UUID.randomUUID().toString(),
+            title = title,
+            order = data.size
+        )
+        data.add(playlist)
+        notifyDataChanged()
+        async(UI) { async(CommonPool) { songDatabase.playlistDao().insert(playlist) }.await() }
     }
 
     private fun refreshDataSet() {

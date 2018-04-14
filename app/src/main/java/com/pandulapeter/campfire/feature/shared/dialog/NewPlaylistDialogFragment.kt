@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.old.feature.shared.dialog
+package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.databinding.DataBindingUtil
 import android.os.Bundle
@@ -12,19 +12,16 @@ import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import com.pandulapeter.campfire.NewPlaylistBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.showKeyboard
 import org.koin.android.ext.android.inject
 
-/**
- * Allows the user to create a new playlist.
- */
 class NewPlaylistDialogFragment : AppCompatDialogFragment() {
     private val playlistRepository by inject<PlaylistRepository>()
-    private val userPreferenceRepository by inject<UserPreferenceRepository>()
+    private val preferenceDatabase by inject<PreferenceDatabase>()
     private lateinit var binding: NewPlaylistBinding
     private val positiveButton by lazy { (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE) }
 
@@ -40,7 +37,7 @@ class NewPlaylistDialogFragment : AppCompatDialogFragment() {
 
             override fun onTextChanged(text: CharSequence?, p1: Int, p2: Int, p3: Int) = Unit
         })
-        AlertDialog.Builder(context, if (userPreferenceRepository.shouldUseDarkTheme) R.style.DarkAlertDialog else R.style.LightAlertDialog)
+        AlertDialog.Builder(context, if (preferenceDatabase.shouldUseDarkTheme) R.style.DarkAlertDialog else R.style.LightAlertDialog)
             .setView(binding.root)
             .setTitle(R.string.home_new_playlist)
             .setPositiveButton(R.string.ok, { _, _ -> onOkButtonPressed() })
@@ -69,8 +66,7 @@ class NewPlaylistDialogFragment : AppCompatDialogFragment() {
     }
 
     //TODO: Check that there are no playlists with duplicate names.
-    //TODO: Display error messages below the input field.
-    private fun CharSequence?.isTextValid() = !isNullOrBlank()
+    private fun CharSequence?.isTextValid() = this?.trim()?.isEmpty() == false
 
     private fun onOkButtonPressed() {
         binding.inputField.text?.let {

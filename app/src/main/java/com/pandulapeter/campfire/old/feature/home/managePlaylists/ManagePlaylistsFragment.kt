@@ -8,10 +8,10 @@ import android.view.View
 import com.pandulapeter.campfire.ManagePlaylistsBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
+import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.old.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
-import com.pandulapeter.campfire.old.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.hideKeyboard

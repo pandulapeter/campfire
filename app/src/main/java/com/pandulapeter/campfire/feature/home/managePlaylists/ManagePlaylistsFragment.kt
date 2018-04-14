@@ -7,6 +7,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentManagePlaylistsBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
+import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.visibleOrGone
@@ -49,7 +50,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         viewModel.shouldShowDeleteAllButton.onPropertyChanged { deleteAllButton.visibleOrGone = it }
     }
 
-    override fun onFloatingActionButtonPressed() = showSnackbar(R.string.work_in_progress)
+    override fun onFloatingActionButtonPressed() = NewPlaylistDialogFragment.show(childFragmentManager)
 
     override fun onPositiveButtonSelected(id: Int) {
         if (id == DIALOG_ID_DELETE_ALL_CONFIRMATION) {
