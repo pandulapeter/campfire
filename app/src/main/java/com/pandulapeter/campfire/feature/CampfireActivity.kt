@@ -379,6 +379,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 reenterTransition = null
             }
         }
+        binding.coordinatorLayout.layoutTransition.disableTransitionType(LayoutTransition.CHANGING)
         supportFragmentManager.beginTransaction()
             .setAllowOptimization(true)
             .replace(R.id.fragment_container, DetailFragment.newInstance(songs, index, shouldShowManagePlaylist))
