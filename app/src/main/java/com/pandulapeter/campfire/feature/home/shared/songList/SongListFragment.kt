@@ -37,7 +37,11 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             downloadActionClickListener = { position -> (items[position] as? SongListItemViewModel.SongViewModel)?.let { viewModel.downloadSong(it.song) } }
             playlistActionClickListener = { position ->
                 (items[position] as? SongListItemViewModel.SongViewModel)?.let {
-                    PlaylistChooserBottomSheetFragment.show(childFragmentManager, it.song.id)
+                    if (viewModel.areThereMoreThanOnePlaylists()) {
+                        PlaylistChooserBottomSheetFragment.show(childFragmentManager, it.song.id)
+                    } else {
+                        viewModel.toggleFavoritesState(it.song.id)
+                    }
                 }
             }
         }

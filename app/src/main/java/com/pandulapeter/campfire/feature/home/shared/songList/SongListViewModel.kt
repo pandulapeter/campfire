@@ -161,6 +161,16 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
 
     fun downloadSong(song: Song) = songDetailRepository.getSongDetail(song)
 
+    fun areThereMoreThanOnePlaylists() = playlistRepository.cache.size > 1
+
+    fun toggleFavoritesState(songId: String) {
+        if (playlistRepository.isSongInPlaylist(Playlist.FAVORITES_ID, songId)) {
+            playlistRepository.removeSongFromPlaylist(Playlist.FAVORITES_ID, songId)
+        } else {
+            playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, songId)
+        }
+    }
+
     protected open fun canUpdateUI() = true
 
     protected abstract fun Sequence<Song>.createViewModels(): List<SongListItemViewModel>
