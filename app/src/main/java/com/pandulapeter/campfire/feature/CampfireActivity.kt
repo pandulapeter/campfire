@@ -149,7 +149,11 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
         // Initialize the primary side navigation drawer.
         binding.primaryNavigation.disableScrollbars()
-        (binding.primaryNavigation.getHeaderView(0)?.findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
+        val headerView = binding.primaryNavigation.getHeaderView(0)
+        (headerView?.findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
+        binding.rootCoordinatorLayout.insetChangeListener = {
+            headerView?.apply { setPadding(paddingStart, it, paddingEnd, paddingBottom) }
+        }
         binding.primaryNavigation.setNavigationItemSelectedListener { menuItem ->
             if (currentScreenId == menuItem.itemId) {
                 consumeAndCloseDrawers()
