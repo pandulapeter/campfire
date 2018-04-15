@@ -6,7 +6,9 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.support.v4.app.SharedElementCallback
 import android.transition.*
+import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
@@ -87,6 +89,12 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             }
         sharedElementEnterTransition = createTransition(TRANSITION_DELAY)
         sharedElementReturnTransition = createTransition(0)
+
+        setEnterSharedElementCallback(object : SharedElementCallback() {
+            override fun onMapSharedElements(names: MutableList<String>?, sharedElements: MutableMap<String, View>?) {
+                Log.d("DEBUG_TRANSITION", "Enter")
+            }
+        })
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -131,6 +139,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
         viewModel.songId.onPropertyChanged {
             updateToolbarTitle(binding.viewPager.currentItem)
+            detailEventBus.notifyTransitionEnd()
         }
         binding.viewPager.adapter = DetailPagerAdapter(childFragmentManager, songs)
         binding.viewPager.addPageScrollListener(

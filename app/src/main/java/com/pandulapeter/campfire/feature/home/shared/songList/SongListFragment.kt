@@ -2,7 +2,9 @@ package com.pandulapeter.campfire.feature.home.shared.songList
 
 import android.os.Bundle
 import android.support.annotation.CallSuper
+import android.support.v4.app.SharedElementCallback
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -22,6 +24,15 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
 
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setExitSharedElementCallback(object : SharedElementCallback() {
+            override fun onMapSharedElements(names: MutableList<String>?, sharedElements: MutableMap<String, View>?) {
+                Log.d("DEBUG_TRANSITION", "Exit")
+            }
+        })
+    }
 
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

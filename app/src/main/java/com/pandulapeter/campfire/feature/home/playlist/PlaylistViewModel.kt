@@ -25,8 +25,7 @@ class PlaylistViewModel(
 
     override fun onActionButtonClicked() = openLibrary()
 
-    override fun Sequence<Song>.createViewModels() = filter { songDetailRepository.isSongDownloaded(it.id) }
-        .filter { it.id != songToDeleteId }
+    override fun Sequence<Song>.createViewModels() = filter { it.id != songToDeleteId }
         .filter { playlist?.songIds?.contains(it.id) ?: false }
         .map {
             SongListItemViewModel.SongViewModel(
