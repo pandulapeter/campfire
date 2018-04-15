@@ -87,7 +87,7 @@ class SongListAdapter : RecyclerView.Adapter<SongListItemViewHolder<*, *>>() {
                             is Payload.IsSongInAPlaylistChanged -> isOnAnyPlaylists = payload.isSongInAPlaylist
                         }
                     }
-                    holder.bind(this)
+                    holder.bind(this, payloads.isEmpty())
                 }
             }
             is SongListItemViewHolder.HeaderViewHolder -> (items[position] as? SongListItemViewModel.HeaderViewModel)?.let { holder.bind(it) }

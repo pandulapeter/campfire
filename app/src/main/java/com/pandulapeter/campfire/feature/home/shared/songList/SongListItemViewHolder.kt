@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.util.obtainColor
 
 sealed class SongListItemViewHolder<out B : ViewDataBinding, in VM : SongListItemViewModel>(protected val binding: B) : RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(viewModel: VM) {
+    open fun bind(viewModel: VM, skipAnimations: Boolean = false) {
         binding.setVariable(BR.viewModel, viewModel)
         binding.executePendingBindings()
     }
@@ -25,6 +25,13 @@ sealed class SongListItemViewHolder<out B : ViewDataBinding, in VM : SongListIte
 
         init {
             binding.loadingIndicator.run { indeterminateDrawable.setColorFilter(context.obtainColor(android.R.attr.textColorSecondary), PorterDuff.Mode.SRC_IN) }
+        }
+
+        override fun bind(viewModel: SongListItemViewModel.SongViewModel, skipAnimations: Boolean) {
+            if (skipAnimations) {
+                binding.playlistAction.setImageDrawable(null)
+            }
+            super.bind(viewModel, skipAnimations)
         }
 
         fun setItemClickListener(itemClickListener: (position: Int, clickedView: View) -> Unit) {
