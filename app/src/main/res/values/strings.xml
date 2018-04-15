@@ -141,7 +141,7 @@
     <!-- Options screen / About -->
     <string name="options_about_description_top"><Data><![CDATA[
         Thank you for using <strong>Campfire</strong>!<br>
-        This app was created by me, Pandula Péter as a hobby project.
+        This app was created by Pandula Péter as a hobby project.
         ]]></Data>
     </string>
     <string name="options_about_description_bottom">"I know that there aren't too many songs in the library - new ones are being added on a semi-regular basis. If you have suggestions on which songs to include next or any other type of feedback, feel free to drop me a line!</string>

@@ -14,6 +14,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:orientation="vertical">
 
         <TextView
@@ -36,9 +38,6 @@
                 android:id="@+id/description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-thin"
-                android:lineSpacingMultiplier="1.1"
-                android:textSize="14sp"
                 app:formattedText="@{model.description}"
                 tools:text="Description" />
 
