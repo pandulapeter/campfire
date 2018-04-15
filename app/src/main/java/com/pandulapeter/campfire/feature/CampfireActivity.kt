@@ -9,6 +9,7 @@ import android.databinding.DataBindingUtil
 import android.graphics.BitmapFactory
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.support.annotation.MenuRes
 import android.support.design.internal.NavigationMenuView
@@ -191,6 +192,10 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             shouldAllowAppBarScrolling = savedInstanceState.toolbarContainerScrollFlags
             if (currentScreenId == R.id.options) {
                 forceExpandAppBar = savedInstanceState.isAppBarExpanded
+                if (!forceExpandAppBar && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                    // Seems to cause glitches on older Android versions.
+                    expandAppBar()
+                }
             }
         }
         binding.drawerLayout.setDrawerLockMode(if (currentFragment is DetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
