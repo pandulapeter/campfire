@@ -11,15 +11,17 @@ import com.pandulapeter.campfire.util.addPageScrollListener
 class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewModel>(R.layout.fragment_options) {
 
     override val viewModel = OptionsViewModel()
+    override val appBarView by lazy {
+        TabLayout(mainActivity.toolbarContext).apply {
+            tabMode = TabLayout.MODE_SCROLLABLE
+            setupWithViewPager(binding.viewPager)
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_options)
         binding.viewPager.adapter = OptionsFragmentPagerAdapter(mainActivity, childFragmentManager)
         binding.viewPager.addPageScrollListener({ mainActivity.expandAppBar() })
-        mainActivity.addViewToAppBar(TabLayout(mainActivity.toolbarContext).apply {
-            tabMode = TabLayout.MODE_SCROLLABLE
-            setupWithViewPager(binding.viewPager)
-        }, savedInstanceState != null)
     }
 }

@@ -26,11 +26,13 @@ import kotlin.math.ceil
 abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes layoutResourceId: Int) : CampfireFragment<B, VM>(layoutResourceId) {
 
     protected val defaultToolbar by lazy { AppCompatTextView(context).apply { gravity = Gravity.CENTER_VERTICAL } }
+    protected open val appBarView: View? = null
     protected var toolbarWidth = 0
 
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         mainActivity.beforeScreenChanged()
+        mainActivity.updateAppBarView(appBarView, savedInstanceState != null)
         mainActivity.updateToolbarTitleView(inflateToolbarTitle(mainActivity.toolbarContext), toolbarWidth)
     }
 

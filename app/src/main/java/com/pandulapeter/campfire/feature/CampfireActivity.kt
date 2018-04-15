@@ -292,37 +292,29 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     override fun onSongRemovedFromAllPlaylists(songId: String) = Unit
 
-    fun addViewToAppBar(view: View, immediately: Boolean) {
-        binding.appBarLayout.run {
-            if (immediately || System.currentTimeMillis() - startTime < 300) {
-                layoutTransition = null
+    fun updateAppBarView(view: View?, immediately: Boolean) {
+        binding.appBarLayout.apply {
+            fun removeViews() {
                 while (childCount > 1) {
-                    getChildAt(1).run { removeView(this) }
+                    removeView(getChildAt(1))
                 }
-                post { toggleTransitionMode(true) }
-                addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            } else {
-                postDelayed({
-                    while (childCount > 1) {
-                        getChildAt(1).run { removeView(this) }
-                    }
-                    toggleTransitionMode(true)
-                    addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                }, 120)
             }
-        }
-    }
-
-    private fun removeViewFromAppBar() {
-        binding.appBarLayout.run {
-            if (childCount > 1) {
-                getChildAt(1).run {
-                    postDelayed({
-                        if (isAttachedToWindow) {
-                            layoutTransition = LayoutTransition()
-                            removeView(this)
-                        }
-                    }, 100)
+            if (view == null) {
+                post { removeViews() }
+            } else {
+                if (getChildAt(1) != view) {
+                    if (immediately || System.currentTimeMillis() - startTime < 800) {
+                        layoutTransition = null
+                        removeViews()
+                        addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                        toggleTransitionMode(true)
+                    } else {
+                        postDelayed({
+                            toggleTransitionMode(true)
+                            removeViews()
+                            addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                        }, 250)
+                    }
                 }
             }
         }
@@ -350,14 +342,16 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             }
             if (childCount > 0) getChildAt(0) else null
         }
-        binding.toolbarTitleContainer.addView(
-            toolbar.apply { visibleOrGone = oldView?.id == R.id.default_toolbar },
-            FrameLayout.LayoutParams(if (width == 0) ViewGroup.LayoutParams.MATCH_PARENT else width, ViewGroup.LayoutParams.MATCH_PARENT).apply {
-                gravity = Gravity.CENTER_VERTICAL
-            })
-        oldView?.run {
-            visibleOrGone = false
-            postOnAnimation { binding.toolbarTitleContainer.removeView(this) }
+        if (toolbar != oldView) {
+            binding.toolbarTitleContainer.addView(
+                toolbar.apply { visibleOrGone = oldView?.id == R.id.default_toolbar },
+                FrameLayout.LayoutParams(if (width == 0) ViewGroup.LayoutParams.MATCH_PARENT else width, ViewGroup.LayoutParams.MATCH_PARENT).apply {
+                    gravity = Gravity.CENTER_VERTICAL
+                })
+            oldView?.run {
+                visibleOrGone = false
+                postOnAnimation { binding.toolbarTitleContainer.removeView(this) }
+            }
         }
         toolbar.run { postOnAnimation { visibleOrGone = true } }
     }
@@ -410,7 +404,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         toggleTransitionMode(false)
         shouldAllowAppBarScrolling = true
         binding.toolbarButtonContainer.removeAllViews()
-        removeViewFromAppBar()
         expandAppBar()
 
         // Reset the secondary navigation drawer.
@@ -500,7 +493,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                     binding.primaryNavigation.setCheckedItem(it.key)
                 }
             }
-            beforeScreenChanged()
             currentPlaylistId = playlistId
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragment_container, PlaylistFragment.newInstance(playlistId))
