@@ -292,7 +292,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     override fun onSongRemovedFromAllPlaylists(songId: String) = Unit
 
-    fun updateAppBarView(view: View?, immediately: Boolean) {
+    fun updateAppBarView(view: View?, immediately: Boolean = false) {
         binding.appBarLayout.apply {
             fun removeViews() {
                 while (childCount > 1) {
@@ -307,7 +307,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                         layoutTransition = null
                         removeViews()
                         addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                        toggleTransitionMode(true)
+                        post { toggleTransitionMode(true) }
                     } else {
                         postDelayed({
                             toggleTransitionMode(true)

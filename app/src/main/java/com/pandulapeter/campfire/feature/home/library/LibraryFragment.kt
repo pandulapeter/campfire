@@ -45,7 +45,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                         context.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { mainActivity.openSecondaryNavigationDrawer() }
                     ))
                 }
-                mainActivity.updateAppBarView(searchControlsBinding.root, false)
+                mainActivity.updateAppBarView(searchControlsBinding.root)
                 mainActivity.enableSecondaryNavigationDrawer(R.menu.library)
                 initializeCompoundButton(R.id.downloaded_only) { viewModel.shouldShowDownloadedOnly }
                 initializeCompoundButton(R.id.show_work_in_progress) { viewModel.shouldShowWorkInProgress }
@@ -87,6 +87,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         savedInstanceState?.let {
+            searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
             if (it.isTextInputVisible) {
                 searchToggle.setImageDrawable(mainActivity.drawable(R.drawable.ic_close_24dp))
                 viewModel.toolbarTextInputView.textInput.run {
@@ -98,7 +99,6 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             }
             viewModel.placeholderText.set(savedInstanceState.placeholderText)
             viewModel.buttonText.set(savedInstanceState.buttonText)
-            searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
         }
         viewModel.toolbarTextInputView.textInput.requestFocus()
         searchControlsViewModel.searchInTitles.onPropertyChanged {

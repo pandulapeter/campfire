@@ -17,7 +17,7 @@
         <item name="android:paddingStart">@dimen/first_keyline</item>
         <item name="android:paddingEnd">@dimen/first_keyline</item>
         <item name="android:paddingTop">@dimen/content_padding</item>
-        <item name="android:paddingBottom">@dimen/content_padding</item>
+        <item name="android:paddingBottom">10dp</item>
     </style>
 
 </resources>
