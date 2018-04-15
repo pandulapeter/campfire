@@ -92,6 +92,16 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
         setEnterSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>?, sharedElements: MutableMap<String, View>?) {
+//                names?.let {
+//                    viewModel.songId.get()?.let { id ->
+//                        names.clear()
+//                        names.add(id)
+//                        sharedElements?.let {
+//                            sharedElements.clear()
+//                            sharedElements[id] = binding.sharedElement
+//                        }
+//                    }
+//                }
                 Log.d("DEBUG_TRANSITION", "Enter")
             }
         })
