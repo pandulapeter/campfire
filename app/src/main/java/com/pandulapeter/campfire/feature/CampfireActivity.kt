@@ -99,7 +99,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     var shouldAllowAppBarScrolling
         get() = (binding.toolbarContainer.layoutParams as AppBarLayout.LayoutParams).scrollFlags != 0
         set(value) {
-            (binding.toolbarContainer.layoutParams as AppBarLayout.LayoutParams).scrollFlags = if (value) {
+            // Seems to cause glitches on older Android versions.
+            (binding.toolbarContainer.layoutParams as AppBarLayout.LayoutParams).scrollFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && value) {
                 AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
             } else 0
         }
@@ -120,6 +121,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         startTime = System.currentTimeMillis()
 
         // Initialize the app bar.
+        shouldAllowAppBarScrolling = true
         val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
         binding.toolbarMainButton.setOnClickListener {
             if (currentFragment is DetailFragment) {
@@ -192,10 +194,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             shouldAllowAppBarScrolling = savedInstanceState.toolbarContainerScrollFlags
             if (currentScreenId == R.id.options) {
                 forceExpandAppBar = savedInstanceState.isAppBarExpanded
-                if (!forceExpandAppBar && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                    // Seems to cause glitches on older Android versions.
-                    expandAppBar()
-                }
             }
         }
         binding.drawerLayout.setDrawerLockMode(if (currentFragment is DetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
