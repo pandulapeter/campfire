@@ -19,6 +19,8 @@ import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
 import com.pandulapeter.campfire.feature.home.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
+import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
@@ -41,7 +43,15 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
     }
 
-    override val viewModel by lazy { DetailViewModel(songs[arguments.index].id) }
+    override val viewModel by lazy {
+        var isAddedToPlaylist: Boolean? = null
+        DetailViewModel(songs[arguments.index].id) {
+            if (isAddedToPlaylist != null && isAddedToPlaylist != it) {
+                playlistButton.setImageDrawable((if (it) addedToPlaylist else removedFromPlaylist)?.apply { start() })
+            }
+            isAddedToPlaylist = it
+        }
+    }
     private val historyRepository by inject<HistoryRepository>()
     private val songRepository by inject<SongRepository>()
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
@@ -49,6 +59,17 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val songs by lazy { arguments?.songs?.filterIsInstance<Song>() ?: listOf() }
     private val drawablePlayToPause by lazy { mainActivity.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { mainActivity.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
+    private val addedToPlaylist by lazy { mainActivity.animatedDrawable(R.drawable.avd_added_to_playlists_24dp) }
+    private val removedFromPlaylist by lazy { mainActivity.animatedDrawable(R.drawable.avd_removed_from_playlists_24dp) }
+    private val playlistButton: ToolbarButton by lazy {
+        mainActivity.toolbarContext.createToolbarButton(if (viewModel.isSongInAnyPlaylists()) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp) {
+            if (viewModel.areThereMoreThanOnePlaylists()) {
+                viewModel.songId.get()?.let { PlaylistChooserBottomSheetFragment.show(childFragmentManager, it) }
+            } else {
+                viewModel.toggleFavoritesState()
+            }
+        }
+    }
     private val multiWindowFlags =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT else Intent.FLAG_ACTIVITY_NEW_TASK
     private var lastSongId = ""
@@ -108,13 +129,11 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 }
             })
         }
-        mainActivity.toolbarContext.let { context ->
-            mainActivity.updateToolbarButtons(
-                listOf(
-                    context.createToolbarButton(R.drawable.ic_playlist_border_24dp) { showSnackbar(R.string.work_in_progress) },
-                    context.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() })
-            )
-        }
+        mainActivity.updateToolbarButtons(
+            listOf(
+                playlistButton,
+                mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() })
+        )
         mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
         binding.viewPager.adapter = DetailPagerAdapter(childFragmentManager, songs)
         binding.viewPager.addPageScrollListener(
