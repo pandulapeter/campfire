@@ -7,10 +7,10 @@ import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
-class DetailViewModel(id: String, private val updatePlaylistIcon: (Boolean) -> Unit) : CampfireViewModel(), PlaylistRepository.Subscriber {
+class DetailViewModel(private val updatePlaylistIcon: (Boolean) -> Unit) : CampfireViewModel(), PlaylistRepository.Subscriber {
 
     private val playlistRepository by inject<PlaylistRepository>()
-    val songId = ObservableField(id)
+    val songId = ObservableField("")
 
     init {
         songId.onPropertyChanged { updatePlaylistIconState() }

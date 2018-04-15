@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentSongListBinding
+import com.pandulapeter.campfire.feature.home.playlist.PlaylistViewModel
 import com.pandulapeter.campfire.feature.home.shared.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
@@ -31,7 +32,14 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 (items[position] as? SongListItemViewModel.SongViewModel)?.let {
                     viewModel.isDetailScreenOpen = true
                     linearLayoutManager.isScrollEnabled = false
-                    mainActivity.openDetailScreen(clickedView, listOf(it.song), items.size > 1)
+                    val isPlaylist = viewModel is PlaylistViewModel
+                    mainActivity.openDetailScreen(
+                        clickedView,
+                        if (isPlaylist) items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song } else listOf(it.song),
+                        items.size > 1,
+                        if (isPlaylist) position else 0,
+                        !isPlaylist
+                    )
                 }
             }
             downloadActionClickListener = { position -> (items[position] as? SongListItemViewModel.SongViewModel)?.let { viewModel.downloadSong(it.song) } }

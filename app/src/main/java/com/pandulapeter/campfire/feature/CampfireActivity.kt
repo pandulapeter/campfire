@@ -537,7 +537,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    fun openDetailScreen(clickedView: View, songs: List<Song>, shouldExplode: Boolean, index: Int = 0, shouldShowManagePlaylist: Boolean = true) {
+    fun openDetailScreen(clickedView: View, songs: List<Song>, shouldExplode: Boolean, index: Int, shouldShowManagePlaylist: Boolean) {
         fun createTransition(delay: Long) = Explode().apply {
             propagation = null
             epicenterCallback = object : Transition.EpicenterCallback() {

@@ -45,7 +45,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     override val viewModel by lazy {
         var isAddedToPlaylist: Boolean? = null
-        DetailViewModel(songs[arguments.index].id) {
+        DetailViewModel {
             if (isAddedToPlaylist != null && isAddedToPlaylist != it) {
                 playlistButton.setImageDrawable((if (it) addedToPlaylist else removedFromPlaylist)?.apply { start() })
             }
@@ -92,7 +92,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
-        defaultToolbar.updateToolbarTitle(songs[arguments?.index ?: 0].title, songs[arguments?.index ?: 0].artist)
         if (savedInstanceState == null) {
             mainActivity.updateMainToolbarButton(true)
         }
@@ -129,16 +128,28 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 }
             })
         }
-        mainActivity.updateToolbarButtons(
-            listOf(
-                playlistButton,
-                mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() })
-        )
         mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
+        viewModel.songId.onPropertyChanged {
+            updateToolbarTitle(binding.viewPager.currentItem)
+        }
         binding.viewPager.adapter = DetailPagerAdapter(childFragmentManager, songs)
         binding.viewPager.addPageScrollListener(
             onPageSelected = { viewModel.songId.set(songs[it].id) },
             onPageScrollStateChanged = { mainActivity.expandAppBar() }
+        )
+        (arguments?.index ?: 0).let {
+            if (it == 0) {
+                viewModel.songId.set(songs[0].id)
+            } else {
+                binding.viewPager.currentItem = it
+            }
+        }
+        mainActivity.updateToolbarButtons(
+            mutableListOf(mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }).apply {
+                if (arguments.shouldShowManagePlaylist) {
+                    add(0, playlistButton)
+                }
+            }
         )
     }
 
@@ -213,7 +224,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override fun onFloatingActionButtonPressed() = toggleAutoScroll()
 
     fun onDataLoaded(songId: String) {
-        if (songs.indexOfFirst { it.id == songId } == binding.viewPager.currentItem) {
+        if (songId == viewModel.songId.get()) {
             mainActivity.enableFloatingActionButton()
             historyRepository.addHistoryItem(HistoryItem(songId, System.currentTimeMillis()))
             if (lastSongId != songId) {
@@ -253,4 +264,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             drawable?.start()
         }
     }
+
+    private fun updateToolbarTitle(position: Int) = defaultToolbar.updateToolbarTitle(songs[position].title, songs[position].artist)
 }
