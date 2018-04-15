@@ -121,7 +121,6 @@
                     <android.support.v7.widget.SwitchCompat
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/content_padding"
                         android:layout_marginStart="@dimen/switch_fix"
                         android:checked="@={viewModel.shouldUseDarkTheme}"
                         android:gravity="center_vertical"
@@ -134,7 +133,6 @@
                     <android.support.v7.widget.SwitchCompat
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/content_padding"
                         android:layout_marginStart="@dimen/switch_fix"
                         android:checked="@={viewModel.shouldShowExitConfirmation}"
                         android:gravity="center_vertical"
@@ -171,7 +169,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="@dimen/content_padding"
-                        android:layout_marginEnd="@dimen/large_content_padding"
+                        android:layout_marginEnd="@dimen/content_padding"
                         android:layout_marginStart="@dimen/switch_content_padding"
                         android:checked="@={viewModel.shouldShareUsageData}"
                         android:gravity="center_vertical"
