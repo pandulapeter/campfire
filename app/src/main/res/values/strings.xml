@@ -126,7 +126,7 @@
     <string name="options_changelog_0_0_2_description">
         <Data><![CDATA[
         • The ability to <strong>transpose</strong> songs, <strong>auto-scroll</strong> longer texts with adjustable speed and saving these preferences individually per song.<br>
-        • <strong>History</strong> screen which shows the last time different songs were opened.<br>
+        • <strong>History</strong> screen which shows the last time different songs were opened.
         ]]></Data>
     </string>
     <string name="options_changelog_0_0_1_version_name">v0.0.1</string>

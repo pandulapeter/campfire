@@ -30,6 +30,7 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:paddingBottom="@dimen/list_bottom_margin"
+                android:paddingTop="@dimen/content_padding"
                 app:adapter="@{viewModel.adapter}" />
 
         </android.support.v4.widget.SwipeRefreshLayout>

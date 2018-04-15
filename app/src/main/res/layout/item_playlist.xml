@@ -15,9 +15,10 @@
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/border"
         android:layout_marginStart="@dimen/content_padding"
-        android:layout_marginTop="@dimen/content_padding"
         android:foreground="?attr/selectableItemBackground"
+        app:cardCornerRadius="@dimen/card_corner"
         app:contentPadding="@dimen/content_padding">
 
         <android.support.constraint.ConstraintLayout

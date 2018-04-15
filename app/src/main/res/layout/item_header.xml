@@ -12,13 +12,10 @@
 
     <TextView
         android:id="@+id/title"
+        style="@style/Header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/large_content_padding"
-        android:paddingEnd="@dimen/first_keyline"
-        android:paddingStart="@dimen/first_keyline"
         android:text="@{viewModel.title}"
-        android:textColor="@color/accent"
         tools:text="A" />
 
 </layout>
