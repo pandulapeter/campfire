@@ -159,7 +159,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
 
     fun updateData() = songRepository.updateData()
 
-    fun downloadSong(song: Song) = songDetailRepository.getSongDetail(song)
+    fun downloadSong(song: Song) = songDetailRepository.getSongDetail(song, true)
 
     fun areThereMoreThanOnePlaylists() = playlistRepository.cache.size > 1
 

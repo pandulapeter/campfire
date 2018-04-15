@@ -89,7 +89,6 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:inAnimation="@android:anim/fade_in"
                     app:displayedChild="@{viewModel.downloadState instanceof DownloadState.Downloading ? 0 : 1}"
                     app:visibility="@{viewModel.downloadState instanceof DownloadState.NotDownloaded || viewModel.downloadState instanceof DownloadState.Downloading ||viewModel.downloadState instanceof DownloadState.Downloaded.Deprecated}">
 

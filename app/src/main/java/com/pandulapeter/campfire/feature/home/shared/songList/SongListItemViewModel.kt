@@ -16,15 +16,15 @@ sealed class SongListItemViewModel {
         private val playlistRepository: PlaylistRepository,
         val song: Song,
         var shouldShowDragHandle: Boolean = false,
-        val shouldShowPlaylistButton: Boolean = true,
+        val shouldShowPlaylistButton: Boolean = true
+    ) : SongListItemViewModel() {
+
+        var isOnAnyPlaylists = playlistRepository.isSongInAnyPlaylist(song.id)
         var downloadState: DownloadState = when {
             songDetailRepository.isSongDownloading(song.id) -> DownloadState.Downloading
             songDetailRepository.isSongDownloaded(song.id) -> if (songDetailRepository.getSongVersion(song.id) != song.version ?: 0) DownloadState.Downloaded.Deprecated else DownloadState.Downloaded.UpToDate
             else -> if (song.isNew) DownloadState.NotDownloaded.New else DownloadState.NotDownloaded.Old
         }
-    ) : SongListItemViewModel() {
-
-        var isOnAnyPlaylists = playlistRepository.isSongInAnyPlaylist(song.id)
         val alertText
             get() = when (downloadState) {
                 DownloadState.Downloaded.Deprecated -> context.getString(R.string.new_version_available)

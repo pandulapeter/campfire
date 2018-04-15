@@ -11,6 +11,7 @@ import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.delay
 
 class SongDetailRepository(
     private val networkManager: NetworkManager,
@@ -32,7 +33,7 @@ class SongDetailRepository(
 
     fun isCacheLoaded() = isCacheLoaded
 
-    fun getSongDetail(song: Song) {
+    fun getSongDetail(song: Song, shouldDelay: Boolean = false) {
         if (!isSongDownloading(song.id)) {
             if (isSongDownloaded(song.id)) {
                 async(UI) {
@@ -51,11 +52,15 @@ class SongDetailRepository(
             }
             downloadQueue.add(song.id)
             notifyDownloadQueChanged()
+            val started = System.currentTimeMillis()
             networkManager.service.getSong(song.id).enqueueCall(
                 onSuccess = { songDetail ->
                     songDetail.version = song.version ?: 0
                     async(UI) {
                         async(CommonPool) { songDatabase.songDetailDao().insert(songDetail) }.await()
+                        if (shouldDelay && System.currentTimeMillis() - started < 300) {
+                            delay(300)
+                        }
                         refreshDataSet()
                         subscribers.forEach { it.onSongDetailRepositoryDownloadSuccess(songDetail) }
                         downloadQueue.remove(song.id)
