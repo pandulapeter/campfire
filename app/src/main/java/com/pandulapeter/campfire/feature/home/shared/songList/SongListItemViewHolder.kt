@@ -56,7 +56,7 @@ sealed class SongListItemViewHolder<out B : ViewDataBinding, in VM : SongListIte
         }
 
         fun setDownloadActionClickListener(itemClickListener: ((position: Int) -> Unit)?) = itemClickListener?.let {
-            binding.downloadActionContainer.setOnClickListener {
+            binding.downloadActionSwitcher.setOnClickListener {
                 if (binding.downloadActionSwitcher.displayedChild == 1 && adapterPosition != RecyclerView.NO_POSITION) {
                     itemClickListener(adapterPosition)
                 }

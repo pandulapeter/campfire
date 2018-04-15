@@ -80,7 +80,6 @@
                 android:id="@+id/download_action_container"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
                 app:layout_constraintEnd_toEndOf="@id/space_3"
                 app:layout_constraintTop_toTopOf="parent">
 
@@ -89,6 +88,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
+                    android:background="?attr/selectableItemBackgroundBorderless"
                     android:inAnimation="@android:anim/fade_in"
                     app:displayedChild="@{viewModel.downloadState instanceof DownloadState.Downloading ? 0 : 1}"
                     app:visibility="@{viewModel.downloadState instanceof DownloadState.NotDownloaded || viewModel.downloadState instanceof DownloadState.Downloading ||viewModel.downloadState instanceof DownloadState.Downloaded.Deprecated}">
