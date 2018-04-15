@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.shared
 
 import android.databinding.BindingAdapter
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.support.annotation.ColorInt
 import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
@@ -63,7 +64,12 @@ fun setText(view: EditText, text: String?) {
 
 @BindingAdapter("formattedText")
 fun setFormattedText(view: TextView, @StringRes resourceId: Int) {
-    view.text = Html.fromHtml(view.context.getString(resourceId), Html.FROM_HTML_MODE_COMPACT)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        view.text = Html.fromHtml(view.context.getString(resourceId), Html.FROM_HTML_MODE_COMPACT)
+    } else {
+        @Suppress("DEPRECATION")
+        view.text = Html.fromHtml(view.context.getString(resourceId))
+    }
 }
 
 

@@ -6,6 +6,7 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
+import android.graphics.BitmapFactory
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -110,7 +111,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         setTaskDescription(
             ActivityManager.TaskDescription(
                 getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
-                null, color(R.color.primary)
+                BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher_foreground),
+                color(R.color.primary)
             )
         )
         super.onCreate(savedInstanceState)

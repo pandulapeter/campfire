@@ -115,6 +115,8 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
             updateUI()
             isResumingDelayed = false
         }
+        enterTransition = null
+        exitTransition = null
     }
 
     override fun onTransitionResume(transition: Transition?) = Unit
