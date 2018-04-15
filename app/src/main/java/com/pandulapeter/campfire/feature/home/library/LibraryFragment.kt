@@ -2,10 +2,10 @@ package com.pandulapeter.campfire.feature.home.library
 
 import android.content.Context
 import android.databinding.DataBindingUtil
-import android.graphics.drawable.AnimatedVectorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.support.annotation.IdRes
+import android.support.graphics.drawable.AnimatedVectorDrawableCompat
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -31,7 +31,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             context = mainActivity,
             toolbarTextInputView = ToolbarTextInputView(mainActivity.toolbarContext).apply { title.updateToolbarTitle(R.string.home_library) },
             updateSearchToggleDrawable = {
-                searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawable)?.start() })
+                searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
                 mainActivity.shouldAllowAppBarScrolling = !it
                 mainActivity.toggleTransitionMode(true)
                 searchControlsViewModel.isVisible.set(it)
@@ -70,18 +70,10 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
     private val searchToggle: ToolbarButton by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) { viewModel.toggleTextInputVisibility() } }
     private val drawableCloseToSearch by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            mainActivity.animatedDrawable(R.drawable.avd_close_to_search_24dp)
-        } else {
-            mainActivity.drawable(R.drawable.ic_search_24dp)
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) mainActivity.animatedDrawable(R.drawable.avd_close_to_search_24dp) else mainActivity.drawable(R.drawable.ic_search_24dp)
     }
     private val drawableSearchToClose by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            mainActivity.animatedDrawable(R.drawable.avd_search_to_close_24dp)
-        } else {
-            mainActivity.drawable(R.drawable.ic_close_24dp)
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) mainActivity.animatedDrawable(R.drawable.avd_search_to_close_24dp) else mainActivity.drawable(R.drawable.ic_close_24dp)
     }
     private val searchControlsViewModel = SearchControlsViewModel()
     private val searchControlsBinding by lazy {
