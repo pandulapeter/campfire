@@ -33,7 +33,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             updateSearchToggleDrawable = {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
                 mainActivity.shouldAllowAppBarScrolling = !it
-                mainActivity.toggleTransitionMode(true)
+                mainActivity.transitionMode = true
                 searchControlsViewModel.isVisible.set(it)
                 binding.swipeRefreshLayout.isEnabled = !it
                 binding.swipeRefreshLayout.isRefreshing = viewModel.isLoading.get()

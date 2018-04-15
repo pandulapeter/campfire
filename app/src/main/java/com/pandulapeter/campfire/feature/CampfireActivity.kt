@@ -104,6 +104,36 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
             } else 0
         }
+    var transitionMode: Boolean? = null
+        set(value) {
+            if (field != value) {
+                when (value) {
+                    true -> {
+                        binding.appBarLayout.layoutTransition = LayoutTransition().apply {
+                            setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
+                        }
+                        binding.coordinatorLayout.layoutTransition = LayoutTransition().apply {
+                            enableTransitionType(LayoutTransition.CHANGING)
+                        }
+                    }
+                    false -> {
+                        binding.appBarLayout.layoutTransition = LayoutTransition().apply {
+                            disableTransitionType(LayoutTransition.DISAPPEARING)
+                            enableTransitionType(LayoutTransition.CHANGING)
+                            setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
+                        }
+                        binding.coordinatorLayout.layoutTransition = LayoutTransition().apply {
+                            disableTransitionType(LayoutTransition.CHANGE_DISAPPEARING)
+                        }
+                    }
+                    null -> {
+                        binding.appBarLayout.layoutTransition = null
+                        binding.coordinatorLayout.layoutTransition = null
+                    }
+                }
+                field = value
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -307,17 +337,19 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 }
             }
             if (view == null) {
-                post { removeViews() }
+                if (childCount > 1) {
+                    post { removeViews() }
+                }
             } else {
                 if (getChildAt(1) != view) {
                     if (immediately || System.currentTimeMillis() - startTime < 800) {
                         layoutTransition = null
                         removeViews()
                         addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                        post { toggleTransitionMode(true) }
+                        transitionMode = true
                     } else {
                         postDelayed({
-                            toggleTransitionMode(true)
+                            transitionMode = true
                             removeViews()
                             addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                         }, 250)
@@ -408,7 +440,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         hideKeyboard(currentFocus)
 
         // Reset the app bar.
-        toggleTransitionMode(false)
+        transitionMode = false
         shouldAllowAppBarScrolling = true
         binding.toolbarButtonContainer.removeAllViews()
         expandAppBar()
@@ -419,26 +451,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
         // Reset the floating action button.
         disableFloatingActionButton()
-    }
-
-    fun toggleTransitionMode(boolean: Boolean) {
-        if (boolean) {
-            binding.appBarLayout.layoutTransition = LayoutTransition().apply {
-                setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
-            }
-            binding.coordinatorLayout.layoutTransition = LayoutTransition().apply {
-                enableTransitionType(LayoutTransition.CHANGING)
-            }
-        } else {
-            binding.appBarLayout.layoutTransition = LayoutTransition().apply {
-                disableTransitionType(LayoutTransition.DISAPPEARING)
-                enableTransitionType(LayoutTransition.CHANGING)
-
-            }
-            binding.coordinatorLayout.layoutTransition = LayoutTransition().apply {
-                disableTransitionType(LayoutTransition.CHANGE_DISAPPEARING)
-            }
-        }
     }
 
     private fun handleNewIntent() {
