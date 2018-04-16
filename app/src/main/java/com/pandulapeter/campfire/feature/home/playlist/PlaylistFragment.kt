@@ -65,6 +65,11 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         outState?.isInEditMode = viewModel.isInEditMode.get()
     }
 
+    override fun onBackPressed() = if (viewModel.toolbarTextInputView?.isTextInputVisible == true) {
+        viewModel.toggleEditMode()
+        true
+    } else super.onBackPressed()
+
     override fun inflateToolbarTitle(context: Context) = viewModel.toolbarTextInputView ?: defaultToolbar
 
     private fun updateToolbarTitle(songCount: Int = viewModel.songCount.get()) = (viewModel.toolbarTextInputView?.title ?: defaultToolbar).updateToolbarTitle(

@@ -7,9 +7,11 @@ import android.databinding.ObservableInt
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.model.remote.Song
+import com.pandulapeter.campfire.feature.home.shared.songList.SongListAdapter
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
+import com.pandulapeter.campfire.util.onPropertyChanged
 
 class PlaylistViewModel(
     context: Context,
@@ -28,6 +30,13 @@ class PlaylistViewModel(
         placeholderText.set(R.string.playlist_placeholder)
         buttonText.set(R.string.go_to_library)
         preferenceDatabase.lastScreen = playlistId
+        isInEditMode.onPropertyChanged {
+            adapter.items.forEachIndexed { index, item ->
+                if (item is SongListItemViewModel.SongViewModel) {
+                    adapter.notifyItemChanged(index, SongListAdapter.Payload.EditModeChanged(it))
+                }
+            }
+        }
     }
 
     override fun onActionButtonClicked() = openLibrary()
