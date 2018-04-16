@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewMo
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.util.onPropertyChanged
+import java.util.*
 
 class PlaylistViewModel(
     context: Context,
@@ -43,8 +44,9 @@ class PlaylistViewModel(
 
     override fun onActionButtonClicked() = openLibrary()
 
-    override fun Sequence<Song>.createViewModels() = filter { it.id != songToDeleteId }
-        .filter { playlist.get()?.songIds?.contains(it.id) ?: false }
+    override fun Sequence<Song>.createViewModels() = (playlist.get()?.songIds ?: listOf<String>())
+        .mapNotNull { songId -> find { it.id == songId } }
+        .filter { it.id != songToDeleteId && playlist.get()?.songIds?.contains(it.id) ?: false }
         .map {
             SongListItemViewModel.SongViewModel(
                 context = context,
@@ -81,5 +83,23 @@ class PlaylistViewModel(
             return
         }
         isInEditMode.set(!isInEditMode.get())
+    }
+
+    fun swapSongsInPlaylist(originalPosition: Int, targetPosition: Int) {
+        if (originalPosition < targetPosition) {
+            for (i in originalPosition until targetPosition) {
+                Collections.swap(adapter.items, i, i + 1)
+            }
+        } else {
+            for (i in originalPosition downTo targetPosition + 1) {
+                Collections.swap(adapter.items, i, i - 1)
+            }
+        }
+        playlist.get()?.let {
+            adapter.notifyItemMoved(originalPosition, targetPosition)
+            val newList = adapter.items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song.id }.toMutableList()
+            it.songIds = newList
+            playlistRepository.updatePlaylistSongIds(it.id, newList)
+        }
     }
 }

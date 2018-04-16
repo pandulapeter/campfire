@@ -111,6 +111,13 @@ class PlaylistRepository(private val songDatabase: SongDatabase) : Repository<Pl
         }
     }
 
+    fun updatePlaylistSongIds(playlistId: String, songsIds: MutableList<String>) {
+        data.find { it.id == playlistId }?.let { playlist ->
+            playlist.songIds = songsIds
+            async(CommonPool) { songDatabase.playlistDao().insert(playlist) }
+        }
+    }
+
     private fun refreshDataSet() {
         async(UI) {
             async(CommonPool) {

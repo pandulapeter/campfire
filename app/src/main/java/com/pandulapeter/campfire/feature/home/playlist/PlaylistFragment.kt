@@ -46,8 +46,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         viewModel.playlist.onPropertyChanged(this) { updateToolbarTitle() }
         viewModel.isInEditMode.onPropertyChanged {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
-            mainActivity.shouldAllowAppBarScrolling = !it
-            mainActivity.transitionMode = true
+            mainActivity.shouldAllowAppBarScrolling = !it //TODO: Not working on Favorites.
         }
         savedInstanceState?.let {
             if (it.isInEditMode) {
@@ -74,11 +73,9 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                 consume {
                     viewHolder?.adapterPosition?.let { originalPosition ->
                         target?.adapterPosition?.let { targetPosition ->
-                            if (originalPosition > 0 && targetPosition > 0) {
-                                hideSnackbar()
+                            hideSnackbar()
 //                                firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
-//                                viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
-                            }
+                            viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
                         }
                     }
                 }
