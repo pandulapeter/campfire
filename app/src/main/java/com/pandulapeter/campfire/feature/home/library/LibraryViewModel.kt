@@ -130,7 +130,7 @@ class LibraryViewModel(
             songsOnly.forEachIndexed { index, song ->
                 if (when (sortingMode) {
                         SortingMode.TITLE -> index == 0 || song.getNormalizedTitle()[0] != songsOnly[index - 1].getNormalizedTitle()[0]
-                        SortingMode.ARTIST -> index == 0 || song.getNormalizedArtist()[0] != songsOnly[index - 1].getNormalizedArtist()[0]
+                        SortingMode.ARTIST -> index == 0 || song.artist != songsOnly[index - 1].artist
                         SortingMode.POPULARITY -> songsOnly[0].isNew && (index == 0 || songsOnly[index].isNew != songsOnly[index - 1].isNew)
                     }
                 ) {
@@ -143,7 +143,7 @@ class LibraryViewModel(
                     index, SongListItemViewModel.HeaderViewModel(
                         when (sortingMode) {
                             SortingMode.TITLE -> songsOnly[index].getNormalizedTitle()[0].toString().toUpperCase()
-                            SortingMode.ARTIST -> songsOnly[index].getNormalizedArtist()[0].toString().toUpperCase()
+                            SortingMode.ARTIST -> songsOnly[index].artist
                             SortingMode.POPULARITY -> if (!songsOnly[0].isNew) "" else if (songsOnly[index].isNew) newString else popularString
                         }
                     )
