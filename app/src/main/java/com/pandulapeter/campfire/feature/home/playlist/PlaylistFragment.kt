@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
+import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.util.*
@@ -46,7 +47,9 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         viewModel.playlist.onPropertyChanged(this) { updateToolbarTitle() }
         viewModel.isInEditMode.onPropertyChanged {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
-            mainActivity.shouldAllowAppBarScrolling = !it //TODO: Not working on Favorites.
+            if (viewModel.playlist.get()?.id != Playlist.FAVORITES_ID) {
+                mainActivity.shouldAllowAppBarScrolling = !it
+            }
         }
         savedInstanceState?.let {
             if (it.isInEditMode) {
@@ -84,14 +87,15 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                 viewHolder?.adapterPosition?.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
 //                        firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true
-//                        val playlist = viewModel.adapter.items[position].playlist
-//                        showSnackbar(
-//                            message = getString(R.string.manage_playlists_playlist_deleted_message, playlist.title),
-//                            actionText = R.string.undo,
-//                            action = { viewModel.cancelDeletePlaylist() },
-//                            dismissAction = { viewModel.deletePlaylistPermanently() }
-//                        )
-//                        binding.root.post { viewModel.deletePlaylistTemporarily(playlist.id) }
+                        (viewModel.adapter.items[position] as? SongListItemViewModel.SongViewModel)?.song?.let { song ->
+                            showSnackbar(
+                                message = getString(R.string.playlist_song_removed_message, song.title),
+                                actionText = R.string.undo,
+                                action = { viewModel.cancelDeleteSong() },
+                                dismissAction = { viewModel.deleteSongPermanently() }
+                            )
+                            binding.root.post { viewModel.deleteSongTemporarily(song.id) }
+                        }
                     }
                 }
             }

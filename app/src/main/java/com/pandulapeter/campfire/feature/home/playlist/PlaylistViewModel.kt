@@ -102,4 +102,25 @@ class PlaylistViewModel(
             playlistRepository.updatePlaylistSongIds(it.id, newList)
         }
     }
+
+    fun deleteSongTemporarily(songId: String) {
+        songToDeleteId = songId
+        updateAdapterItems()
+    }
+
+    fun cancelDeleteSong() {
+        songToDeleteId = null
+        updateAdapterItems()
+    }
+
+    fun deleteSongPermanently() {
+        songToDeleteId?.let {
+            playlist.get()?.let {
+                val newList = adapter.items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song.id }.toMutableList()
+                it.songIds = newList
+                playlistRepository.updatePlaylistSongIds(it.id, newList)
+            }
+            songToDeleteId = null
+        }
+    }
 }

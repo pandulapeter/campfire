@@ -163,6 +163,7 @@
     <string name="playlist_enter_title">Enter playlist title</string>
     <string name="playlist_done">Done</string>
     <string name="playlist_placeholder">To start adding songs to this playlist, tap on the star icon near song titles</string>
+    <string name="playlist_song_removed_message">%s removed</string>
 
     <!-- Manage playlists screen -->
     <plurals name="manage_playlists_subtitle">
