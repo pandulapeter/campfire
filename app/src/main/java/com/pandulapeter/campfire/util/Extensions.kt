@@ -243,10 +243,10 @@ fun String.normalize() = this
     .replace("ű", "u")
     .replace("Ű", "U")
 
-fun ViewPager.addPageScrollListener(onPageSelected: (Int) -> Unit, onPageScrollStateChanged: () -> Unit = {}) =
+fun ViewPager.addPageScrollListener(onPageSelected: (Int) -> Unit, onPageScrollStateChanged: (Int) -> Unit = {}) =
     addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
 
-        override fun onPageScrollStateChanged(state: Int) = onPageScrollStateChanged()
+        override fun onPageScrollStateChanged(state: Int) = onPageScrollStateChanged(state)
 
         override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) = Unit
 

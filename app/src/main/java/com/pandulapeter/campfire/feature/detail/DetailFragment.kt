@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.app.SharedElementCallback
+import android.support.v4.view.ViewPager
 import android.support.v7.widget.AppCompatTextView
 import android.transition.*
 import android.util.Log
@@ -153,8 +154,17 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         binding.viewPager.adapter = DetailPagerAdapter(childFragmentManager, songs)
         binding.viewPager.addPageScrollListener(
             onPageSelected = {
+                mainActivity.disableFloatingActionButton()
+                if (mainActivity.autoScrollControl.visibleOrInvisible) {
+                    mainActivity.updateFloatingActionButtonDrawable(drawablePauseToPlay?.apply { start() })
+                }
                 viewModel.songId.set(songs[it].id)
                 mainActivity.expandAppBar()
+            },
+            onPageScrollStateChanged = {
+                if (binding.viewPager.adapter.count > 1 && it == ViewPager.SCROLL_STATE_DRAGGING && mainActivity.autoScrollControl.visibleOrInvisible) {
+                    toggleAutoScroll()
+                }
             }
         )
         (arguments?.index ?: 0).let {

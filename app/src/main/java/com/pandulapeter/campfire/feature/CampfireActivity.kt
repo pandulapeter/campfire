@@ -414,7 +414,16 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     fun closeSecondaryNavigationDrawer() = binding.drawerLayout.closeDrawer(Gravity.END)
 
-    fun enableFloatingActionButton() = binding.floatingActionButton.show()
+    fun enableFloatingActionButton() {
+        binding.floatingActionButton.show()
+        binding.autoScrollControl.run {
+            (tag as? Animator)?.let {
+                it.addListener(onAnimationEnd = {
+                    binding.floatingActionButton.show()
+                })
+            }
+        }
+    }
 
     fun disableFloatingActionButton() = binding.autoScrollControl.run {
         if (animatedVisibilityEnd) {
