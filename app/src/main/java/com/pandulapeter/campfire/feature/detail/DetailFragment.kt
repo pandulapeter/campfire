@@ -2,17 +2,16 @@ package com.pandulapeter.campfire.feature.detail
 
 import android.animation.Animator
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.app.SharedElementCallback
+import android.support.v7.widget.AppCompatTextView
 import android.transition.*
 import android.util.Log
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
-import android.view.ViewTreeObserver
+import android.view.*
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.HistoryItem
 import com.pandulapeter.campfire.data.model.remote.Song
@@ -148,13 +147,15 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
         mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
         viewModel.songId.onPropertyChanged {
-            updateToolbarTitle(binding.viewPager.currentItem)
+            mainActivity.updateToolbarTitleView(inflateToolbarTitle(mainActivity.toolbarContext), toolbarWidth)
             detailEventBus.notifyTransitionEnd()
         }
         binding.viewPager.adapter = DetailPagerAdapter(childFragmentManager, songs)
         binding.viewPager.addPageScrollListener(
-            onPageSelected = { viewModel.songId.set(songs[it].id) },
-            onPageScrollStateChanged = { mainActivity.expandAppBar() }
+            onPageSelected = {
+                viewModel.songId.set(songs[it].id)
+                mainActivity.expandAppBar()
+            }
         )
         (arguments?.index ?: 0).let {
             if (it == 0) {
@@ -198,6 +199,13 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         toggleAutoScroll()
         true
     } else super.onBackPressed()
+
+    override fun inflateToolbarTitle(context: Context) = AppCompatTextView(context).apply {
+        gravity = Gravity.CENTER_VERTICAL
+        binding.viewPager.currentItem.let { position ->
+            updateToolbarTitle(songs[position].title, songs[position].artist)
+        }
+    }
 
     override fun onDrawerStateChanged(state: Int) {
         if (mainActivity.autoScrollControl.visibleOrInvisible) {
@@ -283,6 +291,4 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             drawable?.start()
         }
     }
-
-    private fun updateToolbarTitle(position: Int) = defaultToolbar.updateToolbarTitle(songs[position].title, songs[position].artist)
 }

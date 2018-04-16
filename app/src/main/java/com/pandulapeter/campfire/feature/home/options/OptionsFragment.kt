@@ -22,6 +22,6 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_options)
         binding.viewPager.adapter = OptionsFragmentPagerAdapter(mainActivity, childFragmentManager)
-        binding.viewPager.addPageScrollListener({ mainActivity.expandAppBar() })
+        binding.viewPager.addPageScrollListener(onPageSelected = { mainActivity.expandAppBar() })
     }
 }
