@@ -90,18 +90,7 @@ class LibraryViewModel(
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
         super.onSongRepositoryDataUpdated(data)
         if (data.isNotEmpty()) {
-            languages.swap(data
-                .map {
-                    when (it.language) {
-                        Language.SupportedLanguages.ENGLISH.id -> Language.Known.English
-                        Language.SupportedLanguages.HUNGARIAN.id -> Language.Known.Hungarian
-                        Language.SupportedLanguages.ROMANIAN.id -> Language.Known.Romanian
-                        else -> Language.Unknown
-                    }
-                }
-                .sortedBy { it.nameResource }
-                .distinct()
-            )
+            languages.swap(songRepository.languages)
             onDataLoaded(languages)
         }
     }

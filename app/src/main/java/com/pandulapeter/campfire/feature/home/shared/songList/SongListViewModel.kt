@@ -26,7 +26,7 @@ import kotlin.coroutines.experimental.CoroutineContext
 
 abstract class SongListViewModel(protected val context: Context) : CampfireViewModel(), SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
 
-    private val songRepository by inject<SongRepository>()
+    protected val songRepository by inject<SongRepository>()
     protected val songDetailRepository by inject<SongDetailRepository>()
     protected val preferenceDatabase by inject<PreferenceDatabase>()
     protected val playlistRepository by inject<PlaylistRepository>()

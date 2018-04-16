@@ -39,12 +39,6 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                 binding.swipeRefreshLayout.isRefreshing = viewModel.isLoading.get()
             },
             onDataLoaded = { languages ->
-                mainActivity.toolbarContext.let { context ->
-                    mainActivity.updateToolbarButtons(listOf(
-                        searchToggle,
-                        context.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { mainActivity.openSecondaryNavigationDrawer() }
-                    ))
-                }
                 mainActivity.updateAppBarView(searchControlsBinding.root)
                 mainActivity.enableSecondaryNavigationDrawer(R.menu.library)
                 initializeCompoundButton(R.id.downloaded_only) { viewModel.shouldShowDownloadedOnly }
@@ -61,6 +55,12 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                             initializeCompoundButton(language.nameResource) { !viewModel.disabledLanguageFilters.contains(language.id) }
                         }
                     }
+                }
+                mainActivity.toolbarContext.let { context ->
+                    mainActivity.updateToolbarButtons(listOf(
+                        searchToggle,
+                        context.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { mainActivity.openSecondaryNavigationDrawer() }
+                    ))
                 }
             }
         )

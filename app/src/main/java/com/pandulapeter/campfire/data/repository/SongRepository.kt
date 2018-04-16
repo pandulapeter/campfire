@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.data.repository
 
+import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
@@ -18,6 +19,7 @@ class SongRepository(
 ) : Repository<SongRepository.Subscriber>() {
 
     private val data = mutableListOf<Song>()
+    val languages = mutableListOf<Language>()
     private var isCacheLoaded = false
     private var isLoading = true
         set(value) {
@@ -30,17 +32,16 @@ class SongRepository(
     init {
         async(UI) {
             async(CommonPool) {
-                songDatabase.songDao().getAll()
-            }.await().let {
-                data.swap(it)
-                isCacheLoaded = true
-                if (System.currentTimeMillis() - preferenceDatabase.lastUpdateTimestamp > UPDATE_LIMIT) {
-                    updateData()
-                } else {
-                    isLoading = false
-                }
-                notifyDataChanged()
+                data.swap(songDatabase.songDao().getAll())
+                updateLanguages()
+            }.await()
+            isCacheLoaded = true
+            if (System.currentTimeMillis() - preferenceDatabase.lastUpdateTimestamp > UPDATE_LIMIT) {
+                updateData()
+            } else {
+                isLoading = false
             }
+            notifyDataChanged()
         }
     }
 
@@ -61,18 +62,24 @@ class SongRepository(
         isLoading = true
         networkManager.service.getLibrary().enqueueCall(
             onSuccess = { newData ->
-                if (data.isNotEmpty()) {
-                    newData.forEach { song ->
-                        if (data.find { it.id == song.id } == null) {
-                            song.isNew = true
+                async(UI) {
+                    async(CommonPool) {
+                        if (data.isNotEmpty()) {
+                            newData.forEach { song ->
+                                if (data.find { it.id == song.id } == null) {
+                                    song.isNew = true
+                                }
+                            }
                         }
-                    }
+                        data.swap(newData)
+                        updateLanguages()
+                    }.await()
+                    async(CommonPool) { songDatabase.songDao().updateAll(data) }
+                    isLoading = false
+                    notifyDataChanged()
+                    preferenceDatabase.lastUpdateTimestamp = System.currentTimeMillis()
+
                 }
-                data.swap(newData)
-                async(CommonPool) { songDatabase.songDao().updateAll(data) }
-                isLoading = false
-                notifyDataChanged()
-                preferenceDatabase.lastUpdateTimestamp = System.currentTimeMillis()
             },
             onFailure = {
                 isLoading = false
@@ -87,6 +94,21 @@ class SongRepository(
                 notifyDataChanged()
             }
         }
+    }
+
+    private fun updateLanguages() {
+        languages.swap(data
+            .map {
+                when (it.language) {
+                    Language.SupportedLanguages.ENGLISH.id -> Language.Known.English
+                    Language.SupportedLanguages.HUNGARIAN.id -> Language.Known.Hungarian
+                    Language.SupportedLanguages.ROMANIAN.id -> Language.Known.Romanian
+                    else -> Language.Unknown
+                }
+            }
+            .distinct()
+            .sortedBy { it.nameResource }
+        )
     }
 
     private fun notifyDataChanged() = subscribers.forEach { it.onSongRepositoryDataUpdated(data) }
