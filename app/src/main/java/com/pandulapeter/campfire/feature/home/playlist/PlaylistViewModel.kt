@@ -31,9 +31,11 @@ class PlaylistViewModel(
         buttonText.set(R.string.go_to_library)
         preferenceDatabase.lastScreen = playlistId
         isInEditMode.onPropertyChanged {
-            adapter.items.forEachIndexed { index, item ->
-                if (item is SongListItemViewModel.SongViewModel) {
-                    adapter.notifyItemChanged(index, SongListAdapter.Payload.EditModeChanged(it))
+            if (adapter.items.size > 1) {
+                adapter.items.forEachIndexed { index, item ->
+                    if (item is SongListItemViewModel.SongViewModel) {
+                        adapter.notifyItemChanged(index, SongListAdapter.Payload.EditModeChanged(it))
+                    }
                 }
             }
         }

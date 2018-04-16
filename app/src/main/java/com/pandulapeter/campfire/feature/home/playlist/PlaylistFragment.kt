@@ -2,9 +2,12 @@ package com.pandulapeter.campfire.feature.home.playlist
 
 import android.content.Context
 import android.os.Bundle
+import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
+import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
@@ -58,6 +61,46 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
             }
         }
         viewModel.toolbarTextInputView?.textInput?.requestFocus()
+        val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
+
+            override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =
+                if (viewModel.isInEditMode.get())
+                    makeMovementFlags(
+                        if (viewModel.adapter.items.size > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
+                        ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                    ) else 0
+
+            override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) =
+                consume {
+                    viewHolder?.adapterPosition?.let { originalPosition ->
+                        target?.adapterPosition?.let { targetPosition ->
+                            if (originalPosition > 0 && targetPosition > 0) {
+                                hideSnackbar()
+//                                firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
+//                                viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
+                            }
+                        }
+                    }
+                }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
+                viewHolder?.adapterPosition?.let { position ->
+                    if (position != RecyclerView.NO_POSITION) {
+//                        firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true
+//                        val playlist = viewModel.adapter.items[position].playlist
+//                        showSnackbar(
+//                            message = getString(R.string.manage_playlists_playlist_deleted_message, playlist.title),
+//                            actionText = R.string.undo,
+//                            action = { viewModel.cancelDeletePlaylist() },
+//                            dismissAction = { viewModel.deletePlaylistPermanently() }
+//                        )
+//                        binding.root.post { viewModel.deletePlaylistTemporarily(playlist.id) }
+                    }
+                }
+            }
+        })
+        itemTouchHelper.attachToRecyclerView(binding.recyclerView)
+        viewModel.adapter.dragHandleTouchListener = { position -> itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position)) }
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
