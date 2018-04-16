@@ -126,6 +126,12 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     @CallSuper
     override fun onTransitionCancel(transition: Transition?) {
         transition?.removeListener(this)
+        if (isResumingDelayed) {
+            updateUI()
+            isResumingDelayed = false
+        }
+        enterTransition = null
+        exitTransition = null
     }
 
     override fun onTransitionStart(transition: Transition?) = Unit

@@ -40,26 +40,34 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         super.onViewCreated(view, savedInstanceState)
         viewModel.adapter.run {
             itemClickListener = { position, clickedView ->
-                (items[position] as? SongListItemViewModel.SongViewModel)?.let {
-                    viewModel.isDetailScreenOpen = true
-                    linearLayoutManager.isScrollEnabled = false
-                    val isPlaylist = viewModel is PlaylistViewModel
-                    mainActivity.openDetailScreen(
-                        clickedView,
-                        if (isPlaylist) items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song } else listOf(it.song),
-                        items.size > 1,
-                        if (isPlaylist) position else 0,
-                        !isPlaylist
-                    )
+                if (linearLayoutManager.isScrollEnabled) {
+                    (items[position] as? SongListItemViewModel.SongViewModel)?.let {
+                        viewModel.isDetailScreenOpen = true
+                        linearLayoutManager.isScrollEnabled = false
+                        val isPlaylist = viewModel is PlaylistViewModel
+                        mainActivity.openDetailScreen(
+                            clickedView,
+                            if (isPlaylist) items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song } else listOf(it.song),
+                            items.size > 1,
+                            if (isPlaylist) position else 0,
+                            !isPlaylist
+                        )
+                    }
                 }
             }
-            downloadActionClickListener = { position -> (items[position] as? SongListItemViewModel.SongViewModel)?.let { viewModel.downloadSong(it.song) } }
+            downloadActionClickListener = { position ->
+                if (linearLayoutManager.isScrollEnabled) {
+                    (items[position] as? SongListItemViewModel.SongViewModel)?.let { viewModel.downloadSong(it.song) }
+                }
+            }
             playlistActionClickListener = { position ->
-                (items[position] as? SongListItemViewModel.SongViewModel)?.let {
-                    if (viewModel.areThereMoreThanOnePlaylists()) {
-                        PlaylistChooserBottomSheetFragment.show(childFragmentManager, it.song.id)
-                    } else {
-                        viewModel.toggleFavoritesState(it.song.id)
+                if (linearLayoutManager.isScrollEnabled) {
+                    (items[position] as? SongListItemViewModel.SongViewModel)?.let {
+                        if (viewModel.areThereMoreThanOnePlaylists()) {
+                            PlaylistChooserBottomSheetFragment.show(childFragmentManager, it.song.id)
+                        } else {
+                            viewModel.toggleFavoritesState(it.song.id)
+                        }
                     }
                 }
             }
