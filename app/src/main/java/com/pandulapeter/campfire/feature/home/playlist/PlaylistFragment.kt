@@ -12,7 +12,9 @@ import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
+import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.*
+import org.koin.android.ext.android.inject
 
 class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
 
@@ -39,6 +41,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
     private val editToggle: ToolbarButton by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_edit_24dp) { viewModel.toggleEditMode() } }
     private val drawableEditToDone by lazy { mainActivity.animatedDrawable(R.drawable.avd_edit_to_done_24dp) }
     private val drawableDoneToEdit by lazy { mainActivity.animatedDrawable(R.drawable.avd_done_to_edit_24dp) }
+    private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -77,7 +80,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                     viewHolder?.adapterPosition?.let { originalPosition ->
                         target?.adapterPosition?.let { targetPosition ->
                             hideSnackbar()
-//                                firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
+//TODO                                firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
                             viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
                         }
                     }
@@ -86,7 +89,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
                 viewHolder?.adapterPosition?.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
-//                        firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true
+//TODO                        firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true
                         (viewModel.adapter.items[position] as? SongListItemViewModel.SongViewModel)?.song?.let { song ->
                             showSnackbar(
                                 message = getString(R.string.playlist_song_removed_message, song.title),
@@ -107,6 +110,18 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
         outState?.isInEditMode = viewModel.isInEditMode.get()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.restoreToolbarButtons()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.toolbarTextInputView?.let {
+            toolbarWidth = it.width
+        }
     }
 
     override fun onBackPressed() = if (viewModel.toolbarTextInputView?.isTextInputVisible == true) {

@@ -53,7 +53,8 @@ class PlaylistViewModel(
                 songDetailRepository = songDetailRepository,
                 playlistRepository = playlistRepository,
                 song = it,
-                shouldShowPlaylistButton = false
+                shouldShowPlaylistButton = false,
+                shouldShowDragHandle = isInEditMode.get()
             )
         }
         .toList()
@@ -83,6 +84,12 @@ class PlaylistViewModel(
             return
         }
         isInEditMode.set(!isInEditMode.get())
+    }
+
+    fun restoreToolbarButtons() {
+        playlist.get()?.let {
+            onDataLoaded(playlistId != Playlist.FAVORITES_ID || it.songIds.size > 1)
+        }
     }
 
     fun swapSongsInPlaylist(originalPosition: Int, targetPosition: Int) {
