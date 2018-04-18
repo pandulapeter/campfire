@@ -49,13 +49,24 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(mainActivity)
         }
+        fun showSwipeHintIfNeeded() {
+            if (viewModel.shouldShowDeleteAllButton.get() && !firstTimeUserExperienceManager.managePlaylistsSwipeCompleted && firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
+                showHint(
+                    message = R.string.manage_playlists_hint_swipe,
+                    action = { firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true }
+                )
+            }
+        }
         viewModel.playlistCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
             mainActivity.shouldAllowAppBarScrolling = it < 3
             if (it > 2 && !firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
                 showHint(
                     message = R.string.manage_playlists_hint_drag,
-                    action = { firstTimeUserExperienceManager.managePlaylistsDragCompleted = true }
+                    action = {
+                        firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
+                        showSwipeHintIfNeeded()
+                    }
                 )
             }
             if (it < Playlist.MAXIMUM_PLAYLIST_COUNT) {
@@ -66,12 +77,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         }
         viewModel.shouldShowDeleteAllButton.onPropertyChanged(this) {
             deleteAllButton.visibleOrGone = it
-            if (it && !firstTimeUserExperienceManager.managePlaylistsSwipeCompleted && firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
-                showHint(
-                    message = R.string.manage_playlists_hint_swipe,
-                    action = { firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true }
-                )
-            }
+            showSwipeHintIfNeeded()
         }
         viewModel.adapter.run { itemClickListener = { mainActivity.openPlaylistScreen(items[it].playlist.id) } }
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {

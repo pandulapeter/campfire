@@ -51,19 +51,25 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         viewModel.isInEditMode.onPropertyChanged(this) {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
             mainActivity.shouldAllowAppBarScrolling = !it
+            fun showSwipeHintIfNeeded() {
+                if (viewModel.adapter.items.isNotEmpty()) {
+                    showHint(
+                        message = R.string.playlist_hint_swipe,
+                        action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
+                    )
+                }
+            }
             if (it && !firstTimeUserExperienceManager.playlistSwipeCompleted) {
                 if (firstTimeUserExperienceManager.playlistDragCompleted) {
-                    if (viewModel.adapter.items.isNotEmpty()) {
-                        showHint(
-                            message = R.string.playlist_hint_swipe,
-                            action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
-                        )
-                    }
+                    showSwipeHintIfNeeded()
                 } else {
                     if (viewModel.adapter.items.size > 1) {
                         showHint(
                             message = R.string.playlist_hint_drag,
-                            action = { firstTimeUserExperienceManager.playlistDragCompleted = true }
+                            action = {
+                                firstTimeUserExperienceManager.playlistDragCompleted = true
+                                showSwipeHintIfNeeded()
+                            }
                         )
                     }
                 }
