@@ -315,6 +315,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             DIALOG_ID_PRIVACY_POLICY -> {
                 preferenceDatabase.shouldShowPrivacyPolicy = false
                 preferenceDatabase.shouldShareUsageData = true
+                currentFragment?.showSnackbar(R.string.options_preferences_share_usage_data_restart_hint)
             }
         }
     }
@@ -579,6 +580,11 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     private fun updatePlaylists(playlists: List<Playlist>) {
+        fun SubMenu.addPlaylistItem(index: Int, id: Int, title: String, shouldUseAddIcon: Boolean = false) =
+            add(R.id.playlist_container, id, index, title).run {
+                setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist_24dp else R.drawable.ic_playlist_24dp)
+            }
+
         val isLookingForUpdatedId = currentFragment is PlaylistFragment || currentFragment is DetailFragment
         playlistsContainerItem.run {
             clear()
@@ -603,11 +609,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             appShortcutManager.updateAppShortcuts()
         }
     }
-
-    private fun SubMenu.addPlaylistItem(index: Int, id: Int, title: String, shouldUseAddIcon: Boolean = false) =
-        add(R.id.playlist_container, id, index, title).run {
-            setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist_24dp else R.drawable.ic_playlist_24dp)
-        }
 
     private inline fun <reified T : TopLevelFragment<*, *>> FragmentManager.handleReplace(crossinline newInstance: () -> T) {
         currentFragment?.exitTransition = null
