@@ -51,6 +51,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         }
         viewModel.playlistCount.onPropertyChanged {
             updateToolbarTitle(it)
+            mainActivity.shouldAllowAppBarScrolling = it < 3
             if (it > 2 && !firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
                 showHint(
                     message = R.string.manage_playlists_hint_drag,

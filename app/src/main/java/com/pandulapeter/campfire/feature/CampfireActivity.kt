@@ -100,9 +100,13 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         get() = (binding.toolbarContainer.layoutParams as AppBarLayout.LayoutParams).scrollFlags != 0
         set(value) {
             // Seems to cause glitches on older Android versions.
-            (binding.toolbarContainer.layoutParams as AppBarLayout.LayoutParams).scrollFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && value) {
-                AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
-            } else 0
+            binding.toolbarContainer.run {
+                layoutParams = (layoutParams as AppBarLayout.LayoutParams).apply {
+                    scrollFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && value) {
+                        AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
+                    } else 0
+                }
+            }
         }
     var transitionMode: Boolean? = null
         set(value) {
@@ -151,7 +155,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         startTime = System.currentTimeMillis()
 
         // Initialize the app bar.
-        shouldAllowAppBarScrolling = true
         val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
         binding.toolbarMainButton.setOnClickListener {
             if (currentFragment is DetailFragment) {

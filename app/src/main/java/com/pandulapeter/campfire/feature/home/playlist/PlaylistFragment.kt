@@ -50,9 +50,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         viewModel.playlist.onPropertyChanged(this) { updateToolbarTitle() }
         viewModel.isInEditMode.onPropertyChanged {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
-            if (viewModel.playlist.get()?.id != Playlist.FAVORITES_ID) {
-                mainActivity.shouldAllowAppBarScrolling = !it
-            }
+            mainActivity.shouldAllowAppBarScrolling = !it
         }
         savedInstanceState?.let {
             if (it.isInEditMode) {
