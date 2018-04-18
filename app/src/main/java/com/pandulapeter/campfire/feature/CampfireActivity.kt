@@ -559,6 +559,9 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             startDelay = delay
         }
         currentFragment?.run {
+            if (this !is PlaylistFragment) {
+                currentPlaylistId = ""
+            }
             if (shouldExplode) {
                 exitTransition = createTransition(0)
                 reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
@@ -576,7 +579,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     private fun updatePlaylists(playlists: List<Playlist>) {
-        val isLookingForUpdatedId = currentFragment is PlaylistFragment
+        val isLookingForUpdatedId = currentFragment is PlaylistFragment || currentFragment is DetailFragment
         playlistsContainerItem.run {
             clear()
             playlistIdMap.clear()
