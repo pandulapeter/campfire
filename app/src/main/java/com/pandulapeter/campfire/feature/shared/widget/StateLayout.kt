@@ -47,10 +47,9 @@ class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSe
         postDelayed({
             if (isAttachedToWindow) {
                 if (displayedChild == 0) {
-                    binding.loadingIndicator.animate().scaleX(1f).scaleY(1f).start()
+                    binding.loadingIndicator.animate().alpha(1f).start()
                 } else {
-                    binding.loadingIndicator.scaleX = 1f
-                    binding.loadingIndicator.scaleY = 1f
+                    binding.loadingIndicator.alpha = 1f
                 }
             }
         }, 200)

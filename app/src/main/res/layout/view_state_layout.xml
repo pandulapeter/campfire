@@ -17,9 +17,8 @@
                 android:layout_width="@dimen/list_item_loading_indicator_size"
                 android:layout_height="@dimen/list_item_loading_indicator_size"
                 android:layout_gravity="center"
-                android:indeterminateTint="@color/accent"
-                android:scaleX="0"
-                android:scaleY="0" />
+                android:alpha="0"
+                android:indeterminateTint="@color/accent" />
 
         </FrameLayout>
 

@@ -51,6 +51,23 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         viewModel.isInEditMode.onPropertyChanged(this) {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
             mainActivity.shouldAllowAppBarScrolling = !it
+            if (it && !firstTimeUserExperienceManager.playlistSwipeCompleted) {
+                if (firstTimeUserExperienceManager.playlistDragCompleted) {
+                    if (viewModel.adapter.items.isNotEmpty()) {
+                        showHint(
+                            message = R.string.playlist_hint_swipe,
+                            action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
+                        )
+                    }
+                } else {
+                    if (viewModel.adapter.items.size > 1) {
+                        showHint(
+                            message = R.string.playlist_hint_drag,
+                            action = { firstTimeUserExperienceManager.playlistDragCompleted = true }
+                        )
+                    }
+                }
+            }
         }
         savedInstanceState?.let {
             if (it.isInEditMode) {
@@ -78,7 +95,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                     viewHolder?.adapterPosition?.let { originalPosition ->
                         target?.adapterPosition?.let { targetPosition ->
                             hideSnackbar()
-//TODO                                firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
+                            firstTimeUserExperienceManager.playlistDragCompleted = true
                             viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
                         }
                     }
@@ -87,7 +104,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
                 viewHolder?.adapterPosition?.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
-//TODO                        firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true
+                        firstTimeUserExperienceManager.playlistSwipeCompleted = true
                         (viewModel.adapter.items[position] as? SongListItemViewModel.SongViewModel)?.song?.let { song ->
                             showSnackbar(
                                 message = getString(R.string.playlist_song_removed_message, song.title),

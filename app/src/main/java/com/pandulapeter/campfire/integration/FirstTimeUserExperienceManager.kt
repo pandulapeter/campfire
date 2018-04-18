@@ -11,6 +11,16 @@ class FirstTimeUserExperienceManager(private val preferenceDatabase: PreferenceD
             preferenceDatabase.ftuxHistoryCompleted = new
         }
     }
+    var playlistSwipeCompleted by Delegates.observable(preferenceDatabase.ftuxPlaylistSwipeCompleted) { _: KProperty<*>, old: Boolean, new: Boolean ->
+        if (old != new) {
+            preferenceDatabase.ftuxPlaylistSwipeCompleted = new
+        }
+    }
+    var playlistDragCompleted by Delegates.observable(preferenceDatabase.ftuxPlaylistDragCompleted) { _: KProperty<*>, old: Boolean, new: Boolean ->
+        if (old != new) {
+            preferenceDatabase.ftuxPlaylistDragCompleted = new
+        }
+    }
     var managePlaylistsSwipeCompleted by Delegates.observable(preferenceDatabase.ftuxManagePlaylistsSwipeCompleted) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
             preferenceDatabase.ftuxManagePlaylistsSwipeCompleted = new
@@ -26,17 +36,13 @@ class FirstTimeUserExperienceManager(private val preferenceDatabase: PreferenceD
             preferenceDatabase.ftuxManageDownloadsCompleted = new
         }
     }
-    var playlistSwipeCompleted by Delegates.observable(preferenceDatabase.ftuxPlaylistSwipeCompleted) { _: KProperty<*>, old: Boolean, new: Boolean ->
-        if (old != new) {
-            preferenceDatabase.ftuxPlaylistSwipeCompleted = new
-        }
-    }
 
     fun resetAll() {
         historyCompleted = false
+        playlistSwipeCompleted = false
+        playlistDragCompleted = false
         managePlaylistsSwipeCompleted = false
         managePlaylistsDragCompleted = false
         manageDownloadsCompleted = false
-        playlistSwipeCompleted = false
     }
 }
