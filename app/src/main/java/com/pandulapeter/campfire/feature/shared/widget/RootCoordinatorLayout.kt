@@ -11,13 +11,6 @@ import com.pandulapeter.campfire.util.color
 
 class RootCoordinatorLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : CoordinatorLayout(context, attrs, defStyleAttr) {
 
-    //    private val statusBarHeight by lazy {
-//        val rectangle = Rect()
-//        val window = (context as Activity).window
-//        window.decorView.getWindowVisibleDisplayFrame(rectangle)
-//        val top = rectangle.top
-//        if (top > height / 3) 0f else top - window.findViewById<View>(Window.ID_ANDROID_CONTENT).top.toFloat()
-//    }
     private val paint = Paint().apply { color = context.color(R.color.primary) }
     var insetChangeListener: (statusBarHeight: Int) -> Unit = {}
         set(value) {

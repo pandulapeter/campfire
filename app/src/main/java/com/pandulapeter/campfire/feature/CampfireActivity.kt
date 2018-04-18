@@ -216,7 +216,11 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         binding.secondaryNavigation.setNavigationItemSelectedListener { currentFragment?.onNavigationItemSelected(it) ?: false }
 
         // Initialize the floating action button.
-        binding.floatingActionButton.setOnClickListener { currentFragment?.onFloatingActionButtonPressed() }
+        binding.floatingActionButton.setOnClickListener {
+            if (binding.autoScrollControl.tag == null && binding.floatingActionButton.isShown && it.tag == null) {
+                currentFragment?.onFloatingActionButtonPressed()
+            }
+        }
 
         // Restore instance state if possible.
         if (savedInstanceState == null) {
@@ -418,14 +422,14 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         binding.floatingActionButton.show()
         binding.autoScrollControl.run {
             (tag as? Animator)?.let {
-                it.addListener(onAnimationEnd = {
-                    binding.floatingActionButton.show()
-                })
+                it.addListener(onAnimationEnd = { binding.floatingActionButton.show() })
             }
         }
+        binding.floatingActionButton.tag = null
     }
 
     fun disableFloatingActionButton() = binding.autoScrollControl.run {
+        binding.floatingActionButton.tag = "Hiding"
         if (animatedVisibilityEnd) {
             animatedVisibilityEnd = false
             (tag as? Animator)?.let {
