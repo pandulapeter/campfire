@@ -48,7 +48,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         binding.swipeRefreshLayout.isEnabled = false
         viewModel.songCount.onPropertyChanged(this) { updateToolbarTitle(it) }
         viewModel.playlist.onPropertyChanged(this) { updateToolbarTitle() }
-        viewModel.isInEditMode.onPropertyChanged {
+        viewModel.isInEditMode.onPropertyChanged(this) {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
             mainActivity.shouldAllowAppBarScrolling = !it
         }

@@ -49,7 +49,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(mainActivity)
         }
-        viewModel.playlistCount.onPropertyChanged {
+        viewModel.playlistCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
             mainActivity.shouldAllowAppBarScrolling = it < 3
             if (it > 2 && !firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
@@ -64,7 +64,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
                 mainActivity.disableFloatingActionButton()
             }
         }
-        viewModel.shouldShowDeleteAllButton.onPropertyChanged {
+        viewModel.shouldShowDeleteAllButton.onPropertyChanged(this) {
             deleteAllButton.visibleOrGone = it
             if (it && !firstTimeUserExperienceManager.managePlaylistsSwipeCompleted && firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
                 showHint(

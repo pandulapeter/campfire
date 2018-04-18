@@ -147,7 +147,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             })
         }
         mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
-        viewModel.songId.onPropertyChanged {
+        viewModel.songId.onPropertyChanged(this) {
             mainActivity.updateToolbarTitleView(inflateToolbarTitle(mainActivity.toolbarContext), toolbarWidth)
             detailEventBus.notifyTransitionEnd()
         }

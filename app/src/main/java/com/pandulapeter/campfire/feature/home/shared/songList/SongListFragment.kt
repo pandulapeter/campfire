@@ -72,19 +72,19 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 }
             }
         }
-        viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered {
+        viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
             showSnackbar(
                 message = R.string.library_update_error,
                 action = { viewModel.updateData() })
         }
-        viewModel.downloadSongError.onEventTriggered { song ->
+        viewModel.downloadSongError.onEventTriggered(this) { song ->
             song?.let {
                 showSnackbar(
                     message = mainActivity.getString(R.string.library_song_download_error, song.title),
                     action = { viewModel.downloadSong(song) })
             }
         }
-        viewModel.isLoading.onPropertyChanged {
+        viewModel.isLoading.onPropertyChanged(this) {
             if (viewModel.state.get() == StateLayout.State.NORMAL) {
                 binding.swipeRefreshLayout.isRefreshing = it
             }

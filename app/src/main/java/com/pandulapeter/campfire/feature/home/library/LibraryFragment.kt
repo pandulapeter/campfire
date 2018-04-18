@@ -101,13 +101,13 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             viewModel.buttonText.set(savedInstanceState.buttonText)
         }
         viewModel.toolbarTextInputView.textInput.requestFocus()
-        searchControlsViewModel.searchInTitles.onPropertyChanged {
+        searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
             binding.root.postDelayed(
                 { if (isAdded) viewModel.shouldSearchInTitles = it },
                 COMPOUND_BUTTON_LONG_TRANSITION_DELAY
             )
         }
-        searchControlsViewModel.searchInArtists.onPropertyChanged {
+        searchControlsViewModel.searchInArtists.onPropertyChanged(this) {
             binding.root.postDelayed(
                 { if (isAdded) viewModel.shouldSearchInArtists = it },
                 COMPOUND_BUTTON_LONG_TRANSITION_DELAY
