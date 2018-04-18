@@ -68,8 +68,11 @@ class HistoryViewModel(context: Context, private val openLibrary: () -> Unit) : 
     override fun onActionButtonClicked() = openLibrary()
 
     override fun onHistoryUpdated(history: List<HistoryItem>) {
-        this.history = history
-        updateAdapterItems(true)
+        val oldFirst = this.history.sortedByDescending { it.lastOpenedAt }.firstOrNull()?.lastOpenedAt
+        val newFirst = history.sortedByDescending { it.lastOpenedAt }.firstOrNull()?.lastOpenedAt
+        val shouldScrollToTop = oldFirst != newFirst
+        this.history = history.toList()
+        updateAdapterItems(shouldScrollToTop)
     }
 
     private fun getHeaderTitle(position: Int, songs: List<Song>): Int {
