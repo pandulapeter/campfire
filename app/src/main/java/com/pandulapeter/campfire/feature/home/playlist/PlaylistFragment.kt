@@ -32,7 +32,11 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
             toolbarTextInputView = if (arguments?.playlistId == Playlist.FAVORITES_ID) null else ToolbarTextInputView(mainActivity.toolbarContext),
             onDataLoaded = {
                 if (it) {
-                    mainActivity.updateToolbarButtons(listOf(editToggle))
+                    mainActivity.updateToolbarButtons(
+                        listOf(
+                            editToggle,
+                            mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs() })
+                    )
                 }
             }
         )
@@ -42,6 +46,24 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
     private val drawableEditToDone by lazy { mainActivity.animatedDrawable(R.drawable.avd_edit_to_done_24dp) }
     private val drawableDoneToEdit by lazy { mainActivity.animatedDrawable(R.drawable.avd_done_to_edit_24dp) }
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
+
+    private fun shuffleSongs() {
+        //TODO: Scroll before the animation to make sure the shared element is on the screen.
+        //TODO: Only show the shuffle button if there are more than two songs in the playlist.
+        val tempList = viewModel.adapter.items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song }.toMutableList()
+        tempList.shuffle()
+        val index = 0
+        val originalIndex = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == tempList[index].id }
+        if (originalIndex != RecyclerView.NO_POSITION) {
+            mainActivity.openDetailScreen(
+                binding.recyclerView.findViewHolderForAdapterPosition(originalIndex).itemView,
+                tempList,
+                tempList.size > 1,
+                0,
+                false
+            )
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -153,7 +175,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
     )
 
     private fun showSwipeHintIfNeeded() {
-        if (viewModel.adapter.items.isNotEmpty() && !isSnackbarVisible()) {
+        if (viewModel.adapter.items.isNotEmpty() && !isSnackbarVisible() && !firstTimeUserExperienceManager.playlistSwipeCompleted) {
             showHint(
                 message = R.string.playlist_hint_swipe,
                 action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
