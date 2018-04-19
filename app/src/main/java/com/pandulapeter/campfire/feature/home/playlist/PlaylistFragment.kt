@@ -107,7 +107,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                             }
                             firstTimeUserExperienceManager.playlistDragCompleted = true
                             viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
-                            showSwipeHintIfNeeded()
+                            binding.root.postDelayed({ if (isAdded) showSwipeHintIfNeeded() }, 300)
                         }
                     }
                 }
