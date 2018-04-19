@@ -110,6 +110,8 @@ class PlaylistViewModel(
         }
     }
 
+    fun hasSongToDelete() = songToDeleteId != null
+
     fun deleteSongTemporarily(songId: String) {
         songToDeleteId = songId
         updateAdapterItems()

@@ -49,14 +49,6 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(mainActivity)
         }
-        fun showSwipeHintIfNeeded() {
-            if (viewModel.shouldShowDeleteAllButton.get() && !firstTimeUserExperienceManager.managePlaylistsSwipeCompleted && firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
-                showHint(
-                    message = R.string.manage_playlists_hint_swipe,
-                    action = { firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true }
-                )
-            }
-        }
         viewModel.playlistCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
             mainActivity.shouldAllowAppBarScrolling = it < 3
@@ -94,9 +86,12 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
                     viewHolder?.adapterPosition?.let { originalPosition ->
                         target?.adapterPosition?.let { targetPosition ->
                             if (originalPosition > 0 && targetPosition > 0) {
-                                hideSnackbar()
+                                if (viewModel.hasPlaylistToDelete() || !firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
+                                    hideSnackbar()
+                                }
                                 firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
                                 viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
+                                showSwipeHintIfNeeded()
                             }
                         }
                     }
@@ -138,4 +133,13 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         R.string.home_manage_playlists,
         mainActivity.resources.getQuantityString(R.plurals.manage_playlists_subtitle, playlistCount, playlistCount)
     )
+
+    private fun showSwipeHintIfNeeded() {
+        if (!isSnackbarVisible() && viewModel.shouldShowDeleteAllButton.get() && !firstTimeUserExperienceManager.managePlaylistsSwipeCompleted && firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
+            showHint(
+                message = R.string.manage_playlists_hint_swipe,
+                action = { firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true }
+            )
+        }
+    }
 }

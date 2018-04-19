@@ -61,6 +61,8 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
         updateAdapterItems(playlistRepository.cache)
     }
 
+    fun hasPlaylistToDelete() = playlistToDeleteId != null
+
     fun deletePlaylistPermanently() {
         playlistToDeleteId?.let {
             playlistRepository.deletePlaylist(it)

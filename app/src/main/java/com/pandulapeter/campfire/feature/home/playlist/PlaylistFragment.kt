@@ -51,14 +51,6 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         viewModel.isInEditMode.onPropertyChanged(this) {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
             mainActivity.shouldAllowAppBarScrolling = !it
-            fun showSwipeHintIfNeeded() {
-                if (viewModel.adapter.items.isNotEmpty()) {
-                    showHint(
-                        message = R.string.playlist_hint_swipe,
-                        action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
-                    )
-                }
-            }
             if (it && !firstTimeUserExperienceManager.playlistSwipeCompleted) {
                 if (firstTimeUserExperienceManager.playlistDragCompleted) {
                     showSwipeHintIfNeeded()
@@ -100,9 +92,12 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                 consume {
                     viewHolder?.adapterPosition?.let { originalPosition ->
                         target?.adapterPosition?.let { targetPosition ->
-                            hideSnackbar()
+                            if (viewModel.hasSongToDelete() || !firstTimeUserExperienceManager.playlistDragCompleted) {
+                                hideSnackbar()
+                            }
                             firstTimeUserExperienceManager.playlistDragCompleted = true
                             viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
+                            showSwipeHintIfNeeded()
                         }
                     }
                 }
@@ -156,4 +151,13 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         viewModel.playlist.get()?.title ?: getString(R.string.home_favorites),
         if (songCount == 0) getString(R.string.manage_playlists_song_count_empty) else mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
     )
+
+    private fun showSwipeHintIfNeeded() {
+        if (viewModel.adapter.items.isNotEmpty() && !isSnackbarVisible()) {
+            showHint(
+                message = R.string.playlist_hint_swipe,
+                action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
+            )
+        }
+    }
 }
