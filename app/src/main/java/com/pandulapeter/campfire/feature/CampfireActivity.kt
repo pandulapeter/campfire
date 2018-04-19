@@ -337,6 +337,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     override fun onSongRemovedFromAllPlaylists(songId: String) = Unit
 
+    fun invalidateAppBar() = binding.toolbarTitleContainer.requestLayout()
+
     fun updateAppBarView(view: View?, immediately: Boolean = false) {
         binding.appBarLayout.apply {
             fun removeViews() {

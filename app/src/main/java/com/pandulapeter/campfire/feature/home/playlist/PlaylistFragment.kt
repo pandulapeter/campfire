@@ -51,7 +51,11 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         binding.swipeRefreshLayout.isEnabled = false
         viewModel.songCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
+            val previousVisibility = shuffleButton.visibleOrGone
             shuffleButton.visibleOrGone = it > 1
+            if (shuffleButton.visibleOrGone != previousVisibility) {
+                mainActivity.invalidateAppBar()
+            }
         }
         viewModel.playlist.onPropertyChanged(this) { updateToolbarTitle() }
         viewModel.isInEditMode.onPropertyChanged(this) {
