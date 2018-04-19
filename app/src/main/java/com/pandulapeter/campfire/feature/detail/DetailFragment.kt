@@ -290,7 +290,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 if (binding.viewPager.currentItem != arguments.index) {
                     firstTimeUserExperienceManager.playlistSwipeCompleted = true
                     hideSnackbar()
-                } else if (songs.size > 1) {
+                } else if (songs.size > 1 && !isSnackbarVisible()) {
                     showHint(
                         message = R.string.detail_swipe_hint,
                         action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
