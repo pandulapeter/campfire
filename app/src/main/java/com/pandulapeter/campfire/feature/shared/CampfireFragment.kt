@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.hideKeyboard
 import org.koin.android.ext.android.inject
 
 abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : Fragment(), Transition.TransitionListener {
@@ -97,6 +98,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     private fun View.makeSnackbar(message: String, duration: Int, dismissAction: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {
         view.setBackgroundColor(context.color(R.color.primary))
+        mainActivity.currentFocus?.let { hideKeyboard(it) }
         dismissAction?.let {
             addCallback(object : Snackbar.Callback() {
                 override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
