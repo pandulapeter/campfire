@@ -38,7 +38,7 @@ class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscri
 
     override fun onPlaylistsUpdated(playlists: List<Playlist>) {
         if (playlistRepository.isCacheLoaded()) {
-            updateAdapterItems(playlists)
+            updateAdapterItems(playlists.sortedBy { it.order })
             state.set(StateLayout.State.NORMAL)
         }
     }
