@@ -74,12 +74,14 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     }
     private val previousButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_previous_24dp) { binding.viewPager.currentItem -= 1 }.apply {
-            visibleOrGone = binding.viewPager.currentItem != 0
+            visibleOrGone = arguments.songs.size > 1
+            isEnabled = binding.viewPager.currentItem != 0
         }
     }
     private val nextButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_next_24dp) { binding.viewPager.currentItem += 1 }.apply {
-            visibleOrGone = binding.viewPager.currentItem != binding.viewPager.adapter.count - 1
+            visibleOrGone = arguments.songs.size > 1
+            isEnabled = binding.viewPager.currentItem != binding.viewPager.adapter.count - 1
         }
     }
     private val multiWindowFlags =
@@ -164,8 +166,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         binding.viewPager.adapter = DetailPagerAdapter(childFragmentManager, songs)
         binding.viewPager.addPageScrollListener(
             onPageSelected = {
-                previousButton.visibleOrGone = it != 0
-                nextButton.visibleOrGone = it != binding.viewPager.adapter.count - 1
+                previousButton.isEnabled = it != 0
+                nextButton.isEnabled = it != binding.viewPager.adapter.count - 1
                 mainActivity.disableFloatingActionButton()
                 if (mainActivity.autoScrollControl.visibleOrInvisible) {
                     mainActivity.updateFloatingActionButtonDrawable(drawablePauseToPlay?.apply { start() })

@@ -53,7 +53,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
             updateToolbarTitle(it)
             val previousVisibility = shuffleButton.visibleOrGone
             shuffleButton.visibleOrGone = it > 1
-            if (shuffleButton.visibleOrGone != previousVisibility) {
+            if (shuffleButton.visibleOrGone != previousVisibility && viewModel.isInEditMode.get()) {
                 mainActivity.invalidateAppBar()
             }
         }

@@ -16,6 +16,8 @@ import com.pandulapeter.campfire.util.dimension
 
 class ToolbarButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : AppCompatImageView(context, attrs, defStyleAttr) {
 
+    private var maxAlpha = 1f
+
     init {
         val padding = context.dimension(R.dimen.toolbar_action_button_padding)
         setPadding(padding, padding, padding, padding)
@@ -27,6 +29,16 @@ class ToolbarButton @JvmOverloads constructor(context: Context, attrs: Attribute
     override fun setImageDrawable(drawable: Drawable?) {
         drawable?.setTint(context.color(R.color.white))
         super.setImageDrawable(drawable)
+    }
+
+    override fun setEnabled(enabled: Boolean) {
+        super.setEnabled(enabled)
+        maxAlpha = if (enabled) 1f else 0.5f
+        alpha = 1f
+    }
+
+    override fun setAlpha(alpha: Float) {
+        super.setAlpha(alpha * maxAlpha)
     }
 
     override fun onAttachedToWindow() {
