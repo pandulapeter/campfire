@@ -72,6 +72,16 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             }
         }
     }
+    private val previousButton by lazy {
+        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_previous_24dp) { binding.viewPager.currentItem -= 1 }.apply {
+            visibleOrGone = binding.viewPager.currentItem != 0
+        }
+    }
+    private val nextButton by lazy {
+        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_next_24dp) { binding.viewPager.currentItem += 1 }.apply {
+            visibleOrGone = binding.viewPager.currentItem != binding.viewPager.adapter.count - 1
+        }
+    }
     private val multiWindowFlags =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT else Intent.FLAG_ACTIVITY_NEW_TASK
     private var lastSongId = ""
@@ -154,6 +164,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         binding.viewPager.adapter = DetailPagerAdapter(childFragmentManager, songs)
         binding.viewPager.addPageScrollListener(
             onPageSelected = {
+                previousButton.visibleOrGone = it != 0
+                nextButton.visibleOrGone = it != binding.viewPager.adapter.count - 1
                 mainActivity.disableFloatingActionButton()
                 if (mainActivity.autoScrollControl.visibleOrInvisible) {
                     mainActivity.updateFloatingActionButtonDrawable(drawablePauseToPlay?.apply { start() })
@@ -178,6 +190,9 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             mutableListOf(mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }).apply {
                 if (arguments.shouldShowManagePlaylist) {
                     add(0, playlistButton)
+                } else {
+                    add(0, nextButton)
+                    add(0, previousButton)
                 }
             }
         )
