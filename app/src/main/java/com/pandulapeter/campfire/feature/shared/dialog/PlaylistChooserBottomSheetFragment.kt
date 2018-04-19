@@ -131,7 +131,7 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
     private fun refreshPlaylistCheckboxes() {
         context?.let { context ->
             binding.container?.playlistContainer?.removeAllViews()
-            playlistRepository.cache.forEach { playlist ->
+            playlistRepository.cache.sortedBy { it.order }.forEach { playlist ->
                 binding.container?.playlistContainer?.addView(AppCompatCheckBox(context).apply {
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(contentPadding, contentPadding, contentPadding, contentPadding)

@@ -595,6 +595,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             clear()
             playlistIdMap.clear()
             playlists
+                .asSequence()
                 .sortedBy { it.order }
                 .filter { it.id != playlistRepository.hiddenPlaylistId }
                 .forEachIndexed { index, playlist ->
