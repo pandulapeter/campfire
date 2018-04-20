@@ -98,8 +98,8 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             linearLayoutManager = DisableScrollLinearLayoutManager(mainActivity)
             layoutManager = linearLayoutManager
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
-                    if (dy > 0 && recyclerView?.isAnimating == false) {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    if (dy > 0 && !recyclerView.isAnimating) {
                         hideKeyboard(activity?.currentFocus)
                     }
                 }

@@ -1,13 +1,10 @@
 package com.pandulapeter.campfire.old.feature.home.playlist
 
 import android.os.Bundle
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import com.pandulapeter.campfire.PlaylistBinding
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.old.feature.home.shared.songInfoList.SongInfoListFragment
@@ -60,34 +57,6 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
             }
         }
         // Setup swipe-to-dismiss and drag-to-rearrange functionality.
-        val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
-
-            override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =
-                if (viewModel.isInEditMode.get()) makeMovementFlags(
-                    if (viewModel.adapter.items.size > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
-                    ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
-                ) else 0
-
-            override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) =
-                consume {
-                    viewHolder?.adapterPosition?.let { originalPosition ->
-                        target?.adapterPosition?.let { targetPosition ->
-                            viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
-                        }
-                    }
-                }
-
-            //TODO: Add confirmation snackbars with Undo action.
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
-                viewHolder?.adapterPosition?.let { position ->
-                    val songInfo = viewModel.adapter.items[position].songInfo
-                    viewModel.removeSongFromPlaylist(songInfo.id)
-//                    firstTimeUserExperienceRepository.shouldShowPlaylistHint = false
-                    dismissHintSnackbar()
-                }
-            }
-        })
-        itemTouchHelper.attachToRecyclerView(binding.recyclerView)
 
         binding.input.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
@@ -98,11 +67,6 @@ class PlaylistFragment : SongInfoListFragment<PlaylistBinding, PlaylistViewModel
         // Set up list item click listeners.
         viewModel.adapter.downloadActionClickListener = { position ->
             viewModel.adapter.items[position].let { viewModel.downloadSong(it.songInfo) }
-        }
-        viewModel.adapter.dragHandleTouchListener = { position ->
-            if (viewModel.isInEditMode.get()) {
-                itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position))
-            }
         }
         viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered(this) { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
     }

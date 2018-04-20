@@ -26,7 +26,7 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
         }
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel.shouldShowErrorShowSnackbar.onEventTriggered(this) { showSnackbar(R.string.options_about_error) }
         //TODO: Easter Egg.
         viewModel.shouldShowNoEasterEggSnackbar.onEventTriggered(this) {

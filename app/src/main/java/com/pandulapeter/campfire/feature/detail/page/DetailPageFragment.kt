@@ -28,13 +28,13 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
     private val detailEventBus by inject<DetailEventBus>()
     override val viewModel by lazy { DetailPageViewModel(song) { (parentFragment as? DetailFragment)?.onDataLoaded(song.id) } }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         savedInstanceState?.let { isContentVisible = it.isContentVisible }
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
+    override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState?.isContentVisible = isContentVisible
+        outState.isContentVisible = isContentVisible
     }
 
     override fun onResume() {

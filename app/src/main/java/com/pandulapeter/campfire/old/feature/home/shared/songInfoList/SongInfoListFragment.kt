@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.feature.home.shared.SpacesItemDecoration
 import com.pandulapeter.campfire.old.feature.home.shared.homeChild.HomeChildFragment
 import com.pandulapeter.campfire.util.dimension
-import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
 import org.koin.android.ext.android.inject
 
@@ -46,13 +45,6 @@ abstract class SongInfoListFragment<B : ViewDataBinding, out VM : SongInfoListVi
                 layoutManager = LinearLayoutManager(context)
                 setHasFixedSize(true)
                 addItemDecoration(SpacesItemDecoration(context.dimension(R.dimen.content_padding)))
-                addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                    override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
-                        if (dy > 0) {
-                            hideKeyboard(activity?.currentFocus)
-                        }
-                    }
-                })
             }
             // Display error snackbar with Retry action if the download fails.
             viewModel.shouldShowDownloadErrorSnackbar.onEventTriggered(this) {

@@ -54,6 +54,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             isAddedToPlaylist = it
         }
     }
+    private val pagerAdapter by lazy { DetailPagerAdapter(childFragmentManager, songs) }
     private val historyRepository by inject<HistoryRepository>()
     private val songRepository by inject<SongRepository>()
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
@@ -74,14 +75,14 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     }
     private val previousButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_previous_24dp) { binding.viewPager.currentItem -= 1 }.apply {
-            visibleOrGone = arguments.songs.size > 1
+            visibleOrGone = arguments?.songs?.size ?: 0 > 1
             isEnabled = binding.viewPager.currentItem != 0
         }
     }
     private val nextButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_next_24dp) { binding.viewPager.currentItem += 1 }.apply {
-            visibleOrGone = arguments.songs.size > 1
-            isEnabled = binding.viewPager.currentItem != binding.viewPager.adapter.count - 1
+            visibleOrGone = arguments?.songs?.size ?: 0 > 1
+            isEnabled = binding.viewPager.currentItem != pagerAdapter.count - 1
         }
     }
     private val multiWindowFlags =
@@ -163,11 +164,11 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             mainActivity.updateToolbarTitleView(inflateToolbarTitle(mainActivity.toolbarContext), toolbarWidth)
             detailEventBus.notifyTransitionEnd()
         }
-        binding.viewPager.adapter = DetailPagerAdapter(childFragmentManager, songs)
+        binding.viewPager.adapter = pagerAdapter
         binding.viewPager.addPageScrollListener(
             onPageSelected = {
                 previousButton.isEnabled = it != 0
-                nextButton.isEnabled = it != binding.viewPager.adapter.count - 1
+                nextButton.isEnabled = it != pagerAdapter.count - 1
                 mainActivity.disableFloatingActionButton()
                 if (mainActivity.autoScrollControl.visibleOrInvisible) {
                     mainActivity.updateFloatingActionButtonDrawable(drawablePauseToPlay?.apply { start() })
@@ -176,7 +177,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 mainActivity.expandAppBar()
             },
             onPageScrollStateChanged = {
-                if (binding.viewPager.adapter.count > 1 && it == ViewPager.SCROLL_STATE_DRAGGING && mainActivity.autoScrollControl.visibleOrInvisible) {
+                if (pagerAdapter.count > 1 && it == ViewPager.SCROLL_STATE_DRAGGING && mainActivity.autoScrollControl.visibleOrInvisible) {
                     toggleAutoScroll()
                 }
             }
@@ -190,11 +191,13 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
         mainActivity.updateToolbarButtons(
             mutableListOf(mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }).apply {
-                if (arguments.shouldShowManagePlaylist) {
-                    add(0, playlistButton)
-                } else {
-                    add(0, nextButton)
-                    add(0, previousButton)
+                arguments?.let {
+                    if (it.shouldShowManagePlaylist) {
+                        add(0, playlistButton)
+                    } else {
+                        add(0, nextButton)
+                        add(0, previousButton)
+                    }
                 }
             }
         )
@@ -287,7 +290,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 lastSongId = songId
             }
             if (!firstTimeUserExperienceManager.playlistSwipeCompleted) {
-                if (binding.viewPager.currentItem != arguments.index) {
+                if (binding.viewPager.currentItem != arguments?.index ?: 0) {
                     firstTimeUserExperienceManager.playlistSwipeCompleted = true
                     hideSnackbar()
                 } else if (songs.size > 1 && !isSnackbarVisible()) {

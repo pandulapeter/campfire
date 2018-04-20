@@ -74,17 +74,17 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         viewModel.adapter.run { itemClickListener = { mainActivity.openPlaylistScreen(items[it].playlist.id) } }
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
 
-            override fun getMovementFlags(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?) =
-                if ((viewHolder?.adapterPosition ?: 0) > 0)
+            override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) =
+                if (viewHolder.adapterPosition > 0)
                     makeMovementFlags(
                         if (viewModel.adapter.items.size > 2) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
                         ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     ) else 0
 
-            override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) =
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) =
                 consume {
-                    viewHolder?.adapterPosition?.let { originalPosition ->
-                        target?.adapterPosition?.let { targetPosition ->
+                    viewHolder.adapterPosition.let { originalPosition ->
+                        target.adapterPosition.let { targetPosition ->
                             if (originalPosition > 0 && targetPosition > 0) {
                                 if (viewModel.hasPlaylistToDelete() || !firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
                                     hideSnackbar()
@@ -97,8 +97,8 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
                     }
                 }
 
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
-                viewHolder?.adapterPosition?.let { position ->
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                viewHolder.adapterPosition.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
                         firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true
                         val playlist = viewModel.adapter.items[position].playlist

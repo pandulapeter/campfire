@@ -54,10 +54,10 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
         }
         ItemTouchHelper(object : ElevationItemTouchHelperCallback((mainActivity.dimension(R.dimen.content_padding)).toFloat(), 0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
-            override fun onMove(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, target: RecyclerView.ViewHolder?) = false
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = false
 
-            override fun getSwipeDirs(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?): Int {
-                viewHolder?.adapterPosition?.let { position ->
+            override fun getSwipeDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+                viewHolder.adapterPosition.let { position ->
                     if (position != RecyclerView.NO_POSITION && viewModel.adapter.items[position] is SongListItemViewModel.SongViewModel) {
                         return ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     }
@@ -65,8 +65,8 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
                 return 0
             }
 
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder?, direction: Int) {
-                viewHolder?.adapterPosition?.let { position ->
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                viewHolder.adapterPosition.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
                         firstTimeUserExperienceManager.manageDownloadsCompleted = true
                         val song = (viewModel.adapter.items[position] as SongListItemViewModel.SongViewModel).song

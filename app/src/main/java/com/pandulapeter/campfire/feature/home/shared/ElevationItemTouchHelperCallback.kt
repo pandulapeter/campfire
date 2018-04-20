@@ -29,9 +29,9 @@ abstract class ElevationItemTouchHelperCallback(
         }
     }
 
-    override fun clearView(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder) {
+    override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
         super.clearView(recyclerView, viewHolder)
-        updateElevation(recyclerView!!, viewHolder, false)
+        updateElevation(recyclerView, viewHolder, false)
     }
 
     private fun updateElevation(recyclerView: RecyclerView, holder: RecyclerView.ViewHolder, elevate: Boolean) {
