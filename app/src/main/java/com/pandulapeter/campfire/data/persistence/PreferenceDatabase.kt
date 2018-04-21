@@ -18,12 +18,14 @@ class PreferenceDatabase(context: Context) {
     var shouldSearchInArtists by PreferenceFieldDelegate.Boolean("shouldSearchInArtists", true)
     var shouldSearchInTitles by PreferenceFieldDelegate.Boolean("shouldSearchInTitles", true)
     var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("shouldShowDownloadedOnly", false)
-    var shouldShowExplicit by PreferenceFieldDelegate.Boolean("shouldShowExplicit", false)
+    var shouldShowExplicitLibrary by PreferenceFieldDelegate.Boolean("shouldShowExplicitLibrary", false)
     var sortingMode by PreferenceFieldDelegate.Int("sortingMode", LibraryViewModel.SortingMode.TITLE.intValue)
     var disabledLibraryLanguageFilters by PreferenceFieldDelegate.StringSet("disabledLibraryLanguageFilters", getDefaultLanguageFilters())
 
     // Collections filters
+    var shouldSortByPopularity by PreferenceFieldDelegate.Boolean("shouldSortByPopularity", false)
     var shouldShowSavedOnly by PreferenceFieldDelegate.Boolean("shouldShowSavedOnly", false)
+    var shouldShowExplicitCollections by PreferenceFieldDelegate.Boolean("shouldShowExplicitCollections", false)
     var disabledCollectionsLanguageFilters by PreferenceFieldDelegate.StringSet("disabledCollectionsLanguageFilters", getDefaultLanguageFilters())
 
     // Preferences

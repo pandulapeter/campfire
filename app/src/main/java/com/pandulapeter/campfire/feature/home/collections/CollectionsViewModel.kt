@@ -14,11 +14,27 @@ class CollectionsViewModel(
     private val onDataLoaded: (languages: List<Language>) -> Unit
 ) : SongListViewModel(context) {
 
+    var shouldSortByPopularity = preferenceDatabase.shouldSortByPopularity
+        set(value) {
+            if (field != value) {
+                field = value
+                preferenceDatabase.shouldSortByPopularity = value
+                updateAdapterItems(true)
+            }
+        }
     var shouldShowSavedOnly = preferenceDatabase.shouldShowSavedOnly
         set(value) {
             if (field != value) {
                 field = value
                 preferenceDatabase.shouldShowSavedOnly = value
+                updateAdapterItems()
+            }
+        }
+    var shouldShowExplicit = preferenceDatabase.shouldShowExplicitCollections
+        set(value) {
+            if (field != value) {
+                field = value
+                preferenceDatabase.shouldShowExplicitCollections = value
                 updateAdapterItems()
             }
         }

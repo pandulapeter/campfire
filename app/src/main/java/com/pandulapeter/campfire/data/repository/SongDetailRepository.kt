@@ -4,7 +4,7 @@ import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.model.remote.SongDetail
 import com.pandulapeter.campfire.data.networking.NetworkManager
-import com.pandulapeter.campfire.data.persistence.SongDatabase
+import com.pandulapeter.campfire.data.persistence.Database
 import com.pandulapeter.campfire.data.repository.shared.Repository
 import com.pandulapeter.campfire.util.enqueueCall
 import com.pandulapeter.campfire.util.swap
@@ -15,7 +15,7 @@ import kotlinx.coroutines.experimental.delay
 
 class SongDetailRepository(
     private val networkManager: NetworkManager,
-    private val songDatabase: SongDatabase
+    private val database: Database
 ) : Repository<SongDetailRepository.Subscriber>() {
     private val data = mutableListOf<SongDetailMetadata>()
     private val downloadQueue = mutableListOf<String>()
@@ -37,7 +37,7 @@ class SongDetailRepository(
         if (!isSongDownloading(song.id)) {
             if (isSongDownloaded(song.id)) {
                 async(UI) {
-                    async(CommonPool) { songDatabase.songDetailDao().get(song.id) }.await().let { songDetail ->
+                    async(CommonPool) { database.songDetailDao().get(song.id) }.await().let { songDetail ->
                         if (songDetail == null) {
                             deleteSong(song.id)
                             getSongDetail(song)
@@ -57,7 +57,7 @@ class SongDetailRepository(
                 onSuccess = { songDetail ->
                     songDetail.version = song.version ?: 0
                     async(UI) {
-                        async(CommonPool) { songDatabase.songDetailDao().insert(songDetail) }.await()
+                        async(CommonPool) { database.songDetailDao().insert(songDetail) }.await()
                         if (shouldDelay && System.currentTimeMillis() - started < 300) {
                             delay(300)
                         }
@@ -85,7 +85,7 @@ class SongDetailRepository(
     fun deleteSong(songId: String) {
         data.swap(data.filter { it.id != songId })
         async(UI) {
-            async(CommonPool) { songDatabase.songDetailDao().delete(songId) }.await()
+            async(CommonPool) { database.songDetailDao().delete(songId) }.await()
             notifyDataChanged()
         }
     }
@@ -93,7 +93,7 @@ class SongDetailRepository(
     fun deleteAllSongs() {
         data.clear()
         async(UI) {
-            async(CommonPool) { songDatabase.songDetailDao().deleteAll() }.await()
+            async(CommonPool) { database.songDetailDao().deleteAll() }.await()
             notifyDataChanged()
         }
     }
@@ -101,7 +101,7 @@ class SongDetailRepository(
     private fun refreshDataSet() {
         async(UI) {
             async(CommonPool) {
-                songDatabase.songDetailDao().getAllMetadata()
+                database.songDetailDao().getAllMetadata()
             }.await().let {
                 data.swap(it)
                 isCacheLoaded = true

@@ -3,8 +3,8 @@ package com.pandulapeter.campfire.data.repository
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.networking.NetworkManager
+import com.pandulapeter.campfire.data.persistence.Database
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.data.persistence.SongDatabase
 import com.pandulapeter.campfire.data.repository.shared.Repository
 import com.pandulapeter.campfire.util.enqueueCall
 import com.pandulapeter.campfire.util.swap
@@ -15,7 +15,7 @@ import kotlinx.coroutines.experimental.async
 class SongRepository(
     private val preferenceDatabase: PreferenceDatabase,
     private val networkManager: NetworkManager,
-    private val songDatabase: SongDatabase
+    private val database: Database
 ) : Repository<SongRepository.Subscriber>() {
 
     private val data = mutableListOf<Song>()
@@ -32,7 +32,7 @@ class SongRepository(
     init {
         async(UI) {
             async(CommonPool) {
-                data.swap(songDatabase.songDao().getAll())
+                data.swap(database.songDao().getAll())
                 updateLanguages()
             }.await()
             isCacheLoaded = true
@@ -74,7 +74,7 @@ class SongRepository(
                         data.swap(newData)
                         updateLanguages()
                     }.await()
-                    async(CommonPool) { songDatabase.songDao().updateAll(data) }
+                    async(CommonPool) { database.songDao().updateAll(data) }
                     isLoading = false
                     notifyDataChanged()
                     preferenceDatabase.lastUpdateTimestamp = System.currentTimeMillis()

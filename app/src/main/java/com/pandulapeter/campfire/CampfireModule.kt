@@ -3,8 +3,8 @@ package com.pandulapeter.campfire
 import android.arch.persistence.room.Room
 import com.google.gson.GsonBuilder
 import com.pandulapeter.campfire.data.networking.NetworkManager
+import com.pandulapeter.campfire.data.persistence.Database
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.data.persistence.SongDatabase
 import com.pandulapeter.campfire.data.repository.*
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -35,7 +35,7 @@ val repositoryModule = applicationContext {
 
 val persistenceModule = applicationContext {
     provide { PreferenceDatabase(get()) }
-    provide { Room.databaseBuilder(get(), SongDatabase::class.java, "songDatabase.db").build() }
+    provide { Room.databaseBuilder(get(), Database::class.java, "songDatabase.db").build() }
 }
 
 val eventBusModule = applicationContext {

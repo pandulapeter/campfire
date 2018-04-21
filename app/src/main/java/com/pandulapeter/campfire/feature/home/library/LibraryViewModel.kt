@@ -36,11 +36,11 @@ class LibraryViewModel(
                 updateAdapterItems()
             }
         }
-    var shouldShowExplicit = preferenceDatabase.shouldShowExplicit
+    var shouldShowExplicit = preferenceDatabase.shouldShowExplicitLibrary
         set(value) {
             if (field != value) {
                 field = value
-                preferenceDatabase.shouldShowExplicit = value
+                preferenceDatabase.shouldShowExplicitLibrary = value
                 updateAdapterItems()
             }
         }
