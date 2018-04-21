@@ -220,7 +220,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                         appShortcutManager.onLibraryOpened()
                         supportFragmentManager.handleReplace { LibraryFragment() }
                     }
-                    R.id.collections -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { CollectionsFragment() } }
+                    R.id.collections -> consumeAndCloseDrawers {
+                        supportFragmentManager.handleReplace {
+                            appShortcutManager.onCollectionsOpened()
+                            CollectionsFragment()
+                        }
+                    }
                     R.id.history -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { HistoryFragment() } }
                     R.id.options -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { OptionsFragment() } }
                     R.id.manage_playlists -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManagePlaylistsFragment() } }
@@ -573,8 +578,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 }
             }
             currentPlaylistId = playlistId
-            supportFragmentManager.handleReplace("${PlaylistFragment::class.java.simpleName}-$playlistId") { PlaylistFragment.newInstance(playlistId) }
             appShortcutManager.onPlaylistOpened(playlistId)
+            supportFragmentManager.handleReplace("${PlaylistFragment::class.java.simpleName}-$playlistId") { PlaylistFragment.newInstance(playlistId) }
         }
     }
 
