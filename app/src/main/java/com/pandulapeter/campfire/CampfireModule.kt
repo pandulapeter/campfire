@@ -31,6 +31,7 @@ val repositoryModule = applicationContext {
     provide { ChangelogRepository() }
     provide { HistoryRepository(get()) }
     provide { PlaylistRepository(get()) }
+    provide { CollectionRepository(get(), get(), get()) }
 }
 
 val persistenceModule = applicationContext {

@@ -2,8 +2,10 @@ package com.pandulapeter.campfire.data.model.remote
 
 import android.arch.persistence.room.ColumnInfo
 import android.arch.persistence.room.Entity
+import android.arch.persistence.room.Ignore
 import android.arch.persistence.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
+import kotlinx.android.parcel.IgnoredOnParcel
 
 @Entity(tableName = Collection.TABLE_NAME)
 data class Collection(
@@ -18,6 +20,11 @@ data class Collection(
     @ColumnInfo(name = IS_EXPLICIT) @SerializedName(IS_EXPLICIT) val isExplicit: Boolean? = false,
     @ColumnInfo(name = IS_SAVED) @SerializedName(IS_SAVED) val isSaved: Boolean? = false
 ) {
+
+    @IgnoredOnParcel
+    @Ignore
+    @Transient
+    var isNew = false
 
     companion object {
         const val TABLE_NAME = "collections"

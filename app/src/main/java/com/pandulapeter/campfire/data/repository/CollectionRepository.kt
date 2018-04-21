@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.local.Language
-import com.pandulapeter.campfire.data.model.remote.Song
+import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.Database
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
@@ -12,35 +12,35 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 
-class SongRepository(
+class CollectionRepository(
     private val preferenceDatabase: PreferenceDatabase,
     private val networkManager: NetworkManager,
     private val database: Database
-) : Repository<SongRepository.Subscriber>() {
+) : Repository<CollectionRepository.Subscriber>() {
 
     companion object {
         private const val UPDATE_LIMIT = 24 * 60 * 60 * 1000
     }
 
-    private val data = mutableListOf<Song>()
+    private val data = mutableListOf<Collection>()
     val languages = mutableListOf<Language>()
     private var isCacheLoaded = false
     private var isLoading = true
         set(value) {
             if (field != value) {
                 field = value
-                subscribers.forEach { it.onSongRepositoryLoadingStateChanged(value) }
+                subscribers.forEach { it.onCollectionsLoadingStateChanged(value) }
             }
         }
 
     init {
         async(UI) {
             async(CommonPool) {
-                data.swap(database.songDao().getAll())
+                data.swap(database.collectionDao().getAll())
                 updateLanguages()
             }.await()
             isCacheLoaded = true
-            if (System.currentTimeMillis() - preferenceDatabase.lastLibraryUpdateTimestamp > UPDATE_LIMIT) {
+            if (System.currentTimeMillis() - preferenceDatabase.lastCollectionsUpdateTimestamp > UPDATE_LIMIT) {
                 updateData()
             } else {
                 isLoading = false
@@ -52,11 +52,11 @@ class SongRepository(
     override fun subscribe(subscriber: Subscriber) {
         super.subscribe(subscriber)
         if (!isLoading) {
-            subscriber.onSongRepositoryDataUpdated(data)
+            subscriber.onCollectionsUpdated(data)
         }
-        subscriber.onSongRepositoryLoadingStateChanged(isLoading)
+        subscriber.onCollectionsLoadingStateChanged(isLoading)
         if (!isLoading && data.isEmpty()) {
-            subscriber.onSongRepositoryUpdateError()
+            subscriber.onCollectionRepositoryUpdateError()
         }
     }
 
@@ -64,7 +64,7 @@ class SongRepository(
 
     fun updateData() {
         isLoading = true
-        networkManager.service.getLibrary().enqueueCall(
+        networkManager.service.getCollections().enqueueCall(
             onSuccess = { newData ->
                 async(UI) {
                     async(CommonPool) {
@@ -78,20 +78,20 @@ class SongRepository(
                         data.swap(newData)
                         updateLanguages()
                     }.await()
-                    async(CommonPool) { database.songDao().updateAll(data) }
+                    async(CommonPool) { database.collectionDao().updateAll(data) }
                     isLoading = false
                     notifyDataChanged()
-                    preferenceDatabase.lastLibraryUpdateTimestamp = System.currentTimeMillis()
+                    preferenceDatabase.lastCollectionsUpdateTimestamp = System.currentTimeMillis()
 
                 }
             },
             onFailure = {
                 isLoading = false
-                subscribers.forEach { it.onSongRepositoryUpdateError() }
+                subscribers.forEach { it.onCollectionRepositoryUpdateError() }
             })
     }
 
-    fun onSongOpened(songId: String) {
+    fun onCollectionOpened(songId: String) {
         data.find { it.id == songId }?.let {
             if (it.isNew) {
                 it.isNew = false
@@ -115,14 +115,14 @@ class SongRepository(
         )
     }
 
-    private fun notifyDataChanged() = subscribers.forEach { it.onSongRepositoryDataUpdated(data) }
+    private fun notifyDataChanged() = subscribers.forEach { it.onCollectionsUpdated(data) }
 
     interface Subscriber {
 
-        fun onSongRepositoryDataUpdated(data: List<Song>)
+        fun onCollectionsUpdated(data: List<Collection>)
 
-        fun onSongRepositoryLoadingStateChanged(isLoading: Boolean)
+        fun onCollectionsLoadingStateChanged(isLoading: Boolean)
 
-        fun onSongRepositoryUpdateError()
+        fun onCollectionRepositoryUpdateError()
     }
 }
