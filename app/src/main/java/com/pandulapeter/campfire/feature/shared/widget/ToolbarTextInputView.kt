@@ -6,6 +6,7 @@ import android.databinding.DataBindingUtil
 import android.os.Parcelable
 import android.support.annotation.StringRes
 import android.text.InputFilter
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
 import android.widget.FrameLayout
@@ -22,6 +23,9 @@ class ToolbarTextInputView(context: Context, @StringRes hintText: Int, isSearch:
         textInput.run {
             hint = context.getString(hintText)
             imeOptions = if (isSearch) EditorInfo.IME_ACTION_SEARCH else EditorInfo.IME_ACTION_DONE
+            if (!isSearch) {
+                inputType = InputType.TYPE_TEXT_FLAG_CAP_WORDS
+            }
             filters = arrayOfNulls<InputFilter>(1).apply {
                 this[0] = InputFilter.LengthFilter(context.resources.getInteger(if (isSearch) R.integer.search_query_limit else R.integer.playlist_name_length_limit))
             }

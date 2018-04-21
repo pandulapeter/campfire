@@ -102,6 +102,15 @@ class PlaylistRepository(private val songDatabase: SongDatabase) : Repository<Pl
         async(UI) { async(CommonPool) { songDatabase.playlistDao().insert(playlist) }.await() }
     }
 
+    fun updatePlaylistTitle(playlistId: String, title: String) {
+        val playlist = data.find { it.id == playlistId }
+        playlist?.let {
+            it.title = title
+            subscribers.forEach { notifyDataChanged() }
+            async(UI) { async(CommonPool) { songDatabase.playlistDao().insert(it) }.await() }
+        }
+    }
+
     fun updatePlaylistOrder(playlistId: String, order: Int) {
         val playlist = data.find { it.id == playlistId }
         playlist?.let {

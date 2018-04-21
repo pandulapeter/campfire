@@ -11,7 +11,9 @@ import com.pandulapeter.campfire.feature.home.shared.songList.SongListAdapter
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.onPropertyChanged
+import org.koin.android.ext.android.inject
 import java.util.*
 
 class PlaylistViewModel(
@@ -22,8 +24,9 @@ class PlaylistViewModel(
     private val onDataLoaded: (Boolean) -> Unit
 ) : SongListViewModel(context) {
 
-    var playlist = ObservableField<Playlist?>()
+    private val appShortcutManager by inject<AppShortcutManager>()
     private var songToDeleteId: String? = null
+    val playlist = ObservableField<Playlist?>()
     val songCount = ObservableInt()
     val isInEditMode = ObservableBoolean()
 
@@ -69,6 +72,7 @@ class PlaylistViewModel(
         super.onPlaylistsUpdated(playlists)
         playlists.findLast { it.id == playlistId }.let {
             playlist.set(it)
+            playlist.notifyChange()
             onDataLoaded(playlistId != Playlist.FAVORITES_ID || (it?.songIds?.size ?: 0) > 1)
         }
     }
@@ -86,6 +90,14 @@ class PlaylistViewModel(
                     (playlist.get()?.title ?: "").let {
                         textInput.setText(it)
                         textInput.setSelection(it.length)
+                    }
+                } else {
+                    playlist.get()?.let {
+                        val newTitle = textInput.text?.toString()
+                        if (it.title != newTitle && newTitle != null && newTitle.trim().isNotEmpty()) {
+                            playlistRepository.updatePlaylistTitle(it.id, newTitle)
+                            appShortcutManager.updateAppShortcuts()
+                        }
                     }
                 }
                 this@PlaylistViewModel.isInEditMode.set(toolbarTextInputView.isTextInputVisible)
