@@ -542,10 +542,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 }
             }
             currentPlaylistId = playlistId
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, PlaylistFragment.newInstance(playlistId))
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .commit()
+            supportFragmentManager.handleReplace("${PlaylistFragment::class.java.simpleName}-$playlistId") { PlaylistFragment.newInstance(playlistId) }
             appShortcutManager.onPlaylistOpened(playlistId)
         }
     }
@@ -626,10 +623,10 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    private inline fun <reified T : TopLevelFragment<*, *>> FragmentManager.handleReplace(crossinline newInstance: () -> T) {
+    private inline fun <reified T : TopLevelFragment<*, *>> FragmentManager.handleReplace(tag: String = T::class.java.name, crossinline newInstance: () -> T) {
         currentFragment?.exitTransition = null
         beginTransaction()
-            .replace(R.id.fragment_container, findFragmentByTag(T::class.java.name) ?: newInstance.invoke(), T::class.java.name)
+            .replace(R.id.fragment_container, findFragmentByTag(tag) ?: newInstance.invoke(), tag)
             .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
             .commit()
     }

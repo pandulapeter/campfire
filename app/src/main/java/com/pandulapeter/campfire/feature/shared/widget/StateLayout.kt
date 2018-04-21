@@ -65,7 +65,7 @@ class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSe
         buttonText = if (stringRes == 0) null else context.getString(stringRes)
     }
 
-    fun setButtonIcon(@DrawableRes resourceId: Int) =
+    fun buttonIcon(@DrawableRes resourceId: Int) =
         binding.button.setCompoundDrawablesRelativeWithIntrinsicBounds(if (resourceId == 0) null else context.drawable(resourceId), null, null, null)
 
     enum class State(val childIndex: Int) {
