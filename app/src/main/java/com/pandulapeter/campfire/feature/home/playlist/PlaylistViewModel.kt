@@ -50,20 +50,22 @@ class PlaylistViewModel(
 
     override fun onActionButtonClicked() = openLibrary()
 
-    override fun Sequence<Song>.createViewModels() = (playlist.get()?.songIds ?: listOf<String>())
-        .mapNotNull { songId -> find { it.id == songId } }
-        .filter { it.id != songToDeleteId && playlist.get()?.songIds?.contains(it.id) ?: false }
-        .map {
+    override fun Sequence<Song>.createViewModels(): List<SongListItemViewModel> {
+        val list = (playlist.get()?.songIds ?: listOf<String>())
+            .mapNotNull { songId -> find { it.id == songId } }
+            .filter { it.id != songToDeleteId && playlist.get()?.songIds?.contains(it.id) ?: false }
+            .toList()
+        return list.map {
             SongListItemViewModel.SongViewModel(
                 context = context,
                 songDetailRepository = songDetailRepository,
                 playlistRepository = playlistRepository,
                 song = it,
                 shouldShowPlaylistButton = false,
-                shouldShowDragHandle = isInEditMode.get()
+                shouldShowDragHandle = isInEditMode.get() && list.size > 1
             )
         }
-        .toList()
+    }
 
     override fun onPlaylistsUpdated(playlists: List<Playlist>) {
         super.onPlaylistsUpdated(playlists)
