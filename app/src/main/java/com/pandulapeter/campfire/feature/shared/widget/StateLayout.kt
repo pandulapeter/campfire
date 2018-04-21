@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.shared.widget
 
 import android.content.Context
 import android.databinding.DataBindingUtil
+import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -9,6 +10,7 @@ import android.view.animation.AnimationUtils
 import android.widget.ViewFlipper
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewStateLayoutBinding
+import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.useStyledAttributes
 import com.pandulapeter.campfire.util.visibleOrGone
 
@@ -62,6 +64,9 @@ class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSe
     fun setButtonText(@StringRes stringRes: Int) {
         buttonText = if (stringRes == 0) null else context.getString(stringRes)
     }
+
+    fun setButtonIcon(@DrawableRes resourceId: Int) =
+        binding.button.setCompoundDrawablesRelativeWithIntrinsicBounds(if (resourceId == 0) null else context.drawable(resourceId), null, null, null)
 
     enum class State(val childIndex: Int) {
         LOADING(0),

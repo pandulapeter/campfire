@@ -34,6 +34,7 @@
                 android:textColor="?android:attr/textColorPrimary"
                 android:theme="@style/DarkTheme"
                 android:visibility="gone"
+                android:drawablePadding="@dimen/content_padding"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

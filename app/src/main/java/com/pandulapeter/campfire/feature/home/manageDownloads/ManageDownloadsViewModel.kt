@@ -18,6 +18,7 @@ class ManageDownloadsViewModel(context: Context, private val openLibrary: () -> 
     init {
         placeholderText.set(R.string.manage_downloads_placeholder)
         buttonText.set(R.string.go_to_library)
+        buttonIcon.set(R.drawable.ic_library_24dp)
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_MANAGE_DOWNLOADS
     }
 
