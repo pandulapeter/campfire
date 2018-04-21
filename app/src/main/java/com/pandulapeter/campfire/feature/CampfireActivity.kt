@@ -574,7 +574,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    fun openDetailScreen(clickedView: View, songs: List<Song>, shouldExplode: Boolean, index: Int, shouldShowManagePlaylist: Boolean) {
+    fun openDetailScreen(clickedView: View?, songs: List<Song>, shouldExplode: Boolean, index: Int, shouldShowManagePlaylist: Boolean) {
         lastSongId = songs[index].id
         fun createTransition(delay: Long) = Explode().apply {
             propagation = null
@@ -596,7 +596,11 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         supportFragmentManager.beginTransaction()
             .setAllowOptimization(true)
             .replace(R.id.fragment_container, DetailFragment.newInstance(songs, index, shouldShowManagePlaylist))
-            .addSharedElement(clickedView, clickedView.transitionName)
+            .apply {
+                clickedView?.let {
+                    addSharedElement(it, it.transitionName)
+                }
+            }
             .addToBackStack(null)
             .commit()
     }

@@ -42,7 +42,6 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                 mainActivity.updateAppBarView(searchControlsBinding.root)
                 mainActivity.enableSecondaryNavigationDrawer(R.menu.library)
                 initializeCompoundButton(R.id.downloaded_only) { viewModel.shouldShowDownloadedOnly }
-                initializeCompoundButton(R.id.show_work_in_progress) { viewModel.shouldShowWorkInProgress }
                 initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
                 initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == LibraryViewModel.SortingMode.TITLE }
                 initializeCompoundButton(R.id.sort_by_artist) { viewModel.sortingMode == LibraryViewModel.SortingMode.ARTIST }
@@ -137,7 +136,6 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
         when (menuItem.itemId) {
             R.id.downloaded_only -> consumeAndUpdateBoolean(menuItem, { shouldShowDownloadedOnly = it }, { shouldShowDownloadedOnly })
-            R.id.show_work_in_progress -> consumeAndUpdateBoolean(menuItem, { shouldShowWorkInProgress = it }, { shouldShowWorkInProgress })
             R.id.show_explicit -> consumeAndUpdateBoolean(menuItem, { shouldShowExplicit = it }, { shouldShowExplicit })
             R.id.sort_by_title -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.TITLE) { sortingMode = it }
             R.id.sort_by_artist -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.ARTIST) { sortingMode = it }

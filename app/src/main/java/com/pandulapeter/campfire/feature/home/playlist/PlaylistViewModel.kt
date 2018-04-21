@@ -42,11 +42,8 @@ class PlaylistViewModel(
         }
         isInEditMode.onPropertyChanged {
             if (adapter.items.size > 1) {
-                adapter.items.forEachIndexed { index, item ->
-                    if (item is SongListItemViewModel.SongViewModel) {
-                        adapter.notifyItemChanged(index, SongListAdapter.Payload.EditModeChanged(it))
-                    }
-                }
+                adapter.notifyItemRangeChanged(0, adapter.itemCount, SongListAdapter.Payload.EditModeChanged(it))
+                updateAdapterItems()
             }
         }
     }

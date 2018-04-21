@@ -60,7 +60,6 @@
     <string name="library_sort_by_artist">Artist</string>
     <string name="library_filter_by_language">Filter by language</string>
     <string name="library_downloaded_only">Downloaded only</string>
-    <string name="library_show_work_in_progress">Show unfinished</string>
     <string name="library_show_explicit">Show explicit</string>
     <string name="library_search_in">Search in:</string>
     <string name="library_search_in_titles">Titles</string>

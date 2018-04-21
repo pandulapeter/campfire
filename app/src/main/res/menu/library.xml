@@ -37,11 +37,6 @@
                 app:actionLayout="@layout/widget_switch" />
 
             <item
-                android:id="@+id/show_work_in_progress"
-                android:title="@string/library_show_work_in_progress"
-                app:actionLayout="@layout/widget_switch" />
-
-            <item
                 android:id="@+id/show_explicit"
                 android:title="@string/library_show_explicit"
                 app:actionLayout="@layout/widget_switch" />

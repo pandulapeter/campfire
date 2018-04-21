@@ -174,19 +174,13 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         val index = 0
         val originalIndex = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == tempList[index].id }
         if (originalIndex != RecyclerView.NO_POSITION) {
-            binding.recyclerView.smoothScrollToPosition(originalIndex)
-            linearLayoutManager.isScrollEnabled = false
-            binding.recyclerView.postDelayed({
-                if (isAdded) {
-                    mainActivity.openDetailScreen(
-                        binding.recyclerView.findViewHolderForAdapterPosition(originalIndex).itemView,
-                        tempList,
-                        tempList.size > 1,
-                        0,
-                        false
-                    )
-                }
-            }, 300)
+            mainActivity.openDetailScreen(
+                null,
+                tempList,
+                false,
+                0,
+                false
+            )
         }
     }
 

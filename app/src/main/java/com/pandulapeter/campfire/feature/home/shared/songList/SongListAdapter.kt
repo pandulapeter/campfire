@@ -74,7 +74,7 @@ class SongListAdapter : RecyclerView.Adapter<SongListItemViewHolder<*, *>>() {
     }
 
 
-    override fun onBindViewHolder(holder: SongListItemViewHolder<*, *>, position: Int) = onBindViewHolder(holder, position, listOf())
+    override fun onBindViewHolder(holder: SongListItemViewHolder<*, *>, position: Int) = Unit
 
     override fun onBindViewHolder(holder: SongListItemViewHolder<*, *>, position: Int, payloads: List<Any>) {
         when (holder) {

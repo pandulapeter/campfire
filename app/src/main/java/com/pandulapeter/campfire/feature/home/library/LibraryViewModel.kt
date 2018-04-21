@@ -36,14 +36,6 @@ class LibraryViewModel(
                 updateAdapterItems()
             }
         }
-    var shouldShowWorkInProgress = preferenceDatabase.shouldShowWorkInProgress
-        set(value) {
-            if (field != value) {
-                field = value
-                preferenceDatabase.shouldShowWorkInProgress = value
-                updateAdapterItems()
-            }
-        }
     var shouldShowExplicit = preferenceDatabase.shouldShowExplicit
         set(value) {
             if (field != value) {
@@ -108,7 +100,6 @@ class LibraryViewModel(
     override fun Sequence<Song>.createViewModels() = filterByQuery()
         .filterDownloaded()
         .filterByLanguage()
-        .filterWorkInProgress()
         .filterExplicit()
         .sort()
         .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
@@ -174,8 +165,6 @@ class LibraryViewModel(
     private fun Sequence<Song>.filterDownloaded() = if (shouldShowDownloadedOnly) filter { songDetailRepository.isSongDownloaded(it.id) } else this
 
     private fun Sequence<Song>.filterByLanguage() = filter { !disabledLanguageFilters.contains(it.language ?: Language.Unknown.id) }
-
-    private fun Sequence<Song>.filterWorkInProgress() = if (!shouldShowWorkInProgress) filter { it.version ?: 0 >= 0 } else this
 
     private fun Sequence<Song>.filterExplicit() = if (!shouldShowExplicit) filter { it.isExplicit != true } else this
 
