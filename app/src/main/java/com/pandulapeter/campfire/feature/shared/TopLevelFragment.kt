@@ -18,6 +18,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.util.drawable
@@ -33,7 +34,9 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         mainActivity.beforeScreenChanged()
-        mainActivity.updateToolbarTitleView(inflateToolbarTitle(mainActivity.toolbarContext), toolbarWidth)
+        if (this !is DetailFragment) {
+            mainActivity.updateToolbarTitleView(inflateToolbarTitle(mainActivity.toolbarContext), toolbarWidth)
+        }
         if (savedInstanceState == null || this !is LibraryFragment) {
             mainActivity.updateAppBarView(appBarView, savedInstanceState != null)
         }
