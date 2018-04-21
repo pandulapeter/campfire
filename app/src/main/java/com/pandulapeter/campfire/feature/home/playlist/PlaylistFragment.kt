@@ -63,6 +63,9 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         viewModel.isInEditMode.onPropertyChanged(this) {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
             updateScrollState()
+            if (!viewModel.hasSongToDelete()) {
+                hideSnackbar()
+            }
             if (it && !firstTimeUserExperienceManager.playlistSwipeCompleted) {
                 if (firstTimeUserExperienceManager.playlistDragCompleted) {
                     showSwipeHintIfNeeded()
