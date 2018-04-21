@@ -10,6 +10,7 @@ data class Collection(
     @PrimaryKey() @ColumnInfo(name = ID) @SerializedName(ID) val id: String,
     @ColumnInfo(name = TITLE) @SerializedName(TITLE) val title: String = "",
     @ColumnInfo(name = DESCRIPTION) @SerializedName(DESCRIPTION) val description: String = "",
+    @ColumnInfo(name = SONGS) @SerializedName(SONGS) val songs: String = "",
     @ColumnInfo(name = LANGUAGE) @SerializedName(LANGUAGE) val language: String? = null,
     @ColumnInfo(name = POPULARITY) @SerializedName(POPULARITY) val popularity: Int? = 0,
     @ColumnInfo(name = DATE) @SerializedName(DATE) val date: Long? = 0,
@@ -22,6 +23,7 @@ data class Collection(
         const val ID = "id"
         private const val TITLE = "title"
         private const val DESCRIPTION = "description"
+        private const val SONGS = "songs"
         private const val LANGUAGE = "language"
         private const val POPULARITY = "popularity"
         private const val DATE = "date"

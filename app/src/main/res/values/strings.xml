@@ -69,6 +69,7 @@
     <!-- Collections screen -->
     <string name="collections_saved_only">Saved only</string>
     <string name="collections_placeholder">No matching collections. Double-check the filters you set up</string>
+    <string name="collections_sort_by_date">Upload date</string>
 
     <!-- History screen -->
     <string name="history_clear_confirmation_title">Are you sure?</string>

@@ -2,6 +2,24 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <item android:title="@string/library_sort_by">
+
+        <menu>
+
+            <item
+                android:id="@+id/sort_by_date"
+                android:title="@string/collections_sort_by_date"
+                app:actionLayout="@layout/widget_radio_button" />
+
+            <item
+                android:id="@+id/sort_by_popularity"
+                android:title="@string/library_sort_by_popularity"
+                app:actionLayout="@layout/widget_radio_button" />
+
+        </menu>
+
+    </item>
+
     <item
         android:id="@+id/filter_by_type"
         android:title="@string/library_filter_by_type">
@@ -11,6 +29,11 @@
             <item
                 android:id="@+id/saved_only"
                 android:title="@string/collections_saved_only"
+                app:actionLayout="@layout/widget_switch" />
+
+            <item
+                android:id="@+id/show_explicit"
+                android:title="@string/library_show_explicit"
                 app:actionLayout="@layout/widget_switch" />
 
         </menu>
