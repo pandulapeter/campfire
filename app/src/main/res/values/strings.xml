@@ -114,6 +114,13 @@
     <string name="options_preferences_share_usage_data_restart_hint">Please restart the application for all changes to take effect</string>
 
     <!-- Options screen / Changelog -->
+    <string name="options_changelog_0_0_4_version_name">v0.0.4</string>
+    <string name="options_changelog_0_0_4_description">
+        <Data><![CDATA[
+        • Added support for <strong>Collections</strong> which are hand-picked playlists that are regularly updated.<br>
+        • Added <strong>shuffle</strong> option for playlists and collections that opens the list of songs in a random order.
+        ]]></Data>
+    </string>
     <string name="options_changelog_0_0_3_version_name">v0.0.3</string>
     <string name="options_changelog_0_0_3_description">
         <Data><![CDATA[
