@@ -36,11 +36,13 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         private var Bundle.songs by BundleArgumentDelegate.ParcelableArrayList("songs")
         private var Bundle.index by BundleArgumentDelegate.Int("index")
         private var Bundle.shouldShowManagePlaylist by BundleArgumentDelegate.Boolean("shouldShowManagePlaylist")
+        private var Bundle.hasNoTransition by BundleArgumentDelegate.Boolean("hasNoTransition")
 
-        fun newInstance(songs: List<Song>, index: Int, shouldShowManagePlaylist: Boolean) = DetailFragment().withArguments {
+        fun newInstance(songs: List<Song>, index: Int, shouldShowManagePlaylist: Boolean, hasNoTransition: Boolean) = DetailFragment().withArguments {
             it.songs = ArrayList(songs)
             it.index = index
             it.shouldShowManagePlaylist = shouldShowManagePlaylist
+            it.hasNoTransition = hasNoTransition
         }
     }
 
@@ -192,6 +194,13 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 }
             }
         )
+        if (arguments?.hasNoTransition == true) {
+            binding.root.postDelayed({
+                if (isAdded) {
+                    detailEventBus.notifyTransitionEnd()
+                }
+            }, 200)
+        }
     }
 
     override fun onPause() {

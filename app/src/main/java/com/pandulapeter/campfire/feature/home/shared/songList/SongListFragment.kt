@@ -84,12 +84,14 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             object : OnLayoutChangeListener {
                 override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
                     binding.recyclerView.removeOnLayoutChangeListener(this)
-                    val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == mainActivity.lastSongId }
-                    if (index != RecyclerView.NO_POSITION) {
-                        val viewAtPosition = linearLayoutManager.findViewByPosition(index)
-                        if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
-                            linearLayoutManager.isScrollEnabled = true
-                            binding.recyclerView.run { post { scrollToPosition(index) } }
+                    if (reenterTransition != null) {
+                        val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == mainActivity.lastSongId }
+                        if (index != RecyclerView.NO_POSITION) {
+                            val viewAtPosition = linearLayoutManager.findViewByPosition(index)
+                            if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
+                                linearLayoutManager.isScrollEnabled = true
+                                binding.recyclerView.run { post { scrollToPosition(index) } }
+                            }
                         }
                     }
                 }

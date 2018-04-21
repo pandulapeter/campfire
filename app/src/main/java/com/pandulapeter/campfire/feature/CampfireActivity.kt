@@ -15,6 +15,7 @@ import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.AppBarLayout
 import android.support.design.widget.NavigationView
 import android.support.v4.app.FragmentManager
+import android.support.v4.app.FragmentTransaction
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
@@ -592,13 +593,14 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 reenterTransition = null
             }
         }
-        expandAppBar()
         supportFragmentManager.beginTransaction()
             .setAllowOptimization(true)
-            .replace(R.id.fragment_container, DetailFragment.newInstance(songs, index, shouldShowManagePlaylist))
+            .replace(R.id.fragment_container, DetailFragment.newInstance(songs, index, shouldShowManagePlaylist, clickedView == null))
             .apply {
-                clickedView?.let {
-                    addSharedElement(it, it.transitionName)
+                if (clickedView == null) {
+                    setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                } else {
+                    addSharedElement(clickedView, clickedView.transitionName)
                 }
             }
             .addToBackStack(null)
@@ -641,6 +643,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         currentFragment?.exitTransition = null
         beginTransaction()
             .replace(R.id.fragment_container, findFragmentByTag(tag) ?: newInstance.invoke(), tag)
+            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
             .commit()
     }
 
