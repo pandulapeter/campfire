@@ -160,6 +160,7 @@
         <item quantity="other">%d songs</item>
     </plurals>
     <string name="playlist_enter_title">Enter playlist title</string>
+    <string name="playlist_title">Playlist title</string>
     <string name="playlist_placeholder">To start adding songs to this playlist, tap on the star icon near song titles</string>
     <string name="playlist_song_removed_message">%s removed</string>
     <string name="playlist_hint_swipe">Swipe the songs away horizontally to remove them from this playlist</string>

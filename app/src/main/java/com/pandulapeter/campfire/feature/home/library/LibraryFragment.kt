@@ -29,7 +29,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     override val viewModel: LibraryViewModel by lazy {
         LibraryViewModel(
             context = mainActivity,
-            toolbarTextInputView = ToolbarTextInputView(mainActivity.toolbarContext).apply { title.updateToolbarTitle(R.string.home_library) },
+            toolbarTextInputView = ToolbarTextInputView(mainActivity.toolbarContext, R.string.library_search, true).apply { title.updateToolbarTitle(R.string.home_library) },
             updateSearchToggleDrawable = {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
                 mainActivity.shouldAllowAppBarScrolling = !it

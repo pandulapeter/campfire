@@ -30,7 +30,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
             context = mainActivity,
             playlistId = arguments.playlistId,
             openLibrary = { mainActivity.openLibraryScreen() },
-            toolbarTextInputView = if (arguments?.playlistId == Playlist.FAVORITES_ID) null else ToolbarTextInputView(mainActivity.toolbarContext),
+            toolbarTextInputView = if (arguments?.playlistId == Playlist.FAVORITES_ID) null else ToolbarTextInputView(mainActivity.toolbarContext, R.string.playlist_title, false),
             onDataLoaded = {
                 if (it) {
                     mainActivity.updateToolbarButtons(listOf(editToggle, shuffleButton))

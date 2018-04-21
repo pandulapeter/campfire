@@ -32,6 +32,11 @@ class PlaylistViewModel(
         buttonText.set(R.string.go_to_library)
         buttonIcon.set(R.drawable.ic_library_24dp)
         preferenceDatabase.lastScreen = playlistId
+        toolbarTextInputView?.onDoneButtonPressed = {
+            if (isInEditMode.get()) {
+                toggleEditMode()
+            }
+        }
         isInEditMode.onPropertyChanged {
             if (adapter.items.size > 1) {
                 adapter.items.forEachIndexed { index, item ->
@@ -78,7 +83,10 @@ class PlaylistViewModel(
             if (title.tag == null) {
                 animateTextInputVisibility(!isTextInputVisible)
                 if (isTextInputVisible) {
-                    textInput.setText("")
+                    (playlist.get()?.title ?: "").let {
+                        textInput.setText(it)
+                        textInput.setSelection(it.length)
+                    }
                 }
                 this@PlaylistViewModel.isInEditMode.set(toolbarTextInputView.isTextInputVisible)
             }
