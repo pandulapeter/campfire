@@ -17,11 +17,11 @@ interface CampfireService {
     fun getCollections(): Call<List<Collection>>
 
     @GET("/v1/song")
-    fun getSong(@Query("id") id: String): Call<SongDetail>
+    fun getSong(@Query("id") songId: String): Call<SongDetail>
 
     @PUT("/v1/songOpened")
-    fun openSong(@Query("id") id: String): Call<Unit>
+    fun openSong(@Query("id") songId: String): Call<Unit>
 
     @PUT("/v1/collectionOpened")
-    fun openCollection(@Query("id") id: String): Call<Unit>
+    fun openCollection(@Query("id") collectionId: String): Call<Unit>
 }

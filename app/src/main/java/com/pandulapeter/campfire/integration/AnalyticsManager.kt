@@ -17,4 +17,10 @@ class AnalyticsManager(private val preferenceDatabase: PreferenceDatabase, priva
             networkManager.service.openSong(songId).enqueueCall({}, {})
         }
     }
+
+    fun onCollectionOpened(collectionId: String) {
+        if (preferenceDatabase.shouldShareUsageData) {
+            networkManager.service.openCollection(collectionId).enqueueCall({}, {})
+        }
+    }
 }
