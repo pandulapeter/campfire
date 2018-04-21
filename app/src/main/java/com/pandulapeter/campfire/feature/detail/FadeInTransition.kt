@@ -16,6 +16,8 @@ class FadeInTransition : Transition() {
 
     override fun captureEndValues(transitionValues: TransitionValues) = Unit
 
-    override fun createAnimator(sceneRoot: ViewGroup, startValues: TransitionValues, endValues: TransitionValues): Animator =
-        ObjectAnimator.ofFloat((endValues.view as ViewGroup).getChildAt(0).apply { alpha = 1f }, View.ALPHA, 0f, 1f).apply { interpolator = timeInterpolator }
+    override fun createAnimator(sceneRoot: ViewGroup?, startValues: TransitionValues?, endValues: TransitionValues?): Animator? =
+        (endValues?.view as? ViewGroup)?.getChildAt(0)?.let {
+            ObjectAnimator.ofFloat(it.apply { alpha = 1f }, View.ALPHA, 0f, 1f).apply { interpolator = timeInterpolator }
+        }
 }

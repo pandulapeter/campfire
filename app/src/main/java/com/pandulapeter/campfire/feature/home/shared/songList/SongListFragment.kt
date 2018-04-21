@@ -5,6 +5,7 @@ import android.support.annotation.CallSuper
 import android.support.v4.app.SharedElementCallback
 import android.support.v7.widget.RecyclerView
 import android.view.View
+import android.view.View.OnLayoutChangeListener
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import com.pandulapeter.campfire.R
@@ -19,10 +20,11 @@ import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 
+
 abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, VM>(R.layout.fragment_song_list) {
 
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
-    private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
+    protected lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,10 +32,12 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
                 val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == mainActivity.lastSongId }
                 if (index != RecyclerView.NO_POSITION) {
-                    binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
+                    (binding.recyclerView.findViewHolderForAdapterPosition(index)
+                            ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition())).let {
                         sharedElements[names[0]] = it.itemView
                     }
                 }
+                mainActivity.lastSongId = ""
             }
         })
     }
@@ -76,6 +80,20 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 }
             }
         }
+        binding.recyclerView.addOnLayoutChangeListener(
+            object : OnLayoutChangeListener {
+                override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
+                    binding.recyclerView.removeOnLayoutChangeListener(this)
+                    val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == mainActivity.lastSongId }
+                    if (index != RecyclerView.NO_POSITION) {
+                        val viewAtPosition = linearLayoutManager.findViewByPosition(index)
+                        if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
+                            linearLayoutManager.isScrollEnabled = true
+                            binding.recyclerView.run { post { scrollToPosition(index) } }
+                        }
+                    }
+                }
+            })
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
             showSnackbar(
                 message = R.string.library_update_error,
@@ -113,7 +131,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
                     viewTreeObserver?.removeOnPreDrawListener(this)
-                    startPostponedEnterTransition()
+                    postDelayed({ startPostponedEnterTransition() }, 300)
                     return true
                 }
             })
