@@ -52,11 +52,11 @@ class LibraryViewModel(
                 updateAdapterItems(true)
             }
         }
-    var disabledLanguageFilters = preferenceDatabase.disabledLanguageFilters
+    var disabledLanguageFilters = preferenceDatabase.disabledLibraryLanguageFilters
         set(value) {
             if (field != value) {
                 field = value
-                preferenceDatabase.disabledLanguageFilters = value
+                preferenceDatabase.disabledLibraryLanguageFilters = value
                 updateAdapterItems(true)
             }
         }
@@ -90,7 +90,7 @@ class LibraryViewModel(
     override fun onListUpdated(items: List<SongListItemViewModel>) {
         super.onListUpdated(items)
         if (librarySongs.toList().isNotEmpty()) {
-            placeholderText.set(R.string.library_placeholder_filters)
+            placeholderText.set(R.string.library_placeholder)
             buttonText.set(0)
         }
     }

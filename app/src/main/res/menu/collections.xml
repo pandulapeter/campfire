@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/filter_by_type"
+        android:title="@string/library_filter_by_type">
+
+        <menu>
+
+            <item
+                android:id="@+id/saved_only"
+                android:title="@string/collections_saved_only"
+                app:actionLayout="@layout/widget_switch" />
+
+        </menu>
+
+    </item>
+
+    <item
+        android:id="@+id/filter_by_language"
+        android:title="@string/library_filter_by_language">
+
+        <menu>
+
+            <group android:id="@+id/language_container" />
+
+        </menu>
+
+    </item>
+
+</menu>

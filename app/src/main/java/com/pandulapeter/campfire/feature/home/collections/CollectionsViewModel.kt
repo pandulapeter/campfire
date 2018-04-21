@@ -14,44 +14,19 @@ class CollectionsViewModel(
     private val onDataLoaded: (languages: List<Language>) -> Unit
 ) : SongListViewModel(context) {
 
-    private val newString = context.getString(R.string.new_tag)
-    private val popularString = context.getString(R.string.popular_tag)
-    var query = ""
+    var shouldShowSavedOnly = preferenceDatabase.shouldShowSavedOnly
         set(value) {
             if (field != value) {
                 field = value
-                updateAdapterItems(true)
-            }
-        }
-    var shouldShowDownloadedOnly = preferenceDatabase.shouldShowDownloadedOnly
-        set(value) {
-            if (field != value) {
-                field = value
-                preferenceDatabase.shouldShowDownloadedOnly = value
+                preferenceDatabase.shouldShowSavedOnly = value
                 updateAdapterItems()
             }
         }
-    var shouldShowExplicit = preferenceDatabase.shouldShowExplicit
+    var disabledLanguageFilters = preferenceDatabase.disabledCollectionsLanguageFilters
         set(value) {
             if (field != value) {
                 field = value
-                preferenceDatabase.shouldShowExplicit = value
-                updateAdapterItems()
-            }
-        }
-    var sortingMode = SortingMode.fromIntValue(preferenceDatabase.sortingMode)
-        set(value) {
-            if (field != value) {
-                field = value
-                preferenceDatabase.sortingMode = value.intValue
-                updateAdapterItems(true)
-            }
-        }
-    var disabledLanguageFilters = preferenceDatabase.disabledLanguageFilters
-        set(value) {
-            if (field != value) {
-                field = value
-                preferenceDatabase.disabledLanguageFilters = value
+                preferenceDatabase.disabledCollectionsLanguageFilters = value
                 updateAdapterItems(true)
             }
         }
@@ -72,45 +47,17 @@ class CollectionsViewModel(
     override fun onListUpdated(items: List<SongListItemViewModel>) {
         super.onListUpdated(items)
         if (librarySongs.toList().isNotEmpty()) {
-            placeholderText.set(R.string.library_placeholder_filters)
+            placeholderText.set(R.string.collections_placeholder)
             buttonText.set(0)
         }
     }
 
     override fun onActionButtonClicked() = updateData()
 
-    override fun Sequence<Song>.createViewModels() = filterDownloaded()
+    override fun Sequence<Song>.createViewModels() = filterSaved()
         .filterByLanguage()
-        .filterExplicit()
-        .sort()
         .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
         .toMutableList<SongListItemViewModel>()
-        .apply {
-            val headerIndices = mutableListOf<Int>()
-            val songsOnly = filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song }
-            songsOnly.forEachIndexed { index, song ->
-                if (when (sortingMode) {
-                        SortingMode.TITLE -> index == 0 || song.getNormalizedTitle()[0] != songsOnly[index - 1].getNormalizedTitle()[0]
-                        SortingMode.ARTIST -> index == 0 || song.artist != songsOnly[index - 1].artist
-                        SortingMode.POPULARITY -> songsOnly[0].isNew && (index == 0 || songsOnly[index].isNew != songsOnly[index - 1].isNew)
-                    }
-                ) {
-                    headerIndices.add(index)
-                }
-            }
-            (headerIndices.size - 1 downTo 0).forEach { position ->
-                val index = headerIndices[position]
-                add(
-                    index, SongListItemViewModel.HeaderViewModel(
-                        when (sortingMode) {
-                            SortingMode.TITLE -> songsOnly[index].getNormalizedTitle()[0].toString().toUpperCase()
-                            SortingMode.ARTIST -> songsOnly[index].artist
-                            SortingMode.POPULARITY -> if (!songsOnly[0].isNew) "" else if (songsOnly[index].isNew) newString else popularString
-                        }
-                    )
-                )
-            }
-        }
 
     fun restoreToolbarButtons() {
         if (languages.isNotEmpty()) {
@@ -118,25 +65,7 @@ class CollectionsViewModel(
         }
     }
 
-    private fun Sequence<Song>.filterDownloaded() = if (shouldShowDownloadedOnly) filter { songDetailRepository.isSongDownloaded(it.id) } else this
+    private fun Sequence<Song>.filterSaved() = if (shouldShowSavedOnly) filter { songDetailRepository.isSongDownloaded(it.id) } else this
 
     private fun Sequence<Song>.filterByLanguage() = filter { !disabledLanguageFilters.contains(it.language ?: Language.Unknown.id) }
-
-    private fun Sequence<Song>.filterExplicit() = if (!shouldShowExplicit) filter { it.isExplicit != true } else this
-
-    private fun Sequence<Song>.sort() = when (sortingMode) {
-        SortingMode.TITLE -> sortedBy { it.getNormalizedArtist() }.sortedBy { it.getNormalizedTitle() }
-        SortingMode.ARTIST -> sortedBy { it.getNormalizedTitle() }.sortedBy { it.getNormalizedArtist() }
-        SortingMode.POPULARITY -> sortedBy { it.getNormalizedArtist() }.sortedBy { it.getNormalizedTitle() }.sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
-    }
-
-    enum class SortingMode(val intValue: Int) {
-        TITLE(0),
-        ARTIST(1),
-        POPULARITY(2);
-
-        companion object {
-            fun fromIntValue(value: Int) = SortingMode.values().find { it.intValue == value } ?: TITLE
-        }
-    }
 }

@@ -22,12 +22,8 @@ class CollectionsFragment : SongListFragment<CollectionsViewModel>() {
         CollectionsViewModel(
             context = mainActivity,
             onDataLoaded = { languages ->
-                mainActivity.enableSecondaryNavigationDrawer(R.menu.library)
-                initializeCompoundButton(R.id.downloaded_only) { viewModel.shouldShowDownloadedOnly }
-                initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
-                initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == CollectionsViewModel.SortingMode.TITLE }
-                initializeCompoundButton(R.id.sort_by_artist) { viewModel.sortingMode == CollectionsViewModel.SortingMode.ARTIST }
-                initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == CollectionsViewModel.SortingMode.POPULARITY }
+                mainActivity.enableSecondaryNavigationDrawer(R.menu.collections)
+                initializeCompoundButton(R.id.saved_only) { viewModel.shouldShowSavedOnly }
                 mainActivity.secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
                     clear()
                     languages.forEachIndexed { index, language ->
@@ -48,6 +44,7 @@ class CollectionsFragment : SongListFragment<CollectionsViewModel>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        defaultToolbar.updateToolbarTitle(R.string.home_collections)
         savedInstanceState?.let {
             viewModel.placeholderText.set(savedInstanceState.placeholderText)
             viewModel.buttonText.set(savedInstanceState.buttonText)
@@ -67,11 +64,7 @@ class CollectionsFragment : SongListFragment<CollectionsViewModel>() {
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
         when (menuItem.itemId) {
-            R.id.downloaded_only -> consumeAndUpdateBoolean(menuItem, { shouldShowDownloadedOnly = it }, { shouldShowDownloadedOnly })
-            R.id.show_explicit -> consumeAndUpdateBoolean(menuItem, { shouldShowExplicit = it }, { shouldShowExplicit })
-            R.id.sort_by_title -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.TITLE) { sortingMode = it }
-            R.id.sort_by_artist -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.ARTIST) { sortingMode = it }
-            R.id.sort_by_popularity -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.POPULARITY) { sortingMode = it }
+            R.id.saved_only -> consumeAndUpdateBoolean(menuItem, { shouldShowSavedOnly = it }, { shouldShowSavedOnly })
             else -> consumeAndUpdateLanguageFilter(menuItem, viewModel.languages.find { it.nameResource == menuItem.itemId }?.id ?: "")
         }
     }
@@ -103,13 +96,6 @@ class CollectionsFragment : SongListFragment<CollectionsViewModel>() {
     private inline fun consumeAndUpdateBoolean(menuItem: MenuItem, crossinline setValue: (Boolean) -> Unit, crossinline getValue: () -> Boolean) = consume {
         setValue(!getValue())
         (menuItem.actionView as? CompoundButton).updateCheckedStateWithDelay(getValue())
-    }
-
-    private inline fun consumeAndUpdateSortingMode(sortingMode: CollectionsViewModel.SortingMode, crossinline setValue: (CollectionsViewModel.SortingMode) -> Unit) = consume {
-        setValue(sortingMode)
-        (mainActivity.secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.TITLE)
-        (mainActivity.secondaryNavigationMenu[R.id.sort_by_artist].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.ARTIST)
-        (mainActivity.secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.POPULARITY)
     }
 
     private operator fun Menu.get(@IdRes id: Int) = findItem(id)

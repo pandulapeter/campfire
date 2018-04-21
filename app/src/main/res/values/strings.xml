@@ -48,7 +48,7 @@
     <string name="home_privacy_policy_negative">No</string>
 
     <!-- Library screen -->
-    <string name="library_placeholder_filters">No matching songs in the library. Double-check the filters you set up</string>
+    <string name="library_placeholder">No matching songs in the library. Double-check the filters you set up</string>
     <string name="library_initializing_error">Something went wrong while trying to load the song library</string>
     <string name="library_update_error">Something went wrong while updating the library</string>
     <string name="library_song_download_error">Error downloading %s</string>
@@ -67,6 +67,8 @@
     <string name="library_search_in_artists">Artists</string>
 
     <!-- Collections screen -->
+    <string name="collections_saved_only">Saved only</string>
+    <string name="collections_placeholder">No matching collections. Double-check the filters you set up</string>
 
     <!-- History screen -->
     <string name="history_clear_confirmation_title">Are you sure?</string>

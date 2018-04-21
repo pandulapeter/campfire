@@ -20,7 +20,11 @@ class PreferenceDatabase(context: Context) {
     var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("shouldShowDownloadedOnly", false)
     var shouldShowExplicit by PreferenceFieldDelegate.Boolean("shouldShowExplicit", false)
     var sortingMode by PreferenceFieldDelegate.Int("sortingMode", LibraryViewModel.SortingMode.TITLE.intValue)
-    var disabledLanguageFilters by PreferenceFieldDelegate.StringSet("disabledLanguageFilters", getDefaultLanguageFilters())
+    var disabledLibraryLanguageFilters by PreferenceFieldDelegate.StringSet("disabledLibraryLanguageFilters", getDefaultLanguageFilters())
+
+    // Collections filters
+    var shouldShowSavedOnly by PreferenceFieldDelegate.Boolean("shouldShowSavedOnly", false)
+    var disabledCollectionsLanguageFilters by PreferenceFieldDelegate.StringSet("disabledCollectionsLanguageFilters", getDefaultLanguageFilters())
 
     // Preferences
     var shouldShowChords by PreferenceFieldDelegate.Boolean("shouldShowChords", true)
