@@ -50,7 +50,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         binding.viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
 
             override fun onPageScrollStateChanged(state: Int) {
-                //TODO: Weird behavior when scrolling from the first or the last page.
                 if (viewModel.adapter.count > 1) {
                     binding.appBarLayout.setExpanded(true, true)
                     viewModel.isAutoScrollStarted.set(false)

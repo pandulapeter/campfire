@@ -15,8 +15,6 @@ import kotlin.reflect.KProperty
 
 /**
  * Wrapper for locally storing complex data in a database.
- *
- * TODO: This data shouldn't be stored in Shared Preferences, replace with a Room-based implementation.
  */
 class DataStorageManager(context: Context, gson: Gson) {
     private val songInfoPreferences = context.applicationContext.getSharedPreferences("song_info_storage", Context.MODE_PRIVATE)
@@ -56,8 +54,6 @@ class DataStorageManager(context: Context, gson: Gson) {
 
         override fun setValue(thisRef: Any, property: KProperty<*>, value: Map<String, T>) {
             async {
-                //TODO: If only a single line has been changed, we should not rewrite the entire map.
-                //TODO: This code does not clean up after itself: once an ID is removed, the corresponding entry is still stored in the file.
                 ids = value.keys.toList()
                 value.keys.forEach { id ->
                     sharedPreferences.edit().putString(valueKeyPrefix + id, gson.toJson(value[id])).apply()

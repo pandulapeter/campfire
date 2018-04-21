@@ -104,7 +104,6 @@ class DetailViewModel(
         }
     }
 
-    //TODO: Users should not be able to interrupt the animation.
     fun onAutoPlayButtonClicked() = isAutoScrollStarted.set(!isAutoScrollStarted.get())
 
     fun getSelectedSongId() = songIds[selectedPosition]

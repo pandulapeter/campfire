@@ -32,7 +32,6 @@ class DownloadedSongRepository(
     fun isSongLoading(songId: String) = downloadQueue.contains(songId)
 
     fun startSongDownload(songInfo: SongInfo, onFailure: () -> Unit = {}) {
-        //TODO: Check that the updating logic actually works. Looks like the cache is never updated.
         dataSet[songInfo.id]?.let {
             getDownloadedSongText(songInfo.id)?.let {
                 notifySubscribers(UpdateType.Download.Successful(songInfo.id, it))
