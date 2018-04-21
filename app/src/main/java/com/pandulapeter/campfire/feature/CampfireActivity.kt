@@ -35,6 +35,7 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.databinding.ActivityCampfireBinding
 import com.pandulapeter.campfire.feature.detail.DetailFragment
+import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.home.manageDownloads.ManageDownloadsFragment
@@ -54,6 +55,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         private const val DIALOG_ID_EXIT_CONFIRMATION = 1
         private const val DIALOG_ID_PRIVACY_POLICY = 2
         const val SCREEN_LIBRARY = "library"
+        const val SCREEN_COLLECTIONS = "collections"
         const val SCREEN_HISTORY = "history"
         const val SCREEN_OPTIONS = "options"
         const val SCREEN_MANAGE_PLAYLISTS = "managePlaylists"
@@ -64,6 +66,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         fun getLibraryIntent(context: Context) = Intent(context, CampfireActivity::class.java).apply {
             screenToOpen = SCREEN_LIBRARY
         }
+
+
+        fun getCollectionsIntent(context: Context) = Intent(context, CampfireActivity::class.java).apply {
+            screenToOpen = SCREEN_COLLECTIONS
+        }
+
 
         fun getPlaylistIntent(context: Context, playlistId: String) = Intent(context, CampfireActivity::class.java).apply {
             screenToOpen = playlistId
@@ -212,6 +220,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                         appShortcutManager.onLibraryOpened()
                         supportFragmentManager.handleReplace { LibraryFragment() }
                     }
+                    R.id.collections -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { CollectionsFragment() } }
                     R.id.history -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { HistoryFragment() } }
                     R.id.options -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { OptionsFragment() } }
                     R.id.manage_playlists -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManagePlaylistsFragment() } }
@@ -508,6 +517,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 when (it) {
                     "" -> openLibraryScreen()
                     SCREEN_LIBRARY -> openLibraryScreen()
+                    SCREEN_COLLECTIONS -> openCollectionsScreen()
                     SCREEN_HISTORY -> openHistoryScreen()
                     SCREEN_OPTIONS -> openOptionsScreen()
                     SCREEN_MANAGE_PLAYLISTS -> openManagePlaylistsScreen()
@@ -526,6 +536,15 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             currentScreenId = R.id.library
             binding.primaryNavigation.setCheckedItem(R.id.library)
             appShortcutManager.onLibraryOpened()
+        }
+    }
+
+    fun openCollectionsScreen() {
+        if (currentFragment !is CollectionsFragment) {
+            supportFragmentManager.handleReplace { CollectionsFragment() }
+            currentScreenId = R.id.collections
+            binding.primaryNavigation.setCheckedItem(R.id.collections)
+            appShortcutManager.onCollectionsOpened()
         }
     }
 

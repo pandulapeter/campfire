@@ -31,6 +31,7 @@
     <string name="home_menu">Menu</string>
     <string name="home_version_pattern">v%s</string>
     <string name="home_library">Library</string>
+    <string name="home_collections">Collections</string>
     <string name="home_options">Options</string>
     <string name="home_history">History</string>
     <string name="home_playlists">Playlists</string>
@@ -64,6 +65,8 @@
     <string name="library_search_in">Search in:</string>
     <string name="library_search_in_titles">Titles</string>
     <string name="library_search_in_artists">Artists</string>
+
+    <!-- Collections screen -->
 
     <!-- History screen -->
     <string name="history_clear_confirmation_title">Are you sure?</string>
@@ -117,8 +120,8 @@
     <string name="options_changelog_0_0_4_version_name">v0.0.4</string>
     <string name="options_changelog_0_0_4_description">
         <Data><![CDATA[
-        • Added support for <strong>Collections</strong> which are hand-picked playlists that are regularly updated.<br>
-        • Added <strong>shuffle</strong> option for playlists and collections that opens the list of songs in a random order.
+        • Added support for <strong>collections</strong> which are thematic playlists accessible to everyone.<br>
+        • Added <strong>Shuffle</strong> option for playlists and collections that opens the list of songs in a random order.
         ]]></Data>
     </string>
     <string name="options_changelog_0_0_3_version_name">v0.0.3</string>

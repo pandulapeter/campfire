@@ -11,6 +11,11 @@
             android:title="@string/home_library" />
 
         <item
+            android:id="@+id/collections"
+            android:icon="@drawable/ic_collections_24dp"
+            android:title="@string/home_collections" />
+
+        <item
             android:id="@+id/history"
             android:icon="@drawable/ic_history_24dp"
             android:title="@string/home_history" />
