@@ -28,7 +28,7 @@ class DetailViewModel(
     private val fragmentManager: FragmentManager,
     private val playlistRepository: PlaylistRepository,
     private val songInfoRepository: SongInfoRepository
-) : CampfireViewModel(analyticsManager), Subscriber {
+) : CampfireViewModel(), Subscriber {
     val title = ObservableField("")
     val artist = ObservableField("")
     val songIds = playlistRepository.getPlaylist(playlistId)?.songIds ?: listOf(songId)
@@ -37,7 +37,7 @@ class DetailViewModel(
     val isSongOnAnyPlaylist = ObservableBoolean()
     val shouldShowSongOptions = ObservableBoolean()
     val shouldShowPlaylistAction = playlistId == DetailFragment.NO_PLAYLIST
-    val playOriginalSearchQuery = ObservableField<String>()
+    private val playOriginalSearchQuery = ObservableField<String>()
     val shouldShowAutoScrollButton = ObservableBoolean()
     val isAutoScrollStarted = ObservableBoolean()
     val isAutoScrollEnabled = userPreferenceRepository.shouldEnableAutoScroll

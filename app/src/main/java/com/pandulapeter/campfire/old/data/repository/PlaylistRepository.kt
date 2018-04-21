@@ -28,7 +28,7 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager) : R
 
     fun getPlaylist(playlistId: Int) = dataSet[playlistId.toString()]
 
-    fun getPlaylistSongIds(playlistId: Int) = dataSet[playlistId.toString()]?.songIds ?: listOf()
+    private fun getPlaylistSongIds(playlistId: Int) = dataSet[playlistId.toString()]?.songIds ?: listOf()
 
     fun isSongInPlaylist(playlistId: Int, songId: String) = getPlaylistSongIds(playlistId).contains(songId)
 
@@ -39,17 +39,6 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager) : R
             }
         }
         return false
-    }
-
-    fun updatePlaylist(playlistId: Int, songIds: List<String>) {
-        dataSet = dataSet.toMutableMap().apply {
-            getPlaylist(playlistId)?.let {
-                put(playlistId.toString(), Playlist(playlistId, it.title, it.songIds.toMutableList().apply {
-                    clear()
-                    addAll(songIds)
-                }))
-            }
-        }
     }
 
     fun addSongToPlaylist(playlistId: Int, songId: String, position: Int? = null) {
@@ -79,17 +68,6 @@ class PlaylistRepository(private val dataStorageManager: DataStorageManager) : R
                 }
             }
             notifySubscribers(UpdateType.SongRemovedFromPlaylist(playlistId, songId, position))
-        }
-    }
-
-    fun renamePlaylist(playlistId: Int, title: String) {
-        if (playlistId != Playlist.FAVORITES_ID) {
-            dataSet = dataSet.toMutableMap().apply {
-                getPlaylist(playlistId)?.songIds?.let {
-                    put(playlistId.toString(), Playlist(playlistId, title, it))
-                }
-            }
-            notifySubscribers(UpdateType.PlaylistRenamed(playlistId, title))
         }
     }
 }

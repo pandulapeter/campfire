@@ -166,7 +166,6 @@
             android:layout_width="@dimen/view_options_width"
             android:layout_height="match_parent"
             android:layout_gravity="end"
-            app:headerLayout="@layout/view_menu_empty_header"
             app:menu="@menu/detail" />
 
     </android.support.v4.widget.DrawerLayout>

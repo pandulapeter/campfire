@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_marginStart="@dimen/edit_text_fix_negative"
+            android:layout_marginStart="@dimen/edit_text_fix"
             android:gravity="center_vertical"
             android:inputType="textEmailSubject"
             tools:ignore="LabelFor,TextFields" />

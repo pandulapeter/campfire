@@ -31,7 +31,7 @@ class SongInfoRepository(
 
     override fun subscribe(subscriber: Subscriber) {
         super.subscribe(subscriber)
-        subscriber.onUpdate(UpdateType.LibraryCacheUpdated(getLibrarySongs()))
+        subscriber.onUpdate(UpdateType.LibraryCacheUpdated())
         subscriber.onUpdate(UpdateType.LoadingStateChanged())
     }
 
@@ -41,17 +41,6 @@ class SongInfoRepository(
 
     private fun updateDataSet() {
         isLoading = true
-//        networkManager.service.getLibrary().enqueueCall(
-//            onSongDetailRepositoryDownloadSuccess = {
-//                dataSet = it.associateBy { it.id }
-//                isLoading = false
-//                preferenceStorageManager.lastUpdateTimestamp = System.currentTimeMillis()
-//                notifyDataChanged(UpdateType.LibraryCacheUpdated(getLibrarySongs()))
-//            },
-//            onFailure = {
-//                isLoading = false
-//                onSongRepositoryUpdateError()
-//            })
     }
 
     private companion object {

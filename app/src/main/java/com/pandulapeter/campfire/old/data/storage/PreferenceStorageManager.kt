@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.old.data.storage
 
 import android.content.Context
-import com.pandulapeter.campfire.old.feature.home.HomeViewModel
 import java.util.*
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -16,9 +15,6 @@ class PreferenceStorageManager(context: Context) {
     var shouldShowChords by PreferenceFieldDelegate.Boolean("should_show_chords", true)
     var shouldEnableAutoScroll by PreferenceFieldDelegate.Boolean("should_enable_auto_scroll", true)
     var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("should_use_german_notation", shouldEnableGermanNotationByDefault())
-    var homeNavigationItem: HomeViewModel.HomeNavigationItem
-        get() = HomeViewModel.HomeNavigationItem.fromStringValue(preferences.getString(KEY_NAVIGATION_ITEM, null))
-        set(value) = preferences.edit().putString(KEY_NAVIGATION_ITEM, value.stringValue).apply()
 
     fun getSongAutoScrollSpeed(songId: String) = Math.max(0, Math.min(14, preferences.getInt(KEY_SONG_AUTO_SCROLL_SPEED + songId, 4)))
 
@@ -55,7 +51,6 @@ class PreferenceStorageManager(context: Context) {
     }
 
     private companion object {
-        private const val KEY_NAVIGATION_ITEM = "navigation_item"
         private const val KEY_SONG_AUTO_SCROLL_SPEED = "song_auto_scroll_speed_"
         private const val KEY_SONG_TRANSPOSITION = "song_transposition_"
     }

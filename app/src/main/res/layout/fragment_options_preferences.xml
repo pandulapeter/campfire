@@ -60,7 +60,7 @@
                         app:title="@{@string/options_preferences_should_show_chords}"
                         tools:text="@string/options_preferences_should_show_chords" />
 
-                    <com.pandulapeter.campfire.old.feature.shared.widget.DividerView
+                    <com.pandulapeter.campfire.feature.shared.widget.DividerView
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/divider_height"
                         android:layout_marginStart="@dimen/options_preferences_divider_margin" />

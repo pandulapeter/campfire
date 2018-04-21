@@ -1,8 +1,5 @@
 package com.pandulapeter.campfire.old.feature.detail
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewPager
@@ -16,7 +13,6 @@ import com.pandulapeter.campfire.old.data.repository.UserPreferenceRepository
 import com.pandulapeter.campfire.old.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
-import java.net.URLEncoder
 
 
 /**
@@ -34,7 +30,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
     private val transposeContainer by lazy { binding.navigationView.menu.findItem(R.id.transpose_container) }
     private val transposeHigher by lazy { binding.navigationView.menu.findItem(R.id.transpose_higher) }
     private val transposeLower by lazy { binding.navigationView.menu.findItem(R.id.transpose_lower) }
-    private val multiWindowFlags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT
 
     override val viewModel by lazy {
         DetailViewModel(
@@ -95,7 +90,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
                 R.id.transpose_higher -> consume { detailEventBus.transposeSong(viewModel.getSelectedSongId(), 1) }
                 R.id.transpose_lower -> consume { detailEventBus.transposeSong(viewModel.getSelectedSongId(), -1) }
                 R.id.play_in_youtube -> consumeAndCloseDrawer { viewModel.onPlayOnYouTubeClicked() }
-                R.id.share -> consumeAndCloseDrawer { binding.coordinatorLayout.showSnackbar(R.string.work_in_progress) }
                 else -> false
             }
         }
@@ -106,17 +100,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         viewModel.transposition.onPropertyChanged(this) { updateTranposeText(it) }
         updateTranposeText(viewModel.transposition.get())
         viewModel.shouldShowSongOptions.onEventTriggered(this) { binding.drawerLayout.openDrawer(GravityCompat.END) }
-        viewModel.playOriginalSearchQuery.onEventTriggered(this) {
-            try {
-                startActivity(getYouTubeIntent("com.lara.android.youtube", it))
-            } catch (_: ActivityNotFoundException) {
-                try {
-                    startActivity(getYouTubeIntent("com.google.android.youtube", it))
-                } catch (_: ActivityNotFoundException) {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com/#q=" + URLEncoder.encode(it, "UTF-8"))).apply { flags = multiWindowFlags })
-                }
-            }
-        }
         viewModel.isAutoScrollStarted.onPropertyChanged(this) {
             if (it) {
                 binding.appBarLayout.setExpanded(false, true)
@@ -161,11 +144,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         detailEventBus.unsubscribe(viewModel)
     }
 
-    private fun getYouTubeIntent(packageName: String, query: String) = Intent(Intent.ACTION_SEARCH).apply {
-        `package` = packageName
-        flags = multiWindowFlags
-    }.putExtra("query", query)
-
     private fun updateTranposeText(transposeValue: Int) {
         context?.let {
             transposeContainer.title = if (transposeValue == 0) it.getString(R.string.detail_transpose) else it.getString(
@@ -184,10 +162,5 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
         const val NO_PLAYLIST = -1
         private var Bundle?.songId by BundleArgumentDelegate.String("song_id")
         private var Bundle?.playlistId by BundleArgumentDelegate.Int("playlist_id")
-
-        fun newInstance(songId: String, playlistId: Int?) = DetailFragment().withArguments {
-            it.songId = songId
-            it.playlistId = playlistId ?: NO_PLAYLIST
-        }
     }
 }

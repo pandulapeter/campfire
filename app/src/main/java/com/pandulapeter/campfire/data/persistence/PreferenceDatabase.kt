@@ -83,7 +83,7 @@ class PreferenceDatabase(context: Context) {
 
         class String(key: kotlin.String, defaultValue: kotlin.String = "") : PreferenceFieldDelegate<kotlin.String>(key, defaultValue) {
 
-            override fun getValue(thisRef: PreferenceDatabase, property: KProperty<*>) = thisRef.preferences.getString(key, defaultValue)
+            override fun getValue(thisRef: PreferenceDatabase, property: KProperty<*>) = thisRef.preferences.getString(key, defaultValue) ?: defaultValue
 
             override fun setValue(thisRef: PreferenceDatabase, property: KProperty<*>, value: kotlin.String) =
                 thisRef.preferences.edit().putString(key, value).apply()

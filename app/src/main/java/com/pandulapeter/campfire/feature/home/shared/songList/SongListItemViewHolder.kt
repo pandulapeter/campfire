@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.home.shared.songList
 
 import android.annotation.SuppressLint
+import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
 import android.graphics.PorterDuff
 import android.support.v7.widget.RecyclerView
@@ -8,7 +9,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import com.pandulapeter.campfire.BR
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ItemHeaderBinding
 import com.pandulapeter.campfire.databinding.ItemSongBinding
 import com.pandulapeter.campfire.util.obtainColor
@@ -20,8 +21,13 @@ sealed class SongListItemViewHolder<out B : ViewDataBinding, in VM : SongListIte
         binding.executePendingBindings()
     }
 
-    class SongViewHolder(parent: ViewGroup) :
-        SongListItemViewHolder<ItemSongBinding, SongListItemViewModel.SongViewModel>(ItemSongBinding.inflate(LayoutInflater.from(parent.context), parent, false)) {
+    class HeaderViewHolder(parent: ViewGroup) : SongListItemViewHolder<ItemHeaderBinding, SongListItemViewModel.HeaderViewModel>(
+        DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_header, parent, false)
+    )
+
+    class SongViewHolder(parent: ViewGroup) : SongListItemViewHolder<ItemSongBinding, SongListItemViewModel.SongViewModel>(
+        DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_song, parent, false)
+    ) {
 
         init {
             binding.loadingIndicator.run { indeterminateDrawable.setColorFilter(context.obtainColor(android.R.attr.textColorSecondary), PorterDuff.Mode.SRC_IN) }
@@ -70,7 +76,4 @@ sealed class SongListItemViewHolder<out B : ViewDataBinding, in VM : SongListIte
             }
         }
     }
-
-    class HeaderViewHolder(parent: ViewGroup) :
-        SongListItemViewHolder<ItemHeaderBinding, SongListItemViewModel.HeaderViewModel>(ItemHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false))
 }

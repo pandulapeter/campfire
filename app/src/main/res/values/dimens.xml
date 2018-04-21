@@ -4,7 +4,6 @@
     <!-- General -->
     <dimen name="first_keyline">16dp</dimen>
     <dimen name="second_keyline">72dp</dimen>
-    <dimen name="small_content_padding">4dp</dimen>
     <dimen name="content_padding">8dp</dimen>
     <dimen name="large_content_padding">16dp</dimen>
     <dimen name="touch_target">48dp</dimen>
@@ -26,8 +25,7 @@
     <dimen name="toolbar_action_button_extra_touch_area">16dp</dimen>
 
     <!-- Fixes -->
-    <dimen name="edit_text_fix">4dp</dimen>
-    <dimen name="edit_text_fix_negative">-4dp</dimen>
+    <dimen name="edit_text_fix">-4dp</dimen>
     <dimen name="switch_content_padding">10dp</dimen>
     <dimen name="switch_fix">2dp</dimen>
 
@@ -40,7 +38,6 @@
     <dimen name="view_options_width">216dp</dimen>
 
     <!-- Options screen / Preferences -->
-    <dimen name="options_preferences_label_margin">2dp</dimen>
     <dimen name="options_preferences_checkbox_margin">-4dp</dimen>
     <dimen name="options_preferences_checkbox_padding">28dp</dimen>
     <dimen name="options_preferences_divider_margin">56dp</dimen>

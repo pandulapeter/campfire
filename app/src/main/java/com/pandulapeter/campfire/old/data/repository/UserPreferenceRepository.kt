@@ -4,7 +4,6 @@ import com.pandulapeter.campfire.old.data.repository.shared.Repository
 import com.pandulapeter.campfire.old.data.repository.shared.Subscriber
 import com.pandulapeter.campfire.old.data.repository.shared.UpdateType
 import com.pandulapeter.campfire.old.data.storage.PreferenceStorageManager
-import com.pandulapeter.campfire.old.feature.home.HomeViewModel
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
@@ -15,12 +14,6 @@ class UserPreferenceRepository(private val preferenceStorageManager: PreferenceS
     var shouldUseDarkTheme by Delegates.observable(preferenceStorageManager.shouldUseDarkTheme) { _: KProperty<*>, old: Boolean, new: Boolean ->
         if (old != new) {
             preferenceStorageManager.shouldUseDarkTheme = new
-        }
-    }
-    var navigationItem by Delegates.observable(preferenceStorageManager.homeNavigationItem) { _: KProperty<*>, old: HomeViewModel.HomeNavigationItem, new: HomeViewModel.HomeNavigationItem ->
-        if (old != new) {
-            notifySubscribers(UpdateType.NavigationItemUpdated)
-            preferenceStorageManager.homeNavigationItem = new
         }
     }
     var shouldShowChords by Delegates.observable(preferenceStorageManager.shouldShowChords) { _: KProperty<*>, old: Boolean, new: Boolean ->

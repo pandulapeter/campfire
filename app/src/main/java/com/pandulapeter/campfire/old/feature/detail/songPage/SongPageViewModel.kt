@@ -28,7 +28,7 @@ class SongPageViewModel(
     private val downloadedSongRepository: DownloadedSongRepository,
     private val detailEventBus: DetailEventBus,
     private val userPreferenceRepository: UserPreferenceRepository
-) : CampfireViewModel(analyticsManager), Subscriber {
+) : CampfireViewModel(), Subscriber {
     val text = ObservableField(SpannableString(""))
     val shouldShowPlaceholder = ObservableBoolean()
     val scrollSpeed = ObservableInt()
