@@ -16,7 +16,6 @@ import android.support.design.internal.NavigationMenuView
 import android.support.design.widget.AppBarLayout
 import android.support.design.widget.NavigationView
 import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
@@ -104,7 +103,10 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 binding.toolbarContainer.run {
                     layoutParams = (layoutParams as AppBarLayout.LayoutParams).apply {
                         scrollFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && value) {
-                            AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
+                            AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or
+                                    AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or
+                                    AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or
+                                    AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
                         } else 0
                     }
                 }
@@ -634,7 +636,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         currentFragment?.exitTransition = null
         beginTransaction()
             .replace(R.id.fragment_container, findFragmentByTag(tag) ?: newInstance.invoke(), tag)
-            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
             .commit()
     }
 
