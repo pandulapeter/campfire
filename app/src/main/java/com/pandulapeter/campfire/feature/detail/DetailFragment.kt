@@ -11,7 +11,6 @@ import android.support.v4.app.SharedElementCallback
 import android.support.v4.view.ViewPager
 import android.support.v7.widget.AppCompatTextView
 import android.transition.*
-import android.util.Log
 import android.view.*
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.HistoryItem
@@ -104,18 +103,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         sharedElementReturnTransition = createTransition(0)
 
         setEnterSharedElementCallback(object : SharedElementCallback() {
-            override fun onMapSharedElements(names: MutableList<String>?, sharedElements: MutableMap<String, View>?) {
-//                names?.let {
-//                    viewModel.songId.get()?.let { id ->
-//                        names.clear()
-//                        names.add(id)
-//                        sharedElements?.let {
-//                            sharedElements.clear()
-//                            sharedElements[id] = binding.sharedElement
-//                        }
-//                    }
-//                }
-                Log.d("DEBUG_TRANSITION", "Enter")
+            override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
+                sharedElements[names[0]] = binding.sharedElement
             }
         })
     }
@@ -161,6 +150,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
         mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
         viewModel.songId.onPropertyChanged(this) {
+            mainActivity.lastSongId = it
             mainActivity.updateToolbarTitleView(inflateToolbarTitle(mainActivity.toolbarContext), toolbarWidth)
             detailEventBus.notifyTransitionEnd()
         }

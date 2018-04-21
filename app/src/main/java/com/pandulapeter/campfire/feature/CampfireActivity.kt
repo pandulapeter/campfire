@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.graphics.BitmapFactory
-import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
@@ -20,7 +19,6 @@ import android.support.v4.view.ViewCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
 import android.transition.Explode
-import android.transition.Transition
 import android.view.Gravity
 import android.view.SubMenu
 import android.view.View
@@ -76,6 +74,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private var Bundle.currentPlaylistId by BundleArgumentDelegate.String("currentPlaylistId")
     private var Bundle.isAppBarExpanded by BundleArgumentDelegate.Boolean("isAppBarExpanded")
     private var Bundle.toolbarContainerScrollFlags by BundleArgumentDelegate.Boolean("shouldAllowAppBarScrolling")
+    private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
     private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? TopLevelFragment<*, *>?
     private val drawableMenuToBack by lazy { animatedDrawable(R.drawable.avd_menu_to_back_24dp) }
@@ -91,6 +90,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private val playlistIdMap = mutableMapOf<Int, String>()
     private var newPlaylistId = 0
     private var startTime = 0L
+    var lastSongId: String = ""
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
     val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
@@ -244,6 +244,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             binding.toolbarMainButton.setImageDrawable(drawable(if (savedInstanceState.isOnDetailScreen) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp))
             currentScreenId = savedInstanceState.currentScreenId
             currentPlaylistId = savedInstanceState.currentPlaylistId
+            lastSongId = savedInstanceState.lastSongId
             shouldAllowAppBarScrolling = savedInstanceState.toolbarContainerScrollFlags
             if (currentScreenId == R.id.options) {
                 forceExpandAppBar = savedInstanceState.isAppBarExpanded
@@ -322,6 +323,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         outState?.isAppBarExpanded = binding.appBarLayout.height - binding.appBarLayout.bottom == 0
         outState?.toolbarContainerScrollFlags = shouldAllowAppBarScrolling
         outState?.currentPlaylistId = playlistIdMap[currentScreenId] ?: ""
+        outState?.lastSongId = lastSongId
     }
 
     override fun onPositiveButtonSelected(id: Int) {
@@ -573,11 +575,9 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     fun openDetailScreen(clickedView: View, songs: List<Song>, shouldExplode: Boolean, index: Int, shouldShowManagePlaylist: Boolean) {
+        lastSongId = songs[index].id
         fun createTransition(delay: Long) = Explode().apply {
             propagation = null
-            epicenterCallback = object : Transition.EpicenterCallback() {
-                override fun onGetEpicenter(transition: Transition?) = Rect().apply { clickedView.getGlobalVisibleRect(this) }
-            }
             startDelay = delay
         }
         currentFragment?.run {

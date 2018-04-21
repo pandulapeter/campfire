@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.support.annotation.CallSuper
 import android.support.v4.app.SharedElementCallback
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -28,8 +27,13 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setExitSharedElementCallback(object : SharedElementCallback() {
-            override fun onMapSharedElements(names: MutableList<String>?, sharedElements: MutableMap<String, View>?) {
-                Log.d("DEBUG_TRANSITION", "Exit")
+            override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
+                val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == mainActivity.lastSongId }
+                if (index != RecyclerView.NO_POSITION) {
+                    binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
+                        sharedElements[names[0]] = it.itemView
+                    }
+                }
             }
         })
     }
