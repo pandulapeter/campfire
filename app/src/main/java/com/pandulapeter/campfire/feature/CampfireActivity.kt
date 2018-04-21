@@ -99,12 +99,14 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     var shouldAllowAppBarScrolling
         get() = (binding.toolbarContainer.layoutParams as AppBarLayout.LayoutParams).scrollFlags != 0
         set(value) {
-            // Seems to cause glitches on older Android versions.
-            binding.toolbarContainer.run {
-                layoutParams = (layoutParams as AppBarLayout.LayoutParams).apply {
-                    scrollFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && value) {
-                        AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
-                    } else 0
+            if (shouldAllowAppBarScrolling != value) {
+                // Seems to cause glitches on older Android versions.
+                binding.toolbarContainer.run {
+                    layoutParams = (layoutParams as AppBarLayout.LayoutParams).apply {
+                        scrollFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && value) {
+                            AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
+                        } else 0
+                    }
                 }
             }
         }
@@ -145,11 +147,20 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         setTheme(if (preferenceDatabase.shouldUseDarkTheme) R.style.DarkTheme else R.style.LightTheme)
         @Suppress("ConstantConditionIf")
         setTaskDescription(
-            ActivityManager.TaskDescription(
-                getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
-                BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher_foreground),
-                color(R.color.primary)
-            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                ActivityManager.TaskDescription(
+                    getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
+                    R.mipmap.ic_launcher_foreground,
+                    color(R.color.primary)
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                ActivityManager.TaskDescription(
+                    getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
+                    BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher_foreground),
+                    color(R.color.primary)
+                )
+            }
         )
         super.onCreate(savedInstanceState)
         startTime = System.currentTimeMillis()
@@ -166,7 +177,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             }
         }
         binding.appBarLayout.addOnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) }
-        shouldAllowAppBarScrolling = true
 
         // Initialize the drawer layout.
         binding.drawerLayout.addDrawerListener(
@@ -460,8 +470,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
         // Reset the app bar.
         transitionMode = false
-        shouldAllowAppBarScrolling = true
         binding.toolbarButtonContainer.removeAllViews()
+        shouldAllowAppBarScrolling = false
         expandAppBar()
 
         // Reset the secondary navigation drawer.

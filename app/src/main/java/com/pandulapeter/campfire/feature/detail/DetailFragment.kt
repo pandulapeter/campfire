@@ -1,10 +1,8 @@
 package com.pandulapeter.campfire.feature.detail
 
 import android.animation.Animator
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.app.SharedElementCallback
@@ -19,14 +17,12 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
-import com.pandulapeter.campfire.feature.home.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
-import java.net.URLEncoder
 
 
 class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail) {
@@ -167,6 +163,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         binding.viewPager.adapter = pagerAdapter
         binding.viewPager.addPageScrollListener(
             onPageSelected = {
+                mainActivity.shouldAllowAppBarScrolling = false
                 previousButton.isEnabled = it != 0
                 nextButton.isEnabled = it != pagerAdapter.count - 1
                 mainActivity.disableFloatingActionButton()
@@ -282,6 +279,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     fun onDataLoaded(songId: String) {
         if (songId == viewModel.songId.get()) {
+            mainActivity.shouldAllowAppBarScrolling = true
             mainActivity.enableFloatingActionButton()
             historyRepository.addHistoryItem(HistoryItem(songId, System.currentTimeMillis()))
             if (lastSongId != songId) {

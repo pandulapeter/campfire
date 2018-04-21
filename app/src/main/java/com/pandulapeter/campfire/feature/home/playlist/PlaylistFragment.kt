@@ -51,6 +51,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         binding.swipeRefreshLayout.isEnabled = false
         viewModel.songCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
+            updateScrollState()
             val previousVisibility = shuffleButton.visibleOrGone
             shuffleButton.visibleOrGone = it > 1
             if (shuffleButton.visibleOrGone != previousVisibility && viewModel.isInEditMode.get()) {
@@ -60,7 +61,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         viewModel.playlist.onPropertyChanged(this) { updateToolbarTitle() }
         viewModel.isInEditMode.onPropertyChanged(this) {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
-            mainActivity.shouldAllowAppBarScrolling = !it
+            updateScrollState()
             if (it && !firstTimeUserExperienceManager.playlistSwipeCompleted) {
                 if (firstTimeUserExperienceManager.playlistDragCompleted) {
                     showSwipeHintIfNeeded()
@@ -135,11 +136,12 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState?.isInEditMode = viewModel.isInEditMode.get()
+        outState.isInEditMode = viewModel.isInEditMode.get()
     }
 
     override fun onResume() {
         super.onResume()
+        updateScrollState()
         viewModel.restoreToolbarButtons()
     }
 
@@ -169,6 +171,10 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                 action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
             )
         }
+    }
+
+    private fun updateScrollState() {
+        mainActivity.shouldAllowAppBarScrolling = viewModel.adapter.itemCount > 0 && !viewModel.isInEditMode.get()
     }
 
     private fun shuffleSongs() {

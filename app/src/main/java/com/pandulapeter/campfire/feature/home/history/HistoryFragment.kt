@@ -44,6 +44,7 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), AlertDialogFragmen
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))
         viewModel.shouldShowDeleteAll.onPropertyChanged(this) {
             deleteAllButton.visibleOrGone = it
+            mainActivity.shouldAllowAppBarScrolling = it
             if (it && !firstTimeUserExperienceManager.historyCompleted) {
                 showHint(
                     message = R.string.history_hint,

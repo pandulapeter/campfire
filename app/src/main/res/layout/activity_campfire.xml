@@ -33,8 +33,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:animateLayoutChanges="true"
-                        android:clipChildren="false"
-                        app:layout_scrollFlags="scroll|snap|exitUntilCollapsed|enterAlways">
+                        android:clipChildren="false">
 
                         <android.support.v4.widget.Space
                             android:id="@+id/toolbar_bottom"

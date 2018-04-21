@@ -21,6 +21,7 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_options)
+        mainActivity.shouldAllowAppBarScrolling = true
         binding.viewPager.adapter = OptionsFragmentPagerAdapter(mainActivity, childFragmentManager)
         binding.viewPager.addPageScrollListener(onPageSelected = { mainActivity.expandAppBar() })
     }
