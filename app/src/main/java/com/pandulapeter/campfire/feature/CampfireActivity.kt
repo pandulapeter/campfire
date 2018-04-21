@@ -358,7 +358,14 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             }
             if (view == null) {
                 if (childCount > 1) {
-                    post { removeViews() }
+                    if (currentFragment is LibraryFragment || currentFragment is DetailFragment) {
+                        post { removeViews() }
+                    } else {
+                        postDelayed({
+                            transitionMode = true
+                            removeViews()
+                        }, 100)
+                    }
                 }
             } else {
                 if (getChildAt(1) != view) {
