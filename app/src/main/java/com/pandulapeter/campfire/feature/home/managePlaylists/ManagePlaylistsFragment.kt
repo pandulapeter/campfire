@@ -52,15 +52,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         viewModel.playlistCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
             mainActivity.shouldAllowAppBarScrolling = it < 3
-            if (it > 2 && !firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
-                showHint(
-                    message = R.string.manage_playlists_hint_drag,
-                    action = {
-                        firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
-                        showSwipeHintIfNeeded()
-                    }
-                )
-            }
+            showHintIfNeeded()
             if (it < Playlist.MAXIMUM_PLAYLIST_COUNT) {
                 mainActivity.enableFloatingActionButton()
             } else {
@@ -69,7 +61,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         }
         viewModel.shouldShowDeleteAllButton.onPropertyChanged(this) {
             deleteAllButton.visibleOrGone = it
-            showSwipeHintIfNeeded()
+            showHintIfNeeded()
         }
         viewModel.adapter.run { itemClickListener = { mainActivity.openPlaylistScreen(items[it].playlist.id) } }
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
@@ -91,7 +83,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
                                 }
                                 firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
                                 viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
-                                binding.root.postDelayed({ if (isAdded) showSwipeHintIfNeeded() }, 300)
+                                binding.root.postDelayed({ if (isAdded) showHintIfNeeded() }, 300)
                             }
                         }
                     }
@@ -117,6 +109,11 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         viewModel.adapter.dragHandleTouchListener = { position -> itemTouchHelper.startDrag(binding.recyclerView.findViewHolderForAdapterPosition(position)) }
     }
 
+    override fun onResume() {
+        super.onResume()
+        showHintIfNeeded()
+    }
+
     override fun onFloatingActionButtonPressed() {
         hideSnackbar()
         NewPlaylistDialogFragment.show(childFragmentManager)
@@ -134,12 +131,33 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         mainActivity.resources.getQuantityString(R.plurals.manage_playlists_subtitle, playlistCount, playlistCount)
     )
 
-    private fun showSwipeHintIfNeeded() {
-        if (!isSnackbarVisible() && viewModel.shouldShowDeleteAllButton.get() && !firstTimeUserExperienceManager.managePlaylistsSwipeCompleted && firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
-            showHint(
-                message = R.string.manage_playlists_hint_swipe,
-                action = { firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true }
-            )
+    private fun showHintIfNeeded() {
+
+        fun showSwipeHintIfNeeded() {
+            if (!firstTimeUserExperienceManager.managePlaylistsSwipeCompleted && !isSnackbarVisible() && viewModel.shouldShowDeleteAllButton.get()) {
+                showHint(
+                    message = R.string.manage_playlists_hint_swipe,
+                    action = { firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true }
+                )
+            }
+        }
+
+        fun showDragHintIfNeeded() {
+            if (!firstTimeUserExperienceManager.managePlaylistsDragCompleted && !isSnackbarVisible() && viewModel.playlistCount.get() > 2) {
+                showHint(
+                    message = R.string.manage_playlists_hint_drag,
+                    action = {
+                        firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
+                        showSwipeHintIfNeeded()
+                    }
+                )
+            }
+        }
+
+        if (!firstTimeUserExperienceManager.managePlaylistsDragCompleted) {
+            showDragHintIfNeeded()
+        } else {
+            showSwipeHintIfNeeded()
         }
     }
 }

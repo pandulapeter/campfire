@@ -49,12 +49,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
         }
         viewModel.songCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
-            if (it > 0 && !firstTimeUserExperienceManager.manageDownloadsCompleted) {
-                showHint(
-                    message = R.string.manage_downloads_hint,
-                    action = { firstTimeUserExperienceManager.manageDownloadsCompleted = true }
-                )
-            }
+            showHintIfNeeded()
         }
         ItemTouchHelper(object : ElevationItemTouchHelperCallback((mainActivity.dimension(R.dimen.content_padding)).toFloat(), 0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
@@ -87,6 +82,11 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
         }).attachToRecyclerView(binding.recyclerView)
     }
 
+    override fun onResume() {
+        super.onResume()
+        showHintIfNeeded()
+    }
+
     override fun onPositiveButtonSelected(id: Int) {
         if (id == DIALOG_ID_DELETE_ALL_CONFIRMATION) {
             viewModel.deleteAllSongs()
@@ -102,4 +102,13 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
             mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
         }
     )
+
+    private fun showHintIfNeeded() {
+        if (!firstTimeUserExperienceManager.manageDownloadsCompleted && !isSnackbarVisible() && viewModel.songCount.get() > 0) {
+            showHint(
+                message = R.string.manage_downloads_hint,
+                action = { firstTimeUserExperienceManager.manageDownloadsCompleted = true }
+            )
+        }
+    }
 }

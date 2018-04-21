@@ -63,22 +63,11 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         viewModel.isInEditMode.onPropertyChanged(this) {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
             updateScrollState()
-            if (!viewModel.hasSongToDelete()) {
-                hideSnackbar()
-            }
-            if (it && !firstTimeUserExperienceManager.playlistSwipeCompleted) {
-                if (firstTimeUserExperienceManager.playlistDragCompleted) {
-                    showSwipeHintIfNeeded()
-                } else {
-                    if (viewModel.adapter.items.size > 1) {
-                        showHint(
-                            message = R.string.playlist_hint_drag,
-                            action = {
-                                firstTimeUserExperienceManager.playlistDragCompleted = true
-                                showSwipeHintIfNeeded()
-                            }
-                        )
-                    }
+            if (it) {
+                showHintIfNeeded()
+            } else {
+                if (!viewModel.hasSongToDelete()) {
+                    hideSnackbar()
                 }
             }
         }
@@ -112,7 +101,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                             }
                             firstTimeUserExperienceManager.playlistDragCompleted = true
                             viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
-                            binding.root.postDelayed({ if (isAdded) showSwipeHintIfNeeded() }, 300)
+                            binding.root.postDelayed({ if (isAdded) showHintIfNeeded() }, 300)
                         }
                     }
                 }
@@ -146,6 +135,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
     override fun onResume() {
         super.onResume()
         updateScrollState()
+        showHintIfNeeded()
         viewModel.restoreToolbarButtons()
     }
 
@@ -172,15 +162,6 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         }
     )
 
-    private fun showSwipeHintIfNeeded() {
-        if (viewModel.adapter.items.isNotEmpty() && !isSnackbarVisible() && !firstTimeUserExperienceManager.playlistSwipeCompleted) {
-            showHint(
-                message = R.string.playlist_hint_swipe,
-                action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
-            )
-        }
-    }
-
     private fun updateScrollState() {
         mainActivity.shouldAllowAppBarScrolling = viewModel.adapter.itemCount > 0 && !viewModel.isInEditMode.get()
     }
@@ -199,6 +180,36 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                 0,
                 false
             )
+        }
+    }
+
+    private fun showHintIfNeeded() {
+
+        fun showSwipeHintIfNeeded() {
+            if (!firstTimeUserExperienceManager.playlistSwipeCompleted && !isSnackbarVisible() && viewModel.adapter.items.isNotEmpty() && viewModel.isInEditMode.get()) {
+                showHint(
+                    message = R.string.playlist_hint_swipe,
+                    action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
+                )
+            }
+        }
+
+        fun showDragHintIfNeeded() {
+            if (!firstTimeUserExperienceManager.playlistDragCompleted && !isSnackbarVisible() && viewModel.adapter.items.size > 1 && viewModel.isInEditMode.get()) {
+                showHint(
+                    message = R.string.playlist_hint_drag,
+                    action = {
+                        firstTimeUserExperienceManager.playlistDragCompleted = true
+                        showSwipeHintIfNeeded()
+                    }
+                )
+            }
+        }
+
+        if (!firstTimeUserExperienceManager.playlistDragCompleted) {
+            showDragHintIfNeeded()
+        } else {
+            showSwipeHintIfNeeded()
         }
     }
 }

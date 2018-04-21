@@ -45,12 +45,7 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), AlertDialogFragmen
         viewModel.shouldShowDeleteAll.onPropertyChanged(this) {
             deleteAllButton.visibleOrGone = it
             mainActivity.shouldAllowAppBarScrolling = it
-            if (it && !firstTimeUserExperienceManager.historyCompleted) {
-                showHint(
-                    message = R.string.history_hint,
-                    action = { firstTimeUserExperienceManager.historyCompleted = true }
-                )
-            }
+            showHintIfNeeded()
         }
         ItemTouchHelper(object : ElevationItemTouchHelperCallback((mainActivity.dimension(R.dimen.content_padding)).toFloat(), 0, 0) {
 
@@ -83,10 +78,24 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), AlertDialogFragmen
         }).attachToRecyclerView(binding.recyclerView)
     }
 
+    override fun onResume() {
+        super.onResume()
+        showHintIfNeeded()
+    }
+
     override fun onPositiveButtonSelected(id: Int) {
         if (id == DIALOG_ID_DELETE_ALL_CONFIRMATION) {
             viewModel.deleteAllSongs()
             showSnackbar(R.string.history_all_songs_removed_message)
+        }
+    }
+
+    private fun showHintIfNeeded() {
+        if (!firstTimeUserExperienceManager.historyCompleted && !isSnackbarVisible() && viewModel.shouldShowDeleteAll.get()) {
+            showHint(
+                message = R.string.history_hint,
+                action = { firstTimeUserExperienceManager.historyCompleted = true }
+            )
         }
     }
 }

@@ -219,6 +219,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
         mainActivity.autoScrollControl.visibleOrInvisible = false
         mainActivity.updateFloatingActionButtonDrawable(mainActivity.drawable(R.drawable.ic_play_24dp))
+        showHintIfNeeded()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -291,17 +292,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 songRepository.onSongOpened(songId)
                 lastSongId = songId
             }
-            if (!firstTimeUserExperienceManager.playlistSwipeCompleted) {
-                if (binding.viewPager.currentItem != arguments?.index ?: 0) {
-                    firstTimeUserExperienceManager.playlistSwipeCompleted = true
-                    hideSnackbar()
-                } else if (songs.size > 1 && !isSnackbarVisible()) {
-                    showHint(
-                        message = R.string.detail_swipe_hint,
-                        action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
-                    )
-                }
-            }
+            showHintIfNeeded()
         }
     }
 
@@ -321,6 +312,20 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             mainActivity.updateFloatingActionButtonDrawable(drawable)
             animatedVisibilityEnd = !animatedVisibilityEnd
             drawable?.start()
+        }
+    }
+
+    private fun showHintIfNeeded() {
+        if (!firstTimeUserExperienceManager.playlistSwipeCompleted) {
+            if (binding.viewPager.currentItem != arguments?.index ?: 0) {
+                firstTimeUserExperienceManager.playlistSwipeCompleted = true
+                hideSnackbar()
+            } else if (songs.size > 1 && !isSnackbarVisible()) {
+                showHint(
+                    message = R.string.detail_swipe_hint,
+                    action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
+                )
+            }
         }
     }
 }
