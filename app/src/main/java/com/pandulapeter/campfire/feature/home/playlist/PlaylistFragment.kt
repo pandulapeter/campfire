@@ -59,6 +59,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                 mainActivity.invalidateAppBar()
             }
         }
+        viewModel.state.onPropertyChanged(this) { updateToolbarTitle() }
         viewModel.playlist.onPropertyChanged(this) { updateToolbarTitle() }
         viewModel.isInEditMode.onPropertyChanged(this) {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })

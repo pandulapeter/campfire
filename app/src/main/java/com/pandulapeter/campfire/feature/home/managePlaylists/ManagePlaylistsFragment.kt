@@ -49,6 +49,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(mainActivity)
         }
+        viewModel.state.onPropertyChanged(this) { updateToolbarTitle(viewModel.playlistCount.get()) }
         viewModel.playlistCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
             mainActivity.shouldAllowAppBarScrolling = it < 3

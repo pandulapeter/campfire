@@ -47,6 +47,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
             deleteAllButton.visibleOrGone = it
             mainActivity.shouldAllowAppBarScrolling = it
         }
+        viewModel.state.onPropertyChanged(this) { updateToolbarTitle(viewModel.songCount.get()) }
         viewModel.songCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
             showHintIfNeeded()
