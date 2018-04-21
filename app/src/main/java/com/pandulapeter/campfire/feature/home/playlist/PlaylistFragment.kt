@@ -168,7 +168,6 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
     }
 
     private fun shuffleSongs() {
-        //TODO: Scroll before the animation to make sure the shared element is on the screen.
         val tempList = viewModel.adapter.items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song }.toMutableList()
         tempList.shuffle()
         val index = 0

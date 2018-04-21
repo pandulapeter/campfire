@@ -32,6 +32,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     companion object {
         const val TRANSITION_DELAY = 50L
+        const val TRANSITION_DURATION = 150L
         private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
         private var Bundle.songs by BundleArgumentDelegate.ParcelableArrayList("songs")
         private var Bundle.index by BundleArgumentDelegate.Int("index")
@@ -100,6 +101,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             .apply {
                 ordering = TransitionSet.ORDERING_TOGETHER
                 startDelay = delay
+                duration = TRANSITION_DURATION
             }
         sharedElementEnterTransition = createTransition(TRANSITION_DELAY)
         sharedElementReturnTransition = createTransition(0)

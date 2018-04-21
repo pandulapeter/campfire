@@ -580,6 +580,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         fun createTransition(delay: Long) = Explode().apply {
             propagation = null
             startDelay = delay
+            duration = DetailFragment.TRANSITION_DURATION
         }
         currentFragment?.run {
             if (this !is PlaylistFragment) {
