@@ -3,8 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/content_padding"
+    android:background="@color/primary"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/content_padding"
+    android:paddingBottom="@dimen/large_content_padding"
     android:paddingEnd="@dimen/first_keyline"
     android:paddingStart="@dimen/first_keyline">
 
@@ -15,7 +17,7 @@
         android:fontFamily="sans-serif-medium"
         android:text="@string/campfire"
         android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-        android:textColor="@color/accent" />
+        android:textColor="@color/white" />
 
     <TextView
         android:id="@+id/version"
@@ -23,6 +25,7 @@
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif-light"
         android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+        android:textColor="@color/white"
         tools:text="v1.0.0" />
 
 </LinearLayout>
