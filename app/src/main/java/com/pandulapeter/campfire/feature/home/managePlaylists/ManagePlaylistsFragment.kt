@@ -42,7 +42,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        defaultToolbar.updateToolbarTitle(R.string.home_manage_playlists)
+        defaultToolbar.updateToolbarTitle(R.string.home_manage_playlists, getString(R.string.loading))
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))
         mainActivity.updateFloatingActionButtonDrawable(mainActivity.drawable(R.drawable.ic_add_24dp))
         binding.recyclerView.run {

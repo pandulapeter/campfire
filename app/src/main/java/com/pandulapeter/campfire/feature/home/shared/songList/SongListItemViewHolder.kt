@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ItemHeaderBinding
 import com.pandulapeter.campfire.databinding.ItemSongBinding

@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCal
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
+import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.onPropertyChanged
@@ -95,6 +96,10 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
 
     private fun updateToolbarTitle(songCount: Int) = defaultToolbar.updateToolbarTitle(
         R.string.home_manage_downloads,
-        if (songCount == 0) getString(R.string.manage_downloads_no_downloads) else mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
+        if (songCount == 0) {
+            getString(if (viewModel.state.get() == StateLayout.State.LOADING) R.string.loading else R.string.manage_downloads_no_downloads)
+        } else {
+            mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
+        }
     )
 }

@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
+import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
@@ -161,7 +162,11 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
 
     private fun updateToolbarTitle(songCount: Int = viewModel.songCount.get()) = (viewModel.toolbarTextInputView?.title ?: defaultToolbar).updateToolbarTitle(
         viewModel.playlist.get()?.title ?: getString(R.string.home_favorites),
-        if (songCount == 0) getString(R.string.manage_playlists_song_count_empty) else mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
+        if (songCount == 0) {
+            getString(if (viewModel.state.get() == StateLayout.State.LOADING) R.string.loading else R.string.manage_playlists_song_count_empty)
+        } else {
+            mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
+        }
     )
 
     private fun showSwipeHintIfNeeded() {

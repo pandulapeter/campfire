@@ -10,6 +10,7 @@
     <string name="undo">Undo</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="loading">Loading…</string>
 
     <!-- Supported languages -->
     <string name="language_english">English</string>
