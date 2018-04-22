@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentSongListBinding
+import com.pandulapeter.campfire.feature.home.collections.detail.CollectionDetailViewModel
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistViewModel
 import com.pandulapeter.campfire.feature.home.shared.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
@@ -53,13 +54,13 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                         viewModel.isDetailScreenOpen = true
                         linearLayoutManager.isScrollEnabled = false
                         onDetailScreenOpened()
-                        val isPlaylist = viewModel is PlaylistViewModel
+                        val shouldSendMultipleSongs = viewModel is PlaylistViewModel || viewModel is CollectionDetailViewModel
                         mainActivity.openDetailScreen(
                             clickedView,
-                            if (isPlaylist) items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song } else listOf(it.song),
+                            if (shouldSendMultipleSongs) items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song } else listOf(it.song),
                             items.size > 1,
-                            if (isPlaylist) position else 0,
-                            !isPlaylist
+                            if (shouldSendMultipleSongs) position else 0,
+                            viewModel !is PlaylistViewModel
                         )
                     }
                 }
@@ -170,7 +171,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 tempList,
                 false,
                 0,
-                false
+                viewModel is CollectionDetailViewModel
             )
         }
     }

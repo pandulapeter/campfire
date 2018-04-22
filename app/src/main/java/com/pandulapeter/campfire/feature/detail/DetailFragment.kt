@@ -1,10 +1,8 @@
 package com.pandulapeter.campfire.feature.detail
 
 import android.animation.Animator
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.app.SharedElementCallback
@@ -19,14 +17,12 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
-import com.pandulapeter.campfire.feature.home.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
-import java.net.URLEncoder
 
 
 class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail) {
@@ -194,7 +190,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 arguments?.let {
                     if (it.shouldShowManagePlaylist) {
                         add(0, playlistButton)
-                    } else {
+                    }
+                    if (songs.isNotEmpty()) {
                         add(0, nextButton)
                         add(0, previousButton)
                     }
