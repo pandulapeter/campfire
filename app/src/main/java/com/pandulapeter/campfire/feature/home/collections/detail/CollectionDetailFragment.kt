@@ -70,7 +70,7 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
             save.setOnClickListener {
                 viewModel?.collection?.let {
                     collectionRepository.toggleSavedState(it.id)
-                    viewModel = CollectionListItemViewModel.CollectionViewModel(it)
+                    viewModel = CollectionListItemViewModel.CollectionViewModel(it, true)
                 }
             }
         }

@@ -14,7 +14,7 @@ class CollectionDetailViewModel(
 ) : SongListViewModel(context) {
 
     init {
-        this.collection.set(CollectionListItemViewModel.CollectionViewModel(collection))
+        this.collection.set(CollectionListItemViewModel.CollectionViewModel(collection, true))
     }
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {

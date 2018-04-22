@@ -19,8 +19,8 @@
         android:layout_marginBottom="@dimen/border"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:transitionGroup="true"
         android:foreground="?attr/selectableItemBackground"
+        android:transitionGroup="true"
         android:transitionName="@{viewModel.collection.id}"
         app:cardCornerRadius="@dimen/card_corner"
         app:contentPadding="@dimen/content_padding"
@@ -30,7 +30,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipChildren="false"
-            android:clipToPadding="false">
+            android:clipToPadding="false"
+            android:paddingEnd="@dimen/nothing"
+            android:paddingStart="@{viewModel.expanded ? @dimen/content_padding : @dimen/nothing}">
 
             <ImageView
                 android:id="@+id/image"
@@ -89,7 +91,7 @@
                 android:layout_marginStart="@dimen/content_padding"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif"
-                android:maxLines="1"
+                android:maxLines="@{viewModel.expanded ? 10 : 1}"
                 android:text="@{viewModel.collection.description}"
                 app:layout_constraintBottom_toTopOf="@+id/new_label"
                 app:layout_constraintEnd_toStartOf="@id/save"
@@ -103,9 +105,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/content_padding"
                 android:layout_marginStart="@dimen/content_padding"
-                android:ellipsize="end"
                 android:fontFamily="sans-serif-thin"
-                android:maxLines="1"
                 android:text="@string/new_tag"
                 android:textColor="@color/accent"
                 android:textSize="12sp"
