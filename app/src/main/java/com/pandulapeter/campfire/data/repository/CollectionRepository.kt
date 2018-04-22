@@ -101,18 +101,20 @@ class CollectionRepository(
     }
 
     private fun updateLanguages() {
-        languages.swap(data
-            .map {
-                when (it.language) {
-                    Language.SupportedLanguages.ENGLISH.id -> Language.Known.English
-                    Language.SupportedLanguages.HUNGARIAN.id -> Language.Known.Hungarian
-                    Language.SupportedLanguages.ROMANIAN.id -> Language.Known.Romanian
-                    else -> Language.Unknown
-                }
+        languages.clear()
+        data.forEach {
+            it.language?.forEach {
+                languages.add(
+                    when (it) {
+                        Language.SupportedLanguages.ENGLISH.id -> Language.Known.English
+                        Language.SupportedLanguages.HUNGARIAN.id -> Language.Known.Hungarian
+                        Language.SupportedLanguages.ROMANIAN.id -> Language.Known.Romanian
+                        else -> Language.Unknown
+                    }
+                )
             }
-            .distinct()
-            .sortedBy { it.nameResource }
-        )
+        }
+        languages.swap(languages.distinct().sortedBy { it.nameResource })
     }
 
     private fun notifyDataChanged() = subscribers.forEach { it.onCollectionsUpdated(data) }
