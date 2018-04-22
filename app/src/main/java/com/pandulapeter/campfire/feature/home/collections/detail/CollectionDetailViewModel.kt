@@ -8,7 +8,7 @@ import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
 
 class CollectionDetailViewModel(
     context: Context,
-    private val collection: Collection,
+    val collection: Collection,
     private val onDataLoaded: () -> Unit
 ) : SongListViewModel(context) {
 

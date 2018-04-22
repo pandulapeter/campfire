@@ -14,27 +14,42 @@
         android:id="@+id/state_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:buttonText="@{viewModel.buttonText}"
+        android:clipChildren="false"
         app:buttonIcon="@{viewModel.buttonIcon}"
+        app:buttonText="@{viewModel.buttonText}"
         app:onButtonClicked="@{() -> viewModel.onActionButtonClicked()}"
         app:state="@{viewModel.state}"
         app:text="@{viewModel.placeholderText}">
 
-        <android.support.v4.widget.SwipeRefreshLayout
-            android:id="@+id/swipe_refresh_layout"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:orientation="vertical">
 
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/recycler_view"
+            <FrameLayout
+                android:id="@+id/main_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <android.support.v4.widget.SwipeRefreshLayout
+                android:id="@+id/swipe_refresh_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingBottom="@dimen/list_bottom_margin"
-                android:paddingTop="@dimen/content_padding"
-                app:adapter="@{viewModel.adapter}" />
+                android:clipChildren="false">
 
-        </android.support.v4.widget.SwipeRefreshLayout>
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:paddingBottom="@dimen/list_bottom_margin"
+                    android:paddingTop="@dimen/content_padding"
+                    app:adapter="@{viewModel.adapter}" />
+
+            </android.support.v4.widget.SwipeRefreshLayout>
+
+        </LinearLayout>
 
     </com.pandulapeter.campfire.feature.shared.widget.StateLayout>
 
