@@ -57,6 +57,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             isAddedToPlaylist = it
         }
     }
+    override val canScrollToolbar = false
     private val pagerAdapter by lazy { DetailPagerAdapter(childFragmentManager, songs) }
     private val historyRepository by inject<HistoryRepository>()
     private val songRepository by inject<SongRepository>()
@@ -166,7 +167,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         binding.viewPager.adapter = pagerAdapter
         binding.viewPager.addPageScrollListener(
             onPageSelected = {
-                mainActivity.shouldAllowAppBarScrolling = false
                 previousButton.isEnabled = it != 0
                 nextButton.isEnabled = it != pagerAdapter.count - 1
                 mainActivity.disableFloatingActionButton()
@@ -296,7 +296,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     fun onDataLoaded(songId: String) {
         if (songId == viewModel.songId.get()) {
-            mainActivity.shouldAllowAppBarScrolling = true
             mainActivity.enableFloatingActionButton()
             historyRepository.addHistoryItem(HistoryItem(songId, System.currentTimeMillis()))
             if (lastSongId != songId) {

@@ -53,9 +53,7 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     override fun onResume() {
         super.onResume()
-        if (this !is DetailFragment) {
-            updateScrollState()
-        }
+        updateScrollState()
     }
 
     open fun onDrawerStateChanged(state: Int) = Unit
