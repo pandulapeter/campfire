@@ -317,14 +317,14 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     }
 
     private fun showHintIfNeeded() {
-        if (!firstTimeUserExperienceManager.playlistSwipeCompleted) {
+        if (!firstTimeUserExperienceManager.playlistPagerSwipeCompleted) {
             if (binding.viewPager.currentItem != arguments?.index ?: 0) {
-                firstTimeUserExperienceManager.playlistSwipeCompleted = true
+                firstTimeUserExperienceManager.playlistPagerSwipeCompleted = true
                 hideSnackbar()
             } else if (songs.size > 1 && !isSnackbarVisible()) {
                 showHint(
                     message = R.string.detail_swipe_hint,
-                    action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
+                    action = { firstTimeUserExperienceManager.playlistPagerSwipeCompleted = true }
                 )
             }
         }

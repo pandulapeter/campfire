@@ -44,6 +44,7 @@ class PreferenceDatabase(context: Context) {
     var ftuxManagePlaylistsSwipeCompleted by PreferenceFieldDelegate.Boolean("ftuxManagePlaylistsSwipeCompleted", false)
     var ftuxManagePlaylistsDragCompleted by PreferenceFieldDelegate.Boolean("ftuxManagePlaylistsDragCompleted", false)
     var ftuxManageDownloadsCompleted by PreferenceFieldDelegate.Boolean("ftuxManageDownloadsCompleted", false)
+    var ftuxPlaylistPagerSwipeCompleted by PreferenceFieldDelegate.Boolean("ftuxPlaylistPagerSwipeCompleted", false)
 
     private fun shouldEnableGermanNotationByDefault() = when (locale) {
         "AUT", "CZE", "DEU", "SWE", "DNK", "EST", "FIN", "HUN", "LVA", "NOR", "POL", "SRB", "SVK" -> true
