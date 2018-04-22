@@ -150,6 +150,12 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         true
     } else super.onBackPressed()
 
+    override fun onDetailScreenOpened() {
+        if (viewModel.toolbarTextInputView.isTextInputVisible && viewModel.query.trim().isEmpty()) {
+            viewModel.toggleTextInputVisibility()
+        }
+    }
+
     private fun consumeAndUpdateLanguageFilter(menuItem: MenuItem, languageId: String) = consume {
         viewModel.disabledLanguageFilters.run {
             viewModel.disabledLanguageFilters = toMutableSet().apply { if (contains(languageId)) remove(languageId) else add(languageId) }
