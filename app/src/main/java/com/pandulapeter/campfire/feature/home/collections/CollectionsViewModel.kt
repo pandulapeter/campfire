@@ -159,7 +159,7 @@ class CollectionsViewModel(
 
     private fun Sequence<Collection>.filterSaved() = if (shouldShowSavedOnly) filter { it.isSaved ?: false } else this
 
-    private fun Sequence<Collection>.filterExplicit() = if (shouldShowExplicit) filter { it.isExplicit ?: false } else this
+    private fun Sequence<Collection>.filterExplicit() = if (!shouldShowExplicit) filter { it.isExplicit != true } else this
 
     private fun Sequence<Collection>.filterByLanguage() = filter {
         var shouldFilter = false
