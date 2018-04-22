@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.pandulapeter.campfire.feature.home.collections.CollectionsViewModel" />
+
+    </data>
+
+    <com.pandulapeter.campfire.feature.shared.widget.StateLayout
+        android:id="@+id/state_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:buttonText="@{viewModel.buttonText}"
+        app:buttonIcon="@{viewModel.buttonIcon}"
+        app:onButtonClicked="@{() -> viewModel.onActionButtonClicked()}"
+        app:state="@{viewModel.state}"
+        app:text="@{viewModel.placeholderText}">
+
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/swipe_refresh_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="@dimen/list_bottom_margin"
+                android:paddingTop="@dimen/content_padding"
+                app:adapter="@{viewModel.adapter}" />
+
+        </android.support.v4.widget.SwipeRefreshLayout>
+
+    </com.pandulapeter.campfire.feature.shared.widget.StateLayout>
+
+</layout>

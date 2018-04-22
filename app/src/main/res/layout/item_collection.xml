@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.pandulapeter.campfire.feature.home.collections.CollectionListItemViewModel.CollectionViewModel" />
+
+        <import type="com.pandulapeter.campfire.R" />
+
+    </data>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/border"
+        android:layout_marginStart="@dimen/content_padding"
+        android:foreground="?attr/selectableItemBackground"
+        android:transitionGroup="true"
+        android:transitionName="@{viewModel.collection.id}"
+        app:cardCornerRadius="@dimen/card_corner"
+        app:contentPadding="@dimen/content_padding">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
+            android:minHeight="@dimen/list_item_minimum_height">
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="@dimen/list_item_text_spacing"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:primaryText="@{viewModel.collection.title}"
+                app:secondaryText="@{viewModel.collection.description}"
+                tools:text="Collection title\nDescription" />
+
+        </android.support.constraint.ConstraintLayout>
+
+    </android.support.v7.widget.CardView>
+
+</layout>

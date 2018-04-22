@@ -2,64 +2,72 @@ package com.pandulapeter.campfire.feature.home.collections
 
 import android.os.Bundle
 import android.support.annotation.IdRes
+import android.support.v7.widget.LinearLayoutManager
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
-import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
+import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.onEventTriggered
+import com.pandulapeter.campfire.util.onPropertyChanged
 
 
-class CollectionsFragment : SongListFragment<CollectionsViewModel>() {
+class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, CollectionsViewModel>(R.layout.fragment_collections) {
 
     override val viewModel: CollectionsViewModel by lazy {
-        CollectionsViewModel(
-            context = mainActivity,
-            onDataLoaded = { languages ->
-                mainActivity.enableSecondaryNavigationDrawer(R.menu.collections)
-                initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == CollectionsViewModel.SortingMode.TITLE }
-                initializeCompoundButton(R.id.sort_by_date) { viewModel.sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE }
-                initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == CollectionsViewModel.SortingMode.POPULARITY }
-                initializeCompoundButton(R.id.saved_only) { viewModel.shouldShowSavedOnly }
-                initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
-                mainActivity.secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
-                    clear()
-                    languages.forEachIndexed { index, language ->
-                        add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
-                            setActionView(R.layout.widget_checkbox)
-                            initializeCompoundButton(language.nameResource) { !viewModel.disabledLanguageFilters.contains(language.id) }
-                        }
+        CollectionsViewModel { languages ->
+            mainActivity.enableSecondaryNavigationDrawer(R.menu.collections)
+            initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == CollectionsViewModel.SortingMode.TITLE }
+            initializeCompoundButton(R.id.sort_by_date) { viewModel.sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE }
+            initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == CollectionsViewModel.SortingMode.POPULARITY }
+            initializeCompoundButton(R.id.saved_only) { viewModel.shouldShowSavedOnly }
+            initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
+            mainActivity.secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
+                clear()
+                languages.forEachIndexed { index, language ->
+                    add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
+                        setActionView(R.layout.widget_checkbox)
+                        initializeCompoundButton(language.nameResource) { !viewModel.disabledLanguageFilters.contains(language.id) }
                     }
                 }
-                mainActivity.updateToolbarButtons(listOf(
-                    mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { mainActivity.openSecondaryNavigationDrawer() }
-                ))
             }
-        )
+            mainActivity.updateToolbarButtons(listOf(
+                mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { mainActivity.openSecondaryNavigationDrawer() }
+            ))
+        }
     }
-    private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
-    private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_collections)
-        savedInstanceState?.let {
-            viewModel.placeholderText.set(savedInstanceState.placeholderText)
-            viewModel.buttonText.set(savedInstanceState.buttonText)
+        viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
+            showSnackbar(
+                message = R.string.collections_update_error,
+                action = { viewModel.updateData() })
+        }
+        viewModel.isLoading.onPropertyChanged(this) {
+            if (viewModel.state.get() == StateLayout.State.NORMAL) {
+                binding.swipeRefreshLayout.isRefreshing = it
+            }
+        }
+        binding.swipeRefreshLayout.run {
+            setOnRefreshListener { viewModel.updateData() }
+            setColorSchemeColors(context.color(R.color.accent))
+        }
+        binding.recyclerView.run {
+            setHasFixedSize(true)
+            layoutManager = LinearLayoutManager(context)
         }
     }
 
     override fun onResume() {
         super.onResume()
         viewModel.restoreToolbarButtons()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) = outState.run {
-        super.onSaveInstanceState(this)
-        placeholderText = viewModel.placeholderText.get()
-        buttonText = viewModel.buttonText.get()
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {

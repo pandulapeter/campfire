@@ -109,7 +109,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             }
         sharedElementEnterTransition = createTransition(TRANSITION_DELAY)
         sharedElementReturnTransition = createTransition(0)
-
         setEnterSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
                 sharedElements[names[0]] = binding.sharedElement
@@ -259,11 +258,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         R.id.font_size_smaller -> consume { showSnackbar(R.string.work_in_progress) }
         R.id.should_show_chords -> consumeAndUpdateBoolean(menuItem, {
             preferenceDatabase.shouldShowChords = it
-            binding.root.postDelayed({
-                if (isAdded) {
-                    updateTransposeControls()
-                }
-            }, 350)
+            updateTransposeControls()
         }, { preferenceDatabase.shouldShowChords })
         R.id.play_in_youtube -> consumeAndCloseDrawer {
             "${songs[arguments?.index ?: 0].title} - ${songs[arguments?.index ?: 0].artist}".let {
