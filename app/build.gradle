@@ -78,6 +78,11 @@ dependencies {
     implementation "android.arch.persistence.room:runtime:$roomVersion"
     kapt "android.arch.persistence.room:compiler:$roomVersion"
 
+    // Image loading
+    def glideVersion = "4.6.1"
+    implementation "com.github.bumptech.glide:glide:$glideVersion"
+    kapt "com.github.bumptech.glide:compiler:$glideVersion"
+
     // Support library
     //noinspection GradleDependency,GradleCompatible
     implementation "com.android.support:appcompat-v7:$supportLibraryVersion"

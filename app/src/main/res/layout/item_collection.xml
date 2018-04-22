@@ -18,8 +18,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/border"
         android:layout_marginStart="@dimen/content_padding"
+        android:clipChildren="false"
         android:foreground="?attr/selectableItemBackground"
-        android:transitionGroup="true"
         android:transitionName="@{viewModel.collection.id}"
         app:cardCornerRadius="@dimen/card_corner"
         app:contentPadding="@dimen/content_padding">
@@ -27,21 +27,66 @@
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:animateLayoutChanges="true"
-            android:minHeight="@dimen/list_item_minimum_height">
+            android:clipChildren="false">
+
+            <ImageView
+                android:id="@+id/image"
+                android:layout_width="@dimen/collections_image_small"
+                android:layout_height="@dimen/collections_image_small"
+                android:contentDescription="@{viewModel.collection.title}"
+                android:scaleType="centerCrop"
+                android:src="@{viewModel.collection.imageUrl}"
+                tools:src="@tools:sample/avatars" />
+
+            <android.support.v4.widget.Space
+                android:id="@+id/space_1"
+                android:layout_width="2dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="parent" />
+
+            <ImageView
+                android:id="@+id/save"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="@dimen/content_padding"
+                android:tint="?android:attr/textColorSecondary"
+                app:animation="@{viewModel.collection.isSaved() ? R.drawable.avd_saved_to_not_saved_24dp : R.drawable.avd_not_saved_to_saved_24dp}"
+                app:lastFrame="@{viewModel.collection.isSaved() ? @drawable/ic_saved_24dp : @drawable/ic_not_saved_24dp}"
+                app:layout_constraintEnd_toEndOf="@id/space_1"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="ContentDescription"
+                tools:src="@drawable/ic_saved_24dp" />
 
             <TextView
                 android:id="@+id/title"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:lineSpacingExtra="@dimen/list_item_text_spacing"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginEnd="@dimen/content_padding"
+                android:layout_marginStart="@dimen/content_padding"
+                android:fontFamily="sans-serif-medium"
+                android:text="@{viewModel.collection.title}"
+                android:textColor="@color/accent"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toStartOf="@id/save"
+                app:layout_constraintStart_toEndOf="@id/image"
                 app:layout_constraintTop_toTopOf="parent"
-                app:primaryText="@{viewModel.collection.title}"
-                app:secondaryText="@{viewModel.collection.description}"
-                tools:text="Collection title\nDescription" />
+                tools:text="Collection title" />
+
+            <TextView
+                android:id="@+id/description"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/content_padding"
+                android:layout_marginStart="@dimen/content_padding"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:maxLines="1"
+                android:text="@{viewModel.collection.description}"
+                app:layout_constraintEnd_toStartOf="@id/save"
+                app:layout_constraintStart_toEndOf="@id/image"
+                app:layout_constraintTop_toBottomOf="@id/title"
+                tools:text="Collection description" />
 
         </android.support.constraint.ConstraintLayout>
 

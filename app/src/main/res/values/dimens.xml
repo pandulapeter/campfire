@@ -37,6 +37,9 @@
     <!-- Home screen -->
     <dimen name="view_options_width">216dp</dimen>
 
+    <!-- Collections -->
+    <dimen name="collections_image_small">48dp</dimen>
+
     <!-- Options screen / Preferences -->
     <dimen name="options_preferences_checkbox_margin">-4dp</dimen>
     <dimen name="options_preferences_checkbox_padding">28dp</dimen>

@@ -19,6 +19,8 @@ import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.drawable
@@ -51,6 +53,13 @@ fun setPadding(view: View, paddingStart: Int?, paddingTop: Int?, paddingEnd: Int
     paddingEnd ?: view.paddingEnd,
     paddingBottom ?: view.paddingBottom
 )
+
+@BindingAdapter("android:src")
+fun setImage(view: ImageView, url: String?) = Glide
+    .with(view)
+    .load(url)
+    .apply(RequestOptions.placeholderOf(R.drawable.bg_splash))
+    .into(view)
 
 @BindingAdapter("android:text")
 fun setText(view: EditText, text: String?) {

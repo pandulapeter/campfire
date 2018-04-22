@@ -107,19 +107,20 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     var shouldAllowAppBarScrolling
         get() = (binding.toolbarContainer.layoutParams as AppBarLayout.LayoutParams).scrollFlags != 0
         set(value) {
-            if (shouldAllowAppBarScrolling != value) {
-                // Seems to cause glitches on older Android versions.
-                binding.toolbarContainer.run {
-                    layoutParams = (layoutParams as AppBarLayout.LayoutParams).apply {
-                        scrollFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && value) {
-                            AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or
-                                    AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or
-                                    AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or
-                                    AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
-                        } else 0
-                    }
-                }
-            }
+            //TODO: Too many glitches, with SwipeRefreshLayout and on older API levels.
+//            if (shouldAllowAppBarScrolling != value) {
+//                // Seems to cause glitches on older Android versions.
+//                binding.toolbarContainer.run {
+//                    layoutParams = (layoutParams as AppBarLayout.LayoutParams).apply {
+//                        scrollFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && value) {
+//                            AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or
+//                                    AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or
+//                                    AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or
+//                                    AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
+//                        } else 0
+//                    }
+//                }
+//            }
         }
     var transitionMode: Boolean? = null
         set(value) {
