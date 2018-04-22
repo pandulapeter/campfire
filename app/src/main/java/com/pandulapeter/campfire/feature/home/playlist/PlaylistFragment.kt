@@ -38,6 +38,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
             }
         )
     }
+    override val canScrollToolbar get() = viewModel.songCount.get() > 0 && !viewModel.isInEditMode.get()
     private var Bundle.isInEditMode by BundleArgumentDelegate.Boolean("isInEditMode")
     private val editToggle: ToolbarButton by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_edit_24dp) { viewModel.toggleEditMode() } }
     private val shuffleButton: ToolbarButton by lazy {
@@ -135,7 +136,6 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
 
     override fun onResume() {
         super.onResume()
-        updateScrollState()
         showHintIfNeeded()
         viewModel.restoreToolbarButtons()
     }
@@ -162,10 +162,6 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
             mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
         }
     )
-
-    private fun updateScrollState() {
-        mainActivity.shouldAllowAppBarScrolling = viewModel.adapter.itemCount > 0 && !viewModel.isInEditMode.get()
-    }
 
     override fun onDetailScreenOpened() {
         if (viewModel.isInEditMode.get()) {

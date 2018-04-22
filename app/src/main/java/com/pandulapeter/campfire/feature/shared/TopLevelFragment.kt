@@ -35,6 +35,7 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     protected val defaultToolbar by lazy { AppCompatTextView(context).apply { gravity = Gravity.CENTER_VERTICAL } }
     protected open val appBarView: View? = null
+    protected open val canScrollToolbar = true
     protected var toolbarWidth = 0
 
     @CallSuper
@@ -48,11 +49,22 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (this !is DetailFragment) {
+            updateScrollState()
+        }
+    }
+
     open fun onDrawerStateChanged(state: Int) = Unit
 
     open fun onNavigationItemSelected(menuItem: MenuItem) = false
 
     open fun onFloatingActionButtonPressed() = Unit
+
+    protected open fun updateScrollState() {
+        mainActivity.shouldAllowAppBarScrolling = canScrollToolbar
+    }
 
     protected open fun inflateToolbarTitle(context: Context): View = defaultToolbar
 

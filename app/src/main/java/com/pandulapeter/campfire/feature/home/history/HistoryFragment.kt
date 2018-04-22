@@ -36,6 +36,7 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), AlertDialogFragmen
             )
         }.apply { visibleOrInvisible = false }
     }
+    override val canScrollToolbar get() = viewModel.shouldShowDeleteAll.get()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -44,7 +45,7 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), AlertDialogFragmen
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))
         viewModel.shouldShowDeleteAll.onPropertyChanged(this) {
             deleteAllButton.visibleOrGone = it
-            mainActivity.shouldAllowAppBarScrolling = it
+            updateScrollState()
             showHintIfNeeded()
         }
         ItemTouchHelper(object : ElevationItemTouchHelperCallback((mainActivity.dimension(R.dimen.content_padding)).toFloat(), 0, 0) {

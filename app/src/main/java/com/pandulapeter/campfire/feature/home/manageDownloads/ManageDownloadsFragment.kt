@@ -25,6 +25,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
 
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
     override val viewModel by lazy { ManageDownloadsViewModel(mainActivity) { mainActivity.openLibraryScreen() } }
+    override val canScrollToolbar get() = viewModel.shouldShowDeleteAll.get()
     private val deleteAllButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
             AlertDialogFragment.show(
@@ -45,7 +46,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Al
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))
         viewModel.shouldShowDeleteAll.onPropertyChanged(this) {
             deleteAllButton.visibleOrGone = it
-            mainActivity.shouldAllowAppBarScrolling = it
+            updateScrollState()
         }
         viewModel.state.onPropertyChanged(this) { updateToolbarTitle(viewModel.songCount.get()) }
         viewModel.songCount.onPropertyChanged(this) {

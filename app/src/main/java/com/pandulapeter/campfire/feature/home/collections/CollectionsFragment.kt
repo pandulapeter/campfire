@@ -43,6 +43,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             },
             openSecondaryNavigationDrawer = { mainActivity.openSecondaryNavigationDrawer() })
     }
+    override val canScrollToolbar get() = viewModel.adapter.items.isNotEmpty()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -52,6 +53,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             viewModel.buttonIcon.set(it.buttonIcon)
         }
         defaultToolbar.updateToolbarTitle(R.string.home_collections)
+        viewModel.state.onPropertyChanged { updateScrollState() }
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
             showSnackbar(
                 message = R.string.collections_update_error,

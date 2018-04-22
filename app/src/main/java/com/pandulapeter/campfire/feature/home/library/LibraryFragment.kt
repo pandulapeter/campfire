@@ -25,14 +25,15 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         private const val COMPOUND_BUTTON_LONG_TRANSITION_DELAY = 300L
     }
 
+    override val canScrollToolbar get() = !viewModel.toolbarTextInputView.isTextInputVisible
     override val viewModel: LibraryViewModel by lazy {
         LibraryViewModel(
             context = mainActivity,
             toolbarTextInputView = ToolbarTextInputView(mainActivity.toolbarContext, R.string.library_search, true).apply { title.updateToolbarTitle(R.string.home_library) },
             updateSearchToggleDrawable = {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
-                mainActivity.shouldAllowAppBarScrolling = !it
                 mainActivity.transitionMode = true
+                updateScrollState()
                 searchControlsViewModel.isVisible.set(it)
                 binding.swipeRefreshLayout.isEnabled = !it
                 binding.swipeRefreshLayout.isRefreshing = viewModel.isLoading.get()
@@ -115,7 +116,6 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
 
     override fun onResume() {
         super.onResume()
-        mainActivity.shouldAllowAppBarScrolling = !viewModel.toolbarTextInputView.isTextInputVisible
         viewModel.restoreToolbarButtons()
     }
 
