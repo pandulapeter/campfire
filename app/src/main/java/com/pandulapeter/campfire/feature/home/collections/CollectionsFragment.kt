@@ -11,39 +11,46 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
-import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.util.consume
-import com.pandulapeter.campfire.util.onEventTriggered
-import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.*
 
 
 class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, CollectionsViewModel>(R.layout.fragment_collections) {
 
+    private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
+    private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
+    private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
     override val viewModel: CollectionsViewModel by lazy {
-        CollectionsViewModel { languages ->
-            mainActivity.enableSecondaryNavigationDrawer(R.menu.collections)
-            initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == CollectionsViewModel.SortingMode.TITLE }
-            initializeCompoundButton(R.id.sort_by_date) { viewModel.sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE }
-            initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == CollectionsViewModel.SortingMode.POPULARITY }
-            initializeCompoundButton(R.id.saved_only) { viewModel.shouldShowSavedOnly }
-            initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
-            mainActivity.secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
-                clear()
-                languages.forEachIndexed { index, language ->
-                    add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
-                        setActionView(R.layout.widget_checkbox)
-                        initializeCompoundButton(language.nameResource) { !viewModel.disabledLanguageFilters.contains(language.id) }
+        CollectionsViewModel(
+            onDataLoaded = { languages ->
+                mainActivity.enableSecondaryNavigationDrawer(R.menu.collections)
+                initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == CollectionsViewModel.SortingMode.TITLE }
+                initializeCompoundButton(R.id.sort_by_date) { viewModel.sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE }
+                initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == CollectionsViewModel.SortingMode.POPULARITY }
+                initializeCompoundButton(R.id.saved_only) { viewModel.shouldShowSavedOnly }
+                initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
+                mainActivity.secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
+                    clear()
+                    languages.forEachIndexed { index, language ->
+                        add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
+                            setActionView(R.layout.widget_checkbox)
+                            initializeCompoundButton(language.nameResource) { !viewModel.disabledLanguageFilters.contains(language.id) }
+                        }
                     }
                 }
-            }
-            mainActivity.updateToolbarButtons(listOf(
-                mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { mainActivity.openSecondaryNavigationDrawer() }
-            ))
-        }
+                mainActivity.updateToolbarButtons(listOf(
+                    mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { mainActivity.openSecondaryNavigationDrawer() }
+                ))
+            },
+            openSecondaryNavigationDrawer = { mainActivity.openSecondaryNavigationDrawer() })
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        savedInstanceState?.let {
+            viewModel.placeholderText.set(it.placeholderText)
+            viewModel.buttonText.set(it.buttonText)
+            viewModel.buttonIcon.set(it.buttonIcon)
+        }
         defaultToolbar.updateToolbarTitle(R.string.home_collections)
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
             showSnackbar(
@@ -63,6 +70,13 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(context)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.placeholderText = viewModel.placeholderText.get()
+        outState.buttonText = viewModel.buttonText.get()
+        outState.buttonIcon = viewModel.buttonIcon.get()
     }
 
     override fun onResume() {

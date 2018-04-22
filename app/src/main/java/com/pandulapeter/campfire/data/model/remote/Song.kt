@@ -37,10 +37,12 @@ data class Song(
     @Ignore
     @Transient
     private var normalizedTitle: String? = null
+
     @IgnoredOnParcel
     @Ignore
     @Transient
     private var normalizedArtist: String? = null
+
     @IgnoredOnParcel
     @Ignore
     @Transient

@@ -69,6 +69,7 @@
     <!-- Collections screen -->
     <string name="collections_update_error">Something went wrong while updating Collections</string>
     <string name="collections_placeholder">No matching collections. Double-check the filters you set up</string>
+    <string name="collections_filters">Filters</string>
     <string name="collections_sort_by">Sort by</string>
     <string name="collections_sort_by_title">Title</string>
     <string name="collections_sort_by_date">Upload date</string>

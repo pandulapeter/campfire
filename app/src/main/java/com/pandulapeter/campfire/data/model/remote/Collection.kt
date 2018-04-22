@@ -5,6 +5,7 @@ import android.arch.persistence.room.Entity
 import android.arch.persistence.room.Ignore
 import android.arch.persistence.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
+import com.pandulapeter.campfire.util.normalize
 import kotlinx.android.parcel.IgnoredOnParcel
 
 @Entity(tableName = Collection.TABLE_NAME)
@@ -21,10 +22,23 @@ data class Collection(
     @ColumnInfo(name = IS_SAVED) @SerializedName(IS_SAVED) val isSaved: Boolean? = false
 ) {
 
+
+    @IgnoredOnParcel
+    @Ignore
+    @Transient
+    private var normalizedTitle: String? = null
+
     @IgnoredOnParcel
     @Ignore
     @Transient
     var isNew = false
+
+    fun getNormalizedTitle(): String {
+        if (normalizedTitle == null) {
+            normalizedTitle = title.normalize()
+        }
+        return normalizedTitle ?: ""
+    }
 
     companion object {
         const val TABLE_NAME = "collections"

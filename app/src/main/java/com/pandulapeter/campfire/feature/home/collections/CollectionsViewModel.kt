@@ -19,7 +19,10 @@ import kotlinx.coroutines.experimental.cancel
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.experimental.CoroutineContext
 
-class CollectionsViewModel(private val onDataLoaded: (languages: List<Language>) -> Unit) : CampfireViewModel(), CollectionRepository.Subscriber {
+class CollectionsViewModel(
+    private val onDataLoaded: (languages: List<Language>) -> Unit,
+    private val openSecondaryNavigationDrawer: () -> Unit
+) : CampfireViewModel(), CollectionRepository.Subscriber {
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private val collectionRepository by inject<CollectionRepository>()
@@ -103,16 +106,25 @@ class CollectionsViewModel(private val onDataLoaded: (languages: List<Language>)
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
         if (collections.toList().isNotEmpty()) {
             placeholderText.set(R.string.collections_placeholder)
-            buttonText.set(0)
+            buttonText.set(R.string.collections_filters)
+            buttonIcon.set(R.drawable.ic_filter_and_sort_24dp)
         }
     }
 
-    fun onActionButtonClicked() = updateData()
+    fun onActionButtonClicked() {
+        if (buttonIcon.get() == 0) {
+            updateData()
+        } else {
+            openSecondaryNavigationDrawer()
+        }
+    }
 
     fun updateData() = collectionRepository.updateData()
 
     private fun Sequence<Collection>.createViewModels() = filterSaved()
+        .filterExplicit()
         .filterByLanguage()
+        .sort()
         .map { CollectionListItemViewModel.CollectionViewModel(it) }
         .toMutableList<CollectionListItemViewModel>()
 
@@ -138,7 +150,23 @@ class CollectionsViewModel(private val onDataLoaded: (languages: List<Language>)
 
     private fun Sequence<Collection>.filterSaved() = if (shouldShowSavedOnly) filter { it.isSaved ?: false } else this
 
-    private fun Sequence<Collection>.filterByLanguage() = filter { !disabledLanguageFilters.contains(it.language ?: Language.Unknown.id) }
+    private fun Sequence<Collection>.filterExplicit() = if (shouldShowSavedOnly) filter { it.isExplicit ?: false } else this
+
+    private fun Sequence<Collection>.filterByLanguage() = filter {
+        var shouldFilter = false
+        it.language?.forEach {
+            if (!disabledLanguageFilters.contains(it)) {
+                shouldFilter = true
+            }
+        }
+        shouldFilter
+    }
+
+    private fun Sequence<Collection>.sort() = when (sortingMode) {
+        SortingMode.TITLE -> sortedBy { it.date }.sortedBy { it.getNormalizedTitle() }
+        SortingMode.UPLOAD_DATE -> sortedBy { it.getNormalizedTitle() }.sortedBy { it.date }
+        SortingMode.POPULARITY -> sortedBy { it.date }.sortedBy { it.getNormalizedTitle() }.sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
+    }
 
     enum class SortingMode(val intValue: Int) {
         TITLE(0),
