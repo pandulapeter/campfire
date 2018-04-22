@@ -3,9 +3,24 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/should_show_chords"
-        android:title="@string/options_preferences_should_show_chords"
-        app:actionLayout="@layout/widget_checkbox" />
+        android:id="@+id/font_size_container"
+        android:title="@string/detail_font_size">
+
+        <menu>
+
+            <item
+                android:id="@+id/font_size_larger"
+                android:icon="@drawable/ic_increment_24dp"
+                android:title="@string/detail_font_size_larger" />
+
+            <item
+                android:id="@+id/font_size_smaller"
+                android:icon="@drawable/ic_decrement_24dp"
+                android:title="@string/detail_font_size_smaller" />
+
+        </menu>
+
+    </item>
 
     <item
         android:id="@+id/transpose_container"
@@ -28,24 +43,9 @@
     </item>
 
     <item
-        android:id="@+id/font_size_container"
-        android:title="@string/detail_font_size">
-
-        <menu>
-
-            <item
-                android:id="@+id/font_size_larger"
-                android:icon="@drawable/ic_increment_24dp"
-                android:title="@string/detail_font_size_larger" />
-
-            <item
-                android:id="@+id/font_size_smaller"
-                android:icon="@drawable/ic_decrement_24dp"
-                android:title="@string/detail_font_size_smaller" />
-
-        </menu>
-
-    </item>
+        android:id="@+id/should_show_chords"
+        android:title="@string/options_preferences_should_show_chords"
+        app:actionLayout="@layout/widget_checkbox" />
 
     <item
         android:id="@+id/play_in_youtube"

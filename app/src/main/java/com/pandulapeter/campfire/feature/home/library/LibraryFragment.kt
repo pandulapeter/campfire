@@ -157,11 +157,6 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         }
     }
 
-    private inline fun consumeAndUpdateBoolean(menuItem: MenuItem, crossinline setValue: (Boolean) -> Unit, crossinline getValue: () -> Boolean) = consume {
-        setValue(!getValue())
-        (menuItem.actionView as? CompoundButton).updateCheckedStateWithDelay(getValue())
-    }
-
     private inline fun consumeAndUpdateSortingMode(sortingMode: LibraryViewModel.SortingMode, crossinline setValue: (LibraryViewModel.SortingMode) -> Unit) = consume {
         setValue(sortingMode)
         (mainActivity.secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == LibraryViewModel.SortingMode.TITLE)

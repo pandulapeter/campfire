@@ -51,7 +51,7 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
     }
 
     override fun onTransitionEnd() {
-        binding.container.animate().alpha(1f).start()
+        binding.container.animate().alpha(1f).apply { duration = 100 }.start()
         isContentVisible = true
         if (!viewModel.text.get().isNullOrBlank()) {
             (parentFragment as? DetailFragment)?.onDataLoaded(song.id)

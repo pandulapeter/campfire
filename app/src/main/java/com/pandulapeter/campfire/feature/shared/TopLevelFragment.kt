@@ -75,7 +75,7 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         }
     }
 
-    protected inline fun initializeCompoundButton(itemId: Int, crossinline getValue: () -> Boolean) = consume {
+    protected fun initializeCompoundButton(itemId: Int, getValue: () -> Boolean) = consume {
         mainActivity.secondaryNavigationMenu.findItem(itemId)?.let {
             (it.actionView as? CompoundButton)?.run {
                 isChecked = getValue()
@@ -88,6 +88,10 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         }
     }
 
+    protected fun consumeAndUpdateBoolean(menuItem: MenuItem, setValue: (Boolean) -> Unit, getValue: () -> Boolean) = consume {
+        setValue(!getValue())
+        (menuItem.actionView as? CompoundButton).updateCheckedStateWithDelay(getValue())
+    }
 
     protected fun CompoundButton?.updateCheckedStateWithDelay(checked: Boolean) {
         this?.postDelayed({ if (isAdded) isChecked = checked }, COMPOUND_BUTTON_TRANSITION_DELAY)

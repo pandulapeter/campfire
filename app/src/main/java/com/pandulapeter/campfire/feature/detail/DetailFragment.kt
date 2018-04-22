@@ -15,6 +15,7 @@ import android.view.*
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.HistoryItem
 import com.pandulapeter.campfire.data.model.remote.Song
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
@@ -59,6 +60,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val pagerAdapter by lazy { DetailPagerAdapter(childFragmentManager, songs) }
     private val historyRepository by inject<HistoryRepository>()
     private val songRepository by inject<SongRepository>()
+    private val preferenceDatabase by inject<PreferenceDatabase>()
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
     private val detailEventBus by inject<DetailEventBus>()
     private val songs by lazy { arguments?.songs?.filterIsInstance<Song>() ?: listOf() }
@@ -66,6 +68,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val drawablePauseToPlay by lazy { mainActivity.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
     private val addedToPlaylist by lazy { mainActivity.animatedDrawable(R.drawable.avd_added_to_playlists_24dp) }
     private val removedFromPlaylist by lazy { mainActivity.animatedDrawable(R.drawable.avd_removed_from_playlists_24dp) }
+    private val transposeHigher by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_higher) }
+    private val transposeLower by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_lower) }
     private val playlistButton: ToolbarButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(if (viewModel.isSongInAnyPlaylists()) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp) {
             if (viewModel.areThereMoreThanOnePlaylists()) {
@@ -153,6 +157,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             })
         }
         mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
+        initializeCompoundButton(R.id.should_show_chords) { preferenceDatabase.shouldShowChords }
+        updateTransposeControls()
         viewModel.songId.onPropertyChanged(this) {
             mainActivity.lastSongId = it
             mainActivity.updateToolbarTitleView(inflateToolbarTitle(mainActivity.toolbarContext), toolbarWidth)
@@ -249,6 +255,16 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override fun onNavigationItemSelected(menuItem: MenuItem) = when (menuItem.itemId) {
         R.id.transpose_higher -> consume { showSnackbar(R.string.work_in_progress) }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), 1) }
         R.id.transpose_lower -> consume { showSnackbar(R.string.work_in_progress) }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), -1) }
+        R.id.font_size_larger -> consume { showSnackbar(R.string.work_in_progress) }
+        R.id.font_size_smaller -> consume { showSnackbar(R.string.work_in_progress) }
+        R.id.should_show_chords -> consumeAndUpdateBoolean(menuItem, {
+            preferenceDatabase.shouldShowChords = it
+            binding.root.postDelayed({
+                if (isAdded) {
+                    updateTransposeControls()
+                }
+            }, 350)
+        }, { preferenceDatabase.shouldShowChords })
         R.id.play_in_youtube -> consumeAndCloseDrawer {
             "${songs[arguments?.index ?: 0].title} - ${songs[arguments?.index ?: 0].artist}".let {
                 try {
@@ -313,6 +329,13 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             mainActivity.updateFloatingActionButtonDrawable(drawable)
             animatedVisibilityEnd = !animatedVisibilityEnd
             drawable?.start()
+        }
+    }
+
+    private fun updateTransposeControls() {
+        preferenceDatabase.shouldShowChords.let {
+            transposeHigher.isEnabled = it
+            transposeLower.isEnabled = it
         }
     }
 
