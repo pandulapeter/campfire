@@ -16,16 +16,22 @@ import android.text.style.TextAppearanceSpan
 import android.view.Gravity
 import android.view.MenuItem
 import android.view.View
+import android.widget.CompoundButton
 import android.widget.TextView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
+import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.obtainColor
 import kotlin.math.ceil
 
 abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes layoutResourceId: Int) : CampfireFragment<B, VM>(layoutResourceId) {
+
+    companion object {
+        const val COMPOUND_BUTTON_TRANSITION_DELAY = 10L
+    }
 
     protected val defaultToolbar by lazy { AppCompatTextView(context).apply { gravity = Gravity.CENTER_VERTICAL } }
     protected open val appBarView: View? = null
@@ -69,7 +75,31 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         }
     }
 
+    protected inline fun initializeCompoundButton(itemId: Int, crossinline getValue: () -> Boolean) = consume {
+        mainActivity.secondaryNavigationMenu.findItem(itemId)?.let {
+            (it.actionView as? CompoundButton)?.run {
+                isChecked = getValue()
+                setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked != getValue()) {
+                        onNavigationItemSelected(it)
+                    }
+                }
+            }
+        }
+    }
+
+
+    protected fun CompoundButton?.updateCheckedStateWithDelay(checked: Boolean) {
+        this?.postDelayed({ if (isAdded) isChecked = checked }, COMPOUND_BUTTON_TRANSITION_DELAY)
+    }
+
+
     class EllipsizeLineSpan(@ColorInt private val color: Int? = null) : ReplacementSpan(), LineBackgroundSpan {
+
+        companion object {
+            private const val ELLIPSIZE_CHARACTER = "\u2026"
+        }
+
         private var layoutLeft = 0
         private var layoutRight = 0
 
@@ -111,10 +141,6 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
                 canvas.drawText(text, start, newEnd, x, y.toFloat(), paint)
                 canvas.drawText(ELLIPSIZE_CHARACTER, x + paint.measureText(text, start, newEnd), y.toFloat(), paint)
             }
-        }
-
-        companion object {
-            private const val ELLIPSIZE_CHARACTER = "\u2026"
         }
     }
 }

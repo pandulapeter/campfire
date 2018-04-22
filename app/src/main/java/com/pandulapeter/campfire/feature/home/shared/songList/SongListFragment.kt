@@ -52,6 +52,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                     (items[position] as? SongListItemViewModel.SongViewModel)?.let {
                         viewModel.isDetailScreenOpen = true
                         linearLayoutManager.isScrollEnabled = false
+                        onDetailScreenOpened()
                         val isPlaylist = viewModel is PlaylistViewModel
                         mainActivity.openDetailScreen(
                             clickedView,
@@ -144,4 +145,6 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         super.updateUI()
         linearLayoutManager.isScrollEnabled = true
     }
+
+    protected open fun onDetailScreenOpened() = Unit
 }

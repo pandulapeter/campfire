@@ -67,9 +67,15 @@
     <string name="library_search_in_artists">Artists</string>
 
     <!-- Collections screen -->
-    <string name="collections_saved_only">Saved only</string>
     <string name="collections_placeholder">No matching collections. Double-check the filters you set up</string>
+    <string name="collections_sort_by">Sort by</string>
+    <string name="collections_sort_by_title">Title</string>
     <string name="collections_sort_by_date">Upload date</string>
+    <string name="collections_sort_by_popularity">Popularity</string>
+    <string name="collections_filter_by_type">Filter by type</string>
+    <string name="collections_saved_only">Saved only</string>
+    <string name="collections_show_explicit">Show explicit</string>
+    <string name="collections_filter_by_language">Filter by language</string>
 
     <!-- History screen -->
     <string name="history_clear_confirmation_title">Are you sure?</string>
@@ -212,6 +218,9 @@
     <string name="detail_transpose_value">Transpose (%s)</string>
     <string name="detail_transpose_higher">Higher</string>
     <string name="detail_transpose_lower">Lower</string>
+    <string name="detail_font_size">Font size</string>
+    <string name="detail_font_size_larger">Larger</string>
+    <string name="detail_font_size_smaller">Smaller</string>
     <string name="detail_play_original">Play original</string>
     <string name="detail_report">Report a problem</string>
     <string name="detail_report_subject">Campfire: Problem with %1$s - %2$s</string>

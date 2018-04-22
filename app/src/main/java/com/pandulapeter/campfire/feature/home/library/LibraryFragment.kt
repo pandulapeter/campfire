@@ -22,7 +22,6 @@ import com.pandulapeter.campfire.util.*
 class LibraryFragment : SongListFragment<LibraryViewModel>() {
 
     companion object {
-        private const val COMPOUND_BUTTON_TRANSITION_DELAY = 10L
         private const val COMPOUND_BUTTON_LONG_TRANSITION_DELAY = 300L
     }
 
@@ -150,23 +149,6 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         viewModel.toggleTextInputVisibility()
         true
     } else super.onBackPressed()
-
-    private inline fun initializeCompoundButton(itemId: Int, crossinline getValue: () -> Boolean) = consume {
-        mainActivity.secondaryNavigationMenu.findItem(itemId)?.let {
-            (it.actionView as? CompoundButton)?.run {
-                isChecked = getValue()
-                setOnCheckedChangeListener { _, isChecked ->
-                    if (isChecked != getValue()) {
-                        onNavigationItemSelected(it)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun CompoundButton?.updateCheckedStateWithDelay(checked: Boolean) {
-        this?.postDelayed({ if (isAdded) isChecked = checked }, COMPOUND_BUTTON_TRANSITION_DELAY)
-    }
 
     private fun consumeAndUpdateLanguageFilter(menuItem: MenuItem, languageId: String) = consume {
         viewModel.disabledLanguageFilters.run {

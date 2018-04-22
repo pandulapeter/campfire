@@ -167,6 +167,12 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         mainActivity.shouldAllowAppBarScrolling = viewModel.adapter.itemCount > 0 && !viewModel.isInEditMode.get()
     }
 
+    override fun onDetailScreenOpened() {
+        if (viewModel.isInEditMode.get()) {
+            viewModel.toggleEditMode()
+        }
+    }
+
     private fun shuffleSongs() {
         val tempList = viewModel.adapter.items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song }.toMutableList()
         tempList.shuffle()
