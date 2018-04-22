@@ -70,8 +70,11 @@ class CollectionRepository(
                     async(CommonPool) {
                         if (data.isNotEmpty()) {
                             newData.forEach { song ->
-                                if (data.find { it.id == song.id } == null) {
+                                val oldSong = data.find { it.id == song.id }
+                                if (oldSong == null) {
                                     song.isNew = true
+                                } else {
+                                    song.isSaved = oldSong.isSaved
                                 }
                             }
                         }
