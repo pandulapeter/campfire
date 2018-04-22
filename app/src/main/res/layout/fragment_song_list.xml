@@ -27,10 +27,10 @@
             android:clipChildren="false"
             android:orientation="vertical">
 
-            <FrameLayout
-                android:id="@+id/main_container"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+            <include
+                android:id="@+id/collection_header"
+                layout="@layout/item_collection"
+                app:viewModel="@{viewModel.collection}" />
 
             <android.support.v4.widget.SwipeRefreshLayout
                 android:id="@+id/swipe_refresh_layout"
@@ -42,6 +42,8 @@
                     android:id="@+id/recycler_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:paddingStart="@dimen/content_padding"
+                    android:paddingEnd="0dp"
                     android:clipToPadding="false"
                     android:paddingBottom="@dimen/list_bottom_margin"
                     android:paddingTop="@dimen/content_padding"

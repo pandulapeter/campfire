@@ -55,7 +55,7 @@ class CollectionRepository(
             subscriber.onCollectionsUpdated(data)
         }
         subscriber.onCollectionsLoadingStateChanged(isLoading)
-        if (!isLoading && data.isEmpty()) {
+        if (isCacheLoaded && !isLoading && data.isEmpty()) {
             subscriber.onCollectionRepositoryUpdateError()
         }
     }

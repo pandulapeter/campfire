@@ -6,7 +6,7 @@ sealed class CollectionListItemViewModel {
 
     abstract fun getItemId(): Long
 
-    data class CollectionViewModel(val collection: Collection) : CollectionListItemViewModel() {
+    data class CollectionViewModel(val collection: Collection, val isExpanded: Boolean = false) : CollectionListItemViewModel() {
 
         override fun getItemId() = collection.id.hashCode().toLong()
     }

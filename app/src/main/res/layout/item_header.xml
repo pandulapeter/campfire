@@ -15,6 +15,8 @@
         style="@style/Header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingEnd="@dimen/first_keyline"
+        android:paddingStart="@dimen/content_padding"
         android:text="@{viewModel.title}"
         tools:text="A" />
 

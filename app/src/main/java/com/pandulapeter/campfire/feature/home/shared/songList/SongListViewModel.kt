@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
+import com.pandulapeter.campfire.feature.home.collections.CollectionListItemViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import kotlinx.coroutines.experimental.CommonPool
@@ -33,6 +34,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     val shouldUpdateScrollState = ObservableBoolean()
     private var coroutine: CoroutineContext? = null
     protected var librarySongs = sequenceOf<Song>()
+    val collection = ObservableField<CollectionListItemViewModel.CollectionViewModel?>()
     val adapter = SongListAdapter()
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
     val downloadSongError = ObservableField<Song?>()

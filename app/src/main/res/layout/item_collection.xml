@@ -17,13 +17,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/border"
-        android:layout_marginStart="@dimen/content_padding"
         android:clipChildren="false"
         android:clipToPadding="false"
+        android:transitionGroup="true"
         android:foreground="?attr/selectableItemBackground"
-        android:transitionName="root"
+        android:transitionName="@{viewModel.collection.id}"
         app:cardCornerRadius="@dimen/card_corner"
-        app:contentPadding="@dimen/content_padding">
+        app:contentPadding="@dimen/content_padding"
+        app:visibility="@{viewModel!=null}">
 
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
@@ -38,7 +39,6 @@
                 android:contentDescription="@{viewModel.collection.title}"
                 android:scaleType="centerCrop"
                 android:src="@{viewModel.collection.imageUrl}"
-                android:transitionName="image"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:src="@tools:sample/avatars" />
@@ -56,7 +56,6 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:scaleType="center"
                 android:tint="?android:attr/textColorSecondary"
-                android:transitionName="save"
                 app:animation="@{viewModel.collection.saved ? R.drawable.avd_not_saved_to_saved_24dp : R.drawable.avd_saved_to_not_saved_24dp }"
                 app:lastFrame="@{viewModel.collection.saved ? @drawable/ic_saved_24dp : @drawable/ic_not_saved_24dp}"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -75,7 +74,6 @@
                 android:text="@{viewModel.collection.title}"
                 android:textColor="@color/accent"
                 android:textSize="16sp"
-                android:transitionName="title"
                 app:layout_constraintBottom_toTopOf="@+id/description"
                 app:layout_constraintEnd_toStartOf="@id/save"
                 app:layout_constraintStart_toEndOf="@id/image"
@@ -111,7 +109,6 @@
                 android:text="@string/new_tag"
                 android:textColor="@color/accent"
                 android:textSize="12sp"
-                android:transitionName="description"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/save"
                 app:layout_constraintStart_toEndOf="@id/image"

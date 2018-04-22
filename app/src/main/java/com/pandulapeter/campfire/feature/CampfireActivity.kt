@@ -578,12 +578,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 }
             }
             supportFragmentManager.beginTransaction()
-                .setAllowOptimization(true)
                 .replace(R.id.fragment_container, CollectionDetailFragment.newInstance(collection))
                 .apply {
                     if (clickedView == null) {
                         setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                     } else {
+                        setAllowOptimization(true)
                         addSharedElement(clickedView, clickedView.transitionName)
                     }
                 }
@@ -661,12 +661,12 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             }
         }
         supportFragmentManager.beginTransaction()
-            .setAllowOptimization(true)
             .replace(R.id.fragment_container, DetailFragment.newInstance(songs, index, shouldShowManagePlaylist, clickedView == null))
             .apply {
                 if (clickedView == null) {
                     setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                 } else {
+                    setAllowOptimization(true)
                     addSharedElement(clickedView, clickedView.transitionName)
                 }
             }
