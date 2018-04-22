@@ -44,11 +44,11 @@ class LibraryViewModel(
                 updateAdapterItems()
             }
         }
-    var sortingMode = SortingMode.fromIntValue(preferenceDatabase.sortingMode)
+    var sortingMode = SortingMode.fromIntValue(preferenceDatabase.librarySortingMode)
         set(value) {
             if (field != value) {
                 field = value
-                preferenceDatabase.sortingMode = value.intValue
+                preferenceDatabase.librarySortingMode = value.intValue
                 updateAdapterItems(true)
             }
         }

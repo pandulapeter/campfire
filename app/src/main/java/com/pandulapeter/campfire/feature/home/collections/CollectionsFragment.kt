@@ -19,8 +19,9 @@ class CollectionsFragment : SongListFragment<CollectionsViewModel>() {
             context = mainActivity,
             onDataLoaded = { languages ->
                 mainActivity.enableSecondaryNavigationDrawer(R.menu.collections)
-                initializeCompoundButton(R.id.sort_by_date) { !viewModel.shouldSortByPopularity }
-                initializeCompoundButton(R.id.sort_by_popularity) { viewModel.shouldSortByPopularity }
+                initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == CollectionsViewModel.SortingMode.TITLE }
+                initializeCompoundButton(R.id.sort_by_date) { viewModel.sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE }
+                initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == CollectionsViewModel.SortingMode.POPULARITY }
                 initializeCompoundButton(R.id.saved_only) { viewModel.shouldShowSavedOnly }
                 initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
                 mainActivity.secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
@@ -63,8 +64,9 @@ class CollectionsFragment : SongListFragment<CollectionsViewModel>() {
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
         when (menuItem.itemId) {
-            R.id.sort_by_date -> consumeAndUpdateSortingMode(false) { shouldSortByPopularity = it }
-            R.id.sort_by_popularity -> consumeAndUpdateSortingMode(true) { shouldSortByPopularity = it }
+            R.id.sort_by_title -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.TITLE) { sortingMode = it }
+            R.id.sort_by_date -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.UPLOAD_DATE) { sortingMode = it }
+            R.id.sort_by_popularity -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.POPULARITY) { sortingMode = it }
             R.id.saved_only -> consumeAndUpdateBoolean(menuItem, { shouldShowSavedOnly = it }, { shouldShowSavedOnly })
             R.id.show_explicit -> consumeAndUpdateBoolean(menuItem, { shouldShowExplicit = it }, { shouldShowExplicit })
             else -> consumeAndUpdateLanguageFilter(menuItem, viewModel.languages.find { it.nameResource == menuItem.itemId }?.id ?: "")
@@ -78,10 +80,11 @@ class CollectionsFragment : SongListFragment<CollectionsViewModel>() {
         }
     }
 
-    private inline fun consumeAndUpdateSortingMode(shouldSortByPopularity: Boolean, crossinline setValue: (Boolean) -> Unit) = consume {
-        setValue(shouldSortByPopularity)
-        (mainActivity.secondaryNavigationMenu[R.id.sort_by_date].actionView as? CompoundButton).updateCheckedStateWithDelay(!shouldSortByPopularity)
-        (mainActivity.secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.updateCheckedStateWithDelay(shouldSortByPopularity)
+    private inline fun consumeAndUpdateSortingMode(sortingMode: CollectionsViewModel.SortingMode, crossinline setValue: (CollectionsViewModel.SortingMode) -> Unit) = consume {
+        setValue(sortingMode)
+        (mainActivity.secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.TITLE)
+        (mainActivity.secondaryNavigationMenu[R.id.sort_by_date].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE)
+        (mainActivity.secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.POPULARITY)
     }
 
     private operator fun Menu.get(@IdRes id: Int) = findItem(id)

@@ -14,11 +14,11 @@ class CollectionsViewModel(
     private val onDataLoaded: (languages: List<Language>) -> Unit
 ) : SongListViewModel(context) {
 
-    var shouldSortByPopularity = preferenceDatabase.shouldSortByPopularity
+    var sortingMode = SortingMode.fromIntValue(preferenceDatabase.collectionsSortingMode)
         set(value) {
             if (field != value) {
                 field = value
-                preferenceDatabase.shouldSortByPopularity = value
+                preferenceDatabase.collectionsSortingMode = value.intValue
                 updateAdapterItems(true)
             }
         }
@@ -84,4 +84,14 @@ class CollectionsViewModel(
     private fun Sequence<Song>.filterSaved() = if (shouldShowSavedOnly) filter { songDetailRepository.isSongDownloaded(it.id) } else this
 
     private fun Sequence<Song>.filterByLanguage() = filter { !disabledLanguageFilters.contains(it.language ?: Language.Unknown.id) }
+
+    enum class SortingMode(val intValue: Int) {
+        TITLE(0),
+        UPLOAD_DATE(1),
+        POPULARITY(2);
+
+        companion object {
+            fun fromIntValue(value: Int) = SortingMode.values().find { it.intValue == value } ?: TITLE
+        }
+    }
 }
