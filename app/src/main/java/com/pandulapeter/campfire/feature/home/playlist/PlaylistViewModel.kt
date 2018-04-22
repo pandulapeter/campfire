@@ -53,7 +53,7 @@ class PlaylistViewModel(
     override fun Sequence<Song>.createViewModels(): List<SongListItemViewModel> {
         val list = (playlist.get()?.songIds ?: listOf<String>())
             .mapNotNull { songId -> find { it.id == songId } }
-            .filter { it.id != songToDeleteId && playlist.get()?.songIds?.contains(it.id) ?: false }
+            .filter { it.id != songToDeleteId }
             .toList()
         return list.map {
             SongListItemViewModel.SongViewModel(

@@ -26,7 +26,7 @@ class CollectionsViewModel(
 ) : CampfireViewModel(), CollectionRepository.Subscriber {
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
-    private val collectionRepository by inject<CollectionRepository>()
+    val collectionRepository by inject<CollectionRepository>()
     private var coroutine: CoroutineContext? = null
     private var collections = sequenceOf<Collection>()
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)

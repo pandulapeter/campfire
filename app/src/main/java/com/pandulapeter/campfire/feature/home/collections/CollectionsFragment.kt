@@ -64,6 +64,15 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                 binding.swipeRefreshLayout.isRefreshing = it
             }
         }
+        viewModel.adapter.apply {
+            itemClickListener = { position, clickedView ->
+                (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.collection?.let {
+                    viewModel.collectionRepository.onCollectionOpened(it.id)
+                    analyticsManager.onCollectionOpened(it.id)
+                    mainActivity.openCollectionDetailsScreen(it, clickedView, items.size > 1)
+                }
+            }
+        }
         binding.swipeRefreshLayout.run {
             setOnRefreshListener { viewModel.updateData() }
             setColorSchemeColors(context.color(R.color.accent))

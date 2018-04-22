@@ -4,23 +4,26 @@ import android.arch.persistence.room.ColumnInfo
 import android.arch.persistence.room.Entity
 import android.arch.persistence.room.Ignore
 import android.arch.persistence.room.PrimaryKey
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
 import com.pandulapeter.campfire.util.normalize
 import kotlinx.android.parcel.IgnoredOnParcel
+import kotlinx.android.parcel.Parcelize
 
+@Parcelize
 @Entity(tableName = Collection.TABLE_NAME)
 data class Collection(
     @PrimaryKey() @ColumnInfo(name = ID) @SerializedName(ID) val id: String,
     @ColumnInfo(name = TITLE) @SerializedName(TITLE) val title: String = "",
     @ColumnInfo(name = DESCRIPTION) @SerializedName(DESCRIPTION) val description: String = "",
     @ColumnInfo(name = IMAGE_URL) @SerializedName(IMAGE_URL) val imageUrl: String = "",
-    @ColumnInfo(name = SONGS) @SerializedName(SONGS) val songs: List<String> = listOf(),
+    @ColumnInfo(name = SONGS) @SerializedName(SONGS) val songs: List<String>? = null,
     @ColumnInfo(name = LANGUAGE) @SerializedName(LANGUAGE) val language: List<String>? = null,
     @ColumnInfo(name = POPULARITY) @SerializedName(POPULARITY) val popularity: Int? = 0,
     @ColumnInfo(name = DATE) @SerializedName(DATE) val date: Long? = 0,
     @ColumnInfo(name = IS_EXPLICIT) @SerializedName(IS_EXPLICIT) val isExplicit: Boolean? = false,
     @ColumnInfo(name = IS_SAVED) @SerializedName(IS_SAVED) var isSaved: Boolean? = false
-) {
+) : Parcelable {
 
 
     @IgnoredOnParcel

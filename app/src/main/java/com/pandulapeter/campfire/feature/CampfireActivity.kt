@@ -30,12 +30,14 @@ import android.widget.TextView
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
+import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.databinding.ActivityCampfireBinding
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
+import com.pandulapeter.campfire.feature.home.collections.detail.CollectionDetailFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.home.manageDownloads.ManageDownloadsFragment
@@ -81,6 +83,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
     private var Bundle.currentScreenId by BundleArgumentDelegate.Int("currentScreenId")
     private var Bundle.currentPlaylistId by BundleArgumentDelegate.String("currentPlaylistId")
+    private var Bundle.currentCollectionId by BundleArgumentDelegate.String("currentCollectionId")
     private var Bundle.isAppBarExpanded by BundleArgumentDelegate.Boolean("isAppBarExpanded")
     private var Bundle.toolbarContainerScrollFlags by BundleArgumentDelegate.Boolean("shouldAllowAppBarScrolling")
     private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
@@ -92,6 +95,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private val playlistRepository by inject<PlaylistRepository>()
     private var currentPlaylistId = ""
+    private var currentCollectionId = ""
     private var currentScreenId = R.id.library
     private var forceExpandAppBar = true
     private val colorWhite by lazy { color(R.color.white) }
@@ -259,6 +263,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             binding.toolbarMainButton.setImageDrawable(drawable(if (savedInstanceState.isOnDetailScreen) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp))
             currentScreenId = savedInstanceState.currentScreenId
             currentPlaylistId = savedInstanceState.currentPlaylistId
+            currentCollectionId = savedInstanceState.currentCollectionId
             lastSongId = savedInstanceState.lastSongId
             shouldAllowAppBarScrolling = savedInstanceState.toolbarContainerScrollFlags
             if (currentScreenId == R.id.options) {
@@ -309,8 +314,10 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             } else {
                 val fragment = currentFragment
                 if (fragment == null || !fragment.onBackPressed()) {
-                    if (fragment is DetailFragment) {
-                        updateMainToolbarButton(false)
+                    if (fragment is DetailFragment || fragment is CollectionDetailFragment) {
+                        if (fragment is DetailFragment) {
+                            updateMainToolbarButton(false)
+                        }
                         super.onBackPressed()
                     } else {
                         if (preferenceDatabase.shouldShowExitConfirmation) {
@@ -338,6 +345,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         outState?.isAppBarExpanded = binding.appBarLayout.height - binding.appBarLayout.bottom == 0
         outState?.toolbarContainerScrollFlags = shouldAllowAppBarScrolling
         outState?.currentPlaylistId = playlistIdMap[currentScreenId] ?: ""
+        outState?.currentCollectionId = currentCollectionId
         outState?.lastSongId = lastSongId
     }
 
@@ -552,6 +560,38 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
+    fun openCollectionDetailsScreen(collection: Collection, clickedView: View?, shouldExplode: Boolean) {
+        if (currentFragment !is CollectionDetailFragment || currentCollectionId != collection.id) {
+            currentCollectionId = collection.id
+            fun createTransition(delay: Long) = Explode().apply {
+                propagation = null
+                startDelay = delay
+                duration = DetailFragment.TRANSITION_DURATION
+            }
+            currentFragment?.run {
+                if (shouldExplode) {
+                    exitTransition = createTransition(0)
+                    reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
+                } else {
+                    exitTransition = null
+                    reenterTransition = null
+                }
+            }
+            supportFragmentManager.beginTransaction()
+                .setAllowOptimization(true)
+                .replace(R.id.fragment_container, CollectionDetailFragment.newInstance(collection))
+                .apply {
+                    if (clickedView == null) {
+                        setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                    } else {
+                        addSharedElement(clickedView, clickedView.transitionName)
+                    }
+                }
+                .addToBackStack(null)
+                .commit()
+        }
+    }
+
     private fun openHistoryScreen() {
         if (currentFragment !is HistoryFragment) {
             supportFragmentManager.handleReplace { HistoryFragment() }
@@ -608,6 +648,9 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         currentFragment?.run {
             if (this !is PlaylistFragment) {
                 currentPlaylistId = ""
+            }
+            if (this !is CollectionDetailFragment) {
+                currentCollectionId = ""
             }
             if (shouldExplode) {
                 exitTransition = createTransition(0)
