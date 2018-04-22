@@ -5,6 +5,7 @@ import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
+import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.withArguments
 
@@ -22,11 +23,17 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
         CollectionDetailViewModel(
             mainActivity,
             (arguments?.collection as? Collection) ?: throw IllegalStateException("No Collection specified.")
-        )
+        ) { mainActivity.updateToolbarButtons(listOf(shuffleButton)) }
     }
+    private val shuffleButton: ToolbarButton by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs() } }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_collections)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.restoreToolbarButtons()
     }
 }

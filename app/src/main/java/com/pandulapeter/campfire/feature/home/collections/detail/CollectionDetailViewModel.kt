@@ -6,25 +6,37 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
 
-class CollectionDetailViewModel(context: Context, private val collection: Collection) : SongListViewModel(context) {
+class CollectionDetailViewModel(
+    context: Context,
+    private val collection: Collection,
+    private val onDataLoaded: () -> Unit
+) : SongListViewModel(context) {
+
+    override fun onSongRepositoryDataUpdated(data: List<Song>) {
+        super.onSongRepositoryDataUpdated(data)
+        if (data.isNotEmpty()) {
+            onDataLoaded()
+        }
+    }
 
     override fun onActionButtonClicked() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun Sequence<Song>.createViewModels(): List<SongListItemViewModel> {
-        val list = (collection.songs ?: listOf())
-            .mapNotNull { songId -> find { it.id == songId } }
-            .toList()
-        return list.map {
+    override fun Sequence<Song>.createViewModels() = (collection.songs ?: listOf())
+        .mapNotNull { songId -> find { it.id == songId } }
+        .map {
             SongListItemViewModel.SongViewModel(
                 context = context,
                 songDetailRepository = songDetailRepository,
                 playlistRepository = playlistRepository,
-                song = it,
-                shouldShowPlaylistButton = false,
-                shouldShowDragHandle = false
+                song = it
             )
+        }
+
+    fun restoreToolbarButtons() {
+        if (adapter.items.isNotEmpty()) {
+            onDataLoaded()
         }
     }
 }
