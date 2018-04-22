@@ -35,6 +35,7 @@ class CollectionsViewModel(
     val buttonText = ObservableInt(R.string.try_again)
     val buttonIcon = ObservableInt()
     val adapter = CollectionListAdapter()
+
     var sortingMode = SortingMode.fromIntValue(preferenceDatabase.collectionsSortingMode)
         set(value) {
             if (field != value) {
@@ -71,6 +72,15 @@ class CollectionsViewModel(
 
     init {
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_COLLECTIONS
+        adapter.saveActionClickListener = { position ->
+            adapter.items[position].let {
+                if (it is CollectionListItemViewModel.CollectionViewModel) {
+                    collectionRepository.toggleSavedState(it.collection.id)
+                    adapter.notifyItemChanged(position, CollectionListAdapter.Payload.SavedStateChanged(it.collection.isSaved ?: false))
+                    updateAdapterItems()
+                }
+            }
+        }
     }
 
     override fun subscribe() = collectionRepository.subscribe(this)
@@ -101,7 +111,6 @@ class CollectionsViewModel(
         }
     }
 
-
     private fun onListUpdated(items: List<CollectionListItemViewModel>) {
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
         if (collections.toList().isNotEmpty()) {
@@ -126,7 +135,7 @@ class CollectionsViewModel(
         .filterByLanguage()
         .sort()
         .map { CollectionListItemViewModel.CollectionViewModel(it) }
-        .toMutableList<CollectionListItemViewModel>()
+        .toList<CollectionListItemViewModel>()
 
     fun restoreToolbarButtons() {
         if (languages.isNotEmpty()) {
@@ -150,7 +159,7 @@ class CollectionsViewModel(
 
     private fun Sequence<Collection>.filterSaved() = if (shouldShowSavedOnly) filter { it.isSaved ?: false } else this
 
-    private fun Sequence<Collection>.filterExplicit() = if (shouldShowSavedOnly) filter { it.isExplicit ?: false } else this
+    private fun Sequence<Collection>.filterExplicit() = if (shouldShowExplicit) filter { it.isExplicit ?: false } else this
 
     private fun Sequence<Collection>.filterByLanguage() = filter {
         var shouldFilter = false

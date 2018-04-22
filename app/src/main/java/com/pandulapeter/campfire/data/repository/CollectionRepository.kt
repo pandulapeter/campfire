@@ -91,12 +91,19 @@ class CollectionRepository(
             })
     }
 
-    fun onCollectionOpened(songId: String) {
-        data.find { it.id == songId }?.let {
+    fun onCollectionOpened(collectionId: String) {
+        data.find { it.id == collectionId }?.let {
             if (it.isNew) {
                 it.isNew = false
                 notifyDataChanged()
             }
+        }
+    }
+
+    fun toggleSavedState(collectionId: String) {
+        data.find { it.id == collectionId }?.let {
+            it.isSaved = !(it.isSaved ?: false)
+            async(CommonPool) { database.collectionDao().insert(it) }
         }
     }
 

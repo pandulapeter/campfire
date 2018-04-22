@@ -18,6 +18,9 @@ interface CollectionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAll(collections: List<Collection>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insert(collection: Collection)
+
     @Query("DELETE FROM ${Collection.TABLE_NAME}")
     fun deleteAll()
 }

@@ -19,7 +19,7 @@ data class Collection(
     @ColumnInfo(name = POPULARITY) @SerializedName(POPULARITY) val popularity: Int? = 0,
     @ColumnInfo(name = DATE) @SerializedName(DATE) val date: Long? = 0,
     @ColumnInfo(name = IS_EXPLICIT) @SerializedName(IS_EXPLICIT) val isExplicit: Boolean? = false,
-    @ColumnInfo(name = IS_SAVED) @SerializedName(IS_SAVED) val isSaved: Boolean? = false
+    @ColumnInfo(name = IS_SAVED) @SerializedName(IS_SAVED) var isSaved: Boolean? = false
 ) {
 
 
