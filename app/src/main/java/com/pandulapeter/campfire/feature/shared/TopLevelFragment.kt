@@ -8,6 +8,7 @@ import android.graphics.Rect
 import android.os.Bundle
 import android.support.annotation.*
 import android.support.v7.widget.AppCompatTextView
+import android.support.v7.widget.RecyclerView
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.LineBackgroundSpan
@@ -26,6 +27,7 @@ import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.obtainColor
 import kotlin.math.ceil
+
 
 abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes layoutResourceId: Int) : CampfireFragment<B, VM>(layoutResourceId) {
 
@@ -99,6 +101,8 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
             }
         }
     }
+
+    protected fun RecyclerView.canScroll() = computeVerticalScrollRange() > height
 
     protected fun consumeAndUpdateBoolean(menuItem: MenuItem, setValue: (Boolean) -> Unit, getValue: () -> Boolean) = consume {
         setValue(!getValue())

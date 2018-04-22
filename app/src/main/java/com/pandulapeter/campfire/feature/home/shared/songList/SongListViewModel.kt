@@ -30,6 +30,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     protected val songDetailRepository by inject<SongDetailRepository>()
     protected val preferenceDatabase by inject<PreferenceDatabase>()
     protected val playlistRepository by inject<PlaylistRepository>()
+    val shouldUpdateScrollState = ObservableBoolean()
     private var coroutine: CoroutineContext? = null
     protected var librarySongs = sequenceOf<Song>()
     val adapter = SongListAdapter()
@@ -177,7 +178,10 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     protected abstract fun Sequence<Song>.createViewModels(): List<SongListItemViewModel>
 
     @CallSuper
-    protected open fun onListUpdated(items: List<SongListItemViewModel>) = state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
+    protected open fun onListUpdated(items: List<SongListItemViewModel>) {
+        state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
+        shouldUpdateScrollState.set(true)
+    }
 
     protected fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
         if (canUpdateUI() && playlistRepository.isCacheLoaded() && songRepository.isCacheLoaded() && songDetailRepository.isCacheLoaded()) {

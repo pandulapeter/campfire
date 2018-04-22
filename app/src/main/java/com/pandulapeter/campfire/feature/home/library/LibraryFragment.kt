@@ -25,7 +25,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         private const val COMPOUND_BUTTON_LONG_TRANSITION_DELAY = 300L
     }
 
-    override val canScrollToolbar get() = !viewModel.toolbarTextInputView.isTextInputVisible
+    override val canScrollToolbar get() = !viewModel.toolbarTextInputView.isTextInputVisible && binding.recyclerView.canScroll()
     override val viewModel: LibraryViewModel by lazy {
         LibraryViewModel(
             context = mainActivity,

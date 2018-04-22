@@ -41,9 +41,10 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                     mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { mainActivity.openSecondaryNavigationDrawer() }
                 ))
             },
-            openSecondaryNavigationDrawer = { mainActivity.openSecondaryNavigationDrawer() })
+            openSecondaryNavigationDrawer = { mainActivity.openSecondaryNavigationDrawer() },
+            onUpdateScrollState = { binding.recyclerView.post { updateScrollState() } })
     }
-    override val canScrollToolbar get() = viewModel.adapter.items.isNotEmpty()
+    override val canScrollToolbar get() = binding.recyclerView.canScroll()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -53,7 +54,6 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             viewModel.buttonIcon.set(it.buttonIcon)
         }
         defaultToolbar.updateToolbarTitle(R.string.home_collections)
-        viewModel.state.onPropertyChanged { updateScrollState() }
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
             showSnackbar(
                 message = R.string.collections_update_error,

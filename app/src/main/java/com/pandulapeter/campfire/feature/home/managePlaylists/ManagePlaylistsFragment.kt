@@ -24,7 +24,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
     }
 
     override val viewModel = ManagePlaylistsViewModel()
-    override val canScrollToolbar get() = viewModel.playlistCount.get() < 3
+    override val canScrollToolbar = false
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
     private val deleteAllButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
@@ -53,7 +53,6 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         viewModel.state.onPropertyChanged(this) { updateToolbarTitle(viewModel.playlistCount.get()) }
         viewModel.playlistCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
-            updateScrollState()
             showHintIfNeeded()
             if (it < Playlist.MAXIMUM_PLAYLIST_COUNT) {
                 mainActivity.enableFloatingActionButton()
