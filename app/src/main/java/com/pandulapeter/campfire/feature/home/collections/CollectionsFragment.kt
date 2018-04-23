@@ -2,10 +2,10 @@ package com.pandulapeter.campfire.feature.home.collections
 
 import android.os.Bundle
 import android.support.annotation.IdRes
+import android.support.v4.app.SharedElementCallback
 import android.support.v7.widget.LinearLayoutManager
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
+import android.support.v7.widget.RecyclerView
+import android.view.*
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
@@ -46,7 +46,25 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
     }
     override val canScrollToolbar get() = binding.recyclerView.canScroll()
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setExitSharedElementCallback(object : SharedElementCallback() {
+            override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
+                val index = viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == mainActivity.lastCollectionId }
+                if (index != RecyclerView.NO_POSITION) {
+                    binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
+                        val view = it.itemView
+                        view.transitionName = getString(R.string.campfire)
+                        sharedElements[names[0]] = view
+                    }
+                }
+                //mainActivity.lastCollectionId = ""
+            }
+        })
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
         savedInstanceState?.let {
             viewModel.placeholderText.set(it.placeholderText)
@@ -80,6 +98,33 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         binding.recyclerView.run {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(context)
+        }
+        binding.recyclerView.addOnLayoutChangeListener(
+            object : View.OnLayoutChangeListener {
+                override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
+                    binding.recyclerView.removeOnLayoutChangeListener(this)
+                    if (reenterTransition != null) {
+                        val index =
+                            viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == mainActivity.lastCollectionId }
+                        if (index != RecyclerView.NO_POSITION) {
+                            val linearLayoutManager = binding.recyclerView.layoutManager as LinearLayoutManager
+                            val viewAtPosition = linearLayoutManager.findViewByPosition(index)
+                            if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
+//TODO                                linearLayoutManager.isScrollEnabled = true
+                                binding.recyclerView.run { post { scrollToPosition(index) } }
+                            }
+                        }
+                    }
+                }
+            })
+        (view.parent as? ViewGroup)?.run {
+            viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+                override fun onPreDraw(): Boolean {
+                    viewTreeObserver?.removeOnPreDrawListener(this)
+                    post { startPostponedEnterTransition() }
+                    return true
+                }
+            })
         }
     }
 

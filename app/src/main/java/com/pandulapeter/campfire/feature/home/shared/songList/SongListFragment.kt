@@ -38,7 +38,6 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                         sharedElements[names[0]] = it.itemView
                     }
                 }
-                mainActivity.lastSongId = ""
             }
         })
     }
@@ -82,22 +81,6 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 }
             }
         }
-        binding.recyclerView.addOnLayoutChangeListener(
-            object : OnLayoutChangeListener {
-                override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
-                    binding.recyclerView.removeOnLayoutChangeListener(this)
-                    if (reenterTransition != null) {
-                        val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == mainActivity.lastSongId }
-                        if (index != RecyclerView.NO_POSITION) {
-                            val viewAtPosition = linearLayoutManager.findViewByPosition(index)
-                            if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
-                                linearLayoutManager.isScrollEnabled = true
-                                binding.recyclerView.run { post { scrollToPosition(index) } }
-                            }
-                        }
-                    }
-                }
-            })
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
             showSnackbar(
                 message = R.string.library_update_error,
@@ -138,6 +121,22 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 }
             })
         }
+        binding.recyclerView.addOnLayoutChangeListener(
+            object : OnLayoutChangeListener {
+                override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
+                    binding.recyclerView.removeOnLayoutChangeListener(this)
+                    if (reenterTransition != null) {
+                        val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == mainActivity.lastSongId }
+                        if (index != RecyclerView.NO_POSITION) {
+                            val viewAtPosition = linearLayoutManager.findViewByPosition(index)
+                            if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
+                                linearLayoutManager.isScrollEnabled = true
+                                binding.recyclerView.run { post { scrollToPosition(index) } }
+                            }
+                        }
+                    }
+                }
+            })
         (view.parent as? ViewGroup)?.run {
             viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {

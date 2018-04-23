@@ -87,6 +87,8 @@
                             android:layout_height="0dp"
                             android:animateLayoutChanges="true"
                             android:background="@color/primary"
+                            android:clipChildren="false"
+                            android:clipToPadding="false"
                             android:gravity="center_vertical|end"
                             android:orientation="horizontal"
                             android:paddingEnd="@dimen/toolbar_action_button_margin_fix"

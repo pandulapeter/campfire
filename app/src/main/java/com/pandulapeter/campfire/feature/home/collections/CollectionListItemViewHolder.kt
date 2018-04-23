@@ -29,7 +29,7 @@ sealed class CollectionListItemViewHolder<out B : ViewDataBinding, in VM : Colle
         fun setItemClickListener(itemClickListener: (position: Int, clickedView: View) -> Unit) {
             binding.root.setOnClickListener {
                 if (adapterPosition != RecyclerView.NO_POSITION) {
-                    itemClickListener(adapterPosition, it)
+                    itemClickListener(adapterPosition, binding.root)
                 }
             }
         }

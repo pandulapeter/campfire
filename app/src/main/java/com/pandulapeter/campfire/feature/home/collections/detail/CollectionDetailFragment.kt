@@ -2,10 +2,7 @@ package com.pandulapeter.campfire.feature.home.collections.detail
 
 import android.os.Bundle
 import android.support.v4.app.SharedElementCallback
-import android.transition.ChangeBounds
-import android.transition.ChangeImageTransform
-import android.transition.ChangeTransform
-import android.transition.TransitionSet
+import android.transition.*
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Collection
@@ -50,6 +47,7 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
         fun createTransition(delay: Long) = TransitionSet()
             .addTransition(FadeInTransition())
             .addTransition(ChangeBounds())
+            .addTransition(ChangeClipBounds())
             .addTransition(ChangeTransform())
             .addTransition(ChangeImageTransform())
             .apply {

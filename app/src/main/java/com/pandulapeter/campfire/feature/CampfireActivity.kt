@@ -86,6 +86,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private var Bundle.isAppBarExpanded by BundleArgumentDelegate.Boolean("isAppBarExpanded")
     private var Bundle.toolbarContainerScrollFlags by BundleArgumentDelegate.Boolean("shouldAllowAppBarScrolling")
     private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
+    private var Bundle.lastColelctionId by BundleArgumentDelegate.String("lastCollectionId")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
     private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? TopLevelFragment<*, *>?
     private val drawableMenuToBack by lazy { animatedDrawable(R.drawable.avd_menu_to_back_24dp) }
@@ -104,6 +105,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private var startTime = 0L
     private val isBackStackEmpty get() = supportFragmentManager.backStackEntryCount == 0
     var lastSongId: String = ""
+    var lastCollectionId: String = ""
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
     val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
@@ -263,6 +265,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             currentPlaylistId = savedInstanceState.currentPlaylistId
             currentCollectionId = savedInstanceState.currentCollectionId
             lastSongId = savedInstanceState.lastSongId
+            lastCollectionId = savedInstanceState.lastColelctionId
             shouldAllowAppBarScrolling = savedInstanceState.toolbarContainerScrollFlags
             if (currentScreenId == R.id.options) {
                 forceExpandAppBar = savedInstanceState.isAppBarExpanded
@@ -344,6 +347,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         outState?.currentPlaylistId = playlistIdMap[currentScreenId] ?: ""
         outState?.currentCollectionId = currentCollectionId
         outState?.lastSongId = lastSongId
+        outState?.lastColelctionId = lastCollectionId
     }
 
     override fun onPositiveButtonSelected(id: Int) {
@@ -563,6 +567,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     fun openCollectionDetailsScreen(collection: Collection, clickedView: View?, shouldExplode: Boolean) {
+        lastCollectionId = collection.id
         if (currentFragment !is CollectionDetailFragment || currentCollectionId != collection.id) {
             currentCollectionId = collection.id
             fun createTransition(delay: Long) = Explode().apply {
@@ -586,6 +591,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                         setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                     } else {
                         setAllowOptimization(true)
+                        clickedView.transitionName = getString(R.string.campfire)
                         addSharedElement(clickedView, clickedView.transitionName)
                     }
                 }

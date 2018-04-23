@@ -18,7 +18,7 @@ class CollectionDetailViewModel(
     val collectionRepository by inject<CollectionRepository>()
 
     init {
-        this.collection.set(CollectionListItemViewModel.CollectionViewModel(collection, true))
+        this.collection.set(CollectionListItemViewModel.CollectionViewModel(collection))
     }
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
