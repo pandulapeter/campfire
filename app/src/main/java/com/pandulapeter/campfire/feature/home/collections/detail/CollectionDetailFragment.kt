@@ -64,7 +64,20 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.swipeRefreshLayout.isEnabled = false
-        defaultToolbar.updateToolbarTitle(R.string.home_collections)
+        (arguments?.collection as? Collection).let {
+            if (it == null) {
+                defaultToolbar.updateToolbarTitle(R.string.home_collections)
+            } else {
+                val songCount = it.songs?.size ?: 0
+                defaultToolbar.updateToolbarTitle(
+                    it.title, if (songCount == 0) {
+                        getString(R.string.manage_playlists_song_count_empty)
+                    } else {
+                        mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
+                    }
+                )
+            }
+        }
         binding.collectionHeader?.run {
             root.setOnClickListener { mainActivity.onBackPressed() }
             save.setOnClickListener {

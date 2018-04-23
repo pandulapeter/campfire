@@ -120,9 +120,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
-        if (savedInstanceState == null) {
-            mainActivity.updateMainToolbarButton(true)
-        }
         mainActivity.updateFloatingActionButtonDrawable(mainActivity.drawable(R.drawable.ic_play_24dp))
         mainActivity.autoScrollControl.visibleOrGone = false
         if (savedInstanceState != null) {

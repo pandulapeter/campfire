@@ -80,7 +80,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    private var Bundle.isOnDetailScreen by BundleArgumentDelegate.Boolean("isOnDetailScreen")
     private var Bundle.currentScreenId by BundleArgumentDelegate.Int("currentScreenId")
     private var Bundle.currentPlaylistId by BundleArgumentDelegate.String("currentPlaylistId")
     private var Bundle.currentCollectionId by BundleArgumentDelegate.String("currentCollectionId")
@@ -103,6 +102,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     private val playlistIdMap = mutableMapOf<Int, String>()
     private var newPlaylistId = 0
     private var startTime = 0L
+    private val isBackStackEmpty get() = supportFragmentManager.backStackEntryCount == 0
     var lastSongId: String = ""
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
@@ -183,12 +183,11 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         // Initialize the app bar.
         val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
         binding.toolbarMainButton.setOnClickListener {
-            if (currentFragment is DetailFragment) {
-                supportFragmentManager.popBackStack()
-                updateMainToolbarButton(false)
-            } else {
+            if (isBackStackEmpty) {
                 hideKeyboard(currentFocus)
                 binding.drawerLayout.openDrawer(Gravity.START)
+            } else {
+                supportFragmentManager.popBackStack()
             }
         }
         binding.appBarLayout.addOnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) }
@@ -260,7 +259,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         if (savedInstanceState == null) {
             handleNewIntent()
         } else {
-            binding.toolbarMainButton.setImageDrawable(drawable(if (savedInstanceState.isOnDetailScreen) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp))
             currentScreenId = savedInstanceState.currentScreenId
             currentPlaylistId = savedInstanceState.currentPlaylistId
             currentCollectionId = savedInstanceState.currentCollectionId
@@ -270,7 +268,10 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 forceExpandAppBar = savedInstanceState.isAppBarExpanded
             }
         }
-        binding.drawerLayout.setDrawerLockMode(if (currentFragment is DetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
+        binding.drawerLayout.setDrawerLockMode(
+            if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
+            Gravity.START
+        )
 
         // Show the privacy consent dialog if needed.
         if (preferenceDatabase.shouldShowPrivacyPolicy) {
@@ -314,12 +315,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             } else {
                 val fragment = currentFragment
                 if (fragment == null || !fragment.onBackPressed()) {
-                    if (fragment is DetailFragment || fragment is CollectionDetailFragment) {
-                        if (fragment is DetailFragment) {
-                            updateMainToolbarButton(false)
-                        }
-                        super.onBackPressed()
-                    } else {
+                    if (isBackStackEmpty) {
                         if (preferenceDatabase.shouldShowExitConfirmation) {
                             AlertDialogFragment.show(
                                 id = DIALOG_ID_EXIT_CONFIRMATION,
@@ -332,6 +328,8 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                         } else {
                             onPositiveButtonSelected(DIALOG_ID_EXIT_CONFIRMATION)
                         }
+                    } else {
+                        super.onBackPressed()
                     }
                 }
             }
@@ -340,7 +338,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
-        outState?.isOnDetailScreen = currentFragment is DetailFragment
         outState?.currentScreenId = currentScreenId
         outState?.isAppBarExpanded = binding.appBarLayout.height - binding.appBarLayout.bottom == 0
         outState?.toolbarContainerScrollFlags = shouldAllowAppBarScrolling
@@ -418,14 +415,15 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         forceExpandAppBar = true
     }
 
-    fun updateMainToolbarButton(shouldShowBackButton: Boolean) {
-        fun changeDrawable() = binding.toolbarMainButton.setImageDrawable((if (shouldShowBackButton) drawableMenuToBack else drawableBackToMenu).apply { this?.start() })
-        if (shouldShowBackButton) {
-            changeDrawable()
-        } else {
-            binding.toolbarMainButton.postDelayed({ changeDrawable() }, 100)
+    private fun updateMainToolbarButton(shouldShowBackButton: Boolean) {
+        binding.toolbarMainButton.run {
+            setImageDrawable(if (if (tag == null) false else tag != shouldShowBackButton) {
+                (if (shouldShowBackButton) drawableMenuToBack else drawableBackToMenu).apply { this?.start() }
+            } else {
+                drawable(if (shouldShowBackButton) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp)
+            })
+            tag = shouldShowBackButton
         }
-        binding.drawerLayout.setDrawerLockMode(if (shouldShowBackButton) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
     }
 
     fun updateToolbarTitleView(toolbar: View, width: Int = 0) {
@@ -506,6 +504,10 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         transitionMode = false
         binding.toolbarButtonContainer.removeAllViews()
         expandAppBar()
+        updateMainToolbarButton(!isBackStackEmpty)
+
+        // Reset the primary navigation drawer.
+        binding.drawerLayout.setDrawerLockMode(if (currentFragment is DetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
 
         // Reset the secondary navigation drawer.
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.END)
@@ -521,7 +523,6 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 return
             } else {
                 supportFragmentManager.popBackStackImmediate()
-                updateMainToolbarButton(false)
             }
         }
         when (intent.screenToOpen) {
@@ -551,7 +552,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         }
     }
 
-    fun openCollectionsScreen() {
+    private fun openCollectionsScreen() {
         if (currentFragment !is CollectionsFragment) {
             supportFragmentManager.handleReplace { CollectionsFragment() }
             currentScreenId = R.id.collections
