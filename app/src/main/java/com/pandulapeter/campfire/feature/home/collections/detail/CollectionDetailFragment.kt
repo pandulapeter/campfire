@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.feature.home.collections.CollectionListItemView
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.animatedDrawable
 import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject
 
@@ -33,9 +34,19 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
         CollectionDetailViewModel(
             mainActivity,
             (arguments?.collection as? Collection) ?: throw IllegalStateException("No Collection specified.")
-        ) { mainActivity.updateToolbarButtons(listOf(shuffleButton)) }
+        ) { mainActivity.updateToolbarButtons(listOf(playlistButton, shuffleButton)) }
     }
     private val shuffleButton: ToolbarButton by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs() } }
+    private val drawableSavedToNotSaved by lazy { mainActivity.animatedDrawable(R.drawable.avd_saved_to_not_saved_24dp) }
+    private val drawableNotSavedToSaved by lazy { mainActivity.animatedDrawable(R.drawable.avd_not_saved_to_saved_24dp) }
+    private val playlistButton: ToolbarButton by lazy {
+        mainActivity.toolbarContext.createToolbarButton(if (viewModel.collection.get()?.collection?.isSaved == true) R.drawable.ic_saved_24dp else R.drawable.ic_not_saved_24dp) {
+            viewModel.collection.get()?.collection?.let {
+                viewModel.collectionRepository.toggleSavedState(it.id)
+                playlistButton.setImageDrawable((if (it.isSaved == true) drawableNotSavedToSaved else drawableSavedToNotSaved).apply { this?.start() })
+            }
+        }
+    }
     private val collectionRepository by inject<CollectionRepository>()
 
     override fun onCreate(savedInstanceState: Bundle?) {

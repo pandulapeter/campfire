@@ -448,8 +448,9 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     fun updateToolbarButtons(buttons: List<View>) = binding.toolbarButtonContainer.run {
+        val size = dimension(R.dimen.toolbar_button_size)
         if (childCount == 0) {
-            buttons.forEach { addView(it, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
+            buttons.forEach { addView(it, size, size) }
         }
     }
 
@@ -507,7 +508,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
         updateMainToolbarButton(!isBackStackEmpty)
 
         // Reset the primary navigation drawer.
-        binding.drawerLayout.setDrawerLockMode(if (currentFragment is DetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.START)
+        binding.drawerLayout.setDrawerLockMode(if (isBackStackEmpty) DrawerLayout.LOCK_MODE_UNLOCKED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.START)
 
         // Reset the secondary navigation drawer.
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.END)

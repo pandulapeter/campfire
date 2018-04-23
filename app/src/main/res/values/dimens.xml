@@ -4,6 +4,7 @@
     <!-- General -->
     <dimen name="first_keyline">16dp</dimen>
     <dimen name="second_keyline">72dp</dimen>
+    <dimen name="small_content_padding">4dp</dimen>
     <dimen name="content_padding">8dp</dimen>
     <dimen name="large_content_padding">16dp</dimen>
     <dimen name="touch_target">48dp</dimen>
@@ -12,6 +13,7 @@
     <dimen name="toolbar_elevation">4dp</dimen>
     <dimen name="list_fab_content_bottom_margin">96dp</dimen>
     <dimen name="list_bottom_margin">56dp</dimen>
+    <dimen name="toolbar_button_size">36dp</dimen>
     <dimen name="border">2dp</dimen>
     <dimen name="nothing">0dp</dimen>
     <dimen name="card_corner">@dimen/nothing</dimen>

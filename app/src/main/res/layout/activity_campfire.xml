@@ -89,8 +89,8 @@
                             android:background="@color/primary"
                             android:gravity="center_vertical|end"
                             android:orientation="horizontal"
-                            android:paddingEnd="0dp"
-                            android:paddingStart="@dimen/content_padding"
+                            android:paddingEnd="@dimen/toolbar_action_button_margin_fix"
+                            android:paddingStart="@dimen/small_content_padding"
                             app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
