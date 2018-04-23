@@ -9,16 +9,13 @@ import android.transition.TransitionSet
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Collection
-import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.detail.FadeInTransition
-import com.pandulapeter.campfire.feature.home.collections.CollectionListItemViewModel
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.animatedDrawable
 import com.pandulapeter.campfire.util.withArguments
-import org.koin.android.ext.android.inject
 
 class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
 
@@ -47,7 +44,6 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
             }
         }
     }
-    private val collectionRepository by inject<CollectionRepository>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,9 +61,7 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
         sharedElementReturnTransition = createTransition(0)
         setEnterSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
-                binding.collectionHeader?.root?.let {
-                    sharedElements[names[0]] = it
-                }
+                sharedElements[names[0]] = binding.collection
             }
         })
     }
@@ -87,15 +81,6 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
                         mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
                     }
                 )
-            }
-        }
-        binding.collectionHeader?.run {
-            root.setOnClickListener { mainActivity.onBackPressed() }
-            save.setOnClickListener {
-                viewModel?.collection?.let {
-                    collectionRepository.toggleSavedState(it.id)
-                    viewModel = CollectionListItemViewModel.CollectionViewModel(it, true)
-                }
             }
         }
     }

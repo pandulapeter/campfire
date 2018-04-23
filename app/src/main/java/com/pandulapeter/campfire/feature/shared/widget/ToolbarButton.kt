@@ -44,7 +44,7 @@ class ToolbarButton @JvmOverloads constructor(context: Context, attrs: Attribute
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        layoutParams = (layoutParams as ViewGroup.MarginLayoutParams).apply { marginStart = context.dimension(R.dimen.small_content_padding) }
+        layoutParams = (layoutParams as ViewGroup.MarginLayoutParams).apply { if (marginStart == 0) marginStart = context.dimension(R.dimen.small_content_padding) }
         (parent as View).let { parent ->
             val extraTouchArea = context.dimension(R.dimen.toolbar_action_button_extra_touch_area)
             val bounds = Rect()

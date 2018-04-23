@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -27,10 +28,55 @@
             android:clipChildren="false"
             android:orientation="vertical">
 
-            <include
-                android:id="@+id/collection_header"
-                layout="@layout/item_collection"
-                app:viewModel="@{viewModel.collection}" />
+            <android.support.v7.widget.CardView
+                android:id="@+id/collection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/border"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:transitionGroup="true"
+                android:transitionName="@{viewModel.collection.collection.id}"
+                app:cardCornerRadius="@dimen/card_corner"
+                app:contentPadding="@dimen/content_padding"
+                app:visibility="@{viewModel.collection!=null}">
+
+                <android.support.constraint.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:paddingEnd="@dimen/nothing"
+                    android:paddingStart="@{viewModel.collection.expanded ? @dimen/content_padding : @dimen/nothing}">
+
+                    <ImageView
+                        android:id="@+id/image"
+                        android:layout_width="@dimen/collections_image_small"
+                        android:layout_height="@dimen/collections_image_small"
+                        android:contentDescription="@{viewModel.collection.collection.title}"
+                        android:scaleType="centerCrop"
+                        android:src="@{viewModel.collection.collection.imageUrl}"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:src="@tools:sample/avatars" />
+
+                    <TextView
+                        android:id="@id/description"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/content_padding"
+                        android:layout_marginStart="@dimen/content_padding"
+                        android:fontFamily="sans-serif"
+                        android:text="@{viewModel.collection.collection.description}"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/image"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:text="Collection description" />
+
+                </android.support.constraint.ConstraintLayout>
+
+            </android.support.v7.widget.CardView>
 
             <android.support.v4.widget.SwipeRefreshLayout
                 android:id="@+id/swipe_refresh_layout"
@@ -42,10 +88,10 @@
                     android:id="@+id/recycler_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:paddingStart="@dimen/content_padding"
-                    android:paddingEnd="0dp"
                     android:clipToPadding="false"
                     android:paddingBottom="@dimen/list_bottom_margin"
+                    android:paddingEnd="0dp"
+                    android:paddingStart="@dimen/content_padding"
                     android:paddingTop="@dimen/content_padding"
                     app:adapter="@{viewModel.adapter}" />
 

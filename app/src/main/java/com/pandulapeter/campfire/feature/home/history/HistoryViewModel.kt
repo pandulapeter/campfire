@@ -50,7 +50,7 @@ class HistoryViewModel(context: Context, private val openLibrary: () -> Unit) : 
         .apply {
             val headerIndices = mutableListOf<Int>()
             val songsOnly = filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song }
-            songsOnly.forEachIndexed { index, song ->
+            songsOnly.forEachIndexed { index, _ ->
                 if (index == 0 || getHeaderTitle(index, songsOnly) != getHeaderTitle(index - 1, songsOnly)) {
                     headerIndices.add(index)
                 }
