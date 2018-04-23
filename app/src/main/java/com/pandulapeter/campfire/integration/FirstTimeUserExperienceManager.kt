@@ -49,5 +49,6 @@ class FirstTimeUserExperienceManager(private val preferenceDatabase: PreferenceD
         managePlaylistsSwipeCompleted = false
         managePlaylistsDragCompleted = false
         manageDownloadsCompleted = false
+        playlistPagerSwipeCompleted = false
     }
 }
