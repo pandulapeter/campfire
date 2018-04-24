@@ -30,7 +30,7 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
                 R.string.cancel
             )
         }
-        viewModel.shouldShareUsageData.onPropertyChanged(this) { showSnackbar(R.string.options_preferences_share_usage_data_restart_hint) }
+        viewModel.shouldShareUsageData.onPropertyChanged(this) { mainActivity.restartProcess() }
         viewModel.shouldShowHintsResetSnackbar.onEventTriggered(this) { showSnackbar(R.string.options_preferences_reset_hints_message) }
     }
 

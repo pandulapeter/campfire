@@ -125,7 +125,6 @@
     <string name="options_preferences_share_usage_data">Share usage data</string>
     <string name="options_preferences_share_usage_data_enabled">Sending analytics data and crash reports anonymously to the developer</string>
     <string name="options_preferences_share_usage_data_disabled">Analytics data and crash reports are not being sent to the developer</string>
-    <string name="options_preferences_share_usage_data_restart_hint">Please restart the application for all changes to take effect</string>
 
     <!-- Options screen / Changelog -->
     <string name="options_changelog_0_0_4_version_name">v0.0.4</string>

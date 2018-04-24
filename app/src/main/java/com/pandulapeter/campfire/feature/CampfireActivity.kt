@@ -27,6 +27,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
+import com.jakewharton.processphoenix.ProcessPhoenix
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
@@ -65,19 +66,13 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
         private var Intent.screenToOpen by IntentExtraDelegate.String("screenToOpen")
 
-        fun getLibraryIntent(context: Context) = Intent(context, CampfireActivity::class.java).apply {
-            screenToOpen = SCREEN_LIBRARY
-        }
+        private fun getStartIntent(context: Context) = Intent(context, CampfireActivity::class.java)
 
+        fun getLibraryIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_LIBRARY }
 
-        fun getCollectionsIntent(context: Context) = Intent(context, CampfireActivity::class.java).apply {
-            screenToOpen = SCREEN_COLLECTIONS
-        }
+        fun getCollectionsIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_COLLECTIONS }
 
-
-        fun getPlaylistIntent(context: Context, playlistId: String) = Intent(context, CampfireActivity::class.java).apply {
-            screenToOpen = playlistId
-        }
+        fun getPlaylistIntent(context: Context, playlistId: String) = getStartIntent(context).apply { screenToOpen = playlistId }
     }
 
     private var Bundle.currentScreenId by BundleArgumentDelegate.Int("currentScreenId")
@@ -356,7 +351,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             DIALOG_ID_PRIVACY_POLICY -> {
                 preferenceDatabase.shouldShowPrivacyPolicy = false
                 preferenceDatabase.shouldShareUsageData = true
-                currentFragment?.showSnackbar(R.string.options_preferences_share_usage_data_restart_hint)
+                restartProcess()
             }
         }
     }
@@ -681,6 +676,10 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
             }
             .addToBackStack(null)
             .commit()
+    }
+
+    fun restartProcess() {
+        binding.rootCoordinatorLayout.postDelayed({ ProcessPhoenix.triggerRebirth(this, getStartIntent(this)) }, 300)
     }
 
     private fun updatePlaylists(playlists: List<Playlist>) {
