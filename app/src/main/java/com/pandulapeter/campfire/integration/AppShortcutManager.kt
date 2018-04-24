@@ -71,7 +71,14 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
         override fun updateAppShortcuts() {
             removeAppShortcuts()
             val shortcuts = mutableListOf<ShortcutInfo>()
-            shortcuts.add(createAppShortcut(LIBRARY_ID, context.getString(R.string.home_library), R.drawable.ic_shortcut_library_48dp, CampfireActivity.getLibraryIntent(context)))
+            shortcuts.add(
+                createAppShortcut(
+                    LIBRARY_ID,
+                    context.getString(R.string.home_library),
+                    R.drawable.ic_shortcut_library_48dp,
+                    CampfireActivity.getLibraryIntent(context)
+                )
+            )
             shortcuts.add(
                 createAppShortcut(
                     COLLECTIONS_ID,

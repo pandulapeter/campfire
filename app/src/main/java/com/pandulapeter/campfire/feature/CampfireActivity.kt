@@ -544,6 +544,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
                 }
             }
             SCREEN_LIBRARY -> openLibraryScreen()
+            SCREEN_COLLECTIONS -> openCollectionsScreen()
             else -> openPlaylistScreen(intent.screenToOpen)
         }
     }
