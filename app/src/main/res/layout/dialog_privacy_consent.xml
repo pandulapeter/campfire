@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--suppress AndroidUnknownAttribute -->
+    <data class=".PrivacyConsentBinding" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingEnd="@dimen/new_playlist_input_padding_end"
+        android:paddingStart="@dimen/new_playlist_input_padding_start"
+        android:paddingTop="@dimen/large_content_padding">
+
+        <CheckBox
+            android:id="@+id/checkbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/options_preferences_share_usage_data" />
+
+    </FrameLayout>
+
+</layout>

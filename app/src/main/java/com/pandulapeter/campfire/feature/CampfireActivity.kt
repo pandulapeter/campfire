@@ -47,12 +47,14 @@ import com.pandulapeter.campfire.feature.home.options.OptionsFragment
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
+import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
+import com.pandulapeter.campfire.feature.shared.dialog.PrivacyConsentDialogFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
-class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsSelectedListener, PlaylistRepository.Subscriber {
+class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSelectedListener, PlaylistRepository.Subscriber {
 
     companion object {
         private const val DIALOG_ID_EXIT_CONFIRMATION = 1
@@ -273,15 +275,7 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
 
         // Show the privacy consent dialog if needed.
         if (preferenceDatabase.shouldShowPrivacyPolicy) {
-            AlertDialogFragment.show(
-                id = DIALOG_ID_PRIVACY_POLICY,
-                fragmentManager = supportFragmentManager,
-                title = R.string.home_privacy_policy_title,
-                message = R.string.home_privacy_policy_message,
-                positiveButton = R.string.home_privacy_policy_positive,
-                negativeButton = R.string.home_privacy_policy_negative,
-                cancelable = false
-            )
+            PrivacyConsentDialogFragment.show(DIALOG_ID_PRIVACY_POLICY, supportFragmentManager)
         }
     }
 
@@ -679,7 +673,10 @@ class CampfireActivity : AppCompatActivity(), AlertDialogFragment.OnDialogItemsS
     }
 
     fun restartProcess() {
-        binding.rootCoordinatorLayout.postDelayed({ ProcessPhoenix.triggerRebirth(this, getStartIntent(this)) }, 300)
+        currentFragment?.showSnackbar(
+            message = R.string.options_preferences_share_usage_data_restart_hint,
+            actionText = R.string.options_preferences_share_usage_data_restart_action,
+            action = { ProcessPhoenix.triggerRebirth(this, getStartIntent(this)) })
     }
 
     private fun updatePlaylists(playlists: List<Playlist>) {

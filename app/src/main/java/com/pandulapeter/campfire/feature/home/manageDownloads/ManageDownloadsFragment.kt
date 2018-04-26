@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCal
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
+import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.dimension
@@ -17,7 +18,7 @@ import com.pandulapeter.campfire.util.visibleOrGone
 import com.pandulapeter.campfire.util.visibleOrInvisible
 import org.koin.android.ext.android.inject
 
-class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), AlertDialogFragment.OnDialogItemsSelectedListener {
+class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), BaseDialogFragment.OnDialogItemSelectedListener {
 
     companion object {
         private const val DIALOG_ID_DELETE_ALL_CONFIRMATION = 4

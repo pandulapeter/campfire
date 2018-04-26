@@ -6,11 +6,12 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsPreferencesBinding
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
+import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 
 class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, PreferencesViewModel>(R.layout.fragment_options_preferences),
-    AlertDialogFragment.OnDialogItemsSelectedListener {
+    BaseDialogFragment.OnDialogItemSelectedListener {
 
     companion object {
         private const val DIALOG_ID_RESET_HINTS_CONFIRMATION = 3

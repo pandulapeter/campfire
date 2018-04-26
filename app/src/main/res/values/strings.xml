@@ -43,9 +43,8 @@
     <string name="home_exit_confirmation_message">Are you sure you want to close the app?</string>
     <string name="home_exit_confirmation_close">Close</string>
     <string name="home_privacy_policy_title">Improve Campfire</string>
-    <string name="home_privacy_policy_message">Thanks for downloading the app!\n\nTo track the popularity of various features as well as to simplify fixing any possible issues, the app would like to send anonymous analytics data and crash reports back to the developer. None of this information will be shared with third parties and you can change this preference at any time.\n\nDo you allow this?</string>
-    <string name="home_privacy_policy_positive">Yes</string>
-    <string name="home_privacy_policy_negative">No</string>
+    <string name="home_privacy_policy_message">Thanks for downloading the app!\n\nTo track the popularity of various features as well as to simplify fixing any possible issues, the app would like to send anonymous analytics data and crash reports back to the developer. None of this information will be shared with third parties and you can change this preference at any time.</string>
+    <string name="home_privacy_policy_positive">Continue</string>
 
     <!-- Library screen -->
     <string name="library_placeholder">No matching songs in the library. Double-check the filters you set up</string>
@@ -125,6 +124,8 @@
     <string name="options_preferences_share_usage_data">Share usage data</string>
     <string name="options_preferences_share_usage_data_enabled">Sending analytics data and crash reports anonymously to the developer</string>
     <string name="options_preferences_share_usage_data_disabled">Analytics data and crash reports are not being sent to the developer</string>
+    <string name="options_preferences_share_usage_data_restart_hint">Please restart the application for all changes to take effect</string>
+    <string name="options_preferences_share_usage_data_restart_action">Restart now</string>
 
     <!-- Options screen / Changelog -->
     <string name="options_changelog_0_0_4_version_name">v0.0.4</string>
