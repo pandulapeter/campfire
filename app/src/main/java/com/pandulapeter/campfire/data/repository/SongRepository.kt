@@ -39,13 +39,15 @@ class SongRepository(
                 data.swap(database.songDao().getAll())
                 updateLanguages()
             }.await()
-            isCacheLoaded = true
             if (System.currentTimeMillis() - preferenceDatabase.lastLibraryUpdateTimestamp > UPDATE_LIMIT) {
                 updateData()
             } else {
                 isLoading = false
             }
-            notifyDataChanged()
+            isCacheLoaded = true
+            if (data.isNotEmpty()) {
+                notifyDataChanged()
+            }
         }
     }
 

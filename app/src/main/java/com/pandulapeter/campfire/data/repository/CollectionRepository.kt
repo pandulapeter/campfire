@@ -39,13 +39,15 @@ class CollectionRepository(
                 data.swap(database.collectionDao().getAll())
                 updateLanguages()
             }.await()
-            isCacheLoaded = true
             if (System.currentTimeMillis() - preferenceDatabase.lastCollectionsUpdateTimestamp > UPDATE_LIMIT) {
                 updateData()
             } else {
                 isLoading = false
             }
-            notifyDataChanged()
+            isCacheLoaded = true
+            if (data.isNotEmpty()) {
+                notifyDataChanged()
+            }
         }
     }
 

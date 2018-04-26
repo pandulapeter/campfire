@@ -100,7 +100,7 @@
 
     <!-- Options screen / Preferences -->
     <string name="options_preferences_preferences">Preferences</string>
-    <string name="options_preferences_changelog">Changelog</string>
+    <string name="options_preferences_changelog">What\'s new</string>
     <string name="options_preferences_about">About</string>
     <string name="options_preferences_chords">Chords</string>
     <string name="options_preferences_should_show_chords">Show chords</string>
