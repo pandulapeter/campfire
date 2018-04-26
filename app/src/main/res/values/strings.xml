@@ -167,13 +167,16 @@
         ]]></Data>
     </string>
     <string name="options_about_description_bottom">"I know that there aren't too many songs in the library - new ones are being added on a semi-regular basis. If you have suggestions on which songs to include next or any other type of feedback, feel free to drop me a line!</string>
+    <string name="options_about_no_easter_egg">No Easter Eggs in this version</string>
     <string name="options_about_links">Links</string>
     <string name="options_about_google_play">Rate on Google Play</string>
     <string name="options_about_github">View on GitHub</string>
     <string name="options_about_share">Share the app</string>
     <string name="options_about_contact">Contact me</string>
     <string name="options_about_error">Looks like no app can handle this request</string>
-    <string name="options_about_no_easter_egg">No Easter Eggs in this version</string>
+    <string name="options_about_legal">Legal</string>
+    <string name="options_about_privacy_policy">Privacy Policy</string>
+    <string name="options_about_licenses">Open-source licenses</string>
 
     <!-- Playlist screen -->
     <plurals name="playlist_song_count">
