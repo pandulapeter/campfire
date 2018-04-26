@@ -7,6 +7,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/content_padding"
         android:paddingEnd="@dimen/new_playlist_input_padding_end"
         android:paddingStart="@dimen/new_playlist_input_padding_start"
         android:paddingTop="@dimen/large_content_padding">
@@ -15,7 +16,9 @@
             android:id="@+id/checkbox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/options_preferences_share_usage_data" />
+            android:paddingEnd="0dp"
+            android:paddingStart="@dimen/content_padding"
+            android:text="@string/home_privacy_policy_checkbox" />
 
     </FrameLayout>
 

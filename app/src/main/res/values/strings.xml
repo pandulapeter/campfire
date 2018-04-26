@@ -44,6 +44,7 @@
     <string name="home_exit_confirmation_close">Close</string>
     <string name="home_privacy_policy_title">Improve Campfire</string>
     <string name="home_privacy_policy_message">Thanks for downloading the app!\n\nTo track the popularity of various features as well as to simplify fixing any possible issues, the app would like to send anonymous analytics data and crash reports back to the developer. None of this information will be shared with third parties and you can change this preference at any time.</string>
+    <string name="home_privacy_policy_checkbox">I\'m fine with the app collecting my anonymous usage statistics and potential crash reports</string>
     <string name="home_privacy_policy_positive">Continue</string>
 
     <!-- Library screen -->
