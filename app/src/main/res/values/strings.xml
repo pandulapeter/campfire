@@ -133,6 +133,7 @@
     <string name="options_changelog_0_0_4_description">
         <Data><![CDATA[
         • Added support for <strong>collections</strong> which are thematic playlists accessible to everyone.<br>
+        • Added option to adjust the <strong>font size</strong>.<br>
         • Added <strong>Shuffle</strong> option for playlists and collections that opens the list of songs in a random order.
         ]]></Data>
     </string>

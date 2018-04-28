@@ -8,26 +8,6 @@
         app:actionLayout="@layout/widget_checkbox" />
 
     <item
-        android:id="@+id/font_size_container"
-        android:title="@string/detail_font_size">
-
-        <menu>
-
-            <item
-                android:id="@+id/font_size_larger"
-                android:icon="@drawable/ic_increment_24dp"
-                android:title="@string/detail_font_size_larger" />
-
-            <item
-                android:id="@+id/font_size_smaller"
-                android:icon="@drawable/ic_decrement_24dp"
-                android:title="@string/detail_font_size_smaller" />
-
-        </menu>
-
-    </item>
-
-    <item
         android:id="@+id/transpose_container"
         android:title="@string/detail_transpose">
 
@@ -48,11 +28,41 @@
     </item>
 
     <item
-        android:id="@+id/play_in_youtube"
-        android:title="@string/detail_play_original" />
+        android:id="@+id/font_size_container"
+        android:title="@string/detail_font_size">
+
+        <menu>
+
+            <item
+                android:id="@+id/font_size_larger"
+                android:icon="@drawable/ic_increment_24dp"
+                android:title="@string/detail_font_size_larger" />
+
+            <item
+                android:id="@+id/font_size_smaller"
+                android:icon="@drawable/ic_decrement_24dp"
+                android:title="@string/detail_font_size_smaller" />
+
+        </menu>
+
+    </item>
 
     <item
-        android:id="@+id/report"
-        android:title="@string/detail_report" />
+        android:id="@+id/song_options_container"
+        android:title="@string/detail_song_options">
+
+        <menu>
+
+            <item
+                android:id="@+id/play_in_youtube"
+                android:title="@string/detail_play_original" />
+
+            <item
+                android:id="@+id/report"
+                android:title="@string/detail_report" />
+
+        </menu>
+
+    </item>
 
 </menu>
