@@ -36,7 +36,8 @@
                 android:paddingEnd="@dimen/first_keyline"
                 android:paddingStart="@dimen/first_keyline"
                 android:paddingTop="@dimen/large_content_padding"
-                android:text="@{viewModel.text}" />
+                android:text="@{viewModel.text}"
+                android:textSize="@{viewModel.textSize}" />
 
         </android.support.v4.widget.NestedScrollView>
 

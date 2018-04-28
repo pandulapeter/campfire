@@ -9,6 +9,12 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 class PreferenceDatabase(context: Context) {
+
+    companion object {
+        const val FONT_SIZE_MAX = 2f
+        const val FONT_SIZE_MIN = 0.8f
+    }
+
     private val preferences = context.applicationContext.getSharedPreferences("preferences", Context.MODE_PRIVATE)
     private val locale by lazy { Locale.getDefault().isO3Country.toUpperCase() }
 
@@ -31,6 +37,7 @@ class PreferenceDatabase(context: Context) {
     // Preferences
     var shouldShowChords by PreferenceFieldDelegate.Boolean("shouldShowChords", true)
     var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("shouldUseGermanNotation", shouldEnableGermanNotationByDefault())
+    var fontSize by PreferenceFieldDelegate.Float("fontSize", 1f)
     var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("shouldUseDarkTheme", true)
     var shouldShowExitConfirmation by PreferenceFieldDelegate.Boolean("shouldShowExitConfirmation", true)
     var shouldShowPrivacyPolicy by PreferenceFieldDelegate.Boolean("shouldShowPrivacyPolicy", true)
@@ -77,6 +84,14 @@ class PreferenceDatabase(context: Context) {
 
             override fun setValue(thisRef: PreferenceDatabase, property: KProperty<*>, value: kotlin.Int) =
                 thisRef.preferences.edit().putInt(key, value).apply()
+        }
+
+        class Float(key: kotlin.String, defaultValue: kotlin.Float = 0f) : PreferenceFieldDelegate<kotlin.Float>(key, defaultValue) {
+
+            override fun getValue(thisRef: PreferenceDatabase, property: KProperty<*>) = thisRef.preferences.getFloat(key, defaultValue)
+
+            override fun setValue(thisRef: PreferenceDatabase, property: KProperty<*>, value: kotlin.Float) =
+                thisRef.preferences.edit().putFloat(key, value).apply()
         }
 
         class Long(key: kotlin.String, defaultValue: kotlin.Long = 0) : PreferenceFieldDelegate<kotlin.Long>(key, defaultValue) {

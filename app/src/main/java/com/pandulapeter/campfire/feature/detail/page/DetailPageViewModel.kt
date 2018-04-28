@@ -1,19 +1,27 @@
 package com.pandulapeter.campfire.feature.detail.page
 
 import android.databinding.ObservableField
+import android.databinding.ObservableFloat
 import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.model.remote.SongDetail
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import org.koin.android.ext.android.inject
 
-class DetailPageViewModel(val song: Song, private val onDataLoaded: () -> Unit) : CampfireViewModel(), SongDetailRepository.Subscriber {
+class DetailPageViewModel(
+    val song: Song,
+    private val initialTextSize: Int,
+    private val onDataLoaded: () -> Unit
+) : CampfireViewModel(), SongDetailRepository.Subscriber {
 
     private val songDetailRepository by inject<SongDetailRepository>()
+    private val preferenceDatabase by inject<PreferenceDatabase>()
     val text = ObservableField("")
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
+    val textSize = ObservableFloat(preferenceDatabase.fontSize * initialTextSize)
 
     override fun subscribe() {
         songDetailRepository.subscribe(this)
@@ -47,4 +55,6 @@ class DetailPageViewModel(val song: Song, private val onDataLoaded: () -> Unit) 
     }
 
     fun loadData() = songDetailRepository.getSongDetail(song)
+
+    fun updateTextSize() = textSize.set(preferenceDatabase.fontSize * initialTextSize)
 }

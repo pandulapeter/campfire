@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject
 
@@ -26,7 +27,13 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
     private val song by lazy { arguments?.song as Song }
     private var isContentVisible = false
     private val detailEventBus by inject<DetailEventBus>()
-    override val viewModel by lazy { DetailPageViewModel(song) { (parentFragment as? DetailFragment)?.onDataLoaded(song.id) } }
+    override val viewModel by lazy {
+        DetailPageViewModel(
+            song = song,
+            initialTextSize = mainActivity.dimension(R.dimen.text_normal),
+            onDataLoaded = { (parentFragment as? DetailFragment)?.onDataLoaded(song.id) }
+        )
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         savedInstanceState?.let { isContentVisible = it.isContentVisible }
@@ -59,4 +66,6 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
             (parentFragment as? DetailFragment)?.onDataLoaded(song.id)
         }
     }
+
+    override fun onTextSizeChanged() = viewModel.updateTextSize()
 }

@@ -71,6 +71,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val removedFromPlaylist by lazy { mainActivity.animatedDrawable(R.drawable.avd_removed_from_playlists_24dp) }
     private val transposeHigher by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_higher) }
     private val transposeLower by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_lower) }
+    private val fontSizeLarger by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.font_size_larger) }
+    private val fontSizeSmaller by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.font_size_smaller) }
     private val playlistButton: ToolbarButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(if (viewModel.isSongInAnyPlaylists()) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp) {
             if (viewModel.areThereMoreThanOnePlaylists()) {
@@ -156,6 +158,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         mainActivity.enableSecondaryNavigationDrawer(R.menu.detail)
         initializeCompoundButton(R.id.should_show_chords) { preferenceDatabase.shouldShowChords }
         updateTransposeControls()
+        updateFontSizeControls()
         viewModel.songId.onPropertyChanged(this) {
             mainActivity.lastSongId = it
             mainActivity.updateToolbarTitleView(inflateToolbarTitle(mainActivity.toolbarContext), toolbarWidth)
@@ -252,8 +255,16 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override fun onNavigationItemSelected(menuItem: MenuItem) = when (menuItem.itemId) {
         R.id.transpose_higher -> consume { showSnackbar(R.string.work_in_progress) }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), 1) }
         R.id.transpose_lower -> consume { showSnackbar(R.string.work_in_progress) }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), -1) }
-        R.id.font_size_larger -> consume { showSnackbar(R.string.work_in_progress) }
-        R.id.font_size_smaller -> consume { showSnackbar(R.string.work_in_progress) }
+        R.id.font_size_larger -> consume {
+            preferenceDatabase.fontSize = Math.min(PreferenceDatabase.FONT_SIZE_MAX, preferenceDatabase.fontSize + 0.2f)
+            updateFontSizeControls()
+            detailEventBus.notifyTextSizeChanged()
+        }
+        R.id.font_size_smaller -> consume {
+            preferenceDatabase.fontSize = Math.max(PreferenceDatabase.FONT_SIZE_MIN, preferenceDatabase.fontSize - 0.2f)
+            updateFontSizeControls()
+            detailEventBus.notifyTextSizeChanged()
+        }
         R.id.should_show_chords -> consumeAndUpdateBoolean(menuItem, {
             preferenceDatabase.shouldShowChords = it
             updateTransposeControls()
@@ -328,6 +339,13 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         preferenceDatabase.shouldShowChords.let {
             transposeHigher.isEnabled = it
             transposeLower.isEnabled = it
+        }
+    }
+
+    private fun updateFontSizeControls() {
+        preferenceDatabase.fontSize.let {
+            fontSizeLarger.isEnabled = it < PreferenceDatabase.FONT_SIZE_MAX
+            fontSizeSmaller.isEnabled = it > PreferenceDatabase.FONT_SIZE_MIN
         }
     }
 
