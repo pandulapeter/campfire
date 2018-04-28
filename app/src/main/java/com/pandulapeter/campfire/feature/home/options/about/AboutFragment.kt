@@ -28,6 +28,7 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel.shouldShowErrorShowSnackbar.onEventTriggered(this) { showSnackbar(R.string.options_about_error) }
+        viewModel.shouldShowWorkInProgressSnackbar.onEventTriggered(this) { showSnackbar(R.string.work_in_progress) }
         //TODO: Easter Egg.
         viewModel.shouldShowNoEasterEggSnackbar.onEventTriggered(this) {
             ObjectAnimator

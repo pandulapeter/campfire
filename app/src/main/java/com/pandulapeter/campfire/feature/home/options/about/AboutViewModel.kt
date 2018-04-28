@@ -18,6 +18,7 @@ class AboutViewModel : CampfireViewModel() {
 
     val shouldShowErrorShowSnackbar = ObservableBoolean()
     val shouldShowNoEasterEggSnackbar = ObservableBoolean()
+    val shouldShowWorkInProgressSnackbar = ObservableBoolean()
 
     fun onLogoClicked() = shouldShowNoEasterEggSnackbar.set(true)
 
@@ -44,11 +45,14 @@ class AboutViewModel : CampfireViewModel() {
         )
     )
 
-    //TODO: Open Chrome custom tab to GitHub markdown file
-    fun onPrivacyPolicyClicked(context: Context) = Unit
+    //TODO: Start in app purchase flow
+    fun onBuyMeABeerClicked() = shouldShowWorkInProgressSnackbar.set(true)
 
     //TODO: Open Chrome custom tab to GitHub markdown file
-    fun onLicensesClicked(context: Context) = Unit
+    fun onPrivacyPolicyClicked(context: Context) = shouldShowWorkInProgressSnackbar.set(true)
+
+    //TODO: Open Chrome custom tab to GitHub markdown file
+    fun onLicensesClicked(context: Context) = shouldShowWorkInProgressSnackbar.set(true)
 
     private fun Context.tryToOpenIntent(intent: Intent) {
         try {

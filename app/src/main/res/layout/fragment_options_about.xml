@@ -109,68 +109,44 @@
                     android:paddingTop="@dimen/content_padding">
 
                     <TextView
-                        style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+                        style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackground"
-                        android:drawablePadding="@dimen/options_about_drawable_padding"
                         android:drawableStart="@drawable/ic_google_play_24dp"
-                        android:gravity="center_vertical"
-                        android:minHeight="@dimen/touch_target"
                         android:onClick="@{() -> viewModel.onGooglePlayClicked(context)}"
-                        android:paddingBottom="@dimen/content_padding"
-                        android:paddingEnd="@dimen/content_padding"
-                        android:paddingStart="@dimen/switch_content_padding"
-                        android:paddingTop="@dimen/content_padding"
                         android:text="@string/options_about_google_play" />
 
                     <TextView
-                        style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+                        style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackground"
-                        android:drawablePadding="@dimen/options_about_drawable_padding"
                         android:drawableStart="@drawable/ic_github_24dp"
-                        android:gravity="center_vertical"
-                        android:minHeight="@dimen/touch_target"
                         android:onClick="@{() -> viewModel.onGitHubClicked(context)}"
-                        android:paddingBottom="@dimen/content_padding"
-                        android:paddingEnd="@dimen/content_padding"
-                        android:paddingStart="@dimen/switch_content_padding"
-                        android:paddingTop="@dimen/content_padding"
                         android:text="@string/options_about_github" />
 
                     <TextView
-                        style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+                        style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackground"
-                        android:drawablePadding="@dimen/options_about_drawable_padding"
                         android:drawableStart="@drawable/ic_share_24dp"
-                        android:gravity="center_vertical"
-                        android:minHeight="@dimen/touch_target"
                         android:onClick="@{() -> viewModel.onShareClicked(context)}"
-                        android:paddingBottom="@dimen/content_padding"
-                        android:paddingEnd="@dimen/content_padding"
-                        android:paddingStart="@dimen/switch_content_padding"
-                        android:paddingTop="@dimen/large_content_padding"
                         android:text="@string/options_about_share" />
 
                     <TextView
-                        style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+                        style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackground"
-                        android:drawablePadding="@dimen/options_about_drawable_padding"
                         android:drawableStart="@drawable/ic_contact_24dp"
-                        android:gravity="center_vertical"
-                        android:minHeight="@dimen/touch_target"
                         android:onClick="@{() -> viewModel.onContactClicked(context)}"
-                        android:paddingBottom="@dimen/content_padding"
-                        android:paddingEnd="@dimen/content_padding"
-                        android:paddingStart="@dimen/switch_content_padding"
-                        android:paddingTop="@dimen/content_padding"
                         android:text="@string/options_about_contact" />
+
+                    <TextView
+                        style="@style/OptionsItem"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawableStart="@drawable/ic_beer_24dp"
+                        android:onClick="@{() -> viewModel.onBuyMeABeerClicked()}"
+                        android:text="@string/options_about_buy_me_a_beer" />
 
                 </LinearLayout>
 
@@ -197,31 +173,17 @@
                     android:paddingTop="@dimen/content_padding">
 
                     <TextView
-                        style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+                        style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackground"
-                        android:gravity="center_vertical"
-                        android:minHeight="@dimen/touch_target"
                         android:onClick="@{() -> viewModel.onPrivacyPolicyClicked(context)}"
-                        android:paddingBottom="@dimen/content_padding"
-                        android:paddingEnd="@dimen/content_padding"
-                        android:paddingStart="@dimen/switch_content_padding"
-                        android:paddingTop="@dimen/content_padding"
                         android:text="@string/options_about_privacy_policy" />
 
                     <TextView
-                        style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+                        style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackground"
-                        android:gravity="center_vertical"
-                        android:minHeight="@dimen/touch_target"
                         android:onClick="@{() -> viewModel.onLicensesClicked(context)}"
-                        android:paddingBottom="@dimen/content_padding"
-                        android:paddingEnd="@dimen/content_padding"
-                        android:paddingStart="@dimen/switch_content_padding"
-                        android:paddingTop="@dimen/content_padding"
                         android:text="@string/options_about_licenses" />
 
                 </LinearLayout>

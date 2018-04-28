@@ -173,6 +173,7 @@
     <string name="options_about_github">View on GitHub</string>
     <string name="options_about_share">Share the app</string>
     <string name="options_about_contact">Contact me</string>
+    <string name="options_about_buy_me_a_beer">Buy me a beer</string>
     <string name="options_about_error">Looks like no app can handle this request</string>
     <string name="options_about_legal">Legal</string>
     <string name="options_about_privacy_policy">Privacy Policy</string>

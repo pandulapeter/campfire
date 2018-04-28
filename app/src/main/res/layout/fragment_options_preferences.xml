@@ -180,17 +180,10 @@
                         tools:text="@string/options_preferences_share_usage_data" />
 
                     <TextView
-                        style="@style/Widget.AppCompat.CompoundButton.CheckBox"
+                        style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackground"
-                        android:gravity="center_vertical"
-                        android:minHeight="@dimen/touch_target"
                         android:onClick="@{() -> viewModel.onResetHintsClicked()}"
-                        android:paddingBottom="@dimen/content_padding"
-                        android:paddingEnd="@dimen/content_padding"
-                        android:paddingStart="@dimen/switch_content_padding"
-                        android:paddingTop="@dimen/content_padding"
                         app:description="@{@string/options_preferences_reset_hints_description}"
                         app:title="@{@string/options_preferences_reset_hints}"
                         tools:text="@string/options_preferences_reset_hints" />
