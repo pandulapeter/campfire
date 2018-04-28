@@ -227,9 +227,6 @@
     <string name="detail_transpose_value">Transpose (%s)</string>
     <string name="detail_transpose_higher">Higher</string>
     <string name="detail_transpose_lower">Lower</string>
-    <string name="detail_font_size">Font size</string>
-    <string name="detail_font_size_larger">Larger</string>
-    <string name="detail_font_size_smaller">Smaller</string>
     <string name="detail_play_original">Play original</string>
     <string name="detail_report">Report a problem</string>
     <string name="detail_report_subject">Campfire: Problem with %1$s - %2$s</string>
