@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.animatedDrawable
+import com.pandulapeter.campfire.util.visibleOrGone
 import com.pandulapeter.campfire.util.withArguments
 
 class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
@@ -28,9 +29,11 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
         CollectionDetailViewModel(
             mainActivity,
             (arguments?.collection as? Collection) ?: throw IllegalStateException("No Collection specified.")
-        ) { mainActivity.updateToolbarButtons(listOf(playlistButton, shuffleButton)) }
+        ) { shuffleButton.visibleOrGone = true }
     }
-    private val shuffleButton: ToolbarButton by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs() } }
+    private val shuffleButton: ToolbarButton by lazy {
+        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs() }.apply { visibleOrGone = false }
+    }
     private val drawableSavedToNotSaved by lazy { mainActivity.animatedDrawable(R.drawable.avd_bookmarked_to_not_bookmarked_24dp) }
     private val drawableNotSavedToSaved by lazy { mainActivity.animatedDrawable(R.drawable.avd_not_bookmarked_to_bookmarked_24dp) }
     private val playlistButton: ToolbarButton by lazy {
@@ -67,6 +70,7 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.swipeRefreshLayout.isEnabled = false
+        mainActivity.updateToolbarButtons(listOf(playlistButton, shuffleButton))
         (arguments?.collection as? Collection).let {
             if (it == null) {
                 defaultToolbar.updateToolbarTitle(R.string.home_collections)

@@ -44,7 +44,7 @@
     <string name="home_exit_confirmation_close">Close</string>
     <string name="home_privacy_policy_title">Improve Campfire</string>
     <string name="home_privacy_policy_message">Thanks for downloading the app!\n\nTo track the popularity of various features as well as to simplify fixing any possible issues, the app would like to send anonymous analytics data and crash reports back to the developer. None of this information will be shared with third parties and you can change this preference at any time.</string>
-    <string name="home_privacy_policy_checkbox">I\'m fine with the app collecting my anonymous usage statistics and potential crash reports</string>
+    <string name="home_privacy_policy_checkbox">I\'m fine with the app anonymously collecting my usage statistics and potential crash reports</string>
     <string name="home_privacy_policy_positive">Continue</string>
 
     <!-- Library screen -->
@@ -67,8 +67,9 @@
     <string name="library_search_in_artists">Artists</string>
 
     <!-- Collections screen -->
-    <string name="collections_update_error">Something went wrong while updating Collections</string>
     <string name="collections_placeholder">No matching collections. Double-check the filters you set up</string>
+    <string name="collections_initializing_error">Something went wrong while trying to load the list of collections</string>
+    <string name="collections_update_error">Something went wrong while updating collections</string>
     <string name="collections_filters">Filters</string>
     <string name="collections_sort_by">Sort by</string>
     <string name="collections_sort_by_title">Title</string>

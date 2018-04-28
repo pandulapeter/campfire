@@ -45,21 +45,21 @@
                     android:interpolator="@android:interpolator/fast_out_slow_in"
                     android:propertyName="scaleX"
                     android:valueFrom="1"
-                    android:valueTo="0.5"
+                    android:valueTo="0.7"
                     android:valueType="floatType" />
                 <objectAnimator
                     android:duration="100"
                     android:interpolator="@android:interpolator/fast_out_slow_in"
                     android:propertyName="scaleY"
                     android:valueFrom="1"
-                    android:valueTo="0.5"
+                    android:valueTo="0.7"
                     android:valueType="floatType" />
                 <objectAnimator
                     android:duration="200"
                     android:interpolator="@android:anim/anticipate_overshoot_interpolator"
                     android:propertyName="scaleX"
                     android:startOffset="100"
-                    android:valueFrom="0.5"
+                    android:valueFrom="0.7"
                     android:valueTo="1"
                     android:valueType="floatType" />
                 <objectAnimator
@@ -67,7 +67,7 @@
                     android:interpolator="@android:anim/anticipate_overshoot_interpolator"
                     android:propertyName="scaleY"
                     android:startOffset="100"
-                    android:valueFrom="0.5"
+                    android:valueFrom="0.7"
                     android:valueTo="1"
                     android:valueType="floatType" />
             </set>

@@ -28,9 +28,7 @@ class CollectionDetailViewModel(
         }
     }
 
-    override fun onActionButtonClicked() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun onActionButtonClicked() = updateData()
 
     override fun Sequence<Song>.createViewModels() = (collection.get()?.collection?.songs ?: listOf())
         .mapNotNull { songId -> find { it.id == songId } }

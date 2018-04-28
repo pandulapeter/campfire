@@ -32,7 +32,7 @@ class CollectionsViewModel(
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
     val isLoading = ObservableBoolean()
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
-    val placeholderText = ObservableInt(R.string.library_initializing_error)
+    val placeholderText = ObservableInt(R.string.collections_initializing_error)
     val buttonText = ObservableInt(R.string.try_again)
     val buttonIcon = ObservableInt()
     val adapter = CollectionListAdapter()
