@@ -38,8 +38,8 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         return binding.root
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onStart() {
+        super.onStart()
         if (shouldDelaySubscribing) {
             isResumingDelayed = true
         } else {
@@ -47,8 +47,8 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         }
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
         isResumingDelayed = false
         snackbar?.dismiss()
         viewModel.unsubscribe()

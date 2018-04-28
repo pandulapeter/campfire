@@ -34,7 +34,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == mainActivity.lastSongId }
                 if (index != RecyclerView.NO_POSITION) {
                     (binding.recyclerView.findViewHolderForAdapterPosition(index)
-                            ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition())).let {
+                            ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
                         sharedElements[names[0]] = it.itemView
                     }
                 }

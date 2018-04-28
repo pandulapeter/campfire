@@ -37,16 +37,16 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
         outState.isContentVisible = isContentVisible
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onStart() {
+        super.onStart()
         detailEventBus.subscribe(this)
         if (isContentVisible) {
             binding.container.alpha = 1f
         }
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
         detailEventBus.unsubscribe(this)
     }
 
