@@ -41,7 +41,7 @@ class CollectionListAdapter : RecyclerView.Adapter<CollectionListItemViewHolder<
             field = newItems
         }
     var itemClickListener: (position: Int, clickedView: View) -> Unit = { _, _ -> }
-    var saveActionClickListener: ((position: Int) -> Unit)? = null
+    var bookmarkActionClickListener: ((position: Int) -> Unit)? = null
 
     init {
         setHasStableIds(true)
@@ -63,7 +63,7 @@ class CollectionListAdapter : RecyclerView.Adapter<CollectionListItemViewHolder<
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = when (viewType) {
         VIEW_TYPE_COLLECTION -> CollectionListItemViewHolder.CollectionViewHolder(parent).apply {
             setItemClickListener(itemClickListener)
-            setSaveActionClickListener(saveActionClickListener)
+            setSaveActionClickListener(bookmarkActionClickListener)
         }
         VIEW_TYPE_HEADER -> CollectionListItemViewHolder.HeaderViewHolder(parent)
         else -> throw IllegalArgumentException("Unsupported item type.")
@@ -78,7 +78,7 @@ class CollectionListAdapter : RecyclerView.Adapter<CollectionListItemViewHolder<
                 (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.run {
                     payloads.forEach { payload ->
                         when (payload) {
-                            is Payload.SavedStateChanged -> collection.isSaved = payload.isSaved
+                            is Payload.BookmarkedStateChanged -> collection.isBookmarked = payload.isBookmarked
                         }
                     }
                     holder.bind(this, payloads.isEmpty())
@@ -93,6 +93,6 @@ class CollectionListAdapter : RecyclerView.Adapter<CollectionListItemViewHolder<
     override fun getItemId(position: Int) = items[position].getItemId()
 
     sealed class Payload {
-        class SavedStateChanged(val isSaved: Boolean) : Payload()
+        class BookmarkedStateChanged(val isBookmarked: Boolean) : Payload()
     }
 }

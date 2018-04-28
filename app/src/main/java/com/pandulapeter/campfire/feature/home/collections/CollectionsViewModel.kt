@@ -73,11 +73,11 @@ class CollectionsViewModel(
 
     init {
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_COLLECTIONS
-        adapter.saveActionClickListener = { position ->
+        adapter.bookmarkActionClickListener = { position ->
             adapter.items[position].let {
                 if (it is CollectionListItemViewModel.CollectionViewModel) {
                     collectionRepository.toggleSavedState(it.collection.id)
-                    adapter.notifyItemChanged(position, CollectionListAdapter.Payload.SavedStateChanged(it.collection.isSaved ?: false))
+                    adapter.notifyItemChanged(position, CollectionListAdapter.Payload.BookmarkedStateChanged(it.collection.isBookmarked ?: false))
                     updateAdapterItems()
                 }
             }
@@ -159,7 +159,7 @@ class CollectionsViewModel(
         }
     }
 
-    private fun Sequence<Collection>.filterSaved() = if (shouldShowSavedOnly) filter { it.isSaved ?: false } else this
+    private fun Sequence<Collection>.filterSaved() = if (shouldShowSavedOnly) filter { it.isBookmarked ?: false } else this
 
     private fun Sequence<Collection>.filterExplicit() = if (!shouldShowExplicit) filter { it.isExplicit != true } else this
 

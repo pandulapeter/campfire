@@ -31,13 +31,13 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
         ) { mainActivity.updateToolbarButtons(listOf(playlistButton, shuffleButton)) }
     }
     private val shuffleButton: ToolbarButton by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs() } }
-    private val drawableSavedToNotSaved by lazy { mainActivity.animatedDrawable(R.drawable.avd_saved_to_not_saved_24dp) }
-    private val drawableNotSavedToSaved by lazy { mainActivity.animatedDrawable(R.drawable.avd_not_saved_to_saved_24dp) }
+    private val drawableSavedToNotSaved by lazy { mainActivity.animatedDrawable(R.drawable.avd_bookmarked_to_not_bookmarked_24dp) }
+    private val drawableNotSavedToSaved by lazy { mainActivity.animatedDrawable(R.drawable.avd_not_bookmarked_to_bookmarked_24dp) }
     private val playlistButton: ToolbarButton by lazy {
-        mainActivity.toolbarContext.createToolbarButton(if (viewModel.collection.get()?.collection?.isSaved == true) R.drawable.ic_saved_24dp else R.drawable.ic_not_saved_24dp) {
+        mainActivity.toolbarContext.createToolbarButton(if (viewModel.collection.get()?.collection?.isBookmarked == true) R.drawable.ic_bookmarked_24dp else R.drawable.ic_not_bookmarked_24dp) {
             viewModel.collection.get()?.collection?.let {
                 viewModel.collectionRepository.toggleSavedState(it.id)
-                playlistButton.setImageDrawable((if (it.isSaved == true) drawableNotSavedToSaved else drawableSavedToNotSaved).apply { this?.start() })
+                playlistButton.setImageDrawable((if (it.isBookmarked == true) drawableNotSavedToSaved else drawableSavedToNotSaved).apply { this?.start() })
             }
         }
     }

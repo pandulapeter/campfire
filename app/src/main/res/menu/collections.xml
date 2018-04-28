@@ -32,8 +32,8 @@
         <menu>
 
             <item
-                android:id="@+id/saved_only"
-                android:title="@string/collections_saved_only"
+                android:id="@+id/bookmarked_only"
+                android:title="@string/collections_bookmarked_only"
                 app:actionLayout="@layout/widget_switch" />
 
             <item

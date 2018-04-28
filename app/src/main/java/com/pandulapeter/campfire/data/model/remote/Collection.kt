@@ -22,7 +22,7 @@ data class Collection(
     @ColumnInfo(name = POPULARITY) @SerializedName(POPULARITY) val popularity: Int? = 0,
     @ColumnInfo(name = DATE) @SerializedName(DATE) val date: Long? = 0,
     @ColumnInfo(name = IS_EXPLICIT) @SerializedName(IS_EXPLICIT) val isExplicit: Boolean? = false,
-    @ColumnInfo(name = IS_SAVED) @SerializedName(IS_SAVED) var isSaved: Boolean? = false
+    @ColumnInfo(name = IS_BOOKMARKED) @SerializedName(IS_BOOKMARKED) var isBookmarked: Boolean? = false
 ) : Parcelable {
 
 
@@ -54,6 +54,6 @@ data class Collection(
         private const val POPULARITY = "popularity"
         private const val DATE = "date"
         private const val IS_EXPLICIT = "isExplicit"
-        private const val IS_SAVED = "isSaved"
+        private const val IS_BOOKMARKED = "isBookmarked"
     }
 }

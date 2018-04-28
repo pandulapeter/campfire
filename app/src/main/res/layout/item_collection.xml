@@ -49,19 +49,19 @@
                 app:layout_constraintStart_toEndOf="parent" />
 
             <ImageView
-                android:id="@+id/save"
+                android:id="@+id/bookmark"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:scaleType="center"
                 android:tint="?android:attr/textColorSecondary"
-                app:animation="@{viewModel.collection.saved ? R.drawable.avd_not_saved_to_saved_24dp : R.drawable.avd_saved_to_not_saved_24dp }"
-                app:lastFrame="@{viewModel.collection.saved ? @drawable/ic_saved_24dp : @drawable/ic_not_saved_24dp}"
+                app:animation="@{viewModel.collection.bookmarked ? R.drawable.avd_not_bookmarked_to_bookmarked_24dp : R.drawable.avd_bookmarked_to_not_bookmarked_24dp }"
+                app:lastFrame="@{viewModel.collection.bookmarked ? @drawable/ic_bookmarked_24dp : @drawable/ic_not_bookmarked_24dp}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/space_1"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:ignore="ContentDescription"
-                tools:src="@drawable/ic_saved_24dp" />
+                tools:src="@drawable/ic_bookmarked_24dp" />
 
             <TextView
                 android:id="@+id/title"
@@ -74,7 +74,7 @@
                 android:textColor="@color/accent"
                 android:textSize="16sp"
                 app:layout_constraintBottom_toTopOf="@+id/description"
-                app:layout_constraintEnd_toStartOf="@id/save"
+                app:layout_constraintEnd_toStartOf="@id/bookmark"
                 app:layout_constraintStart_toEndOf="@id/image"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_chainStyle="packed"
@@ -91,7 +91,7 @@
                 android:maxLines="1"
                 android:text="@{viewModel.collection.description}"
                 app:layout_constraintBottom_toTopOf="@+id/new_label"
-                app:layout_constraintEnd_toStartOf="@id/save"
+                app:layout_constraintEnd_toStartOf="@id/bookmark"
                 app:layout_constraintStart_toEndOf="@id/image"
                 app:layout_constraintTop_toBottomOf="@id/title"
                 tools:text="Collection description" />
@@ -107,7 +107,7 @@
                 android:textColor="@color/accent"
                 android:textSize="12sp"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/save"
+                app:layout_constraintEnd_toStartOf="@id/bookmark"
                 app:layout_constraintStart_toEndOf="@id/image"
                 app:layout_constraintTop_toBottomOf="@id/description"
                 app:visibility="@{viewModel.collection.new}" />

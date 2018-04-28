@@ -26,7 +26,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                 initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == CollectionsViewModel.SortingMode.TITLE }
                 initializeCompoundButton(R.id.sort_by_date) { viewModel.sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE }
                 initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == CollectionsViewModel.SortingMode.POPULARITY }
-                initializeCompoundButton(R.id.saved_only) { viewModel.shouldShowSavedOnly }
+                initializeCompoundButton(R.id.bookmarked_only) { viewModel.shouldShowSavedOnly }
                 initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
                 mainActivity.secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
                     clear()
@@ -145,7 +145,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             R.id.sort_by_title -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.TITLE) { sortingMode = it }
             R.id.sort_by_date -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.UPLOAD_DATE) { sortingMode = it }
             R.id.sort_by_popularity -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.POPULARITY) { sortingMode = it }
-            R.id.saved_only -> consumeAndUpdateBoolean(menuItem, { shouldShowSavedOnly = it }, { shouldShowSavedOnly })
+            R.id.bookmarked_only -> consumeAndUpdateBoolean(menuItem, { shouldShowSavedOnly = it }, { shouldShowSavedOnly })
             R.id.show_explicit -> consumeAndUpdateBoolean(menuItem, { shouldShowExplicit = it }, { shouldShowExplicit })
             else -> consumeAndUpdateLanguageFilter(menuItem, viewModel.languages.find { it.nameResource == menuItem.itemId }?.id ?: "")
         }

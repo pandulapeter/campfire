@@ -35,7 +35,7 @@ sealed class CollectionListItemViewHolder<out B : ViewDataBinding, in VM : Colle
         }
 
         fun setSaveActionClickListener(saveActionClickListener: ((position: Int) -> Unit)?) {
-            binding.save.setOnClickListener {
+            binding.bookmark.setOnClickListener {
                 if (adapterPosition != RecyclerView.NO_POSITION) {
                     saveActionClickListener?.invoke(adapterPosition)
                 }

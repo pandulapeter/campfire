@@ -75,7 +75,7 @@
     <string name="collections_sort_by_date">Upload date</string>
     <string name="collections_sort_by_popularity">Popularity</string>
     <string name="collections_filter_by_type">Filter by type</string>
-    <string name="collections_saved_only">Saved only</string>
+    <string name="collections_bookmarked_only">Bookmarked only</string>
     <string name="collections_show_explicit">Show explicit</string>
     <string name="collections_filter_by_language">Filter by language</string>
 

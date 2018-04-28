@@ -76,7 +76,7 @@ class CollectionRepository(
                                 if (oldSong == null) {
                                     song.isNew = true
                                 } else {
-                                    song.isSaved = oldSong.isSaved
+                                    song.isBookmarked = oldSong.isBookmarked
                                 }
                             }
                         }
@@ -107,7 +107,7 @@ class CollectionRepository(
 
     fun toggleSavedState(collectionId: String) {
         data.find { it.id == collectionId }?.let {
-            it.isSaved = !(it.isSaved ?: false)
+            it.isBookmarked = !(it.isBookmarked ?: false)
             async(CommonPool) { database.collectionDao().insert(it) }
         }
     }
