@@ -209,6 +209,16 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 }
             }, 200)
         }
+        binding.sharedElement.detector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            override fun onScale(detector: ScaleGestureDetector?): Boolean {
+                detector?.let {
+                    preferenceDatabase.fontSize = Math.min(PreferenceDatabase.FONT_SIZE_MAX, preferenceDatabase.fontSize * it.scaleFactor)
+                    updateFontSizeControls()
+                    detailEventBus.notifyTextSizeChanged()
+                }
+                return true
+            }
+        })
     }
 
     override fun onPause() {
