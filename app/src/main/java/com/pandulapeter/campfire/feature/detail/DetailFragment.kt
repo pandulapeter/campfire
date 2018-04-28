@@ -209,8 +209,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         binding.sharedElement.detector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
             override fun onScale(detector: ScaleGestureDetector?): Boolean {
                 detector?.let {
-                    preferenceDatabase.fontSize =
-                            Math.max(PreferenceDatabase.FONT_SIZE_MIN, Math.min(PreferenceDatabase.FONT_SIZE_MAX, preferenceDatabase.fontSize * it.scaleFactor))
+                    val multiplier = Math.round(it.scaleFactor * 50) / 50f
+                    preferenceDatabase.fontSize = Math.max(PreferenceDatabase.FONT_SIZE_MIN, Math.min(PreferenceDatabase.FONT_SIZE_MAX, preferenceDatabase.fontSize * multiplier))
                     detailEventBus.notifyTextSizeChanged()
                 }
                 return true
