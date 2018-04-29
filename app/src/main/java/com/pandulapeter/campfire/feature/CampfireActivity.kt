@@ -204,8 +204,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             },
             onDrawerSlide = {
                 if (it == binding.primaryNavigation) {
-                    while (supportFragmentManager.popBackStackImmediate()) {
-                    }
+                    supportFragmentManager.clearBackStack()
                 }
             })
 
@@ -541,6 +540,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     fun openLibraryScreen() {
         if (currentFragment !is LibraryFragment) {
+            supportFragmentManager.clearBackStack()
             supportFragmentManager.handleReplace { LibraryFragment() }
             currentScreenId = R.id.library
             binding.primaryNavigation.setCheckedItem(R.id.library)
@@ -550,6 +550,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     private fun openCollectionsScreen() {
         if (currentFragment !is CollectionsFragment) {
+            supportFragmentManager.clearBackStack()
             supportFragmentManager.handleReplace { CollectionsFragment() }
             currentScreenId = R.id.collections
             binding.primaryNavigation.setCheckedItem(R.id.collections)
@@ -593,6 +594,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     private fun openHistoryScreen() {
         if (currentFragment !is HistoryFragment) {
+            supportFragmentManager.clearBackStack()
             supportFragmentManager.handleReplace { HistoryFragment() }
             currentScreenId = R.id.history
             binding.primaryNavigation.setCheckedItem(R.id.history)
@@ -601,6 +603,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     private fun openOptionsScreen() {
         if (currentFragment !is OptionsFragment) {
+            supportFragmentManager.clearBackStack()
             supportFragmentManager.handleReplace { OptionsFragment() }
             currentScreenId = R.id.options
             binding.primaryNavigation.setCheckedItem(R.id.options)
@@ -609,6 +612,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     fun openPlaylistScreen(playlistId: String) {
         if (currentFragment !is PlaylistFragment || currentPlaylistId != playlistId) {
+            supportFragmentManager.clearBackStack()
             playlistIdMap.forEach {
                 if (it.value == playlistId) {
                     currentScreenId = it.key
@@ -623,6 +627,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     private fun openManagePlaylistsScreen() {
         if (currentFragment !is ManagePlaylistsFragment) {
+            supportFragmentManager.clearBackStack()
             currentScreenId = R.id.manage_playlists
             supportFragmentManager.handleReplace { ManagePlaylistsFragment() }
             binding.primaryNavigation.setCheckedItem(R.id.manage_playlists)
@@ -631,6 +636,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     private fun openManageDownloadsScreen() {
         if (currentFragment !is ManageDownloadsFragment) {
+            supportFragmentManager.clearBackStack()
             currentScreenId = R.id.manage_downloads
             supportFragmentManager.handleReplace { ManageDownloadsFragment() }
             binding.primaryNavigation.setCheckedItem(R.id.manage_downloads)
@@ -711,6 +717,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             appShortcutManager.updateAppShortcuts()
         }
     }
+
+    private fun FragmentManager.clearBackStack() = (0..backStackEntryCount).forEach { popBackStackImmediate() }
 
     private inline fun <reified T : TopLevelFragment<*, *>> FragmentManager.handleReplace(tag: String = T::class.java.name, crossinline newInstance: () -> T) {
         currentFragment?.exitTransition = null
