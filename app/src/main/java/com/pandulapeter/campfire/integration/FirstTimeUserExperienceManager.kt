@@ -41,6 +41,11 @@ class FirstTimeUserExperienceManager(private val preferenceDatabase: PreferenceD
             preferenceDatabase.ftuxPlaylistPagerSwipeCompleted = new
         }
     }
+    var fontSizePinchCompleted by Delegates.observable(preferenceDatabase.fontSizePinchCompleted) { _: KProperty<*>, old: Boolean, new: Boolean ->
+        if (old != new) {
+            preferenceDatabase.fontSizePinchCompleted = new
+        }
+    }
 
     fun resetAll() {
         historyCompleted = false
@@ -50,5 +55,6 @@ class FirstTimeUserExperienceManager(private val preferenceDatabase: PreferenceD
         managePlaylistsDragCompleted = false
         manageDownloadsCompleted = false
         playlistPagerSwipeCompleted = false
+        fontSizePinchCompleted = false
     }
 }

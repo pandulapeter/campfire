@@ -186,7 +186,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                     message = R.string.playlist_hint_drag,
                     action = {
                         firstTimeUserExperienceManager.playlistDragCompleted = true
-                        showSwipeHintIfNeeded()
+                        binding.root.postDelayed({ if (isAdded) showSwipeHintIfNeeded() }, 300)
                     }
                 )
             }

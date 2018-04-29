@@ -34,6 +34,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     companion object {
         const val TRANSITION_DELAY = 50L
         const val TRANSITION_DURATION = 150L
+        private const val FONT_SIZE_MAX = 2f
+        private const val FONT_SIZE_MIN = 0.8f
         private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
         private var Bundle.songs by BundleArgumentDelegate.ParcelableArrayList("songs")
         private var Bundle.index by BundleArgumentDelegate.Int("index")
@@ -71,6 +73,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val removedFromPlaylist by lazy { mainActivity.animatedDrawable(R.drawable.avd_removed_from_playlists_24dp) }
     private val transposeHigher by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_higher) }
     private val transposeLower by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_lower) }
+    private var isPinchHintVisible = false
     private val playlistButton: ToolbarButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(if (viewModel.isSongInAnyPlaylists()) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp) {
             if (viewModel.areThereMoreThanOnePlaylists()) {
@@ -210,8 +213,15 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             override fun onScale(detector: ScaleGestureDetector?): Boolean {
                 detector?.let {
                     val multiplier = Math.round(it.scaleFactor * 50) / 50f
-                    preferenceDatabase.fontSize = Math.max(PreferenceDatabase.FONT_SIZE_MIN, Math.min(PreferenceDatabase.FONT_SIZE_MAX, preferenceDatabase.fontSize * multiplier))
+                    preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize * multiplier))
                     detailEventBus.notifyTextSizeChanged()
+                    if (!firstTimeUserExperienceManager.fontSizePinchCompleted) {
+                        firstTimeUserExperienceManager.fontSizePinchCompleted = true
+                        if (isPinchHintVisible) {
+                            hideSnackbar()
+                            isPinchHintVisible = false
+                        }
+                    }
                 }
                 return true
             }
@@ -340,15 +350,46 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     }
 
     private fun showHintIfNeeded() {
-        if (!firstTimeUserExperienceManager.playlistPagerSwipeCompleted) {
+        fun showPinchHint() {
+            if (!firstTimeUserExperienceManager.fontSizePinchCompleted && !isSnackbarVisible() && mainActivity.isFloatingActionButtonEnabled()) {
+                isPinchHintVisible = true
+                showHint(
+                    message = R.string.detail_pinch_hint,
+                    action = {
+                        firstTimeUserExperienceManager.fontSizePinchCompleted = true
+                        isPinchHintVisible = false
+                    }
+                )
+            }
+        }
+
+        fun showSwipeHint() {
+            if (!firstTimeUserExperienceManager.playlistPagerSwipeCompleted && !isSnackbarVisible() && songs.size > 1) {
+                showHint(
+                    message = R.string.detail_swipe_hint,
+                    action = {
+                        firstTimeUserExperienceManager.playlistPagerSwipeCompleted = true
+                        binding.root.postDelayed({ if (isAdded) showPinchHint() }, 300)
+                    }
+                )
+            } else {
+                showPinchHint()
+            }
+        }
+
+        if (firstTimeUserExperienceManager.playlistPagerSwipeCompleted) {
+            showPinchHint()
+        } else {
             if (binding.viewPager.currentItem != arguments?.index ?: 0) {
                 firstTimeUserExperienceManager.playlistPagerSwipeCompleted = true
                 hideSnackbar()
-            } else if (songs.size > 1 && !isSnackbarVisible()) {
-                showHint(
-                    message = R.string.detail_swipe_hint,
-                    action = { firstTimeUserExperienceManager.playlistPagerSwipeCompleted = true }
-                )
+                binding.root.postDelayed({
+                    if (isAdded) {
+                        showPinchHint()
+                    }
+                }, 300)
+            } else {
+                showSwipeHint()
             }
         }
     }

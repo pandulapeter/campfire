@@ -232,6 +232,7 @@
     <string name="detail_report">Report a problem</string>
     <string name="detail_report_subject">Campfire: Problem with %1$s - %2$s</string>
     <string name="detail_swipe_hint">Swipe horizontally to cycle through the songs</string>
+    <string name="detail_pinch_hint">Pinch with two fingers to adjust the font size.</string>
     <string name="detail_placeholder_error">Something went wrong while\ntrying to download the song</string>
     <string name="detail_intro">Intro</string>
     <string name="detail_verse">Verse</string>

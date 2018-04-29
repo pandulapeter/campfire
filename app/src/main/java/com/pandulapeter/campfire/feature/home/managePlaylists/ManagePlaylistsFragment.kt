@@ -150,7 +150,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
                     message = R.string.manage_playlists_hint_drag,
                     action = {
                         firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
-                        showSwipeHintIfNeeded()
+                        binding.root.postDelayed({ if (isAdded) showSwipeHintIfNeeded() }, 300)
                     }
                 )
             }

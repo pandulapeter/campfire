@@ -10,11 +10,6 @@ import kotlin.reflect.KProperty
 
 class PreferenceDatabase(context: Context) {
 
-    companion object {
-        const val FONT_SIZE_MAX = 2f
-        const val FONT_SIZE_MIN = 0.8f
-    }
-
     private val preferences = context.applicationContext.getSharedPreferences("preferences", Context.MODE_PRIVATE)
     private val locale by lazy { Locale.getDefault().isO3Country.toUpperCase() }
 
@@ -53,6 +48,7 @@ class PreferenceDatabase(context: Context) {
     var ftuxManagePlaylistsDragCompleted by PreferenceFieldDelegate.Boolean("ftuxManagePlaylistsDragCompleted", false)
     var ftuxManageDownloadsCompleted by PreferenceFieldDelegate.Boolean("ftuxManageDownloadsCompleted", false)
     var ftuxPlaylistPagerSwipeCompleted by PreferenceFieldDelegate.Boolean("ftuxPlaylistPagerSwipeCompleted", false)
+    var fontSizePinchCompleted by PreferenceFieldDelegate.Boolean("fontSizePinchCompleted", false)
 
     private fun shouldEnableGermanNotationByDefault() = when (locale) {
         "AUT", "CZE", "DEU", "SWE", "DNK", "EST", "FIN", "HUN", "LVA", "NOR", "POL", "SRB", "SVK" -> true
