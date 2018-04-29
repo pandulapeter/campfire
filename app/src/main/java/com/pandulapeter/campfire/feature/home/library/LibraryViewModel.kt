@@ -16,7 +16,8 @@ class LibraryViewModel(
     context: Context,
     val toolbarTextInputView: ToolbarTextInputView,
     private val updateSearchToggleDrawable: (Boolean) -> Unit,
-    private val onDataLoaded: (languages: List<Language>) -> Unit
+    private val onDataLoaded: (languages: List<Language>) -> Unit,
+    private val openSecondaryNavigationDrawer: () -> Unit
 ) : SongListViewModel(context) {
 
     private val newString = context.getString(R.string.new_tag)
@@ -91,11 +92,18 @@ class LibraryViewModel(
         super.onListUpdated(items)
         if (librarySongs.toList().isNotEmpty()) {
             placeholderText.set(R.string.library_placeholder)
-            buttonText.set(0)
+            buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.library_filters)
+            buttonIcon.set(R.drawable.ic_filter_and_sort_24dp)
         }
     }
 
-    override fun onActionButtonClicked() = updateData()
+    override fun onActionButtonClicked() {
+        if (buttonIcon.get() == 0) {
+            updateData()
+        } else {
+            openSecondaryNavigationDrawer()
+        }
+    }
 
     override fun Sequence<Song>.createViewModels() = filterByQuery()
         .filterDownloaded()
@@ -149,6 +157,7 @@ class LibraryViewModel(
                 if (shouldScrollToTop) {
                     updateAdapterItems(!isTextInputVisible)
                 }
+                buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.library_filters)
             }
         }
     }

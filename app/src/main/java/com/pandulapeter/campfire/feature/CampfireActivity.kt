@@ -563,6 +563,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             fun createTransition(delay: Long) = Explode().apply {
                 propagation = null
                 startDelay = delay
+                duration = DetailFragment.TRANSITION_DURATION
             }
             currentFragment?.run {
                 if (shouldExplode) {

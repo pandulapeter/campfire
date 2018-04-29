@@ -56,6 +56,7 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
             .apply {
                 ordering = TransitionSet.ORDERING_TOGETHER
                 startDelay = delay
+                duration = DetailFragment.TRANSITION_DURATION
             }
         sharedElementEnterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
         sharedElementReturnTransition = createTransition(0)

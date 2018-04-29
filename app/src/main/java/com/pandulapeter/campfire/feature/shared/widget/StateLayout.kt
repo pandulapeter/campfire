@@ -29,7 +29,9 @@ class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSe
             field = value
             binding.button.run {
                 visibleOrGone = value != null
-                text = value
+                if (value != null) {
+                    text = value
+                }
             }
         }
     var buttonIcon = 0

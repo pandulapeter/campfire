@@ -61,13 +61,15 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                         context.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { mainActivity.openSecondaryNavigationDrawer() }
                     ))
                 }
-            }
+            },
+            openSecondaryNavigationDrawer = { mainActivity.openSecondaryNavigationDrawer() }
         )
     }
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
     private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
     private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
+    private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
     private val searchToggle: ToolbarButton by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) { viewModel.toggleTextInputVisibility() } }
     private val drawableCloseToSearch by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) mainActivity.animatedDrawable(R.drawable.avd_close_to_search_24dp) else mainActivity.drawable(R.drawable.ic_search_24dp)
@@ -98,6 +100,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             }
             viewModel.placeholderText.set(savedInstanceState.placeholderText)
             viewModel.buttonText.set(savedInstanceState.buttonText)
+            viewModel.buttonIcon.set(savedInstanceState.buttonIcon)
         }
         viewModel.toolbarTextInputView.textInput.requestFocus()
         searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
@@ -130,6 +133,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         searchQuery = viewModel.query
         placeholderText = viewModel.placeholderText.get()
         buttonText = viewModel.buttonText.get()
+        buttonIcon = viewModel.buttonIcon.get()
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
