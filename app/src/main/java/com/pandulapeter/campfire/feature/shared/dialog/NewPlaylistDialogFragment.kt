@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.onTextChanged
 import com.pandulapeter.campfire.util.showKeyboard
 import org.koin.android.ext.android.inject
 
@@ -27,11 +28,14 @@ class NewPlaylistDialogFragment : BaseDialogFragment() {
     private val positiveButton by lazy { (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE) }
     private val binding by lazy { DataBindingUtil.inflate<NewPlaylistBinding>(LayoutInflater.from(context), R.layout.dialog_new_playlist, null, false) }
 
-    override fun AlertDialog.Builder.createDialog(arguments: Bundle): AlertDialog = setView(binding.root)
-        .setTitle(R.string.home_new_playlist)
-        .setPositiveButton(R.string.ok, { _, _ -> onOkButtonPressed() })
-        .setNegativeButton(R.string.cancel, null)
-        .create()
+    override fun AlertDialog.Builder.createDialog(arguments: Bundle?): AlertDialog {
+        binding.inputField.onTextChanged { positiveButton.isEnabled = binding.inputField.text.isTextValid() }
+        return setView(binding.root)
+            .setTitle(R.string.home_new_playlist)
+            .setPositiveButton(R.string.ok, { _, _ -> onOkButtonPressed() })
+            .setNegativeButton(R.string.cancel, null)
+            .create()
+    }
 
     override fun onStart() {
         super.onStart()

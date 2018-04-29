@@ -34,7 +34,7 @@ class AlertDialogFragment : BaseDialogFragment() {
         }
     }
 
-    override fun AlertDialog.Builder.createDialog(arguments: Bundle): AlertDialog = setTitle(arguments.title)
+    override fun AlertDialog.Builder.createDialog(arguments: Bundle?): AlertDialog = setTitle(arguments.title)
         .setMessage(arguments.message)
         .setPositiveButton(arguments.positiveButton, { _, _ -> onDialogItemSelectedListener?.onPositiveButtonSelected(arguments.id) })
         .setNegativeButton(arguments.negativeButton, { _, _ -> onDialogItemSelectedListener?.onNegativeButtonSelected(arguments.id) })

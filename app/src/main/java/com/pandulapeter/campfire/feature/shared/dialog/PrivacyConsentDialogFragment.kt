@@ -23,7 +23,7 @@ class PrivacyConsentDialogFragment : BaseDialogFragment() {
 
     private val binding by lazy { DataBindingUtil.inflate<PrivacyConsentBinding>(LayoutInflater.from(context), R.layout.dialog_privacy_consent, null, false) }
 
-    override fun AlertDialog.Builder.createDialog(arguments: Bundle): AlertDialog = setTitle(R.string.home_privacy_policy_title)
+    override fun AlertDialog.Builder.createDialog(arguments: Bundle?): AlertDialog = setTitle(R.string.home_privacy_policy_title)
         .setView(binding.root)
         .setMessage(R.string.home_privacy_policy_message)
         .setPositiveButton(R.string.home_privacy_policy_positive, { _, _ ->
