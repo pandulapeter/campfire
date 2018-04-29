@@ -204,7 +204,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             },
             onDrawerSlide = {
                 if (it == binding.primaryNavigation) {
-                    supportFragmentManager.clearBackStack()
+                    if (supportFragmentManager.backStackEntryCount > 1) {
+                        openCollectionsScreen()
+                    } else {
+                        supportFragmentManager.clearBackStack()
+                    }
                 }
             })
 
