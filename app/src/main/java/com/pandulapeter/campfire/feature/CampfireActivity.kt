@@ -201,6 +201,12 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 if (it == DrawerLayout.STATE_DRAGGING) {
                     hideKeyboard(currentFocus)
                 }
+            },
+            onDrawerSlide = {
+                if (it == binding.primaryNavigation) {
+                    while (supportFragmentManager.popBackStackImmediate()) {
+                    }
+                }
             })
 
         // Initialize the primary side navigation drawer.
@@ -268,10 +274,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 forceExpandAppBar = savedInstanceState.isAppBarExpanded
             }
         }
-        binding.drawerLayout.setDrawerLockMode(
-            if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
-            Gravity.START
-        )
 
         // Show the privacy consent dialog if needed.
         if (preferenceDatabase.shouldShowPrivacyPolicy) {
@@ -501,9 +503,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         binding.toolbarButtonContainer.removeAllViews()
         expandAppBar()
         updateMainToolbarButton(!isBackStackEmpty)
-
-        // Reset the primary navigation drawer.
-        binding.drawerLayout.setDrawerLockMode(if (isBackStackEmpty) DrawerLayout.LOCK_MODE_UNLOCKED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.START)
 
         // Reset the secondary navigation drawer.
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.END)
