@@ -22,7 +22,6 @@ class ToolbarButton @JvmOverloads constructor(context: Context, attrs: Attribute
         val padding = context.dimension(R.dimen.toolbar_action_button_padding)
         setPadding(padding, padding, padding, padding)
         val outValue = TypedValue()
-        scaleType = ScaleType.CENTER
         context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true)
         setBackgroundResource(outValue.resourceId)
     }

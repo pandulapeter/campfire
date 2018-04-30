@@ -442,9 +442,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     fun updateToolbarButtons(buttons: List<View>) = binding.toolbarButtonContainer.run {
-        val size = dimension(R.dimen.toolbar_button_size)
         if (childCount == 0) {
-            buttons.forEach { addView(it, size, size) }
+            buttons.forEach { addView(it, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT) }
         }
     }
 

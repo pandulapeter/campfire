@@ -13,7 +13,6 @@
     <dimen name="toolbar_elevation">4dp</dimen>
     <dimen name="list_fab_content_bottom_margin">96dp</dimen>
     <dimen name="list_bottom_margin">56dp</dimen>
-    <dimen name="toolbar_button_size">36dp</dimen>
     <dimen name="border">2dp</dimen>
     <dimen name="nothing">0dp</dimen>
     <dimen name="card_corner">@dimen/nothing</dimen>
