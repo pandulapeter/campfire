@@ -332,7 +332,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 songRepository.onSongOpened(songId)
                 lastSongId = songId
             }
-            showHintIfNeeded()
+            binding.root.post { if (isAdded) showHintIfNeeded() }
         }
     }
 

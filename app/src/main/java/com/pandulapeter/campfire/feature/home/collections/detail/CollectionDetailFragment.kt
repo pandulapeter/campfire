@@ -63,6 +63,7 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
         setEnterSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
                 sharedElements[names[0]] = binding.collection
+                sharedElements[names[1]] = binding.image
             }
         })
     }

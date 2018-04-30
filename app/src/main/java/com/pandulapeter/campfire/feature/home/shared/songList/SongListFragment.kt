@@ -141,7 +141,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
                     viewTreeObserver?.removeOnPreDrawListener(this)
-                    post { startPostponedEnterTransition() }
+                    startPostponedEnterTransition()
                     return true
                 }
             })

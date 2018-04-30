@@ -381,7 +381,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                         postDelayed({
                             transitionMode = true
                             removeViews()
-                        }, 150)
+                        }, 100)
                     }
                 }
             } else {
@@ -427,15 +427,13 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             if (childCount > 0) getChildAt(0) else null
         }
         if (toolbar != oldView) {
+            oldView?.visibleOrGone = false
+            binding.toolbarTitleContainer.removeView(oldView)
             binding.toolbarTitleContainer.addView(
                 toolbar.apply { visibleOrGone = oldView?.id == R.id.default_toolbar },
                 FrameLayout.LayoutParams(if (width == 0) ViewGroup.LayoutParams.MATCH_PARENT else width, ViewGroup.LayoutParams.MATCH_PARENT).apply {
                     gravity = Gravity.CENTER_VERTICAL
                 })
-            oldView?.run {
-                visibleOrGone = false
-                postOnAnimation { binding.toolbarTitleContainer.removeView(this) }
-            }
         }
         toolbar.run { postOnAnimation { visibleOrGone = true } }
     }
@@ -559,7 +557,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
     }
 
-    fun openCollectionDetailsScreen(collection: Collection, clickedView: View?, shouldExplode: Boolean) {
+    fun openCollectionDetailsScreen(collection: Collection, clickedView: View?, image: View?, shouldExplode: Boolean) {
         lastCollectionId = collection.id
         if (currentFragment !is CollectionDetailFragment || currentCollectionId != collection.id) {
             currentCollectionId = collection.id
@@ -580,12 +578,14 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragment_container, CollectionDetailFragment.newInstance(collection))
                 .apply {
-                    if (clickedView == null) {
+                    if (clickedView == null || image == null) {
                         setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                     } else {
                         setAllowOptimization(true)
                         clickedView.transitionName = getString(R.string.campfire)
                         addSharedElement(clickedView, clickedView.transitionName)
+                        image.transitionName = getString(R.string.home_collections)
+                        addSharedElement(image, image.transitionName)
                     }
                 }
                 .addToBackStack(null)

@@ -40,7 +40,7 @@ class CollectionListAdapter : RecyclerView.Adapter<CollectionListItemViewHolder<
             }
             field = newItems
         }
-    var itemClickListener: (position: Int, clickedView: View) -> Unit = { _, _ -> }
+    var itemClickListener: (position: Int, clickedView: View, image: View) -> Unit = { _, _, _ -> }
     var bookmarkActionClickListener: ((position: Int) -> Unit)? = null
 
     init {

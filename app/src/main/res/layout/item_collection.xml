@@ -20,7 +20,6 @@
         android:clipChildren="false"
         android:clipToPadding="false"
         android:foreground="?attr/selectableItemBackground"
-        android:transitionGroup="true"
         app:cardCornerRadius="@dimen/card_corner"
         app:contentPadding="@dimen/content_padding"
         app:visibility="@{viewModel!=null}">

@@ -56,9 +56,11 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                         val view = it.itemView
                         view.transitionName = getString(R.string.campfire)
                         sharedElements[names[0]] = view
+                        val image = view.findViewById<View>(R.id.image)
+                        image.transitionName = getString(R.string.home_collections)
+                        sharedElements[names[1]] = image
                     }
                 }
-                //mainActivity.lastCollectionId = ""
             }
         })
     }
@@ -83,11 +85,11 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             }
         }
         viewModel.adapter.apply {
-            itemClickListener = { position, clickedView ->
+            itemClickListener = { position, clickedView, image ->
                 (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.collection?.let {
                     viewModel.collectionRepository.onCollectionOpened(it.id)
                     analyticsManager.onCollectionOpened(it.id)
-                    mainActivity.openCollectionDetailsScreen(it, clickedView, items.size > 1)
+                    mainActivity.openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
                 }
             }
         }
