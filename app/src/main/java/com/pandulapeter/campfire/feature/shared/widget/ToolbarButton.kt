@@ -11,8 +11,8 @@ import android.view.TouchDelegate
 import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.util.obtainColor
 
 class ToolbarButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : AppCompatImageView(context, attrs, defStyleAttr) {
 
@@ -27,7 +27,7 @@ class ToolbarButton @JvmOverloads constructor(context: Context, attrs: Attribute
     }
 
     override fun setImageDrawable(drawable: Drawable?) {
-        drawable?.setTint(context.color(R.color.white))
+        drawable?.setTint(context.obtainColor(android.R.attr.textColorSecondary))
         super.setImageDrawable(drawable)
     }
 

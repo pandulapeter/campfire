@@ -12,6 +12,7 @@ import android.transition.Transition
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.CampfireActivity
@@ -97,7 +98,9 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     private fun View.makeSnackbar(message: String, duration: Int, dismissAction: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {
-        view.setBackgroundColor(context.color(R.color.primary))
+        view.setBackgroundColor(context.color(R.color.accent))
+        view.findViewById<TextView>(android.support.design.R.id.snackbar_text).setTextColor(context.color(R.color.white))
+        setActionTextColor(context.color(R.color.white))
         mainActivity.currentFocus?.let { hideKeyboard(it) }
         dismissAction?.let {
             addCallback(object : Snackbar.Callback() {

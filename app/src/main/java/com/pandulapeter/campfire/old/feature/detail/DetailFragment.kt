@@ -83,7 +83,6 @@ class DetailFragment : CampfireFragment<DetailBinding, DetailViewModel>(R.layout
             binding.appBarLayout.setExpanded(true, true)
             viewModel.isAutoScrollStarted.set(false)
         })
-        context?.let { binding.drawerLayout.setStatusBarBackgroundColor(it.color(R.color.primary)) }
         binding.navigationView.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.transpose_higher -> consume { detailEventBus.transposeSong(viewModel.getSelectedSongId(), 1) }

@@ -6,7 +6,6 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
-import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
@@ -165,15 +164,15 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 ActivityManager.TaskDescription(
                     getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
-                    R.mipmap.ic_launcher_foreground,
-                    color(R.color.primary)
+                    0,
+                    obtainColor(android.R.attr.colorPrimary)
                 )
             } else {
                 @Suppress("DEPRECATION")
                 ActivityManager.TaskDescription(
                     getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
-                    BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher_foreground),
-                    color(R.color.primary)
+                    null,
+                    obtainColor(android.R.attr.colorPrimary)
                 )
             }
         )

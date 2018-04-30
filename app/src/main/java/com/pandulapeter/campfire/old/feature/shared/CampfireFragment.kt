@@ -13,8 +13,8 @@ import android.view.ViewGroup
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.color
 import org.koin.android.ext.android.inject
+
 
 /**
  * Base class for all Fragments in the app. Handles layout inflation, setting up the view model,
@@ -75,7 +75,6 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     private fun View.makeSnackbar(message: String, duration: Int, dismissListener: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {
-        view.setBackgroundColor(context.color(R.color.primary))
         dismissListener?.let {
             addCallback(object : Snackbar.Callback() {
                 override fun onDismissed(transientBottomBar: Snackbar?, event: Int) = it()

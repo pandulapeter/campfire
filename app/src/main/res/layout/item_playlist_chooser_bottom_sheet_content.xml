@@ -34,7 +34,6 @@
                 android:layout_height="0dp"
                 android:alpha="@{viewModel.containerAlpha}"
                 android:background="?attr/colorPrimary"
-                android:theme="@style/ActionBar"
                 app:layout_constraintBottom_toBottomOf="@+id/toolbar_container"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -43,8 +42,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/toolbar_height"
                 android:clipChildren="false"
-                android:paddingTop="@{viewModel.containerPadding}"
-                android:theme="@style/ActionBar">
+                android:paddingTop="@{viewModel.containerPadding}">
 
                 <android.support.v4.widget.Space
                     android:id="@+id/space"

@@ -7,11 +7,6 @@
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
-    <style name="ActionBar" parent="@style/Theme.AppCompat">
-        <item name="colorAccent">@color/white</item>
-        <item name="colorPrimary">@color/primary</item>
-    </style>
-
     <style name="LightTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
         <item name="colorAccent">@color/accent</item>
         <item name="android:alertDialogTheme">@style/LightAlertDialog</item>

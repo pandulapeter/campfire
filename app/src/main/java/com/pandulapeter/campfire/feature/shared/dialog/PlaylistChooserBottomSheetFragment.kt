@@ -45,7 +45,7 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
     private var shouldTransformTopToAppBar = false
     private var scrollViewOffset = 0
     private var originalStatusBarColor = 0
-    private val updatedStatusBarColor by lazy { context?.color(R.color.primary) }
+    private val updatedStatusBarColor by lazy { context?.obtainColor(android.R.attr.colorPrimary) }
     private val headerContext by lazy { binding.container?.toolbar?.context }
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->

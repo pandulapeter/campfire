@@ -71,7 +71,6 @@
                 android:layout_marginStart="@dimen/content_padding"
                 android:fontFamily="sans-serif-medium"
                 android:text="@{viewModel.collection.title}"
-                android:textColor="@color/accent"
                 android:textSize="16sp"
                 app:layout_constraintBottom_toTopOf="@+id/description"
                 app:layout_constraintEnd_toStartOf="@id/bookmark"

@@ -4,7 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/content_padding"
-    android:background="@color/primary"
     android:orientation="vertical"
     android:paddingBottom="@dimen/large_content_padding"
     android:paddingEnd="@dimen/first_keyline"
@@ -17,7 +16,7 @@
         android:fontFamily="sans-serif-medium"
         android:text="@string/campfire"
         android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-        android:textColor="@color/white" />
+        android:textColor="@color/accent" />
 
     <TextView
         android:id="@+id/version"
@@ -25,7 +24,6 @@
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif-light"
         android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-        android:textColor="@color/white"
         tools:text="v1.0.0" />
 
 </LinearLayout>
