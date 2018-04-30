@@ -33,7 +33,7 @@ class PreferenceDatabase(context: Context) {
     var shouldShowChords by PreferenceFieldDelegate.Boolean("shouldShowChords", true)
     var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("shouldUseGermanNotation", shouldEnableGermanNotationByDefault())
     var fontSize by PreferenceFieldDelegate.Float("fontSize", 1f)
-    var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("shouldUseDarkTheme", true)
+    var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("shouldUseDarkTheme", false)
     var shouldShowExitConfirmation by PreferenceFieldDelegate.Boolean("shouldShowExitConfirmation", true)
     var shouldShowPrivacyPolicy by PreferenceFieldDelegate.Boolean("shouldShowPrivacyPolicy", true)
     var shouldShareUsageData by PreferenceFieldDelegate.Boolean("shouldShareUsageData", false)
