@@ -165,13 +165,13 @@ inline fun <T> ObservableField<T>.onEventTriggered(fragment: Fragment? = null, c
 
 inline fun DrawerLayout.addDrawerListener(
     crossinline onDrawerStateChanged: (newState: Int) -> Unit = {},
-    crossinline onDrawerSlide: (View) -> Unit = {},
+    crossinline onDrawerSlide: () -> Unit = {},
     crossinline onDrawerClosed: () -> Unit = {},
     crossinline onDrawerOpened: () -> Unit = {}
 ) = addDrawerListener(object : DrawerLayout.DrawerListener {
     override fun onDrawerStateChanged(newState: Int) = onDrawerStateChanged(newState)
 
-    override fun onDrawerSlide(drawerView: View, slideOffset: Float) = onDrawerSlide(drawerView)
+    override fun onDrawerSlide(drawerView: View, slideOffset: Float) = onDrawerSlide()
 
     override fun onDrawerClosed(drawerView: View) = onDrawerClosed()
 

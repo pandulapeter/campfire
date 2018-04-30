@@ -154,6 +154,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 field = value
             }
         }
+    val autoScrollSpeed get() = if (binding.autoScrollControl.visibleOrInvisible) binding.autoScrollSeekBar.progress else 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -200,15 +201,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 currentFragment?.onDrawerStateChanged(it)
                 if (it == DrawerLayout.STATE_DRAGGING) {
                     hideKeyboard(currentFocus)
-                }
-            },
-            onDrawerSlide = {
-                if (it == binding.primaryNavigation) {
-                    if (supportFragmentManager.backStackEntryCount > 1) {
-                        openCollectionsScreen()
-                    } else {
-                        supportFragmentManager.clearBackStack()
-                    }
                 }
             })
 
@@ -277,6 +269,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 forceExpandAppBar = savedInstanceState.isAppBarExpanded
             }
         }
+        binding.drawerLayout.setDrawerLockMode(
+            if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
+            Gravity.START
+        )
 
         // Show the privacy consent dialog if needed.
         if (preferenceDatabase.shouldShowPrivacyPolicy) {
@@ -506,6 +502,9 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         binding.toolbarButtonContainer.removeAllViews()
         expandAppBar()
         updateMainToolbarButton(!isBackStackEmpty)
+
+        // Reset the primary navigation drawer.
+        binding.drawerLayout.setDrawerLockMode(if (isBackStackEmpty) DrawerLayout.LOCK_MODE_UNLOCKED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.START)
 
         // Reset the secondary navigation drawer.
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.END)
