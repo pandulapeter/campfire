@@ -8,10 +8,14 @@ class DetailEventBus : Repository<DetailEventBus.Subscriber>() {
 
     fun notifyTextSizeChanged() = subscribers.forEach { it.onTextSizeChanged() }
 
+    fun notifyScroll(songId: String, speed: Int) = subscribers.forEach { it.scroll(songId, speed) }
+
     interface Subscriber {
 
         fun onTransitionEnd()
 
         fun onTextSizeChanged()
+
+        fun scroll(songId: String, speed: Int)
     }
 }

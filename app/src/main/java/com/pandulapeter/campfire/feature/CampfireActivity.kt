@@ -154,7 +154,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 field = value
             }
         }
-    val autoScrollSpeed get() = if (binding.autoScrollControl.visibleOrInvisible) binding.autoScrollSeekBar.progress else 0
+    val autoScrollSpeed get() = if (binding.autoScrollControl.visibleOrInvisible && binding.autoScrollControl.tag == null) binding.autoScrollSeekBar.progress else -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
 

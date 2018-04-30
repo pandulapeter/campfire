@@ -226,13 +226,26 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 return true
             }
         })
+        binding.root.post(object : Runnable {
+            override fun run() {
+                if (isAdded) {
+                    viewModel.songId.get()?.let { songId ->
+                        mainActivity.autoScrollSpeed.let {
+                            if (it >= 0)
+                                detailEventBus.notifyScroll(songId, it)
+                        }
+                    }
+                }
+                binding.root.postOnAnimation(this)
+            }
+        })
     }
 
     override fun onPause() {
-        super.onPause()
         if (mainActivity.autoScrollControl.visibleOrInvisible) {
             toggleAutoScroll()
         }
+        super.onPause()
     }
 
     override fun onResume() {

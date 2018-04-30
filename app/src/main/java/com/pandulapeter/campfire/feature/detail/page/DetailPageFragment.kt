@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject
+import kotlin.math.roundToInt
 
 class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPageViewModel>(R.layout.fragment_detail_page), DetailEventBus.Subscriber {
 
@@ -27,6 +28,7 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
     private val song by lazy { arguments?.song as Song }
     private var isContentVisible = false
     private val detailEventBus by inject<DetailEventBus>()
+    private var smoothScrollHolder = 0f
     override val viewModel by lazy {
         DetailPageViewModel(
             song = song,
@@ -68,4 +70,14 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
     }
 
     override fun onTextSizeChanged() = viewModel.updateTextSize()
+
+    override fun scroll(songId: String, speed: Int) {
+        if (viewModel.song.id == songId) {
+            smoothScrollHolder += (1 + speed) / 3f
+            if (smoothScrollHolder > 1) {
+                binding.scrollView.scrollY += smoothScrollHolder.roundToInt()
+                smoothScrollHolder = 0f
+            }
+        }
+    }
 }
