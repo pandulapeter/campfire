@@ -13,7 +13,7 @@
         android:label="@string/campfire"
         android:resizeableActivity="true"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
+        android:supportsRtl="false"
         tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
 
         <activity
