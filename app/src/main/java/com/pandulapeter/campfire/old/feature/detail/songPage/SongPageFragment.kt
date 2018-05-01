@@ -19,6 +19,19 @@ import org.koin.android.ext.android.inject
  * Controlled by [SongPageViewModel].
  */
 class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.layout.fragment_song_page) {
+
+    companion object {
+        private const val SONG_ID = "song_id"
+        private val Bundle?.songId
+            get() = this?.getString(SONG_ID) ?: ""
+
+        fun newInstance(songId: String) = SongPageFragment().apply {
+            arguments = Bundle().apply {
+                putString(SONG_ID, songId)
+            }
+        }
+    }
+
     private val songInfoRepository by inject<SongInfoRepository>()
     private val downloadedSongRepository by inject<DownloadedSongRepository>()
     private val userPreferenceRepository by inject<UserPreferenceRepository>()
@@ -72,17 +85,4 @@ class SongPageFragment : CampfireFragment<SongPageBinding, SongPageViewModel>(R.
     }
 
     private fun isScrolledToBottom() = binding.container.bottom <= binding.nestedScrollView.height + binding.nestedScrollView.scrollY
-
-
-    companion object {
-        private const val SONG_ID = "song_id"
-        private val Bundle?.songId
-            get() = this?.getString(SONG_ID) ?: ""
-
-        fun newInstance(songId: String) = SongPageFragment().apply {
-            arguments = Bundle().apply {
-                putString(SONG_ID, songId)
-            }
-        }
-    }
 }

@@ -41,6 +41,7 @@ class PreferenceDatabase(context: Context) {
     var lastScreen by PreferenceFieldDelegate.String("lastScreen", "")
 
     // First time user experience
+    var ftuxLastSeenChangelog by PreferenceFieldDelegate.Int("ftuxLastSeenChangelog", 0)
     var ftuxHistoryCompleted by PreferenceFieldDelegate.Boolean("ftuxHistoryCompleted", false)
     var ftuxPlaylistSwipeCompleted by PreferenceFieldDelegate.Boolean("ftuxPlaylistSwipeCompleted", false)
     var ftuxPlaylistDragCompleted by PreferenceFieldDelegate.Boolean("ftuxPlaylistDragCompleted", false)
