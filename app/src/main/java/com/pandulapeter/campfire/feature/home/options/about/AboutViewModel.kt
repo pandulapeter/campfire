@@ -5,14 +5,18 @@ import android.content.Context
 import android.content.Intent
 import android.databinding.ObservableBoolean
 import android.net.Uri
+import android.support.customtabs.CustomTabsIntent
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.util.color
 
 class AboutViewModel : CampfireViewModel() {
 
     companion object {
         private const val PLAY_STORE_URL = "market://details?id=com.pandulapeter.campfire"
         private const val GIT_HUB_URL = "https://github.com/pandulapeter/campfire-android"
+        private const val PRIVACY_POLICY_URL = "https://campfire-test1.herokuapp.com/v1/privacy-policy"
+        private const val OPEN_SOURCE_LICENSES_URL = "https://campfire-test1.herokuapp.com/v1/open-source-licenses"
         const val EMAIL_ADDRESS = "pandulapeter@gmail.com"
     }
 
@@ -48,11 +52,9 @@ class AboutViewModel : CampfireViewModel() {
     //TODO: Start in app purchase flow
     fun onBuyMeABeerClicked() = shouldShowWorkInProgressSnackbar.set(true)
 
-    //TODO: Open Chrome custom tab to GitHub markdown file
-    fun onPrivacyPolicyClicked(context: Context) = shouldShowWorkInProgressSnackbar.set(true)
+    fun onPrivacyPolicyClicked(context: Context) = context.openInCustomTab(PRIVACY_POLICY_URL)
 
-    //TODO: Open Chrome custom tab to GitHub markdown file
-    fun onLicensesClicked(context: Context) = shouldShowWorkInProgressSnackbar.set(true)
+    fun onLicensesClicked(context: Context) = context.openInCustomTab(OPEN_SOURCE_LICENSES_URL)
 
     private fun Context.tryToOpenIntent(intent: Intent) {
         try {
@@ -61,6 +63,11 @@ class AboutViewModel : CampfireViewModel() {
             shouldShowErrorShowSnackbar.set(true)
         }
     }
+
+    private fun Context.openInCustomTab(url: String) = CustomTabsIntent.Builder()
+        .setToolbarColor(color(R.color.accent))
+        .build()
+        .launchUrl(this, Uri.parse(url))
 
     private fun String.toUrlIntent() = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(this@toUrlIntent) }
 }
