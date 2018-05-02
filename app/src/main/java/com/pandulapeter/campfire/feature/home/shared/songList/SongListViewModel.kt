@@ -44,6 +44,8 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     val buttonText = ObservableInt(R.string.try_again)
     val buttonIcon = ObservableInt()
     var isDetailScreenOpen = false
+    open val cardTransitionName = ""
+    open val imageTransitionName = ""
 
     @CallSuper
     override fun subscribe() {

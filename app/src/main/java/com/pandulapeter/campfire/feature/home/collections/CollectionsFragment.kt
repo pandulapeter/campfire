@@ -54,10 +54,10 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                 if (index != RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
-                        view.transitionName = getString(R.string.campfire)
+                        view.transitionName = "card-${mainActivity.lastCollectionId}"
                         sharedElements[names[0]] = view
                         val image = view.findViewById<View>(R.id.image)
-                        image.transitionName = getString(R.string.home_collections)
+                        image.transitionName = "image-${mainActivity.lastCollectionId}"
                         sharedElements[names[1]] = image
                     }
                 }
@@ -123,10 +123,11 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {
                     viewTreeObserver?.removeOnPreDrawListener(this)
-                    post { startPostponedEnterTransition() }
+                    startPostponedEnterTransition()
                     return true
                 }
             })
+            requestLayout()
         }
     }
 

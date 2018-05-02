@@ -21,7 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/border"
-            android:transitionName="@string/campfire"
+            android:transitionName="@{viewModel.cardTransitionName}"
             app:cardCornerRadius="@dimen/card_corner"
             app:contentPadding="@dimen/content_padding"
             app:visibility="@{viewModel.collection!=null}">
@@ -38,7 +38,7 @@
                     android:contentDescription="@{viewModel.collection.collection.title}"
                     android:scaleType="centerCrop"
                     android:src="@{viewModel.collection.collection.imageUrl}"
-                    android:transitionName="@string/home_collections"
+                    android:transitionName="@{viewModel.imageTransitionName}"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"

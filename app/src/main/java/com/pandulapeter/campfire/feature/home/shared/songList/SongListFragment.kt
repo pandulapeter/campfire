@@ -145,6 +145,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                     return true
                 }
             })
+            requestLayout()
         }
     }
 

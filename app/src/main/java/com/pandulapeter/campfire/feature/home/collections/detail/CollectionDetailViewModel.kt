@@ -16,6 +16,8 @@ class CollectionDetailViewModel(
 ) : SongListViewModel(context) {
 
     val collectionRepository by inject<CollectionRepository>()
+    override val cardTransitionName = "card-${collection.id}"
+    override val imageTransitionName = "image-${collection.id}"
 
     init {
         this.collection.set(CollectionListItemViewModel.CollectionViewModel(collection))

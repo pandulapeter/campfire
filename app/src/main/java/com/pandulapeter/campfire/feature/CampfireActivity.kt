@@ -592,9 +592,9 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                         setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                     } else {
                         setAllowOptimization(true)
-                        clickedView.transitionName = getString(R.string.campfire)
+                        clickedView.transitionName = "card-$lastCollectionId"
                         addSharedElement(clickedView, clickedView.transitionName)
-                        image.transitionName = getString(R.string.home_collections)
+                        image.transitionName = "image-$lastCollectionId"
                         addSharedElement(image, image.transitionName)
                     }
                 }
