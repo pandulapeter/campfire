@@ -288,6 +288,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         R.id.should_show_chords -> consumeAndUpdateBoolean(menuItem, {
             preferenceDatabase.shouldShowChords = it
             updateTransposeControls()
+            detailEventBus.notifyShouldShowChordsChanged()
         }, { preferenceDatabase.shouldShowChords })
         R.id.play_in_youtube -> consumeAndCloseDrawer {
             "${songs[arguments?.index ?: 0].title} - ${songs[arguments?.index ?: 0].artist}".let {

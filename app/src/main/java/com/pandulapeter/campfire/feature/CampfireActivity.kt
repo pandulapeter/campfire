@@ -402,7 +402,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                             transitionMode = true
                             removeViews()
                             addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                        }, 200)
+                        }, 150)
                     }
                 }
             }

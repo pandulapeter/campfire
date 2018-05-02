@@ -80,4 +80,6 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
             }
         }
     }
+
+    override fun onShouldShowChordsChanged() = viewModel.refreshText()
 }
