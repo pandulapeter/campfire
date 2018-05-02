@@ -22,7 +22,6 @@ import kotlinx.coroutines.experimental.async
  */
 class SongPageViewModel(
     val songId: String,
-    private val songParser: SongParser,
     analyticsManager: AnalyticsManager,
     private val songInfoRepository: SongInfoRepository,
     private val downloadedSongRepository: DownloadedSongRepository,
@@ -50,7 +49,6 @@ class SongPageViewModel(
             if (modifiedValue != it) {
                 transposition.set(modifiedValue)
             }
-            refreshText()
         }
     }
 
@@ -64,7 +62,6 @@ class SongPageViewModel(
                 async(UI) {
                     async(CommonPool) {
                         unformattedText = updateType.song
-                        refreshText()
                     }.await()
                     isLoading.set(false)
                 }
@@ -92,12 +89,6 @@ class SongPageViewModel(
             songInfoRepository.getLibrarySongs().find { it.id == songId }?.let { songInfo ->
                 downloadedSongRepository.startSongDownload(songInfo)
             }
-        }
-    }
-
-    private fun refreshText() {
-        unformattedText?.let {
-            text.set(songParser.parseSong(it, shouldShowChords, userPreferenceRepository.shouldUseGermanNotation, transposition.get()))
         }
     }
 }

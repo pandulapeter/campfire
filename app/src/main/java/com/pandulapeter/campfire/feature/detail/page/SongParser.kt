@@ -1,18 +1,15 @@
-package com.pandulapeter.campfire.old.feature.detail.songPage
+package com.pandulapeter.campfire.feature.detail.page
 
 import android.content.Context
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.TextAppearanceSpan
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.old.data.model.Chord
 import com.pandulapeter.campfire.data.model.local.Note
+import com.pandulapeter.campfire.old.data.model.Chord
 import com.pandulapeter.campfire.old.data.model.Section
 import com.pandulapeter.campfire.old.data.model.SectionType
 
-/**
- * Parses raw song texts.
- */
 class SongParser(private val context: Context) {
 
     //TODO: Remove line breaks if they occur multiple times in a row.
@@ -22,8 +19,8 @@ class SongParser(private val context: Context) {
         val chords = mutableListOf<Chord>()
         var offset = 0
         val newText = text.replace("*", "") //TODO: This should be useless.
-        val parsedText = (if (shouldShowChords) newText else newText.replace(Regex("\\[(.*?)]"), ""))
-            .replace(Regex("\\{(.*?)}"), {
+        val parsedText = (if (shouldShowChords) newText else newText.replace(Regex("\\[(.*?)[]]"), ""))
+            .replace(Regex("\\{(.*?)[}]"), {
                 val sectionType = SectionType.fromAbbreviation(it.value[1])
                 if (sectionType != null) {
                     val index = it.value.indexOf("_").let { index -> if (index >= 0) it.value.substring(index + 1).removeSuffix("}").toInt() else 0 }
