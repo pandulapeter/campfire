@@ -127,9 +127,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="24dp"
                     android:layout_marginStart="@dimen/content_padding"
-                    android:max="11"
+                    android:max="10"
                     android:padding="@dimen/content_padding"
-                    android:progress="3" />
+                    android:progress="2" />
 
             </android.support.v7.widget.CardView>
 

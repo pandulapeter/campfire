@@ -73,7 +73,7 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
 
     override fun scroll(songId: String, speed: Int) {
         if (viewModel.song.id == songId) {
-            smoothScrollHolder += (1 + speed) / 4f
+            smoothScrollHolder += (1 + speed) / 5f
             while (smoothScrollHolder > 1) {
                 binding.scrollView.scrollY += smoothScrollHolder.roundToInt()
                 smoothScrollHolder -= 1
