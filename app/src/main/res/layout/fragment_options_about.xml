@@ -176,6 +176,13 @@
                         style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:onClick="@{() -> viewModel.onTermsAndConditionsClicked(context)}"
+                        android:text="@string/options_about_terms_and_conditions" />
+
+                    <TextView
+                        style="@style/OptionsItem"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:onClick="@{() -> viewModel.onPrivacyPolicyClicked(context)}"
                         android:text="@string/options_about_privacy_policy" />
 

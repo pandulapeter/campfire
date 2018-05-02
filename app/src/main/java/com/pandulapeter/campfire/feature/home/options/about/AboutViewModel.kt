@@ -15,6 +15,7 @@ class AboutViewModel : CampfireViewModel() {
     companion object {
         private const val PLAY_STORE_URL = "market://details?id=com.pandulapeter.campfire"
         private const val GIT_HUB_URL = "https://github.com/pandulapeter/campfire-android"
+        private const val TERMS_AND_CONDITIONS_URL = "https://campfire-test1.herokuapp.com/v1/terms-and-conditions"
         private const val PRIVACY_POLICY_URL = "https://campfire-test1.herokuapp.com/v1/privacy-policy"
         private const val OPEN_SOURCE_LICENSES_URL = "https://campfire-test1.herokuapp.com/v1/open-source-licenses"
         const val EMAIL_ADDRESS = "pandulapeter@gmail.com"
@@ -51,6 +52,8 @@ class AboutViewModel : CampfireViewModel() {
 
     //TODO: Start in app purchase flow
     fun onBuyMeABeerClicked() = shouldShowWorkInProgressSnackbar.set(true)
+
+    fun onTermsAndConditionsClicked(context: Context) = context.openInCustomTab(TERMS_AND_CONDITIONS_URL)
 
     fun onPrivacyPolicyClicked(context: Context) = context.openInCustomTab(PRIVACY_POLICY_URL)
 

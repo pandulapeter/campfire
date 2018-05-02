@@ -181,6 +181,7 @@
     <string name="options_about_buy_me_a_beer">Buy me a beer</string>
     <string name="options_about_error">Looks like no app can handle this request</string>
     <string name="options_about_legal">Legal</string>
+    <string name="options_about_terms_and_conditions">Terms and Conditions</string>
     <string name="options_about_privacy_policy">Privacy Policy</string>
     <string name="options_about_licenses">Open-source licenses</string>
 
