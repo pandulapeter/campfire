@@ -277,14 +277,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         if (preferenceDatabase.shouldShowPrivacyPolicy) {
             PrivacyConsentDialogFragment.show(DIALOG_ID_PRIVACY_POLICY, supportFragmentManager)
             preferenceDatabase.ftuxLastSeenChangelog = BuildConfig.VERSION_CODE
-        } else if (preferenceDatabase.ftuxLastSeenChangelog < BuildConfig.VERSION_CODE) {
-            preferenceDatabase.ftuxLastSeenChangelog = BuildConfig.VERSION_CODE
-            binding.root.postDelayed({
-                currentFragment?.showSnackbar(
-                    message = R.string.options_changelog_app_updated,
-                    actionText = R.string.options_changelog_see_what_is_new,
-                    action = { openOptionsScreen(true) })
-            }, 300)
         }
     }
 
@@ -517,6 +509,15 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
         // Reset the floating action button.
         disableFloatingActionButton()
+
+        // Show the changelog snackbar if needed
+        if (preferenceDatabase.ftuxLastSeenChangelog < BuildConfig.VERSION_CODE) {
+            preferenceDatabase.ftuxLastSeenChangelog = BuildConfig.VERSION_CODE
+            currentFragment?.showSnackbar(
+                message = R.string.options_changelog_app_updated,
+                actionText = R.string.options_changelog_what_is_new,
+                action = { openOptionsScreen(true) })
+        }
     }
 
     private fun handleNewIntent() {

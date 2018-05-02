@@ -163,7 +163,7 @@
         ]]></Data>
     </string>
     <string name="options_changelog_app_updated">The app has been updated</string>
-    <string name="options_changelog_see_what_is_new">See what\'s new</string>
+    <string name="options_changelog_what_is_new">What\'s new</string>
 
     <!-- Options screen / About -->
     <string name="options_about_description_top"><Data><![CDATA[
