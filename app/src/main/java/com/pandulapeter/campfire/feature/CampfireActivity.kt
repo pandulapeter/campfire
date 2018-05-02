@@ -130,6 +130,9 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     true -> {
                         binding.appBarLayout.layoutTransition = LayoutTransition().apply {
                             setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
+                            disableTransitionType(LayoutTransition.APPEARING)
+                            disableTransitionType(LayoutTransition.CHANGE_APPEARING)
+
                         }
                         binding.coordinatorLayout.layoutTransition = LayoutTransition().apply {
                             enableTransitionType(LayoutTransition.CHANGING)
@@ -138,6 +141,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     false -> {
                         binding.appBarLayout.layoutTransition = LayoutTransition().apply {
                             disableTransitionType(LayoutTransition.DISAPPEARING)
+                            disableTransitionType(LayoutTransition.APPEARING)
+                            disableTransitionType(LayoutTransition.CHANGE_APPEARING)
                             enableTransitionType(LayoutTransition.CHANGING)
                             setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
                         }
@@ -382,7 +387,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                         postDelayed({
                             transitionMode = true
                             removeViews()
-                        }, 100)
+                        }, 200)
                     }
                 }
             } else {
@@ -397,7 +402,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                             transitionMode = true
                             removeViews()
                             addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                        }, 250)
+                        }, 200)
                     }
                 }
             }
