@@ -6,7 +6,8 @@
     </style>
 
     <style name="Chord">
-        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/accent</item>
     </style>
 

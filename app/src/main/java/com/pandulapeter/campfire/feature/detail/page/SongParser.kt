@@ -55,6 +55,9 @@ class SongParser(private val context: Context) {
                 setSpan(ChordSpan(it.getName(transposition, shouldUseGermanNotation)), it.startPosition, it.endPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 setSpan(TextAppearanceSpan(context, R.style.Chord), it.startPosition, it.endPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
+            Regex("]([ \\t]+)\\[").findAll(parsedText).forEach {
+                setSpan(TextAppearanceSpan(context, R.style.Chord), it.range.first, it.range.last, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
         }
     }
 
