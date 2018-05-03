@@ -387,7 +387,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                         postDelayed({
                             transitionMode = true
                             removeViews()
-                        }, 250)
+                        }, 200)
                     }
                 }
             } else {
@@ -402,7 +402,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                             transitionMode = true
                             removeViews()
                             addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                        }, 150)
+                        }, 200)
                     }
                 }
             }
@@ -435,11 +435,13 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         if (toolbar != oldView) {
             oldView?.visibleOrGone = false
             binding.toolbarTitleContainer.removeView(oldView)
-            binding.toolbarTitleContainer.addView(
-                toolbar.apply { visibleOrGone = oldView?.id == R.id.default_toolbar },
-                FrameLayout.LayoutParams(if (width == 0) ViewGroup.LayoutParams.MATCH_PARENT else width, ViewGroup.LayoutParams.MATCH_PARENT).apply {
-                    gravity = Gravity.CENTER_VERTICAL
-                })
+            if (toolbar.parent == null) { //TODO: The else branch needs to be handled.
+                binding.toolbarTitleContainer.addView(
+                    toolbar.apply { visibleOrGone = oldView?.id == R.id.default_toolbar },
+                    FrameLayout.LayoutParams(if (width == 0) ViewGroup.LayoutParams.MATCH_PARENT else width, ViewGroup.LayoutParams.MATCH_PARENT).apply {
+                        gravity = Gravity.CENTER_VERTICAL
+                    })
+            }
         }
         toolbar.run { postOnAnimation { visibleOrGone = true } }
     }
