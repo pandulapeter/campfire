@@ -9,6 +9,7 @@ import android.view.animation.AnimationUtils
 import android.widget.ViewFlipper
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewStateLayoutBinding
+import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.useStyledAttributes
 import com.pandulapeter.campfire.util.visibleOrGone
@@ -37,7 +38,10 @@ class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSe
     var buttonIcon = 0
         set(value) {
             field = value
-            binding.button.setCompoundDrawablesRelativeWithIntrinsicBounds(if (value == 0) null else context.drawable(value), null, null, null)
+            binding.button.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                if (value == 0) null else context.drawable(value)?.mutate()?.apply { setTint(context.color(R.color.white)) },
+                null, null, null
+            )
         }
     var text = ""
         set(value) {
