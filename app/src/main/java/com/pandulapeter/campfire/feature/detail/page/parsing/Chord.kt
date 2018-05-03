@@ -1,10 +1,5 @@
-package com.pandulapeter.campfire.old.data.model
+package com.pandulapeter.campfire.feature.detail.page.parsing
 
-import com.pandulapeter.campfire.data.model.local.Note
-
-/**
- * Represents a single chord.
- */
 data class Chord(private val root: Note, private val suffix: String, val startPosition: Int, val endPosition: Int) {
 
     fun getName(transposition: Int, shouldUseGermanNotation: Boolean) = root.transpose(transposition).getName(shouldUseGermanNotation) + suffix

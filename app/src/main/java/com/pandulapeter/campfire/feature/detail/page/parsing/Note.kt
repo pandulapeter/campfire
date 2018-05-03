@@ -1,8 +1,5 @@
-package com.pandulapeter.campfire.data.model.local
+package com.pandulapeter.campfire.feature.detail.page.parsing
 
-/**
- * Defines all possible musical notes and their relations.
- */
 sealed class Note {
 
     abstract fun getName(shouldUseGermanNotation: Boolean): String

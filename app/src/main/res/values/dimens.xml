@@ -62,7 +62,6 @@
 
     <!-- Detail screen -->
     <dimen name="detail_auto_scroll_control_width">128dp</dimen>
-    <dimen name="detail_auto_scroll_control_margin">56dp</dimen>
     <dimen name="detail_auto_scroll_control_padding">4dp</dimen>
 
 </resources>

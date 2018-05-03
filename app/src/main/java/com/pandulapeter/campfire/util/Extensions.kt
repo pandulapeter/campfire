@@ -141,17 +141,6 @@ inline fun ObservableBoolean.onEventTriggered(fragment: Fragment? = null, crossi
     })
 }
 
-inline fun ObservableInt.onEventTriggered(fragment: Fragment? = null, crossinline callback: (Int) -> Unit) {
-    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            if (get() != 0 && fragment?.isAdded != false) {
-                callback(get())
-                set(0)
-            }
-        }
-    })
-}
-
 inline fun <T> ObservableField<T>.onEventTriggered(fragment: Fragment? = null, crossinline callback: (T) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {

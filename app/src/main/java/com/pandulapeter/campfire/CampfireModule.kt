@@ -7,7 +7,7 @@ import com.pandulapeter.campfire.data.persistence.Database
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.*
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
-import com.pandulapeter.campfire.feature.detail.page.SongParser
+import com.pandulapeter.campfire.feature.detail.page.parsing.SongParser
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager

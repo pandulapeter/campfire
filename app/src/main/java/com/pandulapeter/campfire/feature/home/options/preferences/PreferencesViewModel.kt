@@ -1,8 +1,8 @@
 package com.pandulapeter.campfire.feature.home.options.preferences
 
 import android.databinding.ObservableBoolean
-import com.pandulapeter.campfire.data.model.local.Note
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.feature.detail.page.parsing.Note
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.onPropertyChanged

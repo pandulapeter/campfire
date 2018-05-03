@@ -6,7 +6,6 @@ import android.os.Build
 import android.support.annotation.ColorInt
 import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
-import android.support.design.widget.FloatingActionButton
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat
 import android.text.Html
 import android.text.Spannable
@@ -78,17 +77,6 @@ fun setFormattedText(view: TextView, @StringRes resourceId: Int) {
     } else {
         @Suppress("DEPRECATION")
         view.text = Html.fromHtml(view.context.getString(resourceId))
-    }
-}
-
-
-@BindingAdapter("visibility")
-fun setVisibility(view: FloatingActionButton, isVisible: Boolean) {
-    if (isVisible) {
-        view.show()
-        view.visibility = View.VISIBLE
-    } else {
-        view.hide()
     }
 }
 

@@ -7,7 +7,7 @@ android {
     compileSdkVersion 'android-P'
     defaultConfig {
         applicationId "com.pandulapeter.campfire"
-        minSdkVersion 26 //TODO: Set to 21 after transition glitches are fixed.
+        minSdkVersion 21
         targetSdkVersion 27
         versionCode 1
         versionName "0.0.4"

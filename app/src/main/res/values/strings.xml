@@ -3,7 +3,6 @@
 
     <!-- General -->
     <string name="campfire">Campfire</string>
-    <string name="work_in_progress">Work in progress</string>
     <string name="got_it">Got it</string>
     <string name="go_to_library">Go to Library</string>
     <string name="try_again">Try again</string>
@@ -28,7 +27,6 @@
     <string name="drag_to_rearrange">Drag to rearrange</string>
 
     <!-- Home screen -->
-    <string name="home_menu">Menu</string>
     <string name="home_version_pattern">v%s</string>
     <string name="home_library">Library</string>
     <string name="home_collections">Collections</string>
