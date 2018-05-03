@@ -12,29 +12,33 @@ import com.pandulapeter.campfire.old.data.model.SectionType
 
 class SongParser(private val context: Context) {
 
-    //TODO: Remove line breaks if they occur multiple times in a row.
-    //TODO: Refactor this method, it's difficult to read.
     fun parseSong(text: String, shouldShowChords: Boolean, shouldUseGermanNotation: Boolean, transposition: Int): SpannableString {
         val sectionNames = mutableListOf<Section>()
         val chords = mutableListOf<Chord>()
         var offset = 0
-        val newText = text.replace("*", "") //TODO: This should be useless.
-        val parsedText = (if (shouldShowChords) newText else newText.replace(Regex("\\[(.*?)[]]"), ""))
-            .replace(Regex("\\{(.*?)[}]"), {
-                val sectionType = SectionType.fromAbbreviation(it.value[1])
-                if (sectionType != null) {
-                    val index = it.value.indexOf("_").let { index -> if (index >= 0) it.value.substring(index + 1).removeSuffix("}").toInt() else 0 }
-                    val section = Section(sectionType, index, offset + it.range.first)
-                    val result = section.getName(context)
-                    sectionNames.add(section)
-                    offset += result.length - it.value.length
-                    result
-                } else {
-                    it.value
-                }
-            })
+        val newText = text.replace("*", "") //Remove asterisk characters //TODO: This should be useless.
+        val parsedText = (if (shouldShowChords) newText else newText
+            .replace(Regex("\\[(.*?)[]]"), "") // Remove chords
+            .replace(Regex("(?:\\h*\\n){3,}"), "") // Remove lines consisting only of empty space
+            .replace(Regex("[ ][ ]+"), "") // Remove groups of multiple whitespaces within a single line
+            .replace(Regex("[}][{]+"), "}\n{") // Ensure that consecutive section headers are separated by an empty line
+                ).replace(Regex("\\{(.*?)[}]"), {
+            // Find the section headers
+            val sectionType = SectionType.fromAbbreviation(it.value[1])
+            if (sectionType != null) {
+                val index = it.value.indexOf("_").let { index -> if (index >= 0) it.value.substring(index + 1).removeSuffix("}").toInt() else 0 }
+                val section = Section(sectionType, index, offset + it.range.first)
+                val result = section.getName(context)
+                sectionNames.add(section)
+                offset += result.length - it.value.length
+                result
+            } else {
+                it.value
+            }
+        })
         if (shouldShowChords) {
             parsedText.replace(Regex("\\[(.*?)]")) {
+                // Find the chords
                 it.value.toNote()?.let { note ->
                     chords.add(Chord(note, it.value.toSuffix(), it.range.first, it.range.last + 1))
                 }
@@ -51,12 +55,15 @@ class SongParser(private val context: Context) {
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
             }
-            chords.forEach {
-                setSpan(ChordSpan(it.getName(transposition, shouldUseGermanNotation)), it.startPosition, it.endPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                setSpan(TextAppearanceSpan(context, R.style.Chord), it.startPosition, it.endPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-            Regex("]([ \\t]+)\\[").findAll(parsedText).forEach {
-                setSpan(TextAppearanceSpan(context, R.style.Chord), it.range.first, it.range.last, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            if (shouldShowChords) {
+                chords.forEach {
+                    setSpan(ChordSpan(it.getName(transposition, shouldUseGermanNotation)), it.startPosition, it.endPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(TextAppearanceSpan(context, R.style.Chord), it.startPosition, it.endPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+                Regex("]([ \\t]+)\\[").findAll(parsedText).forEach {
+                    // Set the font of instrumental-only parts
+                    setSpan(TextAppearanceSpan(context, R.style.Chord), it.range.first, it.range.last, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
             }
         }
     }
