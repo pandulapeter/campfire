@@ -129,31 +129,31 @@
     <string name="options_preferences_share_usage_data_restart_action">Restart now</string>
 
     <!-- Options screen / Changelog -->
-    <string name="options_changelog_0_0_4_version_name">v0.0.4</string>
-    <string name="options_changelog_0_0_4_description">
+    <string name="options_changelog_0_4_0_version_name">v0.4.0</string>
+    <string name="options_changelog_0_4_0_description">
         <Data><![CDATA[
         • Added support for <strong>collections</strong> which are thematic playlists accessible to everyone.<br>
         • Added option to adjust the <strong>font size</strong>.<br>
         • Added <strong>shuffle</strong> option for playlists and collections that opens the list of songs in a random order.
         ]]></Data>
     </string>
-    <string name="options_changelog_0_0_3_version_name">v0.0.3</string>
-    <string name="options_changelog_0_0_3_description">
+    <string name="options_changelog_0_3_0_version_name">v0.3.0</string>
+    <string name="options_changelog_0_3_0_description">
         <Data><![CDATA[
         • Users can now create local <strong>playlists</strong> which are collections of songs for different occasions.<br>
         • Playlist detail screens are <strong>paginated</strong> - swiping horizontally cycles through all the songs in the selected playlist.<br>
         • Support for <strong>app shortcuts</strong> on and above Android 7.1.
         ]]></Data>
     </string>
-    <string name="options_changelog_0_0_2_version_name">v0.0.2</string>
-    <string name="options_changelog_0_0_2_description">
+    <string name="options_changelog_0_2_0_version_name">v0.2.0</string>
+    <string name="options_changelog_0_2_0_description">
         <Data><![CDATA[
         • The ability to <strong>transpose</strong> songs, <strong>auto-scroll</strong> longer texts with adjustable speed and saving these preferences individually per song.<br>
         • <strong>History</strong> screen which shows the last time different songs were opened.
         ]]></Data>
     </string>
-    <string name="options_changelog_0_0_1_version_name">v0.0.1</string>
-    <string name="options_changelog_0_0_1_description">
+    <string name="options_changelog_0_1_0_version_name">v0.1.0</string>
+    <string name="options_changelog_0_1_0_description">
         <Data><![CDATA[
         • <strong>Song library</strong> with options to search, sort and filter the list of songs.<br>
         • <strong>Offline caching</strong> with the ability to manage the downloaded files.<br>
