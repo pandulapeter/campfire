@@ -2,6 +2,41 @@ package com.pandulapeter.campfire.feature.detail.page.parsing
 
 sealed class Note {
 
+    companion object {
+        fun toNote(input: String) = when (input[2].toLowerCase()) {
+            'b' -> when (input[1].toUpperCase()) {
+                'C' -> Note.B
+                'D' -> Note.CSharp
+                'E' -> Note.DSharp
+                'F' -> Note.E
+                'G' -> Note.FSharp
+                'A' -> Note.GSharp
+                'B' -> Note.ASharp
+                else -> null
+            }
+            '#' -> when (input[1].toUpperCase()) {
+                'C' -> Note.CSharp
+                'D' -> Note.DSharp
+                'E' -> Note.F
+                'F' -> Note.FSharp
+                'G' -> Note.GSharp
+                'A' -> Note.ASharp
+                'B' -> Note.C
+                else -> null
+            }
+            else -> when (input[1].toUpperCase()) {
+                'C' -> Note.C
+                'D' -> Note.D
+                'E' -> Note.E
+                'F' -> Note.F
+                'G' -> Note.G
+                'A' -> Note.A
+                'B' -> Note.B
+                else -> Note.Hint
+            }
+        }
+    }
+
     abstract fun getName(shouldUseGermanNotation: Boolean): String
 
     fun transpose(pitchOffset: Int): Note {

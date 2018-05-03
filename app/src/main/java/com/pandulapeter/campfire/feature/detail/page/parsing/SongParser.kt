@@ -35,8 +35,8 @@ class SongParser(private val context: Context) {
         if (shouldShowChords) {
             parsedText.replace(Regex("\\[(.*?)]")) {
                 // Find the chords
-                it.value.toNote()?.let { note ->
-                    chords.add(Chord(note, it.value.toSuffix(note is Note.Hint), it.range.first, it.range.last + 1))
+                Note.toNote(it.value)?.let { note ->
+                    chords.add(Chord(note, it.value.toSuffix(note === Note.Hint), it.range.first, it.range.last + 1))
                 }
                 it.value
             }
@@ -61,39 +61,6 @@ class SongParser(private val context: Context) {
                     setSpan(TextAppearanceSpan(context, R.style.Chord), it.range.first, it.range.last, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
-        }
-    }
-
-    private fun String.toNote() = when (this[2].toLowerCase()) {
-        'b' -> when (this[1].toUpperCase()) {
-            'C' -> Note.B
-            'D' -> Note.CSharp
-            'E' -> Note.DSharp
-            'F' -> Note.E
-            'G' -> Note.FSharp
-            'A' -> Note.GSharp
-            'B' -> Note.ASharp
-            else -> null
-        }
-        '#' -> when (this[1].toUpperCase()) {
-            'C' -> Note.CSharp
-            'D' -> Note.DSharp
-            'E' -> Note.F
-            'F' -> Note.FSharp
-            'G' -> Note.GSharp
-            'A' -> Note.ASharp
-            'B' -> Note.C
-            else -> null
-        }
-        else -> when (this[1].toUpperCase()) {
-            'C' -> Note.C
-            'D' -> Note.D
-            'E' -> Note.E
-            'F' -> Note.F
-            'G' -> Note.G
-            'A' -> Note.A
-            'B' -> Note.B
-            else -> Note.Hint
         }
     }
 
