@@ -3,3 +3,6 @@
 
 # Release keystore
 release.keystore
+
+# Firebase configuration
+google-services.json
