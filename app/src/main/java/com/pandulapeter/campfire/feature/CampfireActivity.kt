@@ -387,7 +387,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                         postDelayed({
                             transitionMode = true
                             removeViews()
-                        }, 200)
+                        }, 250)
                     }
                 }
             } else {

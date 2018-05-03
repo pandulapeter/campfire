@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.model.remote.SongDetail
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
+import com.pandulapeter.campfire.feature.detail.DetailPageEventBus
 import com.pandulapeter.campfire.feature.detail.page.parsing.SongParser
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
@@ -26,6 +27,7 @@ class DetailPageViewModel(
     private val songDetailRepository by inject<SongDetailRepository>()
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private val songParser by inject<SongParser>()
+    private val detailPageEventBus by inject<DetailPageEventBus>()
     private var rawText = ""
     val text = ObservableField<CharSequence>("")
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
@@ -46,6 +48,7 @@ class DetailPageViewModel(
             } else {
                 refreshText()
                 preferenceDatabase.setTransposition(song.id, modifiedValue)
+                detailPageEventBus.notifyTranspositionChanged(song.id, modifiedValue)
             }
         }
     }
@@ -67,6 +70,7 @@ class DetailPageViewModel(
             refreshText {
                 state.set(StateLayout.State.NORMAL)
                 onDataLoaded()
+                detailPageEventBus.notifyTranspositionChanged(song.id, transposition.get())
             }
         }
     }

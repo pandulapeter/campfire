@@ -29,7 +29,7 @@ import org.koin.android.ext.android.inject
 import java.net.URLEncoder
 
 
-class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail) {
+class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail), DetailPageEventBus.Subscriber {
 
     companion object {
         const val TRANSITION_DELAY = 50L
@@ -66,6 +66,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
     private val detailEventBus by inject<DetailEventBus>()
+    private val detailPageEventBus by inject<DetailPageEventBus>()
     private val songs by lazy { arguments?.songs?.filterIsInstance<Song>() ?: listOf() }
     private val drawablePlayToPause by lazy { mainActivity.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { mainActivity.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
@@ -74,6 +75,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val transposeHigher by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_higher) }
     private val transposeLower by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_lower) }
     private var isPinchHintVisible = false
+    private val transposeContainer by lazy { mainActivity.secondaryNavigationMenu.findItem(R.id.transpose_container) }
     private val playlistButton: ToolbarButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(if (viewModel.isSongInAnyPlaylists()) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp) {
             if (viewModel.areThereMoreThanOnePlaylists()) {
@@ -163,6 +165,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             mainActivity.lastSongId = it
             mainActivity.updateToolbarTitleView(inflateToolbarTitle(mainActivity.toolbarContext), toolbarWidth)
             detailEventBus.notifyTransitionEnd()
+            onTranspositionChanged(it, preferenceDatabase.getTransposition(it))
         }
         binding.viewPager.adapter = pagerAdapter
         binding.viewPager.addPageScrollListener(
@@ -241,15 +244,9 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         })
     }
 
-    override fun onPause() {
-        if (mainActivity.autoScrollControl.visibleOrInvisible) {
-            toggleAutoScroll()
-        }
-        super.onPause()
-    }
-
     override fun onResume() {
         super.onResume()
+        detailPageEventBus.subscribe(this)
         (mainActivity.autoScrollControl.tag as? Animator)?.let {
             it.cancel()
             mainActivity.autoScrollControl.tag = null
@@ -257,6 +254,14 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         mainActivity.autoScrollControl.visibleOrInvisible = false
         mainActivity.updateFloatingActionButtonDrawable(mainActivity.drawable(R.drawable.ic_play_24dp))
         showHintIfNeeded()
+    }
+
+    override fun onPause() {
+        if (mainActivity.autoScrollControl.visibleOrInvisible) {
+            toggleAutoScroll()
+        }
+        super.onPause()
+        detailPageEventBus.unsubscribe(this)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -323,6 +328,15 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     }
 
     override fun onFloatingActionButtonPressed() = toggleAutoScroll()
+
+    override fun onTranspositionChanged(songId: String, value: Int) {
+        if (songId == viewModel.songId.get()) {
+            transposeContainer.title = if (value == 0) getString(R.string.detail_transpose) else getString(
+                R.string.detail_transpose_value,
+                if (value < 0) "$value" else "+$value"
+            )
+        }
+    }
 
     fun onDataLoaded(songId: String) {
         if (songId == viewModel.songId.get()) {
