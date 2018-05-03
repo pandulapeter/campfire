@@ -10,6 +10,10 @@ import kotlin.reflect.KProperty
 
 class PreferenceDatabase(context: Context) {
 
+    companion object {
+        private const val TRANSPOSITION_PREFIX = "transposition"
+    }
+
     private val preferences = context.applicationContext.getSharedPreferences("preferences", Context.MODE_PRIVATE)
     private val locale by lazy { Locale.getDefault().isO3Country.toUpperCase() }
 
@@ -50,6 +54,11 @@ class PreferenceDatabase(context: Context) {
     var ftuxManageDownloadsCompleted by PreferenceFieldDelegate.Boolean("ftuxManageDownloadsCompleted", false)
     var ftuxPlaylistPagerSwipeCompleted by PreferenceFieldDelegate.Boolean("ftuxPlaylistPagerSwipeCompleted", false)
     var fontSizePinchCompleted by PreferenceFieldDelegate.Boolean("fontSizePinchCompleted", false)
+
+    // Song transposition values
+    fun getTransposition(songId: String) = preferences.getInt(TRANSPOSITION_PREFIX + songId, 0)
+
+    fun setTransposition(songId: String, transposition: Int) = preferences.edit().putInt(TRANSPOSITION_PREFIX + songId, transposition).apply()
 
     private fun shouldEnableGermanNotationByDefault() = when (locale) {
         "AUT", "CZE", "DEU", "SWE", "DNK", "EST", "FIN", "HUN", "LVA", "NOR", "POL", "SRB", "SVK" -> true

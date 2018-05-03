@@ -12,6 +12,9 @@ import com.pandulapeter.campfire.feature.detail.page.parsing.SongParser
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.util.onPropertyChanged
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
 import org.koin.android.ext.android.inject
 
 class DetailPageViewModel(
@@ -27,7 +30,7 @@ class DetailPageViewModel(
     val text = ObservableField<CharSequence>("")
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
     val textSize = ObservableFloat(preferenceDatabase.fontSize * initialTextSize)
-    val transposition = ObservableInt() //TODO: Implement transposition.
+    val transposition = ObservableInt(preferenceDatabase.getTransposition(song.id))
 
     init {
         transposition.onPropertyChanged {
@@ -40,8 +43,10 @@ class DetailPageViewModel(
             }
             if (modifiedValue != it) {
                 transposition.set(modifiedValue)
+            } else {
+                refreshText()
+                preferenceDatabase.setTransposition(song.id, modifiedValue)
             }
-            refreshText()
         }
     }
 
@@ -83,13 +88,13 @@ class DetailPageViewModel(
     fun updateTextSize() = textSize.set(preferenceDatabase.fontSize * initialTextSize)
 
     fun refreshText(onDone: () -> Unit = {}) {
-//        async(UI) {
-        text.set(
-//                async(CommonPool) {
-            songParser.parseSong(rawText, preferenceDatabase.shouldShowChords, preferenceDatabase.shouldUseGermanNotation, transposition.get())
-//                }.await()
-        )
-        onDone()
-//        }
+        async(UI) {
+            text.set(
+                async(CommonPool) {
+                    songParser.parseSong(rawText, preferenceDatabase.shouldShowChords, preferenceDatabase.shouldUseGermanNotation, transposition.get())
+                }.await()
+            )
+            onDone()
+        }
     }
 }
