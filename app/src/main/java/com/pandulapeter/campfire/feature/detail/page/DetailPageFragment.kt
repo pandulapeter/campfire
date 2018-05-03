@@ -71,6 +71,14 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
 
     override fun onTextSizeChanged() = viewModel.updateTextSize()
 
+    override fun onShouldShowChordsChanged() = viewModel.refreshText()
+
+    override fun onTranspositionChanged(songId: String, value: Int) {
+        if (songId == this.song.id) {
+            viewModel.transposition.set(viewModel.transposition.get() + value)
+        }
+    }
+
     override fun scroll(songId: String, speed: Int) {
         if (viewModel.song.id == songId) {
             smoothScrollHolder += (1 + speed) / 5f
@@ -80,6 +88,4 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
             }
         }
     }
-
-    override fun onShouldShowChordsChanged() = viewModel.refreshText()
 }

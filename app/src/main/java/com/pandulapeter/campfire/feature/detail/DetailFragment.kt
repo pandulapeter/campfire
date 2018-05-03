@@ -283,8 +283,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = when (menuItem.itemId) {
-        R.id.transpose_higher -> consume { showSnackbar(R.string.work_in_progress) }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), 1) }
-        R.id.transpose_lower -> consume { showSnackbar(R.string.work_in_progress) }//detailEventBus.transposeSong(viewModel.getSelectedSongId(), -1) }
+        R.id.transpose_higher -> consume { viewModel.songId.get()?.let { detailEventBus.notifyTranspositionChanged(it, 1) } }
+        R.id.transpose_lower -> consume { viewModel.songId.get()?.let { detailEventBus.notifyTranspositionChanged(it, -1) } }
         R.id.should_show_chords -> consumeAndUpdateBoolean(menuItem, {
             preferenceDatabase.shouldShowChords = it
             updateTransposeControls()
