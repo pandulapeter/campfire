@@ -27,14 +27,12 @@ android {
     buildTypes {
         debug {
             minifyEnabled false
-            applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
         }
         internal {
             minifyEnabled true
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
             signingConfig signingConfigs.internal
-            applicationIdSuffix ".internal"
             versionNameSuffix "-internal"
         }
         release {
@@ -86,6 +84,9 @@ dependencies {
     // Process handling
     implementation "com.jakewharton:process-phoenix:2.0.0"
 
+    // Firebase
+    implementation "com.google.firebase:firebase-core:$firebaseVersion"
+
     // Support library
     //noinspection GradleDependency,GradleCompatible
     implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
@@ -111,3 +112,4 @@ configurations.all {
         }
     }
 }
+apply plugin: "com.google.gms.google-services"
