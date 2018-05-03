@@ -36,7 +36,7 @@ class SongParser(private val context: Context) {
             parsedText.replace(Regex("\\[(.*?)]")) {
                 // Find the chords
                 it.value.toNote()?.let { note ->
-                    chords.add(Chord(note, it.value.toSuffix(), it.range.first, it.range.last + 1))
+                    chords.add(Chord(note, it.value.toSuffix(note is Note.Hint), it.range.first, it.range.last + 1))
                 }
                 it.value
             }
@@ -93,9 +93,9 @@ class SongParser(private val context: Context) {
             'G' -> Note.G
             'A' -> Note.A
             'B' -> Note.B
-            else -> null
+            else -> Note.Hint
         }
     }
 
-    private fun String.toSuffix() = substring(if (this[2] == 'b' || this[2] == '#') 3 else 2).removeSuffix("]").toLowerCase()
+    private fun String.toSuffix(isHint: Boolean) = substring(if (isHint) 1 else if (this[2] == 'b' || this[2] == '#') 3 else 2).removeSuffix("]").toLowerCase()
 }

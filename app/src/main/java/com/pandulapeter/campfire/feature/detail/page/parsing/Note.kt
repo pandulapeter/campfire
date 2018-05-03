@@ -111,4 +111,12 @@ sealed class Note {
 
         override fun transposeDown() = ASharp
     }
+
+    object Hint : Note() {
+        override fun getName(shouldUseGermanNotation: Boolean) = ""
+
+        override fun transposeUp() = Hint
+
+        override fun transposeDown() = Hint
+    }
 }
