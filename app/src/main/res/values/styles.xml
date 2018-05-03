@@ -3,6 +3,7 @@
 
     <style name="Section">
         <item name="android:fontFamily">sans-serif-light</item>
+        <item name="android:textColor">@color/accent</item>
     </style>
 
     <style name="Chord">
