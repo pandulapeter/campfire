@@ -92,7 +92,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected fun showSnackbar(message: String, @StringRes actionText: Int = R.string.try_again, action: (() -> Unit)? = null, dismissAction: (() -> Unit)? = null) {
         snackbar?.dismiss()
         snackbar = mainActivity.snackbarRoot
-            .makeSnackbar(message, if (action == null && dismissAction == null) Snackbar.LENGTH_SHORT else Snackbar.LENGTH_LONG, dismissAction)
+            .makeSnackbar(message, if (action == null && dismissAction == null) Snackbar.LENGTH_SHORT else 8000, dismissAction)
             .apply { action?.let { setAction(actionText, { action() }) } }
         snackbar?.show()
     }
