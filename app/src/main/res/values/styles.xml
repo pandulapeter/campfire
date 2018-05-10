@@ -6,9 +6,13 @@
         <item name="android:textColor">@color/accent</item>
     </style>
 
-    <style name="Chord">
+    <style name="Hint">
         <item name="android:fontFamily">monospace</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <style name="Chord" parent="Hint">
         <item name="android:textColor">@color/accent</item>
     </style>
 

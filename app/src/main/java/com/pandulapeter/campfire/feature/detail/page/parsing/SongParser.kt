@@ -51,13 +51,13 @@ class SongParser(private val context: Context) {
                 )
             }
             if (shouldShowChords) {
-                chords.forEach {
-                    setSpan(ChordSpan(it.getName(transposition, shouldUseGermanNotation)), it.startPosition, it.endPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    setSpan(TextAppearanceSpan(context, R.style.Chord), it.startPosition, it.endPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
                 Regex("]([ \\t]+)\\[").findAll(parsedText).forEach {
                     // Set the font of instrumental-only parts
-                    setSpan(TextAppearanceSpan(context, R.style.Chord), it.range.first, it.range.last, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(TextAppearanceSpan(context, R.style.Hint), it.range.first, it.range.last, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+                chords.forEach {
+                    setSpan(ChordSpan(it.getName(transposition, shouldUseGermanNotation)), it.startPosition, it.endPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(TextAppearanceSpan(context, if (it.isHint) R.style.Hint else R.style.Chord), it.startPosition, it.endPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
         }
