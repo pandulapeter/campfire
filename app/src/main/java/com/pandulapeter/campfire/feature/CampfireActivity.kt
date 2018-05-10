@@ -26,6 +26,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
+import com.crashlytics.android.Crashlytics
 import com.jakewharton.processphoenix.ProcessPhoenix
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
@@ -51,6 +52,7 @@ import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PrivacyConsentDialogFragment
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.*
+import io.fabric.sdk.android.Fabric
 import org.koin.android.ext.android.inject
 
 class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSelectedListener, PlaylistRepository.Subscriber {
@@ -161,6 +163,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     val autoScrollSpeed get() = if (binding.autoScrollControl.visibleOrInvisible && binding.autoScrollControl.tag == null) binding.autoScrollSeekBar.progress else -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        // Enable crash reporting if the user opted in.
+        if (preferenceDatabase.shouldShareUsageData && BuildConfig.BUILD_TYPE == "release") {
+            Fabric.with(this, Crashlytics())
+        }
 
         // Set the theme and the task description.
         setTheme(if (preferenceDatabase.shouldUseDarkTheme) R.style.DarkTheme else R.style.LightTheme)
