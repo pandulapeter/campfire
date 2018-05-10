@@ -129,6 +129,12 @@
     <string name="options_preferences_share_usage_data_restart_action">Restart now</string>
 
     <!-- Options screen / Changelog -->
+    <string name="options_changelog_0_5_0_version_name">v0.5</string>
+    <string name="options_changelog_0_5_0_description">
+        <Data><![CDATA[
+        • TODO
+        ]]></Data>
+    </string>
     <string name="options_changelog_0_4_0_version_name">v0.4</string>
     <string name="options_changelog_0_4_0_description">
         <Data><![CDATA[
