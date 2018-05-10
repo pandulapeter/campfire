@@ -21,12 +21,12 @@ import org.koin.android.ext.android.inject
 class DetailPageViewModel(
     val song: Song,
     private val initialTextSize: Int,
+    private val songParser: SongParser,
     private val onDataLoaded: () -> Unit
 ) : CampfireViewModel(), SongDetailRepository.Subscriber {
 
     private val songDetailRepository by inject<SongDetailRepository>()
     private val preferenceDatabase by inject<PreferenceDatabase>()
-    private val songParser by inject<SongParser>()
     private val detailPageEventBus by inject<DetailPageEventBus>()
     private var rawText = ""
     val text = ObservableField<CharSequence>("")

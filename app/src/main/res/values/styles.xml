@@ -9,7 +9,7 @@
     <style name="Hint">
         <item name="android:fontFamily">monospace</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
     </style>
 
     <style name="Chord" parent="Hint">

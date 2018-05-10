@@ -8,7 +8,6 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.*
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.detail.DetailPageEventBus
-import com.pandulapeter.campfire.feature.detail.page.parsing.SongParser
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
@@ -44,5 +43,4 @@ val persistenceModule = applicationContext {
 val detailModule = applicationContext {
     provide { DetailEventBus() }
     provide { DetailPageEventBus() }
-    provide { SongParser(get()) }
 }

@@ -91,7 +91,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
 
     override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) {
         adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songDetail.id }.let { index ->
-            if (index != RecyclerView.NO_POSITION) {
+            if (index != RecyclerView.NO_POSITION && (adapter.items[index] as? SongListItemViewModel.SongViewModel)?.song?.version == songDetail.version) {
                 adapter.notifyItemChanged(
                     index,
                     SongListAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloaded.UpToDate)

@@ -7,6 +7,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.databinding.FragmentDetailPageBinding
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.detail.DetailFragment
+import com.pandulapeter.campfire.feature.detail.page.parsing.SongParser
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.dimension
@@ -33,6 +34,7 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
         DetailPageViewModel(
             song = song,
             initialTextSize = mainActivity.dimension(R.dimen.text_normal),
+            songParser = SongParser(mainActivity),
             onDataLoaded = { (parentFragment as? DetailFragment)?.onDataLoaded(song.id) }
         )
     }
