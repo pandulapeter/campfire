@@ -1,7 +1,7 @@
 buildscript {
     ext.kotlinVersion = "1.2.41"
     ext.retrofitVersion = "2.3.0"
-    ext.roomVersion = "1.1.0-beta3"
+    ext.roomVersion = "1.1.0"
     ext.supportLibraryVersion = "25.4.0"
     ext.firebaseVersion = "15.0.2"
     repositories {
@@ -15,7 +15,7 @@ buildscript {
         classpath "com.android.tools.build:gradle:3.1.2"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
         classpath "com.google.gms:google-services:3.2.0"
-        classpath "io.fabric.tools:gradle:1.25.3"
+        classpath "io.fabric.tools:gradle:1.25.4"
     }
     allprojects {
         // ...
