@@ -231,6 +231,9 @@ fun String.normalize() = this
     .replace("Ú", "U")
     .replace("ű", "u")
     .replace("Ű", "U")
+    .removePrefix("A ")
+    .removePrefix("Az ")
+    .removePrefix("The ")
 
 fun ViewPager.addPageScrollListener(onPageSelected: (Int) -> Unit, onPageScrollStateChanged: (Int) -> Unit = {}) =
     addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
