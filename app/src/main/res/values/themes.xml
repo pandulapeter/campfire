@@ -7,26 +7,23 @@
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
-    <style name="LightTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme" parent="@style/Theme.AppCompat.DayNight.NoActionBar">
         <item name="colorAccent">@color/accent</item>
-        <item name="android:alertDialogTheme">@style/LightAlertDialog</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:navigationBarColor">?attr/colorPrimaryDark</item>
+        <item name="android:alertDialogTheme">@style/AlertDialogTheme</item>
     </style>
 
-    <style name="LightAlertDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+    <style name="AlertDialogTheme" parent="@style/Theme.AppCompat.DayNight.Dialog.Alert">
         <item name="colorAccent">@color/accent</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:navigationBarColor">?attr/colorPrimaryDark</item>
     </style>
 
     <style name="DarkTheme" parent="@style/Theme.AppCompat.NoActionBar">
         <item name="colorAccent">@color/accent</item>
-        <item name="android:alertDialogTheme">@style/DarkAlertDialog</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:navigationBarColor">?attr/colorPrimaryDark</item>
-    </style>
-
-    <style name="DarkAlertDialog" parent="Theme.AppCompat.Dialog.Alert">
-        <item name="colorAccent">@color/accent</item>
     </style>
 
 </resources>

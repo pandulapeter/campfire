@@ -13,7 +13,7 @@ abstract class BaseDialogFragment : AppCompatDialogFragment() {
     private val preferenceDatabase by inject<PreferenceDatabase>()
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let {
-        AlertDialog.Builder(it, if (preferenceDatabase.shouldUseDarkTheme) R.style.DarkAlertDialog else R.style.LightAlertDialog).createDialog(arguments)
+        AlertDialog.Builder(it, R.style.AlertDialogTheme).createDialog(arguments)
     } ?: super.onCreateDialog(savedInstanceState)
 
     abstract fun AlertDialog.Builder.createDialog(arguments: Bundle?): AlertDialog

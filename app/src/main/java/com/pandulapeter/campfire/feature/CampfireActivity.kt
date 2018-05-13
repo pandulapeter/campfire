@@ -170,7 +170,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
 
         // Set the theme and the task description.
-        setTheme(if (preferenceDatabase.shouldUseDarkTheme) R.style.DarkTheme else R.style.LightTheme)
+        setTheme(R.style.AppTheme)
         @Suppress("ConstantConditionIf")
         setTaskDescription(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -450,7 +450,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     })
             }
         }
-        toolbar.run { postOnAnimation { visibleOrGone = true } }
+        if (binding.toolbarTitleContainer.layoutTransition == null) {
+            binding.toolbarTitleContainer.layoutTransition = LayoutTransition()
+        } else {
+            toolbar.run { postOnAnimation { visibleOrGone = true } }
+        }
     }
 
     fun updateToolbarButtons(buttons: List<View>) = binding.toolbarButtonContainer.run {

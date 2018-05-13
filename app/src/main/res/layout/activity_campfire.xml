@@ -62,7 +62,6 @@
                             android:layout_width="0dp"
                             android:layout_height="0dp"
                             android:layout_marginStart="@dimen/second_keyline"
-                            android:animateLayoutChanges="true"
                             android:clipChildren="false"
                             app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
                             app:layout_constraintEnd_toStartOf="@+id/toolbar_button_container"
