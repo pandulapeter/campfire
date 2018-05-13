@@ -553,7 +553,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             binding.primaryNavigation.setCheckedItem(R.id.library)
             appShortcutManager.onLibraryOpened()
         }
-        return "library"
+        return AnalyticsManager.PARAM_VALUE_SCREEN_LIBRARY
     }
 
     private fun openCollectionsScreen(): String {
@@ -564,7 +564,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             binding.primaryNavigation.setCheckedItem(R.id.collections)
             appShortcutManager.onCollectionsOpened()
         }
-        return "collections"
+        return AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS
     }
 
     fun openCollectionDetailsScreen(collection: Collection, clickedView: View?, image: View?, shouldExplode: Boolean) {
@@ -610,7 +610,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             currentScreenId = R.id.history
             binding.primaryNavigation.setCheckedItem(R.id.history)
         }
-        return "history"
+        return AnalyticsManager.PARAM_VALUE_SCREEN_HISTORY
     }
 
     private fun openOptionsScreen(shouldOpenChangelog: Boolean = false): String {
@@ -620,7 +620,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             currentScreenId = R.id.options
             binding.primaryNavigation.setCheckedItem(R.id.options)
         }
-        return "options"
+        return AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS
     }
 
     fun openPlaylistScreen(playlistId: String): String {
@@ -636,7 +636,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             appShortcutManager.onPlaylistOpened(playlistId)
             supportFragmentManager.handleReplace("${PlaylistFragment::class.java.simpleName}-$playlistId") { PlaylistFragment.newInstance(playlistId) }
         }
-        return "playlist"
+        return AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST
     }
 
     private fun openManagePlaylistsScreen(): String {
@@ -646,7 +646,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             supportFragmentManager.handleReplace { ManagePlaylistsFragment() }
             binding.primaryNavigation.setCheckedItem(R.id.manage_playlists)
         }
-        return "manage_playlists"
+        return AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS
     }
 
     private fun openManageDownloadsScreen(): String {
@@ -656,7 +656,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             supportFragmentManager.handleReplace { ManageDownloadsFragment() }
             binding.primaryNavigation.setCheckedItem(R.id.manage_downloads)
         }
-        return "manage_downloads"
+        return AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS
     }
 
     fun openDetailScreen(clickedView: View?, songs: List<Song>, shouldExplode: Boolean, index: Int, shouldShowManagePlaylist: Boolean) {

@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 
 
@@ -90,6 +91,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_LIBRARY)
         savedInstanceState?.let {
             searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
             if (it.isTextInputVisible) {

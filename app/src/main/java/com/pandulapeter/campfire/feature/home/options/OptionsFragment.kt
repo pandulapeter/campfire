@@ -6,6 +6,7 @@ import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.addPageScrollListener
 import com.pandulapeter.campfire.util.withArguments
@@ -30,9 +31,14 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.home_options)
         binding.viewPager.adapter = OptionsFragmentPagerAdapter(mainActivity, childFragmentManager)
-        binding.viewPager.addPageScrollListener(onPageSelected = { mainActivity.expandAppBar() })
-        if (arguments?.shouldOpenChangelog == true) {
-            binding.viewPager.currentItem = 1
-        }
+        binding.viewPager.addPageScrollListener(onPageSelected = {
+            when (it) {
+                0 -> analyticsManager.onOptionsScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_PREFERENCES)
+                1 -> analyticsManager.onOptionsScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_WHAT_IS_NEW)
+                2 -> analyticsManager.onOptionsScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_ABOUT)
+            }
+            mainActivity.expandAppBar()
+        })
+        binding.viewPager.currentItem = if (arguments?.shouldOpenChangelog == true) 1 else 0
     }
 }

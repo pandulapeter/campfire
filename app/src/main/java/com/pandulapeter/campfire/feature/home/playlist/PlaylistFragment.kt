@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewMo
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
@@ -50,6 +51,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST)
         binding.swipeRefreshLayout.isEnabled = false
         viewModel.songCount.onPropertyChanged(this) {
             updateToolbarTitle(it)

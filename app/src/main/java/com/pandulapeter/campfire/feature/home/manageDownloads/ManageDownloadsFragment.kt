@@ -11,6 +11,7 @@ import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewMo
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.onPropertyChanged
@@ -42,6 +43,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Ba
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS)
         binding.swipeRefreshLayout.isEnabled = false
         updateToolbarTitle(viewModel.songCount.get())
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))

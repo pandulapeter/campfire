@@ -113,6 +113,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
+        analyticsManager.onSongDetailScreenOpened(songs.size)
         mainActivity.updateFloatingActionButtonDrawable(mainActivity.drawable(R.drawable.ic_play_24dp))
         mainActivity.autoScrollControl.visibleOrGone = false
         if (savedInstanceState != null) {
@@ -323,7 +324,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             mainActivity.enableFloatingActionButton()
             historyRepository.addHistoryItem(HistoryItem(songId, System.currentTimeMillis()))
             if (lastSongId != songId) {
-                analyticsManager.onSongOpened(songId)
+                analyticsManager.onSongVisualized(songId)
                 songRepository.onSongOpened(songId)
                 lastSongId = songId
             }

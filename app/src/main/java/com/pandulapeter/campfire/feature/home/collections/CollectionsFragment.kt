@@ -11,6 +11,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 
 
@@ -67,6 +68,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
+        analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
         savedInstanceState?.let {
             viewModel.placeholderText.set(it.placeholderText)
             viewModel.buttonText.set(it.buttonText)
@@ -87,7 +89,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             itemClickListener = { position, clickedView, image ->
                 (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.collection?.let {
                     viewModel.collectionRepository.onCollectionOpened(it.id)
-                    analyticsManager.onCollectionOpened(it.id)
+                    analyticsManager.onCollectionDetailScreenOpened(it.id)
                     mainActivity.openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
                 }
             }
