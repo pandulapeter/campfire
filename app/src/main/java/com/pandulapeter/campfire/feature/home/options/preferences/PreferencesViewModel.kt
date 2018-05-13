@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.home.options.preferences
 import android.content.Context
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.detail.page.parsing.Note
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel

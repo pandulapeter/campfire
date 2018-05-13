@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.home.options.preferences
 
 import android.os.Bundle
 import android.view.View
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsPreferencesBinding
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
