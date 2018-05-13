@@ -18,6 +18,7 @@ import android.support.v4.app.FragmentTransaction
 import android.support.v4.view.ViewCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.app.AppCompatDelegate
 import android.transition.Explode
 import android.view.Gravity
 import android.view.SubMenu
@@ -170,6 +171,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
 
         // Set the theme and the task description.
+        AppCompatDelegate.setDefaultNightMode(if (preferenceDatabase.shouldUseDarkTheme) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO)
         setTheme(R.style.AppTheme)
         @Suppress("ConstantConditionIf")
         setTaskDescription(
