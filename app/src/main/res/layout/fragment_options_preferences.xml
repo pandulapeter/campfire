@@ -40,7 +40,10 @@
                 android:layout_marginEnd="@dimen/content_padding"
                 android:layout_marginStart="@dimen/content_padding"
                 app:cardCornerRadius="@dimen/card_corner"
-                app:contentPadding="@dimen/content_padding">
+                app:contentPaddingBottom="@dimen/small_content_padding"
+                app:contentPaddingLeft="@dimen/content_padding"
+                app:contentPaddingRight="@dimen/content_padding"
+                app:contentPaddingTop="@dimen/small_content_padding">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -113,9 +116,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingBottom="@dimen/content_padding"
-                    android:paddingTop="@dimen/content_padding">
+                    android:orientation="vertical">
 
                     <TextView
                         style="@style/OptionsItem"
@@ -160,9 +161,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingBottom="@dimen/content_padding"
-                    android:paddingTop="@dimen/content_padding">
+                    android:orientation="vertical">
 
                     <android.support.v7.widget.SwitchCompat
                         android:layout_width="match_parent"

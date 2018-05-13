@@ -32,6 +32,7 @@ class ThemeSelectorBottomSheetFragment : BaseBottomSheetDialogFragment<FragmentT
         binding.automatic.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onThemeSelected(PreferencesViewModel.Theme.AUTOMATIC) }
         binding.dark.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onThemeSelected(PreferencesViewModel.Theme.DARK) }
         binding.light.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onThemeSelected(PreferencesViewModel.Theme.LIGHT) }
+        binding.root.apply { post { behavior.peekHeight = height } }
     }
 
     private fun onThemeSelected(theme: PreferencesViewModel.Theme) {

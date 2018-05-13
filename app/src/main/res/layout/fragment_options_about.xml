@@ -104,9 +104,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingBottom="@dimen/content_padding"
-                    android:paddingTop="@dimen/content_padding">
+                    android:orientation="vertical">
 
                     <TextView
                         style="@style/OptionsItem"
@@ -168,9 +166,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingBottom="@dimen/content_padding"
-                    android:paddingTop="@dimen/content_padding">
+                    android:orientation="vertical">
 
                     <TextView
                         style="@style/OptionsItem"
