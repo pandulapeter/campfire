@@ -83,7 +83,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private var Bundle.currentScreenId by BundleArgumentDelegate.Int("currentScreenId")
     private var Bundle.currentPlaylistId by BundleArgumentDelegate.String("currentPlaylistId")
     private var Bundle.currentCollectionId by BundleArgumentDelegate.String("currentCollectionId")
-    private var Bundle.isAppBarExpanded by BundleArgumentDelegate.Boolean("isAppBarExpanded")
     private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
     private var Bundle.lastColelctionId by BundleArgumentDelegate.String("lastCollectionId")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
@@ -97,7 +96,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private var currentPlaylistId = ""
     private var currentCollectionId = ""
     private var currentScreenId = R.id.library
-    private var forceExpandAppBar = true
     private val colorWhite by lazy { color(R.color.white) }
     private val playlistsContainerItem by lazy { binding.primaryNavigation.menu.findItem(R.id.playlists).subMenu }
     private val playlistIdMap = mutableMapOf<Int, String>()
@@ -192,9 +190,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         // Initialize the drawer layout.
         binding.drawerLayout.addDrawerListener(
             onDrawerStateChanged = {
-                if (it == DrawerLayout.STATE_DRAGGING) {
-                    expandAppBar()
-                }
                 currentFragment?.onDrawerStateChanged(it)
                 if (it == DrawerLayout.STATE_DRAGGING) {
                     hideKeyboard(currentFocus)
@@ -261,9 +256,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             currentCollectionId = savedInstanceState.currentCollectionId
             lastSongId = savedInstanceState.lastSongId
             lastCollectionId = savedInstanceState.lastColelctionId
-            if (currentScreenId == R.id.options) {
-                forceExpandAppBar = savedInstanceState.isAppBarExpanded
-            }
         }
         binding.drawerLayout.setDrawerLockMode(
             if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
@@ -329,7 +321,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
         outState?.currentScreenId = currentScreenId
-        outState?.isAppBarExpanded = binding.appBarLayout.height - binding.appBarLayout.bottom == 0
         outState?.currentPlaylistId = playlistIdMap[currentScreenId] ?: ""
         outState?.currentCollectionId = currentCollectionId
         outState?.lastSongId = lastSongId
@@ -398,11 +389,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 }
             }
         }
-    }
-
-    fun expandAppBar() {
-        binding.appBarLayout.setExpanded(forceExpandAppBar, forceExpandAppBar)
-        forceExpandAppBar = true
     }
 
     private fun updateMainToolbarButton(shouldShowBackButton: Boolean) {
@@ -499,7 +485,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         // Reset the app bar.
         transitionMode = false
         binding.toolbarButtonContainer.removeAllViews()
-        expandAppBar()
         updateMainToolbarButton(!isBackStackEmpty)
 
         // Reset the primary navigation drawer.

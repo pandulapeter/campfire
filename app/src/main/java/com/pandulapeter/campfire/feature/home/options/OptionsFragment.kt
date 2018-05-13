@@ -37,7 +37,6 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
                 1 -> analyticsManager.onOptionsScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_WHAT_IS_NEW)
                 2 -> analyticsManager.onOptionsScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_ABOUT)
             }
-            mainActivity.expandAppBar()
         })
         binding.viewPager.currentItem = if (arguments?.shouldOpenChangelog == true) 1 else 0
     }

@@ -164,7 +164,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                     mainActivity.updateFloatingActionButtonDrawable(drawablePauseToPlay?.apply { start() })
                 }
                 viewModel.songId.set(songs[it].id)
-                mainActivity.expandAppBar()
             },
             onPageScrollStateChanged = {
                 if (pagerAdapter.count > 1 && it == ViewPager.SCROLL_STATE_DRAGGING && mainActivity.autoScrollControl.visibleOrInvisible) {
