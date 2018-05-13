@@ -595,7 +595,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     if (clickedView == null || image == null) {
                         setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                     } else {
-                        setAllowOptimization(true)
+                        setReorderingAllowed(true)
                         clickedView.transitionName = "card-$lastCollectionId"
                         addSharedElement(clickedView, clickedView.transitionName)
                         image.transitionName = "image-$lastCollectionId"
@@ -686,7 +686,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 if (clickedView == null) {
                     setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                 } else {
-                    setAllowOptimization(true)
+                    setReorderingAllowed(true)
                     addSharedElement(clickedView, clickedView.transitionName)
                 }
             }

@@ -2,7 +2,7 @@ buildscript {
     ext.kotlinVersion = "1.2.41"
     ext.retrofitVersion = "2.3.0"
     ext.roomVersion = "1.1.0"
-    ext.supportLibraryVersion = "25.4.0"
+    ext.supportLibraryVersion = "27.1.1"
     ext.firebaseVersion = "15.0.2"
     repositories {
         jcenter()
