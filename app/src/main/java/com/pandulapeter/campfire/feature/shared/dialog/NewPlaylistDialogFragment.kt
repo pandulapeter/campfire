@@ -10,6 +10,7 @@ import android.view.inputmethod.EditorInfo
 import com.pandulapeter.campfire.NewPlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onTextChanged
@@ -25,6 +26,7 @@ class NewPlaylistDialogFragment : BaseDialogFragment() {
     }
 
     private val playlistRepository by inject<PlaylistRepository>()
+    private val analyticsManager by inject<AnalyticsManager>()
     private val positiveButton by lazy { (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE) }
     private val binding by lazy { DataBindingUtil.inflate<NewPlaylistBinding>(LayoutInflater.from(context), R.layout.dialog_new_playlist, null, false) }
 
@@ -57,13 +59,13 @@ class NewPlaylistDialogFragment : BaseDialogFragment() {
         hideKeyboard(activity?.currentFocus)
     }
 
-    //TODO: Check that there are no playlists with duplicate names.
     private fun CharSequence?.isTextValid() = this?.trim()?.isEmpty() == false
 
     private fun onOkButtonPressed() {
-        binding.inputField.text?.let {
+        binding.inputField.text?.toString()?.let {
             if (it.isTextValid()) {
-                playlistRepository.createNewPlaylist(it.toString().trim())
+                playlistRepository.createNewPlaylist(it.trim())
+                analyticsManager.onPlaylistCreated(it)
                 dismiss()
             }
         }

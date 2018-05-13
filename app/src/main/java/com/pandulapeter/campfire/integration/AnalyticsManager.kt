@@ -16,6 +16,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_APP_OPENED = "app_opened"
         private const val EVENT_SCREEN_OPENED = "screen_opened"
         private const val EVENT_SONG_VISUALIZED = "song_visualized"
+        private const val EVENT_PLAYLIST_CREATED = "playlist_created"
 
         // Keys
         private const val PARAM_KEY_SCREEN = "screen"
@@ -24,6 +25,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_SONG_ID = "song_id"
         private const val PARAM_KEY_SONG_COUNT = "song_count"
         private const val PARAM_KEY_TAB = "tab"
+        private const val PARAM_KEY_PLAYLIST_TITLE = "title"
 
         // Values
         const val PARAM_VALUE_SCREEN_LIBRARY = "library"
@@ -77,4 +79,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         }
         track(EVENT_SONG_VISUALIZED, PARAM_KEY_SONG_ID to songId)
     }
+
+    fun onPlaylistCreated(title: String) =
+        track(EVENT_PLAYLIST_CREATED, PARAM_KEY_PLAYLIST_TITLE to title)
 }

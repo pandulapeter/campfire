@@ -132,7 +132,10 @@
     <string name="options_changelog_0_5_0_version_name">v0.5</string>
     <string name="options_changelog_0_5_0_description">
         <Data><![CDATA[
-        • TODO
+        • Added options for automatically and manually switching between <strong>dark</strong> and <strong>light</strong> themes or following the global system setting.<br>
+        • Implemented optional <strong>analytics tracking</strong> and <strong>crash reporting</strong>.<br>
+        • Finalized the <string>open-source licenses</strong> section.
+        • Added optional <strong>in-app purchase</strong> for supporting the app.
         ]]></Data>
     </string>
     <string name="options_changelog_0_4_0_version_name">v0.4</string>
