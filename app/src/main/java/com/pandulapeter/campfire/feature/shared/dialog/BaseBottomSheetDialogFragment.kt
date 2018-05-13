@@ -23,7 +23,7 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
     protected val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
     protected val isFullWidth get() = (dialog as CustomWidthBottomSheetDialog).isFullWidth
 
-    abstract fun initializeDialog(context: Context, savedInstanceState: Bundle?)
+    open fun initializeDialog(context: Context, savedInstanceState: Bundle?) = Unit
 
     abstract fun onDialogCreated()
 

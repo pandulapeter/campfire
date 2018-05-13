@@ -21,6 +21,7 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
     val germanNotationExample = generateNotationExample(true)
     val theme = ObservableField<Theme>(Theme.fromId(preferenceDatabase.theme))
     val themeDescription = ObservableField("")
+    val shouldShowThemeSelector = ObservableBoolean()
     val shouldShowExitConfirmation = ObservableBoolean(preferenceDatabase.shouldShowExitConfirmation)
     val shouldShowHintsResetConfirmation = ObservableBoolean()
     val shouldShowHintsResetSnackbar = ObservableBoolean()
@@ -38,9 +39,7 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
         updateThemeDescription()
     }
 
-    fun onThemeClicked() {
-
-    }
+    fun onThemeClicked() = shouldShowThemeSelector.set(true)
 
     fun onResetHintsClicked() {
         shouldShowHintsResetConfirmation.set(true)
@@ -69,10 +68,10 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
     private fun updateThemeDescription() = themeDescription.set(
         context.getString(
             when (theme.get()) {
-                null, PreferencesViewModel.Theme.SYSTEM -> R.string.options_preferences_app_theme_system
-                PreferencesViewModel.Theme.AUTOMATIC -> R.string.options_preferences_app_theme_automatic
-                PreferencesViewModel.Theme.DARK -> R.string.options_preferences_app_theme_dark
-                PreferencesViewModel.Theme.LIGHT -> R.string.options_preferences_app_theme_light
+                null, PreferencesViewModel.Theme.SYSTEM -> R.string.options_preferences_app_theme_system_description
+                PreferencesViewModel.Theme.AUTOMATIC -> R.string.options_preferences_app_theme_automatic_description
+                PreferencesViewModel.Theme.DARK -> R.string.options_preferences_app_theme_dark_description
+                PreferencesViewModel.Theme.LIGHT -> R.string.options_preferences_app_theme_light_description
             }
         )
     )

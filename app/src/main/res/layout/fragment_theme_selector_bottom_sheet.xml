@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/windowBackground"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/content_padding">
+
+            <TextView
+                style="@style/Header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/options_preferences_app_theme" />
+
+            <TextView
+                android:id="@+id/system"
+                style="@style/OptionsItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:description="@{@string/options_preferences_app_theme_system_description}"
+                app:title="@{@string/options_preferences_app_theme_system}"
+                tools:text="@string/options_preferences_app_theme_system" />
+
+            <TextView
+                android:id="@+id/automatic"
+                style="@style/OptionsItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:description="@{@string/options_preferences_app_theme_automatic_description}"
+                app:title="@{@string/options_preferences_app_theme_automatic}"
+                tools:text="@string/options_preferences_app_theme_automatic" />
+
+            <TextView
+                android:id="@+id/dark"
+                style="@style/OptionsItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:description="@{@string/options_preferences_app_theme_dark_description}"
+                app:title="@{@string/options_preferences_app_theme_dark}"
+                tools:text="@string/options_preferences_app_theme_dark" />
+
+            <TextView
+                android:id="@+id/light"
+                style="@style/OptionsItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:description="@{@string/options_preferences_app_theme_light_description}"
+                app:title="@{@string/options_preferences_app_theme_light}"
+                tools:text="@string/options_preferences_app_theme_light" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</layout>
