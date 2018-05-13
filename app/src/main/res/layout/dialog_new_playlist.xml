@@ -5,31 +5,24 @@
     <!--suppress AndroidUnknownAttribute -->
     <data class=".NewPlaylistBinding" />
 
-    <ScrollView
+    <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:clipToPadding="false"
+        android:minWidth="280dp"
         android:paddingTop="@dimen/large_content_padding"
-        android:scrollbars="none">
+        android:hint="@string/playlist_enter_title"
+        android:paddingEnd="@dimen/new_playlist_input_padding_end"
+        android:paddingStart="@dimen/new_playlist_input_padding_start"
+        app:errorEnabled="true">
 
-        <android.support.design.widget.TextInputLayout
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/input_field"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/playlist_enter_title"
-            android:paddingEnd="@dimen/new_playlist_input_padding_end"
-            android:paddingStart="@dimen/new_playlist_input_padding_start"
-            app:errorEnabled="true">
+            android:inputType="textCapSentences"
+            android:maxLength="@integer/playlist_name_length_limit"
+            android:maxLines="1" />
 
-            <android.support.design.widget.TextInputEditText
-                android:id="@+id/input_field"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textCapSentences"
-                android:maxLength="@integer/playlist_name_length_limit"
-                android:maxLines="1" />
-
-        </android.support.design.widget.TextInputLayout>
-
-    </ScrollView>
+    </android.support.design.widget.TextInputLayout>
 
 </layout>
