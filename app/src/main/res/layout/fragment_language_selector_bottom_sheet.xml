@@ -42,6 +42,7 @@
                     style="@style/RadioButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    app:description="@{@string/options_preferences_language_english_description}"
                     app:title="@{@string/options_preferences_language_english}"
                     tools:text="@string/options_preferences_language_english" />
 
