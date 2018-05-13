@@ -51,20 +51,11 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        updateScrollState()
-    }
-
     open fun onDrawerStateChanged(state: Int) = Unit
 
     open fun onNavigationItemSelected(menuItem: MenuItem) = false
 
     open fun onFloatingActionButtonPressed() = Unit
-
-    protected open fun updateScrollState() {
-        mainActivity.shouldAllowAppBarScrolling = canScrollToolbar
-    }
 
     protected open fun inflateToolbarTitle(context: Context): View = defaultToolbar
 

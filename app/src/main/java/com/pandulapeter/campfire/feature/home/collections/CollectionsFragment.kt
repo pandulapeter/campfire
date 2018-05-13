@@ -41,8 +41,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                     mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { mainActivity.openSecondaryNavigationDrawer() }
                 ))
             },
-            openSecondaryNavigationDrawer = { mainActivity.openSecondaryNavigationDrawer() },
-            onUpdateScrollState = { binding.recyclerView.post { updateScrollState() } })
+            openSecondaryNavigationDrawer = { mainActivity.openSecondaryNavigationDrawer() })
     }
     override val canScrollToolbar get() = binding.recyclerView.canScroll()
 

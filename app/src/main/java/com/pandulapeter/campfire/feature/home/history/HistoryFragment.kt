@@ -46,7 +46,6 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), BaseDialogFragment
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))
         viewModel.shouldShowDeleteAll.onPropertyChanged(this) {
             deleteAllButton.visibleOrGone = it
-            updateScrollState()
             showHintIfNeeded()
         }
         ItemTouchHelper(object : ElevationItemTouchHelperCallback((mainActivity.dimension(R.dimen.content_padding)).toFloat(), 0, 0) {

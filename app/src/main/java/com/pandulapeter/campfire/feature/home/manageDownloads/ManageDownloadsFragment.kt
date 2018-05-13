@@ -45,10 +45,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Ba
         binding.swipeRefreshLayout.isEnabled = false
         updateToolbarTitle(viewModel.songCount.get())
         mainActivity.updateToolbarButtons(listOf(deleteAllButton))
-        viewModel.shouldShowDeleteAll.onPropertyChanged(this) {
-            deleteAllButton.visibleOrGone = it
-            updateScrollState()
-        }
+        viewModel.shouldShowDeleteAll.onPropertyChanged(this) { deleteAllButton.visibleOrGone = it }
         viewModel.state.onPropertyChanged(this) { updateToolbarTitle(viewModel.songCount.get()) }
         viewModel.songCount.onPropertyChanged(this) {
             updateToolbarTitle(it)

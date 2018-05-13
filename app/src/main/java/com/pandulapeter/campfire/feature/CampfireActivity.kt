@@ -11,7 +11,6 @@ import android.os.Build
 import android.os.Bundle
 import android.support.annotation.MenuRes
 import android.support.design.internal.NavigationMenuView
-import android.support.design.widget.AppBarLayout
 import android.support.design.widget.NavigationView
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
@@ -83,7 +82,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private var Bundle.currentPlaylistId by BundleArgumentDelegate.String("currentPlaylistId")
     private var Bundle.currentCollectionId by BundleArgumentDelegate.String("currentCollectionId")
     private var Bundle.isAppBarExpanded by BundleArgumentDelegate.Boolean("isAppBarExpanded")
-    private var Bundle.toolbarContainerScrollFlags by BundleArgumentDelegate.Boolean("shouldAllowAppBarScrolling")
     private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
     private var Bundle.lastColelctionId by BundleArgumentDelegate.String("lastCollectionId")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
@@ -109,23 +107,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     val toolbarContext get() = binding.appBarLayout.context!!
     val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
     val snackbarRoot get() = binding.rootCoordinatorLayout
-    var shouldAllowAppBarScrolling
-        get() = (binding.toolbarContainer.layoutParams as AppBarLayout.LayoutParams).scrollFlags != 0
-        set(value) {
-            if (shouldAllowAppBarScrolling != value) {
-                // Seems to cause glitches on older Android versions.
-                binding.toolbarContainer.run {
-                    layoutParams = (layoutParams as AppBarLayout.LayoutParams).apply {
-                        scrollFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && value) {
-                            AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL or
-                                    AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP or
-                                    AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED or
-                                    AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
-                        } else 0
-                    }
-                }
-            }
-        }
     var transitionMode: Boolean? = null
         set(value) {
             if (field != value) {
@@ -260,7 +241,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             currentCollectionId = savedInstanceState.currentCollectionId
             lastSongId = savedInstanceState.lastSongId
             lastCollectionId = savedInstanceState.lastColelctionId
-            shouldAllowAppBarScrolling = savedInstanceState.toolbarContainerScrollFlags
             if (currentScreenId == R.id.options) {
                 forceExpandAppBar = savedInstanceState.isAppBarExpanded
             }
@@ -352,7 +332,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         super.onSaveInstanceState(outState)
         outState?.currentScreenId = currentScreenId
         outState?.isAppBarExpanded = binding.appBarLayout.height - binding.appBarLayout.bottom == 0
-        outState?.toolbarContainerScrollFlags = shouldAllowAppBarScrolling
         outState?.currentPlaylistId = playlistIdMap[currentScreenId] ?: ""
         outState?.currentCollectionId = currentCollectionId
         outState?.lastSongId = lastSongId

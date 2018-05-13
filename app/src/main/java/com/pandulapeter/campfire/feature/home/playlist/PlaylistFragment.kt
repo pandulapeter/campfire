@@ -53,7 +53,6 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         binding.swipeRefreshLayout.isEnabled = false
         viewModel.songCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
-            updateScrollState()
             val previousVisibility = shuffleButton.visibleOrGone
             shuffleButton.visibleOrGone = it > 1
             if (shuffleButton.visibleOrGone != previousVisibility && viewModel.isInEditMode.get()) {
@@ -64,7 +63,6 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         viewModel.playlist.onPropertyChanged(this) { updateToolbarTitle() }
         viewModel.isInEditMode.onPropertyChanged(this) {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
-            updateScrollState()
             if (it) {
                 showHintIfNeeded()
             } else {

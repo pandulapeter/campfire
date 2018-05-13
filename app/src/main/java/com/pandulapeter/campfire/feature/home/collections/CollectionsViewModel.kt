@@ -21,8 +21,7 @@ import kotlin.coroutines.experimental.CoroutineContext
 
 class CollectionsViewModel(
     private val onDataLoaded: (languages: List<Language>) -> Unit,
-    private val openSecondaryNavigationDrawer: () -> Unit,
-    private val onUpdateScrollState: () -> Unit
+    private val openSecondaryNavigationDrawer: () -> Unit
 ) : CampfireViewModel(), CollectionRepository.Subscriber {
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
@@ -119,7 +118,6 @@ class CollectionsViewModel(
             buttonText.set(R.string.collections_filters)
             buttonIcon.set(R.drawable.ic_filter_and_sort_24dp)
         }
-        onUpdateScrollState()
     }
 
     fun onActionButtonClicked() {

@@ -95,13 +95,6 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                     action = { viewModel.downloadSong(song) })
             }
         }
-        viewModel.shouldUpdateScrollState.onEventTriggered(this) {
-            binding.recyclerView.post {
-                if (isAdded) {
-                    updateScrollState()
-                }
-            }
-        }
         viewModel.isLoading.onPropertyChanged(this) {
             if (viewModel.state.get() == StateLayout.State.NORMAL) {
                 binding.swipeRefreshLayout.isRefreshing = it
@@ -149,10 +142,6 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             })
             requestLayout()
         }
-    }
-
-    override fun updateScrollState() {
-        mainActivity.shouldAllowAppBarScrolling = canScrollToolbar && binding.recyclerView.canScroll()
     }
 
     override fun updateUI() {
