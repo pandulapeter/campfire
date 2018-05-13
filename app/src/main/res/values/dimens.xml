@@ -22,7 +22,7 @@
     <dimen name="text_normal">16sp</dimen>
 
     <!-- Toolbar -->
-    <dimen name="toolbar_first_keyline_fix">2dp</dimen>
+    <dimen name="toolbar_first_keyline_fix">6dp</dimen>
     <dimen name="toolbar_action_button_margin_fix">6dp</dimen>
     <dimen name="toolbar_action_button_padding">4dp</dimen>
     <dimen name="toolbar_action_button_extra_touch_area">16dp</dimen>

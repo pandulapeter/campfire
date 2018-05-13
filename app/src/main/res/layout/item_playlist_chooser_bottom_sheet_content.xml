@@ -109,7 +109,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:paddingEnd="@dimen/first_keyline"
-                    android:paddingStart="@dimen/toolbar_action_button_margin_fix" />
+                    android:paddingStart="12dp" />
 
                 <TextView
                     android:id="@+id/new_playlist"
