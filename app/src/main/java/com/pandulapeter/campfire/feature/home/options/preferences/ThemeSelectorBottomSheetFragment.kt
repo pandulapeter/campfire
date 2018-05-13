@@ -22,13 +22,11 @@ class ThemeSelectorBottomSheetFragment : BaseBottomSheetDialogFragment<FragmentT
     private val onThemeSelectedListener get() = parentFragment as? OnThemeSelectedListener
 
     override fun onDialogCreated() {
-        when (PreferencesViewModel.Theme.fromId(arguments?.selectedThemeId ?: PreferencesViewModel.Theme.SYSTEM.id)) {
-            PreferencesViewModel.Theme.SYSTEM -> binding.system
+        when (PreferencesViewModel.Theme.fromId(arguments?.selectedThemeId ?: PreferencesViewModel.Theme.AUTOMATIC.id)) {
             PreferencesViewModel.Theme.AUTOMATIC -> binding.automatic
             PreferencesViewModel.Theme.DARK -> binding.dark
             PreferencesViewModel.Theme.LIGHT -> binding.light
         }.isChecked = true
-        binding.system.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onThemeSelected(PreferencesViewModel.Theme.SYSTEM) }
         binding.automatic.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onThemeSelected(PreferencesViewModel.Theme.AUTOMATIC) }
         binding.dark.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onThemeSelected(PreferencesViewModel.Theme.DARK) }
         binding.light.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onThemeSelected(PreferencesViewModel.Theme.LIGHT) }

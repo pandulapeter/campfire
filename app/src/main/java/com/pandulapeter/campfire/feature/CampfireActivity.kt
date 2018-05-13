@@ -155,7 +155,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         // Set the theme.
         AppCompatDelegate.setDefaultNightMode(
             when (PreferencesViewModel.Theme.fromId(preferenceDatabase.theme)) {
-                PreferencesViewModel.Theme.SYSTEM -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
                 PreferencesViewModel.Theme.AUTOMATIC -> AppCompatDelegate.MODE_NIGHT_AUTO
                 PreferencesViewModel.Theme.DARK -> AppCompatDelegate.MODE_NIGHT_YES
                 PreferencesViewModel.Theme.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO

@@ -113,8 +113,6 @@
     <string name="options_preferences_exit_confirmation_enabled">Ask for confirmation before closing the app</string>
     <string name="options_preferences_exit_confirmation_disabled">Close the app without confirmation</string>
     <string name="options_preferences_app_theme">App theme</string>
-    <string name="options_preferences_app_theme_system">System</string>
-    <string name="options_preferences_app_theme_system_description">The app follows the theme specified by the system.</string>
     <string name="options_preferences_app_theme_automatic">Automatic</string>
     <string name="options_preferences_app_theme_automatic_description">The app automatically switches themes based on the time of the day</string>
     <string name="options_preferences_app_theme_dark">Dark</string>
@@ -143,7 +141,7 @@
     <string name="options_changelog_0_5_0_description">
         <Data><![CDATA[
         • Added <strong>Language switcher</strong> with support for <strong>Hungarian</strong> and <strong>Romanian</strong> translations.<br>
-        • Added options for automatically switching between <strong>dark</strong> and <strong>light</strong> themes or following the global system setting.<br>
+        • Added option for automatically switching between <strong>dark</strong> and <strong>light</strong> themes based on the time of the day.<br>
         • Implemented optional <strong>analytics tracking</strong> and <strong>crash reporting</strong>.<br>
         • Finalized the <string>open-source licenses</strong> section.<br>
         • Added optional <strong>in-app purchase</strong> for supporting the app.

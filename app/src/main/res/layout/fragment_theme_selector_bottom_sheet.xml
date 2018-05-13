@@ -29,15 +29,6 @@
                 android:layout_marginStart="12dp">
 
                 <RadioButton
-                    android:id="@+id/system"
-                    style="@style/RadioButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:description="@{@string/options_preferences_app_theme_system_description}"
-                    app:title="@{@string/options_preferences_app_theme_system}"
-                    tools:text="@string/options_preferences_app_theme_system" />
-
-                <RadioButton
                     android:id="@+id/automatic"
                     style="@style/RadioButton"
                     android:layout_width="match_parent"

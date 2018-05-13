@@ -79,8 +79,7 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
     private fun updateThemeDescription() = themeDescription.set(
         context.getString(
             when (theme.get()) {
-                null, PreferencesViewModel.Theme.SYSTEM -> R.string.options_preferences_app_theme_system_description
-                PreferencesViewModel.Theme.AUTOMATIC -> R.string.options_preferences_app_theme_automatic_description
+                null, PreferencesViewModel.Theme.AUTOMATIC -> R.string.options_preferences_app_theme_automatic_description
                 PreferencesViewModel.Theme.DARK -> R.string.options_preferences_app_theme_dark_description
                 PreferencesViewModel.Theme.LIGHT -> R.string.options_preferences_app_theme_light_description
             }
@@ -97,10 +96,9 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
     )
 
     enum class Theme(val id: Int) {
-        SYSTEM(0),
-        AUTOMATIC(1),
-        DARK(2),
-        LIGHT(3);
+        AUTOMATIC(0),
+        DARK(1),
+        LIGHT(2);
 
         companion object {
             fun fromId(id: Int) = Theme.values().find { it.id == id } ?: AUTOMATIC
