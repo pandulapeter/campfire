@@ -21,6 +21,10 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         }
     }
 
+    fun onAppOpened(screen: String, fromAppShortcut: Boolean) {
+        track("app_opened", "screen" to screen, "from_app_shortcut" to fromAppShortcut.toString())
+    }
+
     fun onSongOpened(songId: String) {
         if (preferenceDatabase.shouldShareUsageData) {
             networkManager.service.openSong(songId).enqueueCall({}, {})
