@@ -32,9 +32,12 @@
             android:fillViewport="true"
             android:scrollbars="none">
 
+            <!-- TODO: Chord spannables are cut off at certain text sizes -->
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:bufferType="spannable"
                 android:paddingBottom="@dimen/list_fab_content_bottom_margin"
                 android:paddingEnd="@dimen/first_keyline"
                 android:paddingStart="@dimen/first_keyline"

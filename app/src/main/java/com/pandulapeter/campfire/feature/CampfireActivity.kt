@@ -165,7 +165,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     override fun onCreate(savedInstanceState: Bundle?) {
 
         // Enable crash reporting if the user opted in.
-        if (preferenceDatabase.shouldShareUsageData && BuildConfig.BUILD_TYPE == "release") {
+        if (preferenceDatabase.shouldShareUsageData && BuildConfig.BUILD_TYPE != "debug") {
             Fabric.with(this, Crashlytics())
         }
 
