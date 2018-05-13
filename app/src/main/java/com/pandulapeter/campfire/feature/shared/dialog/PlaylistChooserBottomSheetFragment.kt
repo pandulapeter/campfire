@@ -151,8 +151,6 @@ class PlaylistChooserBottomSheetFragment : AppCompatDialogFragment() {
         }
     }
 
-    //TODO: Overlap glitch when having too many items and quickly resizing the screen.
-    //TODO: Method is not being called after small changes to multi window size.
     private fun checkIfToolbarTransformationIsNeeded() {
         binding.root.post {
             val screenHeight = activity?.window?.decorView?.height ?: 0

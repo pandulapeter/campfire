@@ -42,7 +42,6 @@ class SongParser(private val context: Context) {
         }
         return SpannableString(parsedText).apply {
             sectionNames.forEach {
-                //TODO: getName() is called unnecessarily.
                 setSpan(
                     TextAppearanceSpan(context, R.style.Section),
                     it.startPosition,

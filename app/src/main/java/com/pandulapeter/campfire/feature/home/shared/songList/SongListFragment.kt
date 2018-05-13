@@ -50,8 +50,10 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             itemClickListener = { position, clickedView ->
                 if (linearLayoutManager.isScrollEnabled) {
                     (items[position] as? SongListItemViewModel.SongViewModel)?.let {
-                        viewModel.isDetailScreenOpen = true
-                        linearLayoutManager.isScrollEnabled = false
+                        if (items.size > 1) {
+                            linearLayoutManager.isScrollEnabled = false
+                            viewModel.isDetailScreenOpen = true
+                        }
                         onDetailScreenOpened()
                         val shouldSendMultipleSongs = viewModel is PlaylistViewModel || viewModel is CollectionDetailViewModel
                         mainActivity.openDetailScreen(

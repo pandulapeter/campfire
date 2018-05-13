@@ -112,7 +112,6 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                             val linearLayoutManager = binding.recyclerView.layoutManager as LinearLayoutManager
                             val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                             if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
-//TODO                                linearLayoutManager.isScrollEnabled = true
                                 binding.recyclerView.run { post { scrollToPosition(index) } }
                             }
                         }
