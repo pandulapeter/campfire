@@ -22,10 +22,16 @@ class ThemeSelectorBottomSheetFragment : BaseBottomSheetDialogFragment<FragmentT
     private val onThemeSelectedListener get() = parentFragment as? OnThemeSelectedListener
 
     override fun onDialogCreated() {
-        binding.system.setOnClickListener { onThemeSelected(PreferencesViewModel.Theme.SYSTEM) }
-        binding.automatic.setOnClickListener { onThemeSelected(PreferencesViewModel.Theme.AUTOMATIC) }
-        binding.dark.setOnClickListener { onThemeSelected(PreferencesViewModel.Theme.DARK) }
-        binding.light.setOnClickListener { onThemeSelected(PreferencesViewModel.Theme.LIGHT) }
+        when (PreferencesViewModel.Theme.fromId(arguments?.selectedThemeId ?: PreferencesViewModel.Theme.SYSTEM.id)) {
+            PreferencesViewModel.Theme.SYSTEM -> binding.system
+            PreferencesViewModel.Theme.AUTOMATIC -> binding.automatic
+            PreferencesViewModel.Theme.DARK -> binding.dark
+            PreferencesViewModel.Theme.LIGHT -> binding.light
+        }.isChecked = true
+        binding.system.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onThemeSelected(PreferencesViewModel.Theme.SYSTEM) }
+        binding.automatic.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onThemeSelected(PreferencesViewModel.Theme.AUTOMATIC) }
+        binding.dark.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onThemeSelected(PreferencesViewModel.Theme.DARK) }
+        binding.light.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onThemeSelected(PreferencesViewModel.Theme.LIGHT) }
     }
 
     private fun onThemeSelected(theme: PreferencesViewModel.Theme) {

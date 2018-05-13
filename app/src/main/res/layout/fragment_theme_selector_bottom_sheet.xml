@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <ScrollView
+    <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:attr/windowBackground"
@@ -13,7 +13,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="@dimen/content_padding">
+            android:paddingBottom="@dimen/content_padding"
+            android:paddingTop="@dimen/small_content_padding">
 
             <TextView
                 style="@style/Header"
@@ -21,44 +22,51 @@
                 android:layout_height="wrap_content"
                 android:text="@string/options_preferences_app_theme" />
 
-            <TextView
-                android:id="@+id/system"
-                style="@style/OptionsItem"
+            <RadioGroup
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:description="@{@string/options_preferences_app_theme_system_description}"
-                app:title="@{@string/options_preferences_app_theme_system}"
-                tools:text="@string/options_preferences_app_theme_system" />
+                android:layout_marginStart="12dp">
 
-            <TextView
-                android:id="@+id/automatic"
-                style="@style/OptionsItem"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:description="@{@string/options_preferences_app_theme_automatic_description}"
-                app:title="@{@string/options_preferences_app_theme_automatic}"
-                tools:text="@string/options_preferences_app_theme_automatic" />
+                <RadioButton
+                    android:id="@+id/system"
+                    style="@style/RadioButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:description="@{@string/options_preferences_app_theme_system_description}"
+                    app:title="@{@string/options_preferences_app_theme_system}"
+                    tools:text="@string/options_preferences_app_theme_system" />
 
-            <TextView
-                android:id="@+id/dark"
-                style="@style/OptionsItem"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:description="@{@string/options_preferences_app_theme_dark_description}"
-                app:title="@{@string/options_preferences_app_theme_dark}"
-                tools:text="@string/options_preferences_app_theme_dark" />
+                <RadioButton
+                    android:id="@+id/automatic"
+                    style="@style/RadioButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:description="@{@string/options_preferences_app_theme_automatic_description}"
+                    app:title="@{@string/options_preferences_app_theme_automatic}"
+                    tools:text="@string/options_preferences_app_theme_automatic" />
 
-            <TextView
-                android:id="@+id/light"
-                style="@style/OptionsItem"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:description="@{@string/options_preferences_app_theme_light_description}"
-                app:title="@{@string/options_preferences_app_theme_light}"
-                tools:text="@string/options_preferences_app_theme_light" />
+                <RadioButton
+                    android:id="@+id/dark"
+                    style="@style/RadioButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:description="@{@string/options_preferences_app_theme_dark_description}"
+                    app:title="@{@string/options_preferences_app_theme_dark}"
+                    tools:text="@string/options_preferences_app_theme_dark" />
+
+                <RadioButton
+                    android:id="@+id/light"
+                    style="@style/RadioButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:description="@{@string/options_preferences_app_theme_light_description}"
+                    app:title="@{@string/options_preferences_app_theme_light}"
+                    tools:text="@string/options_preferences_app_theme_light" />
+
+            </RadioGroup>
 
         </LinearLayout>
 
-    </ScrollView>
+    </android.support.v4.widget.NestedScrollView>
 
 </layout>

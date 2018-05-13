@@ -27,6 +27,15 @@
         <item name="android:textAllCaps">true</item>
     </style>
 
+    <style name="RadioButton" parent="@style/Widget.AppCompat.CompoundButton.RadioButton">
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minHeight">@dimen/touch_target</item>
+        <item name="android:paddingBottom">@dimen/content_padding</item>
+        <item name="android:paddingEnd">@dimen/content_padding</item>
+        <item name="android:paddingStart">@dimen/options_preferences_checkbox_padding</item>
+        <item name="android:paddingTop">@dimen/content_padding</item>
+    </style>
+
     <style name="OptionsItem" parent="@style/Widget.AppCompat.CompoundButton.CheckBox">
         <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:drawablePadding">@dimen/options_about_drawable_padding</item>
