@@ -25,6 +25,7 @@
                     android:id="@+id/app_bar_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="?attr/colorBackgroundFloating"
                     app:elevation="@dimen/toolbar_elevation">
 
                     <android.support.constraint.ConstraintLayout
@@ -32,7 +33,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:animateLayoutChanges="true"
-                        android:clipChildren="false">
+                        android:clipChildren="false"
+                        android:clipToPadding="false">
 
                         <android.support.v4.widget.Space
                             android:id="@+id/toolbar_bottom"
@@ -42,7 +44,7 @@
 
                         <android.support.v4.widget.Space
                             android:id="@+id/first_keyline_fix"
-                            android:layout_width="2dp"
+                            android:layout_width="4dp"
                             android:layout_height="0dp"
                             android:orientation="vertical"
                             app:layout_constraintEnd_toStartOf="parent" />
@@ -63,6 +65,7 @@
                             android:layout_height="0dp"
                             android:layout_marginStart="@dimen/second_keyline"
                             android:clipChildren="false"
+                            android:clipToPadding="false"
                             app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
                             app:layout_constraintEnd_toStartOf="@+id/toolbar_button_container"
                             app:layout_constraintStart_toStartOf="parent"
@@ -84,7 +87,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="0dp"
                             android:animateLayoutChanges="true"
-                            android:background="?attr/colorPrimary"
+                            android:background="?attr/colorBackgroundFloating"
                             android:clipChildren="false"
                             android:clipToPadding="false"
                             android:gravity="center_vertical|end"
@@ -115,6 +118,7 @@
                 android:layout_marginEnd="48dp"
                 android:clipChildren="false"
                 android:visibility="invisible"
+                app:cardBackgroundColor="?attr/colorPrimary"
                 app:cardCornerRadius="16dp"
                 app:contentPadding="@dimen/detail_auto_scroll_control_padding"
                 app:layout_anchor="@+id/floating_action_button"

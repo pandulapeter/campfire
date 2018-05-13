@@ -33,7 +33,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:alpha="@{viewModel.containerAlpha}"
-                android:background="?attr/colorPrimary"
                 app:layout_constraintBottom_toBottomOf="@+id/toolbar_container"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -54,10 +53,10 @@
                     android:id="@+id/close"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:foreground="?attr/selectableItemBackgroundBorderless"
                     android:layout_marginStart="@dimen/first_keyline"
                     android:alpha="@{viewModel.closeAlpha}"
                     android:contentDescription="@string/library_close"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
                     android:onClick="@{() -> viewModel.onCloseButtonClicked()}"
                     android:translationX="@{viewModel.closeTranslation}"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -79,9 +78,9 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:subtitle="@{viewModel.songInfo.artist}"
+                    app:subtitleColor="@{viewModel.toolbarSubtitleColor}"
                     app:title="@{viewModel.songInfo.title}"
                     app:titleColor="@{viewModel.toolbarTitleColor}"
-                    app:subtitleColor="@{viewModel.toolbarSubtitleColor}"
                     tools:text="Song title\nArtist" />
 
             </android.support.constraint.ConstraintLayout>

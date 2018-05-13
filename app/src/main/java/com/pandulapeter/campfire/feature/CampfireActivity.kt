@@ -170,26 +170,9 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             Fabric.with(this, Crashlytics())
         }
 
-        // Set the theme and the task description.
+        // Set the theme.
         AppCompatDelegate.setDefaultNightMode(if (preferenceDatabase.shouldUseDarkTheme) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO)
         setTheme(R.style.AppTheme)
-        @Suppress("ConstantConditionIf")
-        setTaskDescription(
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                ActivityManager.TaskDescription(
-                    getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
-                    0,
-                    obtainColor(android.R.attr.colorPrimary)
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                ActivityManager.TaskDescription(
-                    getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
-                    null,
-                    obtainColor(android.R.attr.colorPrimary)
-                )
-            }
-        )
         super.onCreate(savedInstanceState)
         startTime = System.currentTimeMillis()
 
@@ -298,6 +281,28 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         super.onNewIntent(intent)
         this.intent = intent
         handleNewIntent()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Set the task description.
+        @Suppress("ConstantConditionIf")
+        setTaskDescription(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                ActivityManager.TaskDescription(
+                    getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
+                    0,
+                    obtainColor(android.R.attr.colorBackgroundFloating)
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                ActivityManager.TaskDescription(
+                    getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
+                    null,
+                    obtainColor(android.R.attr.colorBackgroundFloating)
+                )
+            }
+        )
     }
 
     override fun onResume() {
