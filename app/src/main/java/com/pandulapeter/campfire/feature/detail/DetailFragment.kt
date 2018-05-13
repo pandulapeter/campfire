@@ -85,18 +85,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             }
         }
     }
-    private val previousButton by lazy {
-        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_previous_24dp) { binding.viewPager.currentItem -= 1 }.apply {
-            visibleOrGone = arguments?.songs?.size ?: 0 > 1
-            isEnabled = binding.viewPager.currentItem != 0
-        }
-    }
-    private val nextButton by lazy {
-        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_next_24dp) { binding.viewPager.currentItem += 1 }.apply {
-            visibleOrGone = arguments?.songs?.size ?: 0 > 1
-            isEnabled = binding.viewPager.currentItem != pagerAdapter.count - 1
-        }
-    }
     private val multiWindowFlags =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT else Intent.FLAG_ACTIVITY_NEW_TASK
     private var lastSongId = ""
@@ -170,8 +158,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         binding.viewPager.adapter = pagerAdapter
         binding.viewPager.addPageScrollListener(
             onPageSelected = {
-                previousButton.isEnabled = it != 0
-                nextButton.isEnabled = it != pagerAdapter.count - 1
                 mainActivity.disableFloatingActionButton()
                 if (mainActivity.autoScrollControl.visibleOrInvisible) {
                     mainActivity.updateFloatingActionButtonDrawable(drawablePauseToPlay?.apply { start() })
@@ -194,14 +180,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
         mainActivity.updateToolbarButtons(
             mutableListOf(mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_song_options_24dp) { mainActivity.openSecondaryNavigationDrawer() }).apply {
-                arguments?.let {
-                    if (it.shouldShowManagePlaylist) {
-                        add(0, playlistButton)
-                    }
-                    if (songs.isNotEmpty()) {
-                        add(0, nextButton)
-                        add(0, previousButton)
-                    }
+                if (arguments?.shouldShowManagePlaylist == true) {
+                    add(0, playlistButton)
                 }
             }
         )
