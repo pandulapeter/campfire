@@ -36,7 +36,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.databinding.ActivityCampfireBinding
-import com.pandulapeter.campfire.feature.detail.DetailFragmentTemp
+import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
 import com.pandulapeter.campfire.feature.home.collections.detail.CollectionDetailFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
@@ -44,6 +44,7 @@ import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.home.manageDownloads.ManageDownloadsFragment
 import com.pandulapeter.campfire.feature.home.managePlaylists.ManagePlaylistsFragment
 import com.pandulapeter.campfire.feature.home.options.OptionsFragment
+import com.pandulapeter.campfire.feature.home.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
@@ -154,7 +155,14 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
 
         // Set the theme.
-        AppCompatDelegate.setDefaultNightMode(if (preferenceDatabase.shouldUseDarkTheme) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO)
+        AppCompatDelegate.setDefaultNightMode(
+            when (PreferencesViewModel.Theme.fromId(preferenceDatabase.theme)) {
+                PreferencesViewModel.Theme.SYSTEM -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                PreferencesViewModel.Theme.AUTOMATIC -> AppCompatDelegate.MODE_NIGHT_AUTO
+                PreferencesViewModel.Theme.DARK -> AppCompatDelegate.MODE_NIGHT_YES
+                PreferencesViewModel.Theme.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
+            }
+        )
         setTheme(R.style.AppTheme)
         super.onCreate(savedInstanceState)
         startTime = System.currentTimeMillis()
@@ -258,7 +266,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
         }
         binding.drawerLayout.setDrawerLockMode(
-            if (currentFragment is DetailFragmentTemp || currentFragment is CollectionDetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
+            if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
             Gravity.START
         )
 
@@ -364,7 +372,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
             if (view == null) {
                 if (childCount > 1) {
-                    if (currentFragment is LibraryFragment || currentFragment is DetailFragmentTemp) {
+                    if (currentFragment is LibraryFragment || currentFragment is DetailFragment) {
                         post { removeViews() }
                     } else {
                         postDelayed({
@@ -515,7 +523,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     private fun handleNewIntent() {
-        if (currentFragment is DetailFragmentTemp) {
+        if (currentFragment is DetailFragment) {
             if (intent.screenToOpen.isEmpty()) {
                 return
             } else {
@@ -574,12 +582,12 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             fun createTransition(delay: Long) = Explode().apply {
                 propagation = null
                 startDelay = delay
-                duration = DetailFragmentTemp.TRANSITION_DURATION
+                duration = DetailFragment.TRANSITION_DURATION
             }
             currentFragment?.run {
                 if (shouldExplode) {
                     exitTransition = createTransition(0)
-                    reenterTransition = createTransition(DetailFragmentTemp.TRANSITION_DELAY)
+                    reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
                 } else {
                     exitTransition = null
                     reenterTransition = null
@@ -664,7 +672,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         fun createTransition(delay: Long) = Explode().apply {
             propagation = null
             startDelay = delay
-            duration = DetailFragmentTemp.TRANSITION_DURATION
+            duration = DetailFragment.TRANSITION_DURATION
         }
         currentFragment?.run {
             if (this !is PlaylistFragment) {
@@ -675,14 +683,14 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
             if (shouldExplode) {
                 exitTransition = createTransition(0)
-                reenterTransition = createTransition(DetailFragmentTemp.TRANSITION_DELAY)
+                reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
             } else {
                 exitTransition = null
                 reenterTransition = null
             }
         }
         supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, DetailFragmentTemp.newInstance(songs, index, shouldShowManagePlaylist, clickedView == null))
+            .replace(R.id.fragment_container, DetailFragment.newInstance(songs, index, shouldShowManagePlaylist, clickedView == null))
             .apply {
                 if (clickedView == null) {
                     setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
@@ -708,7 +716,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist_24dp else R.drawable.ic_playlist_24dp)
             }
 
-        val isLookingForUpdatedId = currentFragment is PlaylistFragment || currentFragment is DetailFragmentTemp
+        val isLookingForUpdatedId = currentFragment is PlaylistFragment || currentFragment is DetailFragment
         playlistsContainerItem.run {
             clear()
             playlistIdMap.clear()

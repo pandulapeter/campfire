@@ -17,10 +17,10 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
         private const val DIALOG_ID_RESET_HINTS_CONFIRMATION = 3
     }
 
-    override val viewModel = PreferencesViewModel()
+    override val viewModel by lazy { PreferencesViewModel(mainActivity) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel.shouldUseDarkTheme.onPropertyChanged(this) { mainActivity.recreate() }
+        viewModel.theme.onPropertyChanged(this) { mainActivity.recreate() }
         viewModel.shouldShowHintsResetConfirmation.onEventTriggered(this) {
             AlertDialogFragment.show(
                 DIALOG_ID_RESET_HINTS_CONFIRMATION,

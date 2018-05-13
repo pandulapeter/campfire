@@ -4,6 +4,7 @@ import android.content.Context
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.feature.home.collections.CollectionsViewModel
 import com.pandulapeter.campfire.feature.home.library.LibraryViewModel
+import com.pandulapeter.campfire.feature.home.options.preferences.PreferencesViewModel
 import java.util.*
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -37,7 +38,7 @@ class PreferenceDatabase(context: Context) {
     var shouldShowChords by PreferenceFieldDelegate.Boolean("shouldShowChords", true)
     var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("shouldUseGermanNotation", shouldEnableGermanNotationByDefault())
     var fontSize by PreferenceFieldDelegate.Float("fontSize", 1f)
-    var shouldUseDarkTheme by PreferenceFieldDelegate.Boolean("shouldUseDarkTheme", false)
+    var theme by PreferenceFieldDelegate.Int("theme", PreferencesViewModel.Theme.SYSTEM.id)
     var shouldShowExitConfirmation by PreferenceFieldDelegate.Boolean("shouldShowExitConfirmation", true)
     var shouldShowPrivacyPolicy by PreferenceFieldDelegate.Boolean("shouldShowPrivacyPolicy", true)
     var shouldShareUsageData by PreferenceFieldDelegate.Boolean("shouldShareUsageData", false)
