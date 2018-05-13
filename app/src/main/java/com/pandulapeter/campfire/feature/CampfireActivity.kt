@@ -36,7 +36,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.databinding.ActivityCampfireBinding
-import com.pandulapeter.campfire.feature.detail.DetailFragment
+import com.pandulapeter.campfire.feature.detail.DetailFragmentTemp
 import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
 import com.pandulapeter.campfire.feature.home.collections.detail.CollectionDetailFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
@@ -258,7 +258,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
         }
         binding.drawerLayout.setDrawerLockMode(
-            if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
+            if (currentFragment is DetailFragmentTemp || currentFragment is CollectionDetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
             Gravity.START
         )
 
@@ -364,7 +364,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
             if (view == null) {
                 if (childCount > 1) {
-                    if (currentFragment is LibraryFragment || currentFragment is DetailFragment) {
+                    if (currentFragment is LibraryFragment || currentFragment is DetailFragmentTemp) {
                         post { removeViews() }
                     } else {
                         postDelayed({
@@ -515,7 +515,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     private fun handleNewIntent() {
-        if (currentFragment is DetailFragment) {
+        if (currentFragment is DetailFragmentTemp) {
             if (intent.screenToOpen.isEmpty()) {
                 return
             } else {
@@ -574,12 +574,12 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             fun createTransition(delay: Long) = Explode().apply {
                 propagation = null
                 startDelay = delay
-                duration = DetailFragment.TRANSITION_DURATION
+                duration = DetailFragmentTemp.TRANSITION_DURATION
             }
             currentFragment?.run {
                 if (shouldExplode) {
                     exitTransition = createTransition(0)
-                    reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
+                    reenterTransition = createTransition(DetailFragmentTemp.TRANSITION_DELAY)
                 } else {
                     exitTransition = null
                     reenterTransition = null
@@ -664,7 +664,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         fun createTransition(delay: Long) = Explode().apply {
             propagation = null
             startDelay = delay
-            duration = DetailFragment.TRANSITION_DURATION
+            duration = DetailFragmentTemp.TRANSITION_DURATION
         }
         currentFragment?.run {
             if (this !is PlaylistFragment) {
@@ -675,14 +675,14 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
             if (shouldExplode) {
                 exitTransition = createTransition(0)
-                reenterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
+                reenterTransition = createTransition(DetailFragmentTemp.TRANSITION_DELAY)
             } else {
                 exitTransition = null
                 reenterTransition = null
             }
         }
         supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, DetailFragment.newInstance(songs, index, shouldShowManagePlaylist, clickedView == null))
+            .replace(R.id.fragment_container, DetailFragmentTemp.newInstance(songs, index, shouldShowManagePlaylist, clickedView == null))
             .apply {
                 if (clickedView == null) {
                     setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
@@ -708,7 +708,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist_24dp else R.drawable.ic_playlist_24dp)
             }
 
-        val isLookingForUpdatedId = currentFragment is PlaylistFragment || currentFragment is DetailFragment
+        val isLookingForUpdatedId = currentFragment is PlaylistFragment || currentFragment is DetailFragmentTemp
         playlistsContainerItem.run {
             clear()
             playlistIdMap.clear()

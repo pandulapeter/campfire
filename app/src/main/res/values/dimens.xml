@@ -55,7 +55,7 @@
     <dimen name="new_playlist_input_padding_end">12dp</dimen> <!-- large_content_padding - edit_text_fix -->
 
     <!-- Playlist chooser bottom sheet -->
-    <dimen name="playlist_chooser_bottom_sheet_width">0dp</dimen>
+    <dimen name="bottom_sheet_width">0dp</dimen>
     <dimen name="bottom_sheet_toolbar_margin">56dp</dimen>
     <dimen name="bottom_sheet_toolbar_elevation">4dp</dimen>
 

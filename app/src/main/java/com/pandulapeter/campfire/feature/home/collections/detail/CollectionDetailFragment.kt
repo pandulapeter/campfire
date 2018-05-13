@@ -6,7 +6,7 @@ import android.transition.*
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Collection
-import com.pandulapeter.campfire.feature.detail.DetailFragment
+import com.pandulapeter.campfire.feature.detail.DetailFragmentTemp
 import com.pandulapeter.campfire.feature.detail.FadeInTransition
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
@@ -56,9 +56,9 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
             .apply {
                 ordering = TransitionSet.ORDERING_TOGETHER
                 startDelay = delay
-                duration = DetailFragment.TRANSITION_DURATION
+                duration = DetailFragmentTemp.TRANSITION_DURATION
             }
-        sharedElementEnterTransition = createTransition(DetailFragment.TRANSITION_DELAY)
+        sharedElementEnterTransition = createTransition(DetailFragmentTemp.TRANSITION_DELAY)
         sharedElementReturnTransition = createTransition(0)
         setEnterSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {

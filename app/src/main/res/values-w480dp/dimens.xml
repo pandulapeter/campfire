@@ -2,6 +2,6 @@
 <resources>
 
     <!-- Playlist chooser bottom sheet -->
-    <dimen name="playlist_chooser_bottom_sheet_width">360dp</dimen>
+    <dimen name="bottom_sheet_width">360dp</dimen>
 
 </resources>

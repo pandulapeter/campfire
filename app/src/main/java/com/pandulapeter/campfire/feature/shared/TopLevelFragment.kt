@@ -20,7 +20,7 @@ import android.view.View
 import android.widget.CompoundButton
 import android.widget.TextView
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.detail.DetailFragment
+import com.pandulapeter.campfire.feature.detail.DetailFragmentTemp
 import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.util.consume
@@ -43,7 +43,7 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         mainActivity.beforeScreenChanged()
-        if (this !is DetailFragment) {
+        if (this !is DetailFragmentTemp) {
             mainActivity.updateToolbarTitleView(inflateToolbarTitle(mainActivity.toolbarContext), toolbarWidth)
         }
         if (savedInstanceState == null || this !is LibraryFragment) {

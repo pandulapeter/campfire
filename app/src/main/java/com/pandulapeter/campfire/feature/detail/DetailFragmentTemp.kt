@@ -1,8 +1,10 @@
 package com.pandulapeter.campfire.feature.detail
 
 import android.animation.Animator
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.app.SharedElementCallback
@@ -17,15 +19,17 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
+import com.pandulapeter.campfire.feature.home.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
+import java.net.URLEncoder
 
 
-class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail), DetailPageEventBus.Subscriber {
+class DetailFragmentTemp : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail), DetailPageEventBus.Subscriber {
 
     companion object {
         const val TRANSITION_DELAY = 50L
@@ -38,7 +42,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         private var Bundle.shouldShowManagePlaylist by BundleArgumentDelegate.Boolean("shouldShowManagePlaylist")
         private var Bundle.hasNoTransition by BundleArgumentDelegate.Boolean("hasNoTransition")
 
-        fun newInstance(songs: List<Song>, index: Int, shouldShowManagePlaylist: Boolean, hasNoTransition: Boolean) = DetailFragment().withArguments {
+        fun newInstance(songs: List<Song>, index: Int, shouldShowManagePlaylist: Boolean, hasNoTransition: Boolean) = DetailFragmentTemp().withArguments {
             it.songs = ArrayList(songs)
             it.index = index
             it.shouldShowManagePlaylist = shouldShowManagePlaylist
