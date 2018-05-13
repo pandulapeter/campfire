@@ -6,8 +6,8 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.os.Bundle
 import android.support.annotation.MenuRes
 import android.support.design.internal.NavigationMenuView
@@ -157,6 +157,16 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         super.onCreate(savedInstanceState)
         startTime = System.currentTimeMillis()
 
+        // Set the task description.
+        @Suppress("ConstantConditionIf")
+        setTaskDescription(
+            ActivityManager.TaskDescription(
+                getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
+                null,
+                (binding.toolbarButtonContainer.background as ColorDrawable).color
+            )
+        )
+
         // Initialize the app bar.
         val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
         binding.toolbarMainButton.setOnClickListener {
@@ -261,28 +271,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         super.onNewIntent(intent)
         this.intent = intent
         handleNewIntent()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        // Set the task description.
-        @Suppress("ConstantConditionIf")
-        setTaskDescription(
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                ActivityManager.TaskDescription(
-                    getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
-                    0,
-                    obtainColor(android.R.attr.colorBackgroundFloating)
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                ActivityManager.TaskDescription(
-                    getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
-                    null,
-                    obtainColor(android.R.attr.colorBackgroundFloating)
-                )
-            }
-        )
     }
 
     override fun onResume() {

@@ -5,7 +5,7 @@ apply plugin: "kotlin-kapt"
 apply plugin: "io.fabric"
 
 android {
-    compileSdkVersion 'android-P'
+    compileSdkVersion 27
     defaultConfig {
         applicationId "com.pandulapeter.campfire"
         minSdkVersion 21
