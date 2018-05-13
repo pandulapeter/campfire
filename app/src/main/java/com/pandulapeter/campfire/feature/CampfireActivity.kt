@@ -522,11 +522,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 supportFragmentManager.popBackStackImmediate()
             }
         }
-        var isFromDeepLink = true
+        var isFromAppShortcut = true
         val screen = when (intent.screenToOpen) {
             "" -> {
                 preferenceDatabase.lastScreen.let {
-                    isFromDeepLink = false
+                    isFromAppShortcut = false
                     when (it) {
                         "", SCREEN_LIBRARY -> openLibraryScreen()
                         SCREEN_COLLECTIONS -> openCollectionsScreen()
@@ -542,7 +542,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             SCREEN_COLLECTIONS -> openCollectionsScreen()
             else -> openPlaylistScreen(intent.screenToOpen)
         }
-        analyticsManager.onAppOpened(screen, isFromDeepLink)
+        analyticsManager.onAppOpened(screen, isFromAppShortcut)
     }
 
     fun openLibraryScreen(): String {

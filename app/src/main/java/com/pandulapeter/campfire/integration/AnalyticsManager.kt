@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.integration
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.data.networking.NetworkManager
@@ -49,8 +50,17 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
     }
 
     private fun track(event: String, vararg arguments: Pair<String, String>) {
-        if (preferenceDatabase.shouldShareUsageData && BuildConfig.BUILD_TYPE == "release") {
-            firebaseAnalytics.logEvent(event, Bundle().apply { arguments.forEach { putString(it.first, it.second) } })
+        if (preferenceDatabase.shouldShareUsageData) {
+            @Suppress("ConstantConditionIf")
+            if (BuildConfig.BUILD_TYPE == "release") {
+                firebaseAnalytics.logEvent(event, Bundle().apply { arguments.forEach { putString(it.first, it.second) } })
+            } else {
+                var text = event
+                if (arguments.isNotEmpty()) {
+                    text += "(" + arguments.joinToString("; ") { it.first + ": " + it.second } + ")"
+                }
+                Log.d("ANALYTICS_EVENT", text)
+            }
         }
     }
 
