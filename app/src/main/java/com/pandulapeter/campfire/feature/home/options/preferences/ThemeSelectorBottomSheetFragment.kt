@@ -1,11 +1,10 @@
-package com.pandulapeter.campfire.feature.shared.dialog
+package com.pandulapeter.campfire.feature.home.options.preferences
 
 import android.os.Bundle
 import android.support.v4.app.DialogFragment
 import android.support.v4.app.FragmentManager
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentThemeSelectorBottomSheetBinding
-import com.pandulapeter.campfire.feature.home.options.preferences.PreferencesViewModel
+import com.pandulapeter.campfire.feature.shared.dialog.BaseBottomSheetDialogFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.withArguments
 

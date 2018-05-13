@@ -3,7 +3,6 @@ package com.pandulapeter.campfire.feature.home.options.preferences
 import android.content.Context
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.detail.page.parsing.Note
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
@@ -21,7 +20,10 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
     val germanNotationExample = generateNotationExample(true)
     val theme = ObservableField<Theme>(Theme.fromId(preferenceDatabase.theme))
     val themeDescription = ObservableField("")
+    val language = ObservableField<Language>(Language.fromId(preferenceDatabase.language))
+    val languageDescription = ObservableField("")
     val shouldShowThemeSelector = ObservableBoolean()
+    val shouldShowLanguageSelector = ObservableBoolean()
     val shouldShowExitConfirmation = ObservableBoolean(preferenceDatabase.shouldShowExitConfirmation)
     val shouldShowHintsResetConfirmation = ObservableBoolean()
     val shouldShowHintsResetSnackbar = ObservableBoolean()
@@ -34,12 +36,20 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
             preferenceDatabase.theme = it.id
             updateThemeDescription()
         }
+        language.onPropertyChanged {
+            preferenceDatabase.language = it.id
+            updateLanguageDescription()
+            //TODO: Change the UI language
+        }
         shouldShowExitConfirmation.onPropertyChanged { preferenceDatabase.shouldShowExitConfirmation = it }
         shouldShareUsageData.onPropertyChanged { preferenceDatabase.shouldShareUsageData = it }
         updateThemeDescription()
+        updateLanguageDescription()
     }
 
     fun onThemeClicked() = shouldShowThemeSelector.set(true)
+
+    fun onLanguageClicked() = shouldShowLanguageSelector.set(true)
 
     fun onResetHintsClicked() {
         shouldShowHintsResetConfirmation.set(true)
@@ -76,6 +86,15 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
         )
     )
 
+    private fun updateLanguageDescription() = languageDescription.set(
+        context.getString(
+            when (language.get()) {
+                null, PreferencesViewModel.Language.AUTOMATIC -> R.string.options_preferences_language_automatic_description
+                PreferencesViewModel.Language.ENGLISH -> R.string.options_preferences_language_english
+            }
+        )
+    )
+
     enum class Theme(val id: Int) {
         SYSTEM(0),
         AUTOMATIC(1),
@@ -84,6 +103,15 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
 
         companion object {
             fun fromId(id: Int) = Theme.values().find { it.id == id } ?: AUTOMATIC
+        }
+    }
+
+    enum class Language(val id: String) {
+        AUTOMATIC(""),
+        ENGLISH(com.pandulapeter.campfire.data.model.local.Language.SupportedLanguages.ENGLISH.id);
+
+        companion object {
+            fun fromId(id: String) = Language.values().find { it.id == id } ?: AUTOMATIC
         }
     }
 }
