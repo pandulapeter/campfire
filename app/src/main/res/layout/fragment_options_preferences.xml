@@ -116,7 +116,8 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:paddingBottom="@dimen/small_content_padding">
 
                     <TextView
                         style="@style/OptionsItem"
@@ -170,7 +171,17 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:paddingBottom="@dimen/small_content_padding">
+
+                    <TextView
+                        style="@style/OptionsItem"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:onClick="@{() -> viewModel.onResetHintsClicked()}"
+                        app:description="@{@string/options_preferences_reset_hints_description}"
+                        app:title="@{@string/options_preferences_reset_hints}"
+                        tools:text="@string/options_preferences_reset_hints" />
 
                     <android.support.v7.widget.SwitchCompat
                         android:layout_width="match_parent"
@@ -186,15 +197,6 @@
                         app:switchPadding="@dimen/content_padding"
                         app:title="@{@string/options_preferences_share_usage_data}"
                         tools:text="@string/options_preferences_share_usage_data" />
-
-                    <TextView
-                        style="@style/OptionsItem"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:onClick="@{() -> viewModel.onResetHintsClicked()}"
-                        app:description="@{@string/options_preferences_reset_hints_description}"
-                        app:title="@{@string/options_preferences_reset_hints}"
-                        tools:text="@string/options_preferences_reset_hints" />
 
                 </LinearLayout>
 
