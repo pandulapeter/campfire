@@ -143,7 +143,7 @@
     <string name="options_changelog_0_5_0_version_name">v0.5</string>
     <string name="options_changelog_0_5_0_description">
         <Data><![CDATA[
-        • Added <strong>language switcher</strong> with support for <strong>Hungarian</strong> and <strong>Romanian</strong> translations.<br>
+        • Added <strong>language switcher</strong> and <strong>Hungarian</strong> translation.<br>
         • Added option for automatically switching between <strong>dark</strong> and <strong>light</strong> themes based on the time of the day.<br>
         • Implemented optional <strong>analytics tracking</strong> and <strong>crash reporting</strong>.<br>
         • Finalized the <strong>open-source licenses</strong> section.<br>
@@ -256,7 +256,7 @@
     <string name="detail_report">Report a problem</string>
     <string name="detail_report_subject">Campfire: Problem with %1$s - %2$s</string>
     <string name="detail_swipe_hint">Swipe horizontally to cycle through the songs</string>
-    <string name="detail_pinch_hint">Pinch with two fingers to adjust the font size.</string>
+    <string name="detail_pinch_hint">Pinch with two fingers to adjust the font size</string>
     <string name="detail_placeholder_error">Something went wrong while\ntrying to download the song</string>
     <string name="detail_intro">Intro</string>
     <string name="detail_verse">Verse</string>

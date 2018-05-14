@@ -34,7 +34,7 @@
     <string name="home_history">Előzmények</string>
     <string name="home_playlists">Lejátszási listák</string>
     <string name="home_favorites">Kedvencek</string>
-    <string name="home_new_playlist">Új lista</string>
+    <string name="home_new_playlist">Új lejátszási lista</string>
     <string name="home_manage_playlists">@string/manage_playlists</string>
     <string name="home_manage_downloads">Letöltések kezelése</string>
     <string name="home_exit_confirmation_title">Biztos vagy benne?</string>
@@ -82,8 +82,8 @@
     <!-- History screen -->
     <string name="history_clear_confirmation_title">Biztos vagy benne?</string>
     <string name="history_clear_confirmation_message">Minden előzmény törlésre fog kerülni.</string>
-    <string name="history_clear_confirmation_clear">Törlés</string>
-    <string name="history_song_removed_message">%s törölve</string>
+    <string name="history_clear_confirmation_clear">Összes törlése</string>
+    <string name="history_song_removed_message">%s eltávolítva</string>
     <string name="history_all_songs_removed_message">Előzmények törölve</string>
     <string name="history_now">Most</string>
     <string name="history_today">Korábban ma</string>
@@ -95,7 +95,7 @@
     <string name="history_this_year">Ebben az évben</string>
     <string name="history_last_year">Múlt évben</string>
     <string name="history_a_long_time_ago">Réges-régen</string>
-    <string name="history_hint">Vízszintesen húzd el a dalokat hogy kitöröld őket az előzmények közül</string>
+    <string name="history_hint">Vízszintesen húzd el a dalokat, hogy eltávolítsd őket az előzmények közül</string>
     <string name="history_placeholder">A megtekintett dalszövegek kronológikus sorrendben fognak megjelenni itt</string>
 
     <!-- Options screen / Preferences -->
@@ -143,7 +143,7 @@
     <string name="options_changelog_0_5_0_version_name">v0.5</string>
     <string name="options_changelog_0_5_0_description">
         <Data><![CDATA[
-        • Added <strong>language switcher</strong> with support for <strong>Hungarian</strong> and <strong>Romanian</strong> translations.<br>
+        • Added <strong>language switcher</strong> and <strong>Hungarian</strong> translation.<br>
         • Added option for automatically switching between <strong>dark</strong> and <strong>light</strong> themes based on the time of the day.<br>
         • Implemented optional <strong>analytics tracking</strong> and <strong>crash reporting</strong>.<br>
         • Finalized the <strong>open-source licenses</strong> section.<br>
@@ -192,77 +192,77 @@
         ]]></Data>
     </string>
     <string name="options_about_description_bottom">"I know that there aren't too many songs in the library - new ones are being added on a semi-regular basis. If you have suggestions on which songs to include next or any other type of feedback, feel free to drop me a line!</string>
-    <string name="options_about_no_easter_egg">No Easter Eggs in this version</string>
-    <string name="options_about_no_in_app_purchase">Work in progress… But thanks anyway!</string>
-    <string name="options_about_links">Links</string>
-    <string name="options_about_google_play">Rate on Google Play</string>
-    <string name="options_about_github">View on GitHub</string>
-    <string name="options_about_share">Share the app</string>
-    <string name="options_about_contact">Contact me</string>
-    <string name="options_about_buy_me_a_beer">Buy me a beer</string>
-    <string name="options_about_error">Looks like no app can handle this request</string>
-    <string name="options_about_legal">Legal</string>
-    <string name="options_about_terms_and_conditions">Terms and Conditions</string>
-    <string name="options_about_privacy_policy">Privacy Policy</string>
-    <string name="options_about_licenses">Open-source licenses</string>
+    <string name="options_about_no_easter_egg">Semmi meglepetés ebben a verzióban</string>
+    <string name="options_about_no_in_app_purchase">Ez még nincs kész… De azért köszönöm!</string>
+    <string name="options_about_links">Hivatkozások</string>
+    <string name="options_about_google_play">Értékelés Google Play-en</string>
+    <string name="options_about_github">Megtekintés GitHub-on</string>
+    <string name="options_about_share">Applikáció megosztása</string>
+    <string name="options_about_contact">Írj nekem</string>
+    <string name="options_about_buy_me_a_beer">Hívj meg egy sörre</string>
+    <string name="options_about_error">Úgy tűnik ezt egy applikáció se tudja végrehajtani</string>
+    <string name="options_about_legal">Jogi dokumentumok (angol)</string>
+    <string name="options_about_terms_and_conditions">Felhasználói feltételek</string>
+    <string name="options_about_privacy_policy">Adatvédelmi irányelvek</string>
+    <string name="options_about_licenses">Nyílt forráskódú licenszek</string>
 
     <!-- Playlist screen -->
     <plurals name="playlist_song_count">
-        <item quantity="one">%d song</item>
-        <item quantity="other">%d songs</item>
+        <item quantity="one">%d dal</item>
+        <item quantity="other">%d dal</item>
     </plurals>
-    <string name="playlist_enter_title">Enter the name of the playlist</string>
-    <string name="playlist_title">Playlist title</string>
-    <string name="playlist_placeholder">To start adding songs to this playlist, tap on the star icon near song titles</string>
-    <string name="playlist_song_removed_message">%s removed</string>
-    <string name="playlist_hint_swipe">Swipe the songs away horizontally to remove them from this playlist</string>
-    <string name="playlist_hint_drag">Drag the songs vertically to rearrange them</string>
+    <string name="playlist_enter_title">Add meg a lejátszási lista címét</string>
+    <string name="playlist_title">Cím</string>
+    <string name="playlist_placeholder">Hogy dalokat adj hozzá ehhez a lejátszási listához, kattints a dalok melletti csillag ikonra</string>
+    <string name="playlist_song_removed_message">%s eltávolítva</string>
+    <string name="playlist_hint_swipe">Vízszintesen húzd el a dalokat, hogy eltávolítsd őket ebből a listából</string>
+    <string name="playlist_hint_drag">Függőlegesen mozgasd a dalokat a sorrend átrendezéséhez</string>
 
     <!-- Manage playlists screen -->
     <plurals name="manage_playlists_subtitle">
-        <item quantity="one">%d playlist</item>
-        <item quantity="other">%d playlists</item>
+        <item quantity="one">%d lejátszási lista</item>
+        <item quantity="other">%d lejátszási lista</item>
     </plurals>
-    <string name="manage_playlists_song_count_empty">Empty playlist</string>
+    <string name="manage_playlists_song_count_empty">Üres lejátszási lista</string>
     <plurals name="manage_playlists_song_count">
-        <item quantity="one">Contains %d song</item>
-        <item quantity="other">Contains %d songs</item>
+        <item quantity="one">%d dalt tartalmaz</item>
+        <item quantity="other">%d dalt tartalmaz</item>
     </plurals>
-    <string name="manage_playlists_hint_swipe">Swipe the playlists away horizontally to delete them</string>
-    <string name="manage_playlists_hint_drag">Drag the playlists vertically to rearrange them</string>
-    <string name="manage_playlists_delete_all_confirmation_title">Are you sure?</string>
-    <string name="manage_playlists_delete_all_confirmation_message">This will remove all playlists except for Favorites</string>
-    <string name="manage_playlists_delete_all_confirmation_clear">Delete all</string>
-    <string name="manage_playlists_all_playlists_deleted">All playlists deleted</string>
-    <string name="manage_playlists_playlist_deleted_message">%s deleted</string>
+    <string name="manage_playlists_hint_swipe">Vízszintesen húzd el a lejátszási listákat, hogy kitöröld őket</string>
+    <string name="manage_playlists_hint_drag">Függőlegesen mozgasd az elemeket a sorrend átrendezéséhez</string>
+    <string name="manage_playlists_delete_all_confirmation_title">Biztos vagy benne?</string>
+    <string name="manage_playlists_delete_all_confirmation_message">Az összes lejátszási lista törölve lesz a Kedvencek kivételével</string>
+    <string name="manage_playlists_delete_all_confirmation_clear">Összes törlése</string>
+    <string name="manage_playlists_all_playlists_deleted">Az összes lejátszási lista törölve</string>
+    <string name="manage_playlists_playlist_deleted_message">%s törölve</string>
 
     <!-- Manage downloads screen -->
-    <string name="manage_downloads_no_downloads">No downloads</string>
-    <string name="manage_downloads_delete_all_confirmation_title">Are you sure?</string>
-    <string name="manage_downloads_delete_all_confirmation_message">This will remove all downloaded songs</string>
-    <string name="manage_downloads_delete_all_confirmation_clear">Delete all</string>
-    <string name="manage_downloads_delete_all_message">All downloaded songs deleted</string>
-    <string name="manage_downloads_song_deleted_message">%s deleted</string>
-    <string name="manage_downloads_hint">Swipe items away to remove them from your downloads</string>
-    <string name="manage_downloads_placeholder">You don\'t have any downloaded songs</string>
+    <string name="manage_downloads_no_downloads">Nincsenek letöltött dalok</string>
+    <string name="manage_downloads_delete_all_confirmation_title">Biztos vagy benne?</string>
+    <string name="manage_downloads_delete_all_confirmation_message">Az összes letöltött dal törlésre kerül</string>
+    <string name="manage_downloads_delete_all_confirmation_clear">Összes törlése</string>
+    <string name="manage_downloads_delete_all_message">Az összes letöltött dal törölve</string>
+    <string name="manage_downloads_song_deleted_message">%s törölve</string>
+    <string name="manage_downloads_hint">Vízszintesen húzd el a dalokat, hogy kitöröld őket a letöltések közül</string>
+    <string name="manage_downloads_placeholder">Nincsenek letöltött dalszövegek</string>
 
     <!-- Detail screen -->
-    <string name="detail_song_options">Song options</string>
-    <string name="detail_transpose">Transpose (original)</string>
-    <string name="detail_transpose_value">Transpose (%s)</string>
-    <string name="detail_transpose_higher">Higher</string>
-    <string name="detail_transpose_lower">Lower</string>
-    <string name="detail_play_original">Play original</string>
-    <string name="detail_report">Report a problem</string>
-    <string name="detail_report_subject">Campfire: Problem with %1$s - %2$s</string>
-    <string name="detail_swipe_hint">Swipe horizontally to cycle through the songs</string>
-    <string name="detail_pinch_hint">Pinch with two fingers to adjust the font size.</string>
-    <string name="detail_placeholder_error">Something went wrong while\ntrying to download the song</string>
-    <string name="detail_intro">Intro</string>
-    <string name="detail_verse">Verse</string>
-    <string name="detail_bridge">Bridge</string>
-    <string name="detail_solo">Solo</string>
-    <string name="detail_outro">Outro</string>
-    <string name="detail_chorus">Chorus</string>
+    <string name="detail_song_options">Opciók</string>
+    <string name="detail_transpose">Transzponálás (eredeti)</string>
+    <string name="detail_transpose_value">Transzponálás (%s)</string>
+    <string name="detail_transpose_higher">Fennebb</string>
+    <string name="detail_transpose_lower">Lennebb</string>
+    <string name="detail_play_original">Eredeti lejátszása</string>
+    <string name="detail_report">Hiba jelentése</string>
+    <string name="detail_report_subject">Campfire: Probléma ezzel a dallal: %1$s - %2$s</string>
+    <string name="detail_swipe_hint">Lapozz vízszintesen a listában lévő többi dal megtekintéséhez</string>
+    <string name="detail_pinch_hint">Két ujjal csípve állíthatod a szöveg méretét</string>
+    <string name="detail_placeholder_error">Hiba történt a dalszöveg letöltése közben</string>
+    <string name="detail_intro">Bevezető</string>
+    <string name="detail_verse">Szakasz</string>
+    <string name="detail_bridge">Átkötő</string>
+    <string name="detail_solo">Szóló</string>
+    <string name="detail_outro">Lezárás</string>
+    <string name="detail_chorus">Refrén</string>
 
 </resources>
