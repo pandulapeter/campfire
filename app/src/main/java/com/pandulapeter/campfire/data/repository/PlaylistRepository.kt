@@ -2,14 +2,14 @@ package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.persistence.Database
-import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.BaseRepository
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import java.util.*
 
-class PlaylistRepository(private val database: Database) : Repository<PlaylistRepository.Subscriber>() {
+class PlaylistRepository(private val database: Database) : BaseRepository<PlaylistRepository.Subscriber>() {
     private val data = mutableListOf<Playlist>()
     private var isCacheLoaded = false
     var hiddenPlaylistId: String? = null

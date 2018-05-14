@@ -2,7 +2,7 @@ package com.pandulapeter.campfire.data.repository.shared
 
 import android.support.annotation.CallSuper
 
-abstract class Repository<T> {
+abstract class BaseRepository<T> {
 
     protected var subscribers = mutableSetOf<T>()
 

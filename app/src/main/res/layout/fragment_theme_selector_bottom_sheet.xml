@@ -13,7 +13,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="@dimen/content_padding"
+            android:paddingBottom="@dimen/large_content_padding"
             android:paddingTop="@dimen/small_content_padding">
 
             <TextView

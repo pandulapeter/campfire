@@ -1,8 +1,8 @@
 package com.pandulapeter.campfire.feature.detail
 
-import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.BaseRepository
 
-class DetailEventBus : Repository<DetailEventBus.Subscriber>() {
+class DetailEventBus : BaseRepository<DetailEventBus.Subscriber>() {
 
     fun notifyTransitionEnd() = subscribers.forEach { it.onTransitionEnd() }
 

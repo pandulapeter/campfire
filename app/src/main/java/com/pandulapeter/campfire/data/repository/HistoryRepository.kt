@@ -2,13 +2,13 @@ package com.pandulapeter.campfire.data.repository
 
 import com.pandulapeter.campfire.data.model.local.HistoryItem
 import com.pandulapeter.campfire.data.persistence.Database
-import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.BaseRepository
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 
-class HistoryRepository(private val database: Database) : Repository<HistoryRepository.Subscriber>() {
+class HistoryRepository(private val database: Database) : BaseRepository<HistoryRepository.Subscriber>() {
     private val data = mutableListOf<HistoryItem>()
     private var isCacheLoaded = false
 

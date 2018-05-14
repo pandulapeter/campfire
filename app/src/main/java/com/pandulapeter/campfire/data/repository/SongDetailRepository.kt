@@ -5,7 +5,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.model.remote.SongDetail
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.Database
-import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.BaseRepository
 import com.pandulapeter.campfire.util.enqueueCall
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
@@ -16,7 +16,7 @@ import kotlinx.coroutines.experimental.delay
 class SongDetailRepository(
     private val networkManager: NetworkManager,
     private val database: Database
-) : Repository<SongDetailRepository.Subscriber>() {
+) : BaseRepository<SongDetailRepository.Subscriber>() {
     private val data = mutableListOf<SongDetailMetadata>()
     private val downloadQueue = mutableListOf<String>()
     private var isCacheLoaded = false

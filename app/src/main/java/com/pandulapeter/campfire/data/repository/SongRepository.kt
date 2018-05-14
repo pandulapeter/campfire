@@ -5,7 +5,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.Database
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.BaseRepository
 import com.pandulapeter.campfire.util.enqueueCall
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
@@ -16,7 +16,7 @@ class SongRepository(
     private val preferenceDatabase: PreferenceDatabase,
     private val networkManager: NetworkManager,
     private val database: Database
-) : Repository<SongRepository.Subscriber>() {
+) : BaseRepository<SongRepository.Subscriber>() {
 
     companion object {
         private const val UPDATE_LIMIT = 24 * 60 * 60 * 1000

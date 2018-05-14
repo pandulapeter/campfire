@@ -1,8 +1,8 @@
 package com.pandulapeter.campfire.feature.detail
 
-import com.pandulapeter.campfire.data.repository.shared.Repository
+import com.pandulapeter.campfire.data.repository.shared.BaseRepository
 
-class DetailPageEventBus : Repository<DetailPageEventBus.Subscriber>() {
+class DetailPageEventBus : BaseRepository<DetailPageEventBus.Subscriber>() {
 
     fun notifyTranspositionChanged(songId: String, value: Int) = subscribers.forEach { it.onTranspositionChanged(songId, value) }
 

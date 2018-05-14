@@ -49,21 +49,6 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         firebaseAnalytics.setAnalyticsCollectionEnabled(preferenceDatabase.shouldShareUsageData)
     }
 
-    private fun track(event: String, vararg arguments: Pair<String, String>) {
-        if (preferenceDatabase.shouldShareUsageData) {
-            @Suppress("ConstantConditionIf")
-            if (BuildConfig.BUILD_TYPE == "release") {
-                firebaseAnalytics.logEvent(event, Bundle().apply { arguments.forEach { putString(it.first, it.second) } })
-            } else {
-                var text = event
-                if (arguments.isNotEmpty()) {
-                    text += "(" + arguments.joinToString("; ") { it.first + ": " + it.second } + ")"
-                }
-                Log.d("ANALYTICS_EVENT", text)
-            }
-        }
-    }
-
     fun onAppOpened(screen: String, fromAppShortcut: Boolean) =
         track(EVENT_APP_OPENED, PARAM_KEY_SCREEN to screen, PARAM_KEY_FROM_APP_SHORTCUT to fromAppShortcut.toString())
 
@@ -92,4 +77,19 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
 
     fun onPlaylistCreated(title: String) =
         track(EVENT_PLAYLIST_CREATED, PARAM_KEY_PLAYLIST_TITLE to title)
+
+    private fun track(event: String, vararg arguments: Pair<String, String>) {
+        if (preferenceDatabase.shouldShareUsageData) {
+            @Suppress("ConstantConditionIf")
+            if (BuildConfig.BUILD_TYPE == "release") {
+                firebaseAnalytics.logEvent(event, Bundle().apply { arguments.forEach { putString(it.first, it.second) } })
+            } else {
+                var text = event
+                if (arguments.isNotEmpty()) {
+                    text += "(" + arguments.joinToString("; ") { it.first + ": " + it.second } + ")"
+                }
+                Log.d("ANALYTICS_EVENT", text)
+            }
+        }
+    }
 }
