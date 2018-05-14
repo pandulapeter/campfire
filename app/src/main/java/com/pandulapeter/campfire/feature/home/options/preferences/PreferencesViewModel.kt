@@ -90,8 +90,8 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
         context.getString(
             when (language.get()) {
                 null, PreferencesViewModel.Language.AUTOMATIC -> R.string.options_preferences_language_automatic_description
-                PreferencesViewModel.Language.ENGLISH -> R.string.options_preferences_language_english
-                PreferencesViewModel.Language.HUNGARIAN -> R.string.options_preferences_language_hungarian
+                PreferencesViewModel.Language.ENGLISH -> R.string.options_preferences_language_english_description
+                PreferencesViewModel.Language.HUNGARIAN -> R.string.options_preferences_language_hungarian_description
             }
         )
     )

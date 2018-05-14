@@ -60,8 +60,8 @@
     <string name="library_sort_by_artist">Előadó</string>
     <string name="library_filter_by_language">Szűrés nyelv szerint</string>
     <string name="library_downloaded_only">Csak letöltött</string>
-    <string name="library_show_explicit">Explicit dalszövegek mutatása</string>
-    <string name="library_search_in">Keresés</string>
+    <string name="library_show_explicit">Explicit</string>
+    <string name="library_search_in">Itt:</string>
     <string name="library_search_in_titles">Címekben</string>
     <string name="library_search_in_artists">Előadókban</string>
 
@@ -136,8 +136,8 @@
     <string name="options_preferences_share_usage_data">Adatok megosztása</string>
     <string name="options_preferences_share_usage_data_enabled">Névtelen felhasználói adatok küldődnek a fejlesztőnek</string>
     <string name="options_preferences_share_usage_data_disabled">A felhasználói adatok és hibajelentések nem küldődnek el senkinek</string>
-    <string name="options_preferences_share_usage_data_restart_hint">Kérlek indítsd újra az applikációt hogy az új beállítás érvénybe lépjen</string>
-    <string name="options_preferences_share_usage_data_restart_action">Újraindítás most</string>
+    <string name="options_preferences_share_usage_data_restart_hint">Kérlek indítsd újra az appot, hogy az új beállítás érvénybe lépjen</string>
+    <string name="options_preferences_share_usage_data_restart_action">Újraindítás</string>
 
     <!-- Options screen / Changelog -->
     <string name="options_changelog_0_5_0_version_name">v0.5</string>
