@@ -25,6 +25,7 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
         viewModel.shouldShowThemeSelector.onEventTriggered { viewModel.theme.get()?.let { ThemeSelectorBottomSheetFragment.show(childFragmentManager, it.id) } }
         viewModel.shouldShowLanguageSelector.onEventTriggered { viewModel.language.get()?.let { LanguageSelectorBottomSheetFragment.show(childFragmentManager, it.id) } }
         viewModel.theme.onPropertyChanged(this) { mainActivity.recreate() }
+        viewModel.language.onPropertyChanged(this) { mainActivity.recreate() }
         viewModel.shouldShowHintsResetConfirmation.onEventTriggered(this) {
             AlertDialogFragment.show(
                 DIALOG_ID_RESET_HINTS_CONFIRMATION,

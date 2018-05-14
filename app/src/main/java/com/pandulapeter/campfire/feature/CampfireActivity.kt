@@ -5,6 +5,8 @@ import android.animation.LayoutTransition
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.databinding.DataBindingUtil
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -56,6 +58,7 @@ import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.*
 import io.fabric.sdk.android.Fabric
 import org.koin.android.ext.android.inject
+import java.util.*
 
 class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSelectedListener, PlaylistRepository.Subscriber {
 
@@ -161,6 +164,14 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
         )
         setTheme(R.style.AppTheme)
+
+        // Set the language
+        PreferencesViewModel.Language.fromId(preferenceDatabase.language).run {
+            (if (this == PreferencesViewModel.Language.AUTOMATIC) Resources.getSystem().configuration.locale else Locale(id)).let {
+                Locale.setDefault(it)
+                resources.updateConfiguration(Configuration(resources.configuration).apply { locale = it }, resources.displayMetrics)
+            }
+        }
         super.onCreate(savedInstanceState)
         startTime = System.currentTimeMillis()
 

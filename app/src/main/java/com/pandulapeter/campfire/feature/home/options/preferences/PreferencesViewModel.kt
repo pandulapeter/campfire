@@ -91,6 +91,7 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
             when (language.get()) {
                 null, PreferencesViewModel.Language.AUTOMATIC -> R.string.options_preferences_language_automatic_description
                 PreferencesViewModel.Language.ENGLISH -> R.string.options_preferences_language_english
+                PreferencesViewModel.Language.HUNGARIAN -> R.string.options_preferences_language_hungarian
             }
         )
     )
@@ -107,7 +108,8 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
 
     enum class Language(val id: String) {
         AUTOMATIC(""),
-        ENGLISH(com.pandulapeter.campfire.data.model.local.Language.SupportedLanguages.ENGLISH.id);
+        ENGLISH(com.pandulapeter.campfire.data.model.local.Language.SupportedLanguages.ENGLISH.id),
+        HUNGARIAN(com.pandulapeter.campfire.data.model.local.Language.SupportedLanguages.HUNGARIAN.id);
 
         companion object {
             fun fromId(id: String) = Language.values().find { it.id == id } ?: AUTOMATIC
