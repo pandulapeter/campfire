@@ -4,7 +4,7 @@
     <!-- General -->
     <string name="campfire">Campfire</string>
     <string name="got_it">Értem</string>
-    <string name="go_to_library">Dalok böngészése</string>
+    <string name="go_to_library">@string/home_library</string>
     <string name="try_again">Újra</string>
     <string name="undo">Mégse</string>
     <string name="ok">OK</string>
@@ -75,7 +75,7 @@
     <string name="collections_sort_by_date">Feltöltés dátuma</string>
     <string name="collections_sort_by_popularity">Népszerűség</string>
     <string name="collections_filter_by_type">Szűrés típus szerint</string>
-    <string name="collections_bookmarked_only">Csak elmentett</string>
+    <string name="collections_bookmarked_only">Csak cimkézett</string>
     <string name="collections_show_explicit">Trágár szövegek</string>
     <string name="collections_filter_by_language">Szűrés nyelv szerint</string>
 
@@ -197,7 +197,7 @@
     <string name="options_about_google_play">Értékelés Google Play-en</string>
     <string name="options_about_github">Megtekintés GitHub-on</string>
     <string name="options_about_share">Applikáció megosztása</string>
-    <string name="options_about_contact">Írj nekem</string>
+    <string name="options_about_contact">Kapcsolat</string>
     <string name="options_about_buy_me_a_beer">Hívj meg egy sörre</string>
     <string name="options_about_error">Úgy tűnik ezt egy applikáció se tudja végrehajtani</string>
     <string name="options_about_legal">Jogi dokumentumok (angol)</string>
