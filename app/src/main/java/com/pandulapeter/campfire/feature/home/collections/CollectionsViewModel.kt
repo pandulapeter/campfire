@@ -11,6 +11,7 @@ import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.util.removePrefixes
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -172,9 +173,9 @@ class CollectionsViewModel(
     }
 
     private fun Sequence<Collection>.sort() = when (sortingMode) {
-        SortingMode.TITLE -> sortedBy { it.date }.sortedBy { it.getNormalizedTitle() }
-        SortingMode.UPLOAD_DATE -> sortedBy { it.getNormalizedTitle() }.sortedBy { it.date }
-        SortingMode.POPULARITY -> sortedBy { it.date }.sortedBy { it.getNormalizedTitle() }.sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
+        SortingMode.TITLE -> sortedBy { it.date }.sortedBy { it.getNormalizedTitle().removePrefixes() }
+        SortingMode.UPLOAD_DATE -> sortedBy { it.getNormalizedTitle().removePrefixes() }.sortedBy { it.date }
+        SortingMode.POPULARITY -> sortedBy { it.date }.sortedBy { it.getNormalizedTitle().removePrefixes() }.sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
     }
 
     enum class SortingMode(val intValue: Int) {

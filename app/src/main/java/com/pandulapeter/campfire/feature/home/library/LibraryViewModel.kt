@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.onTextChanged
+import com.pandulapeter.campfire.util.removePrefixes
 import com.pandulapeter.campfire.util.swap
 
 class LibraryViewModel(
@@ -117,7 +118,7 @@ class LibraryViewModel(
             val songsOnly = filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song }
             songsOnly.forEachIndexed { index, song ->
                 if (when (sortingMode) {
-                        SortingMode.TITLE -> index == 0 || song.getNormalizedTitle()[0] != songsOnly[index - 1].getNormalizedTitle()[0]
+                        SortingMode.TITLE -> index == 0 || song.getNormalizedTitle().removePrefixes()[0] != songsOnly[index - 1].getNormalizedTitle().removePrefixes()[0]
                         SortingMode.ARTIST -> index == 0 || song.artist != songsOnly[index - 1].artist
                         SortingMode.POPULARITY -> songsOnly[0].isNew && (index == 0 || songsOnly[index].isNew != songsOnly[index - 1].isNew)
                     }
@@ -130,7 +131,7 @@ class LibraryViewModel(
                 add(
                     index, SongListItemViewModel.HeaderViewModel(
                         when (sortingMode) {
-                            SortingMode.TITLE -> songsOnly[index].getNormalizedTitle()[0].toString().toUpperCase()
+                            SortingMode.TITLE -> songsOnly[index].getNormalizedTitle().removePrefixes()[0].toString()
                             SortingMode.ARTIST -> songsOnly[index].artist
                             SortingMode.POPULARITY -> if (!songsOnly[0].isNew) "" else if (songsOnly[index].isNew) newString else popularString
                         }
@@ -178,9 +179,11 @@ class LibraryViewModel(
     private fun Sequence<Song>.filterExplicit() = if (!shouldShowExplicit) filter { it.isExplicit != true } else this
 
     private fun Sequence<Song>.sort() = when (sortingMode) {
-        SortingMode.TITLE -> sortedBy { it.getNormalizedArtist() }.sortedBy { it.getNormalizedTitle() }
-        SortingMode.ARTIST -> sortedBy { it.getNormalizedTitle() }.sortedBy { it.getNormalizedArtist() }
-        SortingMode.POPULARITY -> sortedBy { it.getNormalizedArtist() }.sortedBy { it.getNormalizedTitle() }.sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
+        SortingMode.TITLE -> sortedBy { it.getNormalizedArtist().removePrefixes().toString() }.sortedBy { it.getNormalizedTitle().removePrefixes().toString() }
+        SortingMode.ARTIST -> sortedBy { it.getNormalizedTitle().removePrefixes() }.sortedBy { it.getNormalizedArtist().removePrefixes() }
+        SortingMode.POPULARITY -> sortedBy { it.getNormalizedArtist().removePrefixes() }
+            .sortedBy { it.getNormalizedTitle().removePrefixes() }
+            .sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
     }
 
     enum class SortingMode(val intValue: Int) {

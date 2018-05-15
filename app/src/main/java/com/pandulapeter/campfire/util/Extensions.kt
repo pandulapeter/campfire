@@ -204,38 +204,26 @@ fun <T> Call<T>.enqueueCall(onSuccess: (T) -> Unit, onFailure: () -> Unit) {
     })
 }
 
-fun String.normalize() = this
-    .replace("á", "a")
+fun String.normalize() = toUpperCase()
     .replace("Á", "A")
-    .replace("ă", "a")
     .replace("Ă", "A")
-    .replace("â", "a")
     .replace("Â", "A")
-    .replace("é", "e")
     .replace("É", "E")
-    .replace("í", "i")
     .replace("Í", "I")
-    .replace("î", "i")
     .replace("Î", "I")
-    .replace("ó", "o")
     .replace("Ó", "O")
-    .replace("ö", "o")
     .replace("Ö", "O")
-    .replace("ő", "o")
     .replace("Ő", "O")
-    .replace("ș", "s")
     .replace("Ș", "S")
-    .replace("ț", "t")
     .replace("Ț", "T")
-    .replace("ú", "u")
     .replace("Ú", "U")
-    .replace("ű", "u")
     .replace("Ű", "U")
-    //TODO: What's below should not be a part of normalisation - it causes bugs during search.
     .replace("'", "")
+
+fun String.removePrefixes() = this
     .removePrefix("A ")
-    .removePrefix("Az ")
-    .removePrefix("The ")
+    .removePrefix("AZ ")
+    .removePrefix("THE ")
 
 fun ViewPager.addPageScrollListener(onPageSelected: (Int) -> Unit, onPageScrollStateChanged: (Int) -> Unit = {}) =
     addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
