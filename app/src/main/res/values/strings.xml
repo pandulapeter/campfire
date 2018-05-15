@@ -2,7 +2,7 @@
 <resources>
 
     <!-- General -->
-    <string name="campfire">Campfire</string>
+    <string name="campfire" translatable="false">Campfire</string>
     <string name="got_it">Got it</string>
     <string name="go_to_library">@string/home_library</string>
     <string name="try_again">Try again</string>
@@ -140,24 +140,25 @@
     <string name="options_preferences_share_usage_data_restart_action">Restart now</string>
 
     <!-- Options screen / Changelog -->
-    <string name="options_changelog_0_5_0_version_name">v0.5</string>
+    <string name="options_changelog_app_updated">The app has been updated</string>
+    <string name="options_changelog_what_is_new">What\'s new</string>
+    <string name="options_changelog_0_5_0_version_name" translatable="false">v0.5</string>
     <string name="options_changelog_0_5_0_description">
         <Data><![CDATA[
-        • Added <strong>language switcher</strong> and <strong>Hungarian</strong> translation.<br>
+        • Added <strong>language switcher</strong> preference and <strong>Hungarian</strong> translation.<br>
         • Added option for automatically switching between <strong>dark</strong> and <strong>light</strong> themes based on the time of the day.<br>
-        • Implemented optional <strong>analytics tracking</strong> and <strong>crash reporting</strong>.<br>
-        • Finalized the <strong>open-source licenses</strong> section.
+        • Implemented optional <strong>analytics tracking</strong> and <strong>crash reporting</strong>.
         ]]></Data>
     </string>
-    <string name="options_changelog_0_4_0_version_name">v0.4</string>
+    <string name="options_changelog_0_4_0_version_name" translatable="false">v0.4</string>
     <string name="options_changelog_0_4_0_description">
         <Data><![CDATA[
         • Added support for <strong>collections</strong> which are thematic playlists accessible to everyone.<br>
-        • Added option to adjust the <strong>font size</strong>.<br>
+        • Added pinch-to-zoom gesture to adjust the <strong>font size</strong>.<br>
         • Added <strong>shuffle</strong> option for playlists and collections that opens the list of songs in a random order.
         ]]></Data>
     </string>
-    <string name="options_changelog_0_3_0_version_name">v0.3</string>
+    <string name="options_changelog_0_3_0_version_name" translatable="false">v0.3</string>
     <string name="options_changelog_0_3_0_description">
         <Data><![CDATA[
         • Users can now create local <strong>playlists</strong> which are collections of songs for different occasions.<br>
@@ -165,14 +166,15 @@
         • Support for <strong>app shortcuts</strong> on and above Android 7.1.
         ]]></Data>
     </string>
-    <string name="options_changelog_0_2_0_version_name">v0.2</string>
+    <string name="options_changelog_0_2_0_version_name" translatable="false">v0.2</string>
     <string name="options_changelog_0_2_0_description">
         <Data><![CDATA[
-        • The ability to <strong>transpose</strong> songs, <strong>auto-scroll</strong> longer texts with adjustable speed and saving these preferences individually per song.<br>
-        • <strong>History</strong> screen which shows the last time different songs were opened.
+        • Added the option to <strong>transpose</strong> and saving that preference individually per song.<br>
+        • Implemented <strong>auto-scroll</strong> feature with adjustable speed.<br>
+        • <strong>History</strong> screen which shows the last time the different songs were opened.
         ]]></Data>
     </string>
-    <string name="options_changelog_0_1_0_version_name">v0.1</string>
+    <string name="options_changelog_0_1_0_version_name" translatable="false">v0.1</string>
     <string name="options_changelog_0_1_0_description">
         <Data><![CDATA[
         • <strong>Song library</strong> with options to search, sort and filter the list of songs.<br>
@@ -181,8 +183,6 @@
         • <strong>Options</strong> screen with preferences like switching the app to lyrics-only mode, changing the chord notation mode, changing the theme, privacy options and more.
         ]]></Data>
     </string>
-    <string name="options_changelog_app_updated">The app has been updated</string>
-    <string name="options_changelog_what_is_new">What\'s new</string>
 
     <!-- Options screen / About -->
     <string name="options_about_description_top"><Data><![CDATA[
