@@ -37,11 +37,11 @@
     <string name="home_manage_playlists">@string/manage_playlists</string>
     <string name="home_manage_downloads">Letöltések kezelése</string>
     <string name="home_exit_confirmation_title">Biztos vagy benne?</string>
-    <string name="home_exit_confirmation_message">Biztosan ki szeretnél lépni az appból?</string>
+    <string name="home_exit_confirmation_message">Biztosan ki szeretnél lépni az alkalmazásból?</string>
     <string name="home_exit_confirmation_close">Kilépés</string>
     <string name="home_privacy_policy_title">Személyes adatok megosztása</string>
-    <string name="home_privacy_policy_message">Köszönöm, hogy letöltötted a Campfire-t!\n\nA különböző funkcionalitások népszerűségének követéséhez vagy az esetleges hibák kijavításához az app szeretne névtelen adatokat és hibajelentéseket küldeni a fejlesztőnek. Ez az információ soha nem lesz harmadik személlyel megosztva és a most adott válaszodat akármikor módosíthatod a beállítások között.</string>
-    <string name="home_privacy_policy_checkbox">Beleegyezem, hogy az applikáció névtelen felhasználási adatokat és hibajelentéseket küldjön a készülékemről</string>
+    <string name="home_privacy_policy_message">Köszönöm, hogy letöltötted a Campfire-t!\n\nA különböző funkcionalitások népszerűségének követéséhez vagy az esetleges hibák kijavításához az alkalmazás szeretne névtelen adatokat és hibajelentéseket küldeni a fejlesztőnek. Ez az információ soha nem lesz harmadik személlyel megosztva és a most adott válaszodat akármikor módosíthatod a beállítások között.</string>
+    <string name="home_privacy_policy_checkbox">Beleegyezem, hogy az alkalmazás névtelen felhasználási adatokat és hibajelentéseket küldjön a készülékemről</string>
     <string name="home_privacy_policy_positive">Folytatás</string>
 
     <!-- Library screen -->
@@ -109,8 +109,8 @@
     <string name="options_preferences_german_notation">Német jelölés</string>
     <string name="options_preferences_appearance_and_behavior">Kinézet és viselkedés</string>
     <string name="options_preferences_exit_confirmation">Kilépési megerősítés</string>
-    <string name="options_preferences_exit_confirmation_enabled">Kérjen megerősítést az app bezárása előtt</string>
-    <string name="options_preferences_exit_confirmation_disabled">Zárja be az appot megerősítés nélkül</string>
+    <string name="options_preferences_exit_confirmation_enabled">Kérjen megerősítést az alkalmazás bezárása előtt</string>
+    <string name="options_preferences_exit_confirmation_disabled">Zárja be az alkalmazást megerősítés nélkül</string>
     <string name="options_preferences_app_theme">Téma</string>
     <string name="options_preferences_app_theme_automatic">Automatikus</string>
     <string name="options_preferences_app_theme_automatic_description">A téma a napszak függvényében változik</string>
@@ -135,11 +135,11 @@
     <string name="options_preferences_share_usage_data">Adatok megosztása</string>
     <string name="options_preferences_share_usage_data_enabled">Névtelen felhasználói adatok küldődnek a fejlesztőnek</string>
     <string name="options_preferences_share_usage_data_disabled">A felhasználói adatok és hibajelentések nem küldődnek el senkinek</string>
-    <string name="options_preferences_share_usage_data_restart_hint">Kérlek indítsd újra az appot, hogy az új beállítás érvénybe lépjen</string>
+    <string name="options_preferences_share_usage_data_restart_hint">A beállítás csak az alkalmazás újraindítása után lép érvénybe</string>
     <string name="options_preferences_share_usage_data_restart_action">Újraindítás</string>
 
     <!-- Options screen / Changelog -->
-    <string name="options_changelog_app_updated">Az app frissítve lett</string>
+    <string name="options_changelog_app_updated">Az alkalmazás frissítve lett</string>
     <string name="options_changelog_what_is_new">Újdonságok</string>
     <string name="options_changelog_0_5_0_description">
         <Data><![CDATA[
@@ -181,7 +181,7 @@
     <!-- Options screen / About -->
     <string name="options_about_description_top"><Data><![CDATA[
         Köszönöm, hogy használod a <strong>Campfire</strong>-t!<br>
-        Az appot Pandula Péter készítette.
+        Az alkalmazást Pandula Péter készítette.
         ]]></Data>
     </string>
     <string name="options_about_no_easter_egg">Semmi meglepetés ebben a verzióban</string>
@@ -192,7 +192,7 @@
     <string name="options_about_share">Applikáció megosztása</string>
     <string name="options_about_contact">Kapcsolat</string>
     <string name="options_about_buy_me_a_beer">Hívj meg egy sörre</string>
-    <string name="options_about_error">Úgy tűnik ezt egy applikáció se tudja végrehajtani</string>
+    <string name="options_about_error">Sajnos ezt egyetlen telepített alkalmazás sem tudja végrehajtani</string>
     <string name="options_about_legal">Jogi dokumentumok (angol)</string>
     <string name="options_about_terms_and_conditions">Felhasználói feltételek</string>
     <string name="options_about_privacy_policy">Adatvédelmi irányelvek</string>

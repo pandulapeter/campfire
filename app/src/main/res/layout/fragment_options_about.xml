@@ -54,6 +54,7 @@
                         android:fontFamily="sans-serif-medium"
                         android:gravity="center"
                         app:formattedText="@{R.string.options_about_description_top}"
+                        app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toStartOf="@+id/logo"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
@@ -61,14 +62,13 @@
 
                     <ImageView
                         android:id="@id/logo"
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
+                        android:layout_width="@dimen/touch_target"
+                        android:layout_height="@dimen/touch_target"
                         android:background="@drawable/bg_circle"
                         android:contentDescription="@string/campfire"
                         android:onClick="@{() -> viewModel.onLogoClicked()}"
                         android:src="@mipmap/ic_launcher_foreground"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintDimensionRatio="1"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
