@@ -40,7 +40,7 @@
     <string name="home_exit_confirmation_message">Biztosan ki szeretnél lépni az appból?</string>
     <string name="home_exit_confirmation_close">Kilépés</string>
     <string name="home_privacy_policy_title">Személyes adatok megosztása</string>
-    <string name="home_privacy_policy_message">Köszönöm, hogy letöltötted a Campfire-t!\n\nA különböző funkcionalitások népszerűségének követéséhez vagy az esetleges hibák kijavításához az app szeretne névtelen adatokat vagy hibajelentéseket küldeni a fejlesztőnek. Ez az információ soha nem lesz harmadik személlyel megosztva és a most adott válaszodat akármikor módosíthatod a beállítások között.</string>
+    <string name="home_privacy_policy_message">Köszönöm, hogy letöltötted a Campfire-t!\n\nA különböző funkcionalitások népszerűségének követéséhez vagy az esetleges hibák kijavításához az app szeretne névtelen adatokat és hibajelentéseket küldeni a fejlesztőnek. Ez az információ soha nem lesz harmadik személlyel megosztva és a most adott válaszodat akármikor módosíthatod a beállítások között.</string>
     <string name="home_privacy_policy_checkbox">Beleegyezem, hogy az applikáció névtelen felhasználási adatokat és hibajelentéseket küldjön a készülékemről</string>
     <string name="home_privacy_policy_positive">Folytatás</string>
 

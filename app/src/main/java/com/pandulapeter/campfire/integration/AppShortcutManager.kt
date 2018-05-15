@@ -19,9 +19,9 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
     private val implementation: Functionality =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) Implementation(context, preferenceDatabase, playlistRepository) else object : Functionality {}
 
-    fun onLibraryOpened() = implementation.onLibraryOpened()
-
     fun onCollectionsOpened() = implementation.onCollectionsOpened()
+
+    fun onLibraryOpened() = implementation.onLibraryOpened()
 
     fun onPlaylistOpened(playlistId: String) = implementation.onPlaylistOpened(playlistId)
 
@@ -30,8 +30,8 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
     fun updateAppShortcuts() = implementation.updateAppShortcuts()
 
     interface Functionality {
-        fun onLibraryOpened() = Unit
         fun onCollectionsOpened() = Unit
+        fun onLibraryOpened() = Unit
         fun onPlaylistOpened(playlistId: String) = Unit
         fun onPlaylistDeleted(playlistId: String) = Unit
         fun updateAppShortcuts() = Unit
@@ -52,9 +52,9 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
 
         private val shortcutManager: ShortcutManager = context.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
 
-        override fun onLibraryOpened() = trackAppShortcutUsage(LIBRARY_ID)
-
         override fun onCollectionsOpened() = trackAppShortcutUsage(COLLECTIONS_ID)
+
+        override fun onLibraryOpened() = trackAppShortcutUsage(LIBRARY_ID)
 
         override fun onPlaylistOpened(playlistId: String) {
             trackAppShortcutUsage(PLAYLIST_ID + playlistId)
@@ -73,18 +73,18 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
             val shortcuts = mutableListOf<ShortcutInfo>()
             shortcuts.add(
                 createAppShortcut(
-                    LIBRARY_ID,
-                    context.getString(R.string.home_library),
-                    R.drawable.ic_shortcut_library_48dp,
-                    CampfireActivity.getLibraryIntent(context)
-                )
-            )
-            shortcuts.add(
-                createAppShortcut(
                     COLLECTIONS_ID,
                     context.getString(R.string.home_collections),
                     R.drawable.ic_shortcut_collections_48dp,
                     CampfireActivity.getCollectionsIntent(context)
+                )
+            )
+            shortcuts.add(
+                createAppShortcut(
+                    LIBRARY_ID,
+                    context.getString(R.string.home_library),
+                    R.drawable.ic_shortcut_library_48dp,
+                    CampfireActivity.getLibraryIntent(context)
                 )
             )
             if (preferenceDatabase.playlistHistory.isEmpty()) {
