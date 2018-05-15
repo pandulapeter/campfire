@@ -231,6 +231,8 @@ fun String.normalize() = this
     .replace("Ú", "U")
     .replace("ű", "u")
     .replace("Ű", "U")
+    //TODO: What's below should not be a part of normalisation - it causes bugs during search.
+    .replace("'", "")
     .removePrefix("A ")
     .removePrefix("Az ")
     .removePrefix("The ")

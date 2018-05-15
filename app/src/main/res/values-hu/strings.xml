@@ -4,7 +4,7 @@
     <!-- General -->
     <string name="campfire">Campfire</string>
     <string name="got_it">Értem</string>
-    <string name="go_to_library">Dallistához</string>
+    <string name="go_to_library">Dalok böngészése</string>
     <string name="try_again">Újra</string>
     <string name="undo">Mégse</string>
     <string name="ok">OK</string>
@@ -20,7 +20,7 @@
     <!-- List items -->
     <string name="download">Letöltés</string>
     <string name="update">Frissítés</string>
-    <string name="manage_playlists">Lejátszási listák kezelése</string>
+    <string name="manage_playlists">Listák kezelése</string>
     <string name="new_version_available">Frissítés elérhető</string>
     <string name="new_tag">Új</string>
     <string name="popular_tag">Népszerű</string>
@@ -28,13 +28,13 @@
 
     <!-- Home screen -->
     <string name="home_version_pattern">v%s</string>
-    <string name="home_library">Dallista</string>
+    <string name="home_library">Dalok</string>
     <string name="home_collections">Gyűjtemények</string>
     <string name="home_options">Opciók</string>
     <string name="home_history">Előzmények</string>
-    <string name="home_playlists">Lejátszási listák</string>
+    <string name="home_playlists">Listák</string>
     <string name="home_favorites">Kedvencek</string>
-    <string name="home_new_playlist">Új lejátszási lista</string>
+    <string name="home_new_playlist">Új lista</string>
     <string name="home_manage_playlists">@string/manage_playlists</string>
     <string name="home_manage_downloads">Letöltések kezelése</string>
     <string name="home_exit_confirmation_title">Biztos vagy benne?</string>
@@ -47,8 +47,8 @@
 
     <!-- Library screen -->
     <string name="library_placeholder">Nem található megfelelő dal. Ellenőrizd a beállított szűrőket</string>
-    <string name="library_initializing_error">Hiba történt a dallista letöltése közben</string>
-    <string name="library_update_error">Hiba történt a dallista frissítése közben</string>
+    <string name="library_initializing_error">Hiba történt a dalok letöltése közben</string>
+    <string name="library_update_error">Hiba történt a dalok frissítése közben</string>
     <string name="library_filters">Szűrők</string>
     <string name="library_song_download_error">Hiba történt a dal letöltése közben: %s</string>
     <string name="library_search">Keresés</string>
@@ -60,7 +60,7 @@
     <string name="library_sort_by_artist">Előadó</string>
     <string name="library_filter_by_language">Szűrés nyelv szerint</string>
     <string name="library_downloaded_only">Csak letöltött</string>
-    <string name="library_show_explicit">Explicit</string>
+    <string name="library_show_explicit">Trágár szövegek</string>
     <string name="library_search_in">Itt:</string>
     <string name="library_search_in_titles">Címekben</string>
     <string name="library_search_in_artists">Előadókban</string>
@@ -76,7 +76,7 @@
     <string name="collections_sort_by_popularity">Népszerűség</string>
     <string name="collections_filter_by_type">Szűrés típus szerint</string>
     <string name="collections_bookmarked_only">Csak elmentett</string>
-    <string name="collections_show_explicit">Explicit dalszövegeket mutatása</string>
+    <string name="collections_show_explicit">Trágár szövegek</string>
     <string name="collections_filter_by_language">Szűrés nyelv szerint</string>
 
     <!-- History screen -->
@@ -96,14 +96,14 @@
     <string name="history_last_year">Múlt évben</string>
     <string name="history_a_long_time_ago">Réges-régen</string>
     <string name="history_hint">Vízszintesen húzd el a dalokat, hogy eltávolítsd őket az előzmények közül</string>
-    <string name="history_placeholder">A megtekintett dalszövegek kronológikus sorrendben fognak megjelenni itt</string>
+    <string name="history_placeholder">A megtekintett dalok kronológikus sorrendben fognak megjelenni itt</string>
 
     <!-- Options screen / Preferences -->
     <string name="options_preferences_preferences">Beállítások</string>
     <string name="options_preferences_changelog">Újdonságok</string>
     <string name="options_preferences_about">Névjegy</string>
     <string name="options_preferences_chords">Akkordok</string>
-    <string name="options_preferences_should_show_chords">Akkordok kimutatása</string>
+    <string name="options_preferences_should_show_chords">Akkordok megjelenítése</string>
     <string name="options_preferences_show_chords_checked">Megjeleníti az akkordokat és a dalszöveget is</string>
     <string name="options_preferences_show_chords_unchecked">Csak a dalszöveg jelenik meg</string>
     <string name="options_preferences_english_notation">Angol jelölés</string>
@@ -146,8 +146,7 @@
         • Added <strong>language switcher</strong> and <strong>Hungarian</strong> translation.<br>
         • Added option for automatically switching between <strong>dark</strong> and <strong>light</strong> themes based on the time of the day.<br>
         • Implemented optional <strong>analytics tracking</strong> and <strong>crash reporting</strong>.<br>
-        • Finalized the <strong>open-source licenses</strong> section.<br>
-        • Added optional <strong>in-app purchase</strong> for supporting the app.
+        • Finalized the <strong>open-source licenses</strong> section.
         ]]></Data>
     </string>
     <string name="options_changelog_0_4_0_version_name">v0.4</string>
@@ -182,13 +181,13 @@
         • <strong>Options</strong> screen with preferences like switching the app to lyrics-only mode, changing the chord notation mode, changing the theme, privacy options and more.
         ]]></Data>
     </string>
-    <string name="options_changelog_app_updated">The app has been updated</string>
-    <string name="options_changelog_what_is_new">What\'s new</string>
+    <string name="options_changelog_app_updated">Az app frissítve lett</string>
+    <string name="options_changelog_what_is_new">Újdonságok</string>
 
     <!-- Options screen / About -->
     <string name="options_about_description_top"><Data><![CDATA[
-        Thank you for using <strong>Campfire</strong>!<br>
-        This app was created by Pandula Péter as a hobby project.
+        Köszönöm, hogy használod a <strong>Campfire</strong>-t!<br>
+        Az appot Pandula Péter készítette.
         ]]></Data>
     </string>
     <string name="options_about_description_bottom">"I know that there aren't too many songs in the library - new ones are being added on a semi-regular basis. If you have suggestions on which songs to include next or any other type of feedback, feel free to drop me a line!</string>
@@ -211,29 +210,29 @@
         <item quantity="one">%d dal</item>
         <item quantity="other">%d dal</item>
     </plurals>
-    <string name="playlist_enter_title">Add meg a lejátszási lista címét</string>
+    <string name="playlist_enter_title">Add meg a lista címét</string>
     <string name="playlist_title">Cím</string>
-    <string name="playlist_placeholder">Hogy dalokat adj hozzá ehhez a lejátszási listához, kattints a dalok melletti csillag ikonra</string>
+    <string name="playlist_placeholder">Hogy dalokat adj hozzá ehhez a listához, kattints a dalok melletti csillag ikonra</string>
     <string name="playlist_song_removed_message">%s eltávolítva</string>
-    <string name="playlist_hint_swipe">Vízszintesen húzd el a dalokat, hogy eltávolítsd őket ebből a listából</string>
-    <string name="playlist_hint_drag">Függőlegesen mozgasd a dalokat a sorrend átrendezéséhez</string>
+    <string name="playlist_hint_swipe">Vonszold vízszintesen a dalokat, hogy eltávolítsd őket ebből a listából</string>
+    <string name="playlist_hint_drag">Vonszold függőlegesen a dalokat a sorrend átrendezéséhez</string>
 
     <!-- Manage playlists screen -->
     <plurals name="manage_playlists_subtitle">
-        <item quantity="one">%d lejátszási lista</item>
-        <item quantity="other">%d lejátszási lista</item>
+        <item quantity="one">%d lista</item>
+        <item quantity="other">%d lista</item>
     </plurals>
-    <string name="manage_playlists_song_count_empty">Üres lejátszási lista</string>
+    <string name="manage_playlists_song_count_empty">Üres lista</string>
     <plurals name="manage_playlists_song_count">
         <item quantity="one">%d dalt tartalmaz</item>
         <item quantity="other">%d dalt tartalmaz</item>
     </plurals>
-    <string name="manage_playlists_hint_swipe">Vízszintesen húzd el a lejátszási listákat, hogy kitöröld őket</string>
-    <string name="manage_playlists_hint_drag">Függőlegesen mozgasd az elemeket a sorrend átrendezéséhez</string>
+    <string name="manage_playlists_hint_swipe">Vonszold vízszintesen a listákat, hogy kitöröld őket</string>
+    <string name="manage_playlists_hint_drag">Vonszold függőlegesen a listákat a sorrend átrendezéséhez</string>
     <string name="manage_playlists_delete_all_confirmation_title">Biztos vagy benne?</string>
-    <string name="manage_playlists_delete_all_confirmation_message">Az összes lejátszási lista törölve lesz a Kedvencek kivételével</string>
+    <string name="manage_playlists_delete_all_confirmation_message">Az összes lista törölve lesz a Kedvencek kivételével</string>
     <string name="manage_playlists_delete_all_confirmation_clear">Összes törlése</string>
-    <string name="manage_playlists_all_playlists_deleted">Az összes lejátszási lista törölve</string>
+    <string name="manage_playlists_all_playlists_deleted">Az összes lista törölve</string>
     <string name="manage_playlists_playlist_deleted_message">%s törölve</string>
 
     <!-- Manage downloads screen -->
@@ -243,8 +242,8 @@
     <string name="manage_downloads_delete_all_confirmation_clear">Összes törlése</string>
     <string name="manage_downloads_delete_all_message">Az összes letöltött dal törölve</string>
     <string name="manage_downloads_song_deleted_message">%s törölve</string>
-    <string name="manage_downloads_hint">Vízszintesen húzd el a dalokat, hogy kitöröld őket a letöltések közül</string>
-    <string name="manage_downloads_placeholder">Nincsenek letöltött dalszövegek</string>
+    <string name="manage_downloads_hint">Vonszold vízszintesen a dalokat, hogy kitöröld őket a letöltések közül</string>
+    <string name="manage_downloads_placeholder">Nincsenek letöltött dalok</string>
 
     <!-- Detail screen -->
     <string name="detail_song_options">Opciók</string>
@@ -257,7 +256,7 @@
     <string name="detail_report_subject">Campfire: Probléma ezzel a dallal: %1$s - %2$s</string>
     <string name="detail_swipe_hint">Lapozz vízszintesen a listában lévő többi dal megtekintéséhez</string>
     <string name="detail_pinch_hint">Két ujjal csípve állíthatod a szöveg méretét</string>
-    <string name="detail_placeholder_error">Hiba történt a dalszöveg letöltése közben</string>
+    <string name="detail_placeholder_error">Hiba történt a dal letöltése közben</string>
     <string name="detail_intro">Bevezető</string>
     <string name="detail_verse">Szakasz</string>
     <string name="detail_bridge">Átkötő</string>

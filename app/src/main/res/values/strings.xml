@@ -4,7 +4,7 @@
     <!-- General -->
     <string name="campfire">Campfire</string>
     <string name="got_it">Got it</string>
-    <string name="go_to_library">Go to Library</string>
+    <string name="go_to_library">@string/home_library</string>
     <string name="try_again">Try again</string>
     <string name="undo">Undo</string>
     <string name="ok">OK</string>
@@ -28,7 +28,7 @@
 
     <!-- Home screen -->
     <string name="home_version_pattern">v%s</string>
-    <string name="home_library">Library</string>
+    <string name="home_library">Songs</string>
     <string name="home_collections">Collections</string>
     <string name="home_options">Options</string>
     <string name="home_history">History</string>
@@ -47,8 +47,8 @@
 
     <!-- Library screen -->
     <string name="library_placeholder">No matching songs found. Double-check the filters you set up</string>
-    <string name="library_initializing_error">Something went wrong while trying to load the song library</string>
-    <string name="library_update_error">Something went wrong while updating the library</string>
+    <string name="library_initializing_error">Something went wrong while trying to load the songs</string>
+    <string name="library_update_error">Something went wrong while updating the songs</string>
     <string name="library_filters">Filters</string>
     <string name="library_song_download_error">Error downloading %s</string>
     <string name="library_search">Search</string>
@@ -119,7 +119,7 @@
     <string name="options_preferences_app_theme_dark_description">Always use the dark theme</string>
     <string name="options_preferences_app_theme_light">Light</string>
     <string name="options_preferences_app_theme_light_description">Always use the light theme</string>
-    <string name="options_preferences_language">Interface language</string>
+    <string name="options_preferences_language">Language</string>
     <string name="options_preferences_language_automatic">Automatic</string>
     <string name="options_preferences_language_automatic_description">Try to match the device\'s language or fall back to English</string>
     <string name="options_preferences_language_english">English</string>
@@ -146,8 +146,7 @@
         • Added <strong>language switcher</strong> and <strong>Hungarian</strong> translation.<br>
         • Added option for automatically switching between <strong>dark</strong> and <strong>light</strong> themes based on the time of the day.<br>
         • Implemented optional <strong>analytics tracking</strong> and <strong>crash reporting</strong>.<br>
-        • Finalized the <strong>open-source licenses</strong> section.<br>
-        • Added optional <strong>in-app purchase</strong> for supporting the app.
+        • Finalized the <strong>open-source licenses</strong> section.
         ]]></Data>
     </string>
     <string name="options_changelog_0_4_0_version_name">v0.4</string>
@@ -188,10 +187,10 @@
     <!-- Options screen / About -->
     <string name="options_about_description_top"><Data><![CDATA[
         Thank you for using <strong>Campfire</strong>!<br>
-        This app was created by Pandula Péter as a hobby project.
+        This app was created by Pandula Péter.
         ]]></Data>
     </string>
-    <string name="options_about_description_bottom">"I know that there aren't too many songs in the library - new ones are being added on a semi-regular basis. If you have suggestions on which songs to include next or any other type of feedback, feel free to drop me a line!</string>
+    <string name="options_about_description_bottom">"I know that there aren't too many songs in the app - new ones are being added on a semi-regular basis. If you have suggestions on which songs to include next or any other type of feedback, feel free to drop me a line!</string>
     <string name="options_about_no_easter_egg">No Easter Eggs in this version</string>
     <string name="options_about_no_in_app_purchase">Work in progress… But thanks anyway!</string>
     <string name="options_about_links">Links</string>
