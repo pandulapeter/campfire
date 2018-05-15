@@ -95,8 +95,8 @@
     <string name="history_this_year">Ebben az évben</string>
     <string name="history_last_year">Múlt évben</string>
     <string name="history_a_long_time_ago">Réges-régen</string>
-    <string name="history_hint">Vízszintesen húzd el a dalokat, hogy eltávolítsd őket az előzmények közül</string>
-    <string name="history_placeholder">A megtekintett dalok kronológikus sorrendben fognak megjelenni itt</string>
+    <string name="history_hint">Vonszold vízszintesen a dalokat, hogy eltávolítsd őket az előzmények közül</string>
+    <string name="history_placeholder">A megtekintett dalok időrendi sorrendben fognak megjelenni itt</string>
 
     <!-- Options screen / Preferences -->
     <string name="options_preferences_preferences">Beállítások</string>
@@ -190,7 +190,6 @@
         Az appot Pandula Péter készítette.
         ]]></Data>
     </string>
-    <string name="options_about_description_bottom">"I know that there aren't too many songs in the library - new ones are being added on a semi-regular basis. If you have suggestions on which songs to include next or any other type of feedback, feel free to drop me a line!</string>
     <string name="options_about_no_easter_egg">Semmi meglepetés ebben a verzióban</string>
     <string name="options_about_no_in_app_purchase">Ez még nincs kész… De azért köszönöm!</string>
     <string name="options_about_links">Hivatkozások</string>

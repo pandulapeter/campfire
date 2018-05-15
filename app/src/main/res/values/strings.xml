@@ -190,7 +190,6 @@
         This app was created by Pandula Péter.
         ]]></Data>
     </string>
-    <string name="options_about_description_bottom">"I know that there aren't too many songs in the app - new ones are being added on a semi-regular basis. If you have suggestions on which songs to include next or any other type of feedback, feel free to drop me a line!</string>
     <string name="options_about_no_easter_egg">No Easter Eggs in this version</string>
     <string name="options_about_no_in_app_purchase">Work in progress… But thanks anyway!</string>
     <string name="options_about_links">Links</string>
