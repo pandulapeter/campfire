@@ -18,9 +18,6 @@ import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.home.collections.CollectionListItemViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.cancel
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.experimental.CoroutineContext
@@ -188,8 +185,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     protected fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
         if (canUpdateUI() && playlistRepository.isCacheLoaded() && songRepository.isCacheLoaded() && songDetailRepository.isCacheLoaded()) {
             coroutine?.cancel()
-            coroutine = async(UI) {
-                async(CommonPool) { librarySongs.createViewModels() }.await().let {
+            librarySongs.createViewModels().let {
                     adapter.shouldScrollToTop = shouldScrollToTop
                     adapter.items = it
                     onListUpdated(it)
@@ -198,4 +194,3 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
             }
         }
     }
-}

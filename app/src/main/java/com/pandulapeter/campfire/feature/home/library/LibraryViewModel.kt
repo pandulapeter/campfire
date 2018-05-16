@@ -118,7 +118,10 @@ class LibraryViewModel(
             val songsOnly = filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song }
             songsOnly.forEachIndexed { index, song ->
                 if (when (sortingMode) {
-                        SortingMode.TITLE -> index == 0 || song.getNormalizedTitle().removePrefixes()[0] != songsOnly[index - 1].getNormalizedTitle().removePrefixes()[0]
+                        SortingMode.TITLE -> {
+                            val thisTitleFirstCharacter = song.getNormalizedTitle().removePrefixes()[0]
+                            index == 0 || (thisTitleFirstCharacter != songsOnly[index - 1].getNormalizedTitle().removePrefixes()[0] && !thisTitleFirstCharacter.isDigit())
+                        }
                         SortingMode.ARTIST -> index == 0 || song.artist != songsOnly[index - 1].artist
                         SortingMode.POPULARITY -> songsOnly[0].isNew && (index == 0 || songsOnly[index].isNew != songsOnly[index - 1].isNew)
                     }
@@ -131,7 +134,7 @@ class LibraryViewModel(
                 add(
                     index, SongListItemViewModel.HeaderViewModel(
                         when (sortingMode) {
-                            SortingMode.TITLE -> songsOnly[index].getNormalizedTitle().removePrefixes()[0].toString()
+                            SortingMode.TITLE -> songsOnly[index].getNormalizedTitle().removePrefixes()[0].let { if (it.isDigit()) "0 - 9" else it.toString() }
                             SortingMode.ARTIST -> songsOnly[index].artist
                             SortingMode.POPULARITY -> if (!songsOnly[0].isNew) "" else if (songsOnly[index].isNew) newString else popularString
                         }
