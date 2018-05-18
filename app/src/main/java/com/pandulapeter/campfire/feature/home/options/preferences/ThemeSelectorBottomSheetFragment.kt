@@ -34,8 +34,8 @@ class ThemeSelectorBottomSheetFragment : BaseBottomSheetDialogFragment<FragmentT
     }
 
     private fun onThemeSelected(theme: PreferencesViewModel.Theme) {
-        onThemeSelectedListener?.onThemeSelected(theme)
         dismiss()
+        onThemeSelectedListener?.onThemeSelected(theme)
     }
 
     interface OnThemeSelectedListener {

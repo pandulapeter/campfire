@@ -145,42 +145,41 @@
     <string name="options_changelog_0_5_0_version_name" translatable="false">v0.5</string>
     <string name="options_changelog_0_5_0_description">
         <Data><![CDATA[
-        • Added <strong>language switcher</strong> preference and <strong>Hungarian</strong> translation.<br>
-        • Added option for automatically switching between <strong>dark</strong> and <strong>light</strong> themes based on the time of the day.<br>
-        • Implemented optional <strong>analytics tracking</strong> and <strong>crash reporting</strong>.
+        • <strong>Language switcher</strong> preference and <strong>Hungarian</strong> translation<br>
+        • Option for automatically switching between <strong>dark</strong> and <strong>light</strong> themes based on the time of the day<br>
+        • Optional <strong>analytics tracking</strong> and <strong>crash reporting</strong>
         ]]></Data>
     </string>
     <string name="options_changelog_0_4_0_version_name" translatable="false">v0.4</string>
     <string name="options_changelog_0_4_0_description">
         <Data><![CDATA[
-        • Added support for <strong>collections</strong> which are thematic playlists accessible to everyone.<br>
-        • Added pinch-to-zoom gesture to adjust the <strong>font size</strong>.<br>
-        • Added <strong>shuffle</strong> option for playlists and collections that opens the list of songs in a random order.
+        • <strong>Collections</strong> screen with public, thematic playlists<br>
+        • Pinch-to-zoom gesture to adjust the <strong>font size</strong><br>
+        • <strong>Shuffle</strong> option to open a list of songs in a random order
         ]]></Data>
     </string>
     <string name="options_changelog_0_3_0_version_name" translatable="false">v0.3</string>
     <string name="options_changelog_0_3_0_description">
         <Data><![CDATA[
-        • Users can now create local <strong>playlists</strong> which are collections of songs for different occasions.<br>
-        • Playlist detail screens are <strong>paginated</strong> - swiping horizontally cycles through all the songs in the selected playlist.<br>
-        • Support for <strong>app shortcuts</strong> on and above Android 7.1.
+        • The ability to create local <strong>playlists</strong><br>
+        • <strong>Paginated</strong> song detail screens for songs opened from a playlist<br>
+        • Support for <strong>app shortcuts</strong> on and above Android 7.1
         ]]></Data>
     </string>
     <string name="options_changelog_0_2_0_version_name" translatable="false">v0.2</string>
     <string name="options_changelog_0_2_0_description">
         <Data><![CDATA[
-        • Added the option to <strong>transpose</strong> and saving that preference individually per song.<br>
-        • Implemented <strong>auto-scroll</strong> feature with adjustable speed.<br>
-        • <strong>History</strong> screen which shows the last time the different songs were opened.
+        • Individually <strong>transpose</strong> songs and automatically save the selected key<br>
+        • <strong>Auto-scroll</strong> feature with adjustable speed<br>
+        • <strong>History</strong> screen which shows the last time the different songs were opened in reverse chronological order
         ]]></Data>
     </string>
     <string name="options_changelog_0_1_0_version_name" translatable="false">v0.1</string>
     <string name="options_changelog_0_1_0_description">
         <Data><![CDATA[
-        • <strong>Song library</strong> with options to search, sort and filter the list of songs.<br>
-        • <strong>Song detail</strong> screen with highlighted chords that can be hidden.<br>
-        • <strong>Offline caching</strong> with the ability to manage the downloaded files.<br>
-        • <strong>Options</strong> screen with preferences like switching the app to lyrics-only mode, changing the chord notation mode, changing the theme, privacy options and more.
+        • <strong>Song library</strong> screen with options to search, sort and filter<br>
+        • <strong>Song detail</strong> screen where the visibility of the chords can be toggled<br>
+        • <strong>Offline caching</strong> with the ability to individually remove the downloaded songs
         ]]></Data>
     </string>
 

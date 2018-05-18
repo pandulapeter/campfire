@@ -34,8 +34,8 @@ class LanguageSelectorBottomSheetFragment : BaseBottomSheetDialogFragment<Fragme
     }
 
     private fun onLanguageSelected(language: PreferencesViewModel.Language) {
-        onLanguageSelectedListener?.onLanguageSelected(language)
         dismiss()
+        onLanguageSelectedListener?.onLanguageSelected(language)
     }
 
     interface OnLanguageSelectedListener {

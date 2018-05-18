@@ -143,38 +143,37 @@
     <string name="options_changelog_what_is_new">Újdonságok</string>
     <string name="options_changelog_0_5_0_description">
         <Data><![CDATA[
-        • Added <strong>language switcher</strong> and <strong>Hungarian</strong> translation.<br>
-        • Added option for automatically switching between <strong>dark</strong> and <strong>light</strong> themes based on the time of the day.<br>
-        • Implemented optional <strong>analytics tracking</strong> and <strong>crash reporting</strong>.<br>
-        • Finalized the <strong>open-source licenses</strong> section.
+        • <strong>Nyelvi beállítások</strong> és <strong>magyar</strong> fordítás<br>
+        • Automatikus váltás opció <strong>sötét</strong> és <strong>világos</strong> témák között a napszak függvényében<br>
+        • Kikapcsolható <strong>felhasználói adatgyűjtés</strong> és <strong>hibajelentések</strong>
         ]]></Data>
     </string>
     <string name="options_changelog_0_4_0_description">
         <Data><![CDATA[
-        • Added support for <strong>collections</strong> which are thematic playlists accessible to everyone.<br>
-        • Added option to adjust the <strong>font size</strong>.<br>
-        • Added <strong>shuffle</strong> option for playlists and collections that opens the list of songs in a random order.
+        • <strong>Gyűjtemények</strong> képernyő nyilvános, tematikus dallistákkal<br>
+        • Állítható <strong>betűméret</strong> a dalszöveg nézetben<br>
+        • <strong>Keverés</strong> opció ami véletlenszerű sorrendben nyitja meg az adott dallistát
         ]]></Data>
     </string>
     <string name="options_changelog_0_3_0_description">
         <Data><![CDATA[
-        • Users can now create local <strong>playlists</strong> which are collections of songs for different occasions.<br>
-        • Playlist detail screens are <strong>paginated</strong> - swiping horizontally cycles through all the songs in the selected playlist.<br>
-        • Support for <strong>app shortcuts</strong> on and above Android 7.1.
+        • Saját <strong>listák</strong> létrehozásának lehetősége<br>
+        • <strong>Lapozható</strong> dalszöveg-nézet, amennyiben az egy listából volt megnyitva<br>
+        • <strong>Alkalmazás-parancsikonok</strong> támogatása Android 7.1 vagy újabb rendszereken
         ]]></Data>
     </string>
     <string name="options_changelog_0_2_0_description">
         <Data><![CDATA[
-        • The ability to <strong>transpose</strong> songs, <strong>auto-scroll</strong> longer texts with adjustable speed and saving these preferences individually per song.<br>
-        • <strong>History</strong> screen which shows the last time different songs were opened.
+        • Dalonként állítható <strong>transzponálás</strong> a kiválasztott hangnem automatikus mentésével<br>
+        • <strong>Automatikus görgetés</strong> állítható sebességgel<br>
+        • <strong>Előzmények</strong> menüpont ahol a különböző dalok utolsó megtekintésük fordított időrendi sorrendjében jelennek meg
         ]]></Data>
     </string>
     <string name="options_changelog_0_1_0_description">
         <Data><![CDATA[
-        • <strong>Song library</strong> with options to search, sort and filter the list of songs.<br>
-        • <strong>Song detail</strong> screen with highlighted chords that can be hidden.<br>
-        • <strong>Offline caching</strong> with the ability to manage the downloaded files.<br>
-        • <strong>Options</strong> screen with preferences like switching the app to lyrics-only mode, changing the chord notation mode, changing the theme, privacy options and more.
+        • Szűrhető és kereshető <strong>dallista</strong> képernyő<br>
+        • <strong>Dalszöveg</strong> nézet tetszés szerint kimutatható vagy elrejthető akkordokkal<br>
+        • <strong>Kapcsolat nélküli mód</strong> a letöltött dalok egyenkénti eltávolításának lehetőségével
         ]]></Data>
     </string>
 
