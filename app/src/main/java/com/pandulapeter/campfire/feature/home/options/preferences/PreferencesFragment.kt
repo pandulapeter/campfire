@@ -30,7 +30,7 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
             AlertDialogFragment.show(
                 DIALOG_ID_RESET_HINTS_CONFIRMATION,
                 childFragmentManager,
-                R.string.options_preferences_reset_hints_confirmation_title,
+                R.string.are_you_sure,
                 R.string.options_preferences_reset_hints_confirmation_message,
                 R.string.options_preferences_reset_hints_confirmation_reset,
                 R.string.cancel

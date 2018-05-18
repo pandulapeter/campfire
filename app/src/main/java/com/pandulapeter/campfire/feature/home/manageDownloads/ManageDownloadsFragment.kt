@@ -33,7 +33,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Ba
             AlertDialogFragment.show(
                 DIALOG_ID_DELETE_ALL_CONFIRMATION,
                 childFragmentManager,
-                R.string.manage_downloads_delete_all_confirmation_title,
+                R.string.are_you_sure,
                 R.string.manage_downloads_delete_all_confirmation_message,
                 R.string.manage_downloads_delete_all_confirmation_clear,
                 R.string.cancel

@@ -312,7 +312,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                             AlertDialogFragment.show(
                                 id = DIALOG_ID_EXIT_CONFIRMATION,
                                 fragmentManager = supportFragmentManager,
-                                title = R.string.home_exit_confirmation_title,
+                                title = R.string.are_you_sure,
                                 message = R.string.home_exit_confirmation_message,
                                 positiveButton = R.string.home_exit_confirmation_close,
                                 negativeButton = R.string.cancel

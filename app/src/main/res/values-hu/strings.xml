@@ -5,6 +5,7 @@
     <string name="got_it">Értem</string>
     <string name="go_to_library">@string/home_library</string>
     <string name="try_again">Újra</string>
+    <string name="are_you_sure">Biztos vagy benne?</string>
     <string name="undo">Mégse</string>
     <string name="ok">OK</string>
     <string name="cancel">Mégse</string>
@@ -36,8 +37,7 @@
     <string name="home_new_playlist">Új lista</string>
     <string name="home_manage_playlists">@string/manage_playlists</string>
     <string name="home_manage_downloads">Letöltések kezelése</string>
-    <string name="home_exit_confirmation_title">Biztos vagy benne?</string>
-    <string name="home_exit_confirmation_message">Biztosan ki szeretnél lépni az alkalmazásból?</string>
+    <string name="home_exit_confirmation_message">Tényleg ki szeretnél lépni az alkalmazásból?</string>
     <string name="home_exit_confirmation_close">Kilépés</string>
     <string name="home_privacy_policy_title">Személyes adatok megosztása</string>
     <string name="home_privacy_policy_message">Köszönöm, hogy letöltötted a Campfire-t!\n\nA különböző funkcionalitások népszerűségének követéséhez vagy az esetleges hibák kijavításához az alkalmazás szeretne névtelen adatokat és hibajelentéseket küldeni a fejlesztőnek. Ez az információ soha nem lesz harmadik személlyel megosztva és a most adott válaszodat akármikor módosíthatod a beállítások között.</string>
@@ -79,8 +79,7 @@
     <string name="collections_filter_by_language">Szűrés nyelv szerint</string>
 
     <!-- History screen -->
-    <string name="history_clear_confirmation_title">Biztos vagy benne?</string>
-    <string name="history_clear_confirmation_message">Minden előzmény törlésre fog kerülni.</string>
+    <string name="history_clear_confirmation_message">Minden előzmény törölve lesz.</string>
     <string name="history_clear_confirmation_clear">Összes törlése</string>
     <string name="history_song_removed_message">%s eltávolítva</string>
     <string name="history_all_songs_removed_message">Előzmények törölve</string>
@@ -128,9 +127,8 @@
     <string name="options_preferences_user_data">Felhasználói adatok</string>
     <string name="options_preferences_reset_hints">Tippek visszaállítása</string>
     <string name="options_preferences_reset_hints_description">Az összes megtekintett tipp újra ki lesz mutatva</string>
-    <string name="options_preferences_reset_hints_message">@string/options_preferences_reset_hints</string>
-    <string name="options_preferences_reset_hints_confirmation_title">Biztos vagy benne?</string>
-    <string name="options_preferences_reset_hints_confirmation_message">Az összes tipp alapértékre vissza lesz állítva.</string>
+    <string name="options_preferences_reset_hints_message">Tippek alapértékbe állítva</string>
+    <string name="options_preferences_reset_hints_confirmation_message">Az összes tipp vissza lesz állítva alapértékre.</string>
     <string name="options_preferences_reset_hints_confirmation_reset">Visszaállítás</string>
     <string name="options_preferences_share_usage_data">Adatok megosztása</string>
     <string name="options_preferences_share_usage_data_enabled">Névtelen felhasználói adatok küldődnek a fejlesztőnek</string>
@@ -221,16 +219,14 @@
     </plurals>
     <string name="manage_playlists_hint_swipe">Vonszold vízszintesen a listákat, hogy kitöröld őket</string>
     <string name="manage_playlists_hint_drag">Vonszold függőlegesen a listákat a sorrend átrendezéséhez</string>
-    <string name="manage_playlists_delete_all_confirmation_title">Biztos vagy benne?</string>
-    <string name="manage_playlists_delete_all_confirmation_message">Az összes lista törölve lesz a Kedvencek kivételével</string>
+    <string name="manage_playlists_delete_all_confirmation_message">Az összes lista törölve lesz a Kedvencek kivételével.</string>
     <string name="manage_playlists_delete_all_confirmation_clear">Összes törlése</string>
     <string name="manage_playlists_all_playlists_deleted">Az összes lista törölve</string>
     <string name="manage_playlists_playlist_deleted_message">%s törölve</string>
 
     <!-- Manage downloads screen -->
     <string name="manage_downloads_no_downloads">Nincsenek letöltött dalok</string>
-    <string name="manage_downloads_delete_all_confirmation_title">Biztos vagy benne?</string>
-    <string name="manage_downloads_delete_all_confirmation_message">Az összes letöltött dal törlésre kerül</string>
+    <string name="manage_downloads_delete_all_confirmation_message">Az összes letöltött dal le lesz törölve.</string>
     <string name="manage_downloads_delete_all_confirmation_clear">Összes törlése</string>
     <string name="manage_downloads_delete_all_message">Az összes letöltött dal törölve</string>
     <string name="manage_downloads_song_deleted_message">%s törölve</string>

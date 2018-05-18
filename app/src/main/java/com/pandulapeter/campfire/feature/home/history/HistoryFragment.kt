@@ -31,7 +31,7 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), BaseDialogFragment
             AlertDialogFragment.show(
                 DIALOG_ID_DELETE_ALL_CONFIRMATION,
                 childFragmentManager,
-                R.string.history_clear_confirmation_title,
+                R.string.are_you_sure,
                 R.string.history_clear_confirmation_message,
                 R.string.history_clear_confirmation_clear,
                 R.string.cancel

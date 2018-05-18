@@ -6,6 +6,7 @@
     <string name="got_it">Got it</string>
     <string name="go_to_library">@string/home_library</string>
     <string name="try_again">Try again</string>
+    <string name="are_you_sure">Are you sure?</string>
     <string name="undo">Undo</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
@@ -37,8 +38,7 @@
     <string name="home_new_playlist">New playlist</string>
     <string name="home_manage_playlists">@string/manage_playlists</string>
     <string name="home_manage_downloads">Manage downloads</string>
-    <string name="home_exit_confirmation_title">Are you sure?</string>
-    <string name="home_exit_confirmation_message">Are you sure you want to close the app?</string>
+    <string name="home_exit_confirmation_message">Do you really want to close the app?</string>
     <string name="home_exit_confirmation_close">Close</string>
     <string name="home_privacy_policy_title">Improve Campfire</string>
     <string name="home_privacy_policy_message">Thanks for downloading the app!\n\nTo track the popularity of various features as well as to simplify fixing any possible issues, the app would like to send anonymous analytics data and crash reports back to the developer. None of this information will be shared with third parties and you can change this preference at any time.</string>
@@ -80,7 +80,6 @@
     <string name="collections_filter_by_language">Filter by language</string>
 
     <!-- History screen -->
-    <string name="history_clear_confirmation_title">Are you sure?</string>
     <string name="history_clear_confirmation_message">This will remove all items from your history.</string>
     <string name="history_clear_confirmation_clear">Delete all</string>
     <string name="history_song_removed_message">%s removed</string>
@@ -130,7 +129,6 @@
     <string name="options_preferences_reset_hints">Reset hints</string>
     <string name="options_preferences_reset_hints_description">The hints you dismissed in the past will appear again</string>
     <string name="options_preferences_reset_hints_message">Tutorial progress reset</string>
-    <string name="options_preferences_reset_hints_confirmation_title">Are you sure?</string>
     <string name="options_preferences_reset_hints_confirmation_message">This will reset your progress in the tutorial.</string>
     <string name="options_preferences_reset_hints_confirmation_reset">Reset</string>
     <string name="options_preferences_share_usage_data">Share usage data</string>
@@ -227,16 +225,14 @@
     </plurals>
     <string name="manage_playlists_hint_swipe">Swipe the playlists away horizontally to delete them</string>
     <string name="manage_playlists_hint_drag">Drag the playlists vertically to rearrange them</string>
-    <string name="manage_playlists_delete_all_confirmation_title">Are you sure?</string>
-    <string name="manage_playlists_delete_all_confirmation_message">This will remove all playlists except for Favorites</string>
+    <string name="manage_playlists_delete_all_confirmation_message">This will remove all playlists except for Favorites.</string>
     <string name="manage_playlists_delete_all_confirmation_clear">Delete all</string>
     <string name="manage_playlists_all_playlists_deleted">All playlists deleted</string>
     <string name="manage_playlists_playlist_deleted_message">%s deleted</string>
 
     <!-- Manage downloads screen -->
     <string name="manage_downloads_no_downloads">No downloads</string>
-    <string name="manage_downloads_delete_all_confirmation_title">Are you sure?</string>
-    <string name="manage_downloads_delete_all_confirmation_message">This will remove all downloaded songs</string>
+    <string name="manage_downloads_delete_all_confirmation_message">This will remove all downloaded songs.</string>
     <string name="manage_downloads_delete_all_confirmation_clear">Delete all</string>
     <string name="manage_downloads_delete_all_message">All downloaded songs deleted</string>
     <string name="manage_downloads_song_deleted_message">%s deleted</string>
