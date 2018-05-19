@@ -73,8 +73,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         const val SCREEN_MANAGE_DOWNLOADS = "manageDownloads"
 
         private var Intent.screenToOpen by IntentExtraDelegate.String("screenToOpen")
+        private var Intent.shouldSendConsentEvent by IntentExtraDelegate.Boolean("shouldSendConsentEvent")
 
-        private fun getStartIntent(context: Context) = Intent(context, CampfireActivity::class.java)
+        private fun getStartIntent(context: Context, shouldSendConsentEvent: Boolean = false) = Intent(context, CampfireActivity::class.java).apply {
+            this.shouldSendConsentEvent = shouldSendConsentEvent
+        }
 
         fun getLibraryIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_LIBRARY }
 
@@ -153,6 +156,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         // Enable crash reporting if the user opted in.
         if (preferenceDatabase.shouldShareUsageData && BuildConfig.BUILD_TYPE != "debug") {
             Fabric.with(this, Crashlytics())
+        }
+        if (intent.shouldSendConsentEvent) {
+            analyticsManager.onConsentGiven()
+            intent.shouldSendConsentEvent = false
         }
 
         // Set the theme.
@@ -702,7 +709,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         currentFragment?.showSnackbar(
             message = R.string.options_preferences_share_usage_data_restart_hint,
             actionText = R.string.options_preferences_share_usage_data_restart_action,
-            action = { ProcessPhoenix.triggerRebirth(this, getStartIntent(this)) })
+            action = { ProcessPhoenix.triggerRebirth(this, getStartIntent(this, preferenceDatabase.shouldShareUsageData)) })
     }
 
     private fun updatePlaylists(playlists: List<Playlist>) {

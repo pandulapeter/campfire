@@ -38,6 +38,10 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
                 2 -> analyticsManager.onOptionsScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_ABOUT)
             }
         })
-        binding.viewPager.currentItem = if (arguments?.shouldOpenChangelog == true) 1 else 0
+        if (arguments?.shouldOpenChangelog == true) {
+            binding.viewPager.currentItem = 1
+        } else {
+            analyticsManager.onOptionsScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_PREFERENCES)
+        }
     }
 }

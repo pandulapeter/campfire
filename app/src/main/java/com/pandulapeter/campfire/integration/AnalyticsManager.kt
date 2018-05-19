@@ -8,12 +8,15 @@ import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.util.enqueueCall
+import java.text.SimpleDateFormat
+import java.util.*
 
 class AnalyticsManager(context: Context, private val preferenceDatabase: PreferenceDatabase, private val networkManager: NetworkManager) {
 
     companion object {
 
         // Events
+        private const val EVENT_CONSENT_GIVEN = "consent_given"
         private const val EVENT_APP_OPENED = "app_opened"
         private const val EVENT_SCREEN_OPENED = "screen_opened"
         private const val EVENT_SONG_VISUALIZED = "song_visualized"
@@ -24,6 +27,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_LIBRARY_FILTER_TOGGLED = "library_filter_toggled"
 
         // Keys
+        private const val PARAM_KEY_TIMESTAMP = "timestamp"
         private const val PARAM_KEY_SCREEN = "screen"
         private const val PARAM_KEY_FROM_APP_SHORTCUT = "from_app_shortcut"
         private const val PARAM_KEY_COLLECTION_ID = "collection_id"
@@ -69,6 +73,9 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
     init {
         firebaseAnalytics.setAnalyticsCollectionEnabled(preferenceDatabase.shouldShareUsageData)
     }
+
+    fun onConsentGiven() =
+        track(EVENT_CONSENT_GIVEN, PARAM_KEY_TIMESTAMP to SimpleDateFormat("yyyy.MM.dd', 'HH:mm:ss z", Locale.ENGLISH).format(Date()))
 
     fun onAppOpened(screen: String, fromAppShortcut: Boolean) =
         track(EVENT_APP_OPENED, PARAM_KEY_SCREEN to screen, PARAM_KEY_FROM_APP_SHORTCUT to fromAppShortcut.toString())
