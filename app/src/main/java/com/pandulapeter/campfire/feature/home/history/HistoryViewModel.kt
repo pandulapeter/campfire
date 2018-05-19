@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import org.koin.android.ext.android.inject
 import java.util.*
 
@@ -22,6 +23,7 @@ class HistoryViewModel(context: Context, private val openLibrary: () -> Unit) : 
     private val Calendar.month get() = get(Calendar.MONTH)
     private val Calendar.week get() = get(Calendar.WEEK_OF_YEAR)
     private val Calendar.day get() = get(Calendar.DAY_OF_YEAR)
+    override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_HISTORY
 
     init {
         placeholderText.set(R.string.history_placeholder)

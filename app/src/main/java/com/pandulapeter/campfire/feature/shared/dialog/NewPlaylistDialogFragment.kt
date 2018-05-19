@@ -61,8 +61,8 @@ class NewPlaylistDialogFragment : BaseDialogFragment() {
     private fun onOkButtonPressed() {
         binding.inputField.text?.toString()?.let { title ->
             if (title.isTextValid()) {
+                arguments?.source?.let { analyticsManager.onPlaylistCreated(title.trim(), it, playlistRepository.cache.size + 1) }
                 playlistRepository.createNewPlaylist(title.trim())
-                arguments?.source?.let { analyticsManager.onPlaylistCreated(title.trim(), it) }
                 dismiss()
             }
         }

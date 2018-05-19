@@ -26,14 +26,19 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
 
     companion object {
         private var Bundle?.songId by BundleArgumentDelegate.String("songId")
+        private var Bundle?.screenName by BundleArgumentDelegate.String("screenName")
 
-        fun show(fragmentManager: FragmentManager, songId: String) {
-            PlaylistChooserBottomSheetFragment().withArguments { it.songId = songId }.run { (this as DialogFragment).show(fragmentManager, tag) }
+        fun show(fragmentManager: FragmentManager, songId: String, screenName: String) {
+            PlaylistChooserBottomSheetFragment().withArguments {
+                it.songId = songId
+                it.screenName = screenName
+            }.run { (this as DialogFragment).show(fragmentManager, tag) }
         }
     }
 
     private val songInfoRepository by inject<SongRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
+    private val analyticsManager by inject<AnalyticsManager>()
     private lateinit var viewModel: PlaylistChooserBottomSheetViewModel
     private val checkBoxHeight by lazy { context?.dimension(R.dimen.touch_target) ?: 0 }
     private val contentPadding by lazy { context?.dimension(R.dimen.content_padding) ?: 0 }
@@ -138,8 +143,24 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
                     isChecked = playlistRepository.isSongInPlaylist(playlist.id, viewModel.songId)
                     setOnCheckedChangeListener { _, isChecked ->
                         if (isChecked) {
+                            arguments?.screenName?.let {
+                                analyticsManager.onSongPlaylistStateChanged(
+                                    viewModel.songId,
+                                    playlistRepository.getPlaylistCountForSong(viewModel.songId) + 1,
+                                    it,
+                                    true
+                                )
+                            }
                             playlistRepository.addSongToPlaylist(playlist.id, viewModel.songId)
                         } else {
+                            arguments?.screenName?.let {
+                                analyticsManager.onSongPlaylistStateChanged(
+                                    viewModel.songId,
+                                    playlistRepository.getPlaylistCountForSong(viewModel.songId) - 1,
+                                    it,
+                                    true
+                                )
+                            }
                             playlistRepository.removeSongFromPlaylist(playlist.id, viewModel.songId)
                         }
                     }

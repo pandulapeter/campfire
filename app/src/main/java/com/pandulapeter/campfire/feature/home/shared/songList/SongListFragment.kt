@@ -75,7 +75,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 if (linearLayoutManager.isScrollEnabled) {
                     (items[position] as? SongListItemViewModel.SongViewModel)?.let {
                         if (viewModel.areThereMoreThanOnePlaylists()) {
-                            PlaylistChooserBottomSheetFragment.show(childFragmentManager, it.song.id)
+                            PlaylistChooserBottomSheetFragment.show(childFragmentManager, it.song.id, viewModel.screenName)
                         } else {
                             viewModel.toggleFavoritesState(it.song.id)
                         }

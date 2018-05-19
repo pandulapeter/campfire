@@ -11,6 +11,7 @@ import com.pandulapeter.campfire.feature.home.shared.songList.SongListAdapter
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
@@ -25,10 +26,12 @@ class PlaylistViewModel(
 ) : SongListViewModel(context) {
 
     private val appShortcutManager by inject<AppShortcutManager>()
+    private val analyticsManager by inject<AnalyticsManager>()
     private var songToDeleteId: String? = null
     val playlist = ObservableField<Playlist?>()
     val songCount = ObservableInt()
     val isInEditMode = ObservableBoolean()
+    override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST
 
     init {
         placeholderText.set(R.string.playlist_placeholder)
@@ -133,11 +136,15 @@ class PlaylistViewModel(
     fun hasSongToDelete() = songToDeleteId != null
 
     fun deleteSongTemporarily(songId: String) {
+        analyticsManager.onSongPlaylistStateChanged(songId, playlistRepository.getPlaylistCountForSong(songId) - 1, AnalyticsManager.PARAM_VALUE_SWIPE_TO_DISMISS, false)
         songToDeleteId = songId
         updateAdapterItems()
     }
 
     fun cancelDeleteSong() {
+        songToDeleteId?.let {
+            analyticsManager.onSongPlaylistStateChanged(it, playlistRepository.getPlaylistCountForSong(it), AnalyticsManager.PARAM_VALUE_CANCEL_SWIPE_TO_DISMISS, false)
+        }
         songToDeleteId = null
         updateAdapterItems()
     }

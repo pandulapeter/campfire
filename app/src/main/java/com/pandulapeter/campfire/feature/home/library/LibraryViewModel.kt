@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.onTextChanged
 import com.pandulapeter.campfire.util.removePrefixes
@@ -21,6 +22,7 @@ class LibraryViewModel(
     private val openSecondaryNavigationDrawer: () -> Unit
 ) : SongListViewModel(context) {
 
+    override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_LIBRARY
     private val newString = context.getString(R.string.new_tag)
     private val popularString = context.getString(R.string.popular_tag)
     var query = ""

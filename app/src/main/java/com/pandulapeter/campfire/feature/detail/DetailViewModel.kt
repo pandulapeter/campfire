@@ -4,12 +4,14 @@ import android.databinding.ObservableField
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
 class DetailViewModel(private val updatePlaylistIcon: (Boolean) -> Unit) : CampfireViewModel(), PlaylistRepository.Subscriber {
 
     private val playlistRepository by inject<PlaylistRepository>()
+    private val analyticsManager by inject<AnalyticsManager>()
     val songId = ObservableField("")
 
     init {
@@ -39,10 +41,21 @@ class DetailViewModel(private val updatePlaylistIcon: (Boolean) -> Unit) : Campf
     fun areThereMoreThanOnePlaylists() = playlistRepository.cache.size > 1
 
     fun toggleFavoritesState() {
-        songId.get()?.let {
+        songId.get()?.also {
             if (playlistRepository.isSongInPlaylist(Playlist.FAVORITES_ID, it)) {
+                analyticsManager.onSongPlaylistStateChanged(
+                    it,
+                    playlistRepository.getPlaylistCountForSong(it) - 1,
+                    AnalyticsManager.PARAM_VALUE_SCREEN_SONG_DETAIL,
+                    playlistRepository.cache.size > 1
+                )
                 playlistRepository.removeSongFromPlaylist(Playlist.FAVORITES_ID, it)
             } else {
+                analyticsManager.onSongPlaylistStateChanged(
+                    it, playlistRepository.getPlaylistCountForSong(it) + 1,
+                    AnalyticsManager.PARAM_VALUE_SCREEN_SONG_DETAIL,
+                    playlistRepository.cache.size > 1
+                )
                 playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, it)
             }
         }

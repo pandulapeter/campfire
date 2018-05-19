@@ -27,9 +27,11 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_LIBRARY_SORTING_MODE_UPDATED = "library_sorting_mode_updated"
         private const val EVENT_LIBRARY_FILTER_TOGGLED = "library_filter_toggled"
         private const val EVENT_SHUFFLE_BUTTON_PRESSED = "shuffle_button_pressed"
+        private const val EVENT_SONG_PLAYLIST_STATE_CHANGED = "song_playlist_state_changed"
 
         // Keys
         private const val PARAM_KEY_TIMESTAMP = "timestamp"
+        private const val PARAM_KEY_VERSION = "version"
         private const val PARAM_KEY_SCREEN = "screen"
         private const val PARAM_KEY_THEME = "theme"
         private const val PARAM_KEY_LANGUAGE = "language"
@@ -40,10 +42,13 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_TAB = "tab"
         private const val PARAM_KEY_PLAYLIST_TITLE = "title"
         private const val PARAM_KEY_SOURCE = "source"
+        private const val PARAM_KEY_IS_FROM_BOTTOM_SHEET = "is_from_bottom_sheet"
+        private const val PARAM_KEY_TOTAL_PLAYLIST_COUNT = "total_playlist_count"
         private const val PARAM_KEY_SORTING_MODE = "sorting_mode"
         private const val PARAM_KEY_FILTER = "filter"
         private const val PARAM_KEY_STATE = "state"
         private const val PARAM_KEY_IS_BOOKMARKED = "is_bookmarked"
+        private const val PARAM_KEY_PLAYLIST_COUNT = "playlist_count"
 
         // Values
         const val PARAM_VALUE_SCREEN_LIBRARY = "songs"
@@ -76,6 +81,8 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         const val PARAM_VALUE_OFF = "off"
         const val PARAM_VALUE_YES = "yes"
         const val PARAM_VALUE_NO = "no"
+        const val PARAM_VALUE_SWIPE_TO_DISMISS = "swipe_to_dismiss"
+        const val PARAM_VALUE_CANCEL_SWIPE_TO_DISMISS = "cancel_swipe_to_dismiss"
     }
 
     private val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
@@ -91,6 +98,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
 
     fun onAppOpened(screen: String, fromAppShortcut: Boolean, theme: String, language: String) = track(
         EVENT_APP_OPENED,
+        PARAM_KEY_VERSION to BuildConfig.VERSION_NAME,
         PARAM_KEY_SCREEN to screen,
         PARAM_KEY_FROM_APP_SHORTCUT to if (fromAppShortcut) PARAM_VALUE_YES else PARAM_VALUE_NO,
         PARAM_KEY_THEME to theme,
@@ -135,10 +143,11 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         }
     }
 
-    fun onPlaylistCreated(title: String, source: String) = track(
+    fun onPlaylistCreated(title: String, source: String, totalPlaylistCount: Int) = track(
         EVENT_PLAYLIST_CREATED,
         PARAM_KEY_PLAYLIST_TITLE to title,
-        PARAM_KEY_SOURCE to source
+        PARAM_KEY_SOURCE to source,
+        PARAM_KEY_TOTAL_PLAYLIST_COUNT to totalPlaylistCount.toString()
     )
 
     fun onCollectionBookmarkedStateChanged(collectionId: String, isBookmarked: Boolean, source: String) = track(
@@ -174,6 +183,14 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         EVENT_SHUFFLE_BUTTON_PRESSED,
         PARAM_KEY_SOURCE to source,
         PARAM_KEY_SONG_COUNT to songCount.toString()
+    )
+
+    fun onSongPlaylistStateChanged(songId: String, playlistCount: Int, source: String, isFromBottomSheet: Boolean) = track(
+        EVENT_SONG_PLAYLIST_STATE_CHANGED,
+        PARAM_KEY_SONG_ID to songId,
+        PARAM_KEY_PLAYLIST_COUNT to playlistCount.toString(),
+        PARAM_KEY_SOURCE to source,
+        PARAM_KEY_IS_FROM_BOTTOM_SHEET to if (isFromBottomSheet) PARAM_VALUE_YES else PARAM_VALUE_NO
     )
 
     private fun track(event: String, vararg arguments: Pair<String, String>) {

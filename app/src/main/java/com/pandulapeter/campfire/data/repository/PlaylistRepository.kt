@@ -41,6 +41,16 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
 
     fun isSongInPlaylist(playlistId: String, songId: String) = data.find { it.id == playlistId }?.songIds?.contains(songId) ?: false
 
+    fun getPlaylistCountForSong(songId: String): Int {
+        var count = 0
+        data.forEach {
+            if (isSongInPlaylist(it.id, songId)) {
+                count++
+            }
+        }
+        return count
+    }
+
     fun addSongToPlaylist(playlistId: String, songId: String) {
         async(UI) {
             var shouldNotify = false

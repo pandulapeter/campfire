@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.home.collections.CollectionListItemViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
@@ -31,6 +32,8 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     protected val songDetailRepository by inject<SongDetailRepository>()
     protected val preferenceDatabase by inject<PreferenceDatabase>()
     protected val playlistRepository by inject<PlaylistRepository>()
+    private val analyticsManager by inject<AnalyticsManager>()
+    abstract val screenName: String
     private var coroutine: CoroutineContext? = null
     protected var librarySongs = sequenceOf<Song>()
     val collection = ObservableField<CollectionListItemViewModel.CollectionViewModel?>()
@@ -170,8 +173,20 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
 
     fun toggleFavoritesState(songId: String) {
         if (playlistRepository.isSongInPlaylist(Playlist.FAVORITES_ID, songId)) {
+            analyticsManager.onSongPlaylistStateChanged(
+                songId,
+                playlistRepository.getPlaylistCountForSong(songId) - 1,
+                screenName,
+                playlistRepository.cache.size > 1
+            )
             playlistRepository.removeSongFromPlaylist(Playlist.FAVORITES_ID, songId)
         } else {
+            analyticsManager.onSongPlaylistStateChanged(
+                songId,
+                playlistRepository.getPlaylistCountForSong(songId) + 1,
+                screenName,
+                playlistRepository.cache.size > 1
+            )
             playlistRepository.addSongToPlaylist(Playlist.FAVORITES_ID, songId)
         }
     }

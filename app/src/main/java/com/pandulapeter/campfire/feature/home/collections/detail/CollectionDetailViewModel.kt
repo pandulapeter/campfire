@@ -7,6 +7,7 @@ import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.feature.home.collections.CollectionListItemViewModel
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import org.koin.android.ext.android.inject
 
 class CollectionDetailViewModel(
@@ -18,6 +19,7 @@ class CollectionDetailViewModel(
     val collectionRepository by inject<CollectionRepository>()
     override val cardTransitionName = "card-${collection.id}"
     override val imageTransitionName = "image-${collection.id}"
+    override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL
 
     init {
         this.collection.set(CollectionListItemViewModel.CollectionViewModel(collection))

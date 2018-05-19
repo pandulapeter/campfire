@@ -8,12 +8,14 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
+import com.pandulapeter.campfire.integration.AnalyticsManager
 
 class ManageDownloadsViewModel(context: Context, private val openLibrary: () -> Unit) : SongListViewModel(context) {
 
     val shouldShowDeleteAll = ObservableBoolean()
     val songCount = ObservableInt()
     private var songToDeleteId: String? = null
+    override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS
 
     init {
         placeholderText.set(R.string.manage_downloads_placeholder)
