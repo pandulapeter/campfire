@@ -32,18 +32,20 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
             playlistId = arguments.playlistId,
             openLibrary = { mainActivity.openLibraryScreen() },
             toolbarTextInputView = if (arguments?.playlistId == Playlist.FAVORITES_ID) null else ToolbarTextInputView(mainActivity.toolbarContext, R.string.playlist_title, false),
-            onDataLoaded = {
-                if (it) {
-                    mainActivity.updateToolbarButtons(listOf(editToggle, shuffleButton))
-                }
-            }
+            onDataLoaded = { mainActivity.updateToolbarButtons(listOf(editToggle, shuffleButton)) }
         )
     }
     override val canScrollToolbar get() = viewModel.songCount.get() > 0 && !viewModel.isInEditMode.get()
     private var Bundle.isInEditMode by BundleArgumentDelegate.Boolean("isInEditMode")
-    private val editToggle: ToolbarButton by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_edit_24dp) { viewModel.toggleEditMode() } }
+    private val editToggle: ToolbarButton by lazy {
+        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_edit_24dp) { viewModel.toggleEditMode() }.apply {
+            visibleOrGone = false
+        }
+    }
     private val shuffleButton: ToolbarButton by lazy {
-        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST) }.apply { visibleOrGone = false }
+        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST) }.apply {
+            visibleOrGone = false
+        }
     }
     private val drawableEditToDone by lazy { mainActivity.animatedDrawable(R.drawable.avd_edit_to_done_24dp) }
     private val drawableDoneToEdit by lazy { mainActivity.animatedDrawable(R.drawable.avd_done_to_edit_24dp) }
@@ -56,6 +58,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         viewModel.songCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
             val previousVisibility = shuffleButton.visibleOrGone
+            editToggle.visibleOrGone = arguments?.playlistId != Playlist.FAVORITES_ID || it > 0
             shuffleButton.visibleOrGone = it > 1
             if (shuffleButton.visibleOrGone != previousVisibility && viewModel.isInEditMode.get()) {
                 mainActivity.invalidateAppBar()

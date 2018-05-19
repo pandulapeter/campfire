@@ -22,14 +22,14 @@ class PlaylistViewModel(
     private val playlistId: String,
     private val openLibrary: () -> Unit,
     val toolbarTextInputView: ToolbarTextInputView?,
-    private val onDataLoaded: (Boolean) -> Unit
+    private val onDataLoaded: () -> Unit
 ) : SongListViewModel(context) {
 
     private val appShortcutManager by inject<AppShortcutManager>()
     private val analyticsManager by inject<AnalyticsManager>()
     private var songToDeleteId: String? = null
     val playlist = ObservableField<Playlist?>()
-    val songCount = ObservableInt()
+    val songCount = ObservableInt(-1)
     val isInEditMode = ObservableBoolean()
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST
 
@@ -75,7 +75,7 @@ class PlaylistViewModel(
         playlists.findLast { it.id == playlistId }.let {
             playlist.set(it)
             playlist.notifyChange()
-            onDataLoaded(playlistId != Playlist.FAVORITES_ID || (it?.songIds?.size ?: 0) > 1)
+            onDataLoaded()
         }
     }
 
@@ -111,7 +111,7 @@ class PlaylistViewModel(
 
     fun restoreToolbarButtons() {
         playlist.get()?.let {
-            onDataLoaded(playlistId != Playlist.FAVORITES_ID || it.songIds.size > 1)
+            onDataLoaded()
         }
     }
 
