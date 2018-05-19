@@ -27,6 +27,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_SONG_COUNT = "song_count"
         private const val PARAM_KEY_TAB = "tab"
         private const val PARAM_KEY_PLAYLIST_TITLE = "title"
+        private const val PARAM_KEY_SOURCE = "source"
 
         // Values
         const val PARAM_VALUE_SCREEN_LIBRARY = "library"
@@ -41,6 +42,9 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         const val PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS = "manage_downloads"
         const val PARAM_VALUE_SCREEN_COLLECTION_DETAIL = "collection_detail"
         const val PARAM_VALUE_SCREEN_SONG_DETAIL = "song_detail"
+        const val PARAM_VALUE_DRAWER = "drawer"
+        const val PARAM_VALUE_BOTTOM_SHEET = "bottom_sheet"
+        const val PARAM_VALUE_FLOATING_ACTION_BUTTON = "floating_action_button"
     }
 
     private val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
@@ -75,8 +79,8 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         track(EVENT_SONG_VISUALIZED, PARAM_KEY_SONG_ID to songId)
     }
 
-    fun onPlaylistCreated(title: String) =
-        track(EVENT_PLAYLIST_CREATED, PARAM_KEY_PLAYLIST_TITLE to title)
+    fun onPlaylistCreated(title: String, source: String) =
+        track(EVENT_PLAYLIST_CREATED, PARAM_KEY_PLAYLIST_TITLE to title, PARAM_KEY_SOURCE to source)
 
     private fun track(event: String, vararg arguments: Pair<String, String>) {
         if (preferenceDatabase.shouldShareUsageData) {

@@ -237,7 +237,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     R.id.manage_downloads -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManageDownloadsFragment() } }
                     newPlaylistId -> {
                         currentFragment?.hideSnackbar()
-                        NewPlaylistDialogFragment.show(supportFragmentManager)
+                        NewPlaylistDialogFragment.show(supportFragmentManager, AnalyticsManager.PARAM_VALUE_DRAWER)
                         binding.drawerLayout.closeDrawers()
                         false
                     }

@@ -120,7 +120,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
 
     override fun onFloatingActionButtonPressed() {
         hideSnackbar()
-        NewPlaylistDialogFragment.show(childFragmentManager)
+        NewPlaylistDialogFragment.show(childFragmentManager, AnalyticsManager.PARAM_VALUE_FLOATING_ACTION_BUTTON)
     }
 
     override fun onPositiveButtonSelected(id: Int) {

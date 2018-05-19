@@ -11,17 +11,16 @@ import com.pandulapeter.campfire.NewPlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.consume
-import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.util.onTextChanged
-import com.pandulapeter.campfire.util.showKeyboard
+import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
 class NewPlaylistDialogFragment : BaseDialogFragment() {
 
     companion object {
-        fun show(fragmentManager: FragmentManager) {
-            NewPlaylistDialogFragment().let { it.show(fragmentManager, it.tag) }
+        private var Bundle.source by BundleArgumentDelegate.String("source")
+
+        fun show(fragmentManager: FragmentManager, source: String) {
+            NewPlaylistDialogFragment().withArguments { it.source = source }.let { it.show(fragmentManager, it.tag) }
         }
     }
 
@@ -59,15 +58,15 @@ class NewPlaylistDialogFragment : BaseDialogFragment() {
         hideKeyboard(activity?.currentFocus)
     }
 
-    private fun CharSequence?.isTextValid() = this?.trim()?.isEmpty() == false
-
     private fun onOkButtonPressed() {
-        binding.inputField.text?.toString()?.let {
-            if (it.isTextValid()) {
-                playlistRepository.createNewPlaylist(it.trim())
-                analyticsManager.onPlaylistCreated(it)
+        binding.inputField.text?.toString()?.let { title ->
+            if (title.isTextValid()) {
+                playlistRepository.createNewPlaylist(title.trim())
+                arguments?.source?.let { analyticsManager.onPlaylistCreated(title.trim(), it) }
                 dismiss()
             }
         }
     }
+
+    private fun CharSequence?.isTextValid() = this?.trim()?.isEmpty() == false
 }

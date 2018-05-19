@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
@@ -56,7 +57,12 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
         )
         binding.viewModel = viewModel
         viewModel.shouldDismissDialog.onEventTriggered(this@PlaylistChooserBottomSheetFragment) { dismiss() }
-        viewModel.shouldShowNewPlaylistDialog.onEventTriggered(this@PlaylistChooserBottomSheetFragment) { NewPlaylistDialogFragment.show(childFragmentManager) }
+        viewModel.shouldShowNewPlaylistDialog.onEventTriggered(this@PlaylistChooserBottomSheetFragment) {
+            NewPlaylistDialogFragment.show(
+                childFragmentManager,
+                AnalyticsManager.PARAM_VALUE_BOTTOM_SHEET
+            )
+        }
         viewModel.shouldUpdatePlaylists.onEventTriggered(this@PlaylistChooserBottomSheetFragment) { refreshPlaylistCheckboxes() }
         binding.container?.nestedScrollView?.setOnScrollChangeListener { _: NestedScrollView?, _: Int, scrollY: Int, _: Int, _: Int ->
             scrollViewOffset = scrollY
