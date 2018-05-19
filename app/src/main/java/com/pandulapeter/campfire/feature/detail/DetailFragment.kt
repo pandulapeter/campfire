@@ -387,19 +387,21 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             }
         }
 
-        if (firstTimeUserExperienceManager.playlistPagerSwipeCompleted) {
-            showPinchHint()
-        } else {
-            if (binding.viewPager.currentItem != arguments?.index ?: 0) {
-                firstTimeUserExperienceManager.playlistPagerSwipeCompleted = true
-                hideSnackbar()
-                binding.root.postDelayed({
-                    if (isAdded) {
-                        showPinchHint()
-                    }
-                }, 300)
+        if (mainActivity.isFloatingActionButtonEnabled()) {
+            if (firstTimeUserExperienceManager.playlistPagerSwipeCompleted) {
+                showPinchHint()
             } else {
-                showSwipeHint()
+                if (binding.viewPager.currentItem != arguments?.index ?: 0) {
+                    firstTimeUserExperienceManager.playlistPagerSwipeCompleted = true
+                    hideSnackbar()
+                    binding.root.postDelayed({
+                        if (isAdded) {
+                            showPinchHint()
+                        }
+                    }, 300)
+                } else {
+                    showSwipeHint()
+                }
             }
         }
     }
