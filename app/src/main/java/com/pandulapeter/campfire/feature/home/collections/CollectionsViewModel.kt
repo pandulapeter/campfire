@@ -11,6 +11,7 @@ import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.removePrefixes
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
@@ -27,6 +28,7 @@ class CollectionsViewModel(
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
     val collectionRepository by inject<CollectionRepository>()
+    private val analyticsManager by inject<AnalyticsManager>()
     private var coroutine: CoroutineContext? = null
     private var collections = sequenceOf<Collection>()
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
@@ -76,7 +78,8 @@ class CollectionsViewModel(
         adapter.bookmarkActionClickListener = { position ->
             adapter.items[position].let {
                 if (it is CollectionListItemViewModel.CollectionViewModel) {
-                    collectionRepository.toggleSavedState(it.collection.id)
+                    collectionRepository.toggleBookmarkedState(it.collection.id)
+                    analyticsManager.onCollectionBookmarkedStateChanged(it.collection.id, it.collection.isBookmarked == true, AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
                     adapter.notifyItemChanged(position, CollectionListAdapter.Payload.BookmarkedStateChanged(it.collection.isBookmarked ?: false))
                     updateAdapterItems()
                 }

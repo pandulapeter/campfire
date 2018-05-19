@@ -21,6 +21,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_SCREEN_OPENED = "screen_opened"
         private const val EVENT_SONG_VISUALIZED = "song_visualized"
         private const val EVENT_PLAYLIST_CREATED = "playlist_created"
+        private const val EVENT_COLLECTION_BOOKMARKED_STATE_CHANGED = "collection_bookmarked_state_changed"
         private const val EVENT_COLLECTION_SORTING_MODE_UPDATED = "collection_sorting_mode_updated"
         private const val EVENT_COLLECTION_FILTER_TOGGLED = "collection_filter_toggled"
         private const val EVENT_LIBRARY_SORTING_MODE_UPDATED = "library_sorting_mode_updated"
@@ -39,6 +40,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_SORTING_MODE = "sorting_mode"
         private const val PARAM_KEY_FILTER = "filter"
         private const val PARAM_KEY_STATE = "state"
+        private const val PARAM_KEY_IS_BOOKMARKED = "is_bookmarked"
 
         // Values
         const val PARAM_VALUE_SCREEN_LIBRARY = "songs"
@@ -66,6 +68,8 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         const val PARAM_VALUE_FILTER_DOWNLOADED_ONLY = "downloaded_only"
         const val PARAM_VALUE_ON = "on"
         const val PARAM_VALUE_OFF = "off"
+        const val PARAM_VALUE_YES = "yes"
+        const val PARAM_VALUE_NO = "no"
     }
 
     private val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
@@ -105,6 +109,14 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
 
     fun onPlaylistCreated(title: String, source: String) =
         track(EVENT_PLAYLIST_CREATED, PARAM_KEY_PLAYLIST_TITLE to title, PARAM_KEY_SOURCE to source)
+
+    fun onCollectionBookmarkedStateChanged(collectionId: String, isBookmarked: Boolean, source: String) =
+        track(
+            EVENT_COLLECTION_BOOKMARKED_STATE_CHANGED,
+            PARAM_KEY_COLLECTION_ID to collectionId,
+            PARAM_KEY_IS_BOOKMARKED to if (isBookmarked) PARAM_VALUE_YES else PARAM_VALUE_NO,
+            PARAM_KEY_SOURCE to source
+        )
 
     fun onCollectionSortingModeUpdated(sortingMode: String) =
         track(EVENT_COLLECTION_SORTING_MODE_UPDATED, PARAM_KEY_SORTING_MODE to sortingMode)

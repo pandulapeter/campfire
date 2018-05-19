@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.detail.FadeInTransition
 import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.animatedDrawable
 import com.pandulapeter.campfire.util.visibleOrGone
@@ -39,7 +40,8 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
     private val playlistButton: ToolbarButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(if (viewModel.collection.get()?.collection?.isBookmarked == true) R.drawable.ic_bookmarked_24dp else R.drawable.ic_not_bookmarked_24dp) {
             viewModel.collection.get()?.collection?.let {
-                viewModel.collectionRepository.toggleSavedState(it.id)
+                viewModel.collectionRepository.toggleBookmarkedState(it.id)
+                analyticsManager.onCollectionBookmarkedStateChanged(it.id, it.isBookmarked == true, AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL)
                 playlistButton.setImageDrawable((if (it.isBookmarked == true) drawableNotSavedToSaved else drawableSavedToNotSaved).apply { this?.start() })
             }
         }

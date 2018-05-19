@@ -105,7 +105,7 @@ class CollectionRepository(
         }
     }
 
-    fun toggleSavedState(collectionId: String) {
+    fun toggleBookmarkedState(collectionId: String) {
         data.find { it.id == collectionId }?.let {
             it.isBookmarked = !(it.isBookmarked ?: false)
             async(CommonPool) { database.collectionDao().insert(it) }
