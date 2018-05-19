@@ -26,6 +26,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_COLLECTION_FILTER_TOGGLED = "collection_filter_toggled"
         private const val EVENT_LIBRARY_SORTING_MODE_UPDATED = "library_sorting_mode_updated"
         private const val EVENT_LIBRARY_FILTER_TOGGLED = "library_filter_toggled"
+        private const val EVENT_LIBRARY_SEARCH_QUERY_CHANGED = "library_search_query_changed"
         private const val EVENT_SHUFFLE_BUTTON_PRESSED = "shuffle_button_pressed"
         private const val EVENT_SONG_PLAYLIST_STATE_CHANGED = "song_playlist_state_changed"
         private const val EVENT_AUTO_SCROLL_TOGGLED = "auto_scroll_toggled"
@@ -51,6 +52,9 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_TOTAL_PLAYLIST_COUNT = "total_playlist_count"
         private const val PARAM_KEY_SORTING_MODE = "sorting_mode"
         private const val PARAM_KEY_FILTER = "filter"
+        private const val PARAM_KEY_QUERY = "query"
+        private const val PARAM_KEY_SEARCH_IN_ARTISTS = "search_in_artists"
+        private const val PARAM_KEY_SEARCH_IN_TITLES = "search_in_titles"
         private const val PARAM_KEY_STATE = "state"
         private const val PARAM_KEY_IS_BOOKMARKED = "is_bookmarked"
         private const val PARAM_KEY_PLAYLIST_COUNT = "playlist_count"
@@ -183,6 +187,13 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         EVENT_LIBRARY_FILTER_TOGGLED,
         PARAM_KEY_FILTER to filter,
         PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF
+    )
+
+    fun onLibrarySearchQueryChanged(query: String, shouldSearchInArtists: Boolean, shouldSearchInTitles: Boolean) = track(
+        EVENT_LIBRARY_SEARCH_QUERY_CHANGED,
+        PARAM_KEY_QUERY to query,
+        PARAM_KEY_SEARCH_IN_ARTISTS to if (shouldSearchInArtists) PARAM_VALUE_ON else PARAM_VALUE_OFF,
+        PARAM_KEY_SEARCH_IN_TITLES to if (shouldSearchInTitles) PARAM_VALUE_ON else PARAM_VALUE_OFF
     )
 
     fun onShuffleButtonPressed(source: String, songCount: Int) = track(

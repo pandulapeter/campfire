@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.onTextChanged
 import com.pandulapeter.campfire.util.removePrefixes
 import com.pandulapeter.campfire.util.swap
+import org.koin.android.ext.android.inject
 
 class LibraryViewModel(
     context: Context,
@@ -23,13 +24,15 @@ class LibraryViewModel(
 ) : SongListViewModel(context) {
 
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_LIBRARY
-    private val newString = context.getString(R.string.new_tag)
+    private val analyticsManager by inject<AnalyticsManager>()
     private val popularString = context.getString(R.string.popular_tag)
+    private val newString = context.getString(R.string.new_tag)
     var query = ""
         set(value) {
             if (field != value) {
                 field = value
                 updateAdapterItems(true)
+                trackSearchEvent()
             }
         }
     var shouldShowDownloadedOnly = preferenceDatabase.shouldShowDownloadedOnly
@@ -69,11 +72,13 @@ class LibraryViewModel(
         set(value) {
             field = value
             updateAdapterItems(true)
+            trackSearchEvent()
         }
     var shouldSearchInArtists = preferenceDatabase.shouldSearchInArtists
         set(value) {
             field = value
             updateAdapterItems(true)
+            trackSearchEvent()
         }
 
     init {
@@ -189,6 +194,12 @@ class LibraryViewModel(
         SortingMode.POPULARITY -> sortedBy { it.getNormalizedArtist().removePrefixes() }
             .sortedBy { it.getNormalizedTitle().removePrefixes() }
             .sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
+    }
+
+    private fun trackSearchEvent() {
+        if (query.isNotEmpty()) {
+            analyticsManager.onLibrarySearchQueryChanged(query, shouldSearchInArtists, shouldSearchInTitles)
+        }
     }
 
     enum class SortingMode(val intValue: Int) {
