@@ -96,6 +96,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 viewHolder.adapterPosition.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
+                        viewModel.deletePlaylistPermanently()
                         firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true
                         val playlist = viewModel.adapter.items[position].playlist
                         showSnackbar(
@@ -104,7 +105,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
                             action = { viewModel.cancelDeletePlaylist() },
                             dismissAction = { viewModel.deletePlaylistPermanently() }
                         )
-                        binding.root.post { viewModel.deletePlaylistTemporarily(playlist.id) }
+                        viewModel.deletePlaylistTemporarily(playlist.id)
                     }
                 }
             }

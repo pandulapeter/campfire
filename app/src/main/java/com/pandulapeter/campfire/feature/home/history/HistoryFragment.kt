@@ -66,6 +66,7 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), BaseDialogFragment
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 viewHolder.adapterPosition.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
+                        viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.historyCompleted = true
                         val song = (viewModel.adapter.items[position] as SongListItemViewModel.SongViewModel).song
                         showSnackbar(
@@ -74,7 +75,7 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), BaseDialogFragment
                             action = { viewModel.cancelDeleteSong() },
                             dismissAction = { viewModel.deleteSongPermanently() }
                         )
-                        binding.root.post { viewModel.deleteSongTemporarily(song.id) }
+                        viewModel.deleteSongTemporarily(song.id)
                     }
                 }
             }

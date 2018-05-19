@@ -111,6 +111,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 viewHolder.adapterPosition.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
+                        viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.playlistSwipeCompleted = true
                         (viewModel.adapter.items[position] as? SongListItemViewModel.SongViewModel)?.song?.let { song ->
                             showSnackbar(
@@ -119,7 +120,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                                 action = { viewModel.cancelDeleteSong() },
                                 dismissAction = { viewModel.deleteSongPermanently() }
                             )
-                            binding.root.post { viewModel.deleteSongTemporarily(song.id) }
+                            viewModel.deleteSongTemporarily(song.id)
                         }
                     }
                 }

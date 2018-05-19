@@ -69,6 +69,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Ba
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 viewHolder.adapterPosition.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
+                        viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.manageDownloadsCompleted = true
                         val song = (viewModel.adapter.items[position] as SongListItemViewModel.SongViewModel).song
                         showSnackbar(
@@ -77,7 +78,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Ba
                             action = { viewModel.cancelDeleteSong() },
                             dismissAction = { viewModel.deleteSongPermanently() }
                         )
-                        binding.root.post { viewModel.deleteSongTemporarily(song.id) }
+                        viewModel.deleteSongTemporarily(song.id)
                     }
                 }
             }

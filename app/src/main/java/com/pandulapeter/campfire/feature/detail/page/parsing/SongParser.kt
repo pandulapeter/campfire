@@ -14,8 +14,8 @@ class SongParser(private val context: Context) {
         var offset = 0
         val parsedText = (if (shouldShowChords) text else text
             .replace(Regex("\\[(.*?)[]]"), "") // Remove chords
-            .replace(Regex("(?:\\h*\\n){3,}"), "") // Remove lines consisting only of empty space
             .replace(Regex("[ ][ ]+"), "") // Remove groups of multiple whitespaces within a single line
+            .replace(Regex("(?:\\h*\\n){3,}"), "") // Remove lines consisting only of empty space
             .replace(Regex("[}][{]+"), "}\n{") // Ensure that consecutive section headers are separated by an empty line
                 ).replace(Regex("\\{(.*?)[}]"), {
             // Find the section headers
