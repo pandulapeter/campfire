@@ -18,6 +18,8 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_SCREEN_OPENED = "screen_opened"
         private const val EVENT_SONG_VISUALIZED = "song_visualized"
         private const val EVENT_PLAYLIST_CREATED = "playlist_created"
+        private const val EVENT_COLLECTION_SORTING_MODE_UPDATED = "collection_sorting_mode_updated"
+        private const val EVENT_COLLECTION_FILTER_TOGGLED = "collection_filter_toggled"
 
         // Keys
         private const val PARAM_KEY_SCREEN = "screen"
@@ -28,9 +30,12 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_TAB = "tab"
         private const val PARAM_KEY_PLAYLIST_TITLE = "title"
         private const val PARAM_KEY_SOURCE = "source"
+        private const val PARAM_KEY_SORTING_MODE = "sorting_mode"
+        private const val PARAM_KEY_FILTER = "filter"
+        private const val PARAM_KEY_STATE = "state"
 
         // Values
-        const val PARAM_VALUE_SCREEN_LIBRARY = "library"
+        const val PARAM_VALUE_SCREEN_LIBRARY = "songs"
         const val PARAM_VALUE_SCREEN_COLLECTIONS = "collections"
         const val PARAM_VALUE_SCREEN_HISTORY = "history"
         const val PARAM_VALUE_SCREEN_OPTIONS = "options"
@@ -45,6 +50,14 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         const val PARAM_VALUE_DRAWER = "drawer"
         const val PARAM_VALUE_BOTTOM_SHEET = "bottom_sheet"
         const val PARAM_VALUE_FLOATING_ACTION_BUTTON = "floating_action_button"
+        const val PARAM_VALUE_BY_TITLE = "by_title"
+        const val PARAM_VALUE_BY_DATE = "by_date"
+        const val PARAM_VALUE_BY_POPULARITY = "by_popularity"
+        const val PARAM_VALUE_FILTER_BOOKMARKED_ONLY = "bookmarked_only"
+        const val PARAM_VALUE_FILTER_SHOW_EXPLICIT = "show_explicit"
+        const val PARAM_VALUE_FILTER_LANGUAGE = "language_"
+        const val PARAM_VALUE_ON = "on"
+        const val PARAM_VALUE_OFF = "off"
     }
 
     private val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
@@ -82,17 +95,23 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
     fun onPlaylistCreated(title: String, source: String) =
         track(EVENT_PLAYLIST_CREATED, PARAM_KEY_PLAYLIST_TITLE to title, PARAM_KEY_SOURCE to source)
 
+    fun onCollectionSortingModeUpdated(sortingMode: String) =
+        track(EVENT_COLLECTION_SORTING_MODE_UPDATED, PARAM_KEY_SORTING_MODE to sortingMode)
+
+    fun onCollectionFilterToggled(filter: String, state: Boolean) =
+        track(EVENT_COLLECTION_FILTER_TOGGLED, PARAM_KEY_FILTER to filter, PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF)
+
     private fun track(event: String, vararg arguments: Pair<String, String>) {
         if (preferenceDatabase.shouldShareUsageData) {
             @Suppress("ConstantConditionIf")
-            if (BuildConfig.BUILD_TYPE == "release") {
-                firebaseAnalytics.logEvent(event, Bundle().apply { arguments.forEach { putString(it.first, it.second) } })
-            } else {
+            if (BuildConfig.BUILD_TYPE == "debug") {
                 var text = event
                 if (arguments.isNotEmpty()) {
                     text += "(" + arguments.joinToString("; ") { it.first + ": " + it.second } + ")"
                 }
                 Log.d("ANALYTICS_EVENT", text)
+            } else {
+                firebaseAnalytics.logEvent(event, Bundle().apply { arguments.forEach { putString(it.first, it.second) } })
             }
         }
     }

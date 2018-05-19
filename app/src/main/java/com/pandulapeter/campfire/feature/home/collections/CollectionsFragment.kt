@@ -145,11 +145,26 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
         when (menuItem.itemId) {
-            R.id.sort_by_title -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.TITLE) { sortingMode = it }
-            R.id.sort_by_date -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.UPLOAD_DATE) { sortingMode = it }
-            R.id.sort_by_popularity -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.POPULARITY) { sortingMode = it }
-            R.id.bookmarked_only -> consumeAndUpdateBoolean(menuItem, { shouldShowSavedOnly = it }, { shouldShowSavedOnly })
-            R.id.show_explicit -> consumeAndUpdateBoolean(menuItem, { shouldShowExplicit = it }, { shouldShowExplicit })
+            R.id.sort_by_title -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.TITLE) {
+                analyticsManager.onCollectionSortingModeUpdated(AnalyticsManager.PARAM_VALUE_BY_TITLE)
+                sortingMode = it
+            }
+            R.id.sort_by_date -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.UPLOAD_DATE) {
+                analyticsManager.onCollectionSortingModeUpdated(AnalyticsManager.PARAM_VALUE_BY_DATE)
+                sortingMode = it
+            }
+            R.id.sort_by_popularity -> consumeAndUpdateSortingMode(CollectionsViewModel.SortingMode.POPULARITY) {
+                analyticsManager.onCollectionSortingModeUpdated(AnalyticsManager.PARAM_VALUE_BY_POPULARITY)
+                sortingMode = it
+            }
+            R.id.bookmarked_only -> consumeAndUpdateBoolean(menuItem, {
+                analyticsManager.onCollectionFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_BOOKMARKED_ONLY, it)
+                shouldShowSavedOnly = it
+            }, { shouldShowSavedOnly })
+            R.id.show_explicit -> consumeAndUpdateBoolean(menuItem, {
+                analyticsManager.onCollectionFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_SHOW_EXPLICIT, it)
+                shouldShowExplicit = it
+            }, { shouldShowExplicit })
             else -> consumeAndUpdateLanguageFilter(menuItem, viewModel.languages.find { it.nameResource == menuItem.itemId }?.id ?: "")
         }
     }
@@ -157,6 +172,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
     private fun consumeAndUpdateLanguageFilter(menuItem: MenuItem, languageId: String) = consume {
         viewModel.disabledLanguageFilters.run {
             viewModel.disabledLanguageFilters = toMutableSet().apply { if (contains(languageId)) remove(languageId) else add(languageId) }
+            analyticsManager.onCollectionFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_LANGUAGE + languageId, contains(languageId))
             (menuItem.actionView as? CompoundButton).updateCheckedStateWithDelay(contains(languageId))
         }
     }
