@@ -34,7 +34,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     companion object {
         const val TRANSITION_DELAY = 50L
         const val TRANSITION_DURATION = 150L
-        private const val FONT_SIZE_MAX = 2f
+        private const val FONT_SIZE_MAX = 1.8f
         private const val FONT_SIZE_MIN = 0.8f
         private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
         private var Bundle.songs by BundleArgumentDelegate.ParcelableArrayList("songs")

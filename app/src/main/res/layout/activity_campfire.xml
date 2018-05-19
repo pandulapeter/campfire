@@ -130,7 +130,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="24dp"
                     android:layout_marginStart="@dimen/content_padding"
-                    android:max="10"
+                    android:max="9"
                     android:padding="@dimen/content_padding"
                     android:progress="2" />
 

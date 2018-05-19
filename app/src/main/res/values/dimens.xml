@@ -19,7 +19,7 @@
 
     <!-- Text -->
     <dimen name="text_header">12sp</dimen>
-    <dimen name="text_normal">16sp</dimen>
+    <dimen name="text_normal">14sp</dimen>
 
     <!-- Toolbar -->
     <dimen name="toolbar_first_keyline_fix">6dp</dimen>
