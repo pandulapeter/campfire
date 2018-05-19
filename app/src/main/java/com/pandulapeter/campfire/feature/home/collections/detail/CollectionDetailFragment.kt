@@ -33,16 +33,17 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
         ) { shuffleButton.visibleOrGone = true }
     }
     private val shuffleButton: ToolbarButton by lazy {
-        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs() }.apply { visibleOrGone = false }
+        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL) }
+            .apply { visibleOrGone = false }
     }
-    private val drawableSavedToNotSaved by lazy { mainActivity.animatedDrawable(R.drawable.avd_bookmarked_to_not_bookmarked_24dp) }
-    private val drawableNotSavedToSaved by lazy { mainActivity.animatedDrawable(R.drawable.avd_not_bookmarked_to_bookmarked_24dp) }
-    private val playlistButton: ToolbarButton by lazy {
+    private val drawableBookmarkedToNotBookmarked by lazy { mainActivity.animatedDrawable(R.drawable.avd_bookmarked_to_not_bookmarked_24dp) }
+    private val drawableNotBookmarkedToBookmarked by lazy { mainActivity.animatedDrawable(R.drawable.avd_not_bookmarked_to_bookmarked_24dp) }
+    private val bookmarkedButton: ToolbarButton by lazy {
         mainActivity.toolbarContext.createToolbarButton(if (viewModel.collection.get()?.collection?.isBookmarked == true) R.drawable.ic_bookmarked_24dp else R.drawable.ic_not_bookmarked_24dp) {
             viewModel.collection.get()?.collection?.let {
                 viewModel.collectionRepository.toggleBookmarkedState(it.id)
                 analyticsManager.onCollectionBookmarkedStateChanged(it.id, it.isBookmarked == true, AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL)
-                playlistButton.setImageDrawable((if (it.isBookmarked == true) drawableNotSavedToSaved else drawableSavedToNotSaved).apply { this?.start() })
+                bookmarkedButton.setImageDrawable((if (it.isBookmarked == true) drawableNotBookmarkedToBookmarked else drawableBookmarkedToNotBookmarked).apply { this?.start() })
             }
         }
     }
@@ -73,7 +74,7 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.swipeRefreshLayout.isEnabled = false
-        mainActivity.updateToolbarButtons(listOf(playlistButton, shuffleButton))
+        mainActivity.updateToolbarButtons(listOf(bookmarkedButton, shuffleButton))
         (arguments?.collection as? Collection).let {
             if (it == null) {
                 defaultToolbar.updateToolbarTitle(R.string.home_collections)

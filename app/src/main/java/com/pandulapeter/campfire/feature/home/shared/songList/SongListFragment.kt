@@ -151,19 +151,10 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
 
     protected open fun onDetailScreenOpened() = Unit
 
-    protected fun shuffleSongs() {
+    protected fun shuffleSongs(source: String) {
         val tempList = viewModel.adapter.items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song }.toMutableList()
         tempList.shuffle()
-        val index = 0
-        val originalIndex = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == tempList[index].id }
-        if (originalIndex != RecyclerView.NO_POSITION) {
-            mainActivity.openDetailScreen(
-                null,
-                tempList,
-                false,
-                0,
-                viewModel is CollectionDetailViewModel
-            )
-        }
+        analyticsManager.onShuffleButtonPressed(source, tempList.size)
+        mainActivity.openDetailScreen(null, tempList, false, 0, viewModel is CollectionDetailViewModel)
     }
 }

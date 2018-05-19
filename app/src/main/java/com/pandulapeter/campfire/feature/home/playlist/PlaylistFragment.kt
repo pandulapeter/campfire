@@ -43,7 +43,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
     private var Bundle.isInEditMode by BundleArgumentDelegate.Boolean("isInEditMode")
     private val editToggle: ToolbarButton by lazy { mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_edit_24dp) { viewModel.toggleEditMode() } }
     private val shuffleButton: ToolbarButton by lazy {
-        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs() }.apply { visibleOrGone = false }
+        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST) }.apply { visibleOrGone = false }
     }
     private val drawableEditToDone by lazy { mainActivity.animatedDrawable(R.drawable.avd_edit_to_done_24dp) }
     private val drawableDoneToEdit by lazy { mainActivity.animatedDrawable(R.drawable.avd_done_to_edit_24dp) }

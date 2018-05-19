@@ -26,6 +26,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_COLLECTION_FILTER_TOGGLED = "collection_filter_toggled"
         private const val EVENT_LIBRARY_SORTING_MODE_UPDATED = "library_sorting_mode_updated"
         private const val EVENT_LIBRARY_FILTER_TOGGLED = "library_filter_toggled"
+        private const val EVENT_SHUFFLE_BUTTON_PRESSED = "shuffle_button_pressed"
 
         // Keys
         private const val PARAM_KEY_TIMESTAMP = "timestamp"
@@ -78,57 +79,95 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         firebaseAnalytics.setAnalyticsCollectionEnabled(preferenceDatabase.shouldShareUsageData)
     }
 
-    fun onConsentGiven() =
-        track(EVENT_CONSENT_GIVEN, PARAM_KEY_TIMESTAMP to SimpleDateFormat("yyyy.MM.dd', 'HH:mm:ss z", Locale.ENGLISH).format(Date()))
+    fun onConsentGiven() = track(
+        EVENT_CONSENT_GIVEN,
+        PARAM_KEY_TIMESTAMP to SimpleDateFormat("yyyy.MM.dd', 'HH:mm:ss z", Locale.ENGLISH).format(Date())
+    )
 
-    fun onAppOpened(screen: String, fromAppShortcut: Boolean) =
-        track(EVENT_APP_OPENED, PARAM_KEY_SCREEN to screen, PARAM_KEY_FROM_APP_SHORTCUT to fromAppShortcut.toString())
+    fun onAppOpened(screen: String, fromAppShortcut: Boolean) = track(
+        EVENT_APP_OPENED,
+        PARAM_KEY_SCREEN to screen,
+        PARAM_KEY_FROM_APP_SHORTCUT to fromAppShortcut.toString()
+    )
 
-    fun onTopLevelScreenOpened(screen: String) =
-        track(EVENT_SCREEN_OPENED, PARAM_KEY_SCREEN to screen)
+    fun onTopLevelScreenOpened(screen: String) = track(
+        EVENT_SCREEN_OPENED,
+        PARAM_KEY_SCREEN to screen
+    )
 
     fun onCollectionDetailScreenOpened(collectionId: String) {
         if (preferenceDatabase.shouldShareUsageData) {
             networkManager.service.openCollection(collectionId).enqueueCall({}, {})
+            track(
+                EVENT_SCREEN_OPENED,
+                PARAM_KEY_SCREEN to PARAM_VALUE_SCREEN_COLLECTION_DETAIL,
+                PARAM_KEY_COLLECTION_ID to collectionId
+            )
         }
-        track(EVENT_SCREEN_OPENED, PARAM_KEY_SCREEN to PARAM_VALUE_SCREEN_COLLECTION_DETAIL, PARAM_KEY_COLLECTION_ID to collectionId)
     }
 
-    fun onOptionsScreenOpened(tab: String) =
-        track(EVENT_SCREEN_OPENED, PARAM_KEY_SCREEN to PARAM_VALUE_SCREEN_OPTIONS, PARAM_KEY_TAB to tab)
+    fun onOptionsScreenOpened(tab: String) = track(
+        EVENT_SCREEN_OPENED,
+        PARAM_KEY_SCREEN to PARAM_VALUE_SCREEN_OPTIONS,
+        PARAM_KEY_TAB to tab
+    )
 
-    fun onSongDetailScreenOpened(numberOfSongs: Int) =
-        track(EVENT_SCREEN_OPENED, PARAM_KEY_SCREEN to PARAM_VALUE_SCREEN_SONG_DETAIL, PARAM_KEY_SONG_COUNT to numberOfSongs.toString())
+    fun onSongDetailScreenOpened(numberOfSongs: Int) = track(
+        EVENT_SCREEN_OPENED,
+        PARAM_KEY_SCREEN to PARAM_VALUE_SCREEN_SONG_DETAIL,
+        PARAM_KEY_SONG_COUNT to numberOfSongs.toString()
+    )
 
     fun onSongVisualized(songId: String) {
         if (preferenceDatabase.shouldShareUsageData) {
             networkManager.service.openSong(songId).enqueueCall({}, {})
+            track(
+                EVENT_SONG_VISUALIZED,
+                PARAM_KEY_SONG_ID to songId
+            )
         }
-        track(EVENT_SONG_VISUALIZED, PARAM_KEY_SONG_ID to songId)
     }
 
-    fun onPlaylistCreated(title: String, source: String) =
-        track(EVENT_PLAYLIST_CREATED, PARAM_KEY_PLAYLIST_TITLE to title, PARAM_KEY_SOURCE to source)
+    fun onPlaylistCreated(title: String, source: String) = track(
+        EVENT_PLAYLIST_CREATED,
+        PARAM_KEY_PLAYLIST_TITLE to title,
+        PARAM_KEY_SOURCE to source
+    )
 
-    fun onCollectionBookmarkedStateChanged(collectionId: String, isBookmarked: Boolean, source: String) =
-        track(
-            EVENT_COLLECTION_BOOKMARKED_STATE_CHANGED,
-            PARAM_KEY_COLLECTION_ID to collectionId,
-            PARAM_KEY_IS_BOOKMARKED to if (isBookmarked) PARAM_VALUE_YES else PARAM_VALUE_NO,
-            PARAM_KEY_SOURCE to source
-        )
+    fun onCollectionBookmarkedStateChanged(collectionId: String, isBookmarked: Boolean, source: String) = track(
+        EVENT_COLLECTION_BOOKMARKED_STATE_CHANGED,
+        PARAM_KEY_COLLECTION_ID to collectionId,
+        PARAM_KEY_IS_BOOKMARKED to if (isBookmarked) PARAM_VALUE_YES else PARAM_VALUE_NO,
+        PARAM_KEY_SOURCE to source
+    )
 
-    fun onCollectionSortingModeUpdated(sortingMode: String) =
-        track(EVENT_COLLECTION_SORTING_MODE_UPDATED, PARAM_KEY_SORTING_MODE to sortingMode)
+    fun onCollectionSortingModeUpdated(sortingMode: String) = track(
+        EVENT_COLLECTION_SORTING_MODE_UPDATED,
+        PARAM_KEY_SORTING_MODE to sortingMode
+    )
 
-    fun onCollectionFilterToggled(filter: String, state: Boolean) =
-        track(EVENT_COLLECTION_FILTER_TOGGLED, PARAM_KEY_FILTER to filter, PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF)
+    fun onCollectionFilterToggled(filter: String, state: Boolean) = track(
+        EVENT_COLLECTION_FILTER_TOGGLED,
+        PARAM_KEY_FILTER to filter,
+        PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF
+    )
 
-    fun onLibrarySortingModeUpdated(sortingMode: String) =
-        track(EVENT_LIBRARY_SORTING_MODE_UPDATED, PARAM_KEY_SORTING_MODE to sortingMode)
+    fun onLibrarySortingModeUpdated(sortingMode: String) = track(
+        EVENT_LIBRARY_SORTING_MODE_UPDATED,
+        PARAM_KEY_SORTING_MODE to sortingMode
+    )
 
-    fun onLibraryFilterToggled(filter: String, state: Boolean) =
-        track(EVENT_LIBRARY_FILTER_TOGGLED, PARAM_KEY_FILTER to filter, PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF)
+    fun onLibraryFilterToggled(filter: String, state: Boolean) = track(
+        EVENT_LIBRARY_FILTER_TOGGLED,
+        PARAM_KEY_FILTER to filter,
+        PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF
+    )
+
+    fun onShuffleButtonPressed(source: String, songCount: Int) = track(
+        EVENT_SHUFFLE_BUTTON_PRESSED,
+        PARAM_KEY_SOURCE to source,
+        PARAM_KEY_SONG_COUNT to songCount.toString()
+    )
 
     private fun track(event: String, vararg arguments: Pair<String, String>) {
         if (preferenceDatabase.shouldShareUsageData) {
