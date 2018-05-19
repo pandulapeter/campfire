@@ -90,9 +90,13 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         }
         viewModel.downloadSongError.onEventTriggered(this) { song ->
             song?.let {
-                showSnackbar(
-                    message = mainActivity.getString(R.string.library_song_download_error, song.title),
-                    action = { viewModel.downloadSong(song) })
+                binding.root.post {
+                    if (isAdded) {
+                        showSnackbar(
+                            message = mainActivity.getString(R.string.library_song_download_error, song.title),
+                            action = { viewModel.downloadSong(song) })
+                    }
+                }
             }
         }
         viewModel.isLoading.onPropertyChanged(this) {
