@@ -143,11 +143,26 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
         when (menuItem.itemId) {
-            R.id.downloaded_only -> consumeAndUpdateBoolean(menuItem, { shouldShowDownloadedOnly = it }, { shouldShowDownloadedOnly })
-            R.id.show_explicit -> consumeAndUpdateBoolean(menuItem, { shouldShowExplicit = it }, { shouldShowExplicit })
-            R.id.sort_by_title -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.TITLE) { sortingMode = it }
-            R.id.sort_by_artist -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.ARTIST) { sortingMode = it }
-            R.id.sort_by_popularity -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.POPULARITY) { sortingMode = it }
+            R.id.downloaded_only -> consumeAndUpdateBoolean(menuItem, {
+                analyticsManager.onLibraryFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_DOWNLOADED_ONLY, it)
+                shouldShowDownloadedOnly = it
+            }, { shouldShowDownloadedOnly })
+            R.id.show_explicit -> consumeAndUpdateBoolean(menuItem, {
+                analyticsManager.onLibraryFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_SHOW_EXPLICIT, it)
+                shouldShowExplicit = it
+            }, { shouldShowExplicit })
+            R.id.sort_by_title -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.TITLE) {
+                analyticsManager.onLibrarySortingModeUpdated(AnalyticsManager.PARAM_VALUE_BY_TITLE)
+                sortingMode = it
+            }
+            R.id.sort_by_artist -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.ARTIST) {
+                analyticsManager.onLibrarySortingModeUpdated(AnalyticsManager.PARAM_VALUE_BY_ARTIST)
+                sortingMode = it
+            }
+            R.id.sort_by_popularity -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.POPULARITY) {
+                analyticsManager.onLibrarySortingModeUpdated(AnalyticsManager.PARAM_VALUE_BY_POPULARITY)
+                sortingMode = it
+            }
             else -> consumeAndUpdateLanguageFilter(menuItem, viewModel.languages.find { it.nameResource == menuItem.itemId }?.id ?: "")
         }
     }
@@ -168,6 +183,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     private fun consumeAndUpdateLanguageFilter(menuItem: MenuItem, languageId: String) = consume {
         viewModel.disabledLanguageFilters.run {
             viewModel.disabledLanguageFilters = toMutableSet().apply { if (contains(languageId)) remove(languageId) else add(languageId) }
+            analyticsManager.onLibraryFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_LANGUAGE + languageId, contains(languageId))
             (menuItem.actionView as? CompoundButton).updateCheckedStateWithDelay(contains(languageId))
         }
     }

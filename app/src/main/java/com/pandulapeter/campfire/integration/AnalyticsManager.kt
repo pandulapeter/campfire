@@ -20,6 +20,8 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_PLAYLIST_CREATED = "playlist_created"
         private const val EVENT_COLLECTION_SORTING_MODE_UPDATED = "collection_sorting_mode_updated"
         private const val EVENT_COLLECTION_FILTER_TOGGLED = "collection_filter_toggled"
+        private const val EVENT_LIBRARY_SORTING_MODE_UPDATED = "library_sorting_mode_updated"
+        private const val EVENT_LIBRARY_FILTER_TOGGLED = "library_filter_toggled"
 
         // Keys
         private const val PARAM_KEY_SCREEN = "screen"
@@ -53,9 +55,11 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         const val PARAM_VALUE_BY_TITLE = "by_title"
         const val PARAM_VALUE_BY_DATE = "by_date"
         const val PARAM_VALUE_BY_POPULARITY = "by_popularity"
+        const val PARAM_VALUE_BY_ARTIST = "by_artist"
         const val PARAM_VALUE_FILTER_BOOKMARKED_ONLY = "bookmarked_only"
         const val PARAM_VALUE_FILTER_SHOW_EXPLICIT = "show_explicit"
         const val PARAM_VALUE_FILTER_LANGUAGE = "language_"
+        const val PARAM_VALUE_FILTER_DOWNLOADED_ONLY = "downloaded_only"
         const val PARAM_VALUE_ON = "on"
         const val PARAM_VALUE_OFF = "off"
     }
@@ -100,6 +104,12 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
 
     fun onCollectionFilterToggled(filter: String, state: Boolean) =
         track(EVENT_COLLECTION_FILTER_TOGGLED, PARAM_KEY_FILTER to filter, PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF)
+
+    fun onLibrarySortingModeUpdated(sortingMode: String) =
+        track(EVENT_LIBRARY_SORTING_MODE_UPDATED, PARAM_KEY_SORTING_MODE to sortingMode)
+
+    fun onLibraryFilterToggled(filter: String, state: Boolean) =
+        track(EVENT_LIBRARY_FILTER_TOGGLED, PARAM_KEY_FILTER to filter, PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF)
 
     private fun track(event: String, vararg arguments: Pair<String, String>) {
         if (preferenceDatabase.shouldShareUsageData) {
