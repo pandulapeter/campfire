@@ -17,6 +17,15 @@ class SongParser(private val context: Context) {
             .replace(Regex("[ ][ ]+"), "") // Remove groups of multiple whitespaces within a single line
             .replace(Regex("(?:\\h*\\n){3,}"), "") // Remove lines consisting only of empty space
             .replace(Regex("[}][{]+"), "}\n{") // Ensure that consecutive section headers are separated by an empty line
+            .let {
+                var returnValue = it
+                Regex("[{]").findAll(returnValue, 1).forEach { result ->
+                    if (it[result.range.first - 1] != '\n') {
+                        returnValue = returnValue.substring(0, result.range.first) + "\n\n" + returnValue.substring(result.range.first, returnValue.length - 1)
+                    }
+                }
+                returnValue
+            }
                 ).replace(Regex("\\{(.*?)[}]"), {
             // Find the section headers
             val sectionType = SectionType.fromAbbreviation(it.value[1])
