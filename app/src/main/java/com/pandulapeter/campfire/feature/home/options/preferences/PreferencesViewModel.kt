@@ -7,6 +7,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.detail.page.parsing.Note
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
@@ -15,6 +16,7 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
+    private val analyticsManager by inject<AnalyticsManager>()
     val shouldShowChords = ObservableBoolean(preferenceDatabase.shouldShowChords)
     val shouldUseGermanNotation = ObservableBoolean(preferenceDatabase.shouldUseGermanNotation)
     val englishNotationExample = generateNotationExample(false)
@@ -31,7 +33,10 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
     val shouldShareUsageData = ObservableBoolean(preferenceDatabase.shouldShareUsageData)
 
     init {
-        shouldShowChords.onPropertyChanged { preferenceDatabase.shouldShowChords = it }
+        shouldShowChords.onPropertyChanged {
+            analyticsManager.onShouldShowChordsToggled(it, AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_PREFERENCES)
+            preferenceDatabase.shouldShowChords = it
+        }
         shouldUseGermanNotation.onPropertyChanged { preferenceDatabase.shouldUseGermanNotation = it }
         theme.onPropertyChanged {
             preferenceDatabase.theme = it.id

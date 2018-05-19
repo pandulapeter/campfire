@@ -271,15 +271,18 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = when (menuItem.itemId) {
-        R.id.transpose_higher -> consume { viewModel.songId.get()?.let { detailEventBus.notifyTranspositionChanged(it, 1) } }
-        R.id.transpose_lower -> consume { viewModel.songId.get()?.let { detailEventBus.notifyTranspositionChanged(it, -1) } }
         R.id.should_show_chords -> consumeAndUpdateBoolean(menuItem, {
+            analyticsManager.onShouldShowChordsToggled(it, AnalyticsManager.PARAM_VALUE_SCREEN_SONG_DETAIL)
             preferenceDatabase.shouldShowChords = it
             updateTransposeControls()
             detailEventBus.notifyShouldShowChordsChanged()
         }, { preferenceDatabase.shouldShowChords })
+        R.id.transpose_higher -> consume { viewModel.songId.get()?.let { detailEventBus.notifyTranspositionChanged(it, 1) } }
+        R.id.transpose_lower -> consume { viewModel.songId.get()?.let { detailEventBus.notifyTranspositionChanged(it, -1) } }
         R.id.play_in_youtube -> consumeAndCloseDrawer {
-            "${songs[arguments?.index ?: 0].title} - ${songs[arguments?.index ?: 0].artist}".let {
+            val song = songs[arguments?.index ?: 0]
+            analyticsManager.onPlayOriginalSelected(song.id)
+            "${song.title} - ${song.artist}".let {
                 try {
                     startActivity(getYouTubeIntent("com.lara.android.youtube", it))
                 } catch (_: ActivityNotFoundException) {
@@ -293,6 +296,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
         R.id.report -> consumeAndCloseDrawer {
             val song = songs[binding.viewPager.currentItem]
+            analyticsManager.onReportAProblemSelected(song.id)
             try {
                 startActivity(
                     Intent.createChooser(

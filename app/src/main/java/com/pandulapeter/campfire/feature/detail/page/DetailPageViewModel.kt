@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.feature.detail.DetailPageEventBus
 import com.pandulapeter.campfire.feature.detail.page.parsing.SongParser
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -28,6 +29,7 @@ class DetailPageViewModel(
     private val songDetailRepository by inject<SongDetailRepository>()
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private val detailPageEventBus by inject<DetailPageEventBus>()
+    private val analyticsManager by inject<AnalyticsManager>()
     private var rawText = ""
     val text = ObservableField<CharSequence>("")
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
@@ -47,6 +49,7 @@ class DetailPageViewModel(
                 transposition.set(modifiedValue)
             } else {
                 refreshText()
+                analyticsManager.onTranspositionChanged(song.id, modifiedValue)
                 preferenceDatabase.setTransposition(song.id, modifiedValue)
                 detailPageEventBus.notifyTranspositionChanged(song.id, modifiedValue)
             }

@@ -79,6 +79,7 @@ class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
             if (it == null) {
                 defaultToolbar.updateToolbarTitle(R.string.home_collections)
             } else {
+                analyticsManager.onCollectionDetailScreenOpened(it.id)
                 val songCount = it.songs?.size ?: 0
                 defaultToolbar.updateToolbarTitle(
                     it.title, if (songCount == 0) {

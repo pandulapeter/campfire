@@ -28,6 +28,11 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_LIBRARY_FILTER_TOGGLED = "library_filter_toggled"
         private const val EVENT_SHUFFLE_BUTTON_PRESSED = "shuffle_button_pressed"
         private const val EVENT_SONG_PLAYLIST_STATE_CHANGED = "song_playlist_state_changed"
+        private const val EVENT_AUTO_SCROLL_TOGGLED = "auto_scroll_toggled"
+        private const val EVENT_PREFERENCES_SHOULD_SHOW_CHORDS_TOGGLED = "preferences_should_show_chords_toggled"
+        private const val EVENT_TRANSPOSITION_CHANGED = "transposition_changed"
+        private const val EVENT_PLAY_ORIGINAL_SELECTED = "play_original_selected"
+        private const val EVENT_REPORT_A_PROBLEM_SELECTED = "report_a_problem_selected"
 
         // Keys
         private const val PARAM_KEY_TIMESTAMP = "timestamp"
@@ -49,6 +54,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_STATE = "state"
         private const val PARAM_KEY_IS_BOOKMARKED = "is_bookmarked"
         private const val PARAM_KEY_PLAYLIST_COUNT = "playlist_count"
+        private const val PARAM_KEY_TRANSPOSITION = "transposition"
 
         // Values
         const val PARAM_VALUE_SCREEN_LIBRARY = "songs"
@@ -191,6 +197,34 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_PLAYLIST_COUNT to playlistCount.toString(),
         PARAM_KEY_SOURCE to source,
         PARAM_KEY_IS_FROM_BOTTOM_SHEET to if (isFromBottomSheet) PARAM_VALUE_YES else PARAM_VALUE_NO
+    )
+
+    //TODO: Track auto scroll controls visibility changes.
+    fun onAutoScrollToggled(isScrolling: Boolean) = track(
+        EVENT_AUTO_SCROLL_TOGGLED,
+        PARAM_KEY_STATE to if (isScrolling) PARAM_VALUE_ON else PARAM_VALUE_OFF
+    )
+
+    fun onShouldShowChordsToggled(shouldShowChords: Boolean, source: String) = track(
+        EVENT_PREFERENCES_SHOULD_SHOW_CHORDS_TOGGLED,
+        PARAM_KEY_STATE to if (shouldShowChords) PARAM_VALUE_ON else PARAM_VALUE_OFF,
+        PARAM_KEY_SOURCE to source
+    )
+
+    fun onTranspositionChanged(songId: String, transposition: Int) = track(
+        EVENT_TRANSPOSITION_CHANGED,
+        PARAM_KEY_SONG_ID to songId,
+        PARAM_KEY_TRANSPOSITION to transposition.toString()
+    )
+
+    fun onPlayOriginalSelected(songId: String) = track(
+        EVENT_PLAY_ORIGINAL_SELECTED,
+        PARAM_KEY_SONG_ID to songId
+    )
+
+    fun onReportAProblemSelected(songId: String) = track(
+        EVENT_REPORT_A_PROBLEM_SELECTED,
+        PARAM_KEY_SONG_ID to songId
     )
 
     private fun track(event: String, vararg arguments: Pair<String, String>) {

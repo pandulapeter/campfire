@@ -89,7 +89,6 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             itemClickListener = { position, clickedView, image ->
                 (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.collection?.let {
                     viewModel.collectionRepository.onCollectionOpened(it.id)
-                    analyticsManager.onCollectionDetailScreenOpened(it.id)
                     mainActivity.openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
                 }
             }
