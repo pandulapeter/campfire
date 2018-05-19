@@ -552,7 +552,18 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             SCREEN_COLLECTIONS -> openCollectionsScreen()
             else -> openPlaylistScreen(intent.screenToOpen)
         }
-        analyticsManager.onAppOpened(screen, isFromAppShortcut)
+        analyticsManager.onAppOpened(
+            screen,
+            isFromAppShortcut,
+            when (PreferencesViewModel.Theme.fromId(preferenceDatabase.theme)) {
+                PreferencesViewModel.Theme.AUTOMATIC -> AnalyticsManager.PARAM_VALUE_AUTOMATIC
+                PreferencesViewModel.Theme.LIGHT -> AnalyticsManager.PARAM_VALUE_LIGHT
+                PreferencesViewModel.Theme.DARK -> AnalyticsManager.PARAM_VALUE_DARK
+            },
+            PreferencesViewModel.Language.fromId(preferenceDatabase.language).let {
+                if (it == PreferencesViewModel.Language.AUTOMATIC) AnalyticsManager.PARAM_VALUE_AUTOMATIC else it.id
+            }
+        )
     }
 
     fun openLibraryScreen(): String {

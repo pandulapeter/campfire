@@ -31,6 +31,8 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         // Keys
         private const val PARAM_KEY_TIMESTAMP = "timestamp"
         private const val PARAM_KEY_SCREEN = "screen"
+        private const val PARAM_KEY_THEME = "theme"
+        private const val PARAM_KEY_LANGUAGE = "language"
         private const val PARAM_KEY_FROM_APP_SHORTCUT = "from_app_shortcut"
         private const val PARAM_KEY_COLLECTION_ID = "collection_id"
         private const val PARAM_KEY_SONG_ID = "song_id"
@@ -56,6 +58,9 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         const val PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS = "manage_downloads"
         const val PARAM_VALUE_SCREEN_COLLECTION_DETAIL = "collection_detail"
         const val PARAM_VALUE_SCREEN_SONG_DETAIL = "song_detail"
+        const val PARAM_VALUE_AUTOMATIC = "automatic"
+        const val PARAM_VALUE_LIGHT = "light"
+        const val PARAM_VALUE_DARK = "dark"
         const val PARAM_VALUE_DRAWER = "drawer"
         const val PARAM_VALUE_BOTTOM_SHEET = "bottom_sheet"
         const val PARAM_VALUE_FLOATING_ACTION_BUTTON = "floating_action_button"
@@ -84,10 +89,12 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_TIMESTAMP to SimpleDateFormat("yyyy.MM.dd', 'HH:mm:ss z", Locale.ENGLISH).format(Date())
     )
 
-    fun onAppOpened(screen: String, fromAppShortcut: Boolean) = track(
+    fun onAppOpened(screen: String, fromAppShortcut: Boolean, theme: String, language: String) = track(
         EVENT_APP_OPENED,
         PARAM_KEY_SCREEN to screen,
-        PARAM_KEY_FROM_APP_SHORTCUT to fromAppShortcut.toString()
+        PARAM_KEY_FROM_APP_SHORTCUT to if (fromAppShortcut) PARAM_VALUE_YES else PARAM_VALUE_NO,
+        PARAM_KEY_THEME to theme,
+        PARAM_KEY_LANGUAGE to language
     )
 
     fun onTopLevelScreenOpened(screen: String) = track(
