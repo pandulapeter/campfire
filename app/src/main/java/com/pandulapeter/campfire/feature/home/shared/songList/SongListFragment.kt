@@ -48,12 +48,13 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         super.onViewCreated(view, savedInstanceState)
         viewModel.adapter.run {
             itemClickListener = { position, clickedView ->
-                if (linearLayoutManager.isScrollEnabled) {
+                if (linearLayoutManager.isScrollEnabled && !mainActivity.isUiBlocked) {
                     (items[position] as? SongListItemViewModel.SongViewModel)?.let {
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
                             viewModel.isDetailScreenOpen = true
                         }
+                        mainActivity.isUiBlocked = true
                         onDetailScreenOpened()
                         val shouldSendMultipleSongs = viewModel is PlaylistViewModel || viewModel is CollectionDetailViewModel
                         mainActivity.openDetailScreen(
@@ -67,12 +68,12 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 }
             }
             downloadActionClickListener = { position ->
-                if (linearLayoutManager.isScrollEnabled) {
+                if (linearLayoutManager.isScrollEnabled && !mainActivity.isUiBlocked) {
                     (items[position] as? SongListItemViewModel.SongViewModel)?.let { viewModel.downloadSong(it.song) }
                 }
             }
             playlistActionClickListener = { position ->
-                if (linearLayoutManager.isScrollEnabled) {
+                if (linearLayoutManager.isScrollEnabled && !mainActivity.isUiBlocked) {
                     (items[position] as? SongListItemViewModel.SongViewModel)?.let {
                         if (viewModel.areThereMoreThanOnePlaylists()) {
                             PlaylistChooserBottomSheetFragment.show(childFragmentManager, it.song.id, viewModel.screenName)

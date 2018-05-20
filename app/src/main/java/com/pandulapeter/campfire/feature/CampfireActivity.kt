@@ -108,6 +108,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private var newPlaylistId = 0
     private var startTime = 0L
     private val isBackStackEmpty get() = supportFragmentManager.backStackEntryCount == 0
+    var isUiBlocked = false
     var lastSongId: String = ""
     var lastCollectionId: String = ""
     val autoScrollControl get() = binding.autoScrollControl
@@ -195,11 +196,13 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         // Initialize the app bar.
         val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
         binding.toolbarMainButton.setOnClickListener {
-            if (isBackStackEmpty) {
-                hideKeyboard(currentFocus)
-                binding.drawerLayout.openDrawer(Gravity.START)
-            } else {
-                supportFragmentManager.popBackStack()
+            if (!isUiBlocked) {
+                if (isBackStackEmpty) {
+                    hideKeyboard(currentFocus)
+                    binding.drawerLayout.openDrawer(Gravity.START)
+                } else {
+                    supportFragmentManager.popBackStack()
+                }
             }
         }
         binding.appBarLayout.addOnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) }
@@ -259,7 +262,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
         // Initialize the floating action button.
         binding.floatingActionButton.setOnClickListener {
-            if (binding.autoScrollControl.tag == null && binding.floatingActionButton.isShown && it.tag == null) {
+            if (binding.autoScrollControl.tag == null && binding.floatingActionButton.isShown && it.tag == null && !isUiBlocked) {
                 currentFragment?.onFloatingActionButtonPressed()
             }
         }
@@ -298,6 +301,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         if (currentFocus is EditText) {
             binding.drawerLayout.run { post { closeDrawers() } }
         }
+        isUiBlocked = false
     }
 
     override fun onPause() {
@@ -306,29 +310,31 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     override fun onBackPressed() {
-        if (binding.drawerLayout.isDrawerOpen(Gravity.START)) {
-            binding.drawerLayout.closeDrawer(Gravity.START)
-        } else {
-            if (binding.drawerLayout.isDrawerOpen(Gravity.END)) {
-                binding.drawerLayout.closeDrawer(Gravity.END)
+        if (!isUiBlocked) {
+            if (binding.drawerLayout.isDrawerOpen(Gravity.START)) {
+                binding.drawerLayout.closeDrawer(Gravity.START)
             } else {
-                val fragment = currentFragment
-                if (fragment == null || !fragment.onBackPressed()) {
-                    if (isBackStackEmpty) {
-                        if (preferenceDatabase.shouldShowExitConfirmation) {
-                            AlertDialogFragment.show(
-                                id = DIALOG_ID_EXIT_CONFIRMATION,
-                                fragmentManager = supportFragmentManager,
-                                title = R.string.are_you_sure,
-                                message = R.string.home_exit_confirmation_message,
-                                positiveButton = R.string.home_exit_confirmation_close,
-                                negativeButton = R.string.cancel
-                            )
+                if (binding.drawerLayout.isDrawerOpen(Gravity.END)) {
+                    binding.drawerLayout.closeDrawer(Gravity.END)
+                } else {
+                    val fragment = currentFragment
+                    if (fragment == null || !fragment.onBackPressed()) {
+                        if (isBackStackEmpty) {
+                            if (preferenceDatabase.shouldShowExitConfirmation) {
+                                AlertDialogFragment.show(
+                                    id = DIALOG_ID_EXIT_CONFIRMATION,
+                                    fragmentManager = supportFragmentManager,
+                                    title = R.string.are_you_sure,
+                                    message = R.string.home_exit_confirmation_message,
+                                    positiveButton = R.string.home_exit_confirmation_close,
+                                    negativeButton = R.string.cancel
+                                )
+                            } else {
+                                onPositiveButtonSelected(DIALOG_ID_EXIT_CONFIRMATION)
+                            }
                         } else {
-                            onPositiveButtonSelected(DIALOG_ID_EXIT_CONFIRMATION)
+                            super.onBackPressed()
                         }
-                    } else {
-                        super.onBackPressed()
                     }
                 }
             }

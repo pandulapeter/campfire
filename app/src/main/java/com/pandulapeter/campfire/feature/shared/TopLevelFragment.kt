@@ -61,7 +61,7 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     protected inline fun Context.createToolbarButton(@DrawableRes drawableRes: Int, crossinline onClickListener: (View) -> Unit) = ToolbarButton(this).apply {
         setImageDrawable(drawable(drawableRes))
-        setOnClickListener { onClickListener(it) }
+        setOnClickListener { if (!mainActivity.isUiBlocked) onClickListener(it) }
     }
 
     protected fun TextView.updateToolbarTitle(@StringRes titleRes: Int, subtitle: String? = null) = updateToolbarTitle(context.getString(titleRes), subtitle)

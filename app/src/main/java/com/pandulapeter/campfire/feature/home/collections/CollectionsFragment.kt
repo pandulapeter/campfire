@@ -88,16 +88,19 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         }
         viewModel.adapter.apply {
             itemClickListener = { position, clickedView, image ->
-                if (linearLayoutManager.isScrollEnabled) {
+                if (linearLayoutManager.isScrollEnabled && !mainActivity.isUiBlocked) {
                     (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.collection?.let {
-                        linearLayoutManager.isScrollEnabled = false
+                        if (items.size > 1) {
+                            linearLayoutManager.isScrollEnabled = false
+                        }
+                        mainActivity.isUiBlocked = true
                         viewModel.collectionRepository.onCollectionOpened(it.id)
                         mainActivity.openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
                     }
                 }
             }
             bookmarkActionClickListener = { position ->
-                if (linearLayoutManager.isScrollEnabled) {
+                if (linearLayoutManager.isScrollEnabled && !mainActivity.isUiBlocked) {
                     viewModel.adapter.items[position].let {
                         if (it is CollectionListItemViewModel.CollectionViewModel) {
                             viewModel.onBookmarkClicked(position, it.collection)
@@ -152,8 +155,6 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         super.onResume()
         viewModel.restoreToolbarButtons()
     }
-
-    override fun onBackPressed() = !linearLayoutManager.isScrollEnabled
 
     override fun updateUI() {
         super.updateUI()
