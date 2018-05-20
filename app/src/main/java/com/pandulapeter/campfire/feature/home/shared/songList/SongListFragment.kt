@@ -147,6 +147,8 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         }
     }
 
+    override fun onBackPressed() = !linearLayoutManager.isScrollEnabled
+
     override fun updateUI() {
         super.updateUI()
         linearLayoutManager.isScrollEnabled = true

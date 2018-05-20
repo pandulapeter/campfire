@@ -153,6 +153,8 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         viewModel.restoreToolbarButtons()
     }
 
+    override fun onBackPressed() = !linearLayoutManager.isScrollEnabled
+
     override fun updateUI() {
         super.updateUI()
         linearLayoutManager.isScrollEnabled = true

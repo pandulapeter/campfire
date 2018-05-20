@@ -16,8 +16,8 @@ class DisableScrollLinearLayoutManager(context: Context) : LinearLayoutManager(c
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
-        super.onRestoreInstanceState((state as State).superState)
-        isScrollEnabled = state.isScrollEnabled
+        super.onRestoreInstanceState((state as? State)?.superState ?: state)
+        (state as? State)?.let { isScrollEnabled = it.isScrollEnabled }
     }
 
     @Parcelize

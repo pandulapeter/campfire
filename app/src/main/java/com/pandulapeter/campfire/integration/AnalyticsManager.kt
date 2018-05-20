@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.integration
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import com.crashlytics.android.Crashlytics
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.data.networking.NetworkManager
@@ -101,12 +102,12 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         firebaseAnalytics.setAnalyticsCollectionEnabled(preferenceDatabase.shouldShareUsageData)
     }
 
-    fun onConsentGiven() = track(
+    fun onConsentGiven() = trackAnalyticsEvent(
         EVENT_CONSENT_GIVEN,
         PARAM_KEY_TIMESTAMP to SimpleDateFormat("yyyy.MM.dd', 'HH:mm:ss z", Locale.ENGLISH).format(Date())
     )
 
-    fun onAppOpened(screen: String, fromAppShortcut: Boolean, theme: String, language: String) = track(
+    fun onAppOpened(screen: String, fromAppShortcut: Boolean, theme: String, language: String) = trackAnalyticsEvent(
         EVENT_APP_OPENED,
         PARAM_KEY_VERSION to BuildConfig.VERSION_NAME,
         PARAM_KEY_SCREEN to screen,
@@ -115,7 +116,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_LANGUAGE to language
     )
 
-    fun onTopLevelScreenOpened(screen: String) = track(
+    fun onTopLevelScreenOpened(screen: String) = trackAnalyticsEvent(
         EVENT_SCREEN_OPENED,
         PARAM_KEY_SCREEN to screen
     )
@@ -123,7 +124,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
     fun onCollectionDetailScreenOpened(collectionId: String) {
         if (preferenceDatabase.shouldShareUsageData) {
             networkManager.service.openCollection(collectionId).enqueueCall({}, {})
-            track(
+            trackAnalyticsEvent(
                 EVENT_SCREEN_OPENED,
                 PARAM_KEY_SCREEN to PARAM_VALUE_SCREEN_COLLECTION_DETAIL,
                 PARAM_KEY_COLLECTION_ID to collectionId
@@ -131,13 +132,13 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         }
     }
 
-    fun onOptionsScreenOpened(tab: String) = track(
+    fun onOptionsScreenOpened(tab: String) = trackAnalyticsEvent(
         EVENT_SCREEN_OPENED,
         PARAM_KEY_SCREEN to PARAM_VALUE_SCREEN_OPTIONS,
         PARAM_KEY_TAB to tab
     )
 
-    fun onSongDetailScreenOpened(numberOfSongs: Int) = track(
+    fun onSongDetailScreenOpened(numberOfSongs: Int) = trackAnalyticsEvent(
         EVENT_SCREEN_OPENED,
         PARAM_KEY_SCREEN to PARAM_VALUE_SCREEN_SONG_DETAIL,
         PARAM_KEY_SONG_COUNT to numberOfSongs.toString()
@@ -146,63 +147,63 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
     fun onSongVisualized(songId: String) {
         if (preferenceDatabase.shouldShareUsageData) {
             networkManager.service.openSong(songId).enqueueCall({}, {})
-            track(
+            trackAnalyticsEvent(
                 EVENT_SONG_VISUALIZED,
                 PARAM_KEY_SONG_ID to songId
             )
         }
     }
 
-    fun onPlaylistCreated(title: String, source: String, totalPlaylistCount: Int) = track(
+    fun onPlaylistCreated(title: String, source: String, totalPlaylistCount: Int) = trackAnalyticsEvent(
         EVENT_PLAYLIST_CREATED,
         PARAM_KEY_PLAYLIST_TITLE to title,
         PARAM_KEY_SOURCE to source,
         PARAM_KEY_TOTAL_PLAYLIST_COUNT to totalPlaylistCount.toString()
     )
 
-    fun onCollectionBookmarkedStateChanged(collectionId: String, isBookmarked: Boolean, source: String) = track(
+    fun onCollectionBookmarkedStateChanged(collectionId: String, isBookmarked: Boolean, source: String) = trackAnalyticsEvent(
         EVENT_COLLECTION_BOOKMARKED_STATE_CHANGED,
         PARAM_KEY_COLLECTION_ID to collectionId,
         PARAM_KEY_IS_BOOKMARKED to if (isBookmarked) PARAM_VALUE_YES else PARAM_VALUE_NO,
         PARAM_KEY_SOURCE to source
     )
 
-    fun onCollectionSortingModeUpdated(sortingMode: String) = track(
+    fun onCollectionSortingModeUpdated(sortingMode: String) = trackAnalyticsEvent(
         EVENT_COLLECTION_SORTING_MODE_UPDATED,
         PARAM_KEY_SORTING_MODE to sortingMode
     )
 
-    fun onCollectionFilterToggled(filter: String, state: Boolean) = track(
+    fun onCollectionFilterToggled(filter: String, state: Boolean) = trackAnalyticsEvent(
         EVENT_COLLECTION_FILTER_TOGGLED,
         PARAM_KEY_FILTER to filter,
         PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF
     )
 
-    fun onLibrarySortingModeUpdated(sortingMode: String) = track(
+    fun onLibrarySortingModeUpdated(sortingMode: String) = trackAnalyticsEvent(
         EVENT_LIBRARY_SORTING_MODE_UPDATED,
         PARAM_KEY_SORTING_MODE to sortingMode
     )
 
-    fun onLibraryFilterToggled(filter: String, state: Boolean) = track(
+    fun onLibraryFilterToggled(filter: String, state: Boolean) = trackAnalyticsEvent(
         EVENT_LIBRARY_FILTER_TOGGLED,
         PARAM_KEY_FILTER to filter,
         PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF
     )
 
-    fun onLibrarySearchQueryChanged(query: String, shouldSearchInArtists: Boolean, shouldSearchInTitles: Boolean) = track(
+    fun onLibrarySearchQueryChanged(query: String, shouldSearchInArtists: Boolean, shouldSearchInTitles: Boolean) = trackAnalyticsEvent(
         EVENT_LIBRARY_SEARCH_QUERY_CHANGED,
         PARAM_KEY_QUERY to query,
         PARAM_KEY_SEARCH_IN_ARTISTS to if (shouldSearchInArtists) PARAM_VALUE_ON else PARAM_VALUE_OFF,
         PARAM_KEY_SEARCH_IN_TITLES to if (shouldSearchInTitles) PARAM_VALUE_ON else PARAM_VALUE_OFF
     )
 
-    fun onShuffleButtonPressed(source: String, songCount: Int) = track(
+    fun onShuffleButtonPressed(source: String, songCount: Int) = trackAnalyticsEvent(
         EVENT_SHUFFLE_BUTTON_PRESSED,
         PARAM_KEY_SOURCE to source,
         PARAM_KEY_SONG_COUNT to songCount.toString()
     )
 
-    fun onSongPlaylistStateChanged(songId: String, playlistCount: Int, source: String, isFromBottomSheet: Boolean) = track(
+    fun onSongPlaylistStateChanged(songId: String, playlistCount: Int, source: String, isFromBottomSheet: Boolean) = trackAnalyticsEvent(
         EVENT_SONG_PLAYLIST_STATE_CHANGED,
         PARAM_KEY_SONG_ID to songId,
         PARAM_KEY_PLAYLIST_COUNT to playlistCount.toString(),
@@ -211,34 +212,40 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
     )
 
     //TODO: Track auto scroll controls visibility changes.
-    fun onAutoScrollToggled(isScrolling: Boolean) = track(
+    fun onAutoScrollToggled(isScrolling: Boolean) = trackAnalyticsEvent(
         EVENT_AUTO_SCROLL_TOGGLED,
         PARAM_KEY_STATE to if (isScrolling) PARAM_VALUE_ON else PARAM_VALUE_OFF
     )
 
-    fun onShouldShowChordsToggled(shouldShowChords: Boolean, source: String) = track(
+    fun onShouldShowChordsToggled(shouldShowChords: Boolean, source: String) = trackAnalyticsEvent(
         EVENT_PREFERENCES_SHOULD_SHOW_CHORDS_TOGGLED,
         PARAM_KEY_STATE to if (shouldShowChords) PARAM_VALUE_ON else PARAM_VALUE_OFF,
         PARAM_KEY_SOURCE to source
     )
 
-    fun onTranspositionChanged(songId: String, transposition: Int) = track(
+    fun onTranspositionChanged(songId: String, transposition: Int) = trackAnalyticsEvent(
         EVENT_TRANSPOSITION_CHANGED,
         PARAM_KEY_SONG_ID to songId,
         PARAM_KEY_TRANSPOSITION to transposition.toString()
     )
 
-    fun onPlayOriginalSelected(songId: String) = track(
+    fun onPlayOriginalSelected(songId: String) = trackAnalyticsEvent(
         EVENT_PLAY_ORIGINAL_SELECTED,
         PARAM_KEY_SONG_ID to songId
     )
 
-    fun onReportAProblemSelected(songId: String) = track(
+    fun onReportAProblemSelected(songId: String) = trackAnalyticsEvent(
         EVENT_REPORT_A_PROBLEM_SELECTED,
         PARAM_KEY_SONG_ID to songId
     )
 
-    private fun track(event: String, vararg arguments: Pair<String, String>) {
+    fun trackNonFatalError(throwable: Throwable) {
+        if (preferenceDatabase.shouldShareUsageData && BuildConfig.BUILD_TYPE != "debug") {
+            Crashlytics.logException(throwable)
+        }
+    }
+
+    private fun trackAnalyticsEvent(event: String, vararg arguments: Pair<String, String>) {
         if (preferenceDatabase.shouldShareUsageData) {
             @Suppress("ConstantConditionIf")
             if (BuildConfig.BUILD_TYPE == "debug") {

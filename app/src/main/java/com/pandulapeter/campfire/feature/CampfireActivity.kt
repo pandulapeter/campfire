@@ -438,7 +438,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             } else {
                 //TODO: Properly handle this case.
                 currentFragment?.showSnackbar(R.string.known_bug_1)
-                Crashlytics.logException(IllegalStateException("Interrupted transition caused the toolbar to disappear."))
+                analyticsManager.trackNonFatalError(IllegalStateException("Interrupted transition caused the toolbar to disappear."))
             }
         }
         if (binding.toolbarTitleContainer.layoutTransition == null) {
