@@ -14,11 +14,12 @@
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipChildren="false"
         android:clipToPadding="false"
         android:paddingBottom="@dimen/list_bottom_margin"
-        android:clipChildren="false"
         android:paddingTop="@dimen/content_padding"
         app:adapter="@{viewModel.adapter}"
+        app:hasFixedSize="@{true}"
         app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
 
 </layout>

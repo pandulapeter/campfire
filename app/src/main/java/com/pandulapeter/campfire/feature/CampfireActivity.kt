@@ -90,7 +90,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private var Bundle.currentPlaylistId by BundleArgumentDelegate.String("currentPlaylistId")
     private var Bundle.currentCollectionId by BundleArgumentDelegate.String("currentCollectionId")
     private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
-    private var Bundle.lastColelctionId by BundleArgumentDelegate.String("lastCollectionId")
+    private var Bundle.lastCollectionId by BundleArgumentDelegate.String("lastCollectionId")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
     private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? TopLevelFragment<*, *>?
     private val drawableMenuToBack by lazy { animatedDrawable(R.drawable.avd_menu_to_back_24dp) }
@@ -272,7 +272,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             currentPlaylistId = savedInstanceState.currentPlaylistId
             currentCollectionId = savedInstanceState.currentCollectionId
             lastSongId = savedInstanceState.lastSongId
-            lastCollectionId = savedInstanceState.lastColelctionId
+            lastCollectionId = savedInstanceState.lastCollectionId
         }
         binding.drawerLayout.setDrawerLockMode(
             if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
@@ -341,7 +341,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         outState?.currentPlaylistId = playlistIdMap[currentScreenId] ?: ""
         outState?.currentCollectionId = currentCollectionId
         outState?.lastSongId = lastSongId
-        outState?.lastColelctionId = lastCollectionId
+        outState?.lastCollectionId = lastCollectionId
     }
 
     override fun onPositiveButtonSelected(id: Int) {
