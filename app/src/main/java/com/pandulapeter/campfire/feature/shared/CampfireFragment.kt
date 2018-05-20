@@ -24,6 +24,7 @@ import org.koin.android.ext.android.inject
 abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : Fragment(), Transition.TransitionListener {
 
     companion object {
+        private const val SNACKBAR_SHORT_DURATION = 4000
         private const val SNACKBAR_LONG_DURATION = 7000
     }
 
@@ -95,7 +96,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     protected fun showSnackbar(message: String, @StringRes actionText: Int = R.string.try_again, action: (() -> Unit)? = null, dismissAction: (() -> Unit)? = null) {
         snackbar = mainActivity.snackbarRoot
-            .makeSnackbar(message, if (action == null && dismissAction == null) Snackbar.LENGTH_SHORT else SNACKBAR_LONG_DURATION, dismissAction)
+            .makeSnackbar(message, if (action == null && dismissAction == null) SNACKBAR_SHORT_DURATION else SNACKBAR_LONG_DURATION, dismissAction)
             .apply { action?.let { setAction(actionText, { action() }) } }
         snackbar?.show()
     }

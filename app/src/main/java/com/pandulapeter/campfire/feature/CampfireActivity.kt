@@ -429,12 +429,16 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         if (toolbar != oldView) {
             oldView?.visibleOrGone = false
             binding.toolbarTitleContainer.removeView(oldView)
-            if (toolbar.parent == null) { //TODO: The else branch needs to be handled.
+            if (toolbar.parent == null) {
                 binding.toolbarTitleContainer.addView(
                     toolbar.apply { visibleOrGone = oldView?.id == R.id.default_toolbar },
                     FrameLayout.LayoutParams(if (width == 0) ViewGroup.LayoutParams.MATCH_PARENT else width, ViewGroup.LayoutParams.MATCH_PARENT).apply {
                         gravity = Gravity.CENTER_VERTICAL
                     })
+            } else {
+                //TODO: Properly handle this case.
+                currentFragment?.showSnackbar(R.string.known_bug_1)
+                Crashlytics.logException(IllegalStateException("Interrupted transition caused the toolbar to disappear."))
             }
         }
         if (binding.toolbarTitleContainer.layoutTransition == null) {

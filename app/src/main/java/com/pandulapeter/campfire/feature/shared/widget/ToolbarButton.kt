@@ -52,7 +52,7 @@ class ToolbarButton @JvmOverloads constructor(context: Context, attrs: Attribute
             bounds.top -= extraTouchArea
             bounds.right += extraTouchArea
             bounds.bottom += extraTouchArea
-            //TODO: Does not seem to be working for all children.
+            //TODO: Does not seem to be working.
             parent.touchDelegate = (parent.touchDelegate as? TouchDelegateComposite) ?: TouchDelegateComposite(this).apply {
                 addDelegate(TouchDelegate(bounds, this@ToolbarButton))
             }

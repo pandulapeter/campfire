@@ -45,7 +45,6 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
         language.onPropertyChanged {
             preferenceDatabase.language = it.id
             updateLanguageDescription()
-            //TODO: Change the UI language
         }
         shouldShowExitConfirmation.onPropertyChanged { preferenceDatabase.shouldShowExitConfirmation = it }
         shouldShareUsageData.onPropertyChanged { preferenceDatabase.shouldShareUsageData = it }
