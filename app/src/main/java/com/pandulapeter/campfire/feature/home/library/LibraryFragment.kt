@@ -80,6 +80,8 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
     private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
+    private var Bundle.isEraseButtonVisible by BundleArgumentDelegate.Boolean("isEraseButtonVisible")
+    private var Bundle.isEraseButtonEnabled by BundleArgumentDelegate.Boolean("isEraseButtonEnabled")
     private val searchToggle: ToolbarButton by lazy {
         getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) {
             viewModel.toggleTextInputVisibility()
@@ -112,6 +114,11 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_LIBRARY)
+        viewModel.shouldShowEraseButton.onPropertyChanged { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
+        viewModel.shouldEnableEraseButton.onPropertyChanged {
+            eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
+            eraseButton.isEnabled = it
+        }
         savedInstanceState?.let {
             searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
             if (it.isTextInputVisible) {
@@ -126,11 +133,8 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             viewModel.placeholderText.set(savedInstanceState.placeholderText)
             viewModel.buttonText.set(savedInstanceState.buttonText)
             viewModel.buttonIcon.set(savedInstanceState.buttonIcon)
-        }
-        viewModel.shouldShowEraseButton.onPropertyChanged { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
-        viewModel.shouldEnableEraseButton.onPropertyChanged {
-            eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
-            eraseButton.isEnabled = it
+            viewModel.shouldShowEraseButton.set(savedInstanceState.isEraseButtonVisible)
+            viewModel.shouldEnableEraseButton.set(savedInstanceState.isEraseButtonEnabled)
         }
         viewModel.toolbarTextInputView.textInput.requestFocus()
         searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
@@ -164,6 +168,8 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
         placeholderText = viewModel.placeholderText.get()
         buttonText = viewModel.buttonText.get()
         buttonIcon = viewModel.buttonIcon.get()
+        isEraseButtonVisible = viewModel.shouldShowEraseButton.get()
+        isEraseButtonEnabled = viewModel.shouldEnableEraseButton.get()
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
