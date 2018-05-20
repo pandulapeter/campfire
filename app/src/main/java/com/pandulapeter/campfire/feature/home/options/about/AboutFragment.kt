@@ -11,7 +11,7 @@ import com.pandulapeter.campfire.util.onEventTriggered
 class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewModel>(R.layout.fragment_options_about) {
 
     override val viewModel by lazy {
-        AboutViewModel().apply {
+        AboutViewModel { getCampfireActivity().isUiBlocked }.apply {
             shouldShowErrorShowSnackbar.onEventTriggered(this@AboutFragment) { showSnackbar(R.string.options_about_error) }
             shouldShowWorkInProgressSnackbar.onEventTriggered(this@AboutFragment) { showSnackbar(R.string.options_about_no_in_app_purchase) }
             //TODO: Easter Egg.
@@ -24,6 +24,7 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
                     showSnackbar(R.string.options_about_no_easter_egg)
                 }
             }
+            shouldBlockUi.onEventTriggered { getCampfireActivity().isUiBlocked = true }
         }
     }
     private val scale by lazy {

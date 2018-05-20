@@ -10,7 +10,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.util.color
 
-class AboutViewModel : CampfireViewModel() {
+class AboutViewModel(private val isUiBlocked: () -> Boolean) : CampfireViewModel() {
 
     companion object {
         private const val PLAY_STORE_URL = "market://details?id=com.pandulapeter.campfire"
@@ -24,6 +24,7 @@ class AboutViewModel : CampfireViewModel() {
     val shouldShowErrorShowSnackbar = ObservableBoolean()
     val shouldShowNoEasterEggSnackbar = ObservableBoolean()
     val shouldShowWorkInProgressSnackbar = ObservableBoolean()
+    val shouldBlockUi = ObservableBoolean()
 
     fun onLogoClicked() = shouldShowNoEasterEggSnackbar.set(true)
 
@@ -60,17 +61,25 @@ class AboutViewModel : CampfireViewModel() {
     fun onLicensesClicked(context: Context) = context.openInCustomTab(OPEN_SOURCE_LICENSES_URL)
 
     private fun Context.tryToOpenIntent(intent: Intent) {
-        try {
-            startActivity(intent)
-        } catch (exception: ActivityNotFoundException) {
-            shouldShowErrorShowSnackbar.set(true)
+        if (!isUiBlocked()) {
+            try {
+                startActivity(intent)
+                shouldBlockUi.set(true)
+            } catch (exception: ActivityNotFoundException) {
+                shouldShowErrorShowSnackbar.set(true)
+            }
         }
     }
 
-    private fun Context.openInCustomTab(url: String) = CustomTabsIntent.Builder()
-        .setToolbarColor(color(R.color.accent))
-        .build()
-        .launchUrl(this, Uri.parse(url))
+    private fun Context.openInCustomTab(url: String) {
+        if (!isUiBlocked()) {
+            shouldBlockUi.set(true)
+            CustomTabsIntent.Builder()
+                .setToolbarColor(color(R.color.accent))
+                .build()
+                .launchUrl(this, Uri.parse(url))
+        }
+    }
 
     private fun String.toUrlIntent() = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(this@toUrlIntent) }
 }
