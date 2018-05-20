@@ -19,19 +19,29 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
 
     override val viewModel by lazy {
         PreferencesViewModel(getCampfireActivity()).apply {
-            shouldShowThemeSelector.onEventTriggered { theme.get()?.let { ThemeSelectorBottomSheetFragment.show(childFragmentManager, it.id) } }
-            shouldShowLanguageSelector.onEventTriggered { language.get()?.let { LanguageSelectorBottomSheetFragment.show(childFragmentManager, it.id) } }
+            shouldShowThemeSelector.onEventTriggered {
+                if (!getCampfireActivity().isUiBlocked) {
+                    theme.get()?.let { ThemeSelectorBottomSheetFragment.show(childFragmentManager, it.id) }
+                }
+            }
+            shouldShowLanguageSelector.onEventTriggered {
+                if (!getCampfireActivity().isUiBlocked) {
+                    language.get()?.let { LanguageSelectorBottomSheetFragment.show(childFragmentManager, it.id) }
+                }
+            }
             theme.onPropertyChanged(this@PreferencesFragment) { getCampfireActivity().recreate() }
             language.onPropertyChanged(this@PreferencesFragment) { getCampfireActivity().recreate() }
             shouldShowHintsResetConfirmation.onEventTriggered(this@PreferencesFragment) {
-                AlertDialogFragment.show(
-                    DIALOG_ID_RESET_HINTS_CONFIRMATION,
-                    childFragmentManager,
-                    R.string.are_you_sure,
-                    R.string.options_preferences_reset_hints_confirmation_message,
-                    R.string.options_preferences_reset_hints_confirmation_reset,
-                    R.string.cancel
-                )
+                if (!getCampfireActivity().isUiBlocked) {
+                    AlertDialogFragment.show(
+                        DIALOG_ID_RESET_HINTS_CONFIRMATION,
+                        childFragmentManager,
+                        R.string.are_you_sure,
+                        R.string.options_preferences_reset_hints_confirmation_message,
+                        R.string.options_preferences_reset_hints_confirmation_reset,
+                        R.string.cancel
+                    )
+                }
             }
             shouldShareUsageData.onPropertyChanged(this@PreferencesFragment) { getCampfireActivity().restartProcess() }
             shouldShowHintsResetSnackbar.onEventTriggered(this@PreferencesFragment) { showSnackbar(R.string.options_preferences_reset_hints_message) }

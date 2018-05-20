@@ -80,7 +80,9 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val playlistButton: ToolbarButton by lazy {
         getCampfireActivity().toolbarContext.createToolbarButton(if (viewModel.isSongInAnyPlaylists()) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp) {
             if (viewModel.areThereMoreThanOnePlaylists()) {
-                viewModel.songId.get()?.let { PlaylistChooserBottomSheetFragment.show(childFragmentManager, it, AnalyticsManager.PARAM_VALUE_SCREEN_SONG_DETAIL) }
+                if (!getCampfireActivity().isUiBlocked) {
+                    viewModel.songId.get()?.let { PlaylistChooserBottomSheetFragment.show(childFragmentManager, it, AnalyticsManager.PARAM_VALUE_SCREEN_SONG_DETAIL) }
+                }
             } else {
                 viewModel.toggleFavoritesState()
             }
@@ -281,35 +283,41 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         R.id.transpose_higher -> consume { viewModel.songId.get()?.let { detailEventBus.notifyTranspositionChanged(it, 1) } }
         R.id.transpose_lower -> consume { viewModel.songId.get()?.let { detailEventBus.notifyTranspositionChanged(it, -1) } }
         R.id.play_in_youtube -> consumeAndCloseDrawer {
-            val song = songs[arguments?.index ?: 0]
-            analyticsManager.onPlayOriginalSelected(song.id)
-            "${song.title} - ${song.artist}".let {
-                try {
-                    startActivity(getYouTubeIntent("com.lara.android.youtube", it))
-                } catch (_: ActivityNotFoundException) {
+            if (!getCampfireActivity().isUiBlocked) {
+                getCampfireActivity().isUiBlocked = true
+                val song = songs[arguments?.index ?: 0]
+                analyticsManager.onPlayOriginalSelected(song.id)
+                "${song.title} - ${song.artist}".let {
                     try {
-                        startActivity(getYouTubeIntent("com.google.android.youtube", it))
+                        startActivity(getYouTubeIntent("com.lara.android.youtube", it))
                     } catch (_: ActivityNotFoundException) {
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com/#q=" + URLEncoder.encode(it, "UTF-8"))).apply { flags = multiWindowFlags })
+                        try {
+                            startActivity(getYouTubeIntent("com.google.android.youtube", it))
+                        } catch (_: ActivityNotFoundException) {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com/#q=" + URLEncoder.encode(it, "UTF-8"))).apply { flags = multiWindowFlags })
+                        }
                     }
                 }
             }
         }
         R.id.report -> consumeAndCloseDrawer {
-            val song = songs[binding.viewPager.currentItem]
-            analyticsManager.onReportAProblemSelected(song.id)
-            try {
-                startActivity(
-                    Intent.createChooser(
-                        Intent().apply {
-                            action = Intent.ACTION_SENDTO
-                            type = "text/plain"
-                            data = Uri.parse("mailto:${AboutViewModel.EMAIL_ADDRESS}?subject=${Uri.encode(getString(R.string.detail_report_subject, song.artist, song.title))}")
-                        }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), null
+            if (!getCampfireActivity().isUiBlocked) {
+                val song = songs[binding.viewPager.currentItem]
+                analyticsManager.onReportAProblemSelected(song.id)
+                try {
+                    startActivity(
+                        Intent.createChooser(
+                            Intent().apply {
+                                action = Intent.ACTION_SENDTO
+                                type = "text/plain"
+                                data = Uri.parse("mailto:${AboutViewModel.EMAIL_ADDRESS}?subject=${Uri.encode(getString(R.string.detail_report_subject, song.artist, song.title))}")
+                            }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), null
+                        )
                     )
-                )
-            } catch (exception: ActivityNotFoundException) {
-                showSnackbar(R.string.options_about_error)
+                    getCampfireActivity().isUiBlocked = true
+                } catch (exception: ActivityNotFoundException) {
+                    showSnackbar(R.string.options_about_error)
+                }
             }
         }
         else -> super.onNavigationItemSelected(menuItem)

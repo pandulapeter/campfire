@@ -246,9 +246,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     R.id.manage_playlists -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManagePlaylistsFragment() } }
                     R.id.manage_downloads -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManageDownloadsFragment() } }
                     newPlaylistId -> {
-                        currentFragment?.hideSnackbar()
-                        NewPlaylistDialogFragment.show(supportFragmentManager, AnalyticsManager.PARAM_VALUE_DRAWER)
-                        binding.drawerLayout.closeDrawers()
+                        if (!isUiBlocked) {
+                            currentFragment?.hideSnackbar()
+                            NewPlaylistDialogFragment.show(supportFragmentManager, AnalyticsManager.PARAM_VALUE_DRAWER)
+                            binding.drawerLayout.closeDrawers()
+                        }
                         false
                     }
                     else -> consumeAndCloseDrawers { playlistIdMap[menuItem.itemId]?.let { openPlaylistScreen(it) } }

@@ -77,6 +77,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
                     (items[position] as? SongListItemViewModel.SongViewModel)?.let {
                         if (viewModel.areThereMoreThanOnePlaylists()) {
+                            getCampfireActivity().isUiBlocked = true
                             PlaylistChooserBottomSheetFragment.show(childFragmentManager, it.song.id, viewModel.screenName)
                         } else {
                             viewModel.toggleFavoritesState(it.song.id)
