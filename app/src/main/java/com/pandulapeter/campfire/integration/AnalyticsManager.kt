@@ -31,6 +31,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_SHUFFLE_BUTTON_PRESSED = "shuffle_button_pressed"
         private const val EVENT_SONG_PLAYLIST_STATE_CHANGED = "song_playlist_state_changed"
         private const val EVENT_AUTO_SCROLL_TOGGLED = "auto_scroll_toggled"
+        private const val EVENT_AUTO_SCROLL_SPEED_CHANGED = "auto_scroll_speed_changed"
         private const val EVENT_PREFERENCES_SHOULD_SHOW_CHORDS_TOGGLED = "preferences_should_show_chords_toggled"
         private const val EVENT_TRANSPOSITION_CHANGED = "transposition_changed"
         private const val EVENT_PLAY_ORIGINAL_SELECTED = "play_original_selected"
@@ -57,6 +58,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_SEARCH_IN_ARTISTS = "search_in_artists"
         private const val PARAM_KEY_SEARCH_IN_TITLES = "search_in_titles"
         private const val PARAM_KEY_STATE = "state"
+        private const val PARAM_KEY_SPEED = "speed"
         private const val PARAM_KEY_IS_BOOKMARKED = "is_bookmarked"
         private const val PARAM_KEY_PLAYLIST_COUNT = "playlist_count"
         private const val PARAM_KEY_TRANSPOSITION = "transposition"
@@ -211,10 +213,14 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_IS_FROM_BOTTOM_SHEET to if (isFromBottomSheet) PARAM_VALUE_YES else PARAM_VALUE_NO
     )
 
-    //TODO: Track auto scroll controls visibility changes.
     fun onAutoScrollToggled(isScrolling: Boolean) = trackAnalyticsEvent(
         EVENT_AUTO_SCROLL_TOGGLED,
         PARAM_KEY_STATE to if (isScrolling) PARAM_VALUE_ON else PARAM_VALUE_OFF
+    )
+
+    fun onAutoScrollSpeedChanged(speed: Int) = trackAnalyticsEvent(
+        EVENT_AUTO_SCROLL_SPEED_CHANGED,
+        PARAM_KEY_SPEED to speed.toString()
     )
 
     fun onShouldShowChordsToggled(shouldShowChords: Boolean, source: String) = trackAnalyticsEvent(

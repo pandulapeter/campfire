@@ -27,6 +27,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.SeekBar
 import android.widget.TextView
 import com.crashlytics.android.Crashlytics
 import com.jakewharton.processphoenix.ProcessPhoenix
@@ -268,6 +269,14 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 currentFragment?.onFloatingActionButtonPressed()
             }
         }
+        binding.autoScrollSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) = Unit
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = analyticsManager.onAutoScrollSpeedChanged(binding.autoScrollSeekBar.progress)
+        })
 
         // Restore instance state if possible.
         if (savedInstanceState == null) {

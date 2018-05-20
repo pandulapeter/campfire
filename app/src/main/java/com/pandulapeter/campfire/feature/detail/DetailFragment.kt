@@ -361,6 +361,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     private fun toggleAutoScroll() = getCampfireActivity().autoScrollControl.run {
         if (tag == null) {
+            analyticsManager.onAutoScrollToggled(!visibleOrInvisible)
             val drawable = if (visibleOrInvisible) drawablePauseToPlay else drawablePlayToPause
             getCampfireActivity().updateFloatingActionButtonDrawable(drawable)
             animatedVisibilityEnd = !animatedVisibilityEnd
