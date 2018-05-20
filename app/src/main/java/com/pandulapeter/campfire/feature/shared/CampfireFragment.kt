@@ -31,7 +31,6 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected lateinit var binding: B
     protected abstract val viewModel: VM
     protected open val shouldDelaySubscribing = false
-    protected val mainActivity get() = (activity as? CampfireActivity) ?: throw IllegalStateException("The Fragment is not attached to CampfireActivity.")
     protected val analyticsManager by inject<AnalyticsManager>()
     private var snackbar: Snackbar? = null
     private var isResumingDelayed = false
@@ -76,19 +75,21 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     @CallSuper
     open fun updateUI() {
         viewModel.subscribe()
-        mainActivity.isUiBlocked = false
+        getCampfireActivity().isUiBlocked = false
     }
 
     open fun onBackPressed() = false
 
+    @Suppress("NOTHING_TO_INLINE") // Needed for ProGuard
+    protected inline fun getCampfireActivity() = (activity as? CampfireActivity) ?: throw IllegalStateException("The Fragment is not attached to CampfireActivity.")
+
     protected fun showHint(@StringRes message: Int, action: () -> Unit) {
         snackbar?.dismiss()
-        snackbar = mainActivity.snackbarRoot
+        snackbar = getCampfireActivity().snackbarRoot
             .makeSnackbar(getString(message), Snackbar.LENGTH_INDEFINITE)
             .apply { setAction(R.string.got_it, { action() }) }
         snackbar?.show()
     }
-
 
     protected fun isSnackbarVisible() = snackbar?.isShownOrQueued ?: false
 
@@ -98,7 +99,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         showSnackbar(getString(message), actionText, action, dismissAction)
 
     protected fun showSnackbar(message: String, @StringRes actionText: Int = R.string.try_again, action: (() -> Unit)? = null, dismissAction: (() -> Unit)? = null) {
-        snackbar = mainActivity.snackbarRoot
+        snackbar = getCampfireActivity().snackbarRoot
             .makeSnackbar(message, if (action == null && dismissAction == null) SNACKBAR_SHORT_DURATION else SNACKBAR_LONG_DURATION, dismissAction)
             .apply { action?.let { setAction(actionText, { action() }) } }
         snackbar?.show()
@@ -108,7 +109,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         view.setBackgroundColor(context.color(R.color.accent))
         view.findViewById<TextView>(android.support.design.R.id.snackbar_text).setTextColor(context.color(R.color.white))
         setActionTextColor(context.color(R.color.white))
-        mainActivity.currentFocus?.let { hideKeyboard(it) }
+        getCampfireActivity().currentFocus?.let { hideKeyboard(it) }
         dismissAction?.let {
             addCallback(object : Snackbar.Callback() {
                 override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {

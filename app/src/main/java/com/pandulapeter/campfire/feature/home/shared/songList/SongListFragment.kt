@@ -31,7 +31,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         super.onCreate(savedInstanceState)
         setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
-                val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == mainActivity.lastSongId }
+                val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
                 if (index != RecyclerView.NO_POSITION) {
                     (binding.recyclerView.findViewHolderForAdapterPosition(index)
                             ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
@@ -48,16 +48,16 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         super.onViewCreated(view, savedInstanceState)
         viewModel.adapter.run {
             itemClickListener = { position, clickedView ->
-                if (linearLayoutManager.isScrollEnabled && !mainActivity.isUiBlocked) {
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
                     (items[position] as? SongListItemViewModel.SongViewModel)?.let {
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
                             viewModel.isDetailScreenOpen = true
                         }
-                        mainActivity.isUiBlocked = true
+                        getCampfireActivity().isUiBlocked = true
                         onDetailScreenOpened()
                         val shouldSendMultipleSongs = viewModel is PlaylistViewModel || viewModel is CollectionDetailViewModel
-                        mainActivity.openDetailScreen(
+                        getCampfireActivity().openDetailScreen(
                             clickedView,
                             if (shouldSendMultipleSongs) items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song } else listOf(it.song),
                             items.size > 1,
@@ -68,12 +68,12 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 }
             }
             downloadActionClickListener = { position ->
-                if (linearLayoutManager.isScrollEnabled && !mainActivity.isUiBlocked) {
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
                     (items[position] as? SongListItemViewModel.SongViewModel)?.let { viewModel.downloadSong(it.song) }
                 }
             }
             playlistActionClickListener = { position ->
-                if (linearLayoutManager.isScrollEnabled && !mainActivity.isUiBlocked) {
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
                     (items[position] as? SongListItemViewModel.SongViewModel)?.let {
                         if (viewModel.areThereMoreThanOnePlaylists()) {
                             PlaylistChooserBottomSheetFragment.show(childFragmentManager, it.song.id, viewModel.screenName)
@@ -94,7 +94,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 binding.root.post {
                     if (isAdded) {
                         showSnackbar(
-                            message = mainActivity.getString(R.string.library_song_download_error, song.title),
+                            message = getCampfireActivity().getString(R.string.library_song_download_error, song.title),
                             action = { viewModel.downloadSong(song) })
                     }
                 }
@@ -109,7 +109,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             setOnRefreshListener { viewModel.updateData() }
             setColorSchemeColors(context.color(R.color.accent))
         }
-        linearLayoutManager = DisableScrollLinearLayoutManager(mainActivity)
+        linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())
         binding.recyclerView.run {
             layoutManager = linearLayoutManager
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -125,7 +125,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                 override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
                     binding.recyclerView.removeOnLayoutChangeListener(this)
                     if (reenterTransition != null) {
-                        val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == mainActivity.lastSongId }
+                        val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
                         if (index != RecyclerView.NO_POSITION) {
                             val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                             if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
@@ -161,6 +161,6 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
         val tempList = viewModel.adapter.items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song }.toMutableList()
         tempList.shuffle()
         analyticsManager.onShuffleButtonPressed(source, tempList.size)
-        mainActivity.openDetailScreen(null, tempList, false, 0, viewModel is CollectionDetailViewModel)
+        getCampfireActivity().openDetailScreen(null, tempList, false, 0, viewModel is CollectionDetailViewModel)
     }
 }

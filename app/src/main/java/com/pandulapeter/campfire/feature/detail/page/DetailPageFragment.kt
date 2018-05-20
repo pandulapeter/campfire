@@ -33,8 +33,8 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
     override val viewModel by lazy {
         DetailPageViewModel(
             song = song,
-            initialTextSize = mainActivity.dimension(R.dimen.text_normal),
-            songParser = SongParser(mainActivity),
+            initialTextSize = getCampfireActivity().dimension(R.dimen.text_normal),
+            songParser = SongParser(getCampfireActivity()),
             onDataLoaded = { (parentFragment as? DetailFragment)?.onDataLoaded(song.id) }
         )
     }

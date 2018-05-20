@@ -26,10 +26,10 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Ba
     }
 
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
-    override val viewModel by lazy { ManageDownloadsViewModel(mainActivity) { mainActivity.openLibraryScreen() } }
+    override val viewModel by lazy { ManageDownloadsViewModel(getCampfireActivity()) { getCampfireActivity().openLibraryScreen() } }
     override val canScrollToolbar get() = viewModel.shouldShowDeleteAll.get()
     private val deleteAllButton by lazy {
-        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
             AlertDialogFragment.show(
                 DIALOG_ID_DELETE_ALL_CONFIRMATION,
                 childFragmentManager,
@@ -46,14 +46,15 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Ba
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS)
         binding.swipeRefreshLayout.isEnabled = false
         updateToolbarTitle(viewModel.songCount.get())
-        mainActivity.updateToolbarButtons(listOf(deleteAllButton))
+        getCampfireActivity().updateToolbarButtons(listOf(deleteAllButton))
         viewModel.shouldShowDeleteAll.onPropertyChanged(this) { deleteAllButton.visibleOrGone = it }
         viewModel.state.onPropertyChanged(this) { updateToolbarTitle(viewModel.songCount.get()) }
         viewModel.songCount.onPropertyChanged(this) {
             updateToolbarTitle(it)
             showHintIfNeeded()
         }
-        ItemTouchHelper(object : ElevationItemTouchHelperCallback((mainActivity.dimension(R.dimen.content_padding)).toFloat(), 0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+        ItemTouchHelper(object :
+            ElevationItemTouchHelperCallback((getCampfireActivity().dimension(R.dimen.content_padding)).toFloat(), 0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = false
 
@@ -102,7 +103,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Ba
         if (songCount == 0) {
             getString(if (viewModel.state.get() == StateLayout.State.LOADING) R.string.loading else R.string.manage_downloads_no_downloads)
         } else {
-            mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
+            getCampfireActivity().resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
         }
     )
 

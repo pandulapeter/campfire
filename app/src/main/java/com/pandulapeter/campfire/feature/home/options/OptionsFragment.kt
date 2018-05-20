@@ -21,12 +21,12 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
 
     override val viewModel = OptionsViewModel()
     override val appBarView by lazy {
-        TabLayout(mainActivity.toolbarContext).apply {
+        TabLayout(getCampfireActivity().toolbarContext).apply {
             tabMode = TabLayout.MODE_SCROLLABLE
             setupWithViewPager(binding.viewPager)
         }
     }
-    private val pagerAdapter by lazy { OptionsFragmentPagerAdapter(mainActivity, childFragmentManager) }
+    private val pagerAdapter by lazy { OptionsFragmentPagerAdapter(getCampfireActivity(), childFragmentManager) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

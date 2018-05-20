@@ -28,27 +28,31 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
 
     override val viewModel by lazy {
         PlaylistViewModel(
-            context = mainActivity,
+            context = getCampfireActivity(),
             playlistId = arguments.playlistId,
-            openLibrary = { mainActivity.openLibraryScreen() },
-            toolbarTextInputView = if (arguments?.playlistId == Playlist.FAVORITES_ID) null else ToolbarTextInputView(mainActivity.toolbarContext, R.string.playlist_title, false),
-            onDataLoaded = { mainActivity.updateToolbarButtons(listOf(editToggle, shuffleButton)) }
+            openLibrary = { getCampfireActivity().openLibraryScreen() },
+            toolbarTextInputView = if (arguments?.playlistId == Playlist.FAVORITES_ID) null else ToolbarTextInputView(
+                getCampfireActivity().toolbarContext,
+                R.string.playlist_title,
+                false
+            ),
+            onDataLoaded = { getCampfireActivity().updateToolbarButtons(listOf(editToggle, shuffleButton)) }
         )
     }
     override val canScrollToolbar get() = viewModel.songCount.get() > 0 && !viewModel.isInEditMode.get()
     private var Bundle.isInEditMode by BundleArgumentDelegate.Boolean("isInEditMode")
     private val editToggle: ToolbarButton by lazy {
-        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_edit_24dp) { viewModel.toggleEditMode() }.apply {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_edit_24dp) { viewModel.toggleEditMode() }.apply {
             visibleOrGone = false
         }
     }
     private val shuffleButton: ToolbarButton by lazy {
-        mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST) }.apply {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST) }.apply {
             visibleOrGone = false
         }
     }
-    private val drawableEditToDone by lazy { mainActivity.animatedDrawable(R.drawable.avd_edit_to_done_24dp) }
-    private val drawableDoneToEdit by lazy { mainActivity.animatedDrawable(R.drawable.avd_done_to_edit_24dp) }
+    private val drawableEditToDone by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_edit_to_done_24dp) }
+    private val drawableDoneToEdit by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_done_to_edit_24dp) }
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -61,7 +65,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
             editToggle.visibleOrGone = arguments?.playlistId != Playlist.FAVORITES_ID || it > 0
             shuffleButton.visibleOrGone = it > 1
             if (shuffleButton.visibleOrGone != previousVisibility && viewModel.isInEditMode.get()) {
-                mainActivity.invalidateAppBar()
+                getCampfireActivity().invalidateAppBar()
             }
         }
         viewModel.state.onPropertyChanged(this) { updateToolbarTitle() }
@@ -79,7 +83,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         savedInstanceState?.let {
             if (it.isInEditMode) {
                 viewModel.isInEditMode.set(true)
-                editToggle.setImageDrawable(mainActivity.drawable(R.drawable.ic_done_24dp))
+                editToggle.setImageDrawable(getCampfireActivity().drawable(R.drawable.ic_done_24dp))
                 viewModel.toolbarTextInputView?.textInput?.run {
                     setText(viewModel.playlist.get()?.title)
                     setSelection(text.length)
@@ -163,7 +167,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         if (songCount == 0) {
             getString(if (viewModel.state.get() == StateLayout.State.LOADING) R.string.loading else R.string.manage_playlists_song_count_empty)
         } else {
-            mainActivity.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
+            getCampfireActivity().resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
         }
     )
 

@@ -1,3 +1,9 @@
+# Kotlin
+-dontwarn kotlin.**
+-keepclassmembers class **$WhenMappings {
+    <fields>;
+}
+
 # Annotations
 -dontwarn javax.annotation.Nullable
 -dontwarn javax.annotation.concurrent.GuardedBy
@@ -12,3 +18,7 @@
 # Okio, OkHTTP
 -dontwarn okio.**
 -dontwarn okhttp3.**
+
+# Gson
+-keep class com.google.gson.** { *; }
+-keepattributes Signature

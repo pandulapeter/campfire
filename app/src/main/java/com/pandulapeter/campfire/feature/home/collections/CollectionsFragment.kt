@@ -24,13 +24,13 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
     override val viewModel: CollectionsViewModel by lazy {
         CollectionsViewModel(
             onDataLoaded = { languages ->
-                mainActivity.enableSecondaryNavigationDrawer(R.menu.collections)
+                getCampfireActivity().enableSecondaryNavigationDrawer(R.menu.collections)
                 initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == CollectionsViewModel.SortingMode.TITLE }
                 initializeCompoundButton(R.id.sort_by_date) { viewModel.sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE }
                 initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == CollectionsViewModel.SortingMode.POPULARITY }
                 initializeCompoundButton(R.id.bookmarked_only) { viewModel.shouldShowSavedOnly }
                 initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
-                mainActivity.secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
+                getCampfireActivity().secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
                     clear()
                     languages.forEachIndexed { index, language ->
                         add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
@@ -39,11 +39,12 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                         }
                     }
                 }
-                mainActivity.updateToolbarButtons(listOf(
-                    mainActivity.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { mainActivity.openSecondaryNavigationDrawer() }
+                getCampfireActivity().updateToolbarButtons(
+                    listOf(
+                        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity().openSecondaryNavigationDrawer() }
                 ))
             },
-            openSecondaryNavigationDrawer = { mainActivity.openSecondaryNavigationDrawer() })
+            openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() })
     }
     override val canScrollToolbar get() = binding.recyclerView.canScroll()
 
@@ -51,14 +52,15 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         super.onCreate(savedInstanceState)
         setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
-                val index = viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == mainActivity.lastCollectionId }
+                val index =
+                    viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
                 if (index != RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
-                        view.transitionName = "card-${mainActivity.lastCollectionId}"
+                        view.transitionName = "card-${getCampfireActivity().lastCollectionId}"
                         sharedElements[names[0]] = view
                         val image = view.findViewById<View>(R.id.image)
-                        image.transitionName = "image-${mainActivity.lastCollectionId}"
+                        image.transitionName = "image-${getCampfireActivity().lastCollectionId}"
                         sharedElements[names[1]] = image
                     }
                 }
@@ -88,19 +90,19 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         }
         viewModel.adapter.apply {
             itemClickListener = { position, clickedView, image ->
-                if (linearLayoutManager.isScrollEnabled && !mainActivity.isUiBlocked) {
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
                     (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.collection?.let {
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
                         }
-                        mainActivity.isUiBlocked = true
+                        getCampfireActivity().isUiBlocked = true
                         viewModel.collectionRepository.onCollectionOpened(it.id)
-                        mainActivity.openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
+                        getCampfireActivity().openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
                     }
                 }
             }
             bookmarkActionClickListener = { position ->
-                if (linearLayoutManager.isScrollEnabled && !mainActivity.isUiBlocked) {
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
                     viewModel.adapter.items[position].let {
                         if (it is CollectionListItemViewModel.CollectionViewModel) {
                             viewModel.onBookmarkClicked(position, it.collection)
@@ -113,7 +115,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             setOnRefreshListener { viewModel.updateData() }
             setColorSchemeColors(context.color(R.color.accent))
         }
-        linearLayoutManager = DisableScrollLinearLayoutManager(mainActivity)
+        linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())
         binding.recyclerView.layoutManager = linearLayoutManager
         binding.recyclerView.addOnLayoutChangeListener(
             object : View.OnLayoutChangeListener {
@@ -121,7 +123,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                     binding.recyclerView.removeOnLayoutChangeListener(this)
                     if (reenterTransition != null) {
                         val index =
-                            viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == mainActivity.lastCollectionId }
+                            viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
                         if (index != RecyclerView.NO_POSITION) {
                             val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                             if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
@@ -197,9 +199,9 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
 
     private inline fun consumeAndUpdateSortingMode(sortingMode: CollectionsViewModel.SortingMode, crossinline setValue: (CollectionsViewModel.SortingMode) -> Unit) = consume {
         setValue(sortingMode)
-        (mainActivity.secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.TITLE)
-        (mainActivity.secondaryNavigationMenu[R.id.sort_by_date].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE)
-        (mainActivity.secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.POPULARITY)
+        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.TITLE)
+        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_date].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE)
+        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.POPULARITY)
     }
 
     private operator fun Menu.get(@IdRes id: Int) = findItem(id)

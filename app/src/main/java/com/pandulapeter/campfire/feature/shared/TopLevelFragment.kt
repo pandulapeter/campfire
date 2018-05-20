@@ -42,12 +42,12 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        mainActivity.beforeScreenChanged()
+        getCampfireActivity().beforeScreenChanged()
         if (this !is DetailFragment) {
-            mainActivity.updateToolbarTitleView(inflateToolbarTitle(mainActivity.toolbarContext), toolbarWidth)
+            getCampfireActivity().updateToolbarTitleView(inflateToolbarTitle(getCampfireActivity().toolbarContext), toolbarWidth)
         }
         if (savedInstanceState == null || this !is LibraryFragment) {
-            mainActivity.updateAppBarView(appBarView, savedInstanceState != null)
+            getCampfireActivity().updateAppBarView(appBarView, savedInstanceState != null)
         }
     }
 
@@ -61,13 +61,13 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     protected inline fun Context.createToolbarButton(@DrawableRes drawableRes: Int, crossinline onClickListener: (View) -> Unit) = ToolbarButton(this).apply {
         setImageDrawable(drawable(drawableRes))
-        setOnClickListener { if (!mainActivity.isUiBlocked) onClickListener(it) }
+        setOnClickListener { if (!getCampfireActivity().isUiBlocked) onClickListener(it) }
     }
 
     protected fun TextView.updateToolbarTitle(@StringRes titleRes: Int, subtitle: String? = null) = updateToolbarTitle(context.getString(titleRes), subtitle)
 
     protected fun TextView.updateToolbarTitle(title: String, subtitle: String? = null) {
-        mainActivity.toolbarContext.let { context ->
+        getCampfireActivity().toolbarContext.let { context ->
             text = SpannableString("$title${subtitle?.let { "\n$it" } ?: ""}").apply {
                 setSpan(TextAppearanceSpan(context, R.style.TextAppearance_AppCompat_Title), 0, title.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                 setSpan(EllipsizeLineSpan(context.obtainColor(android.R.attr.textColorPrimary)), 0, title.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -79,7 +79,7 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     protected fun initializeCompoundButton(itemId: Int, getValue: () -> Boolean) = consume {
-        mainActivity.secondaryNavigationMenu.findItem(itemId)?.let {
+        getCampfireActivity().secondaryNavigationMenu.findItem(itemId)?.let {
             (it.actionView as? CompoundButton)?.run {
                 isChecked = getValue()
                 setOnCheckedChangeListener { _, isChecked ->
