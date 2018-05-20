@@ -73,10 +73,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     @CallSuper
-    open fun updateUI() {
-        viewModel.subscribe()
-        getCampfireActivity().isUiBlocked = false
-    }
+    open fun updateUI() = viewModel.subscribe()
 
     open fun onBackPressed() = false
 

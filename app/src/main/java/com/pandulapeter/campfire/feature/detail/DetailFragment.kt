@@ -133,15 +133,16 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                         override fun onTransitionPause(transition: Transition?) = Unit
 
                         override fun onTransitionEnd(transition: Transition?) {
+                            getCampfireActivity().isUiBlocked = false
                             detailEventBus.notifyTransitionEnd()
                             transition?.removeListener(this)
                         }
 
                         override fun onTransitionCancel(transition: Transition?) {
+                            getCampfireActivity().isUiBlocked = false
                             detailEventBus.notifyTransitionEnd()
                             transition?.removeListener(this)
                         }
-
                     })
                     startPostponedEnterTransition()
                     return true
