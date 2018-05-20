@@ -164,7 +164,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
 
     private fun updateToolbarTitle(songCount: Int = viewModel.songCount.get()) = (viewModel.toolbarTextInputView?.title ?: defaultToolbar).updateToolbarTitle(
         viewModel.playlist.get()?.title ?: getString(R.string.home_favorites),
-        if (songCount == 0) {
+        if (songCount == -1) {
             getString(if (viewModel.state.get() == StateLayout.State.LOADING) R.string.loading else R.string.manage_playlists_song_count_empty)
         } else {
             getCampfireActivity().resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
