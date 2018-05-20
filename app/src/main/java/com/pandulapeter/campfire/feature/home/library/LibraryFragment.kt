@@ -88,7 +88,12 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     private val eraseButton: ToolbarButton by lazy {
         getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) {
             viewModel.toolbarTextInputView.textInput.setText("")
-        }.apply { visibleOrGone = false }
+        }.apply {
+            scaleX = 0f
+            scaleY = 0f
+            alpha = 0.5f
+            isEnabled = false
+        }
     }
     private val drawableCloseToSearch by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_close_to_search_24dp) else getCampfireActivity().drawable(R.drawable.ic_search_24dp)
@@ -122,7 +127,11 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             viewModel.buttonText.set(savedInstanceState.buttonText)
             viewModel.buttonIcon.set(savedInstanceState.buttonIcon)
         }
-        viewModel.shouldShowEraseButton.onPropertyChanged { eraseButton.visibleOrGone = it }
+        viewModel.shouldShowEraseButton.onPropertyChanged { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
+        viewModel.shouldEnableEraseButton.onPropertyChanged {
+            eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
+            eraseButton.isEnabled = it
+        }
         viewModel.toolbarTextInputView.textInput.requestFocus()
         searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
             binding.root.postDelayed(
