@@ -10,6 +10,7 @@
     <string name="ok">OK</string>
     <string name="cancel">Mégse</string>
     <string name="loading">Betöltés…</string>
+    <string name="known_bug_1">Hová tűnt a cím…? Úgy tűnik, találtál egy hibát!</string>
 
     <!-- Supported languages -->
     <string name="language_english">Angol</string>

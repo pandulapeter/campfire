@@ -33,7 +33,7 @@ import java.net.URLEncoder
 class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail), DetailPageEventBus.Subscriber {
 
     companion object {
-        const val TRANSITION_DELAY = 50L
+        const val TRANSITION_DELAY = 20L
         const val TRANSITION_DURATION = 150L
         private const val FONT_SIZE_MAX = 1.8f
         private const val FONT_SIZE_MIN = 0.8f

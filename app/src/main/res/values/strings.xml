@@ -11,6 +11,7 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="loading">Loading…</string>
+    <string name="known_bug_1">Where did the title go…? Looks like you found a bug!</string>
 
     <!-- Supported languages -->
     <string name="language_english">English</string>
