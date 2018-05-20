@@ -304,6 +304,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             binding.drawerLayout.run { post { closeDrawers() } }
         }
         isUiBlocked = false
+        currentFragment?.let {
+            if (it is DetailFragment) {
+                it.notifyTransitionEnd()
+            }
+        }
     }
 
     override fun onPause() {

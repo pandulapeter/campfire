@@ -347,6 +347,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
     }
 
+    fun notifyTransitionEnd() = detailEventBus.notifyTransitionEnd()
+
     private fun getYouTubeIntent(packageName: String, query: String) = Intent(Intent.ACTION_SEARCH).apply {
         `package` = packageName
         flags = multiWindowFlags
