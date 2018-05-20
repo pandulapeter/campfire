@@ -104,9 +104,9 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         firebaseAnalytics.setAnalyticsCollectionEnabled(preferenceDatabase.shouldShareUsageData)
     }
 
-    fun onConsentGiven() = trackAnalyticsEvent(
+    fun onConsentGiven(timestamp: Long) = trackAnalyticsEvent(
         EVENT_CONSENT_GIVEN,
-        PARAM_KEY_TIMESTAMP to SimpleDateFormat("yyyy.MM.dd', 'HH:mm:ss z", Locale.ENGLISH).format(Date())
+        PARAM_KEY_TIMESTAMP to SimpleDateFormat("yyyy.MM.dd', 'HH:mm:ss z", Locale.ENGLISH).format(Date(timestamp))
     )
 
     fun onAppOpened(screen: String, fromAppShortcut: Boolean, theme: String, language: String) = trackAnalyticsEvent(

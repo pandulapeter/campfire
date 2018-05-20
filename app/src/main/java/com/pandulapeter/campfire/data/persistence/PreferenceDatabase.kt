@@ -57,6 +57,9 @@ class PreferenceDatabase(context: Context) {
     var ftuxPlaylistPagerSwipeCompleted by PreferenceFieldDelegate.Boolean("ftuxPlaylistPagerSwipeCompleted", false)
     var fontSizePinchCompleted by PreferenceFieldDelegate.Boolean("fontSizePinchCompleted", false)
 
+    // Other
+    var privacyConsentGivenTimestamp by PreferenceFieldDelegate.Long("privacyConsentGivenTimestamp", 0L)
+
     // Song transposition values
     fun getTransposition(songId: String) = preferences.getInt(TRANSPOSITION_PREFIX + songId, 0)
 

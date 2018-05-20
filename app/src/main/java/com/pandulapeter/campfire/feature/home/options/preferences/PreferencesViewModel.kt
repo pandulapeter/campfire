@@ -14,7 +14,7 @@ import org.koin.android.ext.android.inject
 
 class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
 
-    private val preferenceDatabase by inject<PreferenceDatabase>()
+    val preferenceDatabase by inject<PreferenceDatabase>()
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
     private val analyticsManager by inject<AnalyticsManager>()
     val shouldShowChords = ObservableBoolean(preferenceDatabase.shouldShowChords)

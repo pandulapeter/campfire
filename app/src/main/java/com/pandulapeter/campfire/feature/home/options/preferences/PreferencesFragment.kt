@@ -43,7 +43,12 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
                     )
                 }
             }
-            shouldShareUsageData.onPropertyChanged(this@PreferencesFragment) { getCampfireActivity().restartProcess() }
+            shouldShareUsageData.onPropertyChanged(this@PreferencesFragment) {
+                if (it) {
+                    preferenceDatabase.privacyConsentGivenTimestamp = System.currentTimeMillis()
+                }
+                getCampfireActivity().restartProcess()
+            }
             shouldShowHintsResetSnackbar.onEventTriggered(this@PreferencesFragment) { showSnackbar(R.string.options_preferences_reset_hints_message) }
         }
     }
