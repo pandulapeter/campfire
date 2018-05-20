@@ -66,9 +66,10 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
                 getCampfireActivity().toolbarContext.let { context ->
                     getCampfireActivity().updateToolbarButtons(
                         listOf(
-                        searchToggle,
+                            eraseButton,
+                            searchToggle,
                             context.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity().openSecondaryNavigationDrawer() }
-                    ))
+                        ))
                 }
             },
             openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() }
@@ -79,7 +80,16 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
     private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
     private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
-    private val searchToggle: ToolbarButton by lazy { getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) { viewModel.toggleTextInputVisibility() } }
+    private val searchToggle: ToolbarButton by lazy {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) {
+            viewModel.toggleTextInputVisibility()
+        }
+    }
+    private val eraseButton: ToolbarButton by lazy {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) {
+            viewModel.toolbarTextInputView.textInput.setText("")
+        }.apply { visibleOrGone = false }
+    }
     private val drawableCloseToSearch by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_close_to_search_24dp) else getCampfireActivity().drawable(R.drawable.ic_search_24dp)
     }
@@ -112,6 +122,7 @@ class LibraryFragment : SongListFragment<LibraryViewModel>() {
             viewModel.buttonText.set(savedInstanceState.buttonText)
             viewModel.buttonIcon.set(savedInstanceState.buttonIcon)
         }
+        viewModel.shouldShowEraseButton.onPropertyChanged { eraseButton.visibleOrGone = it }
         viewModel.toolbarTextInputView.textInput.requestFocus()
         searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
             binding.root.postDelayed(

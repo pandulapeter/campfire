@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.home.library
 
 import android.content.Context
+import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.remote.Song
@@ -27,12 +28,14 @@ class LibraryViewModel(
     private val analyticsManager by inject<AnalyticsManager>()
     private val popularString = context.getString(R.string.popular_tag)
     private val newString = context.getString(R.string.new_tag)
+    val shouldShowEraseButton = ObservableBoolean()
     var query = ""
         set(value) {
             if (field != value) {
                 field = value
                 updateAdapterItems(true)
                 trackSearchEvent()
+                updateEraseButtonVisibility()
             }
         }
     var shouldShowDownloadedOnly = preferenceDatabase.shouldShowDownloadedOnly
@@ -170,8 +173,11 @@ class LibraryViewModel(
                 }
                 buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.library_filters)
             }
+            updateEraseButtonVisibility()
         }
     }
+
+    private fun updateEraseButtonVisibility() = shouldShowEraseButton.set(toolbarTextInputView.isTextInputVisible && query.isNotEmpty())
 
     //TODO: Prioritize results that begin with the searchQuery.
     private fun Sequence<Song>.filterByQuery() = if (toolbarTextInputView.isTextInputVisible) {
