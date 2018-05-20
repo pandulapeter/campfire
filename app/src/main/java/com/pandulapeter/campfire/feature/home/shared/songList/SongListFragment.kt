@@ -108,9 +108,8 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             setOnRefreshListener { viewModel.updateData() }
             setColorSchemeColors(context.color(R.color.accent))
         }
+        linearLayoutManager = DisableScrollLinearLayoutManager(mainActivity)
         binding.recyclerView.run {
-            setHasFixedSize(true)
-            linearLayoutManager = DisableScrollLinearLayoutManager(mainActivity)
             layoutManager = linearLayoutManager
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -130,7 +129,7 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
                             val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                             if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
                                 linearLayoutManager.isScrollEnabled = true
-                                binding.recyclerView.run { post { scrollToPosition(index) } }
+                                binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
                             }
                         }
                     }

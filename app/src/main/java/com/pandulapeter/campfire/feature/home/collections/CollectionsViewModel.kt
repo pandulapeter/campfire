@@ -75,16 +75,6 @@ class CollectionsViewModel(
 
     init {
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_COLLECTIONS
-        adapter.bookmarkActionClickListener = { position ->
-            adapter.items[position].let {
-                if (it is CollectionListItemViewModel.CollectionViewModel) {
-                    collectionRepository.toggleBookmarkedState(it.collection.id)
-                    analyticsManager.onCollectionBookmarkedStateChanged(it.collection.id, it.collection.isBookmarked == true, AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
-                    adapter.notifyItemChanged(position, CollectionListAdapter.Payload.BookmarkedStateChanged(it.collection.isBookmarked ?: false))
-                    updateAdapterItems()
-                }
-            }
-        }
     }
 
     override fun subscribe() = collectionRepository.subscribe(this)
@@ -145,6 +135,17 @@ class CollectionsViewModel(
         if (languages.isNotEmpty()) {
             onDataLoaded(languages)
         }
+    }
+
+    fun onBookmarkClicked(position: Int, collection: Collection) {
+        collectionRepository.toggleBookmarkedState(collection.id)
+        analyticsManager.onCollectionBookmarkedStateChanged(
+            collection.id,
+            collection.isBookmarked == true,
+            AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS
+        )
+        adapter.notifyItemChanged(position, CollectionListAdapter.Payload.BookmarkedStateChanged(collection.isBookmarked ?: false))
+        updateAdapterItems()
     }
 
     private fun updateAdapterItems(shouldScrollToTop: Boolean = false) {

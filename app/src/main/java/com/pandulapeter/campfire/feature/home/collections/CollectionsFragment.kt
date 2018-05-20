@@ -3,12 +3,12 @@ package com.pandulapeter.campfire.feature.home.collections
 import android.os.Bundle
 import android.support.annotation.IdRes
 import android.support.v4.app.SharedElementCallback
-import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.*
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
+import com.pandulapeter.campfire.feature.home.shared.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -20,6 +20,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
     private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
     private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
+    private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
     override val viewModel: CollectionsViewModel by lazy {
         CollectionsViewModel(
             onDataLoaded = { languages ->
@@ -87,9 +88,21 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         }
         viewModel.adapter.apply {
             itemClickListener = { position, clickedView, image ->
-                (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.collection?.let {
-                    viewModel.collectionRepository.onCollectionOpened(it.id)
-                    mainActivity.openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
+                if (linearLayoutManager.isScrollEnabled) {
+                    (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.collection?.let {
+                        linearLayoutManager.isScrollEnabled = false
+                        viewModel.collectionRepository.onCollectionOpened(it.id)
+                        mainActivity.openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
+                    }
+                }
+            }
+            bookmarkActionClickListener = { position ->
+                if (linearLayoutManager.isScrollEnabled) {
+                    viewModel.adapter.items[position].let {
+                        if (it is CollectionListItemViewModel.CollectionViewModel) {
+                            viewModel.onBookmarkClicked(position, it.collection)
+                        }
+                    }
                 }
             }
         }
@@ -97,10 +110,8 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             setOnRefreshListener { viewModel.updateData() }
             setColorSchemeColors(context.color(R.color.accent))
         }
-        binding.recyclerView.run {
-            setHasFixedSize(true)
-            layoutManager = LinearLayoutManager(context)
-        }
+        linearLayoutManager = DisableScrollLinearLayoutManager(mainActivity)
+        binding.recyclerView.layoutManager = linearLayoutManager
         binding.recyclerView.addOnLayoutChangeListener(
             object : View.OnLayoutChangeListener {
                 override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
@@ -109,10 +120,10 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                         val index =
                             viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == mainActivity.lastCollectionId }
                         if (index != RecyclerView.NO_POSITION) {
-                            val linearLayoutManager = binding.recyclerView.layoutManager as LinearLayoutManager
                             val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                             if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
-                                binding.recyclerView.run { post { scrollToPosition(index) } }
+                                linearLayoutManager.isScrollEnabled = true
+                                binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
                             }
                         }
                     }
@@ -140,6 +151,11 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
     override fun onResume() {
         super.onResume()
         viewModel.restoreToolbarButtons()
+    }
+
+    override fun updateUI() {
+        super.updateUI()
+        linearLayoutManager.isScrollEnabled = true
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
