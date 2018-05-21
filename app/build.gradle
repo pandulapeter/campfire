@@ -18,11 +18,20 @@ android {
         enabled = true
     }
     signingConfigs {
+        def keystoreProperties = new Properties()
         internal {
-            keyAlias "androiddebugkey"
-            keyPassword "android"
-            storeFile file("internal.keystore")
-            storePassword "android"
+            keystoreProperties.load(new FileInputStream(rootProject.file("app/internal.keystore.properties")))
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
+        release {
+            keystoreProperties.load(new FileInputStream(rootProject.file("app/release.keystore.properties")))
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
         }
     }
     buildTypes {
@@ -39,8 +48,7 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-            //TODO: Create a separate signing configuration for Release builds.
-            signingConfig signingConfigs.internal
+            signingConfig signingConfigs.release
         }
     }
 }
@@ -78,7 +86,7 @@ dependencies {
     kapt "android.arch.persistence.room:compiler:$roomVersion"
 
     // Image loading
-    def glideVersion = "4.6.1"
+    def glideVersion = "4.7.1"
     implementation "com.github.bumptech.glide:glide:$glideVersion"
     kapt "com.github.bumptech.glide:compiler:$glideVersion"
 
