@@ -70,6 +70,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Ba
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 viewHolder.adapterPosition.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
+                        analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS)
                         viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.manageDownloadsCompleted = true
                         val song = (viewModel.adapter.items[position] as SongListItemViewModel.SongViewModel).song
@@ -93,6 +94,7 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Ba
 
     override fun onPositiveButtonSelected(id: Int) {
         if (id == DIALOG_ID_DELETE_ALL_CONFIRMATION) {
+            analyticsManager.onDeleteAllButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS, viewModel.adapter.itemCount)
             viewModel.deleteAllSongs()
             showSnackbar(R.string.manage_downloads_delete_all_message)
         }

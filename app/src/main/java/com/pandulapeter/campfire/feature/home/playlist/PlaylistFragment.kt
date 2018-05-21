@@ -111,6 +111,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                             firstTimeUserExperienceManager.playlistDragCompleted = true
                             viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
                             binding.root.postDelayed({ if (isAdded) showHintIfNeeded() }, 300)
+                            analyticsManager.onDragToRearrangeUsed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST)
                         }
                     }
                 }
@@ -118,6 +119,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 viewHolder.adapterPosition.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
+                        analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST)
                         viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.playlistSwipeCompleted = true
                         (viewModel.adapter.items[position] as? SongListItemViewModel.SongViewModel)?.song?.let { song ->

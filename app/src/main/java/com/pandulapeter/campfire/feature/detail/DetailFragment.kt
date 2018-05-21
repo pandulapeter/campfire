@@ -200,7 +200,10 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             override fun onScale(detector: ScaleGestureDetector?): Boolean {
                 detector?.let {
                     val multiplier = Math.round(it.scaleFactor * 50) / 50f
-                    preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize * multiplier))
+                    Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize * multiplier)).let {
+                        preferenceDatabase.fontSize = it
+                        analyticsManager.onPinchToZoomUsed(it)
+                    }
                     detailEventBus.notifyTextSizeChanged()
                     if (!firstTimeUserExperienceManager.fontSizePinchCompleted) {
                         firstTimeUserExperienceManager.fontSizePinchCompleted = true

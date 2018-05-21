@@ -88,6 +88,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
                                 firstTimeUserExperienceManager.managePlaylistsDragCompleted = true
                                 viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
                                 binding.root.postDelayed({ if (isAdded) showHintIfNeeded() }, 300)
+                                analyticsManager.onDragToRearrangeUsed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS)
                             }
                         }
                     }
@@ -96,6 +97,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 viewHolder.adapterPosition.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
+                        analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS)
                         viewModel.deletePlaylistPermanently()
                         firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true
                         val playlist = viewModel.adapter.items[position].playlist
@@ -126,6 +128,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
 
     override fun onPositiveButtonSelected(id: Int) {
         if (id == DIALOG_ID_DELETE_ALL_CONFIRMATION) {
+            analyticsManager.onDeleteAllButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS, viewModel.adapter.itemCount)
             viewModel.deleteAllPlaylists()
             showSnackbar(R.string.manage_playlists_all_playlists_deleted)
         }

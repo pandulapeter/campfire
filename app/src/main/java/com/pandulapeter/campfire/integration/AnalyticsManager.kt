@@ -38,6 +38,10 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_PLAY_ORIGINAL_SELECTED = "play_original_selected"
         private const val EVENT_REPORT_A_PROBLEM_SELECTED = "report_a_problem_selected"
         private const val EVENT_DOWNLOAD_BUTTON_PRESSED = "download_button_pressed"
+        private const val EVENT_DELETE_ALL_BUTTON_PRESSED = "delete_all_button_pressed"
+        private const val EVENT_SWIPE_TO_DISMISS_USED = "swipe_to_dismiss_used"
+        private const val EVENT_DRAG_TO_REARRANGE_USED = "drag_to_rearrange_used"
+        private const val EVENT_PINCH_TO_ZOOM_USED = "pinch_to_zoom_used"
 
         // Keys
         private const val PARAM_KEY_TIMESTAMP = "timestamp"
@@ -66,6 +70,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_IS_BOOKMARKED = "is_bookmarked"
         private const val PARAM_KEY_PLAYLIST_COUNT = "playlist_count"
         private const val PARAM_KEY_TRANSPOSITION = "transposition"
+        private const val PARAM_KEY_FONT_SIZE = "font_size"
 
         // Values
         const val PARAM_VALUE_SCREEN_LIBRARY = "songs"
@@ -258,6 +263,27 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
     fun onDownloadButtonPressed(songId: String) = trackAnalyticsEvent(
         EVENT_DOWNLOAD_BUTTON_PRESSED,
         PARAM_KEY_SONG_ID to songId
+    )
+
+    fun onDeleteAllButtonPressed(source: String, songCount: Int) = trackAnalyticsEvent(
+        EVENT_DELETE_ALL_BUTTON_PRESSED,
+        PARAM_KEY_SOURCE to source,
+        PARAM_KEY_SONG_COUNT to songCount.toString()
+    )
+
+    fun onSwipeToDismissUsed(source: String) = trackAnalyticsEvent(
+        EVENT_SWIPE_TO_DISMISS_USED,
+        PARAM_KEY_SOURCE to source
+    )
+
+    fun onDragToRearrangeUsed(source: String) = trackAnalyticsEvent(
+        EVENT_DRAG_TO_REARRANGE_USED,
+        PARAM_KEY_SOURCE to source
+    )
+
+    fun onPinchToZoomUsed(fontSize: Float) = trackAnalyticsEvent(
+        EVENT_PINCH_TO_ZOOM_USED,
+        PARAM_KEY_FONT_SIZE to fontSize.toString()
     )
 
     fun trackNonFatalError(throwable: Throwable) {

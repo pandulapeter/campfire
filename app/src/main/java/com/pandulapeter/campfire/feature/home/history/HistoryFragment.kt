@@ -66,6 +66,7 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), BaseDialogFragment
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 viewHolder.adapterPosition.let { position ->
                     if (position != RecyclerView.NO_POSITION) {
+                        analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_HISTORY)
                         viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.historyCompleted = true
                         val song = (viewModel.adapter.items[position] as SongListItemViewModel.SongViewModel).song
@@ -89,6 +90,7 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), BaseDialogFragment
 
     override fun onPositiveButtonSelected(id: Int) {
         if (id == DIALOG_ID_DELETE_ALL_CONFIRMATION) {
+            analyticsManager.onDeleteAllButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_HISTORY, viewModel.adapter.itemCount)
             viewModel.deleteAllSongs()
             showSnackbar(R.string.history_all_songs_removed_message)
         }
