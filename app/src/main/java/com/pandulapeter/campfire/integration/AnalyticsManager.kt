@@ -37,6 +37,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_TRANSPOSITION_CHANGED = "transposition_changed"
         private const val EVENT_PLAY_ORIGINAL_SELECTED = "play_original_selected"
         private const val EVENT_REPORT_A_PROBLEM_SELECTED = "report_a_problem_selected"
+        private const val EVENT_DOWNLOAD_BUTTON_PRESSED = "download_button_pressed"
 
         // Keys
         private const val PARAM_KEY_TIMESTAMP = "timestamp"
@@ -251,6 +252,11 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
 
     fun onReportAProblemSelected(songId: String) = trackAnalyticsEvent(
         EVENT_REPORT_A_PROBLEM_SELECTED,
+        PARAM_KEY_SONG_ID to songId
+    )
+
+    fun onDownloadButtonPressed(songId: String) = trackAnalyticsEvent(
+        EVENT_DOWNLOAD_BUTTON_PRESSED,
         PARAM_KEY_SONG_ID to songId
     )
 

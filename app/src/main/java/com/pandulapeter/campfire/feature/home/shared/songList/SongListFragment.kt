@@ -70,7 +70,10 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             }
             downloadActionClickListener = { position ->
                 if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
-                    (items[position] as? SongListItemViewModel.SongViewModel)?.let { viewModel.downloadSong(it.song) }
+                    (items[position] as? SongListItemViewModel.SongViewModel)?.let {
+                        analyticsManager.onDownloadButtonPressed(it.song.id)
+                        viewModel.downloadSong(it.song)
+                    }
                 }
             }
             playlistActionClickListener = { position ->
