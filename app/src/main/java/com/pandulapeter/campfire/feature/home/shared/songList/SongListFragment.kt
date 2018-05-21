@@ -111,7 +111,10 @@ abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<F
             }
         }
         binding.swipeRefreshLayout.run {
-            setOnRefreshListener { viewModel.updateData() }
+            setOnRefreshListener {
+                analyticsManager.onSwipeToRefreshUsed(viewModel.screenName)
+                viewModel.updateData()
+            }
             setColorSchemeColors(context.color(R.color.accent))
         }
         linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())

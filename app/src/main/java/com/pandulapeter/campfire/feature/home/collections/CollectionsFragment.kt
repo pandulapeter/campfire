@@ -42,7 +42,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                 getCampfireActivity().updateToolbarButtons(
                     listOf(
                         getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity().openSecondaryNavigationDrawer() }
-                ))
+                    ))
             },
             openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() })
     }
@@ -112,7 +112,10 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             }
         }
         binding.swipeRefreshLayout.run {
-            setOnRefreshListener { viewModel.updateData() }
+            setOnRefreshListener {
+                analyticsManager.onSwipeToRefreshUsed(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
+                viewModel.updateData()
+            }
             setColorSchemeColors(context.color(R.color.accent))
         }
         linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())

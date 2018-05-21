@@ -40,6 +40,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_REPORT_A_PROBLEM_SELECTED = "report_a_problem_selected"
         private const val EVENT_DOWNLOAD_BUTTON_PRESSED = "download_button_pressed"
         private const val EVENT_DELETE_ALL_BUTTON_PRESSED = "delete_all_button_pressed"
+        private const val EVENT_SWIPE_TO_REFRESH_USED = "swipe_to_refresh_used"
         private const val EVENT_SWIPE_TO_DISMISS_USED = "swipe_to_dismiss_used"
         private const val EVENT_DRAG_TO_REARRANGE_USED = "drag_to_rearrange_used"
         private const val EVENT_PINCH_TO_ZOOM_USED = "pinch_to_zoom_used"
@@ -278,6 +279,11 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         EVENT_DELETE_ALL_BUTTON_PRESSED,
         PARAM_KEY_SOURCE to source,
         PARAM_KEY_SONG_COUNT to songCount.toString()
+    )
+
+    fun onSwipeToRefreshUsed(source: String) = trackAnalyticsEvent(
+        EVENT_SWIPE_TO_REFRESH_USED,
+        PARAM_KEY_SOURCE to source
     )
 
     fun onSwipeToDismissUsed(source: String) = trackAnalyticsEvent(
