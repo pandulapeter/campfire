@@ -43,6 +43,8 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_SWIPE_TO_DISMISS_USED = "swipe_to_dismiss_used"
         private const val EVENT_DRAG_TO_REARRANGE_USED = "drag_to_rearrange_used"
         private const val EVENT_PINCH_TO_ZOOM_USED = "pinch_to_zoom_used"
+        private const val EVENT_UNDO_BUTTON_PRESSED = "undo_button_pressed"
+        private const val EVENT_WHAT_IS_NEW_BUTTON_PRESSED = "what_is_new_button_pressed"
 
         // Keys
         private const val PARAM_KEY_TIMESTAMP = "timestamp"
@@ -291,6 +293,17 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
     fun onPinchToZoomUsed(fontSize: Float) = trackAnalyticsEvent(
         EVENT_PINCH_TO_ZOOM_USED,
         PARAM_KEY_FONT_SIZE to fontSize.toString()
+    )
+
+    //TODO
+    fun onUndoButtonPressed(source: String) = trackAnalyticsEvent(
+        EVENT_UNDO_BUTTON_PRESSED,
+        PARAM_KEY_SOURCE to source
+    )
+
+    fun onWhatIsNewButtonPressed() = trackAnalyticsEvent(
+        EVENT_WHAT_IS_NEW_BUTTON_PRESSED,
+        PARAM_KEY_VERSION to BuildConfig.VERSION_NAME
     )
 
     fun trackNonFatalError(throwable: Throwable) {

@@ -199,11 +199,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         binding.sharedElement.detector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
             override fun onScale(detector: ScaleGestureDetector?): Boolean {
                 detector?.let {
-                    val multiplier = Math.round(it.scaleFactor * 50) / 50f
-                    Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize * multiplier)).let {
-                        preferenceDatabase.fontSize = it
-                        analyticsManager.onPinchToZoomUsed(it)
-                    }
+                    preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize * Math.round(it.scaleFactor * 50) / 50f))
                     detailEventBus.notifyTextSizeChanged()
                     if (!firstTimeUserExperienceManager.fontSizePinchCompleted) {
                         firstTimeUserExperienceManager.fontSizePinchCompleted = true
@@ -215,6 +211,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 }
                 return true
             }
+
+            override fun onScaleEnd(detector: ScaleGestureDetector?) = analyticsManager.onPinchToZoomUsed(Math.round(preferenceDatabase.fontSize * 10) / 10f)
         })
         binding.root.post(object : Runnable {
             override fun run() {

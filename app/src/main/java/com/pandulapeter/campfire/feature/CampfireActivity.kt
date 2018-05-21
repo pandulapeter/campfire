@@ -549,7 +549,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             currentFragment?.showSnackbar(
                 message = R.string.options_changelog_app_updated,
                 actionText = R.string.options_changelog_what_is_new,
-                action = { openOptionsScreen(true) })
+                action = {
+                    analyticsManager.onWhatIsNewButtonPressed()
+                    openOptionsScreen(true)
+                })
         }
     }
 
