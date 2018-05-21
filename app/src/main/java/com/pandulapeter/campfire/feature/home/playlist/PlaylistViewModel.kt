@@ -44,7 +44,7 @@ class PlaylistViewModel(
             }
         }
         isInEditMode.onPropertyChanged {
-            if (adapter.items.size > 1) {
+            if (adapter.itemCount > 1) {
                 adapter.notifyItemRangeChanged(0, adapter.itemCount, SongListAdapter.Payload.EditModeChanged(it))
                 updateAdapterItems()
             }
@@ -100,6 +100,7 @@ class PlaylistViewModel(
                             playlistRepository.updatePlaylistTitle(it.id, newTitle)
                             appShortcutManager.updateAppShortcuts()
                         }
+                        analyticsManager.onPlaylistEdited(newTitle ?: "", adapter.itemCount)
                     }
                 }
                 this@PlaylistViewModel.isInEditMode.set(toolbarTextInputView.isTextInputVisible)

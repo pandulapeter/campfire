@@ -97,7 +97,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
             override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) =
                 if (viewModel.isInEditMode.get())
                     makeMovementFlags(
-                        if (viewModel.adapter.items.size > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
+                        if (viewModel.adapter.itemCount > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
                         ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     ) else 0
 
@@ -191,7 +191,7 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
         }
 
         fun showDragHintIfNeeded() {
-            if (!firstTimeUserExperienceManager.playlistDragCompleted && !isSnackbarVisible() && viewModel.adapter.items.size > 1 && viewModel.isInEditMode.get()) {
+            if (!firstTimeUserExperienceManager.playlistDragCompleted && !isSnackbarVisible() && viewModel.adapter.itemCount > 1 && viewModel.isInEditMode.get()) {
                 showHint(
                     message = R.string.playlist_hint_drag,
                     action = {

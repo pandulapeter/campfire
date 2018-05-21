@@ -23,6 +23,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_SCREEN_OPENED = "screen_opened"
         private const val EVENT_SONG_VISUALIZED = "song_visualized"
         private const val EVENT_PLAYLIST_CREATED = "playlist_created"
+        private const val EVENT_PLAYLIST_EDITED = "playlist_edited"
         private const val EVENT_COLLECTION_BOOKMARKED_STATE_CHANGED = "collection_bookmarked_state_changed"
         private const val EVENT_COLLECTION_SORTING_MODE_UPDATED = "collection_sorting_mode_updated"
         private const val EVENT_COLLECTION_FILTER_TOGGLED = "collection_filter_toggled"
@@ -176,6 +177,12 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_PLAYLIST_TITLE to title,
         PARAM_KEY_SOURCE to source,
         PARAM_KEY_TOTAL_PLAYLIST_COUNT to totalPlaylistCount.toString()
+    )
+
+    fun onPlaylistEdited(title: String, songCount: Int) = trackAnalyticsEvent(
+        EVENT_PLAYLIST_EDITED,
+        PARAM_KEY_PLAYLIST_TITLE to title,
+        PARAM_KEY_SONG_COUNT to songCount.toString()
     )
 
     fun onCollectionBookmarkedStateChanged(collectionId: String, isBookmarked: Boolean, source: String) = trackAnalyticsEvent(

@@ -73,7 +73,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) =
                 if (viewHolder.adapterPosition > 0)
                     makeMovementFlags(
-                        if (viewModel.adapter.items.size > 2) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
+                        if (viewModel.adapter.itemCount > 2) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
                         ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     ) else 0
 
