@@ -46,6 +46,9 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_PINCH_TO_ZOOM_USED = "pinch_to_zoom_used"
         private const val EVENT_UNDO_BUTTON_PRESSED = "undo_button_pressed"
         private const val EVENT_WHAT_IS_NEW_BUTTON_PRESSED = "what_is_new_button_pressed"
+        private const val EVENT_ABOUT_LOGO_PRESSED = "about_logo_pressed"
+        private const val EVENT_ABOUT_LINK_OPENED = "about_link_opened"
+        private const val EVENT_ABOUT_LEGAL_PAGE_OPENED = "about_legal_page_opened"
 
         // Keys
         private const val PARAM_KEY_TIMESTAMP = "timestamp"
@@ -75,6 +78,8 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_PLAYLIST_COUNT = "playlist_count"
         private const val PARAM_KEY_TRANSPOSITION = "transposition"
         private const val PARAM_KEY_FONT_SIZE = "font_size"
+        private const val PARAM_KEY_LINK = "link"
+        private const val PARAM_KEY_LEGAL_PAGE = "legal_page"
 
         // Values
         const val PARAM_VALUE_SCREEN_LIBRARY = "songs"
@@ -109,6 +114,14 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         const val PARAM_VALUE_NO = "no"
         const val PARAM_VALUE_SWIPE_TO_DISMISS = "swipe_to_dismiss"
         const val PARAM_VALUE_CANCEL_SWIPE_TO_DISMISS = "cancel_swipe_to_dismiss"
+        const val PARAM_VALUE_ABOUT_GOOGLE_PLAY = "google_play"
+        const val PARAM_VALUE_ABOUT_GITHUB = "github"
+        const val PARAM_VALUE_ABOUT_SHARE = "share"
+        const val PARAM_VALUE_ABOUT_CONTACT_ME = "contact_me"
+        const val PARAM_VALUE_ABOUT_BUY_ME_A_BEER = "buy_me_a_beer"
+        const val PARAM_VALUE_ABOUT_TERMS_AND_CONDITIONS = "terms_and_conditions"
+        const val PARAM_VALUE_ABOUT_PRIVACY_POLICY = "privacy_policy"
+        const val PARAM_VALUE_ABOUT_OPEN_SOURCE_LICENSES = "open_source_licenses"
     }
 
     private val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
@@ -309,6 +322,20 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
     fun onWhatIsNewButtonPressed() = trackAnalyticsEvent(
         EVENT_WHAT_IS_NEW_BUTTON_PRESSED,
         PARAM_KEY_VERSION to BuildConfig.VERSION_NAME
+    )
+
+    fun trackAboutLogoPressed() = trackAnalyticsEvent(
+        EVENT_ABOUT_LOGO_PRESSED
+    )
+
+    fun trackAboutLinkOpened(link: String) = trackAnalyticsEvent(
+        EVENT_ABOUT_LINK_OPENED,
+        PARAM_KEY_LINK to link
+    )
+
+    fun trackAboutLegalPageOpened(legalPage: String) = trackAnalyticsEvent(
+        EVENT_ABOUT_LEGAL_PAGE_OPENED,
+        PARAM_KEY_LEGAL_PAGE to legalPage
     )
 
     fun trackNonFatalError(throwable: Throwable) {
