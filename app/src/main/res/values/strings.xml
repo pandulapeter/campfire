@@ -15,6 +15,7 @@
 
     <!-- Supported languages -->
     <string name="language_english">English</string>
+    <string name="language_spanish">Spanish</string>
     <string name="language_hungarian">Hungarian</string>
     <string name="language_romanian">Romanian</string>
     <string name="language_unknown">Unknown</string>
@@ -112,7 +113,7 @@
     <string name="options_preferences_exit_confirmation">Exit confirmation</string>
     <string name="options_preferences_exit_confirmation_enabled">Ask for confirmation before closing the app</string>
     <string name="options_preferences_exit_confirmation_disabled">Close the app without confirmation</string>
-    <string name="options_preferences_app_theme">App theme</string>
+    <string name="options_preferences_app_theme">Theme</string>
     <string name="options_preferences_app_theme_automatic">Automatic</string>
     <string name="options_preferences_app_theme_automatic_description">Change the theme based on the time of the day</string>
     <string name="options_preferences_app_theme_dark">Dark</string>

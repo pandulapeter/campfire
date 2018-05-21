@@ -107,6 +107,7 @@ class SongRepository(
             .map {
                 when (it.language) {
                     Language.SupportedLanguages.ENGLISH.id -> Language.Known.English
+                    Language.SupportedLanguages.SPANISH.id -> Language.Known.Spanish
                     Language.SupportedLanguages.HUNGARIAN.id -> Language.Known.Hungarian
                     Language.SupportedLanguages.ROMANIAN.id -> Language.Known.Romanian
                     else -> Language.Unknown

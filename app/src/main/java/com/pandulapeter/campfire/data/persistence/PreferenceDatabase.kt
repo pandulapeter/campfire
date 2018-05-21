@@ -71,10 +71,13 @@ class PreferenceDatabase(context: Context) {
     }
 
     private fun getDefaultLanguageFilters() = mutableSetOf<String>().apply {
-        if (locale != "HUN" && locale != "ROU") {
+        if (!Language.SupportedLanguages.SPANISH.countryCodes.contains(locale)) {
+            add(Language.Known.Spanish.id)
+        }
+        if (!Language.SupportedLanguages.HUNGARIAN.countryCodes.contains(locale)) {
             add(Language.Known.Hungarian.id)
         }
-        if (locale != "ROU") {
+        if (!Language.SupportedLanguages.ROMANIAN.countryCodes.contains(locale)) {
             add(Language.Known.Romanian.id)
         }
     }
