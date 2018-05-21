@@ -1,7 +1,7 @@
 # Campfire (Android)
 *Explore a hand-picked library of high quality song lyrics and chords.*
 
-Sign-up to alpha testing [here](https://plus.google.com/communities/104615840487719249096?sqinv=SVFINUg1WlM4cTdqVWwtc2sxSllsU0xUSUpDd2xn) (after you join the community, follow the link to the Play Store listing in the first post)
+Sign-up to become an alpha tester [here](https://plus.google.com/communities/104615840487719249096?sqinv=SVFINUg1WlM4cTdqVWwtc2sxSllsU0xUSUpDd2xn) (after you join the community, follow the link to the Play Store listing in the first post)
 
 Find the backend project [here](https://github.com/pandulapeter/campfire-backend).
 
