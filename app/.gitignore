@@ -6,4 +6,4 @@ release.keystore
 release.keystore.properties
 
 # Firebase configuration
-app/src/google-services.json
+google-services.json
