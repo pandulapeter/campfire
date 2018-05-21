@@ -37,16 +37,30 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
             analyticsManager.onShouldShowChordsToggled(it, AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_PREFERENCES)
             preferenceDatabase.shouldShowChords = it
         }
-        shouldUseGermanNotation.onPropertyChanged { preferenceDatabase.shouldUseGermanNotation = it }
+        shouldUseGermanNotation.onPropertyChanged {
+            analyticsManager.onNotationModeChanged(it)
+            preferenceDatabase.shouldUseGermanNotation = it
+        }
         theme.onPropertyChanged {
             preferenceDatabase.theme = it.id
             updateThemeDescription()
+            analyticsManager.onThemeChanged(
+                when (it) {
+                    PreferencesViewModel.Theme.AUTOMATIC -> AnalyticsManager.PARAM_VALUE_AUTOMATIC
+                    PreferencesViewModel.Theme.LIGHT -> AnalyticsManager.PARAM_VALUE_LIGHT
+                    PreferencesViewModel.Theme.DARK -> AnalyticsManager.PARAM_VALUE_DARK
+                }
+            )
         }
         language.onPropertyChanged {
             preferenceDatabase.language = it.id
             updateLanguageDescription()
+            analyticsManager.onLanguageChanged(if (it == PreferencesViewModel.Language.AUTOMATIC) AnalyticsManager.PARAM_VALUE_AUTOMATIC else it.id)
         }
-        shouldShowExitConfirmation.onPropertyChanged { preferenceDatabase.shouldShowExitConfirmation = it }
+        shouldShowExitConfirmation.onPropertyChanged {
+            analyticsManager.onExitConfirmationToggled(it)
+            preferenceDatabase.shouldShowExitConfirmation = it
+        }
         shouldShareUsageData.onPropertyChanged { preferenceDatabase.shouldShareUsageData = it }
         updateThemeDescription()
         updateLanguageDescription()

@@ -55,6 +55,7 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
 
     override fun onPositiveButtonSelected(id: Int) {
         if (id == DIALOG_ID_RESET_HINTS_CONFIRMATION) {
+            analyticsManager.onHintsReset()
             viewModel.resetHints()
         }
     }
