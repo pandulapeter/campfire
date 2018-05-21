@@ -86,6 +86,7 @@ class DetailPageViewModel(
 
     override fun onSongDetailRepositoryDownloadError(song: Song) {
         if (song.id == this.song.id && text.get().isNullOrEmpty()) {
+            analyticsManager.onConnectionError(true, song.id)
             state.set(StateLayout.State.ERROR)
         }
     }

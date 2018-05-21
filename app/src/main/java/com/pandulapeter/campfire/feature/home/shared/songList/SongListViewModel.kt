@@ -79,8 +79,10 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
 
     override fun onSongRepositoryUpdateError() {
         if (librarySongs.toList().isEmpty()) {
+            analyticsManager.onConnectionError(true, screenName)
             state.set(StateLayout.State.ERROR)
         } else {
+            analyticsManager.onConnectionError(false, screenName)
             shouldShowUpdateErrorSnackbar.set(true)
         }
     }
@@ -116,6 +118,7 @@ abstract class SongListViewModel(protected val context: Context) : CampfireViewM
     }
 
     override fun onSongDetailRepositoryDownloadError(song: Song) {
+        analyticsManager.onConnectionError(!songDetailRepository.isSongDownloaded(song.id), song.id)
         downloadSongError.set(song)
         adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == song.id }.let { index ->
             if (index != RecyclerView.NO_POSITION) {

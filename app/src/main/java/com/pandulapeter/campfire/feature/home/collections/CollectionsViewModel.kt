@@ -99,8 +99,10 @@ class CollectionsViewModel(
 
     override fun onCollectionRepositoryUpdateError() {
         if (collections.toList().isEmpty()) {
+            analyticsManager.onConnectionError(true, AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
             state.set(StateLayout.State.ERROR)
         } else {
+            analyticsManager.onConnectionError(false, AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
             shouldShowUpdateErrorSnackbar.set(true)
         }
     }

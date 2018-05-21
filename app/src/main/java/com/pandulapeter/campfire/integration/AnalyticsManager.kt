@@ -19,6 +19,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         // Events
         private const val EVENT_CONSENT_GIVEN = "consent_given"
         private const val EVENT_APP_OPENED = "app_opened"
+        private const val EVENT_CONNECTION_ERROR = "connection_error"
         private const val EVENT_SCREEN_OPENED = "screen_opened"
         private const val EVENT_SONG_VISUALIZED = "song_visualized"
         private const val EVENT_PLAYLIST_CREATED = "playlist_created"
@@ -44,6 +45,8 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_THEME = "theme"
         private const val PARAM_KEY_LANGUAGE = "language"
         private const val PARAM_KEY_FROM_APP_SHORTCUT = "from_app_shortcut"
+        private const val PARAM_KEY_IS_INITIAL_LOADING = "is_initial_loading"
+        private const val PARAM_KEY_DATA = "data"
         private const val PARAM_KEY_COLLECTION_ID = "collection_id"
         private const val PARAM_KEY_SONG_ID = "song_id"
         private const val PARAM_KEY_SONG_COUNT = "song_count"
@@ -116,6 +119,12 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_FROM_APP_SHORTCUT to if (fromAppShortcut) PARAM_VALUE_YES else PARAM_VALUE_NO,
         PARAM_KEY_THEME to theme,
         PARAM_KEY_LANGUAGE to language
+    )
+
+    fun onConnectionError(isInitialLoading: Boolean, data: String) = trackAnalyticsEvent(
+        EVENT_CONNECTION_ERROR,
+        PARAM_KEY_IS_INITIAL_LOADING to if (isInitialLoading) PARAM_VALUE_YES else PARAM_VALUE_NO,
+        PARAM_KEY_DATA to data
     )
 
     fun onTopLevelScreenOpened(screen: String) = trackAnalyticsEvent(
