@@ -295,7 +295,6 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_FONT_SIZE to fontSize.toString()
     )
 
-    //TODO
     fun onUndoButtonPressed(source: String) = trackAnalyticsEvent(
         EVENT_UNDO_BUTTON_PRESSED,
         PARAM_KEY_SOURCE to source

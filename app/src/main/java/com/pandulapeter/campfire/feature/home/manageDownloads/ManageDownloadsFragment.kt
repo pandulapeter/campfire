@@ -77,7 +77,10 @@ class ManageDownloadsFragment : SongListFragment<ManageDownloadsViewModel>(), Ba
                         showSnackbar(
                             message = getString(R.string.manage_downloads_song_deleted_message, song.title),
                             actionText = R.string.undo,
-                            action = { viewModel.cancelDeleteSong() },
+                            action = {
+                                analyticsManager.onUndoButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS)
+                                viewModel.cancelDeleteSong()
+                            },
                             dismissAction = { viewModel.deleteSongPermanently() }
                         )
                         viewModel.deleteSongTemporarily(song.id)

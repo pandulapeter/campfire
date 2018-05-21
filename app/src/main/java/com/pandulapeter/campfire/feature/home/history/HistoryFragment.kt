@@ -73,7 +73,10 @@ class HistoryFragment : SongListFragment<HistoryViewModel>(), BaseDialogFragment
                         showSnackbar(
                             message = getString(R.string.history_song_removed_message, song.title),
                             actionText = R.string.undo,
-                            action = { viewModel.cancelDeleteSong() },
+                            action = {
+                                analyticsManager.onUndoButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_HISTORY)
+                                viewModel.cancelDeleteSong()
+                            },
                             dismissAction = { viewModel.deleteSongPermanently() }
                         )
                         viewModel.deleteSongTemporarily(song.id)

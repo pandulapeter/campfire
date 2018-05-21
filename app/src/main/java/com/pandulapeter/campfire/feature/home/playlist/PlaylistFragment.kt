@@ -126,7 +126,10 @@ class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
                             showSnackbar(
                                 message = getString(R.string.playlist_song_removed_message, song.title),
                                 actionText = R.string.undo,
-                                action = { viewModel.cancelDeleteSong() },
+                                action = {
+                                    analyticsManager.onUndoButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST)
+                                    viewModel.cancelDeleteSong()
+                                },
                                 dismissAction = { viewModel.deleteSongPermanently() }
                             )
                             viewModel.deleteSongTemporarily(song.id)

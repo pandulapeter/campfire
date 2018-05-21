@@ -104,7 +104,10 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
                         showSnackbar(
                             message = getString(R.string.manage_playlists_playlist_deleted_message, playlist.title),
                             actionText = R.string.undo,
-                            action = { viewModel.cancelDeletePlaylist() },
+                            action = {
+                                analyticsManager.onUndoButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS)
+                                viewModel.cancelDeletePlaylist()
+                            },
                             dismissAction = { viewModel.deletePlaylistPermanently() }
                         )
                         viewModel.deletePlaylistTemporarily(playlist.id)
