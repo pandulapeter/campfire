@@ -16,6 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/border"
+        android:layout_marginEnd="@dimen/negative_card_corner"
         android:layout_marginStart="@dimen/content_padding"
         android:foreground="?attr/selectableItemBackground"
         app:cardCornerRadius="@dimen/card_corner"
@@ -25,7 +26,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:animateLayoutChanges="true"
-            android:minHeight="@dimen/list_item_minimum_height">
+            android:minHeight="@dimen/list_item_minimum_height"
+            android:paddingEnd="@dimen/card_corner"
+            android:paddingStart="@dimen/nothing">
 
             <android.support.v4.widget.Space
                 android:id="@+id/space"
