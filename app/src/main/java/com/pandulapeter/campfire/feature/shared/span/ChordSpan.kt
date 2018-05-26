@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.detail.page.parsing
+package com.pandulapeter.campfire.feature.shared.span
 
 import android.graphics.Canvas
 import android.graphics.Paint

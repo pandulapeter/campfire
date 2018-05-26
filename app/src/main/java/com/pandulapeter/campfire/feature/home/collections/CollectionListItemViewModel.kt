@@ -6,9 +6,11 @@ sealed class CollectionListItemViewModel {
 
     abstract fun getItemId(): Long
 
-    data class CollectionViewModel(val collection: Collection) : CollectionListItemViewModel() {
+    data class CollectionViewModel(val collection: Collection, private val newText: String) : CollectionListItemViewModel() {
 
         override fun getItemId() = collection.id.hashCode().toLong()
+
+        val alertText = if (collection.isNew) newText else null
     }
 
     data class HeaderViewModel(val title: String) : CollectionListItemViewModel() {

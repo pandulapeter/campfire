@@ -13,7 +13,6 @@ import android.text.SpannableString
 import android.text.TextUtils
 import android.text.style.ForegroundColorSpan
 import android.text.style.TextAppearanceSpan
-import android.text.style.TypefaceSpan
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
@@ -21,8 +20,11 @@ import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.feature.shared.span.EllipsizeLineSpan
+import com.pandulapeter.campfire.feature.shared.span.FontFamilySpan
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.font
 import com.pandulapeter.campfire.util.obtainColor
 
 
@@ -107,7 +109,7 @@ fun setAnimation(view: ImageView, @DrawableRes drawableRes: Int, lastFrame: Draw
 fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?, @ColorInt titleColor: Int?, @ColorInt subtitleColor: Int?) {
     view.text = SpannableString("${title ?: ""}\n${subtitle ?: ""}").apply {
         title?.let {
-            setSpan(TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Title), 0, it.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+            setSpan(TextAppearanceSpan(view.context, R.style.Title), 0, it.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
             if (titleColor != null) {
                 setSpan(ForegroundColorSpan(titleColor), 0, it.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
             }
@@ -125,35 +127,51 @@ fun setTitleDescription(view: TextView, title: String?, description: String?) {
     view.text = SpannableString("${title ?: ""}\n${description ?: ""}").apply {
         description?.let {
             setSpan(
-                TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Caption),
+                TextAppearanceSpan(view.context, R.style.Caption),
+                (title?.length ?: 0) + 1,
+                length,
+                Spannable.SPAN_INCLUSIVE_INCLUSIVE
+            )
+            setSpan(
+                ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorSecondary)),
                 (title?.length ?: 0) + 1,
                 length,
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE
             )
         }
+        setSpan(FontFamilySpan(view.context.font(R.font.regular)), 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
 }
 
-@BindingAdapter(value = ["primaryText", "secondaryText", "extraText"], requireAll = false)
-fun setListItemText(view: TextView, primaryText: String, secondaryText: String?, extraText: String?) {
+@BindingAdapter(value = ["primaryText", "secondaryText", "extraText", "shouldEllipsize"], requireAll = false)
+fun setListItemText(view: TextView, primaryText: String, secondaryText: String?, extraText: String?, shouldEllipsize: Boolean?) {
+    view.setLineSpacing(0f, 0.9f)
     view.text = SpannableString("$primaryText${secondaryText?.let { "\n$it" } ?: ""}${extraText?.let { "\n$it" } ?: ""}").apply {
         setSpan(
-            TypefaceSpan("sans-serif-medium"),
+            ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorPrimary)),
             0,
             primaryText.length,
             Spannable.SPAN_INCLUSIVE_INCLUSIVE
         )
         secondaryText?.let {
             setSpan(
-                TypefaceSpan("sans-serif-thin"),
+                ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorSecondary)),
                 primaryText.length + 1,
                 length,
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE
             )
+            if (shouldEllipsize == true) {
+                setSpan(
+                    EllipsizeLineSpan(),
+                    primaryText.length + 1,
+                    length,
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+            }
         }
         extraText?.let {
             setSpan(
-                TextAppearanceSpan(view.context, R.style.TextAppearance_AppCompat_Caption),
+                TextAppearanceSpan(view.context, R.style.Caption),
                 length - it.length,
                 length,
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE

@@ -13,17 +13,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/large_content_padding"
-        android:fontFamily="sans-serif-medium"
         android:text="@string/campfire"
         android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-        android:textColor="@color/accent" />
+        android:textColor="@color/accent"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="sans-serif-light"
-        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+        android:textAppearance="@style/Caption"
         tools:text="v1.0.0" />
 
 </LinearLayout>

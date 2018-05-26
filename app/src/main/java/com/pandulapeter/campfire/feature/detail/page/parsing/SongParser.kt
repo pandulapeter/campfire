@@ -5,6 +5,7 @@ import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.TextAppearanceSpan
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.feature.shared.span.ChordSpan
 
 class SongParser(private val context: Context) {
 

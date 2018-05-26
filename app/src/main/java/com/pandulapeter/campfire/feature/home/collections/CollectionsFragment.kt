@@ -44,7 +44,9 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                         getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity().openSecondaryNavigationDrawer() }
                     ))
             },
-            openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() })
+            openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() },
+            newText = getString(R.string.new_tag)
+        )
     }
     override val canScrollToolbar get() = binding.recyclerView.canScroll()
 

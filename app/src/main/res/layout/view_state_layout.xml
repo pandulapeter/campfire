@@ -71,6 +71,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:drawablePadding="@dimen/content_padding"
+                android:textAllCaps="false"
                 android:textColor="@color/white"
                 android:theme="@style/ButtonTheme"
                 android:visibility="gone"

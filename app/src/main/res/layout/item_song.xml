@@ -125,7 +125,6 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:alpha="@{viewModel.downloadState instanceof DownloadState.Downloaded ? 1f : 0.5f}"
-                android:lineSpacingExtra="@dimen/list_item_text_spacing"
                 app:extraText="@{viewModel.alertText}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/download_action_container"

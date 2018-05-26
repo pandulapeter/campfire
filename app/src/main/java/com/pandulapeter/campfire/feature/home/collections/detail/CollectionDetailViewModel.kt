@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.home.collections.detail
 
 import android.content.Context
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.CollectionRepository
@@ -22,7 +23,7 @@ class CollectionDetailViewModel(
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL
 
     init {
-        this.collection.set(CollectionListItemViewModel.CollectionViewModel(collection))
+        this.collection.set(CollectionListItemViewModel.CollectionViewModel(collection, context.getString(R.string.new_tag)))
     }
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {

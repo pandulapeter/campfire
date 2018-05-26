@@ -23,7 +23,8 @@ import kotlin.coroutines.experimental.CoroutineContext
 
 class CollectionsViewModel(
     private val onDataLoaded: (languages: List<Language>) -> Unit,
-    private val openSecondaryNavigationDrawer: () -> Unit
+    private val openSecondaryNavigationDrawer: () -> Unit,
+    private val newText: String
 ) : CampfireViewModel(), CollectionRepository.Subscriber {
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
@@ -130,7 +131,7 @@ class CollectionsViewModel(
         .filterExplicit()
         .filterByLanguage()
         .sort()
-        .map { CollectionListItemViewModel.CollectionViewModel(it) }
+        .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
         .toList<CollectionListItemViewModel>()
 
     fun restoreToolbarButtons() {

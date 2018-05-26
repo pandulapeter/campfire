@@ -77,7 +77,7 @@
                                 android:layout_height="wrap_content"
                                 android:gravity="center_vertical"
                                 android:text="@string/campfire"
-                                android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                                android:textAppearance="@style/Title"
                                 android:textColor="?android:attr/textColorPrimary" />
 
                         </FrameLayout>

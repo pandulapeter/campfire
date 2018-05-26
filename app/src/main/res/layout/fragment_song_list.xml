@@ -55,7 +55,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="@dimen/content_padding"
                     android:layout_marginStart="@dimen/content_padding"
-                    android:fontFamily="sans-serif"
                     android:text="@{viewModel.collection.collection.description}"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"

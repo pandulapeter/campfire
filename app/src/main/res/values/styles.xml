@@ -2,7 +2,6 @@
 <resources>
 
     <style name="Section">
-        <item name="android:fontFamily">sans-serif-light</item>
         <item name="android:textColor">@color/accent</item>
     </style>
 
@@ -17,17 +16,26 @@
     </style>
 
     <style name="Header">
-        <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textColor">@color/accent</item>
+        <item name="android:textStyle">bold</item>
         <item name="android:textSize">@dimen/text_header</item>
         <item name="android:paddingStart">@dimen/first_keyline</item>
         <item name="android:paddingEnd">@dimen/first_keyline</item>
         <item name="android:paddingTop">12dp</item>
         <item name="android:paddingBottom">@dimen/content_padding</item>
-        <item name="android:textAllCaps">true</item>
     </style>
 
-    <style name="RadioButton" parent="@style/Widget.AppCompat.CompoundButton.RadioButton">
+    <style name="Title" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="Tab" parent="TextAppearance.Design.Tab">
+        <item name="textAllCaps">false</item>
+    </style>
+
+    <style name="Caption" parent="TextAppearance.AppCompat.Caption" />
+
+    <style name="RadioButton" parent="Widget.AppCompat.CompoundButton.RadioButton">
         <item name="android:gravity">center_vertical</item>
         <item name="android:minHeight">@dimen/touch_target</item>
         <item name="android:paddingBottom">@dimen/content_padding</item>
@@ -36,7 +44,7 @@
         <item name="android:paddingTop">@dimen/content_padding</item>
     </style>
 
-    <style name="OptionsItem" parent="@style/Widget.AppCompat.CompoundButton.CheckBox">
+    <style name="OptionsItem" parent="Widget.AppCompat.CompoundButton.CheckBox">
         <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:drawablePadding">@dimen/options_about_drawable_padding</item>
         <item name="android:gravity">center_vertical</item>

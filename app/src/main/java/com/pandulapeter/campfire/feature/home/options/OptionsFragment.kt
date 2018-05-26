@@ -1,10 +1,13 @@
 package com.pandulapeter.campfire.feature.home.options
 
+import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.design.widget.TabLayout
+import android.view.LayoutInflater
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsBinding
+import com.pandulapeter.campfire.databinding.ViewOptionsTabsBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
@@ -20,9 +23,10 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
     }
 
     override val viewModel = OptionsViewModel()
-    override val appBarView by lazy {
-        TabLayout(getCampfireActivity().toolbarContext).apply {
-            tabMode = TabLayout.MODE_SCROLLABLE
+    override val appBarView: TabLayout by lazy {
+        DataBindingUtil.inflate<ViewOptionsTabsBinding>(
+            LayoutInflater.from(getCampfireActivity().toolbarContext), R.layout.view_options_tabs, null, false
+        ).tabLayout.apply {
             setupWithViewPager(binding.viewPager)
         }
     }

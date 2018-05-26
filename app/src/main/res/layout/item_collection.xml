@@ -66,49 +66,19 @@
                 tools:src="@drawable/ic_bookmarked_24dp" />
 
             <TextView
-                android:id="@+id/title"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/content_padding"
-                android:fontFamily="sans-serif-medium"
-                android:text="@{viewModel.collection.title}"
-                android:textSize="16sp"
-                app:layout_constraintBottom_toTopOf="@+id/description"
+                app:extraText="@{viewModel.alertText}"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/bookmark"
                 app:layout_constraintStart_toEndOf="@id/image"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_chainStyle="packed"
-                tools:text="Collection title" />
-
-            <TextView
-                android:id="@id/description"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/content_padding"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif"
-                android:maxLines="1"
-                android:text="@{viewModel.collection.description}"
-                app:layout_constraintBottom_toTopOf="@+id/new_label"
-                app:layout_constraintEnd_toStartOf="@id/bookmark"
-                app:layout_constraintStart_toEndOf="@id/image"
-                app:layout_constraintTop_toBottomOf="@id/title"
-                tools:text="Collection description" />
-
-            <TextView
-                android:id="@+id/new_label"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/content_padding"
-                android:fontFamily="sans-serif-thin"
-                android:text="@string/new_tag"
-                android:textColor="@color/accent"
-                android:textSize="12sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/bookmark"
-                app:layout_constraintStart_toEndOf="@id/image"
-                app:layout_constraintTop_toBottomOf="@id/description"
-                app:visibility="@{viewModel.collection.new}" />
+                app:primaryText="@{viewModel.collection.title}"
+                app:secondaryText="@{viewModel.collection.description}"
+                app:shouldEllipsize="@{true}"
+                tools:text="Collection title/nCollection description" />
 
         </android.support.constraint.ConstraintLayout>
 
