@@ -57,7 +57,8 @@ fun setPadding(view: View, paddingStart: Int?, paddingTop: Int?, paddingEnd: Int
 fun setImage(view: ImageView, url: String?) = Glide
     .with(view)
     .load(url)
-    .apply(RequestOptions.placeholderOf(R.drawable.bg_splash))
+    .apply(RequestOptions.circleCropTransform())
+    .apply(RequestOptions.placeholderOf(R.drawable.bg_placeholder))
     .into(view)
 
 @BindingAdapter("android:text")

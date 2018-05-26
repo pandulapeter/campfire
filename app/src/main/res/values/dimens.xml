@@ -13,9 +13,9 @@
     <dimen name="toolbar_elevation">4dp</dimen>
     <dimen name="list_fab_content_bottom_margin">96dp</dimen>
     <dimen name="list_bottom_margin">@dimen/content_padding</dimen>
-    <dimen name="border">2dp</dimen>
+    <dimen name="border">4dp</dimen>
     <dimen name="nothing">0dp</dimen>
-    <dimen name="card_corner">@dimen/nothing</dimen>
+    <dimen name="card_corner">16dp</dimen>
 
     <!-- Text -->
     <dimen name="text_header">12sp</dimen>

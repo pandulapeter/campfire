@@ -9,7 +9,7 @@ class DividerView @JvmOverloads constructor(context: Context, attrs: AttributeSe
     View(context, attrs, defStyleAttr) {
 
     init {
-        setBackgroundColor(context.obtainColor(android.R.attr.textColorPrimary))
+        setBackgroundColor(context.obtainColor(android.R.attr.textColorSecondary))
         alpha = 0.4f
     }
 }

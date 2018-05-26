@@ -22,7 +22,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/border"
             android:transitionName="@{viewModel.cardTransitionName}"
-            app:cardCornerRadius="@dimen/card_corner"
+            app:cardCornerRadius="@dimen/nothing"
             app:contentPadding="@dimen/content_padding"
             app:visibility="@{viewModel.collection!=null}">
 
