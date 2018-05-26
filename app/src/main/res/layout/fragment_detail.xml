@@ -16,10 +16,10 @@
         android:layout_height="match_parent"
         android:layout_marginEnd="@dimen/negative_card_corner"
         android:layout_marginStart="@dimen/negative_card_corner"
-        app:contentPaddingLeft="@dimen/card_corner"
-        app:contentPaddingRight="@dimen/card_corner"
         android:transitionName="@{viewModel.songId}"
-        app:cardCornerRadius="@dimen/card_corner">
+        app:cardCornerRadius="@dimen/card_corner"
+        app:contentPaddingLeft="@dimen/card_corner"
+        app:contentPaddingRight="@dimen/card_corner">
 
         <android.support.v4.view.ViewPager
             android:id="@+id/view_pager"

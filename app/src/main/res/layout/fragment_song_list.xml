@@ -21,14 +21,18 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/border"
+            android:layout_marginEnd="@dimen/negative_card_corner"
+            android:layout_marginStart="@dimen/negative_card_corner"
             android:transitionName="@{viewModel.cardTransitionName}"
-            app:cardCornerRadius="@dimen/nothing"
+            app:cardCornerRadius="@dimen/card_corner"
             app:contentPadding="@dimen/content_padding"
             app:visibility="@{viewModel.collection!=null}">
 
             <android.support.constraint.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:paddingEnd="@dimen/card_corner"
+                android:paddingStart="@dimen/card_corner">
 
                 <ImageView
                     android:id="@+id/image"
