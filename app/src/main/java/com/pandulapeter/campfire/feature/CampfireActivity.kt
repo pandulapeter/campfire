@@ -10,6 +10,7 @@ import android.content.res.Resources
 import android.databinding.DataBindingUtil
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.support.annotation.MenuRes
 import android.support.design.internal.NavigationMenuView
@@ -195,6 +196,15 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 (binding.toolbarButtonContainer.background as ColorDrawable).color
             )
         )
+
+        // Make sure the status bar color is properly set.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            window.decorView.systemUiVisibility = when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+                Configuration.UI_MODE_NIGHT_UNDEFINED,
+                Configuration.UI_MODE_NIGHT_NO -> View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                else -> 0
+            }
+        }
 
         // Initialize the app bar.
         val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
