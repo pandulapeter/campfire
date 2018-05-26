@@ -16,6 +16,7 @@
     <dimen name="border">4dp</dimen>
     <dimen name="nothing">0dp</dimen>
     <dimen name="card_corner">16dp</dimen>
+    <dimen name="negative_card_corner">-16dp</dimen>
 
     <!-- Text -->
     <dimen name="text_header">12sp</dimen>
