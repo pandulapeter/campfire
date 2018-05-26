@@ -20,7 +20,13 @@
         <item name="colorAccent">@color/accent</item>
     </style>
 
-    <style name="DarkTheme" parent="Theme.AppCompat.NoActionBar">
+    <style name="BottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:navigationBarColor">?attr/colorPrimaryDark</item>
+    </style>
+
+    <style name="ButtonTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="colorAccent">@color/accent</item>
     </style>
 

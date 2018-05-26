@@ -142,7 +142,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
                 android:layout_margin="@dimen/large_content_padding"
-                android:theme="@style/DarkTheme"
+                android:theme="@style/ButtonTheme"
                 android:visibility="invisible"
                 app:fabSize="normal" />
 
