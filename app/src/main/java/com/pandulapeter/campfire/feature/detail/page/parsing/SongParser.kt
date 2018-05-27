@@ -25,11 +25,12 @@ class SongParser(private val context: Context) {
                         returnValue = returnValue.substring(0, result.range.first) + "\n\n" + returnValue.substring(result.range.first, returnValue.length - 1)
                     }
                 }
+                returnValue = returnValue
+                    .replace("\n\n", "\n")
+                    .replace("\n\n", "\n")
+                    .replace("\n\n", "\n")
                 returnValue
-                    .replace("\n\n", "\n")
-                    .replace("\n\n", "\n")
-                    .replace("\n\n", "\n")
-                    .replace(Regex("\\{(.*?)[}]"), { if (it.range.first == 0) it.value else "\n${it.value}" })
+                    .replace(Regex("\\{(.*?)[}]"), { if (it.range.first == 0 || returnValue[it.range.first - 2] == '}') it.value else "\n${it.value}" })
             }
                 ).replace(Regex("\\{(.*?)[}]"), {
             // Find the section headers
