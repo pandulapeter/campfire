@@ -678,7 +678,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     private fun openOptionsScreen(shouldOpenChangelog: Boolean = false): String {
-        currentFragment?.let {
+        currentFragment.let {
             if (it is OptionsFragment) {
                 if (shouldOpenChangelog) {
                     it.navigateToChangelog()
