@@ -15,7 +15,7 @@
         android:layout_marginTop="@dimen/large_content_padding"
         android:text="@string/campfire"
         android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-        android:textColor="@color/accent"
+        android:textColor="?android:attr/textColorSecondary"
         android:textStyle="bold" />
 
     <TextView
@@ -23,6 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="@style/Caption"
+        android:textColor="?android:attr/textColorSecondary"
         tools:text="v1.0.0" />
 
 </LinearLayout>
