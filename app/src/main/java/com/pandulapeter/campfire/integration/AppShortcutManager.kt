@@ -82,7 +82,7 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
             shortcuts.add(
                 createAppShortcut(
                     LIBRARY_ID,
-                    context.getString(R.string.home_library),
+                    context.getString(R.string.home_songs),
                     R.drawable.ic_shortcut_songs_48dp,
                     CampfireActivity.getSongsIntent(context)
                 )

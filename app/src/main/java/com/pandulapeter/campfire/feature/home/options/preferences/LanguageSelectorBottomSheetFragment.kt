@@ -26,10 +26,12 @@ class LanguageSelectorBottomSheetFragment : BaseBottomSheetDialogFragment<Fragme
             PreferencesViewModel.Language.AUTOMATIC -> binding.automatic
             PreferencesViewModel.Language.ENGLISH -> binding.english
             PreferencesViewModel.Language.HUNGARIAN -> binding.hungarian
+            PreferencesViewModel.Language.ROMANIAN -> binding.romanian
         }.isChecked = true
         binding.automatic.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onLanguageSelected(PreferencesViewModel.Language.AUTOMATIC) }
         binding.english.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onLanguageSelected(PreferencesViewModel.Language.ENGLISH) }
         binding.hungarian.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onLanguageSelected(PreferencesViewModel.Language.HUNGARIAN) }
+        binding.romanian.setOnCheckedChangeListener { _, isChecked -> if (isChecked) onLanguageSelected(PreferencesViewModel.Language.ROMANIAN) }
         binding.root.apply { post { behavior.peekHeight = height } }
     }
 

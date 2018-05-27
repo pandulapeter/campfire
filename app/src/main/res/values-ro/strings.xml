@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!--TODO: Romanian translation -->
+
     <!-- General -->
-    <string name="got_it">Értem</string>
+    <string name="got_it">Am înțeles</string>
     <string name="go_to_songs">@string/home_songs</string>
     <string name="try_again">Újra</string>
-    <string name="are_you_sure">Biztos vagy benne?</string>
+    <string name="are_you_sure">Ești sigur?</string>
     <string name="undo">Mégse</string>
     <string name="ok">OK</string>
     <string name="cancel">Mégse</string>
@@ -13,11 +15,11 @@
     <string name="known_bug_1">Hová tűnt a cím…? Úgy tűnik, találtál egy hibát!</string>
 
     <!-- Supported languages -->
-    <string name="language_english">Angol</string>
-    <string name="language_spanish">Spanyol</string>
-    <string name="language_hungarian">Magyar</string>
-    <string name="language_romanian">Román</string>
-    <string name="language_unknown">Ismeretlen</string>
+    <string name="language_english">Engleză</string>
+    <string name="language_spanish">Spaniolă</string>
+    <string name="language_hungarian">Maghiară</string>
+    <string name="language_romanian">Română</string>
+    <string name="language_unknown">Necunoscut</string>
 
     <!-- List items -->
     <string name="download">Letöltés</string>
@@ -30,17 +32,17 @@
 
     <!-- Home screen -->
     <string name="home_version_pattern">v%s</string>
-    <string name="home_songs">Dalok</string>
-    <string name="home_collections">Gyűjtemények</string>
-    <string name="home_options">Opciók</string>
-    <string name="home_history">Előzmények</string>
-    <string name="home_playlists">Listák</string>
-    <string name="home_favorites">Kedvencek</string>
-    <string name="home_new_playlist">Új lista</string>
+    <string name="home_songs">Piese</string>
+    <string name="home_collections">Colecții</string>
+    <string name="home_options">Oțiuni</string>
+    <string name="home_history">Istoric</string>
+    <string name="home_playlists">Liste</string>
+    <string name="home_favorites">Favorite</string>
+    <string name="home_new_playlist">Listă nouă</string>
     <string name="home_manage_playlists">@string/manage_playlists</string>
     <string name="home_manage_downloads">Letöltések kezelése</string>
     <string name="home_exit_confirmation_message">Tényleg ki szeretnél lépni az alkalmazásból?</string>
-    <string name="home_exit_confirmation_close">Kilépés</string>
+    <string name="home_exit_confirmation_close">Ieșire</string>
     <string name="home_privacy_policy_title">Személyes adatok megosztása</string>
     <string name="home_privacy_policy_message">Köszönöm, hogy letöltötted a Campfire-t!\n\nA különböző funkcionalitások népszerűségének követéséhez vagy az esetleges hibák kijavításához az alkalmazás szeretne névtelen adatokat és hibajelentéseket küldeni a fejlesztőnek. Ez az információ soha nem lesz harmadik személlyel megosztva és a most adott válaszodat akármikor módosíthatod a beállítások között.</string>
     <string name="home_privacy_policy_checkbox">Beleegyezem, hogy az alkalmazás névtelen felhasználási adatokat és hibajelentéseket küldjön a készülékemről</string>
@@ -99,10 +101,10 @@
     <string name="history_placeholder">A megtekintett dalok időrendi sorrendben fognak megjelenni itt</string>
 
     <!-- Options screen / Preferences -->
-    <string name="options_preferences_preferences">Beállítások</string>
-    <string name="options_preferences_changelog">Újdonságok</string>
-    <string name="options_preferences_about">Névjegy</string>
-    <string name="options_preferences_chords">Akkordok</string>
+    <string name="options_preferences_preferences">Setări</string>
+    <string name="options_preferences_changelog">Noutăți</string>
+    <string name="options_preferences_about">Despre</string>
+    <string name="options_preferences_chords">Acorduri</string>
     <string name="options_preferences_should_show_chords">Akkordok megjelenítése</string>
     <string name="options_preferences_show_chords_checked">Megjeleníti az akkordokat és a dalszöveget is</string>
     <string name="options_preferences_show_chords_unchecked">Csak a dalszöveg jelenik meg</string>
@@ -119,14 +121,14 @@
     <string name="options_preferences_app_theme_dark_description">Mindig sötét témát használ</string>
     <string name="options_preferences_app_theme_light">Világos</string>
     <string name="options_preferences_app_theme_light_description">Mindig világos témát használ</string>
-    <string name="options_preferences_language">Nyelv</string>
-    <string name="options_preferences_language_automatic">Automatikus</string>
+    <string name="options_preferences_language">Limbă</string>
+    <string name="options_preferences_language_automatic">Automatic</string>
     <string name="options_preferences_language_automatic_description">Próbálja követni a készülék nyelvi beállításait. Ha ez nem lehetséges, angolt használ</string>
-    <string name="options_preferences_language_english">Angol</string>
+    <string name="options_preferences_language_english">Engleză</string>
     <string name="options_preferences_language_english_description">Mindig legyen angol nyelvű</string>
-    <string name="options_preferences_language_hungarian">Magyar</string>
+    <string name="options_preferences_language_hungarian">Maghiară</string>
     <string name="options_preferences_language_hungarian_description">Mindig legyen magyar nyelvű</string>
-    <string name="options_preferences_language_romanian">Román</string>
+    <string name="options_preferences_language_romanian">Română</string>
     <string name="options_preferences_language_romanian_description">Mindig legyen román nyelvű</string>
     <string name="options_preferences_user_data">Felhasználói adatok</string>
     <string name="options_preferences_reset_hints">Tippek visszaállítása</string>

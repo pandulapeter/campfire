@@ -4,7 +4,7 @@
     <!-- General -->
     <string name="campfire" translatable="false">Campfire</string>
     <string name="got_it">Got it</string>
-    <string name="go_to_library">@string/home_library</string>
+    <string name="go_to_songs">@string/home_songs</string>
     <string name="try_again">Try again</string>
     <string name="are_you_sure">Are you sure?</string>
     <string name="undo">Undo</string>
@@ -31,7 +31,7 @@
 
     <!-- Home screen -->
     <string name="home_version_pattern">v%s</string>
-    <string name="home_library">Songs</string>
+    <string name="home_songs">Songs</string>
     <string name="home_collections">Collections</string>
     <string name="home_options">Options</string>
     <string name="home_history">History</string>
@@ -46,6 +46,20 @@
     <string name="home_privacy_policy_message">Thanks for downloading the app!\n\nTo track the popularity of various features as well as to simplify fixing any possible issues, the app would like to send anonymous analytics data and crash reports back to the developer. None of this information will be shared with third parties and you can change this preference at any time.</string>
     <string name="home_privacy_policy_checkbox">I\'m fine with the app anonymously collecting my usage statistics and potential crash reports</string>
     <string name="home_privacy_policy_positive">Continue</string>
+
+    <!-- Collections screen -->
+    <string name="collections_placeholder">No matching collections found. Double-check the filters you set up</string>
+    <string name="collections_initializing_error">Something went wrong while trying to load the list of collections</string>
+    <string name="collections_update_error">Something went wrong while updating collections</string>
+    <string name="collections_filters">Filters</string>
+    <string name="collections_sort_by">Sort by</string>
+    <string name="collections_sort_by_title">Title</string>
+    <string name="collections_sort_by_date">Upload date</string>
+    <string name="collections_sort_by_popularity">Popularity</string>
+    <string name="collections_filter_by_type">Filter by type</string>
+    <string name="collections_bookmarked_only">Bookmarked only</string>
+    <string name="collections_show_explicit">Show explicit</string>
+    <string name="collections_filter_by_language">Filter by language</string>
 
     <!-- Songs screen -->
     <string name="songs_placeholder">No matching songs found. Double-check the filters you set up</string>
@@ -66,20 +80,6 @@
     <string name="songs_search_in">Search in:</string>
     <string name="songs_search_in_titles">Titles</string>
     <string name="songs_search_in_artists">Artists</string>
-
-    <!-- Collections screen -->
-    <string name="collections_placeholder">No matching collections found. Double-check the filters you set up</string>
-    <string name="collections_initializing_error">Something went wrong while trying to load the list of collections</string>
-    <string name="collections_update_error">Something went wrong while updating collections</string>
-    <string name="collections_filters">Filters</string>
-    <string name="collections_sort_by">Sort by</string>
-    <string name="collections_sort_by_title">Title</string>
-    <string name="collections_sort_by_date">Upload date</string>
-    <string name="collections_sort_by_popularity">Popularity</string>
-    <string name="collections_filter_by_type">Filter by type</string>
-    <string name="collections_bookmarked_only">Bookmarked only</string>
-    <string name="collections_show_explicit">Show explicit</string>
-    <string name="collections_filter_by_language">Filter by language</string>
 
     <!-- History screen -->
     <string name="history_clear_confirmation_message">This will remove all items from your history.</string>
@@ -127,6 +127,8 @@
     <string name="options_preferences_language_english_description">Always use English</string>
     <string name="options_preferences_language_hungarian">Hungarian</string>
     <string name="options_preferences_language_hungarian_description">Always use Hungarian</string>
+    <string name="options_preferences_language_romanian">Romanian</string>
+    <string name="options_preferences_language_romanian_description">Always use Romanian</string>
     <string name="options_preferences_user_data">User data</string>
     <string name="options_preferences_reset_hints">Reset hints</string>
     <string name="options_preferences_reset_hints_description">The hints you dismissed in the past will appear again</string>

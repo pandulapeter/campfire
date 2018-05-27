@@ -54,6 +54,15 @@
                     app:title="@{@string/options_preferences_language_hungarian}"
                     tools:text="@string/options_preferences_language_hungarian" />
 
+                <RadioButton
+                    android:id="@+id/romanian"
+                    style="@style/RadioButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:description="@{@string/options_preferences_language_romanian_description}"
+                    app:title="@{@string/options_preferences_language_romanian}"
+                    tools:text="@string/options_preferences_language_romanian" />
+
             </RadioGroup>
 
         </LinearLayout>

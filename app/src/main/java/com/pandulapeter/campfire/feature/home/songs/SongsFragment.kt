@@ -34,7 +34,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
                 getCampfireActivity().toolbarContext,
                 R.string.songs_search,
                 true
-            ).apply { title.updateToolbarTitle(R.string.home_library) },
+            ).apply { title.updateToolbarTitle(R.string.home_songs) },
             updateSearchToggleDrawable = {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
                 getCampfireActivity().transitionMode = true
