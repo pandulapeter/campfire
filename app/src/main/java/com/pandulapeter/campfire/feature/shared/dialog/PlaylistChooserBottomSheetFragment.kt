@@ -10,7 +10,6 @@ import android.support.v7.widget.AppCompatCheckBox
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import com.pandulapeter.campfire.PlaylistChooserBottomSheetBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
@@ -165,9 +164,9 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
 
     private fun updateBackgroundDim() {
         dialog.window?.let {
-            it.attributes = it.attributes.apply {
-                dimAmount = (1f - viewModel.containerAlpha.get()) * 0.6f
-                flags = flags or WindowManager.LayoutParams.FLAG_DIM_BEHIND
+            val newDimAmount = (1f - viewModel.containerAlpha.get()) * 0.6f
+            if (it.attributes.dimAmount != newDimAmount) {
+                it.attributes = it.attributes.apply { dimAmount = newDimAmount }
             }
         }
     }
