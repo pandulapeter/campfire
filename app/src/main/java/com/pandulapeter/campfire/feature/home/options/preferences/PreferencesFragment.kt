@@ -29,8 +29,8 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
                     language.get()?.let { LanguageSelectorBottomSheetFragment.show(childFragmentManager, it.id) }
                 }
             }
-            theme.onPropertyChanged(this@PreferencesFragment) { getCampfireActivity().recreate() }
-            language.onPropertyChanged(this@PreferencesFragment) { getCampfireActivity().recreate() }
+            theme.onPropertyChanged(this@PreferencesFragment) { binding.root.post { if (isAdded) getCampfireActivity().recreate() } }
+            language.onPropertyChanged(this@PreferencesFragment) { binding.root.post { if (isAdded) getCampfireActivity().recreate() } }
             shouldShowHintsResetConfirmation.onEventTriggered(this@PreferencesFragment) {
                 if (!getCampfireActivity().isUiBlocked) {
                     AlertDialogFragment.show(

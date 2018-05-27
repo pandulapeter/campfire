@@ -3,13 +3,12 @@
 
     <style name="AppTheme" parent="AppThemeBase">
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">?attr/colorPrimaryDark</item>
+        <item name="android:navigationBarColor">?attr/colorPrimary</item>
     </style>
 
     <style name="BottomSheetDialogTheme" parent="BottomSheetDialogThemeBase">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">?attr/colorPrimaryDark</item>
-        <item name="android:windowLightStatusBar">true</item>
     </style>
 
 </resources>
