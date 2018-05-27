@@ -6,8 +6,8 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.BaseSongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.normalize
@@ -22,7 +22,7 @@ class LibraryViewModel(
     private val updateSearchToggleDrawable: (Boolean) -> Unit,
     private val onDataLoaded: (languages: List<Language>) -> Unit,
     private val openSecondaryNavigationDrawer: () -> Unit
-) : SongListViewModel(context) {
+) : BaseSongListViewModel(context) {
 
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_LIBRARY
     private val analyticsManager by inject<AnalyticsManager>()

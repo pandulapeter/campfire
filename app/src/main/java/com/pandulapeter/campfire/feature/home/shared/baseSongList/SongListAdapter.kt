@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.shared.songList
+package com.pandulapeter.campfire.feature.home.shared.baseSongList
 
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView

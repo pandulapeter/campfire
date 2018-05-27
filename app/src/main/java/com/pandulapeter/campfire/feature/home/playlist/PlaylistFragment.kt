@@ -8,8 +8,8 @@ import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.feature.home.shared.ElevationItemTouchHelperCallback
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.BaseSongListFragment
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
-class PlaylistFragment : SongListFragment<PlaylistViewModel>() {
+class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
 
     companion object {
         private var Bundle?.playlistId by BundleArgumentDelegate.String("playlistId")

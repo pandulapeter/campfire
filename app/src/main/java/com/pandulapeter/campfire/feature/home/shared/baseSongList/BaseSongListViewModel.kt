@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.shared.songList
+package com.pandulapeter.campfire.feature.home.shared.baseSongList
 
 import android.content.Context
 import android.databinding.ObservableBoolean
@@ -26,7 +26,8 @@ import kotlinx.coroutines.experimental.cancel
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.experimental.CoroutineContext
 
-abstract class SongListViewModel(protected val context: Context) : CampfireViewModel(), SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
+abstract class BaseSongListViewModel(protected val context: Context) : CampfireViewModel(), SongRepository.Subscriber, SongDetailRepository.Subscriber,
+    PlaylistRepository.Subscriber {
 
     protected val songRepository by inject<SongRepository>()
     protected val songDetailRepository by inject<SongDetailRepository>()

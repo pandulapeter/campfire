@@ -7,9 +7,9 @@ import android.databinding.ObservableInt
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.model.remote.Song
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListAdapter
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.BaseSongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.SongListAdapter
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
@@ -23,7 +23,7 @@ class PlaylistViewModel(
     private val openLibrary: () -> Unit,
     val toolbarTextInputView: ToolbarTextInputView?,
     private val onDataLoaded: () -> Unit
-) : SongListViewModel(context) {
+) : BaseSongListViewModel(context) {
 
     private val appShortcutManager by inject<AppShortcutManager>()
     private val analyticsManager by inject<AnalyticsManager>()

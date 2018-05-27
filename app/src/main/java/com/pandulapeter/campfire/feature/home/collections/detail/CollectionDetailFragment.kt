@@ -8,7 +8,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.detail.FadeInTransition
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.BaseSongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.util.animatedDrawable
 import com.pandulapeter.campfire.util.visibleOrGone
 import com.pandulapeter.campfire.util.withArguments
 
-class CollectionDetailFragment : SongListFragment<CollectionDetailViewModel>() {
+class CollectionDetailFragment : BaseSongListFragment<CollectionDetailViewModel>() {
 
     companion object {
         private var Bundle.collection by BundleArgumentDelegate.Parcelable("collection")

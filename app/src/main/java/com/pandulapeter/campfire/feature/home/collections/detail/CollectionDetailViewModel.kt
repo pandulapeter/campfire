@@ -6,8 +6,8 @@ import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.feature.home.collections.CollectionListItemViewModel
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.BaseSongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.SongListItemViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import org.koin.android.ext.android.inject
 
@@ -15,7 +15,7 @@ class CollectionDetailViewModel(
     context: Context,
     collection: Collection,
     private val onDataLoaded: () -> Unit
-) : SongListViewModel(context) {
+) : BaseSongListViewModel(context) {
 
     val collectionRepository by inject<CollectionRepository>()
     override val cardTransitionName = "card-${collection.id}"

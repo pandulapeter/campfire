@@ -6,11 +6,11 @@ import android.databinding.ObservableInt
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.BaseSongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.SongListItemViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 
-class ManageDownloadsViewModel(context: Context, private val openLibrary: () -> Unit) : SongListViewModel(context) {
+class ManageDownloadsViewModel(context: Context, private val openLibrary: () -> Unit) : BaseSongListViewModel(context) {
 
     val shouldShowDeleteAll = ObservableBoolean()
     val songCount = ObservableInt()

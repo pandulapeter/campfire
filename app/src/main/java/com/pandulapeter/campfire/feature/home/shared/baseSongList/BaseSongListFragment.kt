@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.shared.songList
+package com.pandulapeter.campfire.feature.home.shared.baseSongList
 
 import android.os.Bundle
 import android.support.annotation.CallSuper
@@ -10,12 +10,12 @@ import android.view.View.OnLayoutChangeListener
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.databinding.FragmentSongListBinding
+import com.pandulapeter.campfire.databinding.FragmentBaseSongListBinding
 import com.pandulapeter.campfire.feature.home.collections.detail.CollectionDetailViewModel
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistViewModel
-import com.pandulapeter.campfire.feature.home.shared.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
+import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.hideKeyboard
@@ -23,7 +23,7 @@ import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 
 
-abstract class SongListFragment<out VM : SongListViewModel> : TopLevelFragment<FragmentSongListBinding, VM>(R.layout.fragment_song_list) {
+abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFragment<FragmentBaseSongListBinding, VM>(R.layout.fragment_base_song_list) {
 
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     protected lateinit var linearLayoutManager: DisableScrollLinearLayoutManager

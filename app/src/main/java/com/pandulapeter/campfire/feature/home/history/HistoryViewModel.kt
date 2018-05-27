@@ -7,13 +7,13 @@ import com.pandulapeter.campfire.data.model.local.HistoryItem
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.BaseSongListViewModel
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.SongListItemViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import org.koin.android.ext.android.inject
 import java.util.*
 
-class HistoryViewModel(context: Context, private val openLibrary: () -> Unit) : SongListViewModel(context), HistoryRepository.Subscriber {
+class HistoryViewModel(context: Context, private val openLibrary: () -> Unit) : BaseSongListViewModel(context), HistoryRepository.Subscriber {
 
     private val historyRepository by inject<HistoryRepository>()
     val shouldShowDeleteAll = ObservableBoolean()

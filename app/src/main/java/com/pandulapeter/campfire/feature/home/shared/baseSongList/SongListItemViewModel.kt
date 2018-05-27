@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.shared.songList
+package com.pandulapeter.campfire.feature.home.shared.baseSongList
 
 import android.content.Context
 import com.pandulapeter.campfire.R

@@ -7,11 +7,11 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel.SongViewModel" />
+            type="com.pandulapeter.campfire.feature.home.shared.baseSongList.SongListItemViewModel.SongViewModel" />
 
         <import type="com.pandulapeter.campfire.R" />
 
-        <import type="com.pandulapeter.campfire.feature.home.shared.songList.SongListItemViewModel.SongViewModel.DownloadState" />
+        <import type="com.pandulapeter.campfire.feature.home.shared.baseSongList.SongListItemViewModel.SongViewModel.DownloadState" />
 
     </data>
 

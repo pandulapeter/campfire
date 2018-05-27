@@ -13,14 +13,14 @@ import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
-import com.pandulapeter.campfire.feature.home.shared.songList.SongListFragment
+import com.pandulapeter.campfire.feature.home.shared.baseSongList.BaseSongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 
 
-class LibraryFragment : SongListFragment<LibraryViewModel>() {
+class LibraryFragment : BaseSongListFragment<LibraryViewModel>() {
 
     companion object {
         private const val COMPOUND_BUTTON_LONG_TRANSITION_DELAY = 300L
