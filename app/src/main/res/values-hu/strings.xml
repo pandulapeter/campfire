@@ -141,6 +141,12 @@
     <!-- Options screen / Changelog -->
     <string name="options_changelog_app_updated">Az alkalmazás frissítve lett</string>
     <string name="options_changelog_what_is_new">Újdonságok</string>
+    <string name="options_changelog_0_6_0_description">
+        <Data><![CDATA[
+        • <strong>Román</strong> fordítás<br>
+        • Jelentős <strong>design módosítások</strong>
+        ]]></Data>
+    </string>
     <string name="options_changelog_0_5_0_description">
         <Data><![CDATA[
         • <strong>Nyelvi beállítások</strong> és <strong>magyar</strong> fordítás<br>
