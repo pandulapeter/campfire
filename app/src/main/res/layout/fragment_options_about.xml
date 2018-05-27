@@ -35,6 +35,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/content_padding"
                 android:layout_marginStart="@dimen/content_padding"
+                android:layout_marginTop="@dimen/content_padding"
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 app:cardCornerRadius="@dimen/card_corner"
