@@ -14,25 +14,17 @@ class SongParser(private val context: Context) {
         val chords = mutableListOf<Chord>()
         var offset = 0
         val parsedText = (if (shouldShowChords) text else text
-            .replace(Regex("\\[(.*?)[]]"), "") // Remove chords
-            .replace(Regex("[ ][ ]+"), "") // Remove groups of multiple whitespaces within a single line
-            .replace(Regex("(?:\\h*\\n){3,}"), "") // Remove lines consisting only of empty space
-            .replace(Regex("[}][{]+"), "}\n{") // Ensure that consecutive section headers are separated by an empty line
-            .let {
-                var returnValue = it
-                Regex("[{]").findAll(returnValue, 1).forEach { result ->
-                    if (it[result.range.first - 1] != '\n') {
-                        returnValue = returnValue.substring(0, result.range.first) + "\n\n" + returnValue.substring(result.range.first, returnValue.length)
-                    }
-                }
-                returnValue = returnValue
-                    .replace("\n\n", "\n")
-                    .replace("\n\n", "\n")
-                    .replace("\n\n", "\n")
+            .replace(Regex("\\[(.*?)[]]"), "") // Remove chords.
+            .replace(Regex("[ ][ ]+"), "") // Remove groups of multiple whitespaces within a single line.
+            .replace(Regex("(?:\\h*\\n){3,}"), "") // Remove lines consisting only of empty space.
+            .replace("\n\n", "\n") // Remove consecutive line breaks.
+            .let { returnValue ->
                 returnValue
                     .replace(Regex("\\{(.*?)[}]"), { if (it.range.first == 0 || returnValue[it.range.first - 2] == '}') it.value else "\n${it.value}" })
-            }
-                ).replace(Regex("\\{(.*?)[}]"), {
+                    .replace("{", "\n{") // Ensure that section headers are separated by an empty lines.
+                    .replace("\n\n\n{", "\n\n{") // Remove accidentally inserted consecutive line breaks.
+                    .removePrefix("\n")
+            }).replace(Regex("\\{(.*?)[}]"), {
             // Find the section headers
             val sectionType = SectionType.fromAbbreviation(it.value[1])
             if (sectionType != null) {
