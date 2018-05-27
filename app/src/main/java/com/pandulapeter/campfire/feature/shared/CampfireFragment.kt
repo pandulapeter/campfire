@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.obtainColor
 import org.koin.android.ext.android.inject
 
 abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : Fragment(), Transition.TransitionListener {
@@ -34,6 +35,9 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected val analyticsManager by inject<AnalyticsManager>()
     private var snackbar: Snackbar? = null
     private var isResumingDelayed = false
+    private val snackbarBackgroundColor by lazy { getCampfireActivity().obtainColor(android.R.attr.textColorPrimary) }
+    private val snackbarTextColor by lazy { getCampfireActivity().obtainColor(android.R.attr.colorPrimary) }
+    private val snackbarActionTextColor by lazy { getCampfireActivity().color(R.color.accent) }
 
     final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         viewModel.componentCallbacks = this
@@ -103,9 +107,9 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     private fun View.makeSnackbar(message: String, duration: Int, dismissAction: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {
-        view.setBackgroundColor(context.color(R.color.accent))
-        view.findViewById<TextView>(android.support.design.R.id.snackbar_text).setTextColor(context.color(R.color.white))
-        setActionTextColor(context.color(R.color.white))
+        view.setBackgroundColor(snackbarBackgroundColor)
+        view.findViewById<TextView>(android.support.design.R.id.snackbar_text).setTextColor(snackbarTextColor)
+        setActionTextColor(snackbarActionTextColor)
         getCampfireActivity().currentFocus?.let { hideKeyboard(it) }
         dismissAction?.let {
             addCallback(object : Snackbar.Callback() {
