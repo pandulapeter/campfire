@@ -160,7 +160,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         }
     }
 
-    override fun onBackPressed() = if (viewModel.toolbarTextInputView?.isTextInputVisible == true) {
+    override fun onBackPressed() = if (viewModel.isInEditMode.get()) {
         viewModel.toggleEditMode()
         true
     } else super.onBackPressed()
