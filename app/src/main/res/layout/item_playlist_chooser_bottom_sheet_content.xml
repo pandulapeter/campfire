@@ -23,7 +23,6 @@
             android:id="@+id/fake_app_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?android:attr/windowBackground"
             android:clipChildren="false"
             android:elevation="@{viewModel.appBarElevation}">
 
@@ -32,6 +31,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:alpha="@{viewModel.containerAlpha}"
+                android:background="?attr/colorBackgroundFloating"
+                android:elevation="@{viewModel.appBarElevation}"
                 app:layout_constraintBottom_toBottomOf="@+id/toolbar_container"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -40,6 +41,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/toolbar_height"
                 android:clipChildren="false"
+                android:elevation="@{viewModel.appBarElevation}"
                 android:paddingTop="@{viewModel.containerPadding}">
 
                 <android.support.v4.widget.Space

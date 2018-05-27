@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.content.Context
-import android.content.DialogInterface
 import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
@@ -21,6 +20,7 @@ import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
+
 
 class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<PlaylistChooserBottomSheetBinding>(R.layout.fragment_playlist_chooser_bottom_sheet) {
 
@@ -45,8 +45,6 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
     private val contentBottomMargin by lazy { context?.dimension(R.dimen.list_fab_content_bottom_margin) ?: 0 }
     private var shouldTransformTopToAppBar = false
     private var scrollViewOffset = 0
-    private var originalStatusBarColor = 0
-    private val updatedStatusBarColor by lazy { context?.obtainColor(android.R.attr.colorPrimary) }
     private val headerContext by lazy { binding.container?.toolbar?.context }
 
     override fun initializeDialog(context: Context, savedInstanceState: Bundle?) {
@@ -80,20 +78,7 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
                 if (shouldTransformTopToAppBar) {
                     viewModel.updateSlideState(slideOffset, scrollViewOffset)
-                    activity?.window?.run {
-                        if (slideOffset == 1f) {
-                            if (statusBarColor != updatedStatusBarColor) {
-                                clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-                                originalStatusBarColor = statusBarColor
-                                statusBarColor = updatedStatusBarColor ?: Color.BLACK
-                            }
-                        } else {
-                            if (statusBarColor != originalStatusBarColor) {
-                                addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-                                statusBarColor = originalStatusBarColor
-                            }
-                        }
-                    }
+                    updateBackgroundDim()
                 }
             }
 
@@ -109,22 +94,15 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
         super.onStart()
         songInfoRepository.subscribe(viewModel)
         playlistRepository.subscribe(viewModel)
+        if (shouldTransformTopToAppBar) {
+            updateBackgroundDim()
+        }
     }
 
     override fun onStop() {
         super.onStop()
         songInfoRepository.unsubscribe(viewModel)
         playlistRepository.unsubscribe(viewModel)
-    }
-
-    override fun onDismiss(dialog: DialogInterface?) {
-        super.onDismiss(dialog)
-        if (shouldTransformTopToAppBar) {
-            activity?.window?.run {
-                addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-                statusBarColor = originalStatusBarColor
-            }
-        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -185,6 +163,15 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
                 }
             }
             behavior.peekHeight = Math.min(binding.root.height, screenHeight / 2)
+        }
+    }
+
+    private fun updateBackgroundDim() {
+        dialog.window?.let {
+            it.attributes = it.attributes.apply {
+                dimAmount = (1f - viewModel.containerAlpha.get()) * 0.6f
+                flags = flags or WindowManager.LayoutParams.FLAG_DIM_BEHIND
+            }
         }
     }
 }
