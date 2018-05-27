@@ -50,12 +50,12 @@
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:extraText="@{viewModel.itemCount == 0 ? @string/manage_playlists_song_count_empty : @plurals/manage_playlists_song_count(viewModel.itemCount, viewModel.itemCount)}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/drag_handle"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:primaryText="@{viewModel.playlist.title ?? @string/home_favorites}"
+                app:secondaryText="@{viewModel.itemCount == 0 ? @string/manage_playlists_song_count_empty : @plurals/manage_playlists_song_count(viewModel.itemCount, viewModel.itemCount)}"
                 tools:text="Playlist title\nSong count" />
 
         </android.support.constraint.ConstraintLayout>
