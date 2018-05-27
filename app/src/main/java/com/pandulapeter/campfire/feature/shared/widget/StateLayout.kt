@@ -9,10 +9,7 @@ import android.view.animation.AnimationUtils
 import android.widget.ViewFlipper
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewStateLayoutBinding
-import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.util.drawable
-import com.pandulapeter.campfire.util.useStyledAttributes
-import com.pandulapeter.campfire.util.visibleOrGone
+import com.pandulapeter.campfire.util.*
 
 class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : ViewFlipper(context, attrs) {
 
@@ -42,6 +39,8 @@ class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSe
                 if (value == 0) null else context.drawable(value)?.mutate()?.apply { setTint(context.color(R.color.white)) },
                 null, null, null
             )
+            val contentPadding = context.dimension(R.dimen.content_padding)
+            binding.text.setPadding(contentPadding, 0, if (value == 0) contentPadding else contentPadding * 2, 0)
         }
     var text = ""
         set(value) {
