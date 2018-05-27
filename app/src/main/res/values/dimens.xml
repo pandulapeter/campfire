@@ -43,12 +43,12 @@
     <dimen name="collections_image_small">48dp</dimen>
 
     <!-- Options screen / Preferences -->
-    <dimen name="options_preferences_checkbox_margin">-4dp</dimen>
-    <dimen name="options_preferences_checkbox_padding">@dimen/content_padding</dimen>
+    <dimen name="options_preferences_checkbox_margin">8dp</dimen>
+    <dimen name="options_preferences_checkbox_padding">16dp</dimen>
     <dimen name="options_preferences_divider_margin">56dp</dimen>
 
     <!-- Options screen / About -->
-    <dimen name="options_about_drawable_padding">16dp</dimen>
+    <dimen name="options_about_drawable_padding">20dp</dimen>
 
     <!-- New playlist dialog -->
     <dimen name="new_playlist_input_padding_start">20dp</dimen> <!-- large_content_padding + edit_text_fix -->
