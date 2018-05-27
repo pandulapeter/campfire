@@ -67,10 +67,13 @@
 
             <Button
                 android:id="@+id/button"
-                style="@style/Widget.AppCompat.Button.Colored"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/button_height"
+                android:background="@drawable/bg_button"
                 android:drawablePadding="@dimen/content_padding"
+                android:gravity="center"
+                android:paddingEnd="@dimen/large_content_padding"
+                android:paddingStart="@dimen/large_content_padding"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
                 android:theme="@style/ButtonTheme"

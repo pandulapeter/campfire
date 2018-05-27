@@ -9,6 +9,7 @@
     <dimen name="large_content_padding">16dp</dimen>
     <dimen name="touch_target">48dp</dimen>
     <dimen name="toolbar_height">56dp</dimen>
+    <dimen name="button_height">36dp</dimen>
     <dimen name="divider_height">1dp</dimen>
     <dimen name="toolbar_elevation">4dp</dimen>
     <dimen name="list_fab_content_bottom_margin">96dp</dimen>
