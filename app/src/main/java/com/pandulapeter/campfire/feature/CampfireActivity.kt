@@ -678,11 +678,17 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     private fun openOptionsScreen(shouldOpenChangelog: Boolean = false): String {
-        if (currentFragment !is OptionsFragment) {
-            supportFragmentManager.clearBackStack()
-            supportFragmentManager.handleReplace { OptionsFragment.newInstance(shouldOpenChangelog) }
-            currentScreenId = R.id.options
-            binding.primaryNavigation.setCheckedItem(R.id.options)
+        currentFragment?.let {
+            if (it is OptionsFragment) {
+                if (shouldOpenChangelog) {
+                    it.navigateToChangelog()
+                }
+            } else {
+                supportFragmentManager.clearBackStack()
+                supportFragmentManager.handleReplace { OptionsFragment.newInstance(shouldOpenChangelog) }
+                currentScreenId = R.id.options
+                binding.primaryNavigation.setCheckedItem(R.id.options)
+            }
         }
         return AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS
     }

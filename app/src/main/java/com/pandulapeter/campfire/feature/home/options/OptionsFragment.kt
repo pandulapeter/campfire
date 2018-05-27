@@ -54,4 +54,8 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
             }
         }
     }
+
+    fun navigateToChangelog() {
+        binding.viewPager.currentItem = 1
+    }
 }
