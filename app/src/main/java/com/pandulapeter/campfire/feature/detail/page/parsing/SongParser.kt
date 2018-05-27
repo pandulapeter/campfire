@@ -22,7 +22,7 @@ class SongParser(private val context: Context) {
                 var returnValue = it
                 Regex("[{]").findAll(returnValue, 1).forEach { result ->
                     if (it[result.range.first - 1] != '\n') {
-                        returnValue = returnValue.substring(0, result.range.first) + "\n\n" + returnValue.substring(result.range.first, returnValue.length - 1)
+                        returnValue = returnValue.substring(0, result.range.first) + "\n\n" + returnValue.substring(result.range.first, returnValue.length)
                     }
                 }
                 returnValue = returnValue
