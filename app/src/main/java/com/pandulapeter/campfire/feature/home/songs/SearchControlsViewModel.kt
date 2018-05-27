@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.library
+package com.pandulapeter.campfire.feature.home.songs
 
 import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase

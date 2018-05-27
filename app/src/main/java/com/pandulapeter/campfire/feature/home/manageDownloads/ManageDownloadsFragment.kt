@@ -26,7 +26,7 @@ class ManageDownloadsFragment : BaseSongListFragment<ManageDownloadsViewModel>()
     }
 
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
-    override val viewModel by lazy { ManageDownloadsViewModel(getCampfireActivity()) { getCampfireActivity().openLibraryScreen() } }
+    override val viewModel by lazy { ManageDownloadsViewModel(getCampfireActivity()) { getCampfireActivity().openSongsScreen() } }
     override val canScrollToolbar get() = viewModel.shouldShowDeleteAll.get()
     private val deleteAllButton by lazy {
         getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {

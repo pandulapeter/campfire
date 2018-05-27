@@ -6,7 +6,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.library.SearchControlsViewModel" />
+            type="com.pandulapeter.campfire.feature.home.songs.SearchControlsViewModel" />
 
     </data>
 
@@ -23,21 +23,21 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/library_search_in" />
+            android:text="@string/songs_search_in" />
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/content_padding"
             android:checked="@={viewModel.searchInTitles}"
-            android:text="@string/library_search_in_titles" />
+            android:text="@string/songs_search_in_titles" />
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/content_padding"
             android:checked="@={viewModel.searchInArtists}"
-            android:text="@string/library_search_in_artists" />
+            android:text="@string/songs_search_in_artists" />
 
     </LinearLayout>
 

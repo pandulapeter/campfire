@@ -222,6 +222,8 @@ fun String.normalize() = toUpperCase()
     .replace("Ú", "U")
     .replace("Ű", "U")
     .replace("'", "")
+    .replace("/", "")
+    .replace("-", "")
 
 fun String.removePrefixes() = this
     .removePrefix("A ")

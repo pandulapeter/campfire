@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.library
+package com.pandulapeter.campfire.feature.home.songs
 
 import android.content.Context
 import android.databinding.ObservableBoolean
@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.util.removePrefixes
 import com.pandulapeter.campfire.util.swap
 import org.koin.android.ext.android.inject
 
-class LibraryViewModel(
+class SongsViewModel(
     context: Context,
     val toolbarTextInputView: ToolbarTextInputView,
     private val updateSearchToggleDrawable: (Boolean) -> Unit,
@@ -89,7 +89,7 @@ class LibraryViewModel(
         toolbarTextInputView.apply {
             textInput.onTextChanged { if (isTextInputVisible) query = it }
         }
-        preferenceDatabase.lastScreen = CampfireActivity.SCREEN_LIBRARY
+        preferenceDatabase.lastScreen = CampfireActivity.SCREEN_SONGS
     }
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
@@ -103,8 +103,8 @@ class LibraryViewModel(
     override fun onListUpdated(items: List<SongListItemViewModel>) {
         super.onListUpdated(items)
         if (librarySongs.toList().isNotEmpty()) {
-            placeholderText.set(R.string.library_placeholder)
-            buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.library_filters)
+            placeholderText.set(R.string.songs_placeholder)
+            buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.songs_filters)
             buttonIcon.set(R.drawable.ic_filter_and_sort_24dp)
         }
     }
@@ -172,7 +172,7 @@ class LibraryViewModel(
                 if (shouldScrollToTop) {
                     updateAdapterItems(!isTextInputVisible)
                 }
-                buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.library_filters)
+                buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.songs_filters)
             }
             shouldShowEraseButton.set(isTextInputVisible)
         }

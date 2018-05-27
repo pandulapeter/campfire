@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.home.library
+package com.pandulapeter.campfire.feature.home.songs
 
 import android.content.Context
 import android.databinding.DataBindingUtil
@@ -20,19 +20,19 @@ import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 
 
-class LibraryFragment : BaseSongListFragment<LibraryViewModel>() {
+class SongsFragment : BaseSongListFragment<SongsViewModel>() {
 
     companion object {
         private const val COMPOUND_BUTTON_LONG_TRANSITION_DELAY = 300L
     }
 
     override val canScrollToolbar get() = !viewModel.toolbarTextInputView.isTextInputVisible && binding.recyclerView.canScroll()
-    override val viewModel: LibraryViewModel by lazy {
-        LibraryViewModel(
+    override val viewModel: SongsViewModel by lazy {
+        SongsViewModel(
             context = getCampfireActivity(),
             toolbarTextInputView = ToolbarTextInputView(
                 getCampfireActivity().toolbarContext,
-                R.string.library_search,
+                R.string.songs_search,
                 true
             ).apply { title.updateToolbarTitle(R.string.home_library) },
             updateSearchToggleDrawable = {
@@ -51,9 +51,9 @@ class LibraryFragment : BaseSongListFragment<LibraryViewModel>() {
                 getCampfireActivity().enableSecondaryNavigationDrawer(R.menu.library)
                 initializeCompoundButton(R.id.downloaded_only) { viewModel.shouldShowDownloadedOnly }
                 initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
-                initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == LibraryViewModel.SortingMode.TITLE }
-                initializeCompoundButton(R.id.sort_by_artist) { viewModel.sortingMode == LibraryViewModel.SortingMode.ARTIST }
-                initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == LibraryViewModel.SortingMode.POPULARITY }
+                initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == SongsViewModel.SortingMode.TITLE }
+                initializeCompoundButton(R.id.sort_by_artist) { viewModel.sortingMode == SongsViewModel.SortingMode.ARTIST }
+                initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == SongsViewModel.SortingMode.POPULARITY }
                 getCampfireActivity().secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
                     clear()
                     languages.forEachIndexed { index, language ->
@@ -182,15 +182,15 @@ class LibraryFragment : BaseSongListFragment<LibraryViewModel>() {
                 analyticsManager.onLibraryFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_SHOW_EXPLICIT, it)
                 shouldShowExplicit = it
             }, { shouldShowExplicit })
-            R.id.sort_by_title -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.TITLE) {
+            R.id.sort_by_title -> consumeAndUpdateSortingMode(SongsViewModel.SortingMode.TITLE) {
                 analyticsManager.onLibrarySortingModeUpdated(AnalyticsManager.PARAM_VALUE_BY_TITLE)
                 sortingMode = it
             }
-            R.id.sort_by_artist -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.ARTIST) {
+            R.id.sort_by_artist -> consumeAndUpdateSortingMode(SongsViewModel.SortingMode.ARTIST) {
                 analyticsManager.onLibrarySortingModeUpdated(AnalyticsManager.PARAM_VALUE_BY_ARTIST)
                 sortingMode = it
             }
-            R.id.sort_by_popularity -> consumeAndUpdateSortingMode(LibraryViewModel.SortingMode.POPULARITY) {
+            R.id.sort_by_popularity -> consumeAndUpdateSortingMode(SongsViewModel.SortingMode.POPULARITY) {
                 analyticsManager.onLibrarySortingModeUpdated(AnalyticsManager.PARAM_VALUE_BY_POPULARITY)
                 sortingMode = it
             }
@@ -219,11 +219,11 @@ class LibraryFragment : BaseSongListFragment<LibraryViewModel>() {
         }
     }
 
-    private inline fun consumeAndUpdateSortingMode(sortingMode: LibraryViewModel.SortingMode, crossinline setValue: (LibraryViewModel.SortingMode) -> Unit) = consume {
+    private inline fun consumeAndUpdateSortingMode(sortingMode: SongsViewModel.SortingMode, crossinline setValue: (SongsViewModel.SortingMode) -> Unit) = consume {
         setValue(sortingMode)
-        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == LibraryViewModel.SortingMode.TITLE)
-        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_artist].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == LibraryViewModel.SortingMode.ARTIST)
-        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.updateCheckedStateWithDelay(sortingMode == LibraryViewModel.SortingMode.POPULARITY)
+        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == SongsViewModel.SortingMode.TITLE)
+        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_artist].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == SongsViewModel.SortingMode.ARTIST)
+        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.updateCheckedStateWithDelay(sortingMode == SongsViewModel.SortingMode.POPULARITY)
     }
 
     private operator fun Menu.get(@IdRes id: Int) = findItem(id)

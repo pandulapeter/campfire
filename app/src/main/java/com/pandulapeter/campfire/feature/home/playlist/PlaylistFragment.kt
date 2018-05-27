@@ -30,7 +30,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         PlaylistViewModel(
             context = getCampfireActivity(),
             playlistId = arguments.playlistId,
-            openLibrary = { getCampfireActivity().openLibraryScreen() },
+            openLibrary = { getCampfireActivity().openSongsScreen() },
             toolbarTextInputView = if (arguments?.playlistId == Playlist.FAVORITES_ID) null else ToolbarTextInputView(
                 getCampfireActivity().toolbarContext,
                 R.string.playlist_title,

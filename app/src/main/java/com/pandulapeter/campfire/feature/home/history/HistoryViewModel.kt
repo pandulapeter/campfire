@@ -28,7 +28,7 @@ class HistoryViewModel(context: Context, private val openLibrary: () -> Unit) : 
     init {
         placeholderText.set(R.string.history_placeholder)
         buttonText.set(R.string.go_to_library)
-        buttonIcon.set(R.drawable.ic_library_24dp)
+        buttonIcon.set(R.drawable.ic_songs_24dp)
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_HISTORY
     }
 

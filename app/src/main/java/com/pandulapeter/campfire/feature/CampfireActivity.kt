@@ -44,12 +44,12 @@ import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
 import com.pandulapeter.campfire.feature.home.collections.detail.CollectionDetailFragment
 import com.pandulapeter.campfire.feature.home.history.HistoryFragment
-import com.pandulapeter.campfire.feature.home.library.LibraryFragment
 import com.pandulapeter.campfire.feature.home.manageDownloads.ManageDownloadsFragment
 import com.pandulapeter.campfire.feature.home.managePlaylists.ManagePlaylistsFragment
 import com.pandulapeter.campfire.feature.home.options.OptionsFragment
 import com.pandulapeter.campfire.feature.home.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
+import com.pandulapeter.campfire.feature.home.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
@@ -67,8 +67,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     companion object {
         private const val DIALOG_ID_EXIT_CONFIRMATION = 1
         private const val DIALOG_ID_PRIVACY_POLICY = 2
-        const val SCREEN_LIBRARY = "library"
         const val SCREEN_COLLECTIONS = "collections"
+        const val SCREEN_SONGS = "songs"
         const val SCREEN_HISTORY = "history"
         const val SCREEN_OPTIONS = "options"
         const val SCREEN_MANAGE_PLAYLISTS = "managePlaylists"
@@ -78,9 +78,9 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
         private fun getStartIntent(context: Context) = Intent(context, CampfireActivity::class.java)
 
-        fun getLibraryIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_LIBRARY }
-
         fun getCollectionsIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_COLLECTIONS }
+
+        fun getSongsIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_SONGS }
 
         fun getPlaylistIntent(context: Context, playlistId: String) = getStartIntent(context).apply { screenToOpen = playlistId }
     }
@@ -100,7 +100,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private val playlistRepository by inject<PlaylistRepository>()
     private var currentPlaylistId = ""
     private var currentCollectionId = ""
-    private var currentScreenId = R.id.library
+    private var currentScreenId = R.id.songs
     private val colorWhite by lazy { color(R.color.white) }
     private val playlistsContainerItem by lazy { binding.primaryNavigation.menu.findItem(R.id.playlists).subMenu }
     private val playlistIdMap = mutableMapOf<Int, String>()
@@ -245,15 +245,15 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     currentScreenId = menuItem.itemId
                 }
                 return@setNavigationItemSelectedListener when (menuItem.itemId) {
-                    R.id.library -> consumeAndCloseDrawers {
-                        appShortcutManager.onLibraryOpened()
-                        supportFragmentManager.handleReplace { LibraryFragment() }
-                    }
                     R.id.collections -> consumeAndCloseDrawers {
                         supportFragmentManager.handleReplace {
                             appShortcutManager.onCollectionsOpened()
                             CollectionsFragment()
                         }
+                    }
+                    R.id.songs -> consumeAndCloseDrawers {
+                        appShortcutManager.onLibraryOpened()
+                        supportFragmentManager.handleReplace { SongsFragment() }
                     }
                     R.id.history -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { HistoryFragment() } }
                     R.id.options -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { OptionsFragment() } }
@@ -416,7 +416,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
             if (view == null) {
                 if (childCount > 1) {
-                    if (currentFragment is LibraryFragment || currentFragment is DetailFragment) {
+                    if (currentFragment is SongsFragment || currentFragment is DetailFragment) {
                         post { removeViews() }
                     } else {
                         postDelayed({
@@ -581,7 +581,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 preferenceDatabase.lastScreen.let {
                     isFromAppShortcut = false
                     when (it) {
-                        "", SCREEN_LIBRARY -> openLibraryScreen()
+                        "", SCREEN_SONGS -> openSongsScreen()
                         SCREEN_COLLECTIONS -> openCollectionsScreen()
                         SCREEN_HISTORY -> openHistoryScreen()
                         SCREEN_OPTIONS -> openOptionsScreen()
@@ -591,8 +591,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     }
                 }
             }
-            SCREEN_LIBRARY -> openLibraryScreen()
             SCREEN_COLLECTIONS -> openCollectionsScreen()
+            SCREEN_SONGS -> openSongsScreen()
             else -> openPlaylistScreen(intent.screenToOpen)
         }
         analyticsManager.onAppOpened(
@@ -609,12 +609,12 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         )
     }
 
-    fun openLibraryScreen(): String {
-        if (currentFragment !is LibraryFragment) {
+    fun openSongsScreen(): String {
+        if (currentFragment !is SongsFragment) {
             supportFragmentManager.clearBackStack()
-            supportFragmentManager.handleReplace { LibraryFragment() }
-            currentScreenId = R.id.library
-            binding.primaryNavigation.setCheckedItem(R.id.library)
+            supportFragmentManager.handleReplace { SongsFragment() }
+            currentScreenId = R.id.songs
+            binding.primaryNavigation.setCheckedItem(R.id.songs)
             appShortcutManager.onLibraryOpened()
         }
         return AnalyticsManager.PARAM_VALUE_SCREEN_LIBRARY

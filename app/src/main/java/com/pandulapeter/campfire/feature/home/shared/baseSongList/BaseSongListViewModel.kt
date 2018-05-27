@@ -43,7 +43,7 @@ abstract class BaseSongListViewModel(protected val context: Context) : CampfireV
     val downloadSongError = ObservableField<Song?>()
     val isLoading = ObservableBoolean()
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
-    val placeholderText = ObservableInt(R.string.library_initializing_error)
+    val placeholderText = ObservableInt(R.string.songs_initializing_error)
     val buttonText = ObservableInt(R.string.try_again)
     val buttonIcon = ObservableInt()
     var isDetailScreenOpen = false

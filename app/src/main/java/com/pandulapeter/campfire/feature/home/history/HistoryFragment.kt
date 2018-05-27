@@ -25,7 +25,7 @@ class HistoryFragment : BaseSongListFragment<HistoryViewModel>(), BaseDialogFrag
     }
 
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
-    override val viewModel by lazy { HistoryViewModel(getCampfireActivity()) { getCampfireActivity().openLibraryScreen() } }
+    override val viewModel by lazy { HistoryViewModel(getCampfireActivity()) { getCampfireActivity().openSongsScreen() } }
     private val deleteAllButton by lazy {
         getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
             AlertDialogFragment.show(

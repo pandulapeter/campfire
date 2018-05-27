@@ -47,24 +47,24 @@
     <string name="home_privacy_policy_positive">Folytatás</string>
 
     <!-- Library screen -->
-    <string name="library_placeholder">Nem található megfelelő dal. Ellenőrizd a beállított szűrőket</string>
-    <string name="library_initializing_error">Hiba történt a dalok letöltése közben</string>
-    <string name="library_update_error">Hiba történt a dalok frissítése közben</string>
-    <string name="library_filters">Szűrők</string>
-    <string name="library_song_download_error">Hiba történt a dal letöltése közben: %s</string>
-    <string name="library_search">Keresés</string>
-    <string name="library_close">Bezárás</string>
-    <string name="library_sort_by">Rendezés</string>
-    <string name="library_filter_by_type">Szűrés típus szerint</string>
-    <string name="library_sort_by_popularity">Népszerűség</string>
-    <string name="library_sort_by_title">Cím</string>
-    <string name="library_sort_by_artist">Előadó</string>
-    <string name="library_filter_by_language">Szűrés nyelv szerint</string>
-    <string name="library_downloaded_only">Csak letöltött</string>
-    <string name="library_show_explicit">Trágár szövegek</string>
-    <string name="library_search_in">Itt:</string>
-    <string name="library_search_in_titles">Címekben</string>
-    <string name="library_search_in_artists">Előadókban</string>
+    <string name="songs_placeholder">Nem található megfelelő dal. Ellenőrizd a beállított szűrőket</string>
+    <string name="songs_initializing_error">Hiba történt a dalok letöltése közben</string>
+    <string name="songs_update_error">Hiba történt a dalok frissítése közben</string>
+    <string name="songs_filters">Szűrők</string>
+    <string name="songs_song_download_error">Hiba történt a dal letöltése közben: %s</string>
+    <string name="songs_search">Keresés</string>
+    <string name="songs_close">Bezárás</string>
+    <string name="songs_sort_by">Rendezés</string>
+    <string name="songs_filter_by_type">Szűrés típus szerint</string>
+    <string name="songs_sort_by_popularity">Népszerűség</string>
+    <string name="songs_sort_by_title">Cím</string>
+    <string name="songs_sort_by_artist">Előadó</string>
+    <string name="songs_filter_by_language">Szűrés nyelv szerint</string>
+    <string name="songs_downloaded_only">Csak letöltött</string>
+    <string name="songs_show_explicit">Trágár szövegek</string>
+    <string name="songs_search_in">Itt:</string>
+    <string name="songs_search_in_titles">Címekben</string>
+    <string name="songs_search_in_artists">Előadókban</string>
 
     <!-- Collections screen -->
     <string name="collections_placeholder">Nem található megfelelő gyűjtemény. Ellenőrizd a beállított szűrőket</string>

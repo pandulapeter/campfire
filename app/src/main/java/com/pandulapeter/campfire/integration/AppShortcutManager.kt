@@ -84,7 +84,7 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
                     LIBRARY_ID,
                     context.getString(R.string.home_library),
                     R.drawable.ic_shortcut_songs_48dp,
-                    CampfireActivity.getLibraryIntent(context)
+                    CampfireActivity.getSongsIntent(context)
                 )
             )
             if (preferenceDatabase.playlistHistory.isEmpty()) {

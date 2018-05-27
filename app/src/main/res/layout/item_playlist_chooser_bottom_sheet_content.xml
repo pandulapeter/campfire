@@ -55,7 +55,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/first_keyline"
                     android:alpha="@{viewModel.closeAlpha}"
-                    android:contentDescription="@string/library_close"
+                    android:contentDescription="@string/songs_close"
                     android:foreground="?attr/selectableItemBackgroundBorderless"
                     android:onClick="@{() -> viewModel.onCloseButtonClicked()}"
                     android:translationX="@{viewModel.closeTranslation}"

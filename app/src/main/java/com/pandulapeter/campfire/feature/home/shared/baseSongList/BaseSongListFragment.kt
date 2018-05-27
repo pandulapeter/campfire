@@ -91,7 +91,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
         }
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
             showSnackbar(
-                message = R.string.library_update_error,
+                message = R.string.songs_update_error,
                 action = { viewModel.updateData() })
         }
         viewModel.downloadSongError.onEventTriggered(this) { song ->
@@ -99,7 +99,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
                 binding.root.post {
                     if (isAdded) {
                         showSnackbar(
-                            message = getCampfireActivity().getString(R.string.library_song_download_error, song.title),
+                            message = getCampfireActivity().getString(R.string.songs_song_download_error, song.title),
                             action = { viewModel.downloadSong(song) })
                     }
                 }

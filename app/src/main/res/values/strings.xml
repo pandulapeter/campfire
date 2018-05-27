@@ -47,25 +47,25 @@
     <string name="home_privacy_policy_checkbox">I\'m fine with the app anonymously collecting my usage statistics and potential crash reports</string>
     <string name="home_privacy_policy_positive">Continue</string>
 
-    <!-- Library screen -->
-    <string name="library_placeholder">No matching songs found. Double-check the filters you set up</string>
-    <string name="library_initializing_error">Something went wrong while trying to load the songs</string>
-    <string name="library_update_error">Something went wrong while updating the songs</string>
-    <string name="library_filters">Filters</string>
-    <string name="library_song_download_error">Error downloading %s</string>
-    <string name="library_search">Search</string>
-    <string name="library_close">Close</string>
-    <string name="library_sort_by">Sort by</string>
-    <string name="library_filter_by_type">Filter by type</string>
-    <string name="library_sort_by_popularity">Popularity</string>
-    <string name="library_sort_by_title">Title</string>
-    <string name="library_sort_by_artist">Artist</string>
-    <string name="library_filter_by_language">Filter by language</string>
-    <string name="library_downloaded_only">Downloaded only</string>
-    <string name="library_show_explicit">Show explicit</string>
-    <string name="library_search_in">Search in:</string>
-    <string name="library_search_in_titles">Titles</string>
-    <string name="library_search_in_artists">Artists</string>
+    <!-- Songs screen -->
+    <string name="songs_placeholder">No matching songs found. Double-check the filters you set up</string>
+    <string name="songs_initializing_error">Something went wrong while trying to load the songs</string>
+    <string name="songs_update_error">Something went wrong while updating the songs</string>
+    <string name="songs_filters">Filters</string>
+    <string name="songs_song_download_error">Error downloading %s</string>
+    <string name="songs_search">Search</string>
+    <string name="songs_close">Close</string>
+    <string name="songs_sort_by">Sort by</string>
+    <string name="songs_filter_by_type">Filter by type</string>
+    <string name="songs_sort_by_popularity">Popularity</string>
+    <string name="songs_sort_by_title">Title</string>
+    <string name="songs_sort_by_artist">Artist</string>
+    <string name="songs_filter_by_language">Filter by language</string>
+    <string name="songs_downloaded_only">Downloaded only</string>
+    <string name="songs_show_explicit">Show explicit</string>
+    <string name="songs_search_in">Search in:</string>
+    <string name="songs_search_in_titles">Titles</string>
+    <string name="songs_search_in_artists">Artists</string>
 
     <!-- Collections screen -->
     <string name="collections_placeholder">No matching collections found. Double-check the filters you set up</string>

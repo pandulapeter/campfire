@@ -36,7 +36,7 @@ class PlaylistViewModel(
     init {
         placeholderText.set(R.string.playlist_placeholder)
         buttonText.set(R.string.go_to_library)
-        buttonIcon.set(R.drawable.ic_library_24dp)
+        buttonIcon.set(R.drawable.ic_songs_24dp)
         preferenceDatabase.lastScreen = playlistId
         toolbarTextInputView?.onDoneButtonPressed = {
             if (isInEditMode.get()) {

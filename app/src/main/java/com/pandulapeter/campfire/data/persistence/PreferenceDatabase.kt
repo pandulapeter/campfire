@@ -3,8 +3,8 @@ package com.pandulapeter.campfire.data.persistence
 import android.content.Context
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.feature.home.collections.CollectionsViewModel
-import com.pandulapeter.campfire.feature.home.library.LibraryViewModel
 import com.pandulapeter.campfire.feature.home.options.preferences.PreferencesViewModel
+import com.pandulapeter.campfire.feature.home.songs.SongsViewModel
 import java.util.*
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -20,7 +20,7 @@ class PreferenceDatabase(context: Context) {
 
     // Library
     var lastLibraryUpdateTimestamp by PreferenceFieldDelegate.Long("lastLibraryUpdateTimestamp")
-    var librarySortingMode by PreferenceFieldDelegate.Int("librarySortingMode", LibraryViewModel.SortingMode.TITLE.intValue)
+    var librarySortingMode by PreferenceFieldDelegate.Int("librarySortingMode", SongsViewModel.SortingMode.TITLE.intValue)
     var shouldSearchInArtists by PreferenceFieldDelegate.Boolean("shouldSearchInArtists", true)
     var shouldSearchInTitles by PreferenceFieldDelegate.Boolean("shouldSearchInTitles", true)
     var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("shouldShowDownloadedOnly", false)

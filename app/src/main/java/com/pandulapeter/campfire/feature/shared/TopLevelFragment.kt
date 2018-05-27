@@ -19,7 +19,7 @@ import android.widget.CompoundButton
 import android.widget.TextView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.detail.DetailFragment
-import com.pandulapeter.campfire.feature.home.library.LibraryFragment
+import com.pandulapeter.campfire.feature.home.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.span.EllipsizeLineSpan
 import com.pandulapeter.campfire.feature.shared.span.FontFamilySpan
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
@@ -46,7 +46,7 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         if (this !is DetailFragment) {
             getCampfireActivity().updateToolbarTitleView(inflateToolbarTitle(getCampfireActivity().toolbarContext), toolbarWidth)
         }
-        if (savedInstanceState == null || this !is LibraryFragment) {
+        if (savedInstanceState == null || this !is SongsFragment) {
             getCampfireActivity().updateAppBarView(appBarView, savedInstanceState != null)
         }
     }
