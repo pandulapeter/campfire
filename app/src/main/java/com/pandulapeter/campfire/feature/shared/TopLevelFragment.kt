@@ -9,24 +9,16 @@ import android.support.annotation.LayoutRes
 import android.support.annotation.StringRes
 import android.support.v7.widget.AppCompatTextView
 import android.support.v7.widget.RecyclerView
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.style.TextAppearanceSpan
 import android.view.Gravity
 import android.view.MenuItem
 import android.view.View
 import android.widget.CompoundButton
 import android.widget.TextView
-import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.home.songs.SongsFragment
-import com.pandulapeter.campfire.feature.shared.span.EllipsizeLineSpan
-import com.pandulapeter.campfire.feature.shared.span.FontFamilySpan
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
-import com.pandulapeter.campfire.util.font
-import com.pandulapeter.campfire.util.obtainColor
 
 
 abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes layoutResourceId: Int) : CampfireFragment<B, VM>(layoutResourceId) {
@@ -66,19 +58,7 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     protected fun TextView.updateToolbarTitle(@StringRes titleRes: Int, subtitle: String? = null) = updateToolbarTitle(context.getString(titleRes), subtitle)
 
-    protected fun TextView.updateToolbarTitle(title: String, subtitle: String? = null) {
-        getCampfireActivity().toolbarContext.let { context ->
-            setLineSpacing(0f, 0.9f)
-            text = SpannableString("$title${subtitle?.let { "\n$it" } ?: ""}").apply {
-                setSpan(TextAppearanceSpan(context, R.style.Title), 0, title.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                setSpan(EllipsizeLineSpan(context.obtainColor(android.R.attr.textColorPrimary)), 0, title.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                subtitle?.let {
-                    setSpan(EllipsizeLineSpan(context.obtainColor(android.R.attr.textColorSecondary)), title.length + 1, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-                setSpan(FontFamilySpan(context.font(R.font.regular)), 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-        }
-    }
+    protected fun TextView.updateToolbarTitle(title: String, subtitle: String? = null) = setTitleSubtitle(this, title, subtitle)
 
     protected fun initializeCompoundButton(itemId: Int, getValue: () -> Boolean) = consume {
         getCampfireActivity().secondaryNavigationMenu.findItem(itemId)?.let {

@@ -69,6 +69,7 @@
                     android:id="@+id/toolbar"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
+                    android:layout_marginEnd="@dimen/large_content_padding"
                     android:layout_marginStart="@dimen/first_keyline"
                     android:gravity="center_vertical"
                     android:paddingEnd="@dimen/bottom_sheet_toolbar_margin"
@@ -79,9 +80,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:subtitle="@{viewModel.songInfo.artist}"
-                    app:subtitleColor="@{viewModel.toolbarSubtitleColor}"
                     app:title="@{viewModel.songInfo.title}"
-                    app:titleColor="@{viewModel.toolbarTitleColor}"
                     tools:text="Song title\nArtist" />
 
             </android.support.constraint.ConstraintLayout>

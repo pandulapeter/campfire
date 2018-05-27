@@ -3,7 +3,6 @@ package com.pandulapeter.campfire.feature.shared
 import android.databinding.BindingAdapter
 import android.graphics.drawable.Drawable
 import android.os.Build
-import android.support.annotation.ColorInt
 import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat
@@ -105,20 +104,16 @@ fun setAnimation(view: ImageView, @DrawableRes drawableRes: Int, lastFrame: Draw
     view.tag = drawableRes
 }
 
-@BindingAdapter(value = ["title", "subtitle", "titleColor", "subtitleColor"], requireAll = false)
-fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?, @ColorInt titleColor: Int?, @ColorInt subtitleColor: Int?) {
-    view.text = SpannableString("${title ?: ""}\n${subtitle ?: ""}").apply {
-        title?.let {
-            setSpan(TextAppearanceSpan(view.context, R.style.Title), 0, it.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-            if (titleColor != null) {
-                setSpan(ForegroundColorSpan(titleColor), 0, it.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-            }
-        }
+@BindingAdapter(value = ["title", "subtitle"], requireAll = false)
+fun setTitleSubtitle(view: TextView, title: String, subtitle: String?) {
+    view.setLineSpacing(0f, 0.9f)
+    view.text = SpannableString("$title${subtitle?.let { "\n$it" } ?: ""}").apply {
+        setSpan(TextAppearanceSpan(view.context, R.style.Title), 0, title.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        setSpan(EllipsizeLineSpan(view.context.obtainColor(android.R.attr.textColorPrimary)), 0, title.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         subtitle?.let {
-            if (subtitleColor != null) {
-                setSpan(ForegroundColorSpan(subtitleColor), length - it.length, length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
-            }
+            setSpan(EllipsizeLineSpan(view.context.obtainColor(android.R.attr.textColorSecondary)), title.length + 1, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
+        setSpan(FontFamilySpan(view.context.font(R.font.regular)), 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
 }
 

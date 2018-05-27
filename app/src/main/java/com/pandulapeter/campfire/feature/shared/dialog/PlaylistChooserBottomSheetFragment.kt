@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
 import android.support.v4.app.DialogFragment
@@ -18,7 +17,10 @@ import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.util.onEventTriggered
+import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject
 
 
@@ -45,15 +47,10 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
     private val contentBottomMargin by lazy { context?.dimension(R.dimen.list_fab_content_bottom_margin) ?: 0 }
     private var shouldTransformTopToAppBar = false
     private var scrollViewOffset = 0
-    private val headerContext by lazy { binding.container?.toolbar?.context }
 
     override fun initializeDialog(context: Context, savedInstanceState: Bundle?) {
         viewModel = PlaylistChooserBottomSheetViewModel(
             savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId,
-            headerContext?.obtainColor(android.R.attr.textColorPrimary) ?: Color.BLACK,
-            context.obtainColor(android.R.attr.textColorPrimary),
-            headerContext?.obtainColor(android.R.attr.textColorSecondary) ?: Color.BLACK,
-            context.obtainColor(android.R.attr.textColorSecondary),
             context.dimension(R.dimen.content_padding),
             context.dimension(R.dimen.bottom_sheet_toolbar_elevation),
             context.dimension(R.dimen.bottom_sheet_toolbar_margin)

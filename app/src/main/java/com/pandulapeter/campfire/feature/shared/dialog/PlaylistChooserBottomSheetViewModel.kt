@@ -13,10 +13,6 @@ import com.pandulapeter.campfire.data.repository.SongRepository
 
 class PlaylistChooserBottomSheetViewModel(
     val songId: String,
-    @ColorInt private val titleCollapsedColor: Int,
-    @ColorInt private val titleExpandedColor: Int,
-    @ColorInt private val subtitleCollapsedColor: Int,
-    @ColorInt private val subtitleExpandedColor: Int,
     private val initialToolbarContainerPadding: Int,
     private val finalToolbarElevation: Int,
     private val finalToolbarMargin: Int
@@ -28,8 +24,6 @@ class PlaylistChooserBottomSheetViewModel(
     val closeAlpha = ObservableFloat()
     val closeTranslation = ObservableFloat()
     val toolbarTranslation = ObservableFloat()
-    val toolbarTitleColor = ObservableInt(titleExpandedColor)
-    val toolbarSubtitleColor = ObservableInt(subtitleExpandedColor)
     val appBarElevation = ObservableFloat()
     val containerAlpha = ObservableFloat()
     val containerPadding = ObservableInt(initialToolbarContainerPadding)
@@ -53,10 +47,6 @@ class PlaylistChooserBottomSheetViewModel(
         closeAlpha.set(closenessToTop)
         closeTranslation.set(-(1 - closenessToTop) * finalToolbarMargin / 4)
         toolbarTranslation.set(closenessToTop * finalToolbarMargin)
-        if (titleCollapsedColor != titleExpandedColor) {
-            toolbarTitleColor.set(blendColors(titleCollapsedColor, titleExpandedColor, closenessToTop))
-            toolbarSubtitleColor.set(blendColors(subtitleCollapsedColor, subtitleExpandedColor, closenessToTop))
-        }
         if (scrollViewOffset == 0) {
             appBarElevation.set(closenessToTop * finalToolbarElevation)
             containerAlpha.set(closenessToTop)
