@@ -149,7 +149,7 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
 
     private fun checkIfToolbarTransformationIsNeeded() {
         binding.root.post {
-            val screenHeight = activity?.window?.decorView?.height ?: 0
+            val screenHeight = activity?.window?.decorView?.findViewById<View?>(android.R.id.content)?.height ?: 0
             if (binding.root.height > screenHeight - (binding.container?.fakeAppBar?.height ?: 0) && isFullWidth) {
                 val layoutParams = binding.root.layoutParams
                 layoutParams.height = screenHeight
