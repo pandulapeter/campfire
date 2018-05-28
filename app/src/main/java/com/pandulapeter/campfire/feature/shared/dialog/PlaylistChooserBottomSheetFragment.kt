@@ -1,6 +1,8 @@
 package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.content.Context
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
 import android.support.v4.app.DialogFragment
@@ -167,6 +169,12 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
             val newDimAmount = (1f - viewModel.containerAlpha.get()) * 0.6f
             if (it.attributes.dimAmount != newDimAmount) {
                 it.attributes = it.attributes.apply { dimAmount = newDimAmount }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_NO)
+                    it.decorView.systemUiVisibility = if (newDimAmount == 0F) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                    } else {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else 0
+                    }
             }
         }
     }
