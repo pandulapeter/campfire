@@ -92,9 +92,6 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
         super.onStart()
         songInfoRepository.subscribe(viewModel)
         playlistRepository.subscribe(viewModel)
-        if (shouldTransformTopToAppBar) {
-            updateBackgroundDim()
-        }
     }
 
     override fun onStop() {
@@ -106,6 +103,14 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.songId = viewModel.songId
+    }
+
+    override fun updateSystemWindows() {
+        if (shouldTransformTopToAppBar) {
+            updateBackgroundDim()
+        } else {
+            super.updateSystemWindows()
+        }
     }
 
     private fun refreshPlaylistCheckboxes() {

@@ -2,8 +2,10 @@ package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.content.Context
 import android.content.DialogInterface
+import android.content.res.Configuration
 import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
+import android.os.Build
 import android.os.Bundle
 import android.support.annotation.LayoutRes
 import android.support.annotation.StyleRes
@@ -29,6 +31,12 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
 
     abstract fun onDialogCreated()
 
+    open fun updateSystemWindows() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_NO) {
+            dialog.window.decorView.systemUiVisibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else 0
+        }
+    }
+
     override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->
         (activity as? CampfireActivity)?.isUiBlocked = true
         CustomWidthBottomSheetDialog(context, R.style.BottomSheetDialogTheme).apply {
@@ -38,6 +46,11 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
             onDialogCreated()
         }
     } ?: super.onCreateDialog(savedInstanceState)
+
+    override fun onStart() {
+        super.onStart()
+        updateSystemWindows()
+    }
 
     override fun onCancel(dialog: DialogInterface?) {
         (activity as? CampfireActivity)?.isUiBlocked = false

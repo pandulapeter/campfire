@@ -8,7 +8,7 @@
 
     <style name="BottomSheetDialogTheme" parent="BottomSheetDialogThemeBase">
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">?attr/colorPrimaryDark</item>
+        <item name="android:navigationBarColor">?attr/colorPrimary</item>
     </style>
 
 </resources>
