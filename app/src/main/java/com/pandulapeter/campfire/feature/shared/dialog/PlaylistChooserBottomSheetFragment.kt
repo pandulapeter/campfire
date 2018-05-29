@@ -171,7 +171,7 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
 
     private fun updateBackgroundDim() {
         dialog.window?.let {
-            val newDimAmount = (1f - viewModel.containerAlpha.get()) * 0.6f
+            val newDimAmount = if (viewModel.containerAlpha.get() == 1f) 0f else 0.6f
             if (it.attributes.dimAmount != newDimAmount) {
                 it.attributes = it.attributes.apply { dimAmount = newDimAmount }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_NO)
