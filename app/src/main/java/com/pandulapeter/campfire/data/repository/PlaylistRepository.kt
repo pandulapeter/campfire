@@ -102,6 +102,7 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
     }
 
     fun createNewPlaylist(title: String) {
+        data.sortedBy { it.order }.forEachIndexed { index, playlist -> playlist.order = index }
         val playlist = Playlist(
             id = UUID.randomUUID().toString(),
             title = title,
@@ -109,7 +110,12 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
         )
         data.add(playlist)
         notifyDataChanged()
-        async(UI) { async(CommonPool) { database.playlistDao().insert(playlist) }.await() }
+        async(UI) {
+            async(CommonPool) {
+                database.playlistDao().deleteAll()
+                data.forEach { database.playlistDao().insert(it) }
+            }.await()
+        }
     }
 
     fun updatePlaylistTitle(playlistId: String, title: String) {
