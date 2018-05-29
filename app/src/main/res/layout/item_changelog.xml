@@ -31,6 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/content_padding"
             android:layout_marginStart="@dimen/content_padding"
+            android:elevation="@dimen/card_elevation"
             app:cardCornerRadius="@dimen/card_corner"
             app:contentPadding="@dimen/content_padding">
 

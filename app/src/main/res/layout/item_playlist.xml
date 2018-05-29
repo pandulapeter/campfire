@@ -18,6 +18,7 @@
         android:layout_marginBottom="@dimen/border"
         android:layout_marginEnd="@dimen/negative_card_corner"
         android:layout_marginStart="@dimen/content_padding"
+        android:elevation="@dimen/card_elevation"
         android:foreground="?attr/selectableItemBackground"
         app:cardCornerRadius="@dimen/card_corner"
         app:contentPadding="@dimen/content_padding">

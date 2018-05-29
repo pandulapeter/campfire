@@ -20,6 +20,7 @@
         android:layout_marginEnd="@dimen/negative_card_corner"
         android:clipChildren="false"
         android:clipToPadding="false"
+        android:elevation="@dimen/card_elevation"
         android:foreground="?attr/selectableItemBackground"
         app:cardCornerRadius="@dimen/card_corner"
         app:contentPadding="@dimen/content_padding"
