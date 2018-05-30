@@ -161,9 +161,8 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
                 binding.root.layoutParams = layoutParams
                 shouldTransformTopToAppBar = true
                 binding.container?.contentContainer?.setPadding(0, 0, 0, contentBottomMargin)
-                if (shouldTransformTopToAppBar) {
-                    viewModel.updateSlideState(if (behavior.state == BottomSheetBehavior.STATE_EXPANDED) 1f else 0f, scrollViewOffset)
-                }
+                viewModel.updateSlideState(if (behavior.state == BottomSheetBehavior.STATE_EXPANDED) 1f else 0f, scrollViewOffset)
+                binding.container?.nestedScrollView?.run { setPadding(0, paddingTop, 0, 0) }
             }
             behavior.peekHeight = Math.min(binding.root.height, screenHeight / 2)
         }
