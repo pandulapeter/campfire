@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.content.Context
 import android.content.res.TypedArray
 import android.databinding.*
+import android.os.Build
 import android.os.Bundle
 import android.support.annotation.*
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat
@@ -14,6 +15,7 @@ import android.support.v4.view.ViewPager
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.content.res.AppCompatResources
 import android.text.Editable
+import android.text.Html
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.util.TypedValue
@@ -33,6 +35,13 @@ fun Context.drawable(@DrawableRes drawableId: Int) = AppCompatResources.getDrawa
 fun Context.font(@FontRes fontId: Int) = ResourcesCompat.getFont(this, fontId) ?: throw(Throwable("Font doesn't exist"))
 
 fun Context.animatedDrawable(@DrawableRes drawableId: Int) = AnimatedVectorDrawableCompat.create(this, drawableId)
+
+fun Context.parseHtml(@StringRes resourceId: Int) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+    Html.fromHtml(getString(resourceId), Html.FROM_HTML_MODE_COMPACT)
+} else {
+    @Suppress("DEPRECATION")
+    Html.fromHtml(getString(resourceId))
+}
 
 fun <T> MutableCollection<T>.swap(newItems: Collection<T>) {
     clear()

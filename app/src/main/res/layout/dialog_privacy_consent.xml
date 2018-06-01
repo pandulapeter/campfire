@@ -4,22 +4,36 @@
     <!--suppress AndroidUnknownAttribute -->
     <data class=".PrivacyConsentBinding" />
 
-    <FrameLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
         android:paddingBottom="@dimen/content_padding"
-        android:paddingEnd="@dimen/new_playlist_input_padding_end"
-        android:paddingStart="@dimen/new_playlist_input_padding_start"
         android:paddingTop="@dimen/large_content_padding">
 
-        <CheckBox
-            android:id="@+id/checkbox"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingEnd="0dp"
-            android:paddingStart="@dimen/content_padding"
-            android:text="@string/home_privacy_policy_checkbox" />
+            android:orientation="vertical"
+            android:paddingEnd="@dimen/new_playlist_input_padding_end"
+            android:paddingStart="@dimen/new_playlist_input_padding_start">
 
-    </FrameLayout>
+            <TextView
+                android:id="@+id/text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <CheckBox
+                android:id="@+id/checkbox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding"
+                android:paddingEnd="0dp"
+                android:paddingStart="@dimen/content_padding"
+                android:text="@string/home_privacy_policy_checkbox" />
+
+        </LinearLayout>
+
+    </ScrollView>
 
 </layout>

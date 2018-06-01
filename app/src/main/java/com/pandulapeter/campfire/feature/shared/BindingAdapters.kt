@@ -2,11 +2,9 @@ package com.pandulapeter.campfire.feature.shared
 
 import android.databinding.BindingAdapter
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat
-import android.text.Html
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextUtils
@@ -21,10 +19,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.shared.span.EllipsizeLineSpan
 import com.pandulapeter.campfire.feature.shared.span.FontFamilySpan
-import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.util.drawable
-import com.pandulapeter.campfire.util.font
-import com.pandulapeter.campfire.util.obtainColor
+import com.pandulapeter.campfire.util.*
 
 
 @BindingAdapter(value = ["android:drawableStart", "android:drawableTop", "android:drawableEnd", "android:drawableBottom"], requireAll = false)
@@ -74,12 +69,7 @@ fun setText(view: EditText, text: String?) {
 
 @BindingAdapter("formattedText")
 fun setFormattedText(view: TextView, @StringRes resourceId: Int) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        view.text = Html.fromHtml(view.context.getString(resourceId), Html.FROM_HTML_MODE_COMPACT)
-    } else {
-        @Suppress("DEPRECATION")
-        view.text = Html.fromHtml(view.context.getString(resourceId))
-    }
+    view.text = view.context.parseHtml(resourceId)
 }
 
 @BindingAdapter(value = ["animation", "lastFrame", "forcePlay"], requireAll = false)

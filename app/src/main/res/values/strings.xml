@@ -42,9 +42,17 @@
     <string name="home_manage_downloads">Manage downloads</string>
     <string name="home_exit_confirmation_message">Do you really want to close the app?</string>
     <string name="home_exit_confirmation_close">Close</string>
-    <string name="home_privacy_policy_title">Improve Campfire</string>
-    <string name="home_privacy_policy_message">Thanks for downloading the app!\n\nTo track the popularity of various features as well as to simplify fixing any possible issues, the app would like to send anonymous analytics data and crash reports back to the developer. None of this information will be shared with third parties and you can change this preference at any time.</string>
-    <string name="home_privacy_policy_checkbox">I\'m fine with the app anonymously collecting my usage statistics and potential crash reports</string>
+    <string name="home_privacy_policy_title">Welcome</string>
+    <string name="home_privacy_policy_message">
+        <Data><![CDATA[
+        Thank you for downloading Campfire!<br><br>
+        To help me improve it, please consider allowing the following ways of data collection:<br><br>
+        • Analytics through <strong>Firebase</strong> for statistics that give me general insights on when, where, and how people use the app<br><br>
+        • Crash reporting through <strong>Crashlytics</strong> to automatically let me know about potential mistakes I made so I can fix them quickly<br><br>
+        This is fully optional, and you can change your answer any time. For details, please check out my <strong>Privacy Policy</strong>!
+        ]]></Data>
+    </string>
+    <string name="home_privacy_policy_checkbox">I consent to the anonymous data collection of my usage statistics and potential crash reports</string>
     <string name="home_privacy_policy_positive">Continue</string>
 
     <!-- Collections screen -->

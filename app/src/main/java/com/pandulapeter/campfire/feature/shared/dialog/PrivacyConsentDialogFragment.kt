@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import com.pandulapeter.campfire.PrivacyConsentBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.parseHtml
 import com.pandulapeter.campfire.util.withArguments
 
 class PrivacyConsentDialogFragment : BaseDialogFragment() {
@@ -24,8 +25,7 @@ class PrivacyConsentDialogFragment : BaseDialogFragment() {
     private val binding by lazy { DataBindingUtil.inflate<PrivacyConsentBinding>(LayoutInflater.from(context), R.layout.dialog_privacy_consent, null, false) }
 
     override fun AlertDialog.Builder.createDialog(arguments: Bundle?): AlertDialog = setTitle(R.string.home_privacy_policy_title)
-        .setView(binding.root)
-        .setMessage(R.string.home_privacy_policy_message)
+        .setView(binding.apply { text.text = requireContext().parseHtml(R.string.home_privacy_policy_message) }.root)
         .setPositiveButton(R.string.home_privacy_policy_positive, { _, _ ->
             if (binding.checkbox.isChecked) {
                 onDialogItemSelectedListener?.onPositiveButtonSelected(arguments.id)
