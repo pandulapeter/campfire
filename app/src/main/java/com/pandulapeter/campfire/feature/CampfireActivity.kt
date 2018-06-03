@@ -627,7 +627,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         return AnalyticsManager.PARAM_VALUE_SCREEN_HOME
     }
 
-    private fun openCollectionsScreen(): String {
+    fun openCollectionsScreen(): String {
         if (currentFragment !is CollectionsFragment) {
             supportFragmentManager.clearBackStack()
             supportFragmentManager.handleReplace { CollectionsFragment() }

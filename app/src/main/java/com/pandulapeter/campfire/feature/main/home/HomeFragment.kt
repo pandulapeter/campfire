@@ -9,7 +9,10 @@ import com.pandulapeter.campfire.integration.AnalyticsManager
 
 class HomeFragment : TopLevelFragment<FragmentHomeBinding, HomeViewModel>(R.layout.fragment_home) {
 
-    override val viewModel = HomeViewModel { getCampfireActivity().openSongsScreen() }
+    override val viewModel = HomeViewModel(
+        openCollections = { getCampfireActivity().openCollectionsScreen() },
+        openSongs = { getCampfireActivity().openSongsScreen() }
+    )
     override val shouldShowAppBar = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
