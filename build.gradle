@@ -3,7 +3,7 @@ buildscript {
     ext.retrofitVersion = "2.3.0"
     ext.roomVersion = "1.1.0"
     ext.supportLibraryVersion = "27.1.1"
-    ext.firebaseVersion = "15.0.2"
+    ext.firebaseVersion = "16.0.0"
     repositories {
         jcenter()
         google()

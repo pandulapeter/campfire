@@ -217,6 +217,7 @@
     <!-- Playlist screen -->
     <plurals name="playlist_song_count">
         <item quantity="one">%d dal</item>
+        <item quantity="few">%d dal</item>
         <item quantity="other">%d dal</item>
     </plurals>
     <string name="playlist_enter_title">Add meg a lista címét</string>
@@ -229,11 +230,13 @@
     <!-- Manage playlists screen -->
     <plurals name="manage_playlists_subtitle">
         <item quantity="one">%d lista</item>
+        <item quantity="few">%d lista</item>
         <item quantity="other">%d lista</item>
     </plurals>
     <string name="manage_playlists_song_count_empty">Üres lista</string>
     <plurals name="manage_playlists_song_count">
         <item quantity="one">%d dalt tartalmaz</item>
+        <item quantity="few">%d dalt tartalmaz</item>
         <item quantity="other">%d dalt tartalmaz</item>
     </plurals>
     <string name="manage_playlists_hint_swipe">Vonszold vízszintesen a listákat, hogy kitöröld őket</string>

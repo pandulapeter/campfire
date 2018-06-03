@@ -4,8 +4,6 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import android.databinding.ObservableFloat
 import android.databinding.ObservableInt
-import android.graphics.Color
-import android.support.annotation.ColorInt
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
@@ -57,14 +55,4 @@ class PlaylistChooserBottomSheetViewModel(
     fun onCloseButtonClicked() = shouldDismissDialog.set(true)
 
     fun onNewPlaylistButtonClicked() = shouldShowNewPlaylistDialog.set(true)
-
-    @ColorInt
-    private fun blendColors(@ColorInt color1: Int, @ColorInt color2: Int, ratio: Float) = (1f - ratio).let { inverseRatio ->
-        Color.argb(
-            (Color.alpha(color1) * ratio + Color.alpha(color2) * inverseRatio).toInt(),
-            (Color.red(color1) * ratio + Color.red(color2) * inverseRatio).toInt(),
-            (Color.green(color1) * ratio + Color.green(color2) * inverseRatio).toInt(),
-            (Color.blue(color1) * ratio + Color.blue(color2) * inverseRatio).toInt()
-        )
-    }
 }

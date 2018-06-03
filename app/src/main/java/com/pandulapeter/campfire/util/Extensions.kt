@@ -41,7 +41,7 @@ fun Context.parseHtml(@StringRes resourceId: Int) = if (Build.VERSION.SDK_INT >=
 } else {
     @Suppress("DEPRECATION")
     Html.fromHtml(getString(resourceId))
-}
+} ?: ""
 
 fun <T> MutableCollection<T>.swap(newItems: Collection<T>) {
     clear()

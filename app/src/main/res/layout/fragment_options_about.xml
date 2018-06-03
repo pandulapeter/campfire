@@ -132,7 +132,8 @@
                         android:layout_height="wrap_content"
                         android:drawableStart="@drawable/ic_beer_24dp"
                         android:onClick="@{() -> viewModel.onBuyMeABeerClicked()}"
-                        android:text="@string/options_about_buy_me_a_beer" />
+                        android:text="@string/options_about_buy_me_a_beer"
+                        android:visibility="gone" />
 
                 </LinearLayout>
 
