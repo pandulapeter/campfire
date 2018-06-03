@@ -9,7 +9,7 @@ import com.pandulapeter.campfire.integration.AnalyticsManager
 
 class HomeFragment : TopLevelFragment<FragmentHomeBinding, HomeViewModel>(R.layout.fragment_home) {
 
-    override val viewModel = HomeViewModel()
+    override val viewModel = HomeViewModel { getCampfireActivity().openSongsScreen() }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

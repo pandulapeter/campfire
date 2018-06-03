@@ -5,7 +5,6 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/content_padding"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/large_content_padding"
     android:paddingEnd="@dimen/first_keyline"
     android:paddingStart="@dimen/first_keyline">
 

@@ -52,6 +52,7 @@
     <string name="main_privacy_policy_positive">Folytatás</string>
 
     <!-- Home screen -->
+    <string name="home_placeholder">Ez a képernyő személyre szabott dal ajánlásokat, kiemelt gyűjteményeket és véletlenszerű listákat fog tartalmazni.</string>
 
     <!-- Collections screen -->
     <string name="collections_placeholder">Nem található megfelelő gyűjtemény. Ellenőrizd a beállított szűrőket</string>

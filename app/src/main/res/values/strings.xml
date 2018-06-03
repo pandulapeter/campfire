@@ -53,6 +53,7 @@
     <string name="main_privacy_policy_positive">Continue</string>
 
     <!-- Home screen -->
+    <string name="home_placeholder">This screen will contain personalised song suggestions, featured collections and random playlists.</string>
 
     <!-- Collections screen -->
     <string name="collections_placeholder">No matching collections found. Double-check the filters you set up</string>
