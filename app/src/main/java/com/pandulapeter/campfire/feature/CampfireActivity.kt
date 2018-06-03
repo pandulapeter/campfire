@@ -532,7 +532,19 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         transitionMode = false
         binding.toolbarButtonContainer.removeAllViews()
         updateMainToolbarButton(!isBackStackEmpty)
-        binding.appBarLayout.visibleOrGone = currentFragment?.shouldShowAppBar == true
+        binding.appBarLayout.run {
+            if (currentFragment?.shouldShowAppBar == true) {
+                if (!visibleOrGone) {
+                    visibleOrGone = true
+                    translationY = -height.toFloat()
+                    animate().translationY(0f).start()
+                }
+            } else {
+                if (visibleOrInvisible) {
+                    visibleOrGone = false
+                }
+            }
+        }
 
         // Reset the primary navigation drawer.
         binding.drawerLayout.setDrawerLockMode(
