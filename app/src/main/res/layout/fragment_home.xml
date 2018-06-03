@@ -22,6 +22,7 @@
             android:layout_marginTop="56dp"
             android:alpha="0.8"
             android:src="@drawable/ic_home_24dp"
+            android:tint="?android:attr/textColorSecondary"
             tools:ignore="ContentDescription" />
 
         <TextView
@@ -29,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/large_content_padding"
             android:gravity="center"
-            android:padding="@dimen/large_content_padding"
+            android:padding="32dp"
             android:text="@string/home_placeholder" />
 
         <Button
