@@ -6,7 +6,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.songs.SearchControlsViewModel" />
+            type="com.pandulapeter.campfire.feature.main.songs.SearchControlsViewModel" />
 
     </data>
 

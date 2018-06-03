@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.collections.CollectionListItemViewModel.CollectionViewModel" />
+            type="com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewModel.CollectionViewModel" />
 
         <import type="com.pandulapeter.campfire.R" />
 

@@ -32,7 +32,7 @@ class NewPlaylistDialogFragment : BaseDialogFragment() {
     override fun AlertDialog.Builder.createDialog(arguments: Bundle?): AlertDialog {
         binding.inputField.onTextChanged { positiveButton.isEnabled = binding.inputField.text.isTextValid() }
         return setView(binding.root)
-            .setTitle(R.string.home_new_playlist)
+            .setTitle(R.string.main_new_playlist)
             .setPositiveButton(R.string.ok, { _, _ -> onOkButtonPressed() })
             .setNegativeButton(R.string.cancel, null)
             .create()

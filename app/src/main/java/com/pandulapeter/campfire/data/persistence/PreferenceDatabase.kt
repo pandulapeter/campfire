@@ -2,9 +2,9 @@ package com.pandulapeter.campfire.data.persistence
 
 import android.content.Context
 import com.pandulapeter.campfire.data.model.local.Language
-import com.pandulapeter.campfire.feature.home.collections.CollectionsViewModel
-import com.pandulapeter.campfire.feature.home.options.preferences.PreferencesViewModel
-import com.pandulapeter.campfire.feature.home.songs.SongsViewModel
+import com.pandulapeter.campfire.feature.main.collections.CollectionsViewModel
+import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
+import com.pandulapeter.campfire.feature.main.songs.SongsViewModel
 import java.util.*
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -18,20 +18,23 @@ class PreferenceDatabase(context: Context) {
     private val preferences = context.applicationContext.getSharedPreferences("preferences", Context.MODE_PRIVATE)
     private val locale by lazy { Locale.getDefault().isO3Country.toUpperCase() }
 
-    // Library
-    var lastLibraryUpdateTimestamp by PreferenceFieldDelegate.Long("lastLibraryUpdateTimestamp")
-    var librarySortingMode by PreferenceFieldDelegate.Int("librarySortingMode", SongsViewModel.SortingMode.TITLE.intValue)
-    var shouldSearchInArtists by PreferenceFieldDelegate.Boolean("shouldSearchInArtists", true)
-    var shouldSearchInTitles by PreferenceFieldDelegate.Boolean("shouldSearchInTitles", true)
-    var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("shouldShowDownloadedOnly", false)
-    var shouldShowExplicitLibrary by PreferenceFieldDelegate.Boolean("shouldShowExplicitLibrary", false)
-    var disabledLibraryLanguageFilters by PreferenceFieldDelegate.StringSet("disabledLibraryLanguageFilters", getDefaultLanguageFilters())
+    // General
+    var lastScreen by PreferenceFieldDelegate.String("lastScreen", "")
+    var disabledLanguageFilters by PreferenceFieldDelegate.StringSet("disabledLanguageFilters", getDefaultLanguageFilters())
 
     // Collections
     var lastCollectionsUpdateTimestamp by PreferenceFieldDelegate.Long("lastCollectionsUpdateTimestamp")
     var collectionsSortingMode by PreferenceFieldDelegate.Int("collectionsSortingMode", CollectionsViewModel.SortingMode.TITLE.intValue)
     var shouldShowSavedOnly by PreferenceFieldDelegate.Boolean("shouldShowSavedOnly", false)
     var shouldShowExplicitCollections by PreferenceFieldDelegate.Boolean("shouldShowExplicitCollections", false)
+
+    // Songs
+    var lastSongsUpdateTimestamp by PreferenceFieldDelegate.Long("lastSongsUpdateTimestamp")
+    var songsSortingMode by PreferenceFieldDelegate.Int("songsSortingMode", SongsViewModel.SortingMode.TITLE.intValue)
+    var shouldSearchInArtists by PreferenceFieldDelegate.Boolean("shouldSearchInArtists", true)
+    var shouldSearchInTitles by PreferenceFieldDelegate.Boolean("shouldSearchInTitles", true)
+    var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("shouldShowDownloadedOnly", false)
+    var shouldShowExplicitSongs by PreferenceFieldDelegate.Boolean("shouldShowExplicitSongs", false)
 
     // Preferences
     var shouldShowChords by PreferenceFieldDelegate.Boolean("shouldShowChords", true)
@@ -44,7 +47,6 @@ class PreferenceDatabase(context: Context) {
     var shouldShareCrashReports by PreferenceFieldDelegate.Boolean("shouldShareCrashReports", false)
     var shouldShareUsageData by PreferenceFieldDelegate.Boolean("shouldShareUsageData", false)
     var playlistHistory by PreferenceFieldDelegate.StringSet("playlistHistory", setOf())
-    var lastScreen by PreferenceFieldDelegate.String("lastScreen", "")
 
     // First time user experience
     var ftuxLastSeenChangelog by PreferenceFieldDelegate.Int("ftuxLastSeenChangelog", 0)

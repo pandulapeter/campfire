@@ -6,31 +6,36 @@
         android:checkableBehavior="single">
 
         <item
+            android:id="@+id/home"
+            android:icon="@drawable/ic_home_24dp"
+            android:title="@string/main_home" />
+
+        <item
             android:id="@+id/collections"
             android:icon="@drawable/ic_collections_24dp"
-            android:title="@string/home_collections" />
+            android:title="@string/main_collections" />
 
         <item
             android:id="@+id/songs"
             android:icon="@drawable/ic_songs_24dp"
-            android:title="@string/home_songs" />
+            android:title="@string/main_songs" />
 
         <item
             android:id="@+id/history"
             android:icon="@drawable/ic_history_24dp"
-            android:title="@string/home_history" />
+            android:title="@string/main_history" />
 
         <item
             android:id="@+id/options"
             android:icon="@drawable/ic_options_24dp"
-            android:title="@string/home_options" />
+            android:title="@string/main_options" />
 
     </group>
 
     <item
         android:id="@+id/playlists"
         android:enabled="false"
-        android:title="@string/home_playlists">
+        android:title="@string/main_playlists">
 
         <menu>
 
@@ -50,11 +55,11 @@
 
         <item
             android:id="@+id/manage_playlists"
-            android:title="@string/home_manage_playlists" />
+            android:title="@string/main_manage_playlists" />
 
         <item
             android:id="@+id/manage_downloads"
-            android:title="@string/home_manage_downloads" />
+            android:title="@string/main_manage_downloads" />
 
     </group>
 

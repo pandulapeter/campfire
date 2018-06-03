@@ -41,15 +41,16 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.databinding.ActivityCampfireBinding
 import com.pandulapeter.campfire.feature.detail.DetailFragment
-import com.pandulapeter.campfire.feature.home.collections.CollectionsFragment
-import com.pandulapeter.campfire.feature.home.collections.detail.CollectionDetailFragment
-import com.pandulapeter.campfire.feature.home.history.HistoryFragment
-import com.pandulapeter.campfire.feature.home.manageDownloads.ManageDownloadsFragment
-import com.pandulapeter.campfire.feature.home.managePlaylists.ManagePlaylistsFragment
-import com.pandulapeter.campfire.feature.home.options.OptionsFragment
-import com.pandulapeter.campfire.feature.home.options.preferences.PreferencesViewModel
-import com.pandulapeter.campfire.feature.home.playlist.PlaylistFragment
-import com.pandulapeter.campfire.feature.home.songs.SongsFragment
+import com.pandulapeter.campfire.feature.main.collections.CollectionsFragment
+import com.pandulapeter.campfire.feature.main.collections.detail.CollectionDetailFragment
+import com.pandulapeter.campfire.feature.main.history.HistoryFragment
+import com.pandulapeter.campfire.feature.main.home.HomeFragment
+import com.pandulapeter.campfire.feature.main.manageDownloads.ManageDownloadsFragment
+import com.pandulapeter.campfire.feature.main.managePlaylists.ManagePlaylistsFragment
+import com.pandulapeter.campfire.feature.main.options.OptionsFragment
+import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
+import com.pandulapeter.campfire.feature.main.playlist.PlaylistFragment
+import com.pandulapeter.campfire.feature.main.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
@@ -66,6 +67,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     companion object {
         private const val DIALOG_ID_EXIT_CONFIRMATION = 1
+        const val SCREEN_HOME = "home"
         const val SCREEN_COLLECTIONS = "collections"
         const val SCREEN_SONGS = "songs"
         const val SCREEN_HISTORY = "history"
@@ -76,6 +78,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         private var Intent.screenToOpen by IntentExtraDelegate.String("screenToOpen")
 
         private fun getStartIntent(context: Context) = Intent(context, CampfireActivity::class.java)
+
+        fun getHomeIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_HOME }
 
         fun getCollectionsIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_COLLECTIONS }
 
@@ -224,7 +228,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         // Initialize the primary side navigation drawer.
         binding.primaryNavigation.disableScrollbars()
         val headerView = binding.primaryNavigation.getHeaderView(0)
-        (headerView?.findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.home_version_pattern, BuildConfig.VERSION_NAME)
+        (headerView?.findViewById<View>(R.id.version) as? TextView)?.text = getString(R.string.main_version_pattern, BuildConfig.VERSION_NAME)
         binding.rootCoordinatorLayout.insetChangeListener = {
             headerView?.apply { setPadding(paddingStart, it, paddingEnd, paddingBottom) }
         }
@@ -236,6 +240,12 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     currentScreenId = menuItem.itemId
                 }
                 return@setNavigationItemSelectedListener when (menuItem.itemId) {
+                    R.id.home -> consumeAndCloseDrawers {
+                        supportFragmentManager.handleReplace {
+                            appShortcutManager.onHomeOpened()
+                            HomeFragment()
+                        }
+                    }
                     R.id.collections -> consumeAndCloseDrawers {
                         supportFragmentManager.handleReplace {
                             appShortcutManager.onCollectionsOpened()
@@ -243,7 +253,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                         }
                     }
                     R.id.songs -> consumeAndCloseDrawers {
-                        appShortcutManager.onLibraryOpened()
+                        appShortcutManager.onSongsOpened()
                         supportFragmentManager.handleReplace { SongsFragment() }
                     }
                     R.id.history -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { HistoryFragment() } }
@@ -345,8 +355,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                                     id = DIALOG_ID_EXIT_CONFIRMATION,
                                     fragmentManager = supportFragmentManager,
                                     title = R.string.are_you_sure,
-                                    message = R.string.home_exit_confirmation_message,
-                                    positiveButton = R.string.home_exit_confirmation_close,
+                                    message = R.string.main_exit_confirmation_message,
+                                    positiveButton = R.string.main_exit_confirmation_close,
                                     negativeButton = R.string.cancel
                                 )
                             } else {
@@ -560,8 +570,9 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 preferenceDatabase.lastScreen.let {
                     isFromAppShortcut = false
                     when (it) {
-                        "", SCREEN_SONGS -> openSongsScreen()
+                        "", SCREEN_HOME -> openHomeScreen()
                         SCREEN_COLLECTIONS -> openCollectionsScreen()
+                        SCREEN_SONGS -> openSongsScreen()
                         SCREEN_HISTORY -> openHistoryScreen()
                         SCREEN_OPTIONS -> openOptionsScreen()
                         SCREEN_MANAGE_PLAYLISTS -> openManagePlaylistsScreen()
@@ -570,6 +581,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     }
                 }
             }
+            SCREEN_HOME -> openHomeScreen()
             SCREEN_COLLECTIONS -> openCollectionsScreen()
             SCREEN_SONGS -> openSongsScreen()
             else -> openPlaylistScreen(intent.screenToOpen)
@@ -588,15 +600,15 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         )
     }
 
-    fun openSongsScreen(): String {
-        if (currentFragment !is SongsFragment) {
+    private fun openHomeScreen(): String {
+        if (currentFragment !is HomeFragment) {
             supportFragmentManager.clearBackStack()
-            supportFragmentManager.handleReplace { SongsFragment() }
-            currentScreenId = R.id.songs
-            binding.primaryNavigation.setCheckedItem(R.id.songs)
-            appShortcutManager.onLibraryOpened()
+            supportFragmentManager.handleReplace { HomeFragment() }
+            currentScreenId = R.id.home
+            binding.primaryNavigation.setCheckedItem(R.id.home)
+            appShortcutManager.onHomeOpened()
         }
-        return AnalyticsManager.PARAM_VALUE_SCREEN_LIBRARY
+        return AnalyticsManager.PARAM_VALUE_SCREEN_HOME
     }
 
     private fun openCollectionsScreen(): String {
@@ -608,6 +620,17 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             appShortcutManager.onCollectionsOpened()
         }
         return AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS
+    }
+
+    fun openSongsScreen(): String {
+        if (currentFragment !is SongsFragment) {
+            supportFragmentManager.clearBackStack()
+            supportFragmentManager.handleReplace { SongsFragment() }
+            currentScreenId = R.id.songs
+            binding.primaryNavigation.setCheckedItem(R.id.songs)
+            appShortcutManager.onSongsOpened()
+        }
+        return AnalyticsManager.PARAM_VALUE_SCREEN_SONGS
     }
 
     fun openCollectionDetailsScreen(collection: Collection, clickedView: View?, image: View?, shouldExplode: Boolean) {
@@ -772,11 +795,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                         currentScreenId = id
                         binding.primaryNavigation.run { post { setCheckedItem(id) } }
                     }
-                    addPlaylistItem(index, id, playlist.title ?: getString(R.string.home_favorites))
+                    addPlaylistItem(index, id, playlist.title ?: getString(R.string.main_favorites))
                 }
             if (playlists.size < Playlist.MAXIMUM_PLAYLIST_COUNT) {
                 newPlaylistId = View.generateViewId()
-                addPlaylistItem(playlists.size, newPlaylistId, getString(R.string.home_new_playlist), true)
+                addPlaylistItem(playlists.size, newPlaylistId, getString(R.string.main_new_playlist), true)
             }
             setGroupCheckable(R.id.playlist_container, true, true)
             appShortcutManager.updateAppShortcuts()

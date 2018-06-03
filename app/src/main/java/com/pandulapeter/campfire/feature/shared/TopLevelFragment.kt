@@ -15,7 +15,7 @@ import android.view.View
 import android.widget.CompoundButton
 import android.widget.TextView
 import com.pandulapeter.campfire.feature.detail.DetailFragment
-import com.pandulapeter.campfire.feature.home.songs.SongsFragment
+import com.pandulapeter.campfire.feature.main.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
@@ -29,7 +29,6 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     protected val defaultToolbar by lazy { AppCompatTextView(context).apply { gravity = Gravity.CENTER_VERTICAL } }
     protected open val appBarView: View? = null
-    protected open val canScrollToolbar = true
     protected var toolbarWidth = 0
 
     @CallSuper

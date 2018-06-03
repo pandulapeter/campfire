@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
-import com.pandulapeter.campfire.feature.home.options.about.AboutViewModel
+import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
@@ -60,7 +60,6 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             isAddedToPlaylist = it
         }
     }
-    override val canScrollToolbar = false
     private val pagerAdapter by lazy { DetailPagerAdapter(childFragmentManager, songs) }
     private val historyRepository by inject<HistoryRepository>()
     private val songRepository by inject<SongRepository>()

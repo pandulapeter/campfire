@@ -5,7 +5,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.options.OptionsViewModel" />
+            type="com.pandulapeter.campfire.feature.main.options.OptionsViewModel" />
 
     </data>
 

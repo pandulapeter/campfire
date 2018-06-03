@@ -27,9 +27,9 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_COLLECTION_BOOKMARKED_STATE_CHANGED = "collection_bookmarked_state_changed"
         private const val EVENT_COLLECTION_SORTING_MODE_UPDATED = "collection_sorting_mode_updated"
         private const val EVENT_COLLECTION_FILTER_TOGGLED = "collection_filter_toggled"
-        private const val EVENT_LIBRARY_SORTING_MODE_UPDATED = "songs_sorting_mode_updated"
-        private const val EVENT_LIBRARY_FILTER_TOGGLED = "songs_filter_toggled"
-        private const val EVENT_LIBRARY_SEARCH_QUERY_CHANGED = "songs_search_query_changed"
+        private const val EVENT_SONGS_SORTING_MODE_UPDATED = "songs_sorting_mode_updated"
+        private const val EVENT_SONGS_FILTER_TOGGLED = "songs_filter_toggled"
+        private const val EVENT_SONGS_SEARCH_QUERY_CHANGED = "songs_search_query_changed"
         private const val EVENT_SHUFFLE_BUTTON_PRESSED = "shuffle_button_pressed"
         private const val EVENT_SONG_PLAYLIST_STATE_CHANGED = "song_playlist_state_changed"
         private const val EVENT_AUTO_SCROLL_TOGGLED = "auto_scroll_toggled"
@@ -88,8 +88,9 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_LEGAL_PAGE = "legal_page"
 
         // Values
-        const val PARAM_VALUE_SCREEN_LIBRARY = "songs"
+        const val PARAM_VALUE_SCREEN_HOME = "home"
         const val PARAM_VALUE_SCREEN_COLLECTIONS = "collections"
+        const val PARAM_VALUE_SCREEN_SONGS = "songs"
         const val PARAM_VALUE_SCREEN_HISTORY = "history"
         const val PARAM_VALUE_SCREEN_OPTIONS = "options"
         const val PARAM_VALUE_SCREEN_OPTIONS_PREFERENCES = "preferences"
@@ -227,19 +228,19 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF
     )
 
-    fun onLibrarySortingModeUpdated(sortingMode: String) = trackAnalyticsEvent(
-        EVENT_LIBRARY_SORTING_MODE_UPDATED,
+    fun onSongsSortingModeUpdated(sortingMode: String) = trackAnalyticsEvent(
+        EVENT_SONGS_SORTING_MODE_UPDATED,
         PARAM_KEY_SORTING_MODE to sortingMode
     )
 
-    fun onLibraryFilterToggled(filter: String, state: Boolean) = trackAnalyticsEvent(
-        EVENT_LIBRARY_FILTER_TOGGLED,
+    fun onSongsFilterToggled(filter: String, state: Boolean) = trackAnalyticsEvent(
+        EVENT_SONGS_FILTER_TOGGLED,
         PARAM_KEY_FILTER to filter,
         PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF
     )
 
-    fun onLibrarySearchQueryChanged(query: String, shouldSearchInArtists: Boolean, shouldSearchInTitles: Boolean) = trackAnalyticsEvent(
-        EVENT_LIBRARY_SEARCH_QUERY_CHANGED,
+    fun onSongsSearchQueryChanged(query: String, shouldSearchInArtists: Boolean, shouldSearchInTitles: Boolean) = trackAnalyticsEvent(
+        EVENT_SONGS_SEARCH_QUERY_CHANGED,
         PARAM_KEY_QUERY to query,
         PARAM_KEY_SEARCH_IN_ARTISTS to if (shouldSearchInArtists) PARAM_VALUE_ON else PARAM_VALUE_OFF,
         PARAM_KEY_SEARCH_IN_TITLES to if (shouldSearchInTitles) PARAM_VALUE_ON else PARAM_VALUE_OFF

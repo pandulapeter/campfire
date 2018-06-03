@@ -39,7 +39,7 @@ class SongRepository(
                 data.swap(database.songDao().getAll())
                 updateLanguages()
             }.await()
-            if (System.currentTimeMillis() - preferenceDatabase.lastLibraryUpdateTimestamp > UPDATE_LIMIT) {
+            if (System.currentTimeMillis() - preferenceDatabase.lastSongsUpdateTimestamp > UPDATE_LIMIT) {
                 updateData()
             } else {
                 isLoading = false
@@ -66,7 +66,7 @@ class SongRepository(
 
     fun updateData() {
         isLoading = true
-        networkManager.service.getLibrary().enqueueCall(
+        networkManager.service.getSongs().enqueueCall(
             onSuccess = { newData ->
                 async(UI) {
                     async(CommonPool) {
@@ -83,7 +83,7 @@ class SongRepository(
                     async(CommonPool) { database.songDao().updateAll(data) }
                     isLoading = false
                     notifyDataChanged()
-                    preferenceDatabase.lastLibraryUpdateTimestamp = System.currentTimeMillis()
+                    preferenceDatabase.lastSongsUpdateTimestamp = System.currentTimeMillis()
 
                 }
             },

@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.PrivacyConsentBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.feature.home.options.about.AboutViewModel
+import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.color
 import io.fabric.sdk.android.Fabric
@@ -36,9 +36,9 @@ class PrivacyConsentDialogFragment : BaseDialogFragment() {
     private val analyticsManager by inject<AnalyticsManager>()
     private val binding by lazy {
         DataBindingUtil.inflate<PrivacyConsentBinding>(LayoutInflater.from(context), R.layout.dialog_privacy_consent, null, false).apply {
-            val first = getString(R.string.home_privacy_policy_message_end_part_1)
-            val second = getString(R.string.home_privacy_policy_message_end_part_2)
-            val third = getString(R.string.home_privacy_policy_message_end_part_3)
+            val first = getString(R.string.main_privacy_policy_message_end_part_1)
+            val second = getString(R.string.main_privacy_policy_message_end_part_2)
+            val third = getString(R.string.main_privacy_policy_message_end_part_3)
             textEnd.movementMethod = LinkMovementMethod.getInstance()
             textEnd.text = SpannableString("$first$second$third").apply {
                 setSpan(object : ClickableSpan() {
@@ -54,7 +54,7 @@ class PrivacyConsentDialogFragment : BaseDialogFragment() {
     }
 
     override fun AlertDialog.Builder.createDialog(arguments: Bundle?): AlertDialog = setView(binding.root)
-        .setPositiveButton(R.string.home_privacy_policy_positive, { _, _ ->
+        .setPositiveButton(R.string.main_privacy_policy_positive, { _, _ ->
             preferenceDatabase.shouldShowPrivacyPolicy = false
 
             // Set up analytics.

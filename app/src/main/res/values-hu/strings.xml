@@ -3,7 +3,7 @@
 
     <!-- General -->
     <string name="got_it">Értem</string>
-    <string name="go_to_songs">@string/home_songs</string>
+    <string name="go_to_songs">@string/main_songs</string>
     <string name="try_again">Újra</string>
     <string name="are_you_sure">Biztos vagy benne?</string>
     <string name="undo">Mégse</string>
@@ -28,27 +28,30 @@
     <string name="popular_tag">Népszerű</string>
     <string name="drag_to_rearrange">Húzd az átrendezéshez</string>
 
+    <!-- Main screen -->
+    <string name="main_version_pattern">v%s</string>
+    <string name="main_home">Kezdőképernyő</string>
+    <string name="main_collections">Gyűjtemények</string>
+    <string name="main_songs">Dalok</string>
+    <string name="main_options">Opciók</string>
+    <string name="main_history">Előzmények</string>
+    <string name="main_playlists">Listák</string>
+    <string name="main_favorites">Kedvencek</string>
+    <string name="main_new_playlist">Új lista</string>
+    <string name="main_manage_playlists">@string/manage_playlists</string>
+    <string name="main_manage_downloads">Letöltések kezelése</string>
+    <string name="main_exit_confirmation_message">Tényleg ki szeretnél lépni az alkalmazásból?</string>
+    <string name="main_exit_confirmation_close">Kilépés</string>
+    <string name="main_privacy_policy_title">Üdvözlet</string>
+    <string name="main_privacy_policy_message_start">Ha segítenél az alkalmazás jobbá tételében, kérlek engedélyezd a következő típusú adatok megosztását a fejlesztővel:</string>
+    <string name="main_privacy_policy_analytics_checkbox">Használati statisztikák a Google Firebase szolgáltatáson keresztül</string>
+    <string name="main_privacy_policy_crash_reporting_checkbox">Hibajelentések a Google Crashlytics szolgáltatáson keresztül</string>
+    <string name="main_privacy_policy_message_end_part_1">"Ezeket a beállításokat bármikor megváltoztathatod. További információért olvasd el az angol nyelvű "</string>
+    <string name="main_privacy_policy_message_end_part_2">adatvédelmi irányelveket</string>
+    <string name="main_privacy_policy_message_end_part_3">!</string>
+    <string name="main_privacy_policy_positive">Folytatás</string>
+
     <!-- Home screen -->
-    <string name="home_version_pattern">v%s</string>
-    <string name="home_songs">Dalok</string>
-    <string name="home_collections">Gyűjtemények</string>
-    <string name="home_options">Opciók</string>
-    <string name="home_history">Előzmények</string>
-    <string name="home_playlists">Listák</string>
-    <string name="home_favorites">Kedvencek</string>
-    <string name="home_new_playlist">Új lista</string>
-    <string name="home_manage_playlists">@string/manage_playlists</string>
-    <string name="home_manage_downloads">Letöltések kezelése</string>
-    <string name="home_exit_confirmation_message">Tényleg ki szeretnél lépni az alkalmazásból?</string>
-    <string name="home_exit_confirmation_close">Kilépés</string>
-    <string name="home_privacy_policy_title">Üdvözlet</string>
-    <string name="home_privacy_policy_message_start">Ha segítenél az alkalmazás jobbá tételében, kérlek engedélyezd a következő típusú adatok megosztását a fejlesztővel:</string>
-    <string name="home_privacy_policy_analytics_checkbox">Használati statisztikák a Google Firebase szolgáltatáson keresztül</string>
-    <string name="home_privacy_policy_crash_reporting_checkbox">Hibajelentések a Google Crashlytics szolgáltatáson keresztül</string>
-    <string name="home_privacy_policy_message_end_part_1">"Ezeket a beállításokat bármikor megváltoztathatod. További információért olvasd el az angol nyelvű "</string>
-    <string name="home_privacy_policy_message_end_part_2">adatvédelmi irányelveket</string>
-    <string name="home_privacy_policy_message_end_part_3">!</string>
-    <string name="home_privacy_policy_positive">Folytatás</string>
 
     <!-- Collections screen -->
     <string name="collections_placeholder">Nem található megfelelő gyűjtemény. Ellenőrizd a beállított szűrőket</string>
@@ -152,6 +155,7 @@
     <string name="options_changelog_what_is_new">Újdonságok</string>
     <string name="options_changelog_0_6_0_description">
         <Data><![CDATA[
+        • <strong>Kezdőképernyő</strong> ami gyűjtemény, dal és lista ajánlásokat tartalmaz<br>
         • <strong>Román</strong> fordítás<br>
         • Jelentős <strong>design módosítások</strong>
         ]]></Data>

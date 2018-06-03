@@ -11,7 +11,7 @@ import retrofit2.http.Query
 interface CampfireService {
 
     @GET("/v1/library")
-    fun getLibrary(): Call<List<Song>>
+    fun getSongs(): Call<List<Song>>
 
     @GET("/v1/collections")
     fun getCollections(): Call<List<Collection>>

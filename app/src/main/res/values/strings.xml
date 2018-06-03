@@ -4,7 +4,7 @@
     <!-- General -->
     <string name="campfire" translatable="false">Campfire</string>
     <string name="got_it">Got it</string>
-    <string name="go_to_songs">@string/home_songs</string>
+    <string name="go_to_songs">@string/main_songs</string>
     <string name="try_again">Try again</string>
     <string name="are_you_sure">Are you sure?</string>
     <string name="undo">Undo</string>
@@ -29,27 +29,30 @@
     <string name="popular_tag">Popular</string>
     <string name="drag_to_rearrange">Drag to rearrange</string>
 
+    <!-- Main screen -->
+    <string name="main_version_pattern">v%s</string>
+    <string name="main_home">Home</string>
+    <string name="main_collections">Collections</string>
+    <string name="main_songs">Songs</string>
+    <string name="main_options">Options</string>
+    <string name="main_history">History</string>
+    <string name="main_playlists">Playlists</string>
+    <string name="main_favorites">Favorites</string>
+    <string name="main_new_playlist">New playlist</string>
+    <string name="main_manage_playlists">@string/manage_playlists</string>
+    <string name="main_manage_downloads">Manage downloads</string>
+    <string name="main_exit_confirmation_message">Do you really want to close the app?</string>
+    <string name="main_exit_confirmation_close">Close</string>
+    <string name="main_privacy_policy_title">Welcome</string>
+    <string name="main_privacy_policy_message_start">To help improve Campfire, please consider opting in to the following ways of sharing your data with the developer:</string>
+    <string name="main_privacy_policy_analytics_checkbox">Analytics through Google\'s Firebase service</string>
+    <string name="main_privacy_policy_crash_reporting_checkbox">Crash reporting through Google\'s Crashlytics service</string>
+    <string name="main_privacy_policy_message_end_part_1">"You can change these preferences at any time. For more information, check out the "</string>
+    <string name="main_privacy_policy_message_end_part_2">Privacy Policy</string>
+    <string name="main_privacy_policy_message_end_part_3">!</string>
+    <string name="main_privacy_policy_positive">Continue</string>
+
     <!-- Home screen -->
-    <string name="home_version_pattern">v%s</string>
-    <string name="home_songs">Songs</string>
-    <string name="home_collections">Collections</string>
-    <string name="home_options">Options</string>
-    <string name="home_history">History</string>
-    <string name="home_playlists">Playlists</string>
-    <string name="home_favorites">Favorites</string>
-    <string name="home_new_playlist">New playlist</string>
-    <string name="home_manage_playlists">@string/manage_playlists</string>
-    <string name="home_manage_downloads">Manage downloads</string>
-    <string name="home_exit_confirmation_message">Do you really want to close the app?</string>
-    <string name="home_exit_confirmation_close">Close</string>
-    <string name="home_privacy_policy_title">Welcome</string>
-    <string name="home_privacy_policy_message_start">To help improve Campfire, please consider opting in to the following ways of sharing your data with the developer:</string>
-    <string name="home_privacy_policy_analytics_checkbox">Analytics through Google\'s Firebase service</string>
-    <string name="home_privacy_policy_crash_reporting_checkbox">Crash reporting through Google\'s Crashlytics service</string>
-    <string name="home_privacy_policy_message_end_part_1">"You can change these preferences at any time. For more information, check out the "</string>
-    <string name="home_privacy_policy_message_end_part_2">Privacy Policy</string>
-    <string name="home_privacy_policy_message_end_part_3">!</string>
-    <string name="home_privacy_policy_positive">Continue</string>
 
     <!-- Collections screen -->
     <string name="collections_placeholder">No matching collections found. Double-check the filters you set up</string>
@@ -154,6 +157,7 @@
     <string name="options_changelog_0_6_0_version_name" translatable="false">v0.6</string>
     <string name="options_changelog_0_6_0_description">
         <Data><![CDATA[
+        • <strong>Home screen</strong> that shows collection, song, and playlist suggestions<br>
         • <strong>Romanian</strong> translation<br>
         • Major <strong>design improvements</strong>
         ]]></Data>

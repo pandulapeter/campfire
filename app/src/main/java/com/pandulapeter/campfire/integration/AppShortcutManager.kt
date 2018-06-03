@@ -19,9 +19,11 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
     private val implementation: Functionality =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) Implementation(context, preferenceDatabase, playlistRepository) else object : Functionality {}
 
+    fun onHomeOpened() = implementation.onHomeOpened()
+
     fun onCollectionsOpened() = implementation.onCollectionsOpened()
 
-    fun onLibraryOpened() = implementation.onLibraryOpened()
+    fun onSongsOpened() = implementation.onSongsOpened()
 
     fun onPlaylistOpened(playlistId: String) = implementation.onPlaylistOpened(playlistId)
 
@@ -30,8 +32,9 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
     fun updateAppShortcuts() = implementation.updateAppShortcuts()
 
     interface Functionality {
+        fun onHomeOpened() = Unit
         fun onCollectionsOpened() = Unit
-        fun onLibraryOpened() = Unit
+        fun onSongsOpened() = Unit
         fun onPlaylistOpened(playlistId: String) = Unit
         fun onPlaylistDeleted(playlistId: String) = Unit
         fun updateAppShortcuts() = Unit
@@ -45,16 +48,19 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
     ) : Functionality {
 
         private companion object {
-            const val LIBRARY_ID = "library"
+            const val HOME_ID = "home"
             const val COLLECTIONS_ID = "collections"
+            const val SONGS_ID = "songs"
             const val PLAYLIST_ID = "playlist_"
         }
 
         private val shortcutManager: ShortcutManager = context.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
 
+        override fun onHomeOpened() = trackAppShortcutUsage(HOME_ID)
+
         override fun onCollectionsOpened() = trackAppShortcutUsage(COLLECTIONS_ID)
 
-        override fun onLibraryOpened() = trackAppShortcutUsage(LIBRARY_ID)
+        override fun onSongsOpened() = trackAppShortcutUsage(SONGS_ID)
 
         override fun onPlaylistOpened(playlistId: String) {
             trackAppShortcutUsage(PLAYLIST_ID + playlistId)
@@ -73,16 +79,24 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
             val shortcuts = mutableListOf<ShortcutInfo>()
             shortcuts.add(
                 createAppShortcut(
+                    HOME_ID,
+                    context.getString(R.string.main_home),
+                    R.drawable.ic_shortcut_home_48dp,
+                    CampfireActivity.getHomeIntent(context)
+                )
+            )
+            shortcuts.add(
+                createAppShortcut(
                     COLLECTIONS_ID,
-                    context.getString(R.string.home_collections),
+                    context.getString(R.string.main_collections),
                     R.drawable.ic_shortcut_collections_48dp,
                     CampfireActivity.getCollectionsIntent(context)
                 )
             )
             shortcuts.add(
                 createAppShortcut(
-                    LIBRARY_ID,
-                    context.getString(R.string.home_songs),
+                    SONGS_ID,
+                    context.getString(R.string.main_songs),
                     R.drawable.ic_shortcut_songs_48dp,
                     CampfireActivity.getSongsIntent(context)
                 )
@@ -92,7 +106,7 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
             }
             preferenceDatabase.playlistHistory.forEach { playlistId ->
                 playlistRepository.cache.find { it.id == playlistId }?.let { playlist ->
-                    val title = playlist.title ?: context.getString(R.string.home_favorites)
+                    val title = playlist.title ?: context.getString(R.string.main_favorites)
                     shortcuts.add(
                         createAppShortcut(
                             PLAYLIST_ID + playlist.id,

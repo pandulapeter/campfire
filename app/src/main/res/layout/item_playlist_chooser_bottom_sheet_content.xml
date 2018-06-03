@@ -122,7 +122,7 @@
                     android:onClick="@{() -> viewModel.onNewPlaylistButtonClicked()}"
                     android:paddingEnd="@dimen/first_keyline"
                     android:paddingStart="14dp"
-                    android:text="@string/home_new_playlist"
+                    android:text="@string/main_new_playlist"
                     tools:drawableStart="@drawable/ic_new_playlist_24dp" />
 
             </LinearLayout>

@@ -20,14 +20,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/large_content_padding"
-                android:text="@string/home_privacy_policy_title"
+                android:text="@string/main_privacy_policy_title"
                 android:textAppearance="@style/Title" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/content_padding"
-                android:text="@string/home_privacy_policy_message_start" />
+                android:text="@string/main_privacy_policy_message_start" />
 
             <CheckBox
                 android:id="@+id/checkbox_analytics"
@@ -36,7 +36,7 @@
                 android:layout_marginTop="@dimen/content_padding"
                 android:paddingEnd="0dp"
                 android:paddingStart="@dimen/content_padding"
-                android:text="@string/home_privacy_policy_analytics_checkbox" />
+                android:text="@string/main_privacy_policy_analytics_checkbox" />
 
             <CheckBox
                 android:id="@+id/checkbox_crash_reporting"
@@ -45,14 +45,14 @@
                 android:layout_marginTop="@dimen/content_padding"
                 android:paddingEnd="0dp"
                 android:paddingStart="@dimen/content_padding"
-                android:text="@string/home_privacy_policy_crash_reporting_checkbox" />
+                android:text="@string/main_privacy_policy_crash_reporting_checkbox" />
 
             <TextView
                 android:id="@+id/text_end"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/content_padding"
-                tools:text="@string/home_privacy_policy_message_end_part_1" />
+                tools:text="@string/main_privacy_policy_message_end_part_1" />
 
         </LinearLayout>
 

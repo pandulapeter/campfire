@@ -8,7 +8,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.home.managePlaylists.PlaylistViewModel" />
+            type="com.pandulapeter.campfire.feature.main.managePlaylists.PlaylistViewModel" />
 
     </data>
 
@@ -55,7 +55,7 @@
                 app:layout_constraintEnd_toStartOf="@id/drag_handle"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:primaryText="@{viewModel.playlist.title ?? @string/home_favorites}"
+                app:primaryText="@{viewModel.playlist.title ?? @string/main_favorites}"
                 app:secondaryText="@{viewModel.itemCount == 0 ? @string/manage_playlists_song_count_empty : @plurals/manage_playlists_song_count(viewModel.itemCount, viewModel.itemCount)}"
                 tools:text="Playlist title\nSong count" />
 

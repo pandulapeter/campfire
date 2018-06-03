@@ -120,7 +120,7 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
                 binding.container?.playlistContainer?.addView(AppCompatCheckBox(context).apply {
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(contentPadding, contentPadding, contentPadding, contentPadding)
-                    text = playlist.title ?: getString(R.string.home_favorites)
+                    text = playlist.title ?: getString(R.string.main_favorites)
                     isChecked = playlistRepository.isSongInPlaylist(playlist.id, viewModel.songId)
                     setOnCheckedChangeListener { _, isChecked ->
                         if (isChecked) {
