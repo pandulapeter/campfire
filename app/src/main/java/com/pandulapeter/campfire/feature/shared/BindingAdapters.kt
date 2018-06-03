@@ -117,12 +117,14 @@ fun setTitleDescription(view: TextView, title: String?, description: String?) {
                 length,
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE
             )
-            setSpan(
-                ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorSecondary)),
-                (title?.length ?: 0) + 1,
-                length,
-                Spannable.SPAN_INCLUSIVE_INCLUSIVE
-            )
+            if (view.isEnabled) {
+                setSpan(
+                    ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorSecondary)),
+                    (title?.length ?: 0) + 1,
+                    length,
+                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
+                )
+            }
         }
         setSpan(FontFamilySpan(view.context.font(R.font.regular)), 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
