@@ -64,11 +64,11 @@ class CollectionsViewModel(
                 updateAdapterItems()
             }
         }
-    var disabledLanguageFilters = preferenceDatabase.disabledCollectionsLanguageFilters
+    var disabledLanguageFilters = preferenceDatabase.disabledLibraryLanguageFilters
         set(value) {
             if (field != value) {
                 field = value
-                preferenceDatabase.disabledCollectionsLanguageFilters = value
+                preferenceDatabase.disabledLibraryLanguageFilters = value
                 updateAdapterItems(true)
             }
         }

@@ -32,7 +32,6 @@ class PreferenceDatabase(context: Context) {
     var collectionsSortingMode by PreferenceFieldDelegate.Int("collectionsSortingMode", CollectionsViewModel.SortingMode.TITLE.intValue)
     var shouldShowSavedOnly by PreferenceFieldDelegate.Boolean("shouldShowSavedOnly", false)
     var shouldShowExplicitCollections by PreferenceFieldDelegate.Boolean("shouldShowExplicitCollections", false)
-    var disabledCollectionsLanguageFilters by PreferenceFieldDelegate.StringSet("disabledCollectionsLanguageFilters", getDefaultLanguageFilters())
 
     // Preferences
     var shouldShowChords by PreferenceFieldDelegate.Boolean("shouldShowChords", true)
