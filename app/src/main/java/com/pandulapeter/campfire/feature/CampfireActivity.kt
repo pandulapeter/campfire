@@ -523,7 +523,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     fun updateFloatingActionButtonDrawable(drawable: Drawable?) = binding.floatingActionButton.setImageDrawable(drawable.apply { this?.setTint(colorWhite) })
 
-    fun beforeScreenChanged() {
+    fun onScreenChanged() {
 
         // Hide the keyboard.
         hideKeyboard(currentFocus)
@@ -532,9 +532,13 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         transitionMode = false
         binding.toolbarButtonContainer.removeAllViews()
         updateMainToolbarButton(!isBackStackEmpty)
+        binding.appBarLayout.visibleOrGone = currentFragment?.shouldShowAppBar == true
 
         // Reset the primary navigation drawer.
-        binding.drawerLayout.setDrawerLockMode(if (isBackStackEmpty) DrawerLayout.LOCK_MODE_UNLOCKED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.START)
+        binding.drawerLayout.setDrawerLockMode(
+            if (isBackStackEmpty && currentFragment?.shouldShowAppBar == true) DrawerLayout.LOCK_MODE_UNLOCKED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED,
+            Gravity.START
+        )
 
         // Reset the secondary navigation drawer.
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.END)
