@@ -1,36 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!--suppress AndroidUnknownAttribute -->
     <data class=".PrivacyConsentBinding" />
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingBottom="@dimen/content_padding"
-        android:paddingTop="@dimen/large_content_padding">
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingEnd="@dimen/new_playlist_input_padding_end"
+            android:paddingEnd="@dimen/large_content_padding"
             android:paddingStart="@dimen/new_playlist_input_padding_start">
 
             <TextView
-                android:id="@+id/text"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/large_content_padding"
+                android:text="@string/home_privacy_policy_title"
+                android:textAppearance="@style/Title" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding"
+                android:text="@string/home_privacy_policy_message_start" />
 
             <CheckBox
-                android:id="@+id/checkbox"
+                android:id="@+id/checkbox_analytics"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/content_padding"
                 android:paddingEnd="0dp"
                 android:paddingStart="@dimen/content_padding"
-                android:text="@string/home_privacy_policy_checkbox" />
+                android:text="@string/home_privacy_policy_analytics_checkbox" />
+
+            <CheckBox
+                android:id="@+id/checkbox_crash_reporting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding"
+                android:paddingEnd="0dp"
+                android:paddingStart="@dimen/content_padding"
+                android:text="@string/home_privacy_policy_crash_reporting_checkbox" />
+
+            <TextView
+                android:id="@+id/text_end"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding"
+                tools:text="@string/home_privacy_policy_message_end_part_1" />
 
         </LinearLayout>
 

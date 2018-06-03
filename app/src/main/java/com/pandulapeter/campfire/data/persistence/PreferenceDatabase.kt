@@ -42,6 +42,7 @@ class PreferenceDatabase(context: Context) {
     var language by PreferenceFieldDelegate.String("language", PreferencesViewModel.Language.AUTOMATIC.id)
     var shouldShowExitConfirmation by PreferenceFieldDelegate.Boolean("shouldShowExitConfirmation", true)
     var shouldShowPrivacyPolicy by PreferenceFieldDelegate.Boolean("shouldShowPrivacyPolicy", true)
+    var shouldShareCrashReports by PreferenceFieldDelegate.Boolean("shouldShareCrashReports", false)
     var shouldShareUsageData by PreferenceFieldDelegate.Boolean("shouldShareUsageData", false)
     var playlistHistory by PreferenceFieldDelegate.StringSet("playlistHistory", setOf())
     var lastScreen by PreferenceFieldDelegate.String("lastScreen", "")

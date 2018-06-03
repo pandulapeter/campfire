@@ -154,13 +154,14 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     override fun onCreate(savedInstanceState: Bundle?) {
 
         // Enable crash reporting if the user opted in.
+        @Suppress("ConstantConditionIf")
+        if (preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
+            Fabric.with(this, Crashlytics())
+        }
         if (preferenceDatabase.shouldShareUsageData) {
-            @Suppress("ConstantConditionIf")
-            if (BuildConfig.BUILD_TYPE != "debug") {
-                Fabric.with(this, Crashlytics())
-            }
             preferenceDatabase.privacyConsentGivenTimestamp.let {
                 if (it != 0L) {
+                    //TODO: Bug
                     analyticsManager.onConsentGiven(it)
                     preferenceDatabase.privacyConsentGivenTimestamp = 0L
                 }
@@ -306,8 +307,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             Gravity.START
         )
 
-        // Show the privacy consent dialog or the app updated snackbar if needed.
-        if (preferenceDatabase.shouldShowPrivacyPolicy) {
+        // Show the privacy consent dialog if needed.
+        if (preferenceDatabase.shouldShowPrivacyPolicy && savedInstanceState == null) {
             PrivacyConsentDialogFragment.show(DIALOG_ID_PRIVACY_POLICY, supportFragmentManager)
             preferenceDatabase.ftuxLastSeenChangelog = BuildConfig.VERSION_CODE
         }
@@ -384,7 +385,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             DIALOG_ID_EXIT_CONFIRMATION -> supportFinishAfterTransition()
             DIALOG_ID_PRIVACY_POLICY -> {
                 preferenceDatabase.shouldShowPrivacyPolicy = false
-                preferenceDatabase.shouldShareUsageData = true
                 preferenceDatabase.privacyConsentGivenTimestamp = System.currentTimeMillis()
                 restartProcess()
             }

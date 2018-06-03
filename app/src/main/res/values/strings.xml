@@ -43,16 +43,12 @@
     <string name="home_exit_confirmation_message">Do you really want to close the app?</string>
     <string name="home_exit_confirmation_close">Close</string>
     <string name="home_privacy_policy_title">Welcome</string>
-    <string name="home_privacy_policy_message">
-        <Data><![CDATA[
-        Thank you for downloading Campfire!<br><br>
-        To help me improve it, please consider allowing the following ways of data collection:<br><br>
-        • Analytics through <strong>Firebase</strong> for statistics that give me general insights on when, where, and how people use the app<br><br>
-        • Crash reporting through <strong>Crashlytics</strong> to automatically let me know about potential mistakes I made so I can fix them quickly<br><br>
-        This is fully optional, and you can change your answer any time. For details, please check out my <strong>Privacy Policy</strong>!
-        ]]></Data>
-    </string>
-    <string name="home_privacy_policy_checkbox">I consent to the anonymous data collection of my usage statistics and potential crash reports</string>
+    <string name="home_privacy_policy_message_start">To help improve Campfire, please consider opting in to the following ways of sharing your data with the developer:</string>
+    <string name="home_privacy_policy_analytics_checkbox">Analytics through Google\'s Firebase service</string>
+    <string name="home_privacy_policy_crash_reporting_checkbox">Crash reporting through Google\'s Crashlytics service</string>
+    <string name="home_privacy_policy_message_end_part_1">"You can change these preferences at any time. For more information, check out the "</string>
+    <string name="home_privacy_policy_message_end_part_2">Privacy Policy</string>
+    <string name="home_privacy_policy_message_end_part_3">!</string>
     <string name="home_privacy_policy_positive">Continue</string>
 
     <!-- Collections screen -->

@@ -43,9 +43,13 @@
     <string name="home_manage_downloads">Letöltések kezelése</string>
     <string name="home_exit_confirmation_message">Tényleg ki szeretnél lépni az alkalmazásból?</string>
     <string name="home_exit_confirmation_close">Ieșire</string>
-    <string name="home_privacy_policy_title">Személyes adatok megosztása</string>
-    <string name="home_privacy_policy_message">Köszönöm, hogy letöltötted a Campfire-t!\n\nA különböző funkcionalitások népszerűségének követéséhez vagy az esetleges hibák kijavításához az alkalmazás szeretne névtelen adatokat és hibajelentéseket küldeni a fejlesztőnek. Ez az információ soha nem lesz harmadik személlyel megosztva és a most adott válaszodat akármikor módosíthatod a beállítások között.</string>
-    <string name="home_privacy_policy_checkbox">Beleegyezem, hogy az alkalmazás névtelen felhasználási adatokat és hibajelentéseket küldjön a készülékemről</string>
+    <string name="home_privacy_policy_title">Üdvözlet</string>
+    <string name="home_privacy_policy_message_start">Ha segítenél az alkalmazás jobbá tételében, kérlek engedélyezd a következő típusú adatok megosztását a fejlesztővel:</string>
+    <string name="home_privacy_policy_analytics_checkbox">Felhasználási statisztikák a Google Firebase szolgáltatáson keresztül</string>
+    <string name="home_privacy_policy_crash_reporting_checkbox">Hibajelentések a Google Crashlytics szolgáltatáson keresztül</string>
+    <string name="home_privacy_policy_message_end_part_1">"Ezeket a beállításokat bármikor megváltoztathatod. További információért olvasd el az angol nyelvű "</string>
+    <string name="home_privacy_policy_message_end_part_2">adatvédelmi irányelveket</string>
+    <string name="home_privacy_policy_message_end_part_3">!</string>
     <string name="home_privacy_policy_positive">Folytatás</string>
 
     <!-- Collections screen -->

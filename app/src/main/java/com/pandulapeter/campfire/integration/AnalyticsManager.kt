@@ -369,7 +369,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
     )
 
     fun trackNonFatalError(throwable: Throwable) {
-        if (preferenceDatabase.shouldShareUsageData && BuildConfig.BUILD_TYPE != "debug") {
+        if (preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
             Crashlytics.logException(throwable)
         }
     }
