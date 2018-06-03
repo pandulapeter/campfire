@@ -31,6 +31,7 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
     val shouldShowHintsResetConfirmation = ObservableBoolean()
     val shouldShowHintsResetSnackbar = ObservableBoolean()
     val shouldShareUsageData = ObservableBoolean(preferenceDatabase.shouldShareUsageData)
+    val shouldShareCrashReports = ObservableBoolean(preferenceDatabase.shouldShareCrashReports)
 
     init {
         shouldShowChords.onPropertyChanged {
@@ -62,6 +63,7 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
             preferenceDatabase.shouldShowExitConfirmation = it
         }
         shouldShareUsageData.onPropertyChanged { preferenceDatabase.shouldShareUsageData = it }
+        shouldShareCrashReports.onPropertyChanged { preferenceDatabase.shouldShareCrashReports = it }
         updateThemeDescription()
         updateLanguageDescription()
     }

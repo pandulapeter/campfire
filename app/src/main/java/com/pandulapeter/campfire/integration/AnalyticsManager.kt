@@ -136,7 +136,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         updateCollectionEnabledState()
     }
 
-    fun updateCollectionEnabledState() = firebaseAnalytics.setAnalyticsCollectionEnabled(preferenceDatabase.shouldShareUsageData)
+    fun updateCollectionEnabledState() = firebaseAnalytics.setAnalyticsCollectionEnabled(preferenceDatabase.shouldShareUsageData && BuildConfig.BUILD_TYPE != "debug")
 
     fun onConsentGiven(timestamp: Long) = trackAnalyticsEvent(
         EVENT_CONSENT_GIVEN,

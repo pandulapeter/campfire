@@ -1,5 +1,7 @@
 package com.pandulapeter.campfire.feature.home.options.preferences
 
+import com.crashlytics.android.Crashlytics
+import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsPreferencesBinding
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
@@ -7,6 +9,7 @@ import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
+import io.fabric.sdk.android.Fabric
 
 class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, PreferencesViewModel>(R.layout.fragment_options_preferences),
     BaseDialogFragment.OnDialogItemSelectedListener,
@@ -48,8 +51,16 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
                 if (it) {
                     analyticsManager.onConsentGiven(System.currentTimeMillis())
                 }
-                //TODO: Not necessary, also, needs to be separate switch.
-                getCampfireActivity().restartProcess()
+            }
+            shouldShareCrashReports.onPropertyChanged(this@PreferencesFragment) {
+                if (it) {
+                    @Suppress("ConstantConditionIf")
+                    if (BuildConfig.BUILD_TYPE != "debug") {
+                        Fabric.with(requireContext().applicationContext, Crashlytics())
+                    }
+                } else {
+                    getCampfireActivity().restartProcess()
+                }
             }
             shouldShowHintsResetSnackbar.onEventTriggered(this@PreferencesFragment) { showSnackbar(R.string.options_preferences_reset_hints_message) }
         }

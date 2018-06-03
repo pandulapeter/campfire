@@ -68,11 +68,9 @@ class PrivacyConsentDialogFragment : BaseDialogFragment() {
             // Set up crash reporting.
             val shouldShareCrashReports = binding.checkboxCrashReporting.isChecked
             preferenceDatabase.shouldShareCrashReports = shouldShareCrashReports
-            if (shouldShareCrashReports) {
-                @Suppress("ConstantConditionIf")
-                if (BuildConfig.BUILD_TYPE != "debug") {
-                    Fabric.with(requireContext().applicationContext, Crashlytics())
-                }
+            @Suppress("ConstantConditionIf")
+            if (shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
+                Fabric.with(requireContext().applicationContext, Crashlytics())
             }
         })
         .create()

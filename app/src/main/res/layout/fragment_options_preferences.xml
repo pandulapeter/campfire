@@ -198,6 +198,21 @@
                         app:title="@{@string/options_preferences_share_usage_data}"
                         tools:text="@string/options_preferences_share_usage_data" />
 
+                    <android.support.v7.widget.SwitchCompat
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/content_padding"
+                        android:layout_marginEnd="@dimen/content_padding"
+                        android:layout_marginStart="@dimen/switch_content_padding"
+                        android:checked="@={viewModel.shouldShareCrashReports}"
+                        android:gravity="center_vertical"
+                        android:minHeight="@dimen/touch_target"
+                        android:paddingTop="@dimen/content_padding"
+                        app:description="@{viewModel.shouldShareCrashReports ? @string/options_preferences_share_crash_reports_enabled : @string/options_preferences_share_crash_reports_disabled}"
+                        app:switchPadding="@dimen/content_padding"
+                        app:title="@{@string/options_preferences_share_crash_reports}"
+                        tools:text="@string/options_preferences_share_crash_reports" />
+
                 </LinearLayout>
 
             </android.support.v7.widget.CardView>
