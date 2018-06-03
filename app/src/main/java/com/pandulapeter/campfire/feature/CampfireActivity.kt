@@ -66,7 +66,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     companion object {
         private const val DIALOG_ID_EXIT_CONFIRMATION = 1
-        private const val DIALOG_ID_PRIVACY_POLICY = 2
         const val SCREEN_COLLECTIONS = "collections"
         const val SCREEN_SONGS = "songs"
         const val SCREEN_HISTORY = "history"
@@ -156,16 +155,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         // Enable crash reporting if the user opted in.
         @Suppress("ConstantConditionIf")
         if (preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
-            Fabric.with(this, Crashlytics())
-        }
-        if (preferenceDatabase.shouldShareUsageData) {
-            preferenceDatabase.privacyConsentGivenTimestamp.let {
-                if (it != 0L) {
-                    //TODO: Bug
-                    analyticsManager.onConsentGiven(it)
-                    preferenceDatabase.privacyConsentGivenTimestamp = 0L
-                }
-            }
+            Fabric.with(applicationContext, Crashlytics())
         }
 
         // Set the theme.
@@ -309,7 +299,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
         // Show the privacy consent dialog if needed.
         if (preferenceDatabase.shouldShowPrivacyPolicy && savedInstanceState == null) {
-            PrivacyConsentDialogFragment.show(DIALOG_ID_PRIVACY_POLICY, supportFragmentManager)
+            PrivacyConsentDialogFragment.show(supportFragmentManager)
             preferenceDatabase.ftuxLastSeenChangelog = BuildConfig.VERSION_CODE
         }
     }
@@ -383,17 +373,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     override fun onPositiveButtonSelected(id: Int) {
         when (id) {
             DIALOG_ID_EXIT_CONFIRMATION -> supportFinishAfterTransition()
-            DIALOG_ID_PRIVACY_POLICY -> {
-                preferenceDatabase.shouldShowPrivacyPolicy = false
-                preferenceDatabase.privacyConsentGivenTimestamp = System.currentTimeMillis()
-                restartProcess()
-            }
-        }
-    }
-
-    override fun onNegativeButtonSelected(id: Int) {
-        if (id == DIALOG_ID_PRIVACY_POLICY) {
-            preferenceDatabase.shouldShowPrivacyPolicy = false
         }
     }
 

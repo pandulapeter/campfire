@@ -12,24 +12,28 @@ import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.view.LayoutInflater
 import android.view.View
+import com.crashlytics.android.Crashlytics
+import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.PrivacyConsentBinding
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.home.options.about.AboutViewModel
-import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.util.withArguments
+import io.fabric.sdk.android.Fabric
+import org.koin.android.ext.android.inject
 
 class PrivacyConsentDialogFragment : BaseDialogFragment() {
 
     companion object {
-        private var Bundle?.id by BundleArgumentDelegate.Int("id")
-
-        fun show(id: Int, fragmentManager: FragmentManager) = PrivacyConsentDialogFragment().withArguments { it.id = id }.run {
+        fun show(fragmentManager: FragmentManager) = PrivacyConsentDialogFragment().run {
             isCancelable = false
             show(fragmentManager, tag)
         }
     }
 
+    private val preferenceDatabase by inject<PreferenceDatabase>()
+    private val analyticsManager by inject<AnalyticsManager>()
     private val binding by lazy {
         DataBindingUtil.inflate<PrivacyConsentBinding>(LayoutInflater.from(context), R.layout.dialog_privacy_consent, null, false).apply {
             val first = getString(R.string.home_privacy_policy_message_end_part_1)
@@ -51,10 +55,24 @@ class PrivacyConsentDialogFragment : BaseDialogFragment() {
 
     override fun AlertDialog.Builder.createDialog(arguments: Bundle?): AlertDialog = setView(binding.root)
         .setPositiveButton(R.string.home_privacy_policy_positive, { _, _ ->
-            if (binding.checkboxAnalytics.isChecked) {
-                onDialogItemSelectedListener?.onPositiveButtonSelected(arguments.id)
-            } else {
-                onDialogItemSelectedListener?.onNegativeButtonSelected(arguments.id)
+            preferenceDatabase.shouldShowPrivacyPolicy = false
+
+            // Set up analytics.
+            val shouldShareUsageData = binding.checkboxAnalytics.isChecked
+            preferenceDatabase.shouldShareUsageData = shouldShareUsageData
+            if (shouldShareUsageData) {
+                analyticsManager.updateCollectionEnabledState()
+                analyticsManager.onConsentGiven(System.currentTimeMillis())
+            }
+
+            // Set up crash reporting.
+            val shouldShareCrashReports = binding.checkboxCrashReporting.isChecked
+            preferenceDatabase.shouldShareCrashReports = shouldShareCrashReports
+            if (shouldShareCrashReports) {
+                @Suppress("ConstantConditionIf")
+                if (BuildConfig.BUILD_TYPE != "debug") {
+                    Fabric.with(requireContext().applicationContext, Crashlytics())
+                }
             }
         })
         .create()

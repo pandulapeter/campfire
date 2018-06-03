@@ -133,8 +133,10 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
     private val firebaseAnalytics = FirebaseAnalytics.getInstance(context)
 
     init {
-        firebaseAnalytics.setAnalyticsCollectionEnabled(preferenceDatabase.shouldShareUsageData)
+        updateCollectionEnabledState()
     }
+
+    fun updateCollectionEnabledState() = firebaseAnalytics.setAnalyticsCollectionEnabled(preferenceDatabase.shouldShareUsageData)
 
     fun onConsentGiven(timestamp: Long) = trackAnalyticsEvent(
         EVENT_CONSENT_GIVEN,
