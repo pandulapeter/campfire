@@ -140,9 +140,12 @@
     <string name="options_preferences_reset_hints_message">Tippek alapértékbe állítva</string>
     <string name="options_preferences_reset_hints_confirmation_message">Az összes tipp vissza lesz állítva alapértékre.</string>
     <string name="options_preferences_reset_hints_confirmation_reset">Visszaállítás</string>
-    <string name="options_preferences_share_usage_data">Adatok megosztása</string>
-    <string name="options_preferences_share_usage_data_enabled">Névtelen felhasználói adatok küldődnek a fejlesztőnek</string>
-    <string name="options_preferences_share_usage_data_disabled">A felhasználói adatok és hibajelentések nem küldődnek el senkinek</string>
+    <string name="options_preferences_share_usage_data">Használati mód követése</string>
+    <string name="options_preferences_share_usage_data_enabled">Névtelen használati statisztikák küldődnek a fejlesztőnek a Google Firebase szolgáltatáson keresztül</string>
+    <string name="options_preferences_share_usage_data_disabled">A használati mód követése letiltva</string>
+    <string name="options_preferences_share_crash_reports">Hibajelentések küldése</string>
+    <string name="options_preferences_share_crash_reports_enabled">Az esetleges hibajelentések a Google Crashlytics szolgáltatáson keresztül küldődnek a fejlesztőnek</string>
+    <string name="options_preferences_share_crash_reports_disabled">Automatikus hibajelentések letiltva</string>
     <string name="options_preferences_share_usage_data_restart_hint">A beállítás csak az alkalmazás újraindítása után lép érvénybe</string>
     <string name="options_preferences_share_usage_data_restart_action">Újraindítás</string>
 

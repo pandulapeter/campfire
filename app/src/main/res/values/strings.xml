@@ -139,14 +139,12 @@
     <string name="options_preferences_reset_hints_message">Tutorial progress reset</string>
     <string name="options_preferences_reset_hints_confirmation_message">This will reset your progress in the tutorial.</string>
     <string name="options_preferences_reset_hints_confirmation_reset">Reset</string>
-    <string name="options_preferences_share_usage_data">Track usage data</string>
-    <string name="options_preferences_share_usage_data_enabled">Sending analytics events anonymously to the developer</string>
+    <string name="options_preferences_share_usage_data">Analytics tracking</string>
+    <string name="options_preferences_share_usage_data_enabled">Sending analytics events anonymously to the developer using Google\'s Firebase service</string>
     <string name="options_preferences_share_usage_data_disabled">Tracking analytics events is disabled</string>
     <string name="options_preferences_share_crash_reports">Send crash reports</string>
-    <string name="options_preferences_share_crash_reports_enabled">Sending crash reports anonymously to the developer</string>
+    <string name="options_preferences_share_crash_reports_enabled">Sending potential crash reports anonymously to the developer using Google\'s Crashlytics service</string>
     <string name="options_preferences_share_crash_reports_disabled">Automatic crash reporting is disabled</string>
-
-
     <string name="options_preferences_share_usage_data_restart_hint">Please restart the application for all changes to take effect</string>
     <string name="options_preferences_share_usage_data_restart_action">Restart now</string>
 
