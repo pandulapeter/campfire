@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
 
     <data>
 
@@ -10,45 +9,9 @@
 
     </data>
 
-    <LinearLayout
+    <android.support.v4.view.ViewPager
+        android:id="@+id/view_pager"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical">
-
-        <ImageView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="56dp"
-            android:alpha="0.8"
-            android:src="@drawable/ic_home_24dp"
-            android:tint="?android:attr/textColorSecondary"
-            tools:ignore="ContentDescription" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/large_content_padding"
-            android:gravity="center"
-            android:padding="32dp"
-            android:text="Onboarding" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/button_height"
-            android:layout_marginTop="@dimen/large_content_padding"
-            android:background="@drawable/bg_button"
-            android:drawablePadding="@dimen/content_padding"
-            android:drawableStart="@drawable/ic_songs_24dp"
-            android:gravity="center"
-            android:onClick="@{() -> viewModel.onOpenHomeButtonClicked()}"
-            android:paddingEnd="@dimen/large_content_padding"
-            android:paddingStart="@dimen/content_padding"
-            android:text="@string/main_home"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:theme="@style/ButtonTheme" />
-
-    </LinearLayout>
+        android:layout_height="match_parent" />
 
 </layout>

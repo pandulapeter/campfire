@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.main.home
 
+import android.app.FragmentTransaction
 import android.os.Bundle
 import android.view.View
 import com.pandulapeter.campfire.R
@@ -24,6 +25,10 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
     }
 
     fun navigateToHome() {
-        childFragmentManager.beginTransaction().replace(R.id.home_container, HomeFragment()).commit()
+        childFragmentManager
+            .beginTransaction()
+            .replace(R.id.home_container, HomeFragment())
+            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+            .commit()
     }
 }
