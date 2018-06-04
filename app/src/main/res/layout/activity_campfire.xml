@@ -26,6 +26,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="?attr/colorBackgroundFloating"
+                    android:visibility="invisible"
                     app:elevation="@dimen/toolbar_elevation">
 
                     <android.support.constraint.ConstraintLayout

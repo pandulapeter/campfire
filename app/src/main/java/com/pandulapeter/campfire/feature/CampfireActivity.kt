@@ -534,14 +534,33 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         updateMainToolbarButton(!isBackStackEmpty)
         binding.appBarLayout.run {
             if (currentFragment?.shouldShowAppBar == true) {
-                if (!visibleOrGone) {
-                    visibleOrGone = true
+                if (!visibleOrInvisible) {
+                    visibleOrInvisible = true
                     translationY = -height.toFloat()
-                    animate().translationY(0f).start()
+                    animate().cancel()
+                    postDelayed({ animate().translationY(0f).start() }, 200)
                 }
             } else {
                 if (visibleOrInvisible) {
-                    visibleOrGone = false
+                    animate().cancel()
+                    animate().translationY(-height.toFloat()).apply {
+                        setListener(object : Animator.AnimatorListener {
+
+                            override fun onAnimationStart(animation: Animator?) = Unit
+
+                            override fun onAnimationRepeat(animation: Animator?) = Unit
+
+                            override fun onAnimationEnd(animation: Animator?) {
+                                visibleOrInvisible = false
+                                setListener(null)
+                            }
+
+                            override fun onAnimationCancel(animation: Animator?) {
+                                visibleOrInvisible = false
+                                setListener(null)
+                            }
+                        })
+                    }.start()
                 }
             }
         }

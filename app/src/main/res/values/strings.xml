@@ -159,6 +159,7 @@
     <string name="options_changelog_0_6_0_description">
         <Data><![CDATA[
         • <strong>Home screen</strong> that shows collection, song, and playlist suggestions<br>
+        • <strong>Onboarding flow</strong> where users can customize their experience<br>
         • <strong>Romanian</strong> translation<br>
         • Major <strong>design improvements</strong>
         ]]></Data>
