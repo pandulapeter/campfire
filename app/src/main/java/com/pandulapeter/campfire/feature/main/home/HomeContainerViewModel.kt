@@ -5,18 +5,11 @@ import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import org.koin.android.ext.android.inject
 
-class HomeViewModel(
-    private val openCollections: () -> Unit,
-    private val openSongs: () -> Unit
-) : CampfireViewModel() {
+class HomeContainerViewModel : CampfireViewModel() {
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
 
     init {
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_HOME
     }
-
-    fun onCollectionsButtonClicked() = openCollections()
-
-    fun onSongsButtonClicked() = openSongs()
 }

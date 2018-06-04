@@ -44,7 +44,7 @@ import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.main.collections.CollectionsFragment
 import com.pandulapeter.campfire.feature.main.collections.detail.CollectionDetailFragment
 import com.pandulapeter.campfire.feature.main.history.HistoryFragment
-import com.pandulapeter.campfire.feature.main.home.HomeFragment
+import com.pandulapeter.campfire.feature.main.home.HomeContainerFragment
 import com.pandulapeter.campfire.feature.main.manageDownloads.ManageDownloadsFragment
 import com.pandulapeter.campfire.feature.main.managePlaylists.ManagePlaylistsFragment
 import com.pandulapeter.campfire.feature.main.options.OptionsFragment
@@ -243,7 +243,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     R.id.home -> consumeAndCloseDrawers {
                         supportFragmentManager.handleReplace {
                             appShortcutManager.onHomeOpened()
-                            HomeFragment()
+                            HomeContainerFragment()
                         }
                     }
                     R.id.collections -> consumeAndCloseDrawers {
@@ -636,9 +636,9 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     private fun openHomeScreen(): String {
-        if (currentFragment !is HomeFragment) {
+        if (currentFragment !is HomeContainerFragment) {
             supportFragmentManager.clearBackStack()
-            supportFragmentManager.handleReplace { HomeFragment() }
+            supportFragmentManager.handleReplace { HomeContainerFragment() }
             currentScreenId = R.id.home
             binding.primaryNavigation.setCheckedItem(R.id.home)
             appShortcutManager.onHomeOpened()

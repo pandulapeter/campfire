@@ -6,7 +6,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.main.home.home.HomeViewModel" />
+            type="com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingViewModel" />
 
     </data>
 
@@ -31,23 +31,7 @@
             android:layout_marginTop="@dimen/large_content_padding"
             android:gravity="center"
             android:padding="32dp"
-            android:text="@string/home_placeholder" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/button_height"
-            android:layout_marginTop="@dimen/large_content_padding"
-            android:background="@drawable/bg_button"
-            android:drawablePadding="@dimen/content_padding"
-            android:drawableStart="@drawable/ic_collections_24dp"
-            android:gravity="center"
-            android:onClick="@{() -> viewModel.onCollectionsButtonClicked()}"
-            android:paddingEnd="@dimen/large_content_padding"
-            android:paddingStart="@dimen/content_padding"
-            android:text="@string/main_collections"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:theme="@style/ButtonTheme" />
+            android:text="Onboarding" />
 
         <Button
             android:layout_width="wrap_content"
@@ -57,10 +41,10 @@
             android:drawablePadding="@dimen/content_padding"
             android:drawableStart="@drawable/ic_songs_24dp"
             android:gravity="center"
-            android:onClick="@{() -> viewModel.onSongsButtonClicked()}"
+            android:onClick="@{() -> viewModel.onOpenHomeButtonClicked()}"
             android:paddingEnd="@dimen/large_content_padding"
             android:paddingStart="@dimen/content_padding"
-            android:text="@string/main_songs"
+            android:text="@string/main_home"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:theme="@style/ButtonTheme" />
