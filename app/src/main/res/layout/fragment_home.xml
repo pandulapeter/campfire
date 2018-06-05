@@ -10,62 +10,70 @@
 
     </data>
 
-    <LinearLayout
+
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clipChildren="false"
-        android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:clipChildren="false">
 
-        <ImageView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="56dp"
-            android:alpha="0.8"
-            android:src="@drawable/ic_home_24dp"
-            android:tint="?android:attr/textColorSecondary"
-            tools:ignore="ContentDescription" />
-
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/large_content_padding"
-            android:gravity="center"
-            android:padding="32dp"
-            android:text="@string/home_placeholder" />
+            android:layout_gravity="center_vertical"
+            android:clipChildren="false"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/button_height"
-            android:layout_marginTop="@dimen/large_content_padding"
-            android:background="@drawable/bg_button"
-            android:drawablePadding="@dimen/content_padding"
-            android:drawableStart="@drawable/ic_collections_24dp"
-            android:gravity="center"
-            android:onClick="@{() -> viewModel.onCollectionsButtonClicked()}"
-            android:paddingEnd="@dimen/large_content_padding"
-            android:paddingStart="@dimen/content_padding"
-            android:text="@string/main_collections"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:theme="@style/ButtonTheme" />
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:alpha="0.8"
+                android:src="@drawable/ic_home_24dp"
+                android:tint="?android:attr/textColorSecondary"
+                tools:ignore="ContentDescription" />
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/button_height"
-            android:layout_marginTop="@dimen/large_content_padding"
-            android:background="@drawable/bg_button"
-            android:drawablePadding="@dimen/content_padding"
-            android:drawableStart="@drawable/ic_songs_24dp"
-            android:gravity="center"
-            android:onClick="@{() -> viewModel.onSongsButtonClicked()}"
-            android:paddingEnd="@dimen/large_content_padding"
-            android:paddingStart="@dimen/content_padding"
-            android:text="@string/main_songs"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:theme="@style/ButtonTheme" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/large_content_padding"
+                android:gravity="center"
+                android:padding="32dp"
+                android:text="@string/home_placeholder" />
 
-    </LinearLayout>
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/button_height"
+                android:layout_marginTop="@dimen/large_content_padding"
+                android:background="@drawable/bg_button"
+                android:drawablePadding="@dimen/content_padding"
+                android:drawableStart="@drawable/ic_collections_24dp"
+                android:gravity="center"
+                android:onClick="@{() -> viewModel.onCollectionsButtonClicked()}"
+                android:paddingEnd="@dimen/large_content_padding"
+                android:paddingStart="@dimen/content_padding"
+                android:text="@string/main_collections"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:theme="@style/ButtonTheme" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/button_height"
+                android:layout_marginTop="@dimen/large_content_padding"
+                android:background="@drawable/bg_button"
+                android:drawablePadding="@dimen/content_padding"
+                android:drawableStart="@drawable/ic_songs_24dp"
+                android:gravity="center"
+                android:onClick="@{() -> viewModel.onSongsButtonClicked()}"
+                android:paddingEnd="@dimen/large_content_padding"
+                android:paddingStart="@dimen/content_padding"
+                android:text="@string/main_songs"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:theme="@style/ButtonTheme" />
+
+        </LinearLayout>
+
+    </FrameLayout>
 
 </layout>
