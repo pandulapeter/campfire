@@ -1,17 +1,16 @@
-package com.pandulapeter.campfire.feature.main.home.onboarding.page
+package com.pandulapeter.campfire.feature.main.home.onboarding.page.userData
 
 import android.os.Bundle
 import android.view.View
 import android.widget.FrameLayout
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.databinding.FragmentOnboardingPageBinding
-import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingFragment
+import com.pandulapeter.campfire.databinding.FragmentOnboardingUserDataBinding
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.waitForLayout
 
-class OnboardingPageFragment : CampfireFragment<FragmentOnboardingPageBinding, OnboardingPageViewModel>(R.layout.fragment_onboarding_page) {
+class UserDataFragment : CampfireFragment<FragmentOnboardingUserDataBinding, UserDataViewModel>(R.layout.fragment_onboarding_user_data) {
 
-    override val viewModel = OnboardingPageViewModel { (parentFragment as? OnboardingFragment)?.navigateToHome() }
+    override val viewModel = UserDataViewModel()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.linearLayout.apply {
