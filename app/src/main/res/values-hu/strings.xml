@@ -28,6 +28,11 @@
     <string name="popular_tag">Népszerű</string>
     <string name="drag_to_rearrange">Húzd az átrendezéshez</string>
 
+    <!-- Onboarding screen / Welcome -->
+    <string name="welcome_title">Üdv!</string>
+    <string name="welcome_skip">Átugrás</string>
+    <string name="welcome_next">Következő</string>
+
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>
     <string name="main_home">Kezdőképernyő</string>

@@ -11,11 +11,17 @@ import com.pandulapeter.campfire.util.waitForLayout
 
 class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, OnboardingViewModel>(R.layout.fragment_onboarding) {
 
-    override val viewModel = OnboardingViewModel()
+    override val viewModel = OnboardingViewModel(::navigateToHome, {
+        if (binding.viewPager.currentItem + 1 < binding.viewPager.adapter?.count ?: 0) {
+            binding.viewPager.setCurrentItem(binding.viewPager.currentItem + 1, true)
+        } else {
+            navigateToHome()
+        }
+    })
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.viewPager.adapter = OnboardingAdapter(childFragmentManager)
-        binding.viewPager.run {
+        binding.root.run {
             waitForLayout {
                 layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
             }

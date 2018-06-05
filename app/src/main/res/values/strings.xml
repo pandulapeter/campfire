@@ -29,6 +29,11 @@
     <string name="popular_tag">Popular</string>
     <string name="drag_to_rearrange">Drag to rearrange</string>
 
+    <!-- Onboarding screen / Welcome -->
+    <string name="welcome_title">Welcome!</string>
+    <string name="welcome_skip">Skip</string>
+    <string name="welcome_next">Next</string>
+
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>
     <string name="main_home">Home</string>
