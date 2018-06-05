@@ -115,6 +115,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     var lastCollectionId: String = ""
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
+    val toolbarHeight get() = binding.appBarLayout.height
     val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
     val snackbarRoot get() = binding.rootCoordinatorLayout
     var transitionMode: Boolean? = null
@@ -532,17 +533,16 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         transitionMode = false
         binding.toolbarButtonContainer.removeAllViews()
         updateMainToolbarButton(!isBackStackEmpty)
-        binding.appBarLayout.run {
-            if (currentFragment?.shouldShowAppBar == true) {
-                if (!visibleOrInvisible) {
+        val shouldShowAppBar = currentFragment?.shouldShowAppBar == true
+        binding.coordinatorLayout.clipChildren = shouldShowAppBar
+        binding.appBarLayout.apply {
+            if (shouldShowAppBar != visibleOrInvisible) {
+                animate().cancel()
+                if (shouldShowAppBar) {
                     visibleOrInvisible = true
                     translationY = -height.toFloat()
-                    animate().cancel()
                     postDelayed({ animate().translationY(0f).start() }, 200)
-                }
-            } else {
-                if (visibleOrInvisible) {
-                    animate().cancel()
+                } else {
                     animate().translationY(-height.toFloat()).apply {
                         setListener(object : Animator.AnimatorListener {
 

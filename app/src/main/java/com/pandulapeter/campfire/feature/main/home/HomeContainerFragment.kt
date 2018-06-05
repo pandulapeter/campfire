@@ -1,7 +1,8 @@
 package com.pandulapeter.campfire.feature.main.home
 
-import android.app.FragmentTransaction
 import android.os.Bundle
+import android.transition.Slide
+import android.view.Gravity
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentHomeContainerBinding
@@ -27,8 +28,7 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
     fun navigateToHome() {
         childFragmentManager
             .beginTransaction()
-            .replace(R.id.home_container, HomeFragment())
-            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+            .replace(R.id.home_container, HomeFragment().apply { enterTransition = Slide(Gravity.BOTTOM) })
             .commit()
     }
 }
