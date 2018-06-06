@@ -44,6 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/content_padding"
             android:layout_marginEnd="@dimen/content_padding"
+            android:animateFirstView="false"
             android:inAnimation="@android:anim/fade_in"
             app:displayedChild="@{viewModel.isOnLastPage ? 1 : 0}"
             app:layout_constraintBottom_toBottomOf="parent"

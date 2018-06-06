@@ -30,7 +30,7 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
         }
     }
 
-    fun navigateToHome() {
+    private fun navigateToHome() {
         (parentFragment as? HomeContainerFragment)?.navigateToHome()
     }
 }
