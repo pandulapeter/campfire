@@ -33,6 +33,7 @@
             android:layout_marginStart="@dimen/content_padding"
             android:onClick="@{() -> viewModel.onSkipButtonClicked()}"
             android:text="@string/welcome_skip"
+            android:textAllCaps="false"
             android:textColor="@color/accent"
             android:visibility="@{!viewModel.isOnLastPage}"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -55,6 +56,7 @@
                 android:layout_gravity="center"
                 android:onClick="@{() -> viewModel.onNextButtonClicked()}"
                 android:text="@string/welcome_next"
+                android:textAllCaps="false"
                 android:textColor="@color/accent" />
 
             <Button

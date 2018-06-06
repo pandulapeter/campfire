@@ -123,19 +123,19 @@
                         style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:onClick="@{() -> viewModel.onThemeClicked()}"
-                        app:description="@{viewModel.themeDescription}"
-                        app:title="@{@string/options_preferences_app_theme}"
-                        tools:text="@string/options_preferences_app_theme" />
+                        android:onClick="@{() -> viewModel.onLanguageClicked()}"
+                        app:description="@{viewModel.languageDescription}"
+                        app:title="@{@string/options_preferences_language}"
+                        tools:text="@string/options_preferences_language" />
 
                     <TextView
                         style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:onClick="@{() -> viewModel.onLanguageClicked()}"
-                        app:description="@{viewModel.languageDescription}"
-                        app:title="@{@string/options_preferences_language}"
-                        tools:text="@string/options_preferences_language" />
+                        android:onClick="@{() -> viewModel.onThemeClicked()}"
+                        app:description="@{viewModel.themeDescription}"
+                        app:title="@{@string/options_preferences_app_theme}"
+                        tools:text="@string/options_preferences_app_theme" />
 
                     <android.support.v7.widget.SwitchCompat
                         android:layout_width="match_parent"
