@@ -7,6 +7,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOnboardingBinding
 import com.pandulapeter.campfire.feature.main.home.HomeContainerFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.util.addPageScrollListener
 import com.pandulapeter.campfire.util.waitForLayout
 
 class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, OnboardingViewModel>(R.layout.fragment_onboarding) {
@@ -20,6 +21,7 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
     })
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.viewPager.addPageScrollListener(onPageSelected = { viewModel.isOnLastPage.set(it + 1 == binding.viewPager.adapter?.count ?: 0) })
         binding.viewPager.adapter = OnboardingAdapter(childFragmentManager)
         binding.root.run {
             waitForLayout {

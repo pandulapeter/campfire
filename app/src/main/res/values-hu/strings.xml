@@ -32,6 +32,7 @@
     <string name="welcome_title">Üdv!</string>
     <string name="welcome_skip">Átugrás</string>
     <string name="welcome_next">Következő</string>
+    <string name="welcome_done">Kész</string>
 
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>

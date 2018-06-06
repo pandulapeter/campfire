@@ -33,6 +33,7 @@
     <string name="welcome_title">Welcome!</string>
     <string name="welcome_skip">Skip</string>
     <string name="welcome_next">Next</string>
+    <string name="welcome_done">Done</string>
 
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>

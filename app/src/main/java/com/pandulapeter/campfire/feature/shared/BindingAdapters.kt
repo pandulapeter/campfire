@@ -41,6 +41,11 @@ fun setCompoundDrawables(
     )
 }
 
+@BindingAdapter("android:visibility")
+fun setVisibility(view: View, isVisible: Boolean) {
+    view.visibility = if (isVisible) View.VISIBLE else View.GONE
+}
+
 @BindingAdapter(value = ["android:paddingStart", "android:paddingTop", "android:paddingEnd", "android:paddingBottom"], requireAll = false)
 fun setPadding(view: View, paddingStart: Int?, paddingTop: Int?, paddingEnd: Int?, paddingBottom: Int?) = view.setPadding(
     paddingStart ?: view.paddingStart,
