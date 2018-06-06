@@ -180,11 +180,11 @@ inline fun DrawerLayout.addDrawerListener(
     override fun onDrawerOpened(drawerView: View) = onDrawerOpened()
 })
 
-inline fun View.waitForLayout(crossinline f: () -> Unit) = with(viewTreeObserver) {
+inline fun View.waitForLayout(crossinline block: () -> Unit) = with(viewTreeObserver) {
     addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
         override fun onGlobalLayout() {
+            block()
             viewTreeObserver.removeOnGlobalLayoutListener(this)
-            f()
         }
     })
 }

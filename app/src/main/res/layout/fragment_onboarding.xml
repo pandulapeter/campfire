@@ -29,8 +29,6 @@
             style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/content_padding"
-            android:layout_marginStart="@dimen/content_padding"
             android:onClick="@{() -> viewModel.onSkipButtonClicked()}"
             android:text="@string/welcome_skip"
             android:textAllCaps="false"
@@ -39,43 +37,36 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <ViewSwitcher
+        <Button
+            style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/content_padding"
-            android:layout_marginEnd="@dimen/content_padding"
-            android:animateFirstView="false"
-            android:inAnimation="@android:anim/fade_in"
-            app:displayedChild="@{viewModel.isOnLastPage ? 1 : 0}"
+            android:onClick="@{() -> viewModel.onNextButtonClicked()}"
+            android:text="@string/welcome_next"
+            android:textAllCaps="false"
+            android:textColor="@color/accent"
+            android:visibility="@{!viewModel.isOnLastPage}"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintEnd_toEndOf="parent" />
 
-            <Button
-                style="@style/Widget.AppCompat.Button.Borderless"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:onClick="@{() -> viewModel.onNextButtonClicked()}"
-                android:text="@string/welcome_next"
-                android:textAllCaps="false"
-                android:textColor="@color/accent" />
-
-            <Button
-                style="@style/Widget.AppCompat.Button"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/button_height"
-                android:layout_gravity="center"
-                android:background="@drawable/bg_button"
-                android:gravity="center"
-                android:onClick="@{() -> viewModel.onSkipButtonClicked()}"
-                android:paddingEnd="@dimen/content_padding"
-                android:paddingStart="@dimen/content_padding"
-                android:text="@string/welcome_done"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:theme="@style/ButtonTheme" />
-
-        </ViewSwitcher>
+        <Button
+            style="@style/Widget.AppCompat.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/button_height"
+            android:layout_marginBottom="@dimen/content_padding"
+            android:background="@drawable/bg_button"
+            android:gravity="center"
+            android:onClick="@{() -> viewModel.onSkipButtonClicked()}"
+            android:paddingEnd="@dimen/content_padding"
+            android:paddingStart="@dimen/content_padding"
+            android:text="@string/welcome_done"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:theme="@style/ButtonTheme"
+            android:visibility="@{viewModel.isOnLastPage}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
     </android.support.constraint.ConstraintLayout>
 

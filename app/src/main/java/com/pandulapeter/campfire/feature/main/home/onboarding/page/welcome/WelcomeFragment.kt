@@ -24,23 +24,23 @@ class WelcomeFragment : CampfireFragment<FragmentOnboardingWelcomeBinding, Welco
         binding.root.animate().alpha(1f).start()
         binding.linearLayout.apply {
             waitForLayout {
-                layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
-            }
-        }
-        viewModel.apply {
-            shouldShowLanguageSelector.onEventTriggered {
-                if (!getCampfireActivity().isUiBlocked) {
-                    language.get()?.let { LanguageSelectorBottomSheetFragment.show(childFragmentManager, it.id) }
+                if (isAdded) {
+                    layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
                 }
             }
-            language.onPropertyChanged(this@WelcomeFragment) { binding.root.post { if (isAdded) getCampfireActivity().recreate() } }
-            shouldShowThemeSelector.onEventTriggered {
-                if (!getCampfireActivity().isUiBlocked) {
-                    theme.get()?.let { ThemeSelectorBottomSheetFragment.show(childFragmentManager, it.id) }
-                }
-            }
-            theme.onPropertyChanged(this@WelcomeFragment) { binding.root.post { if (isAdded) getCampfireActivity().recreate() } }
         }
+        viewModel.shouldShowLanguageSelector.onEventTriggered(this) {
+            if (!getCampfireActivity().isUiBlocked) {
+                viewModel.language.get()?.let { LanguageSelectorBottomSheetFragment.show(childFragmentManager, it.id) }
+            }
+        }
+        viewModel.language.onPropertyChanged(this) { binding.root.post { if (isAdded) getCampfireActivity().recreate() } }
+        viewModel.shouldShowThemeSelector.onEventTriggered(this) {
+            if (!getCampfireActivity().isUiBlocked) {
+                viewModel.theme.get()?.let { ThemeSelectorBottomSheetFragment.show(childFragmentManager, it.id) }
+            }
+        }
+        viewModel.theme.onPropertyChanged(this@WelcomeFragment) { binding.root.post { if (isAdded) getCampfireActivity().recreate() } }
     }
 
     override fun onThemeSelected(theme: PreferencesViewModel.Theme) = viewModel.theme.set(theme)
