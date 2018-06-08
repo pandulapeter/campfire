@@ -35,6 +35,16 @@
     <string name="welcome_next">Next</string>
     <string name="welcome_done">Done</string>
 
+    <!-- Onboarding screen / User data -->
+    <string name="user_data_title">User data</string>
+    <string name="user_data_message_start">To help improve Campfire, please consider opting in to the following ways of sharing your data with the developer:</string>
+    <string name="user_data_analytics_checkbox">Analytics through Google\'s Firebase service</string>
+    <string name="user_data_crash_reporting_checkbox">Crash reporting through Google\'s Crashlytics service</string>
+    <string name="user_data_message_end_part_1">"You can change these preferences at any time. For more information, check out the "</string>
+    <string name="user_data_message_end_part_2">Privacy Policy</string>
+    <string name="user_data_message_end_part_3">!</string>
+    <string name="user_data_positive">Continue</string>
+
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>
     <string name="main_home">Home</string>
@@ -49,14 +59,6 @@
     <string name="main_manage_downloads">Manage downloads</string>
     <string name="main_exit_confirmation_message">Do you really want to close the app?</string>
     <string name="main_exit_confirmation_close">Close</string>
-    <string name="main_privacy_policy_title">Welcome</string>
-    <string name="main_privacy_policy_message_start">To help improve Campfire, please consider opting in to the following ways of sharing your data with the developer:</string>
-    <string name="main_privacy_policy_analytics_checkbox">Analytics through Google\'s Firebase service</string>
-    <string name="main_privacy_policy_crash_reporting_checkbox">Crash reporting through Google\'s Crashlytics service</string>
-    <string name="main_privacy_policy_message_end_part_1">"You can change these preferences at any time. For more information, check out the "</string>
-    <string name="main_privacy_policy_message_end_part_2">Privacy Policy</string>
-    <string name="main_privacy_policy_message_end_part_3">!</string>
-    <string name="main_privacy_policy_positive">Continue</string>
 
     <!-- Home screen -->
     <string name="home_placeholder">This screen will contain personalised song suggestions, featured collections and random playlists. It\'s not ready yet, but check back soon!</string>

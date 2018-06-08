@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -26,15 +27,45 @@
                 android:layout_gravity="center_vertical"
                 android:clipChildren="false"
                 android:gravity="center_horizontal"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:padding="@dimen/first_keyline">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:padding="@dimen/large_content_padding"
-                    android:text="GDPR stuff"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+                    android:text="@string/user_data_title"
+                    android:textAppearance="@style/Title" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/large_content_padding"
+                    android:text="@string/user_data_message_start" />
+
+                <CheckBox
+                    android:id="@+id/checkbox_analytics"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/large_content_padding"
+                    android:paddingEnd="0dp"
+                    android:paddingStart="@dimen/content_padding"
+                    android:text="@string/user_data_analytics_checkbox" />
+
+                <CheckBox
+                    android:id="@+id/checkbox_crash_reporting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/content_padding"
+                    android:paddingEnd="0dp"
+                    android:paddingStart="@dimen/content_padding"
+                    android:text="@string/user_data_crash_reporting_checkbox" />
+
+                <TextView
+                    android:id="@+id/text_end"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/large_content_padding"
+                    tools:text="@string/user_data_message_end_part_1" />
 
             </LinearLayout>
 

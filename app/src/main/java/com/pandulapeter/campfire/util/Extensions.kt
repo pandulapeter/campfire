@@ -249,12 +249,12 @@ fun String.removePrefixes() = this
     .removePrefix("AZ ")
     .removePrefix("THE ")
 
-fun ViewPager.addPageScrollListener(onPageSelected: (Int) -> Unit, onPageScrollStateChanged: (Int) -> Unit = {}) =
+fun ViewPager.addPageScrollListener(onPageSelected: (Int) -> Unit, onPageScrollStateChanged: (Int) -> Unit = {}, onPageScrolled: (Int, Float) -> Unit = { _, _ -> }) =
     addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
 
         override fun onPageScrollStateChanged(state: Int) = onPageScrollStateChanged(state)
 
-        override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) = Unit
+        override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) = onPageScrolled(position, positionOffset)
 
         override fun onPageSelected(position: Int) = onPageSelected(position)
     })

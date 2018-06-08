@@ -34,6 +34,16 @@
     <string name="welcome_next">Következő</string>
     <string name="welcome_done">Kész</string>
 
+    <!-- Onboarding screen / User data -->
+    <string name="user_data_title">Felhasználói adatok</string>
+    <string name="user_data_message_start">Ha segítenél az alkalmazás jobbá tételében, kérlek engedélyezd a következő típusú adatok megosztását a fejlesztővel:</string>
+    <string name="user_data_analytics_checkbox">Használati statisztikák a Google Firebase szolgáltatáson keresztül</string>
+    <string name="user_data_crash_reporting_checkbox">Hibajelentések a Google Crashlytics szolgáltatáson keresztül</string>
+    <string name="user_data_message_end_part_1">"Ezeket a beállításokat bármikor megváltoztathatod. További információért olvasd el az angol nyelvű "</string>
+    <string name="user_data_message_end_part_2">adatvédelmi irányelveket</string>
+    <string name="user_data_message_end_part_3">!</string>
+    <string name="user_data_positive">Folytatás</string>
+
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>
     <string name="main_home">Kezdőképernyő</string>
@@ -48,14 +58,6 @@
     <string name="main_manage_downloads">Letöltések kezelése</string>
     <string name="main_exit_confirmation_message">Tényleg ki szeretnél lépni az alkalmazásból?</string>
     <string name="main_exit_confirmation_close">Kilépés</string>
-    <string name="main_privacy_policy_title">Üdvözlet</string>
-    <string name="main_privacy_policy_message_start">Ha segítenél az alkalmazás jobbá tételében, kérlek engedélyezd a következő típusú adatok megosztását a fejlesztővel:</string>
-    <string name="main_privacy_policy_analytics_checkbox">Használati statisztikák a Google Firebase szolgáltatáson keresztül</string>
-    <string name="main_privacy_policy_crash_reporting_checkbox">Hibajelentések a Google Crashlytics szolgáltatáson keresztül</string>
-    <string name="main_privacy_policy_message_end_part_1">"Ezeket a beállításokat bármikor megváltoztathatod. További információért olvasd el az angol nyelvű "</string>
-    <string name="main_privacy_policy_message_end_part_2">adatvédelmi irányelveket</string>
-    <string name="main_privacy_policy_message_end_part_3">!</string>
-    <string name="main_privacy_policy_positive">Folytatás</string>
 
     <!-- Home screen -->
     <string name="home_placeholder">Ez a képernyő személyre szabott dal ajánlásokat, kiemelt gyűjteményeket és véletlenszerű listákat fog tartalmazni. Jelenleg még fejlesztés alatt van, de nézz erre később!</string>

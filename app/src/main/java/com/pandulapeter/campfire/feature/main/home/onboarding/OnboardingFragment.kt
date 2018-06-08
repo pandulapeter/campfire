@@ -21,7 +21,14 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
     })
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.viewPager.addPageScrollListener(onPageSelected = { viewModel.isOnLastPage.set(it + 1 == binding.viewPager.adapter?.count ?: 0) })
+        binding.viewPager.addPageScrollListener(
+            onPageSelected = { viewModel.isOnLastPage.set(it + 1 == binding.viewPager.adapter?.count ?: 0) },
+            onPageScrolled = { index, offset ->
+                if (index == binding.viewPager.adapter?.count) {
+
+                }
+            }
+        )
         binding.viewPager.adapter = OnboardingAdapter(childFragmentManager)
         binding.root.run {
             waitForLayout {

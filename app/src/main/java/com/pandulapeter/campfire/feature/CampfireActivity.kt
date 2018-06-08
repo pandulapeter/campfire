@@ -55,7 +55,6 @@ import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
-import com.pandulapeter.campfire.feature.shared.dialog.PrivacyConsentDialogFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.*
@@ -203,6 +202,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
         }
 
+        // Make sure the "What's new" snackbar does not appear after a fresh start.
+        if (preferenceDatabase.ftuxLastSeenChangelog == 0) {
+            preferenceDatabase.ftuxLastSeenChangelog = BuildConfig.VERSION_CODE
+        }
+
         // Initialize the app bar.
         val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
         binding.toolbarMainButton.setOnClickListener {
@@ -307,12 +311,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
             Gravity.START
         )
-
-        // Show the privacy consent dialog if needed.
-        if (preferenceDatabase.shouldShowPrivacyPolicy && savedInstanceState == null) {
-            PrivacyConsentDialogFragment.show(supportFragmentManager)
-            preferenceDatabase.ftuxLastSeenChangelog = BuildConfig.VERSION_CODE
-        }
     }
 
     override fun onNewIntent(intent: Intent?) {
