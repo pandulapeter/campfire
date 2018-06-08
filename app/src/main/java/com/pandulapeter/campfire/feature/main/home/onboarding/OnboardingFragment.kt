@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding
 
 import android.os.Bundle
+import android.transition.Fade
 import android.view.View
 import android.widget.FrameLayout
 import com.pandulapeter.campfire.R
@@ -11,6 +12,11 @@ import com.pandulapeter.campfire.util.addPageScrollListener
 import com.pandulapeter.campfire.util.waitForLayout
 
 class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, OnboardingViewModel>(R.layout.fragment_onboarding) {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        exitTransition = Fade()
+    }
 
     override val viewModel = OnboardingViewModel(::navigateToHome, {
         if (binding.viewPager.currentItem + 1 < binding.viewPager.adapter?.count ?: 0) {

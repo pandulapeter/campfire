@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.shared
 
+import android.content.res.Resources
 import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
 import android.os.Bundle
@@ -12,6 +13,9 @@ import android.transition.Transition
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.TextView
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
@@ -21,6 +25,7 @@ import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.obtainColor
 import org.koin.android.ext.android.inject
+
 
 abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : Fragment(), Transition.TransitionListener {
 
@@ -45,6 +50,39 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         binding.setVariable(BR.viewModel, viewModel)
         binding.executePendingBindings()
         return binding.root
+    }
+
+    override fun onCreateAnimation(transit: Int, enter: Boolean, nextAnim: Int): Animation? {
+        val parent = parentFragment
+        return if (!enter && parent != null && parent.isRemoving) {
+            // This is a workaround for the bug where child fragments disappear when
+            // the parent is removed (as all children are first removed from the parent)
+            // See https://code.google.com/p/android/issues/detail?id=55228
+            val doNothingAnim = AlphaAnimation(1f, 1f)
+            doNothingAnim.duration = getNextAnimationDuration(parent, 300L)
+            doNothingAnim
+        } else {
+            super.onCreateAnimation(transit, enter, nextAnim)
+        }
+    }
+
+    private fun getNextAnimationDuration(fragment: Fragment, defValue: Long): Long {
+        try {
+            val animInfoField = Fragment::class.java.getDeclaredField("mAnimationInfo")
+            animInfoField.isAccessible = true
+            val animationInfo = animInfoField.get(fragment)
+            val nextAnimField = animationInfo.javaClass.getDeclaredField("mNextAnim")
+            nextAnimField.isAccessible = true
+            val nextAnimResource = nextAnimField.getInt(animationInfo)
+            val nextAnim = AnimationUtils.loadAnimation(fragment.activity, nextAnimResource)
+            return nextAnim?.duration ?: defValue
+        } catch (ex: NoSuchFieldException) {
+            return defValue
+        } catch (ex: IllegalAccessException) {
+            return defValue
+        } catch (ex: Resources.NotFoundException) {
+            return defValue
+        }
     }
 
     override fun onStart() {
