@@ -43,7 +43,9 @@ class UserDataFragment : CampfireFragment<FragmentOnboardingUserDataBinding, Use
         }
         binding.linearLayout.apply {
             waitForLayout {
-                layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
+                if (isAdded) {
+                    layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
+                }
             }
         }
     }

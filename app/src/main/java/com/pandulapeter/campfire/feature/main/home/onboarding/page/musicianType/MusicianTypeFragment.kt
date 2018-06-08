@@ -15,7 +15,9 @@ class MusicianTypeFragment : CampfireFragment<FragmentOnboardingMusicianTypeBind
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.linearLayout.apply {
             waitForLayout {
-                layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
+                if (isAdded) {
+                    layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
+                }
             }
         }
     }

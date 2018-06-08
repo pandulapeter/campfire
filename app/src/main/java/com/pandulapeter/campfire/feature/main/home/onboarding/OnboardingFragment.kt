@@ -32,7 +32,9 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
         binding.viewPager.adapter = OnboardingAdapter(childFragmentManager)
         binding.root.run {
             waitForLayout {
-                layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
+                if (isAdded) {
+                    layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
+                }
             }
         }
     }
