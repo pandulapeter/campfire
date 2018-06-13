@@ -43,7 +43,9 @@
     <string name="user_data_crash_reporting_checkbox">Hibajelentések a Google Crashlytics szolgáltatáson keresztül</string>
     <string name="user_data_message_end_part_1">"Ezeket a beállításokat bármikor megváltoztathatod. További információért olvasd el az angol nyelvű "</string>
     <string name="user_data_message_end_part_2">adatvédelmi irányelveket</string>
-    <string name="user_data_message_end_part_3">!</string>
+    <string name="user_data_message_end_part_3">" és a "</string>
+    <string name="user_data_message_end_part_4">felhasználói feltételeket</string>
+    <string name="user_data_message_end_part_5">!</string>
     <string name="user_data_positive">Folytatás</string>
 
     <!-- Main screen -->

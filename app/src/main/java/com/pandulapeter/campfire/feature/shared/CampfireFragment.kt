@@ -58,9 +58,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
             // This is a workaround for the bug where child fragments disappear when
             // the parent is removed (as all children are first removed from the parent)
             // See https://code.google.com/p/android/issues/detail?id=55228
-            val doNothingAnim = AlphaAnimation(1f, 1f)
-            doNothingAnim.duration = getNextAnimationDuration(parent, 300L)
-            doNothingAnim
+            AlphaAnimation(1f, 1f).apply { duration = getNextAnimationDuration(parent, 300L) }
         } else {
             super.onCreateAnimation(transit, enter, nextAnim)
         }

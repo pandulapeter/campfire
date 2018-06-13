@@ -42,7 +42,9 @@
     <string name="user_data_crash_reporting_checkbox">Crash reporting through Google\'s Crashlytics service</string>
     <string name="user_data_message_end_part_1">"You can change these preferences at any time. For more information, check out the "</string>
     <string name="user_data_message_end_part_2">Privacy Policy</string>
-    <string name="user_data_message_end_part_3">!</string>
+    <string name="user_data_message_end_part_3">" as well as the "</string>
+    <string name="user_data_message_end_part_4">Terms and Conditions</string>
+    <string name="user_data_message_end_part_5">!</string>
     <string name="user_data_positive">Continue</string>
 
     <!-- Main screen -->

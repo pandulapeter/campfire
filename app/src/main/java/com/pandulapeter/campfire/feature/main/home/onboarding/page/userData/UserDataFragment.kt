@@ -30,8 +30,10 @@ class UserDataFragment : CampfireFragment<FragmentOnboardingUserDataBinding, Use
         val first = getString(R.string.user_data_message_end_part_1)
         val second = getString(R.string.user_data_message_end_part_2)
         val third = getString(R.string.user_data_message_end_part_3)
+        val fourth = getString(R.string.user_data_message_end_part_4)
+        val fifth = getString(R.string.user_data_message_end_part_5)
         binding.textEnd.movementMethod = LinkMovementMethod.getInstance()
-        binding.textEnd.text = SpannableString("$first$second$third").apply {
+        binding.textEnd.text = SpannableString("$first$second$third$fourth$fifth").apply {
             setSpan(object : ClickableSpan() {
                 override fun onClick(widget: View?) {
                     CustomTabsIntent.Builder()
@@ -39,7 +41,15 @@ class UserDataFragment : CampfireFragment<FragmentOnboardingUserDataBinding, Use
                         .build()
                         .launchUrl(requireContext(), Uri.parse(AboutViewModel.PRIVACY_POLICY_URL))
                 }
-            }, first.length, length - third.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }, first.length, first.length + second.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            setSpan(object : ClickableSpan() {
+                override fun onClick(widget: View?) {
+                    CustomTabsIntent.Builder()
+                        .setToolbarColor(requireContext().color(R.color.accent))
+                        .build()
+                        .launchUrl(requireContext(), Uri.parse(AboutViewModel.TERMS_AND_CONDITIONS_URL))
+                }
+            }, first.length + second.length + third.length, length - fifth.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         binding.linearLayout.apply {
             waitForLayout {
