@@ -47,6 +47,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/large_content_padding"
+                    android:checked="@={viewModel.isAnalyticsEnabled}"
                     android:paddingEnd="0dp"
                     android:paddingStart="@dimen/content_padding"
                     android:text="@string/user_data_analytics_checkbox" />
@@ -56,6 +57,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/content_padding"
+                    android:checked="@={viewModel.isCrashReportingEnabled}"
                     android:paddingEnd="0dp"
                     android:paddingStart="@dimen/content_padding"
                     android:text="@string/user_data_crash_reporting_checkbox" />
