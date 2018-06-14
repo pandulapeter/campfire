@@ -21,8 +21,6 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
     override val viewModel = OnboardingViewModel(::navigateToHome, {
         if (binding.viewPager.currentItem + 1 < binding.viewPager.adapter?.count ?: 0) {
             binding.viewPager.setCurrentItem(binding.viewPager.currentItem + 1, true)
-        } else {
-            navigateToHome()
         }
     })
 

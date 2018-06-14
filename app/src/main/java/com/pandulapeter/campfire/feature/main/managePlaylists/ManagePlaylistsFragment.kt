@@ -48,10 +48,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         defaultToolbar.updateToolbarTitle(R.string.main_manage_playlists, getString(R.string.loading))
         getCampfireActivity().updateToolbarButtons(listOf(deleteAllButton))
         getCampfireActivity().updateFloatingActionButtonDrawable(getCampfireActivity().drawable(R.drawable.ic_add_24dp))
-        binding.recyclerView.run {
-            setHasFixedSize(true)
-            layoutManager = LinearLayoutManager(getCampfireActivity())
-        }
+        binding.recyclerView.layoutManager = LinearLayoutManager(getCampfireActivity())
         viewModel.state.onPropertyChanged(this) { updateToolbarTitle(viewModel.playlistCount.get()) }
         viewModel.playlistCount.onPropertyChanged(this) {
             updateToolbarTitle(it)

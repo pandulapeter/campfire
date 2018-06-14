@@ -23,7 +23,8 @@
             android:clipToPadding="false"
             android:paddingBottom="@dimen/list_fab_content_bottom_margin"
             android:paddingTop="@dimen/content_padding"
-            app:adapter="@{viewModel.adapter}" />
+            app:adapter="@{viewModel.adapter}"
+            app:hasFixedSize="@{true}" />
 
     </com.pandulapeter.campfire.feature.shared.widget.StateLayout>
 

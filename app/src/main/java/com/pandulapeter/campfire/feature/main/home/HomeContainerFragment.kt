@@ -32,6 +32,7 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
     }
 
     fun navigateToHome() {
+        //TODO: Save the fact that the user is done with the onboarding flow.
 
         // Set up crash reporting.
         @Suppress("ConstantConditionIf")
