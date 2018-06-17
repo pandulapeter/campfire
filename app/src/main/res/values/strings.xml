@@ -55,6 +55,7 @@
     <string name="musician_type_lyrics_chords_english">Lyrics and chords (English notation)</string>
     <string name="musician_type_lyrics_chords_german">Lyrics and chords (German notation)</string>
     <string name="musician_type_lyrics_only">Lyrics only</string>
+    <string name="musician_type_lyrics_only_description">No chords whatsoever</string>
 
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>

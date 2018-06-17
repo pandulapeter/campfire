@@ -5,10 +5,10 @@ import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.feature.detail.page.parsing.Note
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
+import com.pandulapeter.campfire.util.generateNotationExample
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
@@ -80,21 +80,6 @@ class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
         firstTimeUserExperienceManager.resetAll()
         shouldShowHintsResetSnackbar.set(true)
     }
-
-    private fun generateNotationExample(shouldUseGermanNotation: Boolean) = listOf(
-        Note.C.getName(shouldUseGermanNotation),
-        Note.CSharp.getName(shouldUseGermanNotation),
-        Note.D.getName(shouldUseGermanNotation),
-        Note.DSharp.getName(shouldUseGermanNotation),
-        Note.E.getName(shouldUseGermanNotation),
-        Note.F.getName(shouldUseGermanNotation),
-        Note.FSharp.getName(shouldUseGermanNotation),
-        Note.G.getName(shouldUseGermanNotation),
-        Note.GSharp.getName(shouldUseGermanNotation),
-        Note.A.getName(shouldUseGermanNotation),
-        Note.ASharp.getName(shouldUseGermanNotation),
-        Note.B.getName(shouldUseGermanNotation)
-    ).joinToString(", ")
 
     private fun updateThemeDescription() = themeDescription.set(
         context.getString(

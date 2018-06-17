@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -54,42 +55,51 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/large_content_padding"
+                android:checked="@={viewModel.isFirstOptionSelected}"
                 android:paddingEnd="0dp"
                 android:paddingStart="@dimen/content_padding"
-                android:text="@string/musician_type_lyrics_chords_english"
+                app:description="@{viewModel.englishNotationExample}"
                 app:layout_constraintBottom_toTopOf="@id/radio_button_lyrics_chords_german"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/text_top"
-                app:layout_constraintVertical_chainStyle="packed" />
+                app:layout_constraintVertical_chainStyle="packed"
+                app:title="@{@string/musician_type_lyrics_chords_english}"
+                tools:text="@string/musician_type_lyrics_chords_english" />
 
             <RadioButton
                 android:id="@+id/radio_button_lyrics_chords_german"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/content_padding"
+                android:checked="@={viewModel.isSecondOptionSelected}"
                 android:paddingEnd="0dp"
                 android:paddingStart="@dimen/content_padding"
-                android:text="@string/musician_type_lyrics_chords_german"
+                app:description="@{viewModel.germanNotationExample}"
                 app:layout_constraintBottom_toTopOf="@id/radio_button_lyrics_only"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/radio_button_lyrics_chords_english"
-                app:layout_constraintVertical_chainStyle="packed" />
+                app:layout_constraintVertical_chainStyle="packed"
+                app:title="@{@string/musician_type_lyrics_chords_german}"
+                tools:text="@string/musician_type_lyrics_chords_german" />
 
             <RadioButton
                 android:id="@+id/radio_button_lyrics_only"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/content_padding"
+                android:checked="@={viewModel.isThirdOptionSelected}"
                 android:paddingEnd="0dp"
                 android:paddingStart="@dimen/content_padding"
-                android:text="@string/musician_type_lyrics_only"
+                app:description="@{@string/musician_type_lyrics_only_description}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/radio_button_lyrics_chords_german"
-                app:layout_constraintVertical_chainStyle="packed" />
+                app:layout_constraintVertical_chainStyle="packed"
+                app:title="@{@string/musician_type_lyrics_only}"
+                tools:text="@string/musician_type_lyrics_only" />
 
         </android.support.constraint.ConstraintLayout>
 
