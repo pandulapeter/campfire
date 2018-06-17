@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -9,31 +11,86 @@
 
     </data>
 
-    <FrameLayout
-        android:id="@+id/linear_layout"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipChildren="false"
-        android:paddingBottom="@dimen/onboarding_bottom_margin_small">
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:paddingBottom="@dimen/onboarding_bottom_margin_small"
+        android:scrollbars="none">
 
-        <LinearLayout
+        <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:clipChildren="false"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
+            android:animateLayoutChanges="true"
+            android:paddingEnd="@dimen/large_content_padding"
+            android:paddingStart="@dimen/large_content_padding">
 
             <TextView
-                android:layout_width="match_parent"
+                android:id="@+id/title"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:padding="@dimen/large_content_padding"
+                android:layout_marginTop="@dimen/large_content_padding"
                 android:text="@string/content_language_title"
-                android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+                android:textAppearance="@style/Title"
+                app:layout_constraintBottom_toTopOf="@id/text_top"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed" />
 
-        </LinearLayout>
+            <TextView
+                android:id="@+id/text_top"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/large_content_padding"
+                android:text="@string/content_language_description"
+                app:layout_constraintBottom_toTopOf="@id/state_layout"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/title"
+                app:layout_constraintVertical_chainStyle="packed" />
 
-    </FrameLayout>
+            <com.pandulapeter.campfire.feature.shared.widget.StateLayout
+                android:id="@+id/state_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/large_content_padding"
+                app:layout_constraintBottom_toTopOf="@id/show_explicit_switch"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_top"
+                app:layout_constraintVertical_chainStyle="packed">
+
+                <LinearLayout
+                    android:id="@+id/language_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+            </com.pandulapeter.campfire.feature.shared.widget.StateLayout>
+
+            <android.support.v7.widget.SwitchCompat
+                android:id="@+id/show_explicit_switch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/switch_fix"
+                android:layout_marginTop="@dimen/large_content_padding"
+                android:checked="@={viewModel.shouldShowExplicit}"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/touch_target"
+                app:description="@{viewModel.shouldShowExplicit ? @string/content_language_explicit_switch_enabled : @string/content_language_explicit_switch_disabled}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/state_layout"
+                app:layout_constraintVertical_chainStyle="packed"
+                app:switchPadding="@dimen/content_padding"
+                app:title="@{@string/content_language_explicit_switch}"
+                tools:text="@string/content_language_explicit_switch" />
+
+        </android.support.constraint.ConstraintLayout>
+
+    </ScrollView>
 
 </layout>

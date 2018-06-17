@@ -21,6 +21,7 @@ class PreferenceDatabase(context: Context) {
     // General
     var lastScreen by PreferenceFieldDelegate.String("lastScreen", "")
     var disabledLanguageFilters by PreferenceFieldDelegate.StringSet("disabledLanguageFilters", getDefaultLanguageFilters())
+    var shouldShowExplicit by PreferenceFieldDelegate.Boolean("shouldShowExplicit", false)
 
     // Home
     var isOnboardingDone by PreferenceFieldDelegate.Boolean("isOnboardingDone", false)
@@ -29,7 +30,6 @@ class PreferenceDatabase(context: Context) {
     var lastCollectionsUpdateTimestamp by PreferenceFieldDelegate.Long("lastCollectionsUpdateTimestamp")
     var collectionsSortingMode by PreferenceFieldDelegate.Int("collectionsSortingMode", CollectionsViewModel.SortingMode.TITLE.intValue)
     var shouldShowSavedOnly by PreferenceFieldDelegate.Boolean("shouldShowSavedOnly", false)
-    var shouldShowExplicitCollections by PreferenceFieldDelegate.Boolean("shouldShowExplicitCollections", false)
 
     // Songs
     var lastSongsUpdateTimestamp by PreferenceFieldDelegate.Long("lastSongsUpdateTimestamp")
@@ -37,7 +37,6 @@ class PreferenceDatabase(context: Context) {
     var shouldSearchInArtists by PreferenceFieldDelegate.Boolean("shouldSearchInArtists", true)
     var shouldSearchInTitles by PreferenceFieldDelegate.Boolean("shouldSearchInTitles", true)
     var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("shouldShowDownloadedOnly", false)
-    var shouldShowExplicitSongs by PreferenceFieldDelegate.Boolean("shouldShowExplicitSongs", false)
 
     // Preferences
     var shouldShowChords by PreferenceFieldDelegate.Boolean("shouldShowChords", true)

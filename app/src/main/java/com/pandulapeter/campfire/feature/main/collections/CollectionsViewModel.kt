@@ -56,11 +56,11 @@ class CollectionsViewModel(
                 updateAdapterItems()
             }
         }
-    var shouldShowExplicit = preferenceDatabase.shouldShowExplicitCollections
+    var shouldShowExplicit = preferenceDatabase.shouldShowExplicit
         set(value) {
             if (field != value) {
                 field = value
-                preferenceDatabase.shouldShowExplicitCollections = value
+                preferenceDatabase.shouldShowExplicit = value
                 updateAdapterItems()
             }
         }

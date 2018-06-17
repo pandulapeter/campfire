@@ -48,7 +48,7 @@
     <string name="user_data_message_end_part_5">!</string>
 
     <!-- Onboarding screen / Song appearance -->
-    <string name="song_appearance_title">Dal nézet</string>
+    <string name="song_appearance_title">Dalok megjelenítése</string>
     <string name="song_appearance_description">Hangszeren játszol vagy csak énekelsz? Mit szeretnél látni amikor megtekintessz egy dalt?</string>
     <string name="song_appearance_lyrics_chords_english">Dalszöveg és akkordok (Angol jelölés)</string>
     <string name="song_appearance_lyrics_chords_german">Dalszöveg és akkordok (Német jelölés)</string>
@@ -57,6 +57,10 @@
 
     <!-- Onboarding screen / Content language -->
     <string name="content_language_title">Tartalom nyelve</string>
+    <string name="content_language_description">Az alkalmazás csak ilyen nyelvű dalokat és gyűjteményeket fog kimutatni:</string>
+    <string name="content_language_explicit_switch">Trágár dalok megjelenítése</string>
+    <string name="content_language_explicit_switch_enabled">A trágár szövegű dalok megjelenhetnek</string>
+    <string name="content_language_explicit_switch_disabled">Trágár szövegű dalok kiszűrve</string>
 
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>

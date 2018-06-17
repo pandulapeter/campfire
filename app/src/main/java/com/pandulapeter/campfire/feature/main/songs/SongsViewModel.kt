@@ -47,11 +47,11 @@ class SongsViewModel(
                 updateAdapterItems()
             }
         }
-    var shouldShowExplicit = preferenceDatabase.shouldShowExplicitSongs
+    var shouldShowExplicit = preferenceDatabase.shouldShowExplicit
         set(value) {
             if (field != value) {
                 field = value
-                preferenceDatabase.shouldShowExplicitSongs = value
+                preferenceDatabase.shouldShowExplicit = value
                 updateAdapterItems()
             }
         }
