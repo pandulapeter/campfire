@@ -56,9 +56,11 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
                     scaleX = 1 - absoluteOffset * 0.75f
                     scaleY = scaleX
                 }
+
                 fun View.applyTitleTransformation() {
                     translationX = width * offset * 0.5f
                 }
+
                 val binding = view.tag
                 when (binding) {
                     is FragmentOnboardingWelcomeBinding -> {
@@ -91,7 +93,7 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
     }
 
     fun languageFiltersUpdated(selectedLanguageCount: Int) {
-        binding.doneButton.isEnabled = selectedLanguageCount > 0
+        viewModel.canSkip.set(selectedLanguageCount > 0)
     }
 
     private fun navigateToHome() {
