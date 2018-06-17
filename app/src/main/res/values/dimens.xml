@@ -19,6 +19,7 @@
     <dimen name="card_corner">16dp</dimen>
     <dimen name="card_elevation">2dp</dimen>
     <dimen name="negative_card_corner">-16dp</dimen>
+    <dimen name="view_options_width">216dp</dimen>
 
     <!-- Text -->
     <dimen name="text_header">12sp</dimen>
@@ -39,7 +40,7 @@
     <dimen name="list_item_loading_indicator_size">36dp</dimen>
 
     <!-- Home screen -->
-    <dimen name="view_options_width">216dp</dimen>
+    <dimen name="onboarding_bottom_margin">56dp</dimen>
 
     <!-- Collections -->
     <dimen name="collections_image_small">48dp</dimen>

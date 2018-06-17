@@ -11,62 +11,56 @@
     </data>
 
     <FrameLayout
+        android:id="@+id/linear_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipChildren="false">
+        android:clipChildren="false"
+        android:paddingBottom="@dimen/onboarding_bottom_margin">
 
-        <FrameLayout
-            android:id="@+id/linear_layout"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipChildren="false">
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:clipChildren="false"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <ImageView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:clipChildren="false"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
+                android:alpha="0.8"
+                android:src="@mipmap/ic_launcher_foreground"
+                android:tint="?android:attr/textColorSecondary"
+                tools:ignore="ContentDescription" />
 
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:alpha="0.8"
-                    android:src="@mipmap/ic_launcher_foreground"
-                    android:tint="?android:attr/textColorSecondary"
-                    tools:ignore="ContentDescription" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/welcome_title"
+                android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="@string/welcome_title"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/large_content_padding"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center"
+                android:onClick="@{() -> viewModel.onLanguageClicked()}"
+                android:padding="@dimen/content_padding"
+                android:text="@string/options_preferences_language" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/large_content_padding"
-                    android:background="?attr/selectableItemBackground"
-                    android:gravity="center"
-                    android:onClick="@{() -> viewModel.onLanguageClicked()}"
-                    android:padding="@dimen/content_padding"
-                    android:text="@string/options_preferences_language" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center"
+                android:onClick="@{() -> viewModel.onThemeClicked()}"
+                android:padding="@dimen/content_padding"
+                android:text="@string/options_preferences_app_theme" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/content_padding"
-                    android:background="?attr/selectableItemBackground"
-                    android:gravity="center"
-                    android:onClick="@{() -> viewModel.onThemeClicked()}"
-                    android:padding="@dimen/content_padding"
-                    android:text="@string/options_preferences_app_theme" />
-
-            </LinearLayout>
-
-        </FrameLayout>
+        </LinearLayout>
 
     </FrameLayout>
 

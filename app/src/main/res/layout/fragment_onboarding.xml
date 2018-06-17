@@ -62,6 +62,8 @@
             android:onClick="@{() -> viewModel.onSkipButtonClicked()}"
             android:paddingEnd="@dimen/content_padding"
             android:paddingStart="@dimen/content_padding"
+            android:scaleX="@{viewModel.doneButtonOffset}"
+            android:scaleY="@{viewModel.doneButtonOffset}"
             android:text="@string/welcome_done"
             android:textAllCaps="false"
             android:textColor="@color/white"

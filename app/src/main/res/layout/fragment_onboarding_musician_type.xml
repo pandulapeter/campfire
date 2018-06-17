@@ -10,35 +10,29 @@
     </data>
 
     <FrameLayout
+        android:id="@+id/linear_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipChildren="false">
+        android:clipChildren="false"
+        android:paddingBottom="@dimen/onboarding_bottom_margin">
 
-        <FrameLayout
-            android:id="@+id/linear_layout"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipChildren="false">
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:clipChildren="false"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:clipChildren="false"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
+                android:gravity="center"
+                android:padding="@dimen/large_content_padding"
+                android:text="Are you an instrumentist or a singer?"
+                android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:padding="@dimen/large_content_padding"
-                    android:text="Are you an instrumentist or a singer?"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
-
-            </LinearLayout>
-
-        </FrameLayout>
+        </LinearLayout>
 
     </FrameLayout>
 

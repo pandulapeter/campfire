@@ -11,67 +11,61 @@
     </data>
 
     <FrameLayout
+        android:id="@+id/linear_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipChildren="false">
+        android:clipChildren="false"
+        android:paddingBottom="@dimen/onboarding_bottom_margin">
 
-        <FrameLayout
-            android:id="@+id/linear_layout"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipChildren="false">
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:clipChildren="false"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="@dimen/first_keyline">
 
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:clipChildren="false"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-                android:padding="@dimen/first_keyline">
+                android:text="@string/user_data_title"
+                android:textAppearance="@style/Title" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/user_data_title"
-                    android:textAppearance="@style/Title" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/large_content_padding"
+                android:text="@string/user_data_message_start" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/large_content_padding"
-                    android:text="@string/user_data_message_start" />
+            <CheckBox
+                android:id="@+id/checkbox_analytics"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/large_content_padding"
+                android:checked="@={viewModel.isAnalyticsEnabled}"
+                android:paddingEnd="0dp"
+                android:paddingStart="@dimen/content_padding"
+                android:text="@string/user_data_analytics_checkbox" />
 
-                <CheckBox
-                    android:id="@+id/checkbox_analytics"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/large_content_padding"
-                    android:checked="@={viewModel.isAnalyticsEnabled}"
-                    android:paddingEnd="0dp"
-                    android:paddingStart="@dimen/content_padding"
-                    android:text="@string/user_data_analytics_checkbox" />
+            <CheckBox
+                android:id="@+id/checkbox_crash_reporting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding"
+                android:checked="@={viewModel.isCrashReportingEnabled}"
+                android:paddingEnd="0dp"
+                android:paddingStart="@dimen/content_padding"
+                android:text="@string/user_data_crash_reporting_checkbox" />
 
-                <CheckBox
-                    android:id="@+id/checkbox_crash_reporting"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/content_padding"
-                    android:checked="@={viewModel.isCrashReportingEnabled}"
-                    android:paddingEnd="0dp"
-                    android:paddingStart="@dimen/content_padding"
-                    android:text="@string/user_data_crash_reporting_checkbox" />
+            <TextView
+                android:id="@+id/text_end"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/large_content_padding"
+                tools:text="@string/user_data_message_end_part_1" />
 
-                <TextView
-                    android:id="@+id/text_end"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/large_content_padding"
-                    tools:text="@string/user_data_message_end_part_1" />
-
-            </LinearLayout>
-
-        </FrameLayout>
+        </LinearLayout>
 
     </FrameLayout>
 

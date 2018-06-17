@@ -3,13 +3,11 @@ package com.pandulapeter.campfire.feature.main.home.onboarding
 import android.os.Bundle
 import android.transition.Fade
 import android.view.View
-import android.widget.FrameLayout
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOnboardingBinding
 import com.pandulapeter.campfire.feature.main.home.HomeContainerFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.addPageScrollListener
-import com.pandulapeter.campfire.util.waitForLayout
 
 class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, OnboardingViewModel>(R.layout.fragment_onboarding) {
 
@@ -37,13 +35,6 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
             }
         )
         binding.viewPager.adapter = OnboardingAdapter(childFragmentManager)
-        binding.root.run {
-            waitForLayout {
-                if (isAdded) {
-                    layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
-                }
-            }
-        }
     }
 
     private fun navigateToHome() {

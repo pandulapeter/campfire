@@ -8,13 +8,11 @@ import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.view.View
-import android.widget.FrameLayout
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOnboardingUserDataBinding
 import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.util.waitForLayout
 
 class UserDataFragment : CampfireFragment<FragmentOnboardingUserDataBinding, UserDataViewModel>(R.layout.fragment_onboarding_user_data) {
 
@@ -44,13 +42,6 @@ class UserDataFragment : CampfireFragment<FragmentOnboardingUserDataBinding, Use
                         .launchUrl(requireContext(), Uri.parse(AboutViewModel.TERMS_AND_CONDITIONS_URL))
                 }
             }, first.length + second.length + third.length, length - fifth.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-        binding.linearLayout.apply {
-            waitForLayout {
-                if (isAdded) {
-                    layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
-                }
-            }
         }
     }
 }
