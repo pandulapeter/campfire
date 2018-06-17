@@ -41,26 +41,39 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_chainStyle="packed" />
 
-            <TextView
+            <ViewSwitcher
                 android:id="@+id/text_top"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/large_content_padding"
-                android:text="@{viewModel.state == State.ERROR ? @string/content_language_initializing_error : @string/content_language_description}"
+                android:inAnimation="@android:anim/fade_in"
+                app:displayedChild="@{viewModel.state == State.ERROR ? 1 : 0}"
                 app:layout_constraintBottom_toTopOf="@id/state_layout"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/title"
-                app:layout_constraintVertical_chainStyle="packed" />
+                app:layout_constraintVertical_chainStyle="packed">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/content_language_description" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/content_language_initializing_error" />
+
+            </ViewSwitcher>
 
             <com.pandulapeter.campfire.feature.shared.widget.StateLayout
                 android:id="@+id/state_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:animateLayoutChanges="true"
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 android:paddingBottom="@dimen/large_content_padding"
+                android:transitionGroup="true"
                 app:buttonText="@string/try_again"
                 app:layout_constraintBottom_toTopOf="@id/show_explicit_switch"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -74,7 +87,6 @@
                     android:id="@+id/language_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:animateLayoutChanges="true"
                     android:orientation="vertical"
                     android:paddingTop="@dimen/large_content_padding" />
 

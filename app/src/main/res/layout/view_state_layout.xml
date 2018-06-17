@@ -26,7 +26,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:animateLayoutChanges="true"
-            android:clipChildren="false">
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:paddingBottom="@dimen/large_content_padding"
+            android:paddingTop="@dimen/large_content_padding">
 
             <android.support.constraint.Guideline
                 android:id="@+id/guideline_top"
