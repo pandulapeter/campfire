@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.main.home.onboarding
 import android.os.Bundle
 import android.transition.Fade
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOnboardingBinding
 import com.pandulapeter.campfire.feature.main.home.HomeContainerFragment
@@ -23,18 +24,30 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.viewPager.addPageScrollListener(
-            onPageScrolled = { index, offset ->
-                viewModel.doneButtonOffset.set(
-                    when (binding.viewPager.adapter?.count) {
-                        index + 2 -> offset
-                        index + 1 -> 1f
-                        else -> 0f
-                    }
-                )
+        binding.viewPager.apply {
+            addPageScrollListener(
+                onPageScrolled = { index, offset ->
+                    viewModel.doneButtonOffset.set(
+                        when (binding.viewPager.adapter?.count) {
+                            index + 2 -> offset
+                            index + 1 -> 1f
+                            else -> 0f
+                        }
+                    )
+                }
+            )
+            val interpolator = AccelerateDecelerateInterpolator()
+            setPageTransformer(false) { view, offset ->
+                view.apply {
+                    translationX = -interpolator.getInterpolation(offset) * width * 0.5f
+                    translationY = interpolator.getInterpolation(Math.abs(offset)) * height * 0.1f
+                    alpha = 1 - Math.abs(offset)
+                    scaleX = 1 - Math.abs(offset * 0.75f)
+                    scaleY = 1 - Math.abs(offset * 0.75f)
+                }
             }
-        )
-        binding.viewPager.adapter = OnboardingAdapter(childFragmentManager)
+            adapter = OnboardingAdapter(childFragmentManager)
+        }
     }
 
     private fun navigateToHome() {
