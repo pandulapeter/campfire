@@ -3,7 +3,7 @@ package com.pandulapeter.campfire.feature.main.home.onboarding
 import android.os.Bundle
 import android.transition.Fade
 import android.view.View
-import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.AccelerateInterpolator
 import android.widget.FrameLayout
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOnboardingBinding
@@ -46,7 +46,7 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
                     )
                 }
             )
-            val interpolator = AccelerateDecelerateInterpolator()
+            val interpolator = AccelerateInterpolator()
             setPageTransformer(false) { view, offset ->
                 view.apply {
                     translationX = -interpolator.getInterpolation(offset) * width * 0.4f
