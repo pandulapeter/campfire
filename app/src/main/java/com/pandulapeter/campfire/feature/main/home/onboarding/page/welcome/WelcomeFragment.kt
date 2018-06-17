@@ -23,13 +23,19 @@ class WelcomeFragment : CampfireFragment<FragmentOnboardingWelcomeBinding, Welco
                 viewModel.language.get()?.let { LanguageSelectorBottomSheetFragment.show(childFragmentManager, it.id) }
             }
         }
-        viewModel.language.onPropertyChanged(this) { binding.root.post { if (isAdded) getCampfireActivity().recreate() } }
+        viewModel.language.onPropertyChanged(this) {
+            getCampfireActivity().isUiBlocked = true
+            binding.root.post { if (isAdded) getCampfireActivity().recreate() }
+        }
         viewModel.shouldShowThemeSelector.onEventTriggered(this) {
             if (!getCampfireActivity().isUiBlocked) {
                 viewModel.theme.get()?.let { ThemeSelectorBottomSheetFragment.show(childFragmentManager, it.id) }
             }
         }
-        viewModel.theme.onPropertyChanged(this@WelcomeFragment) { binding.root.post { if (isAdded) getCampfireActivity().recreate() } }
+        viewModel.theme.onPropertyChanged(this@WelcomeFragment) {
+            getCampfireActivity().isUiBlocked = true
+            binding.root.post { if (isAdded) getCampfireActivity().recreate() }
+        }
     }
 
     override fun onThemeSelected(theme: PreferencesViewModel.Theme) = viewModel.theme.set(theme)
