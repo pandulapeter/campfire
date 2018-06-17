@@ -182,16 +182,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         super.onCreate(savedInstanceState)
         startTime = System.currentTimeMillis()
 
-        // Set the task description.
-        @Suppress("ConstantConditionIf")
-        setTaskDescription(
-            ActivityManager.TaskDescription(
-                getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
-                null,
-                (binding.toolbarButtonContainer.background as ColorDrawable).color
-            )
-        )
-
         // Make sure the status bar color is properly set.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             window.decorView.systemUiVisibility = when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
@@ -317,6 +307,20 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         super.onNewIntent(intent)
         this.intent = intent
         handleNewIntent()
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        // Set the task description.
+        @Suppress("ConstantConditionIf")
+        setTaskDescription(
+            ActivityManager.TaskDescription(
+                getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
+                null,
+                (binding.toolbarButtonContainer.background as ColorDrawable).color
+            )
+        )
     }
 
     override fun onResume() {

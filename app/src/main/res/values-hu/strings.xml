@@ -60,10 +60,11 @@
 
     <!-- Onboarding screen / Content language -->
     <string name="content_language_title">Tartalom nyelve</string>
-    <string name="content_language_description">Az alkalmazás csak ilyen nyelvű dalokat és gyűjteményeket fog kimutatni:</string>
+    <string name="content_language_description">Az alkalmazás csak ezeken a nyelveken fog dalokat és gyűjteményeket kimutatni:</string>
     <string name="content_language_explicit_switch">Trágár dalok megjelenítése</string>
     <string name="content_language_explicit_switch_enabled">A trágár szövegű dalok megjelenhetnek</string>
     <string name="content_language_explicit_switch_disabled">Trágár szövegű dalok kiszűrve</string>
+    <string name="content_language_initializing_error">Hiba történt a nyelvek letöltése közben</string>
 
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>

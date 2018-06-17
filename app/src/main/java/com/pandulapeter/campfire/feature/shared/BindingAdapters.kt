@@ -41,6 +41,11 @@ fun setCompoundDrawables(
     )
 }
 
+@BindingAdapter("android:visibility")
+fun setVisibility(view: View, isVisible: Boolean) {
+    view.visibleOrGone = isVisible
+}
+
 @BindingAdapter("translationMultiplierX")
 fun setTranslationMultiplierX(view: View, translationMultiplierX: Float) {
     view.apply { translationX = width * translationMultiplierX }

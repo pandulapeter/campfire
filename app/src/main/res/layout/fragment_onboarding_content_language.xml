@@ -9,6 +9,8 @@
             name="viewModel"
             type="com.pandulapeter.campfire.feature.main.home.onboarding.page.contentLanguage.ContentLanguageViewModel" />
 
+        <import type="com.pandulapeter.campfire.feature.shared.widget.StateLayout.State" />
+
     </data>
 
     <ScrollView
@@ -45,28 +47,48 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/large_content_padding"
                 android:text="@string/content_language_description"
-                app:layout_constraintBottom_toTopOf="@id/state_layout"
+                app:layout_constraintBottom_toTopOf="@id/error_message"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/title"
+                app:layout_constraintVertical_chainStyle="packed" />
+
+            <TextView
+                android:id="@+id/error_message"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/large_content_padding"
+                android:gravity="center"
+                android:text="@string/content_language_initializing_error"
+                android:visibility="@{viewModel.state == State.ERROR}"
+                app:layout_constraintBottom_toTopOf="@id/state_layout"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_top"
                 app:layout_constraintVertical_chainStyle="packed" />
 
             <com.pandulapeter.campfire.feature.shared.widget.StateLayout
                 android:id="@+id/state_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/large_content_padding"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:paddingBottom="@dimen/large_content_padding"
+                app:buttonText="@string/try_again"
                 app:layout_constraintBottom_toTopOf="@id/show_explicit_switch"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/text_top"
-                app:layout_constraintVertical_chainStyle="packed">
+                app:layout_constraintTop_toBottomOf="@id/error_message"
+                app:layout_constraintVertical_chainStyle="packed"
+                app:onButtonClicked="@{() -> viewModel.startLoading()}"
+                app:state="@{viewModel.state}">
 
                 <LinearLayout
                     android:id="@+id/language_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical" />
+                    android:orientation="vertical"
+                    android:paddingTop="@dimen/large_content_padding" />
 
             </com.pandulapeter.campfire.feature.shared.widget.StateLayout>
 
@@ -75,7 +97,6 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/switch_fix"
-                android:layout_marginTop="@dimen/large_content_padding"
                 android:checked="@={viewModel.shouldShowExplicit}"
                 android:gravity="center_vertical"
                 android:minHeight="@dimen/touch_target"

@@ -65,6 +65,7 @@
     <string name="content_language_explicit_switch">Show songs with explicit lyrics</string>
     <string name="content_language_explicit_switch_enabled">Explicit songs can appear</string>
     <string name="content_language_explicit_switch_disabled">Explicit songs are hidden</string>
+    <string name="content_language_initializing_error">Something went wrong while trying to load the list of languages</string>
 
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>
