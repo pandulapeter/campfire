@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
@@ -10,63 +11,88 @@
 
     </data>
 
-    <FrameLayout
-        android:id="@+id/linear_layout"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipChildren="false"
-        android:paddingBottom="@dimen/onboarding_bottom_margin">
+        android:fillViewport="true"
+        android:paddingBottom="@dimen/onboarding_bottom_margin"
+        android:scrollbars="none">
 
-        <LinearLayout
+        <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:clipChildren="false"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:padding="@dimen/first_keyline">
+            android:paddingEnd="@dimen/large_content_padding"
+            android:paddingStart="@dimen/large_content_padding">
 
             <TextView
-                android:layout_width="match_parent"
+                android:id="@+id/title"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text="@string/user_data_title"
-                android:textAppearance="@style/Title" />
+                android:textAppearance="@style/Title"
+                app:layout_constraintBottom_toTopOf="@id/text_top"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed" />
 
             <TextView
-                android:layout_width="match_parent"
+                android:id="@+id/text_top"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/large_content_padding"
-                android:text="@string/user_data_message_start" />
+                android:text="@string/user_data_message_start"
+                app:layout_constraintBottom_toTopOf="@id/checkbox_analytics"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/title"
+                app:layout_constraintVertical_chainStyle="packed" />
 
             <CheckBox
                 android:id="@+id/checkbox_analytics"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/large_content_padding"
                 android:checked="@={viewModel.isAnalyticsEnabled}"
                 android:paddingEnd="0dp"
                 android:paddingStart="@dimen/content_padding"
-                android:text="@string/user_data_analytics_checkbox" />
+                android:text="@string/user_data_analytics_checkbox"
+                app:layout_constraintBottom_toTopOf="@id/checkbox_crash_reporting"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_top"
+                app:layout_constraintVertical_chainStyle="packed" />
 
             <CheckBox
                 android:id="@+id/checkbox_crash_reporting"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/content_padding"
                 android:checked="@={viewModel.isCrashReportingEnabled}"
                 android:paddingEnd="0dp"
                 android:paddingStart="@dimen/content_padding"
-                android:text="@string/user_data_crash_reporting_checkbox" />
+                android:text="@string/user_data_crash_reporting_checkbox"
+                app:layout_constraintBottom_toTopOf="@id/text_bottom"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/checkbox_analytics"
+                app:layout_constraintVertical_chainStyle="packed" />
 
             <TextView
-                android:id="@+id/text_end"
-                android:layout_width="match_parent"
+                android:id="@+id/text_bottom"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/onboarding_bottom_padding"
                 android:layout_marginTop="@dimen/large_content_padding"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/checkbox_crash_reporting"
+                app:layout_constraintVertical_chainStyle="packed"
                 tools:text="@string/user_data_message_end_part_1" />
 
-        </LinearLayout>
+        </android.support.constraint.ConstraintLayout>
 
-    </FrameLayout>
+    </ScrollView>
 
 </layout>

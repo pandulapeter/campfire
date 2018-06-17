@@ -24,8 +24,8 @@ class UserDataFragment : CampfireFragment<FragmentOnboardingUserDataBinding, Use
         val third = getString(R.string.user_data_message_end_part_3)
         val fourth = getString(R.string.user_data_message_end_part_4)
         val fifth = getString(R.string.user_data_message_end_part_5)
-        binding.textEnd.movementMethod = LinkMovementMethod.getInstance()
-        binding.textEnd.text = SpannableString("$first$second$third$fourth$fifth").apply {
+        binding.textBottom.movementMethod = LinkMovementMethod.getInstance()
+        binding.textBottom.text = SpannableString("$first$second$third$fourth$fifth").apply {
             setSpan(object : ClickableSpan() {
                 override fun onClick(widget: View?) {
                     CustomTabsIntent.Builder()
