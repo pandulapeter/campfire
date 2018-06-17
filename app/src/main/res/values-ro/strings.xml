@@ -31,7 +31,7 @@
     <string name="drag_to_rearrange">Húzd az átrendezéshez</string>
 
     <!-- Onboarding screen -->
-    <string name="welcome_skip">Átugrás</string>
+    <string name="welcome_skip">Kiugrás</string>
     <string name="welcome_next">Következő</string>
     <string name="welcome_done">Kész</string>
 

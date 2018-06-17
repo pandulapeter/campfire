@@ -46,25 +46,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/large_content_padding"
-                android:text="@string/content_language_description"
-                app:layout_constraintBottom_toTopOf="@id/error_message"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/title"
-                app:layout_constraintVertical_chainStyle="packed" />
-
-            <TextView
-                android:id="@+id/error_message"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/large_content_padding"
-                android:gravity="center"
-                android:text="@string/content_language_initializing_error"
-                android:visibility="@{viewModel.state == State.ERROR}"
+                android:text="@{viewModel.state == State.ERROR ? @string/content_language_initializing_error : @string/content_language_description}"
                 app:layout_constraintBottom_toTopOf="@id/state_layout"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/text_top"
+                app:layout_constraintTop_toBottomOf="@id/title"
                 app:layout_constraintVertical_chainStyle="packed" />
 
             <com.pandulapeter.campfire.feature.shared.widget.StateLayout
@@ -79,7 +65,7 @@
                 app:layout_constraintBottom_toTopOf="@id/show_explicit_switch"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/error_message"
+                app:layout_constraintTop_toBottomOf="@id/text_top"
                 app:layout_constraintVertical_chainStyle="packed"
                 app:onButtonClicked="@{() -> viewModel.startLoading()}"
                 app:state="@{viewModel.state}">
