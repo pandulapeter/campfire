@@ -4,11 +4,13 @@ import android.os.Bundle
 import android.transition.Fade
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
+import android.widget.FrameLayout
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOnboardingBinding
 import com.pandulapeter.campfire.feature.main.home.HomeContainerFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.addPageScrollListener
+import com.pandulapeter.campfire.util.waitForPreDraw
 
 class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, OnboardingViewModel>(R.layout.fragment_onboarding) {
 
@@ -24,6 +26,14 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.root.apply {
+            waitForPreDraw {
+                if (isAdded) {
+                    layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
+                }
+                false
+            }
+        }
         binding.viewPager.apply {
             addPageScrollListener(
                 onPageScrolled = { index, offset ->

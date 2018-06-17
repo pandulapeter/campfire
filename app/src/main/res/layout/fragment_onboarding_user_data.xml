@@ -15,7 +15,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
-        android:paddingBottom="@dimen/onboarding_bottom_margin"
+        android:overScrollMode="never"
+        android:paddingBottom="@dimen/onboarding_bottom_margin_small"
         android:scrollbars="none">
 
         <android.support.constraint.ConstraintLayout
@@ -28,6 +29,7 @@
                 android:id="@+id/title"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/large_content_padding"
                 android:text="@string/user_data_title"
                 android:textAppearance="@style/Title"
                 app:layout_constraintBottom_toTopOf="@id/text_top"

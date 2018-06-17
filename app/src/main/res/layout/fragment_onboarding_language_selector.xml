@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipChildren="false"
-        android:paddingBottom="@dimen/onboarding_bottom_margin">
+        android:paddingBottom="@dimen/onboarding_bottom_margin_small">
 
         <LinearLayout
             android:layout_width="match_parent"
