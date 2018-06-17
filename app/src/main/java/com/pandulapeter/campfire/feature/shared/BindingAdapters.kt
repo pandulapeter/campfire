@@ -41,9 +41,14 @@ fun setCompoundDrawables(
     )
 }
 
-@BindingAdapter("android:visibility")
-fun setVisibility(view: View, isVisible: Boolean) {
-    view.visibility = if (isVisible) View.VISIBLE else View.GONE
+@BindingAdapter("translationMultiplierX")
+fun setTranslationMultiplierX(view: View, translationMultiplierX: Float) {
+    view.apply { translationX = width * translationMultiplierX }
+}
+
+@BindingAdapter("translationMultiplierY")
+fun setTranslationMultiplierY(view: View, translationMultiplierY: Float) {
+    view.apply { translationY = width * translationMultiplierY }
 }
 
 @BindingAdapter(value = ["android:paddingStart", "android:paddingTop", "android:paddingEnd", "android:paddingBottom"], requireAll = false)

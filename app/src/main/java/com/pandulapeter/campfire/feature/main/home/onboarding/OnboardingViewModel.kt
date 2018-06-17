@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding
 
-import android.databinding.ObservableBoolean
+import android.databinding.ObservableFloat
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 
 class OnboardingViewModel(
@@ -8,7 +8,7 @@ class OnboardingViewModel(
     private val navigateToNextPage: () -> Unit
 ) : CampfireViewModel() {
 
-    val isOnLastPage = ObservableBoolean()
+    val doneButtonOffset = ObservableFloat()
 
     fun onSkipButtonClicked() = skip()
 

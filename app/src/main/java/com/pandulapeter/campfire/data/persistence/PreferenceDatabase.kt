@@ -22,6 +22,9 @@ class PreferenceDatabase(context: Context) {
     var lastScreen by PreferenceFieldDelegate.String("lastScreen", "")
     var disabledLanguageFilters by PreferenceFieldDelegate.StringSet("disabledLanguageFilters", getDefaultLanguageFilters())
 
+    // Home
+    var isOnboardingDone by PreferenceFieldDelegate.Boolean("isOnboardingDone", false)
+
     // Collections
     var lastCollectionsUpdateTimestamp by PreferenceFieldDelegate.Long("lastCollectionsUpdateTimestamp")
     var collectionsSortingMode by PreferenceFieldDelegate.Int("collectionsSortingMode", CollectionsViewModel.SortingMode.TITLE.intValue)

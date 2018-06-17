@@ -29,31 +29,34 @@
             style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:alpha="@{1f - viewModel.doneButtonOffset}"
             android:onClick="@{() -> viewModel.onSkipButtonClicked()}"
             android:text="@string/welcome_skip"
             android:textAllCaps="false"
             android:textColor="@color/accent"
-            android:visibility="@{!viewModel.isOnLastPage}"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:translationMultiplierX="@{-viewModel.doneButtonOffset}" />
 
         <Button
             style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:alpha="@{1f - viewModel.doneButtonOffset}"
             android:onClick="@{() -> viewModel.onNextButtonClicked()}"
             android:text="@string/welcome_next"
             android:textAllCaps="false"
             android:textColor="@color/accent"
-            android:visibility="@{!viewModel.isOnLastPage}"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:translationMultiplierX="@{viewModel.doneButtonOffset}" />
 
         <Button
             style="@style/Widget.AppCompat.Button"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/button_height"
-            android:layout_marginBottom="@dimen/content_padding"
+            android:layout_marginBottom="@dimen/large_content_padding"
+            android:alpha="@{viewModel.doneButtonOffset}"
             android:background="@drawable/bg_button"
             android:gravity="center"
             android:onClick="@{() -> viewModel.onSkipButtonClicked()}"
@@ -63,10 +66,10 @@
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:theme="@style/ButtonTheme"
-            android:visibility="@{viewModel.isOnLastPage}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:translationMultiplierY="@{1f - viewModel.doneButtonOffset}" />
 
     </android.support.constraint.ConstraintLayout>
 

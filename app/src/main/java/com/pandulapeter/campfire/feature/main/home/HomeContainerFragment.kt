@@ -27,12 +27,13 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
         defaultToolbar.updateToolbarTitle(R.string.main_home)
         if (savedInstanceState == null) {
-            childFragmentManager.beginTransaction().replace(R.id.home_container, OnboardingFragment()).commit()
+            childFragmentManager.beginTransaction().replace(R.id.home_container, if (preferenceDatabase.isOnboardingDone) HomeFragment() else OnboardingFragment()).commit()
         }
     }
 
     fun navigateToHome() {
         //TODO: Save the fact that the user is done with the onboarding flow.
+        //preferenceDatabase.isOnboardingDone = true
 
         // Set up crash reporting.
         @Suppress("ConstantConditionIf")

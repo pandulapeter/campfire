@@ -18,19 +18,22 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
         exitTransition = Fade()
     }
 
-    override val viewModel = OnboardingViewModel(::navigateToHome, {
+    override val viewModel = OnboardingViewModel(::navigateToHome) {
         if (binding.viewPager.currentItem + 1 < binding.viewPager.adapter?.count ?: 0) {
             binding.viewPager.setCurrentItem(binding.viewPager.currentItem + 1, true)
         }
-    })
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.viewPager.addPageScrollListener(
-            onPageSelected = { viewModel.isOnLastPage.set(it + 1 == binding.viewPager.adapter?.count ?: 0) },
             onPageScrolled = { index, offset ->
-                if (index == binding.viewPager.adapter?.count) {
-
-                }
+                viewModel.doneButtonOffset.set(
+                    when (binding.viewPager.adapter?.count) {
+                        index + 2 -> offset
+                        index + 1 -> 1f
+                        else -> 0f
+                    }
+                )
             }
         )
         binding.viewPager.adapter = OnboardingAdapter(childFragmentManager)

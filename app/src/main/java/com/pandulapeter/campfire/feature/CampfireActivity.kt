@@ -158,7 +158,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
         // Enable crash reporting if the user opted in.
         @Suppress("ConstantConditionIf")
-        if (preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
+        if (preferenceDatabase.isOnboardingDone && preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
             Fabric.with(applicationContext, Crashlytics())
         }
 
