@@ -1,13 +1,16 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding.page.welcome
 
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.support.customtabs.CustomTabsIntent
 import android.text.SpannableString
 import android.text.Spanned
+import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.view.View
+import android.widget.TextView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOnboardingWelcomeBinding
 import com.pandulapeter.campfire.feature.main.home.onboarding.page.OnboardingPageFragment
@@ -18,6 +21,7 @@ import com.pandulapeter.campfire.feature.main.options.preferences.ThemeSelectorB
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
+
 
 class WelcomeFragment : OnboardingPageFragment<FragmentOnboardingWelcomeBinding, WelcomeViewModel>(R.layout.fragment_onboarding_welcome),
     ThemeSelectorBottomSheetFragment.OnThemeSelectedListener,
@@ -50,28 +54,38 @@ class WelcomeFragment : OnboardingPageFragment<FragmentOnboardingWelcomeBinding,
         val third = getString(R.string.welcome_conditions_part_3)
         val fourth = getString(R.string.welcome_conditions_part_4)
         val fifth = getString(R.string.welcome_conditions_part_5)
+        binding.textBottom.setText(SpannableString("$first$second$third$fourth$fifth").apply {
+            setSpan(
+                UrlClickableSpan(requireContext(), AboutViewModel.PRIVACY_POLICY_URL),
+                first.length,
+                first.length + second.length,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            setSpan(
+                UrlClickableSpan(requireContext(), AboutViewModel.TERMS_AND_CONDITIONS_URL),
+                first.length + second.length + third.length,
+                length - fifth.length,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }, TextView.BufferType.SPANNABLE)
         binding.textBottom.movementMethod = LinkMovementMethod.getInstance()
-        binding.textBottom.text = SpannableString("$first$second$third$fourth$fifth").apply {
-            setSpan(object : ClickableSpan() {
-                override fun onClick(widget: View?) {
-                    CustomTabsIntent.Builder()
-                        .setToolbarColor(requireContext().color(R.color.accent))
-                        .build()
-                        .launchUrl(requireContext(), Uri.parse(AboutViewModel.PRIVACY_POLICY_URL))
-                }
-            }, first.length, first.length + second.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            setSpan(object : ClickableSpan() {
-                override fun onClick(widget: View?) {
-                    CustomTabsIntent.Builder()
-                        .setToolbarColor(requireContext().color(R.color.accent))
-                        .build()
-                        .launchUrl(requireContext(), Uri.parse(AboutViewModel.TERMS_AND_CONDITIONS_URL))
-                }
-            }, first.length + second.length + third.length, length - fifth.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
     }
 
     override fun onThemeSelected(theme: PreferencesViewModel.Theme) = viewModel.theme.set(theme)
 
     override fun onLanguageSelected(language: PreferencesViewModel.Language) = viewModel.language.set(language)
+
+    private class UrlClickableSpan(private val context: Context, private val url: String) : ClickableSpan() {
+        override fun onClick(widget: View?) {
+            CustomTabsIntent.Builder()
+                .setToolbarColor(context.color(R.color.accent))
+                .build()
+                .launchUrl(context, Uri.parse(url))
+        }
+
+        override fun updateDrawState(ds: TextPaint?) {
+            super.updateDrawState(ds)
+            ds?.isUnderlineText = false
+        }
+    }
 }
