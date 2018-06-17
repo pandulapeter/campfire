@@ -53,7 +53,7 @@
 
     <!-- Onboarding screen / Song appearance -->
     <string name="song_appearance_title">Song appearance</string>
-    <string name="song_appearance_description">Are you playing an instrument or just singing along? What would you like to see when opening a song?</string>
+    <string name="song_appearance_description">Are you playing an instrument or just singing along? What would you like to see when you open a song?</string>
     <string name="song_appearance_lyrics_chords_english">Lyrics and chords (English notation)</string>
     <string name="song_appearance_lyrics_chords_german">Lyrics and chords (German notation)</string>
     <string name="song_appearance_lyrics_only">Lyrics only</string>
@@ -83,7 +83,7 @@
     <string name="main_exit_confirmation_close">Close</string>
 
     <!-- Home screen -->
-    <string name="home_placeholder">This screen will contain personalised song suggestions, featured collections and random playlists. It\'s not ready yet, but check back soon!</string>
+    <string name="home_placeholder">This screen will contain personalised song suggestions, featured collections and random playlists. Unfortunately it\'s not ready yet, so check back soon!</string>
 
     <!-- Collections screen -->
     <string name="collections_placeholder">No matching collections found. Double-check the filters you set up</string>
@@ -188,7 +188,6 @@
     <string name="options_changelog_0_6_0_version_name" translatable="false">v0.6</string>
     <string name="options_changelog_0_6_0_description">
         <Data><![CDATA[
-        • <strong>Home screen</strong> that shows collection, song, and playlist suggestions<br>
         • <strong>Onboarding flow</strong> where users can customize their experience<br>
         • <strong>Romanian</strong> translation<br>
         • Major <strong>design improvements</strong>

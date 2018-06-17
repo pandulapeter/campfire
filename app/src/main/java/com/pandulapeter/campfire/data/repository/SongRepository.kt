@@ -81,8 +81,8 @@ class SongRepository(
                         updateLanguages()
                     }.await()
                     async(CommonPool) { database.songDao().updateAll(data) }
-                    isLoading = false
                     notifyDataChanged()
+                    isLoading = false
                     preferenceDatabase.lastSongsUpdateTimestamp = System.currentTimeMillis()
 
                 }

@@ -48,9 +48,7 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
             )
             val interpolator = AccelerateInterpolator()
             setPageTransformer(false) { view, offset ->
-
                 val absoluteOffset = Math.abs(offset)
-
                 fun View.applyStandardTransformation() {
                     translationX = -interpolator.getInterpolation(offset) * width * 0.4f
                     translationY = interpolator.getInterpolation(absoluteOffset) * height * 0.1f
@@ -58,11 +56,9 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
                     scaleX = 1 - absoluteOffset * 0.75f
                     scaleY = scaleX
                 }
-
                 fun View.applyTitleTransformation() {
                     translationX = width * offset * 0.5f
                 }
-
                 val binding = view.tag
                 when (binding) {
                     is FragmentOnboardingWelcomeBinding -> {
@@ -92,6 +88,10 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
             offscreenPageLimit = 3
             adapter = OnboardingAdapter(childFragmentManager)
         }
+    }
+
+    fun languageFiltersUpdated(selectedLanguageCount: Int) {
+        binding.doneButton.isEnabled = selectedLanguageCount > 0
     }
 
     private fun navigateToHome() {

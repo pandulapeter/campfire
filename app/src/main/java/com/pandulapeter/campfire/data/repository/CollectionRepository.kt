@@ -84,8 +84,8 @@ class CollectionRepository(
                         updateLanguages()
                     }.await()
                     async(CommonPool) { database.collectionDao().updateAll(data) }
-                    isLoading = false
                     notifyDataChanged()
+                    isLoading = false
                     preferenceDatabase.lastCollectionsUpdateTimestamp = System.currentTimeMillis()
 
                 }

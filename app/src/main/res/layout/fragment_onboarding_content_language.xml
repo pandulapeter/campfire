@@ -71,6 +71,7 @@
                 android:id="@+id/state_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 android:paddingBottom="@dimen/large_content_padding"
@@ -87,6 +88,7 @@
                     android:id="@+id/language_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:animateLayoutChanges="true"
                     android:orientation="vertical"
                     android:paddingTop="@dimen/large_content_padding" />
 

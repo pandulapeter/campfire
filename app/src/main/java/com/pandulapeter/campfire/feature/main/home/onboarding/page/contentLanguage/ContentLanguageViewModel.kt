@@ -20,8 +20,6 @@ class ContentLanguageViewModel(private val onLanguagesLoaded: (List<Language>) -
     private val songRepository by inject<SongRepository>()
     private var areCollectionsLoading = true
     private var areSongsLoading = true
-    private var collectionLanguages = listOf<Language>()
-    private var songLanguages = listOf<Language>()
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
     val shouldShowExplicit = ObservableBoolean(preferenceDatabase.shouldShowExplicit)
 
@@ -39,26 +37,26 @@ class ContentLanguageViewModel(private val onLanguagesLoaded: (List<Language>) -
         songRepository.unsubscribe(this)
     }
 
-    override fun onCollectionsUpdated(data: List<Collection>) {
-        collectionLanguages = collectionRepository.languages
-    }
+    override fun onCollectionsUpdated(data: List<Collection>) = Unit
 
     override fun onCollectionsLoadingStateChanged(isLoading: Boolean) {
         areCollectionsLoading = isLoading
         refreshLoadingState()
-        updateLanguages()
+        if (!isLoading) {
+            updateLanguages()
+        }
     }
 
     override fun onCollectionRepositoryUpdateError() = state.set(StateLayout.State.ERROR)
 
-    override fun onSongRepositoryDataUpdated(data: List<Song>) {
-        songLanguages = songRepository.languages
-    }
+    override fun onSongRepositoryDataUpdated(data: List<Song>) = Unit
 
     override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {
         areSongsLoading = isLoading
         refreshLoadingState()
-        updateLanguages()
+        if (!isLoading) {
+            updateLanguages()
+        }
     }
 
     override fun onSongRepositoryUpdateError() = state.set(StateLayout.State.ERROR)
@@ -77,7 +75,7 @@ class ContentLanguageViewModel(private val onLanguagesLoaded: (List<Language>) -
 
     private fun updateLanguages() {
         if (!areCollectionsLoading && !areSongsLoading) {
-            onLanguagesLoaded(collectionLanguages.union(songLanguages).toList())
+            onLanguagesLoaded(collectionRepository.languages.union(songRepository.languages).toList())
             state.set(StateLayout.State.NORMAL)
         }
     }

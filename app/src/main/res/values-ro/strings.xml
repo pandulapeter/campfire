@@ -188,7 +188,7 @@
     <string name="options_changelog_what_is_new">Újdonságok</string>
     <string name="options_changelog_0_6_0_description">
         <Data><![CDATA[
-        • <strong>Kezdőképernyő</strong> ami gyűjtemény, dal és lista ajánlásokat tartalmaz<br>
+        • <strong>Bevezető képernyők</strong> amelyeken a felhasználók testre szabhatják az alkalmazást<br>
         • <strong>Román</strong> fordítás<br>
         • Jelentős <strong>design módosítások</strong>
         ]]></Data>
