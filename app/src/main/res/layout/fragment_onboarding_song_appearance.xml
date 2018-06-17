@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.main.home.onboarding.page.musicianType.MusicianTypeViewModel" />
+            type="com.pandulapeter.campfire.feature.main.home.onboarding.page.songAppearance.SongAppearanceViewModel" />
 
     </data>
 
@@ -30,7 +30,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/large_content_padding"
-                android:text="@string/musician_type_title"
+                android:text="@string/song_appearance_title"
                 android:textAppearance="@style/Title"
                 app:layout_constraintBottom_toTopOf="@id/text_top"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -43,7 +43,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/large_content_padding"
-                android:text="@string/musician_type_description"
+                android:text="@string/song_appearance_description"
                 app:layout_constraintBottom_toTopOf="@id/radio_button_lyrics_chords_english"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -64,8 +64,8 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/text_top"
                 app:layout_constraintVertical_chainStyle="packed"
-                app:title="@{@string/musician_type_lyrics_chords_english}"
-                tools:text="@string/musician_type_lyrics_chords_english" />
+                app:title="@{@string/song_appearance_lyrics_chords_english}"
+                tools:text="@string/song_appearance_lyrics_chords_english" />
 
             <RadioButton
                 android:id="@+id/radio_button_lyrics_chords_german"
@@ -81,8 +81,8 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/radio_button_lyrics_chords_english"
                 app:layout_constraintVertical_chainStyle="packed"
-                app:title="@{@string/musician_type_lyrics_chords_german}"
-                tools:text="@string/musician_type_lyrics_chords_german" />
+                app:title="@{@string/song_appearance_lyrics_chords_german}"
+                tools:text="@string/song_appearance_lyrics_chords_german" />
 
             <RadioButton
                 android:id="@+id/radio_button_lyrics_only"
@@ -92,14 +92,14 @@
                 android:checked="@={viewModel.isThirdOptionSelected}"
                 android:paddingEnd="0dp"
                 android:paddingStart="@dimen/content_padding"
-                app:description="@{@string/musician_type_lyrics_only_description}"
+                app:description="@{@string/song_appearance_lyrics_only_description}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/radio_button_lyrics_chords_german"
                 app:layout_constraintVertical_chainStyle="packed"
-                app:title="@{@string/musician_type_lyrics_only}"
-                tools:text="@string/musician_type_lyrics_only" />
+                app:title="@{@string/song_appearance_lyrics_only}"
+                tools:text="@string/song_appearance_lyrics_only" />
 
         </android.support.constraint.ConstraintLayout>
 

@@ -47,15 +47,17 @@
     <string name="user_data_message_end_part_3">" as well as the "</string>
     <string name="user_data_message_end_part_4">Terms and Conditions</string>
     <string name="user_data_message_end_part_5">!</string>
-    <string name="user_data_positive">Continue</string>
 
-    <!-- Onboarding screen / Musician type -->
-    <string name="musician_type_title">Song appearance</string>
-    <string name="musician_type_description">Are you playing an instrument or just singing along? What would you like to see when opening a song?</string>
-    <string name="musician_type_lyrics_chords_english">Lyrics and chords (English notation)</string>
-    <string name="musician_type_lyrics_chords_german">Lyrics and chords (German notation)</string>
-    <string name="musician_type_lyrics_only">Lyrics only</string>
-    <string name="musician_type_lyrics_only_description">No chords whatsoever</string>
+    <!-- Onboarding screen / Song appearance -->
+    <string name="song_appearance_title">Song appearance</string>
+    <string name="song_appearance_description">Are you playing an instrument or just singing along? What would you like to see when opening a song?</string>
+    <string name="song_appearance_lyrics_chords_english">Lyrics and chords (English notation)</string>
+    <string name="song_appearance_lyrics_chords_german">Lyrics and chords (German notation)</string>
+    <string name="song_appearance_lyrics_only">Lyrics only</string>
+    <string name="song_appearance_lyrics_only_description">No chords whatsoever</string>
+
+    <!-- Onboarding screen / Content language -->
+    <string name="content_language_title">Content language</string>
 
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>

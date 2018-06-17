@@ -46,7 +46,17 @@
     <string name="user_data_message_end_part_3">" és a "</string>
     <string name="user_data_message_end_part_4">felhasználói feltételeket</string>
     <string name="user_data_message_end_part_5">!</string>
-    <string name="user_data_positive">Folytatás</string>
+
+    <!-- Onboarding screen / Song appearance -->
+    <string name="song_appearance_title">Dal nézet</string>
+    <string name="song_appearance_description">Hangszeren játszol vagy csak énekelsz? Mit szeretnél látni amikor megtekintessz egy dalt?</string>
+    <string name="song_appearance_lyrics_chords_english">Dalszöveg és akkordok (Angol jelölés)</string>
+    <string name="song_appearance_lyrics_chords_german">Dalszöveg és akkordok (Német jelölés)</string>
+    <string name="song_appearance_lyrics_only">Csak dalszöveg</string>
+    <string name="song_appearance_lyrics_only_description">Az akkordok nem jelennek meg</string>
+
+    <!-- Onboarding screen / Content language -->
+    <string name="content_language_title">Tartalom nyelve</string>
 
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>

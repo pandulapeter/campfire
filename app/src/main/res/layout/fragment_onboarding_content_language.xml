@@ -5,7 +5,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.main.home.onboarding.page.languageSelector.LanguageSelectorViewModel" />
+            type="com.pandulapeter.campfire.feature.main.home.onboarding.page.contentLanguage.ContentLanguageViewModel" />
 
     </data>
 
@@ -29,7 +29,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:padding="@dimen/large_content_padding"
-                android:text="On which languages would you like to see songs?"
+                android:text="@string/content_language_title"
                 android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
 
         </LinearLayout>

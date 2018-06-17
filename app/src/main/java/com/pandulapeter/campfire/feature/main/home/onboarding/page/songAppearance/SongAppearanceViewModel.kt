@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.main.home.onboarding.page.musicianType
+package com.pandulapeter.campfire.feature.main.home.onboarding.page.songAppearance
 
 import android.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
@@ -7,7 +7,7 @@ import com.pandulapeter.campfire.util.generateNotationExample
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
-class MusicianTypeViewModel : CampfireViewModel() {
+class SongAppearanceViewModel : CampfireViewModel() {
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private var shouldTriggerCallback = true
     val englishNotationExample = generateNotationExample(false)
