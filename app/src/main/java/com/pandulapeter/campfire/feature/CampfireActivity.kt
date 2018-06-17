@@ -114,7 +114,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     var lastCollectionId: String = ""
     val autoScrollControl get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
-    val toolbarHeight get() = binding.appBarLayout.height
+    val toolbarHeight get() = binding.toolbarTitleContainer.height
     val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
     val snackbarRoot get() = binding.rootCoordinatorLayout
     var transitionMode: Boolean? = null
