@@ -90,6 +90,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val multiWindowFlags =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT else Intent.FLAG_ACTIVITY_NEW_TASK
     private var lastSongId = ""
+    private val isAutoScrollActive get() = getCampfireActivity().autoScrollControl.visibleOrInvisible
+    private val isSongLoaded get() = getCampfireActivity().isFloatingActionButtonEnabled()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -163,13 +165,13 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         binding.viewPager.addPageScrollListener(
             onPageSelected = {
                 getCampfireActivity().disableFloatingActionButton()
-                if (getCampfireActivity().autoScrollControl.visibleOrInvisible) {
+                if (isAutoScrollActive) {
                     getCampfireActivity().updateFloatingActionButtonDrawable(drawablePauseToPlay?.apply { start() })
                 }
                 viewModel.songId.set(songs[it].id)
             },
             onPageScrollStateChanged = {
-                if (pagerAdapter.count > 1 && it == ViewPager.SCROLL_STATE_DRAGGING && getCampfireActivity().autoScrollControl.visibleOrInvisible) {
+                if (pagerAdapter.count > 1 && it == ViewPager.SCROLL_STATE_DRAGGING && isAutoScrollActive) {
                     toggleAutoScroll()
                 }
             }
@@ -197,18 +199,23 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
         binding.sharedElement.detector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
             override fun onScale(detector: ScaleGestureDetector?): Boolean {
-                detector?.let {
-                    preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize * Math.round(it.scaleFactor * 50) / 50f))
-                    detailEventBus.notifyTextSizeChanged()
-                    if (!firstTimeUserExperienceManager.fontSizePinchCompleted) {
-                        firstTimeUserExperienceManager.fontSizePinchCompleted = true
-                        if (isPinchHintVisible) {
-                            hideSnackbar()
-                            isPinchHintVisible = false
+                if (isSongLoaded) {
+                    detector?.let {
+                        preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize * Math.round(it.scaleFactor * 50) / 50f))
+                        detailEventBus.notifyTextSizeChanged()
+                        if (!firstTimeUserExperienceManager.fontSizePinchCompleted) {
+                            firstTimeUserExperienceManager.fontSizePinchCompleted = true
+                            if (isPinchHintVisible) {
+                                hideSnackbar()
+                                isPinchHintVisible = false
+                            }
                         }
+
                     }
+                    return true
+                } else {
+                    return false
                 }
-                return true
             }
 
             override fun onScaleEnd(detector: ScaleGestureDetector?) = analyticsManager.onPinchToZoomUsed(Math.round(preferenceDatabase.fontSize * 10) / 10f)
@@ -242,7 +249,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     }
 
     override fun onPause() {
-        if (getCampfireActivity().autoScrollControl.visibleOrInvisible) {
+        if (isAutoScrollActive) {
             toggleAutoScroll()
         }
         super.onPause()
@@ -255,7 +262,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         outState.lastSongId = lastSongId
     }
 
-    override fun onBackPressed() = if (getCampfireActivity().autoScrollControl.visibleOrInvisible) {
+    override fun onBackPressed() = if (isAutoScrollActive) {
         toggleAutoScroll()
         true
     } else super.onBackPressed()
@@ -268,7 +275,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     }
 
     override fun onDrawerStateChanged(state: Int) {
-        if (getCampfireActivity().autoScrollControl.visibleOrInvisible) {
+        if (isAutoScrollActive) {
             toggleAutoScroll()
         }
     }
@@ -378,7 +385,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     private fun showHintIfNeeded() {
         fun showPinchHint() {
-            if (!firstTimeUserExperienceManager.fontSizePinchCompleted && !isSnackbarVisible() && getCampfireActivity().isFloatingActionButtonEnabled()) {
+            if (!firstTimeUserExperienceManager.fontSizePinchCompleted && !isSnackbarVisible() && isSongLoaded) {
                 isPinchHintVisible = true
                 showHint(
                     message = R.string.detail_pinch_hint,
@@ -404,7 +411,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             }
         }
 
-        if (getCampfireActivity().isFloatingActionButtonEnabled()) {
+        if (isSongLoaded) {
             if (firstTimeUserExperienceManager.playlistPagerSwipeCompleted) {
                 showPinchHint()
             } else {

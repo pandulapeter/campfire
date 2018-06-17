@@ -14,15 +14,11 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
         AboutViewModel { getCampfireActivity().isUiBlocked }.apply {
             shouldShowErrorShowSnackbar.onEventTriggered(this@AboutFragment) { showSnackbar(R.string.options_about_error) }
             shouldShowWorkInProgressSnackbar.onEventTriggered(this@AboutFragment) { showSnackbar(R.string.options_about_no_in_app_purchase) }
-            //TODO: Easter Egg.
             shouldShowNoEasterEggSnackbar.onEventTriggered(this@AboutFragment) {
                 ObjectAnimator
                     .ofFloat(binding.logo, scale, 1f, 1.5f, 0.5f, 1.25f, 0.75f, 1.1f, 0.9f, 1f)
                     .setDuration(800)
                     .start()
-                if (!isSnackbarVisible()) {
-                    showSnackbar(R.string.options_about_no_easter_egg)
-                }
             }
             shouldBlockUi.onEventTriggered { getCampfireActivity().isUiBlocked = true }
         }

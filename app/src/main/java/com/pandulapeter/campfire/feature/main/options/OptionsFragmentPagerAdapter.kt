@@ -2,13 +2,13 @@ package com.pandulapeter.campfire.feature.main.options
 
 import android.content.Context
 import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentStatePagerAdapter
+import android.support.v4.app.FragmentPagerAdapter
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.main.options.about.AboutFragment
 import com.pandulapeter.campfire.feature.main.options.changelog.ChangelogFragment
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesFragment
 
-class OptionsFragmentPagerAdapter(private val context: Context, fragmentManager: FragmentManager) : FragmentStatePagerAdapter(fragmentManager) {
+class OptionsFragmentPagerAdapter(private val context: Context, fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
 
     override fun getItem(position: Int) = when (position) {
         0 -> PreferencesFragment()
