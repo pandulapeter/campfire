@@ -10,22 +10,23 @@ import android.text.style.ClickableSpan
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOnboardingWelcomeBinding
+import com.pandulapeter.campfire.feature.main.home.onboarding.page.OnboardingPageFragment
 import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.main.options.preferences.LanguageSelectorBottomSheetFragment
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.main.options.preferences.ThemeSelectorBottomSheetFragment
-import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 
-class WelcomeFragment : CampfireFragment<FragmentOnboardingWelcomeBinding, WelcomeViewModel>(R.layout.fragment_onboarding_welcome),
+class WelcomeFragment : OnboardingPageFragment<FragmentOnboardingWelcomeBinding, WelcomeViewModel>(R.layout.fragment_onboarding_welcome),
     ThemeSelectorBottomSheetFragment.OnThemeSelectedListener,
     LanguageSelectorBottomSheetFragment.OnLanguageSelectedListener {
 
     override val viewModel by lazy { WelcomeViewModel(getCampfireActivity()) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         viewModel.shouldShowLanguageSelector.onEventTriggered(this) {
             if (!getCampfireActivity().isUiBlocked) {
                 viewModel.language.get()?.let { LanguageSelectorBottomSheetFragment.show(childFragmentManager, it.id) }

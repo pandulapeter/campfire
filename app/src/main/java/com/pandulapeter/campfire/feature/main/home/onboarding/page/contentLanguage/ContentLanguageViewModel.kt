@@ -41,7 +41,6 @@ class ContentLanguageViewModel(private val onLanguagesLoaded: (List<Language>) -
 
     override fun onCollectionsUpdated(data: List<Collection>) {
         collectionLanguages = collectionRepository.languages
-        updateLanguages()
     }
 
     override fun onCollectionsLoadingStateChanged(isLoading: Boolean) {
@@ -54,7 +53,6 @@ class ContentLanguageViewModel(private val onLanguagesLoaded: (List<Language>) -
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
         songLanguages = songRepository.languages
-        updateLanguages()
     }
 
     override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {

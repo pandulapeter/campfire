@@ -2,9 +2,9 @@ package com.pandulapeter.campfire.feature.main.home.onboarding.page.songAppearan
 
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOnboardingSongAppearanceBinding
-import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.feature.main.home.onboarding.page.OnboardingPageFragment
 
-class SongAppearanceFragment : CampfireFragment<FragmentOnboardingSongAppearanceBinding, SongAppearanceViewModel>(R.layout.fragment_onboarding_song_appearance) {
+class SongAppearanceFragment : OnboardingPageFragment<FragmentOnboardingSongAppearanceBinding, SongAppearanceViewModel>(R.layout.fragment_onboarding_song_appearance) {
 
     override val viewModel = SongAppearanceViewModel()
 }

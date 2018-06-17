@@ -6,7 +6,7 @@ import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.widget.FrameLayout
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.databinding.FragmentOnboardingBinding
+import com.pandulapeter.campfire.databinding.*
 import com.pandulapeter.campfire.feature.main.home.HomeContainerFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.addPageScrollListener
@@ -48,14 +48,48 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
             )
             val interpolator = AccelerateInterpolator()
             setPageTransformer(false) { view, offset ->
-                view.apply {
+
+                val absoluteOffset = Math.abs(offset)
+
+                fun View.applyStandardTransformation() {
                     translationX = -interpolator.getInterpolation(offset) * width * 0.4f
-                    translationY = interpolator.getInterpolation(Math.abs(offset)) * height * 0.1f
-                    alpha = 1 - Math.abs(offset)
-                    scaleX = 1 - Math.abs(offset * 0.75f)
+                    translationY = interpolator.getInterpolation(absoluteOffset) * height * 0.1f
+                    alpha = 1 - absoluteOffset
+                    scaleX = 1 - absoluteOffset * 0.75f
                     scaleY = scaleX
                 }
+
+                fun View.applyTitleTransformation() {
+                    translationX = width * offset * 0.5f
+                }
+
+                val binding = view.tag
+                when (binding) {
+                    is FragmentOnboardingWelcomeBinding -> {
+                        binding.mainContainer.applyStandardTransformation()
+                        binding.textBottom.translationX = -view.width * offset
+                        binding.textBottom.translationY = binding.textBottom.height * absoluteOffset * 4
+                        binding.textBottom.alpha = 1 - absoluteOffset * 5
+                        binding.logo.alpha = binding.textBottom.alpha
+                        binding.logo.translationY = -width * absoluteOffset * 0.5f
+                        binding.title.applyTitleTransformation()
+                    }
+                    is FragmentOnboardingUserDataBinding -> {
+                        view.applyStandardTransformation()
+                        binding.title.applyTitleTransformation()
+
+                    }
+                    is FragmentOnboardingSongAppearanceBinding -> {
+                        view.applyStandardTransformation()
+                        binding.title.applyTitleTransformation()
+                    }
+                    is FragmentOnboardingContentLanguageBinding -> {
+                        view.applyStandardTransformation()
+                        binding.title.applyTitleTransformation()
+                    }
+                }
             }
+            offscreenPageLimit = 3
             adapter = OnboardingAdapter(childFragmentManager)
         }
     }
