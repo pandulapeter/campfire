@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
 
@@ -9,31 +10,89 @@
 
     </data>
 
-    <FrameLayout
-        android:id="@+id/linear_layout"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipChildren="false"
-        android:paddingBottom="@dimen/onboarding_bottom_margin_small">
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:paddingBottom="@dimen/onboarding_bottom_margin_small"
+        android:scrollbars="none">
 
-        <LinearLayout
+        <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:clipChildren="false"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
+            android:paddingEnd="@dimen/large_content_padding"
+            android:paddingStart="@dimen/large_content_padding">
 
             <TextView
-                android:layout_width="match_parent"
+                android:id="@+id/title"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:padding="@dimen/large_content_padding"
-                android:text="Are you an instrumentist or a singer?"
-                android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+                android:layout_marginTop="@dimen/large_content_padding"
+                android:text="@string/musician_type_title"
+                android:textAppearance="@style/Title"
+                app:layout_constraintBottom_toTopOf="@id/text_top"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed" />
 
-        </LinearLayout>
+            <TextView
+                android:id="@+id/text_top"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/large_content_padding"
+                android:text="@string/musician_type_description"
+                app:layout_constraintBottom_toTopOf="@id/radio_button_lyrics_chords_english"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/title"
+                app:layout_constraintVertical_chainStyle="packed" />
 
-    </FrameLayout>
+            <RadioButton
+                android:id="@+id/radio_button_lyrics_chords_english"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/large_content_padding"
+                android:paddingEnd="0dp"
+                android:paddingStart="@dimen/content_padding"
+                android:text="@string/musician_type_lyrics_chords_english"
+                app:layout_constraintBottom_toTopOf="@id/radio_button_lyrics_chords_german"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_top"
+                app:layout_constraintVertical_chainStyle="packed" />
+
+            <RadioButton
+                android:id="@+id/radio_button_lyrics_chords_german"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding"
+                android:paddingEnd="0dp"
+                android:paddingStart="@dimen/content_padding"
+                android:text="@string/musician_type_lyrics_chords_german"
+                app:layout_constraintBottom_toTopOf="@id/radio_button_lyrics_only"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/radio_button_lyrics_chords_english"
+                app:layout_constraintVertical_chainStyle="packed" />
+
+            <RadioButton
+                android:id="@+id/radio_button_lyrics_only"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding"
+                android:paddingEnd="0dp"
+                android:paddingStart="@dimen/content_padding"
+                android:text="@string/musician_type_lyrics_only"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/radio_button_lyrics_chords_german"
+                app:layout_constraintVertical_chainStyle="packed" />
+
+        </android.support.constraint.ConstraintLayout>
+
+    </ScrollView>
 
 </layout>
