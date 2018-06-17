@@ -39,11 +39,11 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
             val interpolator = AccelerateDecelerateInterpolator()
             setPageTransformer(false) { view, offset ->
                 view.apply {
-                    translationX = -interpolator.getInterpolation(offset) * width * 0.5f
+                    translationX = -interpolator.getInterpolation(offset) * width * 0.4f
                     translationY = interpolator.getInterpolation(Math.abs(offset)) * height * 0.1f
                     alpha = 1 - Math.abs(offset)
                     scaleX = 1 - Math.abs(offset * 0.75f)
-                    scaleY = 1 - Math.abs(offset * 0.75f)
+                    scaleY = scaleX
                 }
             }
             adapter = OnboardingAdapter(childFragmentManager)

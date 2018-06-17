@@ -32,6 +32,8 @@
 
     <!-- Onboarding screen / Welcome -->
     <string name="welcome_title">Bine ai venit!</string>
+    <string name="welcome_language">Limba:</string>
+    <string name="welcome_theme">Tema:</string>
     <string name="welcome_skip">Átugrás</string>
     <string name="welcome_next">Következő</string>
     <string name="welcome_done">Kész</string>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
@@ -10,58 +11,80 @@
 
     </data>
 
-    <FrameLayout
-        android:id="@+id/linear_layout"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipChildren="false"
-        android:paddingBottom="@dimen/onboarding_bottom_margin">
+        android:fillViewport="true"
+        android:scrollbars="none">
 
-        <LinearLayout
+        <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:clipChildren="false"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
+            android:layout_height="wrap_content">
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:alpha="0.8"
+                android:id="@+id/logo"
+                android:layout_width="@dimen/onboarding_logo_size"
+                android:layout_height="@dimen/onboarding_logo_size"
+                android:scaleType="centerCrop"
                 android:src="@mipmap/ic_launcher_foreground"
                 android:tint="?android:attr/textColorSecondary"
+                app:layout_constraintBottom_toTopOf="@id/title"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed"
                 tools:ignore="ContentDescription" />
 
             <TextView
+                android:id="@+id/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="@string/welcome_title"
-                android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+                app:layout_constraintBottom_toTopOf="@id/language"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/logo"
+                app:layout_constraintVertical_chainStyle="packed" />
 
             <TextView
+                android:id="@+id/language"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/large_content_padding"
+                android:layout_marginTop="@dimen/onboarding_logo_margin"
                 android:background="?attr/selectableItemBackground"
                 android:gravity="center"
                 android:onClick="@{() -> viewModel.onLanguageClicked()}"
                 android:padding="@dimen/content_padding"
-                android:text="@string/options_preferences_language" />
+                android:text="@{viewModel.languageLabel}"
+                app:layout_constraintBottom_toTopOf="@id/theme"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/title"
+                app:layout_constraintVertical_chainStyle="packed"
+                tools:text="@string/options_preferences_language" />
 
             <TextView
+                android:id="@+id/theme"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/content_padding"
+                android:layout_marginBottom="@dimen/onboarding_bottom_margin"
+                android:layout_marginTop="@dimen/small_content_padding"
                 android:background="?attr/selectableItemBackground"
                 android:gravity="center"
                 android:onClick="@{() -> viewModel.onThemeClicked()}"
                 android:padding="@dimen/content_padding"
-                android:text="@string/options_preferences_app_theme" />
+                android:text="@{viewModel.themeLabel}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/language"
+                app:layout_constraintVertical_chainStyle="packed"
+                tools:text="@string/options_preferences_app_theme" />
 
-        </LinearLayout>
+        </android.support.constraint.ConstraintLayout>
 
-    </FrameLayout>
+    </ScrollView>
 
 </layout>

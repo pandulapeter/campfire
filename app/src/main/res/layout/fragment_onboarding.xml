@@ -59,6 +59,7 @@
             android:layout_marginBottom="@dimen/large_content_padding"
             android:alpha="@{viewModel.doneButtonOffset}"
             android:background="@drawable/bg_button"
+            android:clickable="@{viewModel.doneButtonOffset > 0.5f}"
             android:gravity="center"
             android:onClick="@{() -> viewModel.onSkipButtonClicked()}"
             android:paddingEnd="@dimen/content_padding"

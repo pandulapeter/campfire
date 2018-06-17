@@ -39,8 +39,10 @@
     <dimen name="list_item_minimum_height">40dp</dimen>
     <dimen name="list_item_loading_indicator_size">36dp</dimen>
 
-    <!-- Home screen -->
-    <dimen name="onboarding_bottom_margin">56dp</dimen>
+    <!-- Onboarding screens -->
+    <dimen name="onboarding_bottom_margin">128dp</dimen>
+    <dimen name="onboarding_logo_size">96dp</dimen>
+    <dimen name="onboarding_logo_margin">36dp</dimen>
 
     <!-- Collections -->
     <dimen name="collections_image_small">48dp</dimen>

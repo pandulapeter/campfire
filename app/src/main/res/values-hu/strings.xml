@@ -30,6 +30,8 @@
 
     <!-- Onboarding screen / Welcome -->
     <string name="welcome_title">Üdv!</string>
+    <string name="welcome_language">Nyelv:</string>
+    <string name="welcome_theme">Téma:</string>
     <string name="welcome_skip">Átugrás</string>
     <string name="welcome_next">Következő</string>
     <string name="welcome_done">Kész</string>

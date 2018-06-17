@@ -15,7 +15,7 @@ class WelcomeFragment : CampfireFragment<FragmentOnboardingWelcomeBinding, Welco
     ThemeSelectorBottomSheetFragment.OnThemeSelectedListener,
     LanguageSelectorBottomSheetFragment.OnLanguageSelectedListener {
 
-    override val viewModel = WelcomeViewModel()
+    override val viewModel by lazy { WelcomeViewModel(getCampfireActivity()) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel.shouldShowLanguageSelector.onEventTriggered(this) {
