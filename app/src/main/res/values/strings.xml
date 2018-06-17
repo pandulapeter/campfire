@@ -29,24 +29,27 @@
     <string name="popular_tag">Popular</string>
     <string name="drag_to_rearrange">Drag to rearrange</string>
 
+    <!-- Onboarding screen -->
+    <string name="welcome_skip">Skip</string>
+    <string name="welcome_next">Next</string>
+    <string name="welcome_done">Done</string>
+
     <!-- Onboarding screen / Welcome -->
     <string name="welcome_title">Welcome!</string>
     <string name="welcome_language">Language:</string>
     <string name="welcome_theme">Theme:</string>
-    <string name="welcome_skip">Skip</string>
-    <string name="welcome_next">Next</string>
-    <string name="welcome_done">Done</string>
+    <string name="welcome_conditions_part_1">"By using this application, you agree to the "</string>
+    <string name="welcome_conditions_part_2">Privacy Policy</string>
+    <string name="welcome_conditions_part_3">" and the "</string>
+    <string name="welcome_conditions_part_4">Terms and Conditions</string>
+    <string name="welcome_conditions_part_5">.</string>
 
     <!-- Onboarding screen / User data -->
     <string name="user_data_title">User data</string>
     <string name="user_data_message_start">To help improve Campfire, please consider opting in to the following ways of sharing your data with the developer:</string>
     <string name="user_data_analytics_checkbox">Analytics through Google\'s Firebase service</string>
     <string name="user_data_crash_reporting_checkbox">Crash reporting through Google\'s Crashlytics service</string>
-    <string name="user_data_message_end_part_1">"You can change these preferences at any time. For more information, check out the "</string>
-    <string name="user_data_message_end_part_2">Privacy Policy</string>
-    <string name="user_data_message_end_part_3">" as well as the "</string>
-    <string name="user_data_message_end_part_4">Terms and Conditions</string>
-    <string name="user_data_message_end_part_5">!</string>
+    <string name="user_data_message_end">You will be able to change these settings at any time.</string>
 
     <!-- Onboarding screen / Song appearance -->
     <string name="song_appearance_title">Song appearance</string>

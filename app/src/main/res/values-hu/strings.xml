@@ -28,24 +28,27 @@
     <string name="popular_tag">Népszerű</string>
     <string name="drag_to_rearrange">Húzd az átrendezéshez</string>
 
+    <!-- Onboarding screen -->
+    <string name="welcome_skip">Átugrás</string>
+    <string name="welcome_next">Következő</string>
+    <string name="welcome_done">Kész</string>
+
     <!-- Onboarding screen / Welcome -->
     <string name="welcome_title">Üdv!</string>
     <string name="welcome_language">Nyelv:</string>
     <string name="welcome_theme">Téma:</string>
-    <string name="welcome_skip">Átugrás</string>
-    <string name="welcome_next">Következő</string>
-    <string name="welcome_done">Kész</string>
+    <string name="welcome_conditions_part_1">"Az alkalmazás használatával beleegyezel az (angol nyelvű) "</string>
+    <string name="welcome_conditions_part_2">adatvédelmi irányelvekbe</string>
+    <string name="welcome_conditions_part_3">" és a "</string>
+    <string name="welcome_conditions_part_4">felhasználói feltételekbe</string>
+    <string name="welcome_conditions_part_5">.</string>
 
     <!-- Onboarding screen / User data -->
     <string name="user_data_title">Felhasználói adatok</string>
     <string name="user_data_message_start">Ha segítenél az alkalmazás jobbá tételében, kérlek engedélyezd a következő típusú adatok megosztását a fejlesztővel:</string>
     <string name="user_data_analytics_checkbox">Használati statisztikák a Google Firebase szolgáltatáson keresztül</string>
     <string name="user_data_crash_reporting_checkbox">Hibajelentések a Google Crashlytics szolgáltatáson keresztül</string>
-    <string name="user_data_message_end_part_1">"Ezeket a beállításokat bármikor megváltoztathatod. További információért olvasd el az angol nyelvű "</string>
-    <string name="user_data_message_end_part_2">adatvédelmi irányelveket</string>
-    <string name="user_data_message_end_part_3">" és a "</string>
-    <string name="user_data_message_end_part_4">felhasználói feltételeket</string>
-    <string name="user_data_message_end_part_5">!</string>
+    <string name="user_data_message_end">Ezeket a beállításokat bármikor megváltoztathatod.</string>
 
     <!-- Onboarding screen / Song appearance -->
     <string name="song_appearance_title">Dalok megjelenítése</string>

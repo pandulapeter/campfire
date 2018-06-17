@@ -16,7 +16,7 @@
         android:layout_height="match_parent"
         android:fillViewport="true"
         android:overScrollMode="never"
-        android:paddingBottom="@dimen/onboarding_bottom_margin_small"
+        android:paddingBottom="@dimen/onboarding_bottom_margin"
         android:scrollbars="none">
 
         <android.support.constraint.ConstraintLayout
