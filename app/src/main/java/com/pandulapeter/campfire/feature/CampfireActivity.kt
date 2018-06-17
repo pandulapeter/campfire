@@ -569,7 +569,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
         // Reset the primary navigation drawer.
         binding.drawerLayout.setDrawerLockMode(
-            if (isBackStackEmpty && currentFragment?.shouldShowAppBar == true) DrawerLayout.LOCK_MODE_UNLOCKED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED,
+            if (isBackStackEmpty && shouldShowAppBar) DrawerLayout.LOCK_MODE_UNLOCKED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED,
             Gravity.START
         )
 

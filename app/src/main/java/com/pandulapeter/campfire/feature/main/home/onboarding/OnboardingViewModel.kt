@@ -10,7 +10,7 @@ class OnboardingViewModel(
 ) : CampfireViewModel() {
 
     val doneButtonOffset = ObservableFloat()
-    val canSkip = ObservableBoolean(true)
+    val canSkip = ObservableBoolean()
 
     fun onSkipButtonClicked() = skip()
 

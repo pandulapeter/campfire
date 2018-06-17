@@ -19,7 +19,7 @@ import org.koin.android.ext.android.inject
 class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, HomeContainerViewModel>(R.layout.fragment_home_container) {
 
     override val viewModel = HomeContainerViewModel()
-    override val shouldShowAppBar get() = childFragmentManager.findFragmentById(R.id.home_container) is HomeFragment
+    override val shouldShowAppBar get() = preferenceDatabase.isOnboardingDone
     private val preferenceDatabase by inject<PreferenceDatabase>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -32,8 +32,8 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
     }
 
     fun navigateToHome() {
-        //TODO: Save the fact that the user is done with the onboarding flow.
-        //preferenceDatabase.isOnboardingDone = true
+        // Save the fact that the user is done with the onboarding flow.
+        preferenceDatabase.isOnboardingDone = true
 
         // Set up crash reporting.
         @Suppress("ConstantConditionIf")

@@ -7,6 +7,7 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.databinding.FragmentOnboardingContentLanguageBinding
 import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.page.OnboardingPageFragment
+import com.pandulapeter.campfire.util.dimension
 import org.koin.android.ext.android.inject
 
 class ContentLanguageFragment : OnboardingPageFragment<FragmentOnboardingContentLanguageBinding, ContentLanguageViewModel>(R.layout.fragment_onboarding_content_language) {
@@ -16,9 +17,11 @@ class ContentLanguageFragment : OnboardingPageFragment<FragmentOnboardingContent
             val totalLanguageCount = it.size
             binding.languageContainer.apply {
                 removeAllViews()
+                val contentPadding = context.dimension(R.dimen.content_padding)
                 it.forEach {
                     addView(AppCompatCheckBox(getCampfireActivity()).apply {
                         setText(it.nameResource)
+                        setPadding(contentPadding, 0, 0, 0)
                         isChecked = !preferenceDatabase.disabledLanguageFilters.contains(it.id)
                         setOnCheckedChangeListener { _, _ ->
                             preferenceDatabase.disabledLanguageFilters =
