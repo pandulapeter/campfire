@@ -22,6 +22,7 @@
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:clipToPadding="false"
             android:paddingEnd="@dimen/large_content_padding"
             android:paddingStart="@dimen/large_content_padding">
 
