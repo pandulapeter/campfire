@@ -39,10 +39,10 @@
     <string name="welcome_title">Bine ai venit!</string>
     <string name="welcome_language">Limba:</string>
     <string name="welcome_theme">Tema:</string>
-    <string name="welcome_conditions_part_1">"Az alkalmazás használatával beleegyezel az (angol nyelvű) "</string>
-    <string name="welcome_conditions_part_2">adatvédelmi irányelvekbe</string>
-    <string name="welcome_conditions_part_3">" és a "</string>
-    <string name="welcome_conditions_part_4">felhasználói feltételekbe</string>
+    <string name="welcome_conditions_part_1">"Az alkalmazás használatával beleegyezel a "</string>
+    <string name="welcome_conditions_part_2">felhasználói feltételekbe</string>
+    <string name="welcome_conditions_part_3">" és az "</string>
+    <string name="welcome_conditions_part_4">adatvédelmi irányelvekbe</string>
     <string name="welcome_conditions_part_5">.</string>
 
     <!-- Onboarding screen / User data -->

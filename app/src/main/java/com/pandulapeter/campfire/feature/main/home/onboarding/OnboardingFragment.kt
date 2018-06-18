@@ -68,8 +68,8 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
                         binding.textBottom.translationX = -view.width * offset
                         binding.textBottom.translationY = binding.textBottom.height * absoluteOffset * 4
                         binding.textBottom.alpha = 1 - absoluteOffset * 5
-                        binding.logo.alpha = binding.textBottom.alpha
-                        binding.logo.translationY = -width * absoluteOffset * 0.5f
+                        binding.logo.alpha = 1 - absoluteOffset * 3
+                        binding.logo.translationY = -width * absoluteOffset * 0.4f
                         binding.title.applyTitleTransformation()
                     }
                     is FragmentOnboardingUserDataBinding -> {
