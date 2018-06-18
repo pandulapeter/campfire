@@ -63,6 +63,7 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
                 Spanned.SPAN_INCLUSIVE_INCLUSIVE
             )
         }
+        val interpolator = AccelerateInterpolator()
         binding.viewPager.apply {
             addPageScrollListener(
                 onPageScrolled = { index, offset ->
@@ -75,7 +76,6 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
                     )
                 }
             )
-            val interpolator = AccelerateInterpolator()
             setPageTransformer(false) { view, offset ->
                 val absoluteOffset = Math.abs(offset)
                 fun View.applyStandardTransformation() {
