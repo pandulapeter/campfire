@@ -26,97 +26,67 @@
             android:paddingEnd="@dimen/large_content_padding"
             android:paddingStart="@dimen/large_content_padding">
 
-            <TextView
-                android:id="@+id/text_bottom"
-                android:layout_width="0dp"
+            <ImageView
+                android:id="@+id/logo"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/ic_launcher_foreground"
+                android:tint="?android:attr/textColorSecondary"
+                app:layout_constraintBottom_toTopOf="@id/title"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/welcome_title"
+                android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+                app:layout_constraintBottom_toTopOf="@id/language"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/logo"
+                app:layout_constraintVertical_chainStyle="packed" />
+
+            <TextView
+                android:id="@+id/language"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/onboarding_logo_margin"
                 android:background="?attr/selectableItemBackground"
                 android:gravity="center"
-                android:onClick="@{() -> viewModel.onLegalDocumentsClicked()}"
-                android:paddingBottom="@dimen/large_content_padding"
-                android:paddingEnd="@dimen/touch_target"
-                android:paddingStart="@dimen/touch_target"
-                android:paddingTop="@dimen/large_content_padding"
-                android:textSize="10sp"
+                android:onClick="@{() -> viewModel.onLanguageClicked()}"
+                android:padding="@dimen/content_padding"
+                android:text="@{viewModel.languageLabel}"
+                app:layout_constraintBottom_toTopOf="@id/theme"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/title"
+                app:layout_constraintVertical_chainStyle="packed"
+                tools:text="@string/options_preferences_language" />
+
+            <TextView
+                android:id="@+id/theme"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/large_content_padding"
+                android:layout_marginTop="@dimen/small_content_padding"
+                android:background="?attr/selectableItemBackground"
+                android:gravity="center"
+                android:onClick="@{() -> viewModel.onThemeClicked()}"
+                android:padding="@dimen/content_padding"
+                android:text="@{viewModel.themeLabel}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                tools:ignore="SmallSp"
-                tools:text="@string/welcome_conditions_part_1" />
-
-            <android.support.constraint.ConstraintLayout
-                android:id="@+id/main_container"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_marginBottom="@dimen/content_padding"
-                app:layout_constraintBottom_toTopOf="@id/text_bottom"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <ImageView
-                    android:id="@+id/logo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:scaleType="centerCrop"
-                    android:src="@mipmap/ic_launcher_foreground"
-                    android:tint="?android:attr/textColorSecondary"
-                    app:layout_constraintBottom_toTopOf="@id/title"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintVertical_chainStyle="packed"
-                    tools:ignore="ContentDescription" />
-
-                <TextView
-                    android:id="@+id/title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="@string/welcome_title"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-                    app:layout_constraintBottom_toTopOf="@id/language"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/logo"
-                    app:layout_constraintVertical_chainStyle="packed" />
-
-                <TextView
-                    android:id="@+id/language"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/onboarding_logo_margin"
-                    android:background="?attr/selectableItemBackground"
-                    android:gravity="center"
-                    android:onClick="@{() -> viewModel.onLanguageClicked()}"
-                    android:padding="@dimen/content_padding"
-                    android:text="@{viewModel.languageLabel}"
-                    app:layout_constraintBottom_toTopOf="@id/theme"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/title"
-                    app:layout_constraintVertical_chainStyle="packed"
-                    tools:text="@string/options_preferences_language" />
-
-                <TextView
-                    android:id="@+id/theme"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/large_content_padding"
-                    android:layout_marginTop="@dimen/small_content_padding"
-                    android:background="?attr/selectableItemBackground"
-                    android:gravity="center"
-                    android:onClick="@{() -> viewModel.onThemeClicked()}"
-                    android:padding="@dimen/content_padding"
-                    android:text="@{viewModel.themeLabel}"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/language"
-                    app:layout_constraintVertical_chainStyle="packed"
-                    tools:text="@string/options_preferences_app_theme" />
-
-            </android.support.constraint.ConstraintLayout>
+                app:layout_constraintTop_toBottomOf="@id/language"
+                app:layout_constraintVertical_chainStyle="packed"
+                tools:text="@string/options_preferences_app_theme" />
 
         </android.support.constraint.ConstraintLayout>
 

@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.main.home.onboarding.page.welcome
+package com.pandulapeter.campfire.feature.main.home.onboarding
 
 import android.net.Uri
 import android.support.customtabs.CustomTabsIntent

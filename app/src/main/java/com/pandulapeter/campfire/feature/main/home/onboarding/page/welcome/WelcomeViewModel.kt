@@ -18,7 +18,6 @@ class WelcomeViewModel(private val context: Context) : CampfireViewModel() {
     private val preferenceDatabase by inject<PreferenceDatabase>()
     val shouldShowThemeSelector = ObservableBoolean()
     val shouldShowLanguageSelector = ObservableBoolean()
-    val shouldShowLegalDocuments = ObservableBoolean()
     val language = ObservableField<PreferencesViewModel.Language>(PreferencesViewModel.Language.fromId(preferenceDatabase.language))
     val languageLabel = ObservableField(SpannableString(""))
     private val languageText = context.getString(R.string.welcome_language)
@@ -42,8 +41,6 @@ class WelcomeViewModel(private val context: Context) : CampfireViewModel() {
     fun onThemeClicked() = shouldShowThemeSelector.set(true)
 
     fun onLanguageClicked() = shouldShowLanguageSelector.set(true)
-
-    fun onLegalDocumentsClicked() = shouldShowLegalDocuments.set(true)
 
     private fun updateLanguageDescription() = languageLabel.set(
         SpannableString(

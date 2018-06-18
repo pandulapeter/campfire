@@ -1,6 +1,9 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding
 
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
 import android.transition.Fade
 import android.view.View
 import android.view.animation.AccelerateInterpolator
@@ -10,6 +13,8 @@ import com.pandulapeter.campfire.databinding.*
 import com.pandulapeter.campfire.feature.main.home.HomeContainerFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.addPageScrollListener
+import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.waitForPreDraw
 
 class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, OnboardingViewModel>(R.layout.fragment_onboarding) {
@@ -33,6 +38,30 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
                 }
                 false
             }
+        }
+        viewModel.shouldShowLegalDocuments.onEventTriggered(this) {
+            if (!getCampfireActivity().isUiBlocked) {
+                LegalDocumentsBottomSheetFragment.show(childFragmentManager)
+            }
+        }
+        val first = getString(R.string.welcome_conditions_part_1)
+        val second = getString(R.string.welcome_conditions_part_2)
+        val third = getString(R.string.welcome_conditions_part_3)
+        val fourth = getString(R.string.welcome_conditions_part_4)
+        val fifth = getString(R.string.welcome_conditions_part_5)
+        binding.textBottom.text = SpannableString("$first$second$third$fourth$fifth").apply {
+            setSpan(
+                ForegroundColorSpan(getCampfireActivity().color(R.color.accent)),
+                first.length,
+                first.length + second.length,
+                Spanned.SPAN_INCLUSIVE_INCLUSIVE
+            )
+            setSpan(
+                ForegroundColorSpan(getCampfireActivity().color(R.color.accent)),
+                first.length + second.length + third.length,
+                length - fifth.length,
+                Spanned.SPAN_INCLUSIVE_INCLUSIVE
+            )
         }
         binding.viewPager.apply {
             addPageScrollListener(
@@ -61,29 +90,28 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
                     translationX = width * offset * 0.5f
                 }
 
-                val binding = view.tag
-                when (binding) {
+                val viewBinding = view.tag
+                when (viewBinding) {
                     is FragmentOnboardingWelcomeBinding -> {
-                        binding.mainContainer.applyStandardTransformation()
-                        binding.textBottom.translationX = -view.width * offset
+                        view.applyStandardTransformation()
                         binding.textBottom.translationY = binding.textBottom.height * absoluteOffset * 4
                         binding.textBottom.alpha = 1 - absoluteOffset * 5
-                        binding.logo.alpha = 1 - absoluteOffset * 3
-                        binding.logo.translationY = -width * absoluteOffset * 0.4f
-                        binding.title.applyTitleTransformation()
+                        viewBinding.logo.alpha = 1 - absoluteOffset * 3
+                        viewBinding.logo.translationY = -width * absoluteOffset * 0.4f
+                        viewBinding.title.applyTitleTransformation()
                     }
                     is FragmentOnboardingUserDataBinding -> {
                         view.applyStandardTransformation()
-                        binding.title.applyTitleTransformation()
+                        viewBinding.title.applyTitleTransformation()
 
                     }
                     is FragmentOnboardingSongAppearanceBinding -> {
                         view.applyStandardTransformation()
-                        binding.title.applyTitleTransformation()
+                        viewBinding.title.applyTitleTransformation()
                     }
                     is FragmentOnboardingContentLanguageBinding -> {
                         view.applyStandardTransformation()
-                        binding.title.applyTitleTransformation()
+                        viewBinding.title.applyTitleTransformation()
                     }
                 }
             }

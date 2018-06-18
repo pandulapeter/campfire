@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -24,6 +25,24 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/text_bottom"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:gravity="center"
+            android:onClick="@{() -> viewModel.onLegalDocumentsClicked()}"
+            android:paddingBottom="@dimen/large_content_padding"
+            android:paddingEnd="@dimen/touch_target"
+            android:paddingStart="@dimen/touch_target"
+            android:paddingTop="@dimen/large_content_padding"
+            android:textSize="10sp"
+            app:layout_constraintBottom_toTopOf="@id/done_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:ignore="SmallSp"
+            tools:text="@string/welcome_conditions_part_1" />
 
         <Button
             style="@style/Widget.AppCompat.Button.Borderless"
