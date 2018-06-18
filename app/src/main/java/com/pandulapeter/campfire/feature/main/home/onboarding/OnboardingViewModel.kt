@@ -11,11 +11,8 @@ class OnboardingViewModel(
 
     val doneButtonOffset = ObservableFloat()
     val canSkip = ObservableBoolean()
-    val shouldShowLegalDocuments = ObservableBoolean()
 
     fun onSkipButtonClicked() = skip()
 
     fun onNextButtonClicked() = navigateToNextPage()
-
-    fun onLegalDocumentsClicked() = shouldShowLegalDocuments.set(true)
 }

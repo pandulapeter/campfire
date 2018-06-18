@@ -19,7 +19,7 @@ class AboutViewModel(private val isUiBlocked: () -> Boolean) : CampfireViewModel
         private const val GIT_HUB_URL = "https://github.com/pandulapeter/campfire-android"
         const val TERMS_AND_CONDITIONS_URL = "https://campfire-test1.herokuapp.com/v1/terms-and-conditions"
         const val PRIVACY_POLICY_URL = "https://campfire-test1.herokuapp.com/v1/privacy-policy"
-        const val OPEN_SOURCE_LICENSES_URL = "https://campfire-test1.herokuapp.com/v1/open-source-licenses"
+        private const val OPEN_SOURCE_LICENSES_URL = "https://campfire-test1.herokuapp.com/v1/open-source-licenses"
         const val EMAIL_ADDRESS = "pandulapeter@gmail.com"
     }
 
