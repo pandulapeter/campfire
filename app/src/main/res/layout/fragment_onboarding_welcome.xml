@@ -57,7 +57,7 @@
                 android:id="@+id/language"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/large_content_padding"
+                android:layout_marginTop="@dimen/onboarding_logo_margin"
                 android:background="?attr/selectableItemBackground"
                 android:gravity="center"
                 android:onClick="@{() -> viewModel.onLanguageClicked()}"
