@@ -21,6 +21,7 @@ class ContentLanguageViewModel(private val onLanguagesLoaded: (List<Language>) -
     private var areCollectionsLoading = true
     private var areSongsLoading = true
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
+    val shouldShowError = ObservableBoolean()
     val shouldShowExplicit = ObservableBoolean(preferenceDatabase.shouldShowExplicit)
 
     init {

@@ -62,6 +62,7 @@
     <!-- Onboarding screen / Content language -->
     <string name="content_language_title">Content language</string>
     <string name="content_language_description">The app will only display songs and collections in the following languages:</string>
+    <string name="content_language_error">Please select at least one language</string>
     <string name="content_language_explicit_switch">Show songs with explicit lyrics</string>
     <string name="content_language_explicit_switch_enabled">Explicit songs can appear</string>
     <string name="content_language_explicit_switch_disabled">Explicit songs are hidden</string>

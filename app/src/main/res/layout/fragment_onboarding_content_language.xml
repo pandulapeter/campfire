@@ -73,10 +73,10 @@
                 android:layout_height="wrap_content"
                 android:clipChildren="false"
                 android:clipToPadding="false"
-                android:paddingBottom="@dimen/large_content_padding"
+                android:paddingBottom="@dimen/content_padding"
                 android:transitionGroup="true"
                 app:buttonText="@string/try_again"
-                app:layout_constraintBottom_toTopOf="@id/show_explicit_switch"
+                app:layout_constraintBottom_toTopOf="@id/error_message"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/text_top"
@@ -89,9 +89,23 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingTop="@dimen/large_content_padding" />
+                    android:paddingTop="@dimen/content_padding" />
 
             </com.pandulapeter.campfire.feature.shared.widget.StateLayout>
+
+            <TextView
+                android:id="@+id/error_message"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/content_padding"
+                android:layout_marginStart="@dimen/content_padding"
+                android:text="@string/content_language_error"
+                android:textColor="@color/accent"
+                android:visibility="@{viewModel.shouldShowError}"
+                app:layout_constraintBottom_toTopOf="@id/show_explicit_switch"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/state_layout" />
 
             <android.support.v7.widget.SwitchCompat
                 android:id="@+id/show_explicit_switch"
@@ -105,7 +119,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/state_layout"
+                app:layout_constraintTop_toBottomOf="@id/error_message"
                 app:layout_constraintVertical_chainStyle="packed"
                 app:switchPadding="@dimen/content_padding"
                 app:title="@{@string/content_language_explicit_switch}"

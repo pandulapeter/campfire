@@ -14,7 +14,7 @@ class ContentLanguageFragment : OnboardingPageFragment<FragmentOnboardingContent
 
     override val viewModel = ContentLanguageViewModel {
         if (isAdded) {
-            val totalLanguageCount = it.size
+            totalLanguageCount = it.size
             binding.languageContainer.apply {
                 removeAllViews()
                 val contentPadding = context.dimension(R.dimen.content_padding)
@@ -26,13 +26,21 @@ class ContentLanguageFragment : OnboardingPageFragment<FragmentOnboardingContent
                         setOnCheckedChangeListener { _, _ ->
                             preferenceDatabase.disabledLanguageFilters =
                                     preferenceDatabase.disabledLanguageFilters.toMutableSet().apply { if (contains(it.id)) remove(it.id) else add(it.id) }
-                            (parentFragment as OnboardingFragment).languageFiltersUpdated(totalLanguageCount - preferenceDatabase.disabledLanguageFilters.size)
+                            onLanguageFiltersUpdated()
                         }
                     }, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                 }
             }
-            (parentFragment as OnboardingFragment).languageFiltersUpdated(totalLanguageCount - preferenceDatabase.disabledLanguageFilters.size)
+            onLanguageFiltersUpdated()
         }
     }
     private val preferenceDatabase by inject<PreferenceDatabase>()
+    private var totalLanguageCount = 0
+
+    private fun onLanguageFiltersUpdated() {
+        (totalLanguageCount - preferenceDatabase.disabledLanguageFilters.size).let { selectedLanguageCount ->
+            (parentFragment as OnboardingFragment).languageFiltersUpdated(selectedLanguageCount)
+            viewModel.shouldShowError.set(selectedLanguageCount == 0)
+        }
+    }
 }
