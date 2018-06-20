@@ -8,7 +8,9 @@ import android.support.annotation.StringRes
 import android.text.InputFilter
 import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.TextView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewToolbarTextInputBinding
 import com.pandulapeter.campfire.util.*
@@ -42,8 +44,8 @@ class ToolbarTextInputView(context: Context, @StringRes hintText: Int, isSearch:
         clipChildren = false
     }
 
-    val title = binding.title
-    val textInput = binding.textInput
+    val title: TextView = binding.title
+    val textInput: EditText = binding.textInput
     var isTextInputVisible = false
 
     fun animateTextInputVisibility(isVisible: Boolean) {

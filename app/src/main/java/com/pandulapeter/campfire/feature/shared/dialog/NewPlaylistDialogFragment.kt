@@ -33,7 +33,7 @@ class NewPlaylistDialogFragment : BaseDialogFragment() {
         binding.inputField.onTextChanged { positiveButton.isEnabled = binding.inputField.text.isTextValid() }
         return setView(binding.root)
             .setTitle(R.string.main_new_playlist)
-            .setPositiveButton(R.string.ok, { _, _ -> onOkButtonPressed() })
+            .setPositiveButton(R.string.ok) { _, _ -> onOkButtonPressed() }
             .setNegativeButton(R.string.cancel, null)
             .create()
     }

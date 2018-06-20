@@ -7,6 +7,7 @@ import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 
 class HistoryRepository(private val database: Database) : BaseRepository<HistoryRepository.Subscriber>() {
     private val data = mutableListOf<HistoryItem>()
@@ -24,7 +25,7 @@ class HistoryRepository(private val database: Database) : BaseRepository<History
     fun isCacheLoaded() = isCacheLoaded
 
     fun addHistoryItem(historyItem: HistoryItem) {
-        async(UI) {
+        launch(UI) {
             data.swap(data.filter { it.id != historyItem.id })
             data.add(historyItem)
             async(CommonPool) { database.historyDao().insert(historyItem) }.await()
@@ -34,7 +35,7 @@ class HistoryRepository(private val database: Database) : BaseRepository<History
 
     fun deleteHistoryItem(songId: String) {
         data.swap(data.filter { it.id != songId })
-        async(UI) {
+        launch(UI) {
             async(CommonPool) { database.historyDao().delete(songId) }.await()
             notifyDataChanged()
         }
@@ -42,14 +43,14 @@ class HistoryRepository(private val database: Database) : BaseRepository<History
 
     fun deleteAllHistory() {
         data.clear()
-        async(UI) {
+        launch(UI) {
             async(CommonPool) { database.historyDao().deleteAll() }.await()
             notifyDataChanged()
         }
     }
 
     private fun refreshDataSet() {
-        async(UI) {
+        launch(UI) {
             async(CommonPool) {
                 database.historyDao().getAll()
             }.await().let {

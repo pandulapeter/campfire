@@ -14,6 +14,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.cancel
+import kotlinx.coroutines.experimental.launch
 import kotlin.coroutines.experimental.CoroutineContext
 
 class ManagePlaylistListAdapter : RecyclerView.Adapter<ManagePlaylistListAdapter.PlaylistViewHolder>() {
@@ -21,7 +22,7 @@ class ManagePlaylistListAdapter : RecyclerView.Adapter<ManagePlaylistListAdapter
     var items = listOf<PlaylistViewModel>()
         set(newItems) {
             coroutine?.cancel()
-            coroutine = async(UI) {
+            coroutine = launch(UI) {
                 val oldItems = items
                 async(CommonPool) {
                     DiffUtil.calculateDiff(object : DiffUtil.Callback() {

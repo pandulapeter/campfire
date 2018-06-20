@@ -71,7 +71,6 @@ class AboutViewModel(private val isUiBlocked: () -> Boolean) : CampfireViewModel
 
     fun onBuyMeABeerClicked() {
         analyticsManager.trackAboutLinkOpened(AnalyticsManager.PARAM_VALUE_ABOUT_BUY_ME_A_BEER)
-        //TODO: Start in app purchase flow
         shouldShowWorkInProgressSnackbar.set(true)
     }
 

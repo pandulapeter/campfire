@@ -18,6 +18,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.cancel
+import kotlinx.coroutines.experimental.launch
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.experimental.CoroutineContext
 
@@ -154,7 +155,7 @@ class CollectionsViewModel(
     private fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
         if (collectionRepository.isCacheLoaded()) {
             coroutine?.cancel()
-            coroutine = async(UI) {
+            coroutine = launch(UI) {
                 async(CommonPool) { collections.createViewModels() }.await().let {
                     adapter.shouldScrollToTop = shouldScrollToTop
                     adapter.items = it

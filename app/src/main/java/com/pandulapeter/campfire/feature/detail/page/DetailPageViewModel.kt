@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.util.onPropertyChanged
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 import org.koin.android.ext.android.inject
 
 class DetailPageViewModel(
@@ -96,7 +97,7 @@ class DetailPageViewModel(
     fun updateTextSize() = textSize.set(preferenceDatabase.fontSize * initialTextSize)
 
     fun refreshText(onDone: () -> Unit = {}) {
-        async(UI) {
+        launch(UI) {
             text.set(
                 async(CommonPool) {
                     songParser.parseSong(rawText, preferenceDatabase.shouldShowChords, preferenceDatabase.shouldUseGermanNotation, transposition.get())

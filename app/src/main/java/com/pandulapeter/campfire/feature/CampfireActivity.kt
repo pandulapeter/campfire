@@ -112,11 +112,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     var isUiBlocked = false
     var lastSongId: String = ""
     var lastCollectionId: String = ""
-    val autoScrollControl get() = binding.autoScrollControl
+    val autoScrollControl: View get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
     val toolbarHeight get() = binding.toolbarTitleContainer.height
     val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
-    val snackbarRoot get() = binding.rootCoordinatorLayout
+    val snackbarRoot: View get() = binding.rootCoordinatorLayout
     var transitionMode: Boolean? = null
         set(value) {
             if (field != value) {

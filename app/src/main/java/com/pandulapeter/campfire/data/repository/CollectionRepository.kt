@@ -11,6 +11,7 @@ import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 
 class CollectionRepository(
     private val preferenceDatabase: PreferenceDatabase,
@@ -34,7 +35,7 @@ class CollectionRepository(
         }
 
     init {
-        async(UI) {
+        launch(UI) {
             async(CommonPool) {
                 data.swap(database.collectionDao().getAll())
                 updateLanguages()
@@ -68,7 +69,7 @@ class CollectionRepository(
         isLoading = true
         networkManager.service.getCollections().enqueueCall(
             onSuccess = { newData ->
-                async(UI) {
+                launch(UI) {
                     async(CommonPool) {
                         if (data.isNotEmpty()) {
                             newData.forEach { song ->

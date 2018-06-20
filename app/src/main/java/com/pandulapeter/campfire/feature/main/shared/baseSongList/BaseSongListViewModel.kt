@@ -23,6 +23,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.cancel
+import kotlinx.coroutines.experimental.launch
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.experimental.CoroutineContext
 
@@ -208,7 +209,7 @@ abstract class BaseSongListViewModel(protected val context: Context) : CampfireV
     protected fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
         if (canUpdateUI() && playlistRepository.isCacheLoaded() && songRepository.isCacheLoaded() && songDetailRepository.isCacheLoaded()) {
             coroutine?.cancel()
-            coroutine = async(UI) {
+            coroutine = launch(UI) {
                 async(CommonPool) { songs.createViewModels() }.await().let {
                     adapter.shouldScrollToTop = shouldScrollToTop
                     adapter.items = it

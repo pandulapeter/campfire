@@ -124,7 +124,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         snackbar?.dismiss()
         snackbar = getCampfireActivity().snackbarRoot
             .makeSnackbar(getString(message), Snackbar.LENGTH_INDEFINITE)
-            .apply { setAction(R.string.got_it, { action() }) }
+            .apply { setAction(R.string.got_it) { action() } }
         snackbar?.show()
     }
 
@@ -138,7 +138,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected fun showSnackbar(message: String, @StringRes actionText: Int = R.string.try_again, action: (() -> Unit)? = null, dismissAction: (() -> Unit)? = null) {
         snackbar = getCampfireActivity().snackbarRoot
             .makeSnackbar(message, if (action == null && dismissAction == null) SNACKBAR_SHORT_DURATION else SNACKBAR_LONG_DURATION, dismissAction)
-            .apply { action?.let { setAction(actionText, { action() }) } }
+            .apply { action?.let { setAction(actionText) { action() } } }
         snackbar?.show()
     }
 

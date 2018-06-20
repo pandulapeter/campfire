@@ -12,6 +12,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.launch
 
 class SongDetailRepository(
     private val networkManager: NetworkManager,
@@ -36,7 +37,7 @@ class SongDetailRepository(
     fun getSongDetail(song: Song, shouldDelay: Boolean = false) {
         if (!isSongDownloading(song.id)) {
             if (isSongDownloaded(song.id)) {
-                async(UI) {
+                launch(UI) {
                     async(CommonPool) { database.songDetailDao().get(song.id) }.await().let { songDetail ->
                         if (songDetail == null) {
                             deleteSong(song.id)
@@ -56,7 +57,7 @@ class SongDetailRepository(
             networkManager.service.getSong(song.id).enqueueCall(
                 onSuccess = { songDetail ->
                     songDetail.version = song.version ?: 0
-                    async(UI) {
+                    launch(UI) {
                         async(CommonPool) { database.songDetailDao().insert(songDetail) }.await()
                         if (shouldDelay && System.currentTimeMillis() - started < 300) {
                             delay(300)
@@ -84,7 +85,7 @@ class SongDetailRepository(
 
     fun deleteSong(songId: String) {
         data.swap(data.filter { it.id != songId })
-        async(UI) {
+        launch(UI) {
             async(CommonPool) { database.songDetailDao().delete(songId) }.await()
             notifyDataChanged()
         }
@@ -92,14 +93,14 @@ class SongDetailRepository(
 
     fun deleteAllSongs() {
         data.clear()
-        async(UI) {
+        launch(UI) {
             async(CommonPool) { database.songDetailDao().deleteAll() }.await()
             notifyDataChanged()
         }
     }
 
     private fun refreshDataSet() {
-        async(UI) {
+        launch(UI) {
             async(CommonPool) {
                 database.songDetailDao().getAllMetadata()
             }.await().let {

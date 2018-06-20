@@ -32,8 +32,6 @@
             android:fillViewport="true"
             android:scrollbars="none">
 
-            <!-- TODO: Chord spannables are cut off at certain text sizes -->
-
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -11,6 +11,7 @@ import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 
 class SongRepository(
     private val preferenceDatabase: PreferenceDatabase,
@@ -34,7 +35,7 @@ class SongRepository(
         }
 
     init {
-        async(UI) {
+        launch(UI) {
             async(CommonPool) {
                 data.swap(database.songDao().getAll())
                 updateLanguages()
@@ -68,7 +69,7 @@ class SongRepository(
         isLoading = true
         networkManager.service.getSongs().enqueueCall(
             onSuccess = { newData ->
-                async(UI) {
+                launch(UI) {
                     async(CommonPool) {
                         if (data.isNotEmpty()) {
                             newData.forEach { song ->

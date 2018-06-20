@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!--TODO: Romanian translation -->
-
     <!-- General -->
     <string name="got_it">Am înțeles</string>
     <string name="go_to_songs">@string/main_songs</string>
