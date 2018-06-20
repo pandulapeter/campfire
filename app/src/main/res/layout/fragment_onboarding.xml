@@ -26,16 +26,15 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
+        <Button
             android:id="@+id/text_bottom"
+            style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/content_padding"
-            android:background="?attr/selectableItemBackground"
             android:gravity="center"
             android:onClick="@{() -> viewModel.onLegalDocumentsClicked()}"
-            android:padding="@dimen/content_padding"
-            android:textSize="10sp"
+            android:textAllCaps="false"
+            android:textSize="8sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/next_button"
             app:layout_constraintStart_toEndOf="@+id/skip_button"
