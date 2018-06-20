@@ -13,20 +13,21 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipChildren="false"
         android:fillViewport="true"
         android:scrollbars="none">
 
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:clipChildren="false"
-            android:paddingBottom="@dimen/large_content_padding"
-            android:paddingTop="@dimen/large_content_padding">
+            android:clipChildren="false">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
+                android:layout_marginBottom="@dimen/large_content_padding"
+                android:layout_marginTop="@dimen/large_content_padding"
                 android:clipChildren="false"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
