@@ -9,24 +9,31 @@ import com.pandulapeter.campfire.feature.shared.span.ChordSpan
 
 class SongParser(private val context: Context) {
 
+    private val regexChord = Regex("\\[(.*?)[]]")
+    private val regexSection = Regex("\\{(.*?)[}]")
+    private val regexConsecutiveWhitespaces = Regex("[ ][ ]+")
+    private val regexEmptyLine = Regex("(?:\\h*\\n){3,}")
+    private val regexSpaceBetweenWords = Regex("\\b(\\s)\\b")
+    private val regexInstrumentalPart = Regex("]([ \\t]+)\\[")
+
     fun parseSong(text: String, shouldShowChords: Boolean, shouldUseGermanNotation: Boolean, transposition: Int): SpannableString {
         val sectionNames = mutableListOf<Section>()
         val chords = mutableListOf<Chord>()
         var offset = 0
         val parsedText = (if (shouldShowChords)
-            text.replace(Regex("\\b(\\s)\\b"), " [ ]") // Insert invisible, fake chords between words to keep the line height consistent.
+            text.replace(regexSpaceBetweenWords, " [ ]") // Insert invisible, fake chords between words to keep the line height consistent.
         else text
-            .replace(Regex("\\[(.*?)[]]"), "") // Remove chords.
-            .replace(Regex("[ ][ ]+"), "") // Remove groups of multiple whitespaces within a single line.
-            .replace(Regex("(?:\\h*\\n){3,}"), "") // Remove lines consisting only of empty space.
+            .replace(regexChord, "") // Remove chords.
+            .replace(regexConsecutiveWhitespaces, "") // Remove groups of multiple whitespaces within a single line.
+            .replace(regexEmptyLine, "") // Remove lines consisting only of empty space.
             .replace("\n\n", "\n") // Remove consecutive line breaks.
             .let { returnValue ->
                 returnValue
-                    .replace(Regex("\\{(.*?)[}]")) { if (it.range.first == 0 || returnValue[it.range.first - 2] == '}') it.value else "\n${it.value}" }
+                    .replace(regexSection) { if (it.range.first == 0 || returnValue[it.range.first - 2] == '}') it.value else "\n${it.value}" }
                     .replace("{", "\n{") // Ensure that section headers are separated by an empty lines.
                     .replace("\n\n\n{", "\n\n{") // Remove accidentally inserted consecutive line breaks.
                     .removePrefix("\n")
-            }).replace(Regex("\\{(.*?)[}]")) {
+            }).replace(regexSection) {
             // Find the section headers
             val sectionType = SectionType.fromAbbreviation(it.value[1])
             if (sectionType != null) {
@@ -41,7 +48,7 @@ class SongParser(private val context: Context) {
             }
         }
         if (shouldShowChords) {
-            parsedText.replace(Regex("\\[(.*?)]")) {
+            parsedText.replace(regexChord) {
                 // Find the chords
                 Note.toNote(it.value)?.let { note ->
                     chords.add(Chord(note, it.value.toSuffix(note === Note.Hint), it.range.first, it.range.last + 1))
@@ -59,7 +66,7 @@ class SongParser(private val context: Context) {
                 )
             }
             if (shouldShowChords) {
-                Regex("]([ \\t]+)\\[").findAll(parsedText).forEach {
+                regexInstrumentalPart.findAll(parsedText).forEach {
                     // Set the font of instrumental-only parts
                     setSpan(TextAppearanceSpan(context, R.style.Hint), it.range.first, it.range.last, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
