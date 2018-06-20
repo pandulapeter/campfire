@@ -51,6 +51,9 @@ android {
             signingConfig signingConfigs.release
         }
     }
+    packagingOptions {
+        exclude "META-INF/main.kotlin_module"
+    }
 }
 repositories {
     mavenCentral()
@@ -72,7 +75,7 @@ dependencies {
 
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.kotlinVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.19.2"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.23.2"
 
     // Dependency injection
     implementation "org.koin:koin-android:0.8.0"

@@ -12,6 +12,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
 
 class CollectionRepository(
     private val preferenceDatabase: PreferenceDatabase,
@@ -36,10 +37,10 @@ class CollectionRepository(
 
     init {
         launch(UI) {
-            async(CommonPool) {
+            withContext(CommonPool) {
                 data.swap(database.collectionDao().getAll())
                 updateLanguages()
-            }.await()
+            }
             if (System.currentTimeMillis() - preferenceDatabase.lastCollectionsUpdateTimestamp > UPDATE_LIMIT) {
                 updateData()
             } else {
@@ -70,7 +71,7 @@ class CollectionRepository(
         networkManager.service.getCollections().enqueueCall(
             onSuccess = { newData ->
                 launch(UI) {
-                    async(CommonPool) {
+                    withContext(CommonPool) {
                         if (data.isNotEmpty()) {
                             newData.forEach { song ->
                                 val oldSong = data.find { it.id == song.id }
@@ -83,8 +84,8 @@ class CollectionRepository(
                         }
                         data.swap(newData)
                         updateLanguages()
-                    }.await()
-                    async(CommonPool) { database.collectionDao().updateAll(data) }
+                    }
+                    launch(CommonPool) { database.collectionDao().updateAll(data) }
                     notifyDataChanged()
                     isLoading = false
                     preferenceDatabase.lastCollectionsUpdateTimestamp = System.currentTimeMillis()

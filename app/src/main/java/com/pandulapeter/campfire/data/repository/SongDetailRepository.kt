@@ -10,9 +10,9 @@ import com.pandulapeter.campfire.util.enqueueCall
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
 
 class SongDetailRepository(
     private val networkManager: NetworkManager,
@@ -38,7 +38,7 @@ class SongDetailRepository(
         if (!isSongDownloading(song.id)) {
             if (isSongDownloaded(song.id)) {
                 launch(UI) {
-                    async(CommonPool) { database.songDetailDao().get(song.id) }.await().let { songDetail ->
+                    withContext(CommonPool) { database.songDetailDao().get(song.id) }.let { songDetail ->
                         if (songDetail == null) {
                             deleteSong(song.id)
                             getSongDetail(song)
@@ -58,7 +58,7 @@ class SongDetailRepository(
                 onSuccess = { songDetail ->
                     songDetail.version = song.version ?: 0
                     launch(UI) {
-                        async(CommonPool) { database.songDetailDao().insert(songDetail) }.await()
+                        withContext(CommonPool) { database.songDetailDao().insert(songDetail) }
                         if (shouldDelay && System.currentTimeMillis() - started < 300) {
                             delay(300)
                         }
@@ -86,7 +86,7 @@ class SongDetailRepository(
     fun deleteSong(songId: String) {
         data.swap(data.filter { it.id != songId })
         launch(UI) {
-            async(CommonPool) { database.songDetailDao().delete(songId) }.await()
+            withContext(CommonPool) { database.songDetailDao().delete(songId) }
             notifyDataChanged()
         }
     }
@@ -94,16 +94,16 @@ class SongDetailRepository(
     fun deleteAllSongs() {
         data.clear()
         launch(UI) {
-            async(CommonPool) { database.songDetailDao().deleteAll() }.await()
+            withContext(CommonPool) { database.songDetailDao().deleteAll() }
             notifyDataChanged()
         }
     }
 
     private fun refreshDataSet() {
         launch(UI) {
-            async(CommonPool) {
+            withContext(CommonPool) {
                 database.songDetailDao().getAllMetadata()
-            }.await().let {
+            }.let {
                 data.swap(it)
                 isCacheLoaded = true
                 notifyDataChanged()

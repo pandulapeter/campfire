@@ -16,9 +16,9 @@ import com.pandulapeter.campfire.util.removePrefixes
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.cancel
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.experimental.CoroutineContext
 
@@ -156,7 +156,7 @@ class CollectionsViewModel(
         if (collectionRepository.isCacheLoaded()) {
             coroutine?.cancel()
             coroutine = launch(UI) {
-                async(CommonPool) { collections.createViewModels() }.await().let {
+                withContext(CommonPool) { collections.createViewModels() }.let {
                     adapter.shouldScrollToTop = shouldScrollToTop
                     adapter.items = it
                     onListUpdated(it)

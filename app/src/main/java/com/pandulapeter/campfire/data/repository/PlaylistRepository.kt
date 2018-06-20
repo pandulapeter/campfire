@@ -8,6 +8,7 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
 import java.util.*
 
 class PlaylistRepository(private val database: Database) : BaseRepository<PlaylistRepository.Subscriber>() {
@@ -55,18 +56,18 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
     fun addSongToPlaylist(playlistId: String, songId: String) {
         launch(UI) {
             var shouldNotify = false
-            async(CommonPool) {
+            withContext(CommonPool) {
                 shouldNotify = !isSongInAnyPlaylist(songId)
                 val playlist = data.find { it.id == playlistId }
                 if (playlist?.songIds?.contains(songId) == false) {
                     playlist.songIds.add(songId)
                 }
                 playlist
-            }.await()?.let { playlist ->
+            }?.let { playlist ->
                 if (shouldNotify) {
                     subscribers.forEach { it.onSongAddedToPlaylistForTheFirstTime(songId) }
                 }
-                async(CommonPool) { database.playlistDao().insert(playlist) }.await()
+                withContext(CommonPool) { database.playlistDao().insert(playlist) }
             }
         }
     }
@@ -74,31 +75,31 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
     fun removeSongFromPlaylist(playlistId: String, songId: String) {
         launch(UI) {
             var shouldNotify = false
-            async(CommonPool) {
+            withContext(CommonPool) {
                 val playlist = data.find { it.id == playlistId }
                 if (playlist?.songIds?.contains(songId) == true) {
                     playlist.songIds.remove(songId)
                 }
                 shouldNotify = !isSongInAnyPlaylist(songId)
                 playlist
-            }.await()?.let { playlist ->
+            }?.let { playlist ->
                 if (shouldNotify) {
                     subscribers.forEach { it.onSongRemovedFromAllPlaylists(songId) }
                 }
-                async(CommonPool) { database.playlistDao().insert(playlist) }.await()
+                withContext(CommonPool) { database.playlistDao().insert(playlist) }
             }
         }
     }
 
     fun deleteAllPlaylists() {
         data.swap(data.filter { it.id == Playlist.FAVORITES_ID })
-        launch(UI) { async(CommonPool) { database.playlistDao().deleteAll() }.await() }
+        launch(UI) { withContext(CommonPool) { database.playlistDao().deleteAll() } }
         notifyDataChanged()
     }
 
     fun deletePlaylist(playlistId: String) {
         data.swap(data.filter { it.id != playlistId })
-        launch(UI) { async(CommonPool) { database.playlistDao().delete(playlistId) }.await() }
+        launch(UI) { withContext(CommonPool) { database.playlistDao().delete(playlistId) } }
         notifyDataChanged()
     }
 
@@ -112,10 +113,10 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
         data.add(playlist)
         notifyDataChanged()
         launch(UI) {
-            async(CommonPool) {
+            withContext(CommonPool) {
                 database.playlistDao().deleteAll()
                 data.forEach { database.playlistDao().insert(it) }
-            }.await()
+            }
         }
     }
 
@@ -124,7 +125,7 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
         playlist?.let {
             it.title = title
             subscribers.forEach { notifyDataChanged() }
-            launch(UI) { async(CommonPool) { database.playlistDao().insert(it) }.await() }
+            launch(UI) { withContext(CommonPool) { database.playlistDao().insert(it) } }
         }
     }
 
@@ -133,7 +134,7 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
         playlist?.let {
             it.order = order
             subscribers.forEach { it.onPlaylistOrderChanged(data) }
-            launch(UI) { async(CommonPool) { database.playlistDao().insert(it) }.await() }
+            launch(UI) { withContext(CommonPool) { database.playlistDao().insert(it) } }
         }
     }
 
@@ -146,16 +147,16 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
 
     private fun refreshDataSet() {
         launch(UI) {
-            async(CommonPool) {
+            withContext(CommonPool) {
                 database.playlistDao().getAll()
-            }.await().let { newData ->
+            }.let { newData ->
                 val finalNewData = newData.toMutableList()
                 val favorites = Playlist(
                     id = Playlist.FAVORITES_ID,
                     order = 0
                 )
                 if (newData.isEmpty()) {
-                    async(CommonPool) { database.playlistDao().insert(favorites) }.await()
+                    withContext(CommonPool) { database.playlistDao().insert(favorites) }
                     finalNewData.add(favorites)
                 }
                 data.swap(finalNewData)

@@ -12,9 +12,9 @@ import com.pandulapeter.campfire.PlaylistItemBinding
 import com.pandulapeter.campfire.R
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.cancel
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
 import kotlin.coroutines.experimental.CoroutineContext
 
 class ManagePlaylistListAdapter : RecyclerView.Adapter<ManagePlaylistListAdapter.PlaylistViewHolder>() {
@@ -24,7 +24,7 @@ class ManagePlaylistListAdapter : RecyclerView.Adapter<ManagePlaylistListAdapter
             coroutine?.cancel()
             coroutine = launch(UI) {
                 val oldItems = items
-                async(CommonPool) {
+                withContext(CommonPool) {
                     DiffUtil.calculateDiff(object : DiffUtil.Callback() {
                         override fun getOldListSize() = oldItems.size
 
@@ -35,7 +35,7 @@ class ManagePlaylistListAdapter : RecyclerView.Adapter<ManagePlaylistListAdapter
 
                         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
                     })
-                }.await().dispatchUpdatesTo(this@ManagePlaylistListAdapter)
+                }.dispatchUpdatesTo(this@ManagePlaylistListAdapter)
                 field = newItems
             }
         }

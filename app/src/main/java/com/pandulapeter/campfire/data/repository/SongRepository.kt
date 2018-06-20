@@ -10,8 +10,8 @@ import com.pandulapeter.campfire.util.enqueueCall
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
 
 class SongRepository(
     private val preferenceDatabase: PreferenceDatabase,
@@ -36,10 +36,10 @@ class SongRepository(
 
     init {
         launch(UI) {
-            async(CommonPool) {
+            withContext(CommonPool) {
                 data.swap(database.songDao().getAll())
                 updateLanguages()
-            }.await()
+            }
             if (System.currentTimeMillis() - preferenceDatabase.lastSongsUpdateTimestamp > UPDATE_LIMIT) {
                 updateData()
             } else {
@@ -70,7 +70,7 @@ class SongRepository(
         networkManager.service.getSongs().enqueueCall(
             onSuccess = { newData ->
                 launch(UI) {
-                    async(CommonPool) {
+                    withContext(CommonPool) {
                         if (data.isNotEmpty()) {
                             newData.forEach { song ->
                                 if (data.find { it.id == song.id } == null) {
@@ -80,8 +80,8 @@ class SongRepository(
                         }
                         data.swap(newData)
                         updateLanguages()
-                    }.await()
-                    async(CommonPool) { database.songDao().updateAll(data) }
+                    }
+                    launch(CommonPool) { database.songDao().updateAll(data) }
                     notifyDataChanged()
                     isLoading = false
                     preferenceDatabase.lastSongsUpdateTimestamp = System.currentTimeMillis()

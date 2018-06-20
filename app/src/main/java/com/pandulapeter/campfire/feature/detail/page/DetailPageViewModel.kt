@@ -16,8 +16,8 @@ import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
 import org.koin.android.ext.android.inject
 
 class DetailPageViewModel(
@@ -99,9 +99,9 @@ class DetailPageViewModel(
     fun refreshText(onDone: () -> Unit = {}) {
         launch(UI) {
             text.set(
-                async(CommonPool) {
+                withContext(CommonPool) {
                     songParser.parseSong(rawText, preferenceDatabase.shouldShowChords, preferenceDatabase.shouldUseGermanNotation, transposition.get())
-                }.await()
+                }
             )
             onDone()
         }
