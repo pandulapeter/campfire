@@ -48,6 +48,7 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
     private val contentBottomMargin by lazy { context?.dimension(R.dimen.list_fab_content_bottom_margin) ?: 0 }
     private var shouldTransformTopToAppBar = false
     private var scrollViewOffset = 0
+    private var shouldScrollToBottom = false
 
     override fun initializeDialog(context: Context, savedInstanceState: Bundle?) {
         viewModel = PlaylistChooserBottomSheetViewModel(
@@ -149,6 +150,10 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
             }
             binding.container?.newPlaylist?.visibility = if (playlistRepository.cache.size < Playlist.MAXIMUM_PLAYLIST_COUNT) View.VISIBLE else View.GONE
             checkIfToolbarTransformationIsNeeded()
+            if (shouldScrollToBottom) {
+                binding.container?.nestedScrollView?.run { post { if (isAdded) fullScroll(View.FOCUS_DOWN) } }
+            }
+            shouldScrollToBottom = true
         }
     }
 
