@@ -14,7 +14,7 @@ class SongParser(private val context: Context) {
         val chords = mutableListOf<Chord>()
         var offset = 0
         val parsedText = (if (shouldShowChords)
-            text.replace(" ", " [ ]") // Insert invisible, fake chords to keep the line height consistent.
+            text.replace(Regex("\\b(\\s)\\b"), " [ ]") // Insert invisible, fake chords between words to keep the line height consistent.
         else text
             .replace(Regex("\\[(.*?)[]]"), "") // Remove chords.
             .replace(Regex("[ ][ ]+"), "") // Remove groups of multiple whitespaces within a single line.
@@ -22,11 +22,11 @@ class SongParser(private val context: Context) {
             .replace("\n\n", "\n") // Remove consecutive line breaks.
             .let { returnValue ->
                 returnValue
-                    .replace(Regex("\\{(.*?)[}]"), { if (it.range.first == 0 || returnValue[it.range.first - 2] == '}') it.value else "\n${it.value}" })
+                    .replace(Regex("\\{(.*?)[}]")) { if (it.range.first == 0 || returnValue[it.range.first - 2] == '}') it.value else "\n${it.value}" }
                     .replace("{", "\n{") // Ensure that section headers are separated by an empty lines.
                     .replace("\n\n\n{", "\n\n{") // Remove accidentally inserted consecutive line breaks.
                     .removePrefix("\n")
-            }).replace(Regex("\\{(.*?)[}]"), {
+            }).replace(Regex("\\{(.*?)[}]")) {
             // Find the section headers
             val sectionType = SectionType.fromAbbreviation(it.value[1])
             if (sectionType != null) {
@@ -39,7 +39,7 @@ class SongParser(private val context: Context) {
             } else {
                 it.value
             }
-        })
+        }
         if (shouldShowChords) {
             parsedText.replace(Regex("\\[(.*?)]")) {
                 // Find the chords
