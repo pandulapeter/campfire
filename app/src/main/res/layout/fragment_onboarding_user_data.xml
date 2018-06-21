@@ -54,7 +54,7 @@
                 android:id="@+id/checkbox_analytics"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/content_padding"
+                android:layout_marginTop="@dimen/large_content_padding"
                 android:checked="@={viewModel.isAnalyticsEnabled}"
                 android:paddingEnd="0dp"
                 android:paddingStart="@dimen/content_padding"

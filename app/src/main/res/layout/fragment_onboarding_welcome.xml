@@ -53,16 +53,14 @@
                 app:layout_constraintTop_toBottomOf="@id/logo"
                 app:layout_constraintVertical_chainStyle="packed" />
 
-            <TextView
+            <Button
                 android:id="@+id/language"
+                style="@style/Widget.AppCompat.Button.Borderless"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/onboarding_logo_margin"
-                android:background="?attr/selectableItemBackground"
-                android:gravity="center"
                 android:onClick="@{() -> viewModel.onLanguageClicked()}"
-                android:padding="@dimen/content_padding"
-                android:text="@{viewModel.languageLabel}"
+                android:textAllCaps="false"
                 app:layout_constraintBottom_toTopOf="@id/theme"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -70,17 +68,15 @@
                 app:layout_constraintVertical_chainStyle="packed"
                 tools:text="@string/options_preferences_language" />
 
-            <TextView
+            <Button
                 android:id="@+id/theme"
+                style="@style/Widget.AppCompat.Button.Borderless"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/large_content_padding"
                 android:layout_marginTop="@dimen/small_content_padding"
-                android:background="?attr/selectableItemBackground"
-                android:gravity="center"
                 android:onClick="@{() -> viewModel.onThemeClicked()}"
-                android:padding="@dimen/content_padding"
-                android:text="@{viewModel.themeLabel}"
+                android:textAllCaps="false"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
