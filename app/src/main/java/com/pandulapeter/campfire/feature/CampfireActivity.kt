@@ -583,13 +583,15 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         // Show the changelog snackbar if needed
         if (preferenceDatabase.ftuxLastSeenChangelog < BuildConfig.VERSION_CODE) {
             preferenceDatabase.ftuxLastSeenChangelog = BuildConfig.VERSION_CODE
-            currentFragment?.showSnackbar(
-                message = R.string.options_changelog_app_updated,
-                actionText = R.string.options_changelog_what_is_new,
-                action = {
-                    analyticsManager.onWhatIsNewButtonPressed()
-                    openOptionsScreen(true)
-                })
+            if (preferenceDatabase.isOnboardingDone) {
+                currentFragment?.showSnackbar(
+                    message = R.string.options_changelog_app_updated,
+                    actionText = R.string.options_changelog_what_is_new,
+                    action = {
+                        analyticsManager.onWhatIsNewButtonPressed()
+                        openOptionsScreen(true)
+                    })
+            }
         }
     }
 
