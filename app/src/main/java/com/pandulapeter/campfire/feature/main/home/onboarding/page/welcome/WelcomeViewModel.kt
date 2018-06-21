@@ -2,7 +2,7 @@ package com.pandulapeter.campfire.feature.main.home.onboarding.page.welcome
 
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
-import android.text.SpannableString
+import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
@@ -14,12 +14,19 @@ class WelcomeViewModel : CampfireViewModel() {
     val shouldShowThemeSelector = ObservableBoolean()
     val shouldShowLanguageSelector = ObservableBoolean()
     val language = ObservableField<PreferencesViewModel.Language>(PreferencesViewModel.Language.fromId(preferenceDatabase.language))
-    val languageLabel = ObservableField(SpannableString(""))
     val theme = ObservableField<PreferencesViewModel.Theme>(PreferencesViewModel.Theme.fromId(preferenceDatabase.theme))
-    val themeLabel = ObservableField(SpannableString(""))
 
     init {
-        language.onPropertyChanged { preferenceDatabase.language = it.id }
+        language.onPropertyChanged {
+            preferenceDatabase.language = it.id
+            preferenceDatabase.disabledLanguageFilters = preferenceDatabase.disabledLanguageFilters.toMutableSet().apply { remove(it.id) }
+            when (it.id) {
+                Language.Unknown.id -> Unit
+                Language.Known.Hungarian.id -> preferenceDatabase.shouldUseGermanNotation = true
+                else -> preferenceDatabase.shouldUseGermanNotation = false
+            }
+
+        }
         theme.onPropertyChanged { preferenceDatabase.theme = it.id }
     }
 
