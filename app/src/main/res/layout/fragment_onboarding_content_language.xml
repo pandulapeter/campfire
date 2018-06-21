@@ -67,6 +67,8 @@
 
             </ViewSwitcher>
 
+            <!-- TODO: Error placeholder button elevation is not correct during the page transformation. -->
+
             <com.pandulapeter.campfire.feature.shared.widget.StateLayout
                 android:id="@+id/state_layout"
                 android:layout_width="0dp"
