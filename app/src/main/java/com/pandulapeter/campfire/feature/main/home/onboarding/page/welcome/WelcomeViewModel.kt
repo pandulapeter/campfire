@@ -1,8 +1,8 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding.page.welcome
 
+import android.content.res.Resources
 import android.databinding.ObservableBoolean
 import android.databinding.ObservableField
-import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
@@ -17,15 +17,20 @@ class WelcomeViewModel : CampfireViewModel() {
     val theme = ObservableField<PreferencesViewModel.Theme>(PreferencesViewModel.Theme.fromId(preferenceDatabase.theme))
 
     init {
+        val automaticLocaleCode = Resources.getSystem().configuration.locale.isO3Country.toUpperCase()
         language.onPropertyChanged {
             preferenceDatabase.language = it.id
-            preferenceDatabase.disabledLanguageFilters = preferenceDatabase.disabledLanguageFilters.toMutableSet().apply { remove(it.id) }
-            when (it.id) {
-                Language.Unknown.id -> Unit
-                Language.Known.Hungarian.id -> preferenceDatabase.shouldUseGermanNotation = true
-                else -> preferenceDatabase.shouldUseGermanNotation = false
+            preferenceDatabase.disabledLanguageFilters = if (it == PreferencesViewModel.Language.AUTOMATIC) {
+                PreferenceDatabase.getDefaultLanguageFilters(automaticLocaleCode)
+            } else {
+                preferenceDatabase.disabledLanguageFilters.toMutableSet().apply { remove(it.id) }
             }
-
+            preferenceDatabase.shouldUseGermanNotation = when (it) {
+                PreferencesViewModel.Language.AUTOMATIC -> PreferenceDatabase.shouldEnableGermanNotationByDefault(automaticLocaleCode)
+                PreferencesViewModel.Language.ENGLISH -> false
+                PreferencesViewModel.Language.HUNGARIAN -> true
+                PreferencesViewModel.Language.ROMANIAN -> false
+            }
         }
         theme.onPropertyChanged { preferenceDatabase.theme = it.id }
     }

@@ -17,7 +17,7 @@ sealed class Language(val id: String, @StringRes val nameResource: Int) {
     enum class SupportedLanguages(val id: String, val countryCodes: List<String>) {
         ENGLISH("en", listOf()),
         SPANISH("es", listOf("ARG", "BOL", "CHL", "COL", "CRI", "CUB", "DOM", "ECU", "SLV", "GTM", "HND", "MEX", "NIC", "PAN", "PRY", "PER", "ESP", "URY", "VEN", "USA")),
-        HUNGARIAN("hu", listOf("HUN", "ROU")),
+        HUNGARIAN("hu", listOf("HUN")),
         ROMANIAN("ro", listOf("ROU"))
     }
 }

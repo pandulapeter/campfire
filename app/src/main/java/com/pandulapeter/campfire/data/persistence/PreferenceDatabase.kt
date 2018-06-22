@@ -13,6 +13,23 @@ class PreferenceDatabase(context: Context) {
 
     companion object {
         private const val TRANSPOSITION_PREFIX = "transposition"
+
+        fun shouldEnableGermanNotationByDefault(locale: String) = when (locale) {
+            "AUT", "CZE", "DEU", "SWE", "DNK", "EST", "FIN", "HUN", "LVA", "NOR", "POL", "SRB", "SVK" -> true
+            else -> false
+        }
+
+        fun getDefaultLanguageFilters(locale: String) = mutableSetOf<String>().apply {
+            if (!Language.SupportedLanguages.SPANISH.countryCodes.contains(locale)) {
+                add(Language.Known.Spanish.id)
+            }
+            if (!Language.SupportedLanguages.HUNGARIAN.countryCodes.contains(locale)) {
+                add(Language.Known.Hungarian.id)
+            }
+            if (!Language.SupportedLanguages.ROMANIAN.countryCodes.contains(locale)) {
+                add(Language.Known.Romanian.id)
+            }
+        }
     }
 
     private val preferences = context.applicationContext.getSharedPreferences("preferences", Context.MODE_PRIVATE)
@@ -20,7 +37,7 @@ class PreferenceDatabase(context: Context) {
 
     // General
     var lastScreen by PreferenceFieldDelegate.String("lastScreen", "")
-    var disabledLanguageFilters by PreferenceFieldDelegate.StringSet("disabledLanguageFilters", getDefaultLanguageFilters())
+    var disabledLanguageFilters by PreferenceFieldDelegate.StringSet("disabledLanguageFilters", getDefaultLanguageFilters(locale))
     var shouldShowExplicit by PreferenceFieldDelegate.Boolean("shouldShowExplicit", false)
 
     // Home
@@ -40,7 +57,7 @@ class PreferenceDatabase(context: Context) {
 
     // Preferences
     var shouldShowChords by PreferenceFieldDelegate.Boolean("shouldShowChords", true)
-    var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("shouldUseGermanNotation", shouldEnableGermanNotationByDefault())
+    var shouldUseGermanNotation by PreferenceFieldDelegate.Boolean("shouldUseGermanNotation", shouldEnableGermanNotationByDefault(locale))
     var fontSize by PreferenceFieldDelegate.Float("fontSize", 1f)
     var theme by PreferenceFieldDelegate.Int("theme", PreferencesViewModel.Theme.AUTOMATIC.id)
     var language by PreferenceFieldDelegate.String("language", PreferencesViewModel.Language.AUTOMATIC.id)
@@ -64,23 +81,6 @@ class PreferenceDatabase(context: Context) {
     fun getTransposition(songId: String) = preferences.getInt(TRANSPOSITION_PREFIX + songId, 0)
 
     fun setTransposition(songId: String, transposition: Int) = preferences.edit().putInt(TRANSPOSITION_PREFIX + songId, transposition).apply()
-
-    private fun shouldEnableGermanNotationByDefault() = when (locale) {
-        "AUT", "CZE", "DEU", "SWE", "DNK", "EST", "FIN", "HUN", "LVA", "NOR", "POL", "SRB", "SVK" -> true
-        else -> false
-    }
-
-    private fun getDefaultLanguageFilters() = mutableSetOf<String>().apply {
-        if (!Language.SupportedLanguages.SPANISH.countryCodes.contains(locale)) {
-            add(Language.Known.Spanish.id)
-        }
-        if (!Language.SupportedLanguages.HUNGARIAN.countryCodes.contains(locale)) {
-            add(Language.Known.Hungarian.id)
-        }
-        if (!Language.SupportedLanguages.ROMANIAN.countryCodes.contains(locale)) {
-            add(Language.Known.Romanian.id)
-        }
-    }
 
     private sealed class PreferenceFieldDelegate<T>(protected val key: kotlin.String, protected val defaultValue: T) : ReadWriteProperty<PreferenceDatabase, T> {
 
