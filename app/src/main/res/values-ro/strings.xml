@@ -169,7 +169,7 @@
     <string name="options_preferences_language_romanian_description">Folosește întotdeauna română</string>
     <string name="options_preferences_user_data">Datele utilizatorului</string>
     <string name="options_preferences_reset_hints">Resetează îndrumările</string>
-    <string name="options_preferences_reset_hints_description">Îndrumările vor apărea din nou</string>
+    <string name="options_preferences_reset_hints_description">Mesajele de îndrumare vor apărea din nou</string>
     <string name="options_preferences_reset_hints_message">Îndrumările au fost resetate</string>
     <string name="options_preferences_reset_hints_confirmation_message">Asta va reseta toate mesajele de îndrumare.</string>
     <string name="options_preferences_reset_hints_confirmation_reset">Resetare</string>
@@ -289,22 +289,22 @@
     <string name="manage_downloads_placeholder">Nincsenek letöltött dalok</string>
 
     <!-- Detail screen -->
-    <string name="detail_song_options">Opciók</string>
-    <string name="detail_transpose">Transzponálás (eredeti)</string>
-    <string name="detail_transpose_value">Transzponálás (%s)</string>
-    <string name="detail_transpose_higher">Fennebb</string>
-    <string name="detail_transpose_lower">Lennebb</string>
+    <string name="detail_song_options">Opțiuni</string>
+    <string name="detail_transpose">Transpunere (original)</string>
+    <string name="detail_transpose_value">Transpunere (%s)</string>
+    <string name="detail_transpose_higher">Mai sus</string>
+    <string name="detail_transpose_lower">Mai jos</string>
     <string name="detail_play_original">Eredeti lejátszása</string>
     <string name="detail_report">Hiba jelentése</string>
     <string name="detail_report_subject">Campfire: Probléma ezzel a dallal: %1$s - %2$s</string>
     <string name="detail_swipe_hint">Lapozz vízszintesen a listában lévő többi dal megtekintéséhez</string>
     <string name="detail_pinch_hint">Két ujjal csípve állíthatod a szöveg méretét</string>
     <string name="detail_placeholder_error">Hiba történt a dal letöltése közben</string>
-    <string name="detail_intro">Bevezető</string>
-    <string name="detail_verse">Szakasz</string>
-    <string name="detail_bridge">Átkötő</string>
-    <string name="detail_solo">Szóló</string>
-    <string name="detail_outro">Lezárás</string>
-    <string name="detail_chorus">Refrén</string>
+    <string name="detail_intro">Introducere</string>
+    <string name="detail_verse">Strofa</string>
+    <string name="detail_bridge">Bridge</string>
+    <string name="detail_solo">Solo</string>
+    <string name="detail_outro">Outro</string>
+    <string name="detail_chorus">Refren</string>
 
 </resources>

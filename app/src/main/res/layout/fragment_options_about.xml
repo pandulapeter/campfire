@@ -126,6 +126,8 @@
                         android:onClick="@{() -> viewModel.onContactClicked(context)}"
                         android:text="@string/options_about_contact" />
 
+                    <!-- TODO: Implement in-app purchases. -->
+
                     <TextView
                         style="@style/OptionsItem"
                         android:layout_width="match_parent"
