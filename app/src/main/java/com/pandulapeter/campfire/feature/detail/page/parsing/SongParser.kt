@@ -35,6 +35,7 @@ class SongParser(private val context: Context) {
                     .replace(regexSection) { if (it.range.first == 0 || returnValue[it.range.first - 2] == '}') it.value else "\n${it.value}" }
                     .replace("{", "\n{") // Ensure that section headers are separated by an empty lines.
                     .replace("\n\n\n{", "\n\n{") // Remove accidentally inserted consecutive line breaks.
+                    .replace("}\n\n{", "}\n{") // Remove accidentally inserted consecutive line breaks.
                     .removePrefix("\n")
             }).replace(regexSection) {
             // Find the section headers
