@@ -51,10 +51,10 @@
     <string name="user_data_message_end">Aceste setări pot fi schimbate oricând.</string>
 
     <!-- Onboarding screen / Song appearance -->
-    <string name="song_appearance_title">Afișarea cântecului</string>
+    <string name="song_appearance_title">Afișarea cântecelor</string>
     <string name="song_appearance_description">Cânți la un instrument sau doar cu vocea? Ce ai prefera să vezi când deschizi un cântec?</string>
-    <string name="song_appearance_lyrics_chords_english">Versuri și acorduri (notația Engleză)</string>
-    <string name="song_appearance_lyrics_chords_german">Versuri și acorduri (notația Germană)</string>
+    <string name="song_appearance_lyrics_chords_english">Versuri și acorduri (notația engleză)</string>
+    <string name="song_appearance_lyrics_chords_german">Versuri și acorduri (notația germană)</string>
     <string name="song_appearance_lyrics_only">Doar versuri</string>
     <string name="song_appearance_lyrics_only_description">Fără acorduri</string>
 
@@ -242,16 +242,16 @@
     <string name="options_about_contact">Kapcsolat</string>
     <string name="options_about_buy_me_a_beer">Hívj meg egy sörre</string>
     <string name="options_about_error">Sajnos ezt egyetlen telepített alkalmazás sem tudja végrehajtani</string>
-    <string name="options_about_legal">Jogi dokumentumok (angol)</string>
-    <string name="options_about_terms_and_conditions">Felhasználói feltételek</string>
-    <string name="options_about_privacy_policy">Adatvédelmi irányelvek</string>
-    <string name="options_about_licenses">Nyílt forráskódú licenszek</string>
+    <string name="options_about_legal">Documente legale (engleză)</string>
+    <string name="options_about_terms_and_conditions">Termeni de utilizare</string>
+    <string name="options_about_privacy_policy">Politica de confidențialitate</string>
+    <string name="options_about_licenses">Licențe de sursă deschisă</string>
 
     <!-- Playlist screen -->
     <plurals name="playlist_song_count">
-        <item quantity="one">%d dal</item>
-        <item quantity="few">%d dal</item>
-        <item quantity="other">%d dal</item>
+        <item quantity="one">%d cântec</item>
+        <item quantity="few">%d cântece</item>
+        <item quantity="other">%d cântece</item>
     </plurals>
     <string name="playlist_enter_title">Add meg a lista címét</string>
     <string name="playlist_title">Cím</string>
@@ -262,9 +262,9 @@
 
     <!-- Manage playlists screen -->
     <plurals name="manage_playlists_subtitle">
-        <item quantity="one">%d lista</item>
-        <item quantity="few">%d lista</item>
-        <item quantity="other">%d lista</item>
+        <item quantity="one">%d listă</item>
+        <item quantity="few">%d liste</item>
+        <item quantity="other">%d liste</item>
     </plurals>
     <string name="manage_playlists_song_count_empty">Üres lista</string>
     <plurals name="manage_playlists_song_count">
