@@ -83,7 +83,7 @@
     <string name="main_exit_confirmation_close">Ieșire</string>
 
     <!-- Home screen -->
-    <string name="home_placeholder">Această pagină va conține sugestii personalizate, colecții recomandate și liste aleatoare de cântece. Din păcate încă nu este gate. Încearcă mai târziu!</string>
+    <string name="home_placeholder">Această pagină va conține sugestii personalizate, colecții recomandate și liste aleatoare de cântece. Din păcate încă nu este gata. Încearcă mai târziu!</string>
 
     <!-- Collections screen -->
     <string name="collections_placeholder">Nu s-au găsit colecții pentru criteriile de căutare. Te rog să verifici filtrele!</string>
