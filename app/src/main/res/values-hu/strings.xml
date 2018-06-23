@@ -53,8 +53,8 @@
     <!-- Onboarding screen / Song appearance -->
     <string name="song_appearance_title">Dalok megjelenítése</string>
     <string name="song_appearance_description">Hangszeren játszol vagy csak énekelsz? Mit szeretnél látni amikor megtekintessz egy dalt?</string>
-    <string name="song_appearance_lyrics_chords_english">Dalszöveg és akkordok (Angol jelölés)</string>
-    <string name="song_appearance_lyrics_chords_german">Dalszöveg és akkordok (Német jelölés)</string>
+    <string name="song_appearance_lyrics_chords_english">Dalszöveg és akkordok (angol jelölés)</string>
+    <string name="song_appearance_lyrics_chords_german">Dalszöveg és akkordok (német jelölés)</string>
     <string name="song_appearance_lyrics_only">Csak dalszöveg</string>
     <string name="song_appearance_lyrics_only_description">Az akkordok nem jelennek meg</string>
 

@@ -117,7 +117,7 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
                 }
             }
             offscreenPageLimit = 3
-            adapter = OnboardingAdapter(childFragmentManager)
+            adapter = OnboardingPagerAdapter(childFragmentManager)
         }
     }
 

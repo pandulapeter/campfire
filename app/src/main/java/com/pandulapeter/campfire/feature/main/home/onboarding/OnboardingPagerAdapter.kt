@@ -7,7 +7,7 @@ import com.pandulapeter.campfire.feature.main.home.onboarding.page.songAppearanc
 import com.pandulapeter.campfire.feature.main.home.onboarding.page.userData.UserDataFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.page.welcome.WelcomeFragment
 
-class OnboardingAdapter(fragmentManager: FragmentManager) : FragmentStatePagerAdapter(fragmentManager) {
+class OnboardingPagerAdapter(fragmentManager: FragmentManager) : FragmentStatePagerAdapter(fragmentManager) {
 
     override fun getItem(position: Int) = when (position) {
         0 -> WelcomeFragment()
