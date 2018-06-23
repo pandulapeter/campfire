@@ -350,7 +350,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 songRepository.onSongOpened(songId)
                 lastSongId = songId
             }
-            binding.root.post { if (isAdded) showHintIfNeeded() }
+            binding.root.postDelayed({ if (isAdded) showHintIfNeeded() }, 300)
         }
     }
 
