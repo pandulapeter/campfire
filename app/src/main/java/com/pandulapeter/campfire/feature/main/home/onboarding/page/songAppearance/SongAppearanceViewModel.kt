@@ -9,35 +9,41 @@ import org.koin.android.ext.android.inject
 
 class SongAppearanceViewModel : CampfireViewModel() {
     private val preferenceDatabase by inject<PreferenceDatabase>()
+    private var areListenersSet = false
     val englishNotationExample = generateNotationExample(false)
     val germanNotationExample = generateNotationExample(true)
-    //TODO: Initial values are not properly set.
-    val isFirstOptionSelected = ObservableBoolean(preferenceDatabase.shouldShowChords && !preferenceDatabase.shouldUseGermanNotation)
-    val isSecondOptionSelected = ObservableBoolean(preferenceDatabase.shouldShowChords && preferenceDatabase.shouldUseGermanNotation)
-    val isThirdOptionSelected = ObservableBoolean(!preferenceDatabase.shouldShowChords)
+    val isFirstOptionSelected = ObservableBoolean()
+    val isSecondOptionSelected = ObservableBoolean()
+    val isThirdOptionSelected = ObservableBoolean()
 
-    init {
-        isFirstOptionSelected.onPropertyChanged {
-            if (it) {
-                isSecondOptionSelected.set(false)
-                isThirdOptionSelected.set(false)
-                preferenceDatabase.shouldShowChords = true
-                preferenceDatabase.shouldUseGermanNotation = false
+    fun initialize() {
+        isFirstOptionSelected.set(preferenceDatabase.shouldShowChords && !preferenceDatabase.shouldUseGermanNotation)
+        isSecondOptionSelected.set(preferenceDatabase.shouldShowChords && preferenceDatabase.shouldUseGermanNotation)
+        isThirdOptionSelected.set(!preferenceDatabase.shouldShowChords)
+        if (!areListenersSet) {
+            areListenersSet = true
+            isFirstOptionSelected.onPropertyChanged {
+                if (it) {
+                    isSecondOptionSelected.set(false)
+                    isThirdOptionSelected.set(false)
+                    preferenceDatabase.shouldShowChords = true
+                    preferenceDatabase.shouldUseGermanNotation = false
+                }
             }
-        }
-        isSecondOptionSelected.onPropertyChanged {
-            if (it) {
-                isFirstOptionSelected.set(false)
-                isThirdOptionSelected.set(false)
-                preferenceDatabase.shouldShowChords = true
-                preferenceDatabase.shouldUseGermanNotation = true
+            isSecondOptionSelected.onPropertyChanged {
+                if (it) {
+                    isFirstOptionSelected.set(false)
+                    isThirdOptionSelected.set(false)
+                    preferenceDatabase.shouldShowChords = true
+                    preferenceDatabase.shouldUseGermanNotation = true
+                }
             }
-        }
-        isThirdOptionSelected.onPropertyChanged {
-            if (it) {
-                isFirstOptionSelected.set(false)
-                isSecondOptionSelected.set(false)
-                preferenceDatabase.shouldShowChords = false
+            isThirdOptionSelected.onPropertyChanged {
+                if (it) {
+                    isFirstOptionSelected.set(false)
+                    isSecondOptionSelected.set(false)
+                    preferenceDatabase.shouldShowChords = false
+                }
             }
         }
     }

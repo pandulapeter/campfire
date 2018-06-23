@@ -7,4 +7,9 @@ import com.pandulapeter.campfire.feature.main.home.onboarding.page.OnboardingPag
 class SongAppearanceFragment : OnboardingPageFragment<FragmentOnboardingSongAppearanceBinding, SongAppearanceViewModel>(R.layout.fragment_onboarding_song_appearance) {
 
     override val viewModel = SongAppearanceViewModel()
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.initialize()
+    }
 }
