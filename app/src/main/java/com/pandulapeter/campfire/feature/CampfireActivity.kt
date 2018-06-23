@@ -309,20 +309,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         handleNewIntent()
     }
 
-    override fun onStart() {
-        super.onStart()
-
-        // Set the task description.
-        @Suppress("ConstantConditionIf")
-        setTaskDescription(
-            ActivityManager.TaskDescription(
-                getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
-                null,
-                (binding.toolbarButtonContainer.background as ColorDrawable).color
-            )
-        )
-    }
-
     override fun onResume() {
         super.onResume()
         playlistRepository.subscribe(this)
@@ -335,6 +321,16 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 it.notifyTransitionEnd()
             }
         }
+        
+        // Set the task description.
+        @Suppress("ConstantConditionIf")
+        setTaskDescription(
+            ActivityManager.TaskDescription(
+                getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
+                null,
+                (binding.toolbarButtonContainer.background as ColorDrawable).color
+            )
+        )
     }
 
     override fun onPause() {

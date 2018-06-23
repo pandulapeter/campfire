@@ -20,8 +20,11 @@ class SongParser(private val context: Context) {
         val sectionNames = mutableListOf<Section>()
         val chords = mutableListOf<Chord>()
         var offset = 0
-        val parsedText = (if (shouldShowChords)
-            text.replace(regexSpaceBetweenWords, " [ ]") // Insert invisible, fake chords between words to keep the line height consistent.
+        val parsedText = (if (shouldShowChords) text
+            .replace(regexSpaceBetweenWords, " [ ]") // Insert invisible, fake chords between words to keep the line height consistent.
+            .replace("\n", "[ ]\n") // Insert invisible, fake chords at the end of each line to keep the line height consistent.
+            .replace("}[ ]\n", "}\n") // Remove automatically inserted fake chords from the headers
+            .replace("\n[ ]\n", "\n\n")
         else text
             .replace(regexChord, "") // Remove chords.
             .replace(regexConsecutiveWhitespaces, "") // Remove groups of multiple whitespaces within a single line.
