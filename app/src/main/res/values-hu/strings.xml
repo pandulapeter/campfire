@@ -29,7 +29,7 @@
     <string name="drag_to_rearrange">Húzd az átrendezéshez</string>
 
     <!-- Onboarding screen -->
-    <string name="welcome_skip">Kiugrás</string>
+    <string name="welcome_skip">Átugrás</string>
     <string name="welcome_next">Következő</string>
     <string name="welcome_done">Kész</string>
 
@@ -62,10 +62,10 @@
     <string name="content_language_title">Tartalom nyelve</string>
     <string name="content_language_description">Az alkalmazás csak ezeken a nyelveken fog dalokat és gyűjteményeket kimutatni:</string>
     <string name="content_language_error">Kérlek válassz ki legalább egy nyelvet</string>
-    <string name="content_language_explicit_switch">Trágár dalok megjelenítése</string>
-    <string name="content_language_explicit_switch_enabled">A trágár szövegű dalok megjelenhetnek</string>
-    <string name="content_language_explicit_switch_disabled">Trágár szövegű dalok kiszűrve</string>
-    <string name="content_language_initializing_error">Hiba történt a nyelvek letöltése közben</string>
+    <string name="content_language_explicit_switch">Explicit szövegű dalok megjelenítése</string>
+    <string name="content_language_explicit_switch_enabled">Az explicit szövegű dalok megjelenhetnek</string>
+    <string name="content_language_explicit_switch_disabled">Az explicit szövegű dalok kiszűrve</string>
+    <string name="content_language_initializing_error">Hiba történt a nyelvek betöltése közben</string>
 
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>
@@ -87,7 +87,7 @@
 
     <!-- Collections screen -->
     <string name="collections_placeholder">Nem található megfelelő gyűjtemény. Ellenőrizd a beállított szűrőket</string>
-    <string name="collections_initializing_error">Hiba történt a gyűjtemények letöltése közben</string>
+    <string name="collections_initializing_error">Hiba történt a gyűjtemények betöltése közben</string>
     <string name="collections_update_error">Hiba történt a gyűjtemények frissítése közben</string>
     <string name="collections_filters">Szűrők</string>
     <string name="collections_sort_by">Rendezés</string>
@@ -96,12 +96,12 @@
     <string name="collections_sort_by_popularity">Népszerűség</string>
     <string name="collections_filter_by_type">Szűrés típus szerint</string>
     <string name="collections_bookmarked_only">Csak cimkézett</string>
-    <string name="collections_show_explicit">Trágár szövegek</string>
+    <string name="collections_show_explicit">Explicit szövegek</string>
     <string name="collections_filter_by_language">Szűrés nyelv szerint</string>
 
     <!-- Songs screen -->
     <string name="songs_placeholder">Nem található megfelelő dal. Ellenőrizd a beállított szűrőket</string>
-    <string name="songs_initializing_error">Hiba történt a dalok letöltése közben</string>
+    <string name="songs_initializing_error">Hiba történt a dalok betöltése közben</string>
     <string name="songs_update_error">Hiba történt a dalok frissítése közben</string>
     <string name="songs_filters">Szűrők</string>
     <string name="songs_song_download_error">Hiba történt a dal letöltése közben: %s</string>
@@ -114,7 +114,7 @@
     <string name="songs_sort_by_artist">Előadó</string>
     <string name="songs_filter_by_language">Szűrés nyelv szerint</string>
     <string name="songs_downloaded_only">Csak letöltött</string>
-    <string name="songs_show_explicit">Trágár szövegek</string>
+    <string name="songs_show_explicit">Explicit szövegek</string>
     <string name="songs_search_in">Itt:</string>
     <string name="songs_search_in_titles">Címekben</string>
     <string name="songs_search_in_artists">Előadókban</string>
@@ -203,13 +203,13 @@
         <Data><![CDATA[
         • <strong>Gyűjtemények</strong> képernyő nyilvános, tematikus dallistákkal<br>
         • Állítható <strong>betűméret</strong> a dalszöveg nézetben<br>
-        • <strong>Keverés</strong> opció ami véletlenszerű sorrendben nyitja meg az adott dallistát
+        • <strong>Keverés</strong> gomb ami véletlenszerű sorrendben nyitja meg az adott dallistát
         ]]></Data>
     </string>
     <string name="options_changelog_0_3_0_description">
         <Data><![CDATA[
-        • Saját <strong>listák</strong> létrehozásának lehetősége<br>
-        • <strong>Lapozható</strong> dalszöveg-nézet, amennyiben az egy listából volt megnyitva<br>
+        • Helyi <strong>listák</strong> létrehozásának lehetősége<br>
+        • <strong>Lapozható</strong> dalszöveg-nézet, listában lévő daloknak<br>
         • <strong>Alkalmazás-parancsikonok</strong> támogatása Android 7.1 vagy újabb rendszereken
         ]]></Data>
     </string>
@@ -223,7 +223,7 @@
     <string name="options_changelog_0_1_0_description">
         <Data><![CDATA[
         • Szűrhető és kereshető <strong>dallista</strong> képernyő<br>
-        • <strong>Dalszöveg</strong> nézet tetszés szerint kimutatható vagy elrejthető akkordokkal<br>
+        • <strong>Dalszöveg</strong> nézet tetszés szerint kimutatható akkordokkal<br>
         • <strong>Kapcsolat nélküli mód</strong> a letöltött dalok egyenkénti eltávolításának lehetőségével
         ]]></Data>
     </string>
@@ -235,14 +235,14 @@
         ]]></Data>
     </string>
     <string name="options_about_no_in_app_purchase">Ez még nincs kész… De azért köszönöm!</string>
-    <string name="options_about_links">Hivatkozások</string>
+    <string name="options_about_links">Külső hivatkozások</string>
     <string name="options_about_google_play">Értékelés Google Play-en</string>
     <string name="options_about_github">Megtekintés GitHub-on</string>
     <string name="options_about_share">Applikáció megosztása</string>
-    <string name="options_about_contact">Kapcsolat</string>
+    <string name="options_about_contact">Írj nekem</string>
     <string name="options_about_buy_me_a_beer">Hívj meg egy sörre</string>
-    <string name="options_about_error">Sajnos ezt egyetlen telepített alkalmazás sem tudja végrehajtani</string>
-    <string name="options_about_legal">Jogi dokumentumok (angol)</string>
+    <string name="options_about_error">Ezt egyetlen telepített alkalmazás sem tudja végrehajtani</string>
+    <string name="options_about_legal">Jogi dokumentumok (angolul)</string>
     <string name="options_about_terms_and_conditions">Felhasználói feltételek</string>
     <string name="options_about_privacy_policy">Adatvédelmi irányelvek</string>
     <string name="options_about_licenses">Nyílt forráskódú licenszek</string>
@@ -254,7 +254,7 @@
     </plurals>
     <string name="playlist_enter_title">Add meg a lista címét</string>
     <string name="playlist_title">Cím</string>
-    <string name="playlist_placeholder">Hogy dalokat adj hozzá ehhez a listához, kattints a dalok melletti csillag ikonra</string>
+    <string name="playlist_placeholder">Ahhoz, hogy dalokat adj hozzá ehhez a listához, koppints a címek melletti csillag ikonra</string>
     <string name="playlist_song_removed_message">%s eltávolítva</string>
     <string name="playlist_hint_swipe">Vonszold vízszintesen a dalokat, hogy eltávolítsd őket ebből a listából</string>
     <string name="playlist_hint_drag">Vonszold függőlegesen a dalokat a sorrend átrendezéséhez</string>
@@ -278,7 +278,7 @@
 
     <!-- Manage downloads screen -->
     <string name="manage_downloads_no_downloads">Nincsenek letöltött dalok</string>
-    <string name="manage_downloads_delete_all_confirmation_message">Az összes letöltött dal le lesz törölve.</string>
+    <string name="manage_downloads_delete_all_confirmation_message">Az összes letöltött dal törölve lesz.</string>
     <string name="manage_downloads_delete_all_confirmation_clear">Összes törlése</string>
     <string name="manage_downloads_delete_all_message">Az összes letöltött dal törölve</string>
     <string name="manage_downloads_song_deleted_message">%s törölve</string>

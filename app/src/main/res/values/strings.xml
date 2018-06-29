@@ -40,7 +40,7 @@
     <string name="welcome_theme">Theme:</string>
     <string name="welcome_conditions_part_1">"By using this application, you agree to the "</string>
     <string name="welcome_conditions_part_2">Terms and Conditions</string>
-    <string name="welcome_conditions_part_3">" as well as the "</string>
+    <string name="welcome_conditions_part_3">" as well as to the "</string>
     <string name="welcome_conditions_part_4">Privacy Policy</string>
     <string name="welcome_conditions_part_5">.</string>
 
@@ -97,7 +97,7 @@
     <string name="collections_sort_by_popularity">Popularity</string>
     <string name="collections_filter_by_type">Filter by type</string>
     <string name="collections_bookmarked_only">Bookmarked only</string>
-    <string name="collections_show_explicit">Show explicit</string>
+    <string name="collections_show_explicit">Explicit lyrics</string>
     <string name="collections_filter_by_language">Filter by language</string>
 
     <!-- Songs screen -->
@@ -115,7 +115,7 @@
     <string name="songs_sort_by_artist">Artist</string>
     <string name="songs_filter_by_language">Filter by language</string>
     <string name="songs_downloaded_only">Downloaded only</string>
-    <string name="songs_show_explicit">Show explicit</string>
+    <string name="songs_show_explicit">Explicit lyrics</string>
     <string name="songs_search_in">Search in:</string>
     <string name="songs_search_in_titles">Titles</string>
     <string name="songs_search_in_artists">Artists</string>
@@ -207,7 +207,7 @@
         <Data><![CDATA[
         • <strong>Collections</strong> screen with public, thematic playlists<br>
         • Pinch-to-zoom gesture to adjust the <strong>font size</strong><br>
-        • <strong>Shuffle</strong> option to open a list of songs in a random order
+        • <strong>Shuffle</strong> button to open a list of songs in a random order
         ]]></Data>
     </string>
     <string name="options_changelog_0_3_0_version_name" translatable="false">v0.3</string>
@@ -242,11 +242,11 @@
         ]]></Data>
     </string>
     <string name="options_about_no_in_app_purchase">Work in progress… But thanks anyway!</string>
-    <string name="options_about_links">Links</string>
+    <string name="options_about_links">External links</string>
     <string name="options_about_google_play">Rate on Google Play</string>
     <string name="options_about_github">View on GitHub</string>
     <string name="options_about_share">Share the app</string>
-    <string name="options_about_contact">Contact me</string>
+    <string name="options_about_contact">Get in touch</string>
     <string name="options_about_buy_me_a_beer">Buy me a beer</string>
     <string name="options_about_error">Looks like no app can handle this request</string>
     <string name="options_about_legal">Legal</string>
@@ -284,7 +284,7 @@
     <string name="manage_playlists_playlist_deleted_message">%s deleted</string>
 
     <!-- Manage downloads screen -->
-    <string name="manage_downloads_no_downloads">No downloads</string>
+    <string name="manage_downloads_no_downloads">No downloaded songs</string>
     <string name="manage_downloads_delete_all_confirmation_message">This will remove all downloaded songs.</string>
     <string name="manage_downloads_delete_all_confirmation_clear">Delete all</string>
     <string name="manage_downloads_delete_all_message">All downloaded songs deleted</string>
@@ -298,10 +298,10 @@
     <string name="detail_transpose_value">Transpose (%s)</string>
     <string name="detail_transpose_higher">Higher</string>
     <string name="detail_transpose_lower">Lower</string>
-    <string name="detail_play_original">Play original</string>
+    <string name="detail_play_original">Listen to the original</string>
     <string name="detail_report">Report a problem</string>
     <string name="detail_report_subject">Campfire: Problem with %1$s - %2$s</string>
-    <string name="detail_swipe_hint">Swipe horizontally to cycle through the songs</string>
+    <string name="detail_swipe_hint">Swipe horizontally to cycle through the songs from the list</string>
     <string name="detail_pinch_hint">Pinch with two fingers to adjust the font size</string>
     <string name="detail_placeholder_error">Something went wrong while\ntrying to download the song</string>
     <string name="detail_intro">Intro</string>
