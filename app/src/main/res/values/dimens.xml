@@ -19,7 +19,6 @@
     <dimen name="card_corner">16dp</dimen>
     <dimen name="card_elevation">2dp</dimen>
     <dimen name="negative_card_corner">-16dp</dimen>
-    <dimen name="view_options_width">216dp</dimen>
 
     <!-- Text -->
     <dimen name="text_header">12sp</dimen>
