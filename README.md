@@ -21,7 +21,7 @@ The **master** branch should always be buildable, you just need to create three 
 In general I'm not accepting pull requests for this project, it is only open-sourced only for educational purposes. If you find a bug or any possibility for improvements, I'd very much appreciate your feedback but I'd like to be the one fixing the issues. If you'd like to help me by adding more songs to the database, check out the backend project [here](https://github.com/pandulapeter/campfire-backend).
 
 ### Terms and Conditions
-You are not allowed to copy or modify the application, or any large part of it, in any way. You are not allowed to make derivative versions, even though the source code is publicly available online. You are permitted to take inspiration from certain technical solutions, but pieces of software resulting from my work can only be used in non-competing applications. The app itself and all the trademarks, copyright, database rights and other intellectual property rights related to it, still belong to me.
+You are not allowed to publish a copy of the application, or any large part of it, or to make derivative versions. You are permitted to take inspiration from certain technical solutions, but pieces of software resulting from my work can only be used in non-competing products. The app itself and all the trademarks, copyright, database rights and other intellectual property rights related to it belong to me.
 
 ### License
 Copyright (C) 2018 Pandula Péter
