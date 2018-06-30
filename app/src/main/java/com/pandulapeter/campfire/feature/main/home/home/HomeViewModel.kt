@@ -160,20 +160,25 @@ class HomeViewModel(
         collections
             .filterExplicitCollections()
             .filterCollectionsByLanguage()
+            .sortedByDescending { it.date }
+            .take(3)
             .map { HomeItemViewModel.CollectionViewModel(it, newText) }
             .toList().let {
                 if (it.isNotEmpty()) {
-                    add(HomeItemViewModel.HeaderViewModel("Collections"))
+                    add(HomeItemViewModel.HeaderViewModel("New collections"))
                     addAll(it)
                 }
             }
         songs
             .filterExplicitSongs()
             .filterSongsByLanguage()
+            .toList()
+            .shuffled()
+            .take(5)
             .map { HomeItemViewModel.SongViewModel(it, newText) }
-            .toList().let {
+            .let {
                 if (it.isNotEmpty()) {
-                    add(HomeItemViewModel.HeaderViewModel("Songs"))
+                    add(HomeItemViewModel.HeaderViewModel("Random songs"))
                     addAll(it)
                 }
             }
