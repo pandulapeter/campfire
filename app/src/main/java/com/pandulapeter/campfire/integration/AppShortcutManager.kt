@@ -117,7 +117,7 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
                     )
                 }
             }
-            shortcutManager.dynamicShortcuts = shortcuts
+            shortcutManager.dynamicShortcuts = shortcuts.take(5)
         }
 
         private fun removeAppShortcuts() = shortcutManager.removeAllDynamicShortcuts()
