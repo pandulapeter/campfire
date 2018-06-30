@@ -157,19 +157,26 @@ class HomeViewModel(
     }
 
     private fun createViewModels() = mutableListOf<HomeItemViewModel>().apply {
-        add(HomeItemViewModel.HeaderViewModel("Collections"))
-        addAll(collections
+        collections
             .filterExplicitCollections()
             .filterCollectionsByLanguage()
             .map { HomeItemViewModel.CollectionViewModel(it, newText) }
-            .toList())
-        add(HomeItemViewModel.HeaderViewModel("Songs"))
-        addAll(songs
+            .toList().let {
+                if (it.isNotEmpty()) {
+                    add(HomeItemViewModel.HeaderViewModel("Collections"))
+                    addAll(it)
+                }
+            }
+        songs
             .filterExplicitSongs()
             .filterSongsByLanguage()
             .map { HomeItemViewModel.SongViewModel(it, newText) }
-            .toList()
-        )
+            .toList().let {
+                if (it.isNotEmpty()) {
+                    add(HomeItemViewModel.HeaderViewModel("Songs"))
+                    addAll(it)
+                }
+            }
     }
 
     private fun Sequence<Collection>.filterCollectionsByLanguage() = filter {
