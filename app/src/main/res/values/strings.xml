@@ -12,6 +12,7 @@
     <string name="cancel">Cancel</string>
     <string name="loading">Loading…</string>
     <string name="filters">Filters</string>
+    <string name="filter_by_type">Filter by type</string>
     <string name="show_explicit">Explicit lyrics</string>
     <string name="filter_by_language">Filter by language</string>
     <string name="known_bug_1">Where did the title go…? Looks like you found a bug!</string>
@@ -99,7 +100,6 @@
     <string name="collections_sort_by_title">Title</string>
     <string name="collections_sort_by_date">Upload date</string>
     <string name="collections_sort_by_popularity">Popularity</string>
-    <string name="collections_filter_by_type">Filter by type</string>
     <string name="collections_bookmarked_only">Bookmarked only</string>
 
     <!-- Songs screen -->
@@ -110,7 +110,6 @@
     <string name="songs_search">Search</string>
     <string name="songs_close">Close</string>
     <string name="songs_sort_by">Sort by</string>
-    <string name="songs_filter_by_type">Filter by type</string>
     <string name="songs_sort_by_popularity">Popularity</string>
     <string name="songs_sort_by_title">Title</string>
     <string name="songs_sort_by_artist">Artist</string>

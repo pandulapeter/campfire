@@ -27,7 +27,7 @@
 
     <item
         android:id="@+id/filter_by_type"
-        android:title="@string/songs_filter_by_type">
+        android:title="@string/filter_by_type">
 
         <menu>
 

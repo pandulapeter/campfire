@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/filter_by_type"
-        android:title="@string/collections_filter_by_type">
+        android:title="@string/filter_by_type">
 
         <menu>
 

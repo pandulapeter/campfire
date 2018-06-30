@@ -137,7 +137,7 @@ class HomeViewModel(
     }
 
     private fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
-        if (collectionRepository.isCacheLoaded() && songRepository.isCacheLoaded()) {
+        if (collectionRepository.isCacheLoaded() && songRepository.isCacheLoaded() && collections.toList().isNotEmpty() && songs.toList().isNotEmpty()) {
             if (!isFirstLoadingDone) {
                 languages.swap(collectionRepository.languages.union(songRepository.languages).toList())
                 onDataLoaded(languages)

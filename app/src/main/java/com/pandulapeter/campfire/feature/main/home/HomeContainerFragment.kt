@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.main.home
 import android.os.Bundle
 import android.transition.Slide
 import android.view.Gravity
+import android.view.MenuItem
 import android.view.View
 import com.crashlytics.android.Crashlytics
 import com.pandulapeter.campfire.BuildConfig
@@ -30,6 +31,9 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
             childFragmentManager.beginTransaction().replace(R.id.home_container, if (preferenceDatabase.isOnboardingDone) HomeFragment() else OnboardingFragment()).commit()
         }
     }
+
+    override fun onNavigationItemSelected(menuItem: MenuItem) =
+        (childFragmentManager.findFragmentById(R.id.home_container) as? HomeFragment)?.onNavigationItemSelected(menuItem) ?: super.onNavigationItemSelected(menuItem)
 
     fun navigateToHome() {
         // Save the fact that the user is done with the onboarding flow.

@@ -11,6 +11,7 @@
     <string name="cancel">Mégse</string>
     <string name="loading">Betöltés…</string>
     <string name="filters">Szűrők</string>
+    <string name="filter_by_type">Szűrés típus szerint</string>
     <string name="show_explicit">Explicit szövegek</string>
     <string name="filter_by_language">Szűrés nyelv szerint</string>
     <string name="known_bug_1">Hová tűnt a cím…? Úgy tűnik, találtál egy hibát!</string>
@@ -98,7 +99,6 @@
     <string name="collections_sort_by_title">Cím</string>
     <string name="collections_sort_by_date">Feltöltés dátuma</string>
     <string name="collections_sort_by_popularity">Népszerűség</string>
-    <string name="collections_filter_by_type">Szűrés típus szerint</string>
     <string name="collections_bookmarked_only">Csak cimkézett</string>
 
     <!-- Songs screen -->
@@ -109,7 +109,6 @@
     <string name="songs_search">Keresés</string>
     <string name="songs_close">Bezárás</string>
     <string name="songs_sort_by">Rendezés</string>
-    <string name="songs_filter_by_type">Szűrés típus szerint</string>
     <string name="songs_sort_by_popularity">Népszerűség</string>
     <string name="songs_sort_by_title">Cím</string>
     <string name="songs_sort_by_artist">Előadó</string>

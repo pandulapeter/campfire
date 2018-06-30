@@ -11,6 +11,7 @@
     <string name="cancel">Renunță</string>
     <string name="loading">Se încarcă…</string>
     <string name="filters">Filtre</string>
+    <string name="filter_by_type">Filtrează după tip</string>
     <string name="show_explicit">Versuri explicite</string>
     <string name="filter_by_language">Filtrare după limbă</string>
     <string name="known_bug_1">Unde-i titlul…? Se pare că ai găsit un bug!</string>
@@ -86,30 +87,28 @@
     <string name="main_exit_confirmation_close">Ieșire</string>
 
     <!-- Home screen -->
-    <string name="home_placeholder">Conținutul nu este disponibil. Te rog să verifici filtrele!</string>
+    <string name="home_placeholder">Conținutul nu este disponibil. Te rog să verifici filtrele</string>
     <string name="home_initializing_error">A intervenit o eroare la descărcarea paginei de start</string>
     <string name="home_update_error">A intervenit o eroare la actualizarea paginei de start</string>
 
     <!-- Collections screen -->
-    <string name="collections_placeholder">Nu s-au găsit colecții pentru criteriile de căutare. Te rog să verifici filtrele!</string>
+    <string name="collections_placeholder">Nu s-au găsit colecții pentru criteriile de căutare. Te rog să verifici filtrele</string>
     <string name="collections_initializing_error">A intervenit o eroare la descărcarea colecțiilor</string>
     <string name="collections_update_error">A intervenit o eroare la actualizarea colecțiilor</string>
     <string name="collections_sort_by">Sortează după</string>
     <string name="collections_sort_by_title">Titlu</string>
     <string name="collections_sort_by_date">Dată</string>
     <string name="collections_sort_by_popularity">Popularitate</string>
-    <string name="collections_filter_by_type">Filtrează după tip</string>
     <string name="collections_bookmarked_only">Doar cele marcate</string>
 
     <!-- Songs screen -->
-    <string name="songs_placeholder">Nu s-au găsit piese pentru criteriile de căutare. Te rog să verifici filtrele!</string>
+    <string name="songs_placeholder">Nu s-au găsit piese pentru criteriile de căutare. Te rog să verifici filtrele</string>
     <string name="songs_initializing_error">A intervenit o eroare la descărcarea pieselor</string>
     <string name="songs_update_error">A intervenit o eroare la actualizarea pieselor</string>
     <string name="songs_song_download_error">A intervenit o eroare la descărcarea piesei: %s</string>
     <string name="songs_search">Căutare</string>
     <string name="songs_close">Închidere</string>
     <string name="songs_sort_by">Sortează după</string>
-    <string name="songs_filter_by_type">Filtrare după tip</string>
     <string name="songs_sort_by_popularity">Popularitate</string>
     <string name="songs_sort_by_title">Titlu</string>
     <string name="songs_sort_by_artist">Artist</string>
