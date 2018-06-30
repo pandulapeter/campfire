@@ -12,6 +12,8 @@ import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.cancel
@@ -25,11 +27,13 @@ class HomeViewModel(
     private val openSecondaryNavigationDrawer: () -> Unit
 ) : CampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber {
 
+    private val analyticsManager by inject<AnalyticsManager>()
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private val collectionRepository by inject<CollectionRepository>()
     private val songRepository by inject<SongRepository>()
     private var coroutine: CoroutineContext? = null
     private var collections = sequenceOf<Collection>()
+    private var songs = sequenceOf<Song>()
     val adapter = HomeAdapter()
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
     val isLoading = ObservableBoolean()
@@ -37,6 +41,7 @@ class HomeViewModel(
     val placeholderText = ObservableInt(R.string.home_initializing_error)
     val buttonText = ObservableInt(R.string.try_again)
     val buttonIcon = ObservableInt()
+    private var isFirstLoadingDone = false
     var shouldShowExplicit = preferenceDatabase.shouldShowExplicit
         set(value) {
             if (field != value) {
@@ -66,27 +71,41 @@ class HomeViewModel(
     }
 
     override fun onCollectionsUpdated(data: List<Collection>) {
-        //TODO
+        collections = data.asSequence()
+        updateAdapterItems(true)
     }
 
     override fun onCollectionsLoadingStateChanged(isLoading: Boolean) {
-        //TODO
+        this.isLoading.set(isLoading)
+        if (collections.toList().isEmpty() && isLoading) {
+            state.set(StateLayout.State.LOADING)
+        }
     }
 
-    override fun onCollectionRepositoryUpdateError() {
-        //TODO
-    }
+    override fun onCollectionRepositoryUpdateError() = onError()
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
-        //TODO
+        songs = data.asSequence()
+        updateAdapterItems(true)
     }
 
     override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {
-        //TODO
+        this.isLoading.set(isLoading)
+        if (songs.toList().isEmpty() && isLoading) {
+            state.set(StateLayout.State.LOADING)
+        }
     }
 
-    override fun onSongRepositoryUpdateError() {
-        //TODO
+    override fun onSongRepositoryUpdateError() = onError()
+
+    private fun onError() {
+        if (collections.toList().isEmpty() || songs.toList().isEmpty()) {
+            analyticsManager.onConnectionError(true, AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
+            state.set(StateLayout.State.ERROR)
+        } else {
+            analyticsManager.onConnectionError(false, AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
+            shouldShowUpdateErrorSnackbar.set(true)
+        }
     }
 
     private fun onListUpdated(items: List<HomeItemViewModel>) {
@@ -118,7 +137,12 @@ class HomeViewModel(
     }
 
     private fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
-        if (collectionRepository.isCacheLoaded()) {
+        if (collectionRepository.isCacheLoaded() && songRepository.isCacheLoaded()) {
+            if (!isFirstLoadingDone) {
+                languages.swap(collectionRepository.languages.union(songRepository.languages).toList())
+                onDataLoaded(languages)
+                isFirstLoadingDone = true
+            }
             coroutine?.cancel()
             coroutine = launch(UI) {
                 withContext(CommonPool) { createViewModels() }.let {
