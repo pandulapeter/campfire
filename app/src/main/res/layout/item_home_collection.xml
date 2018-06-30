@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.pandulapeter.campfire.feature.main.home.home.HomeItemViewModel.CollectionViewModel" />
+
+        <import type="com.pandulapeter.campfire.R" />
+
+    </data>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/border"
+        android:layout_marginEnd="@dimen/negative_card_corner"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:elevation="@dimen/card_elevation"
+        android:foreground="?attr/selectableItemBackground"
+        app:cardCornerRadius="@dimen/card_corner"
+        app:contentPadding="@dimen/content_padding"
+        app:visibility="@{viewModel!=null}">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:paddingEnd="@dimen/card_corner"
+            android:paddingStart="@dimen/nothing">
+
+            <ImageView
+                android:id="@+id/image"
+                android:layout_width="@dimen/collections_image_small"
+                android:layout_height="@dimen/collections_image_small"
+                android:contentDescription="@{viewModel.collection.title}"
+                android:scaleType="centerCrop"
+                android:src="@{viewModel.collection.imageUrl}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:src="@tools:sample/avatars" />
+
+            <android.support.v4.widget.Space
+                android:id="@+id/space"
+                android:layout_width="4dp"
+                android:layout_height="0dp"
+                app:layout_constraintStart_toEndOf="parent" />
+
+            <ImageView
+                android:id="@+id/bookmark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="@dimen/content_padding"
+                android:tint="?android:attr/textColorSecondary"
+                app:animation="@{safeUnbox(viewModel.collection.isBookmarked) ? R.drawable.avd_not_bookmarked_to_bookmarked_24dp : R.drawable.avd_bookmarked_to_not_bookmarked_24dp }"
+                app:lastFrame="@{safeUnbox(viewModel.collection.isBookmarked) ? @drawable/ic_bookmarked_24dp : @drawable/ic_not_bookmarked_24dp}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="@id/space"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="ContentDescription"
+                tools:src="@drawable/ic_bookmarked_24dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/content_padding"
+                app:extraText="@{viewModel.alertText}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/bookmark"
+                app:layout_constraintStart_toEndOf="@id/image"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed"
+                app:primaryText="@{viewModel.collection.title}"
+                app:secondaryText="@{viewModel.collection.description}"
+                app:shouldEllipsize="@{true}"
+                tools:text="Collection title/nCollection description" />
+
+        </android.support.constraint.ConstraintLayout>
+
+    </android.support.v7.widget.CardView>
+
+</layout>

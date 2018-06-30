@@ -36,7 +36,8 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                         getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity().openSecondaryNavigationDrawer() }
                     ))
             },
-            openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() }
+            openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() },
+            newText = getString(R.string.new_tag)
         )
     }
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
@@ -67,6 +68,37 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         }
         linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())
         binding.recyclerView.layoutManager = linearLayoutManager
+        viewModel.adapter.apply {
+            collectionClickListener = { position, clickedView, image ->
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
+                    (items[position] as? HomeItemViewModel.CollectionViewModel)?.collection?.let {
+                        if (items.size > 1) {
+                            linearLayoutManager.isScrollEnabled = false
+                        }
+                        getCampfireActivity().isUiBlocked = true
+                        viewModel.collectionRepository.onCollectionOpened(it.id)
+                        getCampfireActivity().openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
+                    }
+                }
+            }
+            songClickListener = { position, clickedView ->
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
+                    (items[position] as? HomeItemViewModel.SongViewModel)?.song?.let {
+                        if (items.size > 1) {
+                            linearLayoutManager.isScrollEnabled = false
+                        }
+                        getCampfireActivity().isUiBlocked = true
+                        getCampfireActivity().openDetailScreen(
+                            clickedView,
+                            listOf(it),
+                            items.size > 1,
+                            0,
+                            true
+                        )
+                    }
+                }
+            }
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

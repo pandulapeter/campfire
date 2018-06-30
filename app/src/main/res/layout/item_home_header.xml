@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.pandulapeter.campfire.feature.main.home.home.HomeItemViewModel.HeaderViewModel" />
+
+    </data>
+
+    <TextView
+        android:id="@+id/title"
+        style="@style/Header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingEnd="@dimen/first_keyline"
+        android:paddingStart="@dimen/content_padding"
+        android:text="@{viewModel.title}"
+        tools:text="A" />
+
+</layout>

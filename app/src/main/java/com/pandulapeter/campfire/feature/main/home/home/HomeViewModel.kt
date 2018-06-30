@@ -24,12 +24,13 @@ import kotlin.coroutines.experimental.CoroutineContext
 
 class HomeViewModel(
     private val onDataLoaded: (languages: List<Language>) -> Unit,
-    private val openSecondaryNavigationDrawer: () -> Unit
+    private val openSecondaryNavigationDrawer: () -> Unit,
+    private val newText: String
 ) : CampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber {
 
     private val analyticsManager by inject<AnalyticsManager>()
     private val preferenceDatabase by inject<PreferenceDatabase>()
-    private val collectionRepository by inject<CollectionRepository>()
+    val collectionRepository by inject<CollectionRepository>()
     private val songRepository by inject<SongRepository>()
     private var coroutine: CoroutineContext? = null
     private var collections = sequenceOf<Collection>()
@@ -155,13 +156,31 @@ class HomeViewModel(
         }
     }
 
-    private fun createViewModels() = listOf<HomeItemViewModel>()
-//        filterSaved()
-//        .filterExplicit()
-//        .filterByLanguage()
-//        .sort()
-//        .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
-//        .toList<CollectionListItemViewModel>()
+    private fun createViewModels() = mutableListOf<HomeItemViewModel>().apply {
+        addAll(collections
+            .filterExplicitCollections()
+            .filterCollectionsByLanguage()
+            .map { HomeItemViewModel.CollectionViewModel(it, newText) }
+            .toList())
+        addAll(songs
+            .filterExplicitSongs()
+            .filterSongsByLanguage()
+            .map { HomeItemViewModel.SongViewModel(it, newText) }
+            .toList()
+        )
+    }
+
+    private fun Sequence<Collection>.filterCollectionsByLanguage() = filter {
+        var shouldFilter = false
+        it.language?.forEach {
+            if (!disabledLanguageFilters.contains(it)) {
+                shouldFilter = true
+            }
+        }
+        shouldFilter
+    }
+
+    private fun Sequence<Song>.filterSongsByLanguage() = filter { !disabledLanguageFilters.contains(it.language) }
 
     private fun Sequence<Collection>.filterExplicitCollections() = if (!shouldShowExplicit) filter { it.isExplicit != true } else this
 

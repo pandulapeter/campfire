@@ -8,8 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.databinding.ItemCollectionBinding
-import com.pandulapeter.campfire.databinding.ItemHeaderBinding
+import com.pandulapeter.campfire.databinding.ItemHomeCollectionBinding
+import com.pandulapeter.campfire.databinding.ItemHomeHeaderBinding
+import com.pandulapeter.campfire.databinding.ItemHomeSongBinding
 
 sealed class HomeItemViewHolder<out B : ViewDataBinding, in VM : HomeItemViewModel>(protected val binding: B) : RecyclerView.ViewHolder(binding.root) {
 
@@ -18,18 +19,31 @@ sealed class HomeItemViewHolder<out B : ViewDataBinding, in VM : HomeItemViewMod
         binding.executePendingBindings()
     }
 
-    class HeaderViewHolder(parent: ViewGroup) : HomeItemViewHolder<ItemHeaderBinding, HomeItemViewModel.HeaderViewModel>(
-        DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_header, parent, false)
+    class HeaderViewHolder(parent: ViewGroup) : HomeItemViewHolder<ItemHomeHeaderBinding, HomeItemViewModel.HeaderViewModel>(
+        DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_home_header, parent, false)
     )
 
-    class CollectionViewHolder(parent: ViewGroup) : HomeItemViewHolder<ItemCollectionBinding, HomeItemViewModel.CollectionViewModel>(
-        DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_collection, parent, false)
+    class CollectionViewHolder(parent: ViewGroup) : HomeItemViewHolder<ItemHomeCollectionBinding, HomeItemViewModel.CollectionViewModel>(
+        DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_home_collection, parent, false)
     ) {
 
         fun setItemClickListener(itemClickListener: (position: Int, clickedView: View, image: View) -> Unit) {
             binding.root.setOnClickListener {
                 if (adapterPosition != RecyclerView.NO_POSITION) {
                     itemClickListener(adapterPosition, binding.root, binding.image)
+                }
+            }
+        }
+    }
+
+    class SongViewHolder(parent: ViewGroup) : HomeItemViewHolder<ItemHomeSongBinding, HomeItemViewModel.SongViewModel>(
+        DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_home_song, parent, false)
+    ) {
+
+        fun setItemClickListener(itemClickListener: (position: Int, clickedView: View) -> Unit) {
+            binding.root.setOnClickListener {
+                if (adapterPosition != RecyclerView.NO_POSITION) {
+                    itemClickListener(adapterPosition, binding.root)
                 }
             }
         }
