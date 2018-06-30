@@ -38,7 +38,7 @@
 
             <item
                 android:id="@+id/show_explicit"
-                android:title="@string/collections_show_explicit"
+                android:title="@string/show_explicit"
                 app:actionLayout="@layout/widget_switch" />
 
         </menu>
@@ -47,7 +47,7 @@
 
     <item
         android:id="@+id/filter_by_language"
-        android:title="@string/collections_filter_by_language">
+        android:title="@string/filter_by_language">
 
         <menu>
 

@@ -1,29 +1,32 @@
 package com.pandulapeter.campfire.feature.shared
 
+import android.content.Context
 import android.content.res.Resources
 import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
 import android.os.Bundle
 import android.support.annotation.CallSuper
+import android.support.annotation.DrawableRes
 import android.support.annotation.LayoutRes
 import android.support.annotation.StringRes
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.transition.Transition
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.widget.CompoundButton
 import android.widget.TextView
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.CampfireActivity
+import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.util.obtainColor
+import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
 
@@ -32,6 +35,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     companion object {
         private const val SNACKBAR_SHORT_DURATION = 4000
         private const val SNACKBAR_LONG_DURATION = 7000
+        private const val COMPOUND_BUTTON_TRANSITION_DELAY = 10L
     }
 
     protected lateinit var binding: B
@@ -62,6 +66,26 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         } else {
             super.onCreateAnimation(transit, enter, nextAnim)
         }
+    }
+
+    open fun onNavigationItemSelected(menuItem: MenuItem) = false
+
+    protected fun initializeCompoundButton(itemId: Int, getValue: () -> Boolean) = consume {
+        getCampfireActivity().secondaryNavigationMenu.findItem(itemId)?.let {
+            (it.actionView as? CompoundButton)?.run {
+                isChecked = getValue()
+                setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked != getValue()) {
+                        onNavigationItemSelected(it)
+                    }
+                }
+            }
+        }
+    }
+
+    protected inline fun Context.createToolbarButton(@DrawableRes drawableRes: Int, crossinline onClickListener: (View) -> Unit) = ToolbarButton(this).apply {
+        setImageDrawable(drawable(drawableRes))
+        setOnClickListener { if (!getCampfireActivity().isUiBlocked) onClickListener(it) }
     }
 
     private fun getNextAnimationDuration(fragment: Fragment, defValue: Long): Long {
@@ -140,6 +164,15 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
             .makeSnackbar(message, if (action == null && dismissAction == null) SNACKBAR_SHORT_DURATION else SNACKBAR_LONG_DURATION, dismissAction)
             .apply { action?.let { setAction(actionText) { action() } } }
         snackbar?.show()
+    }
+
+    protected fun consumeAndUpdateBoolean(menuItem: MenuItem, setValue: (Boolean) -> Unit, getValue: () -> Boolean) = consume {
+        setValue(!getValue())
+        (menuItem.actionView as? CompoundButton).updateCheckedStateWithDelay(getValue())
+    }
+
+    protected fun CompoundButton?.updateCheckedStateWithDelay(checked: Boolean) {
+        this?.postDelayed({ if (isAdded) isChecked = checked }, COMPOUND_BUTTON_TRANSITION_DELAY)
     }
 
     private fun View.makeSnackbar(message: String, duration: Int, dismissAction: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {

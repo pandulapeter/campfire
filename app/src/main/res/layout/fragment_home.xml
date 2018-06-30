@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
 
@@ -10,81 +10,35 @@
 
     </data>
 
-    <ScrollView
+    <com.pandulapeter.campfire.feature.shared.widget.StateLayout
+        android:id="@+id/state_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipChildren="false"
-        android:fillViewport="true"
-        android:scrollbars="none">
+        app:buttonIcon="@{viewModel.buttonIcon}"
+        app:buttonText="@{viewModel.buttonText}"
+        app:onButtonClicked="@{() -> viewModel.onActionButtonClicked()}"
+        app:state="@{viewModel.state}"
+        app:text="@{viewModel.placeholderText}">
 
-        <FrameLayout
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/swipe_refresh_layout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clipChildren="false">
+            android:layout_height="match_parent">
 
-            <LinearLayout
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recycler_view"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginBottom="@dimen/large_content_padding"
-                android:layout_marginTop="@dimen/large_content_padding"
-                android:clipChildren="false"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-                tools:ignore="UselessParent">
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="@dimen/list_bottom_margin"
+                android:paddingEnd="0dp"
+                android:paddingStart="@dimen/content_padding"
+                android:paddingTop="@dimen/content_padding"
+                app:adapter="@{viewModel.adapter}"
+                app:hasFixedSize="@{true}" />
 
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:alpha="0.8"
-                    android:src="@drawable/ic_home_24dp"
-                    android:tint="?android:attr/textColorSecondary"
-                    tools:ignore="ContentDescription" />
+        </android.support.v4.widget.SwipeRefreshLayout>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/large_content_padding"
-                    android:gravity="center"
-                    android:padding="32dp"
-                    android:text="@string/home_placeholder" />
-
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/button_height"
-                    android:layout_marginTop="@dimen/large_content_padding"
-                    android:background="@drawable/bg_button"
-                    android:drawablePadding="@dimen/content_padding"
-                    android:drawableStart="@drawable/ic_collections_24dp"
-                    android:gravity="center"
-                    android:onClick="@{() -> viewModel.onCollectionsButtonClicked()}"
-                    android:paddingEnd="@dimen/large_content_padding"
-                    android:paddingStart="@dimen/content_padding"
-                    android:text="@string/main_collections"
-                    android:textAllCaps="false"
-                    android:textColor="@color/white"
-                    android:theme="@style/ButtonTheme" />
-
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/button_height"
-                    android:layout_marginTop="@dimen/large_content_padding"
-                    android:background="@drawable/bg_button"
-                    android:drawablePadding="@dimen/content_padding"
-                    android:drawableStart="@drawable/ic_songs_24dp"
-                    android:gravity="center"
-                    android:onClick="@{() -> viewModel.onSongsButtonClicked()}"
-                    android:paddingEnd="@dimen/large_content_padding"
-                    android:paddingStart="@dimen/content_padding"
-                    android:text="@string/main_songs"
-                    android:textAllCaps="false"
-                    android:textColor="@color/white"
-                    android:theme="@style/ButtonTheme" />
-
-            </LinearLayout>
-
-        </FrameLayout>
-
-    </ScrollView>
+    </com.pandulapeter.campfire.feature.shared.widget.StateLayout>
 
 </layout>

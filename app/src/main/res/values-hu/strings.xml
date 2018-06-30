@@ -10,6 +10,9 @@
     <string name="ok">OK</string>
     <string name="cancel">Mégse</string>
     <string name="loading">Betöltés…</string>
+    <string name="filters">Szűrők</string>
+    <string name="show_explicit">Explicit szövegek</string>
+    <string name="filter_by_language">Szűrés nyelv szerint</string>
     <string name="known_bug_1">Hová tűnt a cím…? Úgy tűnik, találtál egy hibát!</string>
 
     <!-- Supported languages -->
@@ -83,27 +86,25 @@
     <string name="main_exit_confirmation_close">Kilépés</string>
 
     <!-- Home screen -->
-    <string name="home_placeholder">Ez a képernyő személyre szabott dal ajánlásokat, kiemelt gyűjteményeket és véletlenszerű listákat fog tartalmazni. Jelenleg sajnos még fejlesztés alatt van, szóval nézz erre később!</string>
+    <string name="home_placeholder">Nincs megjeleníthető tartalom. Ellenőrizd a beállított szűrőket</string>
+    <string name="home_initializing_error">Hiba történt a kezdőképernyő betöltése közben</string>
+    <string name="home_update_error">Hiba történt a kezdőképernyő frissítése közben</string>
 
     <!-- Collections screen -->
     <string name="collections_placeholder">Nem található megfelelő gyűjtemény. Ellenőrizd a beállított szűrőket</string>
     <string name="collections_initializing_error">Hiba történt a gyűjtemények betöltése közben</string>
     <string name="collections_update_error">Hiba történt a gyűjtemények frissítése közben</string>
-    <string name="collections_filters">Szűrők</string>
     <string name="collections_sort_by">Rendezés</string>
     <string name="collections_sort_by_title">Cím</string>
     <string name="collections_sort_by_date">Feltöltés dátuma</string>
     <string name="collections_sort_by_popularity">Népszerűség</string>
     <string name="collections_filter_by_type">Szűrés típus szerint</string>
     <string name="collections_bookmarked_only">Csak cimkézett</string>
-    <string name="collections_show_explicit">Explicit szövegek</string>
-    <string name="collections_filter_by_language">Szűrés nyelv szerint</string>
 
     <!-- Songs screen -->
     <string name="songs_placeholder">Nem található megfelelő dal. Ellenőrizd a beállított szűrőket</string>
     <string name="songs_initializing_error">Hiba történt a dalok betöltése közben</string>
     <string name="songs_update_error">Hiba történt a dalok frissítése közben</string>
-    <string name="songs_filters">Szűrők</string>
     <string name="songs_song_download_error">Hiba történt a dal letöltése közben: %s</string>
     <string name="songs_search">Keresés</string>
     <string name="songs_close">Bezárás</string>
@@ -112,9 +113,7 @@
     <string name="songs_sort_by_popularity">Népszerűség</string>
     <string name="songs_sort_by_title">Cím</string>
     <string name="songs_sort_by_artist">Előadó</string>
-    <string name="songs_filter_by_language">Szűrés nyelv szerint</string>
     <string name="songs_downloaded_only">Csak letöltött</string>
-    <string name="songs_show_explicit">Explicit szövegek</string>
     <string name="songs_search_in">Itt:</string>
     <string name="songs_search_in_titles">Címekben</string>
     <string name="songs_search_in_artists">Előadókban</string>

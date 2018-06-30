@@ -159,7 +159,7 @@
             app:itemBackground="?attr/selectableItemBackground"
             app:itemIconTint="@color/menu_item_icon"
             app:itemTextColor="@color/menu_item_text"
-            app:menu="@menu/home" />
+            app:menu="@menu/campfire" />
 
         <android.support.design.widget.NavigationView
             android:id="@+id/secondary_navigation"

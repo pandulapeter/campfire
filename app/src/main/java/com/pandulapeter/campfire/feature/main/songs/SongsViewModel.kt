@@ -104,7 +104,7 @@ class SongsViewModel(
         super.onListUpdated(items)
         if (songs.toList().isNotEmpty()) {
             placeholderText.set(R.string.songs_placeholder)
-            buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.songs_filters)
+            buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
             buttonIcon.set(R.drawable.ic_filter_and_sort_24dp)
         }
     }
@@ -172,7 +172,7 @@ class SongsViewModel(
                 if (shouldScrollToTop) {
                     updateAdapterItems(!isTextInputVisible)
                 }
-                buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.songs_filters)
+                buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
             }
             shouldShowEraseButton.set(isTextInputVisible)
         }

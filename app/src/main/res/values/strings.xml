@@ -11,6 +11,9 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="loading">Loading…</string>
+    <string name="filters">Filters</string>
+    <string name="show_explicit">Explicit lyrics</string>
+    <string name="filter_by_language">Filter by language</string>
     <string name="known_bug_1">Where did the title go…? Looks like you found a bug!</string>
 
     <!-- Supported languages -->
@@ -84,27 +87,25 @@
     <string name="main_exit_confirmation_close">Close</string>
 
     <!-- Home screen -->
-    <string name="home_placeholder">This screen will contain personalised song suggestions, featured collections and random playlists. Unfortunately it\'s not ready yet, so check back soon!</string>
+    <string name="home_placeholder">No content to display. Double-check the filters you set up</string>
+    <string name="home_initializing_error">Something went wrong while trying to load the home screen</string>
+    <string name="home_update_error">Something went wrong while updating the home screen</string>
 
     <!-- Collections screen -->
     <string name="collections_placeholder">No matching collections found. Double-check the filters you set up</string>
     <string name="collections_initializing_error">Something went wrong while trying to load the list of collections</string>
     <string name="collections_update_error">Something went wrong while updating collections</string>
-    <string name="collections_filters">Filters</string>
     <string name="collections_sort_by">Sort by</string>
     <string name="collections_sort_by_title">Title</string>
     <string name="collections_sort_by_date">Upload date</string>
     <string name="collections_sort_by_popularity">Popularity</string>
     <string name="collections_filter_by_type">Filter by type</string>
     <string name="collections_bookmarked_only">Bookmarked only</string>
-    <string name="collections_show_explicit">Explicit lyrics</string>
-    <string name="collections_filter_by_language">Filter by language</string>
 
     <!-- Songs screen -->
     <string name="songs_placeholder">No matching songs found. Double-check the filters you set up</string>
     <string name="songs_initializing_error">Something went wrong while trying to load the songs</string>
     <string name="songs_update_error">Something went wrong while updating the songs</string>
-    <string name="songs_filters">Filters</string>
     <string name="songs_song_download_error">Error downloading %s</string>
     <string name="songs_search">Search</string>
     <string name="songs_close">Close</string>
@@ -113,9 +114,7 @@
     <string name="songs_sort_by_popularity">Popularity</string>
     <string name="songs_sort_by_title">Title</string>
     <string name="songs_sort_by_artist">Artist</string>
-    <string name="songs_filter_by_language">Filter by language</string>
     <string name="songs_downloaded_only">Downloaded only</string>
-    <string name="songs_show_explicit">Explicit lyrics</string>
     <string name="songs_search_in">Search in:</string>
     <string name="songs_search_in_titles">Titles</string>
     <string name="songs_search_in_artists">Artists</string>

@@ -113,7 +113,7 @@ class CollectionsViewModel(
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
         if (collections.toList().isNotEmpty()) {
             placeholderText.set(R.string.collections_placeholder)
-            buttonText.set(R.string.collections_filters)
+            buttonText.set(R.string.filters)
             buttonIcon.set(R.drawable.ic_filter_and_sort_24dp)
         }
     }
