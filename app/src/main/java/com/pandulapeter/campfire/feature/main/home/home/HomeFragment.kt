@@ -1,8 +1,13 @@
 package com.pandulapeter.campfire.feature.main.home.home
 
 import android.os.Bundle
+import android.support.v4.app.SharedElementCallback
+import android.support.v7.widget.RecyclerView
+import android.transition.Transition
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentHomeBinding
@@ -41,6 +46,34 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         )
     }
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setExitSharedElementCallback(object : SharedElementCallback() {
+            override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
+                var index =
+                    viewModel.adapter.items.indexOfFirst { it is HomeItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
+                if (index != RecyclerView.NO_POSITION) {
+                    binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
+                        val view = it.itemView
+                        view.transitionName = "card-${getCampfireActivity().lastCollectionId}"
+                        sharedElements[names[0]] = view
+                        val image = view.findViewById<View>(R.id.image)
+                        image.transitionName = "image-${getCampfireActivity().lastCollectionId}"
+                        sharedElements[names[1]] = image
+                    }
+                } else {
+                    index = viewModel.adapter.items.indexOfFirst { it is HomeItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
+                    if (index != RecyclerView.NO_POSITION) {
+                        (binding.recyclerView.findViewHolderForAdapterPosition(index)
+                                ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
+                            sharedElements[names[0]] = it.itemView
+                        }
+                    }
+                }
+            }
+        })
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         getCampfireActivity().onScreenChanged()
@@ -98,6 +131,60 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     }
                 }
             }
+        }
+        binding.recyclerView.addOnLayoutChangeListener(
+            object : View.OnLayoutChangeListener {
+                override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
+                    binding.recyclerView.removeOnLayoutChangeListener(this)
+                    if (reenterTransition != null) {
+                        var index =
+                            viewModel.adapter.items.indexOfFirst { it is HomeItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
+                        if (index != RecyclerView.NO_POSITION) {
+                            val viewAtPosition = linearLayoutManager.findViewByPosition(index)
+                            if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
+                                linearLayoutManager.isScrollEnabled = true
+                                binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
+                            }
+                        } else {
+                            index = viewModel.adapter.items.indexOfFirst { it is HomeItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
+                            if (index != RecyclerView.NO_POSITION) {
+                                val viewAtPosition = linearLayoutManager.findViewByPosition(index)
+                                if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
+                                    linearLayoutManager.isScrollEnabled = true
+                                    binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+        (view.parent as? ViewGroup)?.run {
+            viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+                override fun onPreDraw(): Boolean {
+                    viewTreeObserver?.removeOnPreDrawListener(this)
+                    (sharedElementEnterTransition as? Transition)?.addListener(object : Transition.TransitionListener {
+
+                        override fun onTransitionStart(transition: Transition?) = Unit
+
+                        override fun onTransitionResume(transition: Transition?) = Unit
+
+                        override fun onTransitionPause(transition: Transition?) = Unit
+
+                        override fun onTransitionEnd(transition: Transition?) {
+                            getCampfireActivity().isUiBlocked = false
+                            transition?.removeListener(this)
+                        }
+
+                        override fun onTransitionCancel(transition: Transition?) {
+                            getCampfireActivity().isUiBlocked = false
+                            transition?.removeListener(this)
+                        }
+                    })
+                    startPostponedEnterTransition()
+                    return true
+                }
+            })
+            requestLayout()
         }
     }
 
