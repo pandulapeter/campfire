@@ -1,11 +1,39 @@
 # Campfire (Android)
 *Explore a hand-picked library of high quality song lyrics and chords.*
 
-Sign-up to become an alpha tester [here](https://plus.google.com/communities/104615840487719249096?sqinv=SVFINUg1WlM4cTdqVWwtc2sxSllsU0xUSUpDd2xn) (after you join the community, follow the link to the Play Store listing in the first post)
+Become a beta tester [here](https://play.google.com/apps/testing/com.pandulapeter.campfire)
 
 Find the backend project [here](https://github.com/pandulapeter/campfire-backend).
 
 ### Screenshots
-<img src="screenshots/01.png" width="25%" /> <img src="screenshots/02.png" width="25%" /> <img src="screenshots/03.png" width="25%" />
-<img src="screenshots/04.png" width="25%" /> <img src="screenshots/05.png" width="25%" /> <img src="screenshots/06.png" width="25%" />
-<img src="screenshots/07.png" width="25%" /> <img src="screenshots/08.png" width="25%" /> <img src="screenshots/09.png" width="25%" />
+<img src="screenshots/06.png" width="20%" /> <img src="screenshots/05.png" width="20%" /> <img src="screenshots/01.png" width="20%" />
+<img src="screenshots/02.png" width="20%" /> <img src="screenshots/03.png" width="20%" /> <img src="screenshots/04.png" width="20%" />
+<img src="screenshots/07.png" width="20%" /> <img src="screenshots/08.png" width="20%" />
+
+### How to build
+The **master** branch should always be buildable, you just need to create three configuration files after cloning the project (as these files contain sensitive information, they are not part of the repository).
+
+*  Copy your **google-services.json** file to the **app** folder for the Firebase configuration. This does not need to be valid, as the **debug** build type will never use the Firebase API and I don't recommend compiling the other versions.
+*  In the **app** folder, duplicate the **internal.keystore** file with the name **release.keystore**.
+*  In the **app** folder, duplicate the **internal.keystore.properties** file with the name **release.keystore.properties**.
+
+### Pull requests
+In general I'm not accepting pull requests for this project, it is only open-sourced only for educational purposes. If you find a bug or any possibility for improvements, I'd very much appreciate your feedback but I'd like to be the one fixing the issues. If you'd like to help me by adding more songs to the database, check out the backend project [here](https://github.com/pandulapeter/campfire-backend).
+
+### Terms and Conditions
+You are not allowed to copy or modify the application, or any large part of it, in any way. You are not allowed to make derivative versions, even though the source code is publicly available online. You are permitted to take inspiration from certain technical solutions, but pieces of software resulting from my work can only be used in non-competing applications. The app itself and all the trademarks, copyright, database rights and other intellectual property rights related to it, still belong to me.
+
+### License
+Copyright (C) 2018 Pandula Péter
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License. 
