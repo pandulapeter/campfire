@@ -1,9 +1,10 @@
 buildscript {
     ext.kotlinVersion = "1.2.50"
     ext.retrofitVersion = "2.3.0"
-    ext.roomVersion = "1.1.0"
+    ext.roomVersion = "1.1.1"
     ext.supportLibraryVersion = "27.1.1"
-    ext.firebaseVersion = "16.0.0"
+    ext.firebaseVersion = "16.0.1"
+    ext.glideVersion = "4.7.1"
     repositories {
         jcenter()
         google()

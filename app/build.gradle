@@ -89,7 +89,6 @@ dependencies {
     kapt "android.arch.persistence.room:compiler:$roomVersion"
 
     // Image loading
-    def glideVersion = "4.7.1"
     implementation "com.github.bumptech.glide:glide:$glideVersion"
     kapt "com.github.bumptech.glide:compiler:$glideVersion"
 
