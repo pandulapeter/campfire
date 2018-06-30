@@ -6,6 +6,7 @@ import com.pandulapeter.campfire.data.model.local.ChangelogItem
 class ChangelogRepository {
 
     val data = listOf(
+        ChangelogItem(R.string.options_changelog_0_7_0_version_name, R.string.options_changelog_0_7_0_description),
         ChangelogItem(R.string.options_changelog_0_6_0_version_name, R.string.options_changelog_0_6_0_description),
         ChangelogItem(R.string.options_changelog_0_5_0_version_name, R.string.options_changelog_0_5_0_description),
         ChangelogItem(R.string.options_changelog_0_4_0_version_name, R.string.options_changelog_0_4_0_description),

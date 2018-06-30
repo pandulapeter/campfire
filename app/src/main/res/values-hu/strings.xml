@@ -185,6 +185,11 @@
     <!-- Options screen / Changelog -->
     <string name="options_changelog_app_updated">Az alkalmazás frissítve lett</string>
     <string name="options_changelog_what_is_new">Újdonságok</string>
+    <string name="options_changelog_0_7_0_description">
+        <Data><![CDATA[
+        • <strong>Kezdőképernyő</strong> ami személyre szabott dal ajánlásokat, kiemelt gyűjteményeket és véletlenszerű listákat tartalmaz
+        ]]></Data>
+    </string>
     <string name="options_changelog_0_6_0_description">
         <Data><![CDATA[
         • <strong>Bevezető képernyők</strong> amelyeken a felhasználók testre szabhatják az alkalmazást<br>

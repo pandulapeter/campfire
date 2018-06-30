@@ -186,6 +186,12 @@
     <!-- Options screen / Changelog -->
     <string name="options_changelog_app_updated">The app has been updated</string>
     <string name="options_changelog_what_is_new">What\'s new</string>
+    <string name="options_changelog_0_7_0_version_name" translatable="false">v0.7</string>
+    <string name="options_changelog_0_7_0_description">
+        <Data><![CDATA[
+        • <strong>Home screen</strong> that contains personalised song suggestions, featured collections and random playlists
+        ]]></Data>
+    </string>
     <string name="options_changelog_0_6_0_version_name" translatable="false">v0.6</string>
     <string name="options_changelog_0_6_0_description">
         <Data><![CDATA[
