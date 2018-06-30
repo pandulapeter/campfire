@@ -51,7 +51,10 @@ class EllipsizeLineSpan(@ColorInt private val color: Int? = null) : ReplacementS
             canvas.drawText(text, start, end, x, y.toFloat(), paint)
         } else {
             val ellipsizeWidth = paint.measureText(ELLIPSIZE_CHARACTER)
-            val newEnd = start + paint.breakText(text, start, end, true, layoutRight - x - ellipsizeWidth, null)
+            var newEnd = start + paint.breakText(text, start, end, true, layoutRight - x - ellipsizeWidth, null)
+            while (text[newEnd - 1] == ' ' || text[newEnd - 1] == ',' || text[newEnd - 1] == '.') {
+                newEnd--
+            }
             canvas.drawText(text, start, newEnd, x, y.toFloat(), paint)
             canvas.drawText(ELLIPSIZE_CHARACTER, x + paint.measureText(text, start, newEnd), y.toFloat(), paint)
         }
