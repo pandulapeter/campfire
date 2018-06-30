@@ -166,7 +166,7 @@ fun setListItemText(view: TextView, primaryText: String, secondaryText: String?,
                 setSpan(
                     EllipsizeLineSpan(),
                     primaryText.length + 1,
-                    length,
+                    primaryText.length + 1 + it.length,
                     Spannable.SPAN_INCLUSIVE_INCLUSIVE
                 )
             }
