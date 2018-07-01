@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.main.managePlaylists
 
 import android.os.Bundle
+import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -49,6 +50,11 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         getCampfireActivity().updateToolbarButtons(listOf(deleteAllButton))
         getCampfireActivity().updateFloatingActionButtonDrawable(getCampfireActivity().drawable(R.drawable.ic_add_24dp))
         binding.recyclerView.layoutManager = LinearLayoutManager(getCampfireActivity())
+        binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
+            init {
+                supportsChangeAnimations = false
+            }
+        }
         viewModel.state.onPropertyChanged(this) { updateToolbarTitle(viewModel.playlistCount.get()) }
         viewModel.playlistCount.onPropertyChanged(this) {
             updateToolbarTitle(it)

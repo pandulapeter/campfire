@@ -28,6 +28,7 @@ class CollectionsViewModel(
     private val newText: String
 ) : CampfireViewModel(), CollectionRepository.Subscriber {
 
+    var isDetailScreenOpen = false
     private val preferenceDatabase by inject<PreferenceDatabase>()
     val collectionRepository by inject<CollectionRepository>()
     private val analyticsManager by inject<AnalyticsManager>()
@@ -79,13 +80,16 @@ class CollectionsViewModel(
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_COLLECTIONS
     }
 
-    override fun subscribe() = collectionRepository.subscribe(this)
+    override fun subscribe() {
+        collectionRepository.subscribe(this)
+        isDetailScreenOpen = false
+    }
 
     override fun unsubscribe() = collectionRepository.unsubscribe(this)
 
     override fun onCollectionsUpdated(data: List<Collection>) {
         collections = data.asSequence()
-        updateAdapterItems(true)
+        updateAdapterItems()
         if (data.isNotEmpty()) {
             languages.swap(collectionRepository.languages)
             onDataLoaded(languages)

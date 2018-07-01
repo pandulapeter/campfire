@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.main.shared.baseSongList
 import android.os.Bundle
 import android.support.annotation.CallSuper
 import android.support.v4.app.SharedElementCallback
+import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.RecyclerView
 import android.transition.Transition
 import android.view.View
@@ -128,23 +129,28 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
                     }
                 }
             })
-        }
-        binding.recyclerView.addOnLayoutChangeListener(
-            object : OnLayoutChangeListener {
-                override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
-                    binding.recyclerView.removeOnLayoutChangeListener(this)
-                    if (reenterTransition != null) {
-                        val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
-                        if (index != RecyclerView.NO_POSITION) {
-                            val viewAtPosition = linearLayoutManager.findViewByPosition(index)
-                            if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
-                                linearLayoutManager.isScrollEnabled = true
-                                binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
+            addOnLayoutChangeListener(
+                object : OnLayoutChangeListener {
+                    override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
+                        binding.recyclerView.removeOnLayoutChangeListener(this)
+                        if (reenterTransition != null) {
+                            val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
+                            if (index != RecyclerView.NO_POSITION) {
+                                val viewAtPosition = linearLayoutManager.findViewByPosition(index)
+                                if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
+                                    linearLayoutManager.isScrollEnabled = true
+                                    binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
+                                }
                             }
                         }
                     }
+                })
+            itemAnimator = object : DefaultItemAnimator() {
+                init {
+                    supportsChangeAnimations = false
                 }
-            })
+            }
+        }
         (view.parent as? ViewGroup)?.run {
             viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
                 override fun onPreDraw(): Boolean {

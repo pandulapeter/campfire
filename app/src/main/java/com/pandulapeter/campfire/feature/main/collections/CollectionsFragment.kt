@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.main.collections
 import android.os.Bundle
 import android.support.annotation.IdRes
 import android.support.v4.app.SharedElementCallback
+import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.RecyclerView
 import android.view.*
 import android.widget.CompoundButton
@@ -20,6 +21,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
     private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
     private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
+    override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
     override val viewModel: CollectionsViewModel by lazy {
         CollectionsViewModel(
@@ -95,6 +97,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                     (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.collection?.let {
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
+                            viewModel.isDetailScreenOpen = true
                         }
                         getCampfireActivity().isUiBlocked = true
                         viewModel.collectionRepository.onCollectionOpened(it.id)
@@ -121,6 +124,11 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         }
         linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())
         binding.recyclerView.layoutManager = linearLayoutManager
+        binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
+            init {
+                supportsChangeAnimations = false
+            }
+        }
         binding.recyclerView.addOnLayoutChangeListener(
             object : View.OnLayoutChangeListener {
                 override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
