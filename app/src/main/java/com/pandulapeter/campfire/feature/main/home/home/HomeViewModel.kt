@@ -38,10 +38,10 @@ class HomeViewModel(
 ) : CampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
 
     companion object {
-        private const val RANDOM_COLLECTION_COUNT = 3
-        private const val NEW_SONG_COUNT = 5
-        private const val NEW_COLLECTION_COUNT = 3
-        private const val RANDOM_SONG_COUNT = 10
+        const val RANDOM_COLLECTION_COUNT = 3
+        const val NEW_SONG_COUNT = 5
+        const val NEW_COLLECTION_COUNT = 3
+        const val RANDOM_SONG_COUNT = 10
     }
 
     private val analyticsManager by inject<AnalyticsManager>()
@@ -319,39 +319,39 @@ class HomeViewModel(
 
     private fun updateAdapterItems(shouldRefreshRandom: Boolean, shouldScrollToTop: Boolean = false) {
         if (collectionRepository.isCacheLoaded() && songRepository.isCacheLoaded() && collections.toList().isNotEmpty() && songs.toList().isNotEmpty()) {
-            if (!isFirstLoadingDone) {
-                languages.swap(collectionRepository.languages.union(songRepository.languages).toList())
-                onDataLoaded(languages)
-                isFirstLoadingDone = true
-            }
-            if (shouldRefreshRandom) {
-                randomSongs = listOf()
-                randomCollections = listOf()
-            }
-            if (randomCollections.isEmpty()) {
-                randomCollections = collections
-                    .filterExplicitCollections()
-                    .filterCollectionsByLanguage()
-                    .toList()
-                    .shuffled()
-                    .takeLast(RANDOM_COLLECTION_COUNT + NEW_COLLECTION_COUNT)
-            }
-            if (randomSongs.isEmpty()) {
-                randomSongs = songs
-                    .filterExplicitSongs()
-                    .filterSongsByLanguage()
-                    .toList()
-                    .shuffled()
-                    .takeLast(RANDOM_SONG_COUNT + NEW_SONG_COUNT)
-            }
             coroutine?.cancel()
             coroutine = launch(UI) {
-                withContext(CommonPool) { createViewModels() }.let {
+                withContext(CommonPool) {
+                    if (shouldRefreshRandom) {
+                        randomSongs = listOf()
+                        randomCollections = listOf()
+                    }
+                    if (randomCollections.isEmpty()) {
+                        randomCollections = collections
+                            .filterExplicitCollections()
+                            .filterCollectionsByLanguage()
+                            .toList()
+                            .shuffled()
+                    }
+                    if (randomSongs.isEmpty()) {
+                        randomSongs = songs
+                            .filterExplicitSongs()
+                            .filterSongsByLanguage()
+                            .toList()
+                            .shuffled()
+                    }
+                    createViewModels()
+                }.let {
                     adapter.shouldScrollToTop = shouldScrollToTop
                     adapter.items = it
                     onListUpdated(it)
+                    coroutine = null
+                    if (!isFirstLoadingDone) {
+                        languages.swap(collectionRepository.languages.union(songRepository.languages).toList())
+                        onDataLoaded(languages)
+                        isFirstLoadingDone = true
+                    }
                 }
-                coroutine = null
             }
         }
     }
@@ -366,7 +366,7 @@ class HomeViewModel(
         if (shouldShowRandomCollections) {
             var totalRandomCollectionCount = 0
             randomCollections
-                .filter { !newCollections.contains(it) }
+                .filterNot { newCollections.contains(it) }
                 .apply { totalRandomCollectionCount = size }
                 .take(RANDOM_COLLECTION_COUNT)
                 .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
@@ -408,7 +408,7 @@ class HomeViewModel(
         if (shouldShowRandomSongs) {
             var totalRandomSongCount = 0
             displayedRandomSongs = randomSongs
-                .filter { !newSongs.contains(it) }
+                .filterNot { newSongs.contains(it) }
                 .apply { totalRandomSongCount = size }
                 .take(RANDOM_SONG_COUNT)
             displayedRandomSongs

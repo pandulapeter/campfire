@@ -254,8 +254,8 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         outState.buttonText = viewModel.buttonText.get()
         outState.buttonIcon = viewModel.buttonIcon.get()
         outState.wasLastTransitionForACollection = wasLastTransitionForACollection
-        outState.randomCollections = ArrayList(viewModel.randomCollections)
-        outState.randomSongs = ArrayList(viewModel.randomSongs)
+        outState.randomCollections = ArrayList(viewModel.randomCollections.take(HomeViewModel.RANDOM_COLLECTION_COUNT + HomeViewModel.NEW_COLLECTION_COUNT + 1))
+        outState.randomSongs = ArrayList(viewModel.randomSongs.take(HomeViewModel.RANDOM_SONG_COUNT + HomeViewModel.NEW_SONG_COUNT + 1))
     }
 
     override fun onResume() {
