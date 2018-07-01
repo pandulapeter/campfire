@@ -69,7 +69,8 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             deleteAllButton.visibleOrGone = it
             showHintIfNeeded()
         }
-        viewModel.adapter.run { itemClickListener = { getCampfireActivity().openPlaylistScreen(items[it].playlist.id) } }
+        // Disabled due to the navigation stack inconsistency it causes.
+        // viewModel.adapter.run { itemClickListener = { getCampfireActivity().openPlaylistScreen(items[it].playlist.id) } }
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
 
             override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) =
