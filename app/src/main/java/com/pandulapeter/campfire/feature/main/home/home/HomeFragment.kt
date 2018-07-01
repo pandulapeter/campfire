@@ -85,7 +85,6 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        getCampfireActivity().onScreenChanged()
         savedInstanceState?.let {
             viewModel.placeholderText.set(it.placeholderText)
             viewModel.buttonText.set(it.buttonText)
