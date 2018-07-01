@@ -315,12 +315,18 @@ class HomeViewModel(
                 onDataLoaded(languages)
                 isFirstLoadingDone = true
             }
-            if (shouldRefreshRandom || randomCollections.isEmpty() || randomSongs.isEmpty()) {
+            if (shouldRefreshRandom) {
+                randomSongs = listOf()
+                randomCollections = listOf()
+            }
+            if (randomCollections.isEmpty()) {
                 randomCollections = collections
                     .filterExplicitCollections()
                     .filterCollectionsByLanguage()
                     .toList()
                     .shuffled()
+            }
+            if (randomSongs.isEmpty()) {
                 randomSongs = songs
                     .filterExplicitSongs()
                     .filterSongsByLanguage()
@@ -375,7 +381,7 @@ class HomeViewModel(
                 .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
                 .let {
                     if (it.isNotEmpty()) {
-                        add(HomeHeaderViewModel(context.getString(R.string.home_random_collections)))
+                        add(HomeHeaderViewModel(context.getString(R.string.home_random_collections), ::refreshRandomCollections))
                         addAll(it)
                     }
                 }
@@ -389,11 +395,21 @@ class HomeViewModel(
                 .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
                 .let {
                     if (it.isNotEmpty()) {
-                        add(HomeHeaderViewModel(context.getString(R.string.home_random_songs)))
+                        add(HomeHeaderViewModel(context.getString(R.string.home_random_songs), ::refreshRandomSongs))
                         addAll(it)
                     }
                 }
         }
+    }
+
+    private fun refreshRandomCollections() {
+        randomCollections = listOf()
+        updateAdapterItems(false, false)
+    }
+
+    private fun refreshRandomSongs() {
+        randomSongs = listOf()
+        updateAdapterItems(false, false)
     }
 
     private fun Sequence<Collection>.filterCollectionsByLanguage() = filter {
