@@ -25,6 +25,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
     private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
+    private var Bundle.wasLastTransitionForACollection by BundleArgumentDelegate.Boolean("wasLastTransitionForACollection")
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     override val viewModel: HomeViewModel by lazy {
         HomeViewModel(
@@ -54,14 +55,15 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         )
     }
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
+    private var wasLastTransitionForACollection = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setExitSharedElementCallback(object : SharedElementCallback() {
+        parentFragment?.setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
                 var index =
                     viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
-                if (index != RecyclerView.NO_POSITION) {
+                if (wasLastTransitionForACollection && index != RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
                         view.transitionName = "card-${getCampfireActivity().lastCollectionId}"
@@ -77,7 +79,6 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                                 ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
                             sharedElements[names[0]] = it.itemView
                         }
-                        getCampfireActivity().lastSongId = ""
                     }
                 }
             }
@@ -89,6 +90,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             viewModel.placeholderText.set(it.placeholderText)
             viewModel.buttonText.set(it.buttonText)
             viewModel.buttonIcon.set(it.buttonIcon)
+            wasLastTransitionForACollection = it.wasLastTransitionForACollection
         }
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
             showSnackbar(
@@ -131,6 +133,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                         getCampfireActivity().isUiBlocked = true
                         viewModel.collectionRepository.onCollectionOpened(it.id)
                         getCampfireActivity().openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
+                        wasLastTransitionForACollection = true
                     }
                 }
             }
@@ -158,6 +161,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                             if (position > viewModel.firstRandomSongIndex) position - viewModel.firstRandomSongIndex - 2 else 0,
                             true
                         )
+                        wasLastTransitionForACollection = false
                     }
                 }
             }
@@ -243,6 +247,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         outState.placeholderText = viewModel.placeholderText.get()
         outState.buttonText = viewModel.buttonText.get()
         outState.buttonIcon = viewModel.buttonIcon.get()
+        outState.wasLastTransitionForACollection = wasLastTransitionForACollection
     }
 
     override fun onResume() {
