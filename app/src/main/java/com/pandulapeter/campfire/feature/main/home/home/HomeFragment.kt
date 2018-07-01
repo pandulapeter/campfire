@@ -146,9 +146,9 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                         getCampfireActivity().isUiBlocked = true
                         getCampfireActivity().openDetailScreen(
                             clickedView,
-                            listOf(it),
+                            if (position > viewModel.firstRandomSongIndex) viewModel.displayedRandomSongs else listOf(it),
                             items.size > 1,
-                            0,
+                            if (position > viewModel.firstRandomSongIndex) position - viewModel.firstRandomSongIndex - 2 else 0,
                             true
                         )
                     }

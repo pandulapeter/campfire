@@ -47,8 +47,11 @@ class HomeViewModel(
     private var coroutine: CoroutineContext? = null
     private var collections = sequenceOf<Collection>()
     private var songs = sequenceOf<Song>()
-    private var randomSongs = listOf<Song>()
     private var randomCollections = listOf<Collection>()
+    private var randomSongs = listOf<Song>()
+    private var displayedRandomCollections = listOf<Collection>()
+    var displayedRandomSongs = listOf<Song>()
+    var firstRandomSongIndex = 0
     val adapter = HomeAdapter()
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
     val isLoading = ObservableBoolean()
@@ -334,9 +337,10 @@ class HomeViewModel(
                     addAll(it)
                 }
             }
-        randomCollections
+        displayedRandomCollections = randomCollections
             .filter { !newCollections.contains(it) }
             .take(3)
+        displayedRandomCollections
             .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
             .let {
                 if (it.isNotEmpty()) {
@@ -344,9 +348,11 @@ class HomeViewModel(
                     addAll(it)
                 }
             }
-        randomSongs
+        firstRandomSongIndex = size - 1
+        displayedRandomSongs = randomSongs
             .filter { !newSongs.contains(it) }
-            .take(5)
+            .take(10)
+        displayedRandomSongs
             .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
             .let {
                 if (it.isNotEmpty()) {
