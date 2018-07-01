@@ -29,6 +29,10 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         HomeViewModel(
             onDataLoaded = { languages ->
                 getCampfireActivity().enableSecondaryNavigationDrawer(R.menu.home)
+                initializeCompoundButton(R.id.new_collections) { viewModel.shouldShowNewCollections }
+                initializeCompoundButton(R.id.new_songs) { viewModel.shouldShowNewSongs }
+                initializeCompoundButton(R.id.random_collections) { viewModel.shouldShowRandomCollections }
+                initializeCompoundButton(R.id.random_songs) { viewModel.shouldShowRandomSongs }
                 initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
                 getCampfireActivity().secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
                     clear()
@@ -108,7 +112,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         }
         binding.swipeRefreshLayout.run {
             setOnRefreshListener {
-                analyticsManager.onSwipeToRefreshUsed(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
+                analyticsManager.onSwipeToRefreshUsed(AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
                 viewModel.updateData()
             }
             setColorSchemeColors(context.color(R.color.accent))
@@ -250,8 +254,24 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
         when (menuItem.itemId) {
+            R.id.new_collections -> consumeAndUpdateBoolean(menuItem, {
+                analyticsManager.onHomeFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_SHOW_NEW_COLLECTIONS, it)
+                shouldShowNewCollections = it
+            }, { shouldShowNewCollections })
+            R.id.new_songs -> consumeAndUpdateBoolean(menuItem, {
+                analyticsManager.onHomeFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_SHOW_NEW_SONGS, it)
+                shouldShowNewSongs = it
+            }, { shouldShowNewSongs })
+            R.id.random_collections -> consumeAndUpdateBoolean(menuItem, {
+                analyticsManager.onHomeFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_SHOW_RANDOM_COLLECTIONS, it)
+                shouldShowRandomCollections = it
+            }, { shouldShowRandomCollections })
+            R.id.random_songs -> consumeAndUpdateBoolean(menuItem, {
+                analyticsManager.onHomeFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_SHOW_RANDOM_SONGS, it)
+                shouldShowRandomSongs = it
+            }, { shouldShowRandomSongs })
             R.id.show_explicit -> consumeAndUpdateBoolean(menuItem, {
-                analyticsManager.onCollectionFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_SHOW_EXPLICIT, it)
+                analyticsManager.onHomeFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_SHOW_EXPLICIT, it)
                 shouldShowExplicit = it
             }, { shouldShowExplicit })
             else -> consumeAndUpdateLanguageFilter(menuItem, viewModel.languages.find { it.nameResource == menuItem.itemId }?.id ?: "")
@@ -261,7 +281,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     private fun consumeAndUpdateLanguageFilter(menuItem: MenuItem, languageId: String) = consume {
         viewModel.disabledLanguageFilters.run {
             viewModel.disabledLanguageFilters = toMutableSet().apply { if (contains(languageId)) remove(languageId) else add(languageId) }
-            analyticsManager.onCollectionFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_LANGUAGE + languageId, contains(languageId))
+            analyticsManager.onHomeFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_LANGUAGE + languageId, contains(languageId))
             (menuItem.actionView as? CompoundButton).updateCheckedStateWithDelay(contains(languageId))
         }
     }

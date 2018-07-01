@@ -3,6 +3,36 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/sections"
+        android:title="@string/home_modules">
+
+        <menu>
+
+            <item
+                android:id="@+id/new_collections"
+                android:title="@string/home_new_collections"
+                app:actionLayout="@layout/widget_switch" />
+
+            <item
+                android:id="@+id/new_songs"
+                android:title="@string/home_new_songs"
+                app:actionLayout="@layout/widget_switch" />
+
+            <item
+                android:id="@+id/random_collections"
+                android:title="@string/home_random_collections"
+                app:actionLayout="@layout/widget_switch" />
+
+            <item
+                android:id="@+id/random_songs"
+                android:title="@string/home_random_songs"
+                app:actionLayout="@layout/widget_switch" />
+
+        </menu>
+
+    </item>
+
+    <item
         android:id="@+id/filter_by_type"
         android:title="@string/filter_by_type">
 

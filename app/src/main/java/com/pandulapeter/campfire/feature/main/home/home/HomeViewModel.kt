@@ -49,7 +49,6 @@ class HomeViewModel(
     private var songs = sequenceOf<Song>()
     private var randomCollections = listOf<Collection>()
     private var randomSongs = listOf<Song>()
-    private var displayedRandomCollections = listOf<Collection>()
     var displayedRandomSongs = listOf<Song>()
     var firstRandomSongIndex = 0
     val adapter = HomeAdapter()
@@ -61,6 +60,38 @@ class HomeViewModel(
     val buttonText = ObservableInt(R.string.try_again)
     val buttonIcon = ObservableInt()
     private var isFirstLoadingDone = false
+    var shouldShowNewCollections = preferenceDatabase.shouldShowNewCollections
+        set(value) {
+            if (field != value) {
+                field = value
+                preferenceDatabase.shouldShowNewCollections = value
+                updateAdapterItems(true, true)
+            }
+        }
+    var shouldShowNewSongs = preferenceDatabase.shouldShowNewSongs
+        set(value) {
+            if (field != value) {
+                field = value
+                preferenceDatabase.shouldShowNewSongs = value
+                updateAdapterItems(true, true)
+            }
+        }
+    var shouldShowRandomCollections = preferenceDatabase.shouldShowRandomCollections
+        set(value) {
+            if (field != value) {
+                field = value
+                preferenceDatabase.shouldShowRandomCollections = value
+                updateAdapterItems(true, true)
+            }
+        }
+    var shouldShowRandomSongs = preferenceDatabase.shouldShowRandomSongs
+        set(value) {
+            if (field != value) {
+                field = value
+                preferenceDatabase.shouldShowRandomSongs = value
+                updateAdapterItems(true, true)
+            }
+        }
     var shouldShowExplicit = preferenceDatabase.shouldShowExplicit
         set(value) {
             if (field != value) {
@@ -277,7 +308,7 @@ class HomeViewModel(
 
     fun downloadSong(song: Song) = songDetailRepository.getSongDetail(song, true)
 
-    private fun updateAdapterItems(shouldRefreshRandom: Boolean) {
+    private fun updateAdapterItems(shouldRefreshRandom: Boolean, shouldScrollToTop: Boolean = false) {
         if (collectionRepository.isCacheLoaded() && songRepository.isCacheLoaded() && collections.toList().isNotEmpty() && songs.toList().isNotEmpty()) {
             if (!isFirstLoadingDone) {
                 languages.swap(collectionRepository.languages.union(songRepository.languages).toList())
@@ -299,7 +330,7 @@ class HomeViewModel(
             coroutine?.cancel()
             coroutine = launch(UI) {
                 withContext(CommonPool) { createViewModels() }.let {
-                    adapter.shouldScrollToTop = false
+                    adapter.shouldScrollToTop = shouldScrollToTop
                     adapter.items = it
                     onListUpdated(it)
                 }
@@ -309,12 +340,12 @@ class HomeViewModel(
     }
 
     private fun createViewModels() = mutableListOf<HomeItemViewModel>().apply {
-        val newCollections = collections
+        val newCollections = if (shouldShowNewCollections) collections
             .filterExplicitCollections()
             .filterCollectionsByLanguage()
             .toList()
             .takeLast(3)
-            .asReversed()
+            .asReversed() else listOf()
         newCollections
             .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
             .let {
@@ -323,12 +354,12 @@ class HomeViewModel(
                     addAll(it)
                 }
             }
-        val newSongs = songs
+        val newSongs = if (shouldShowNewSongs) songs
             .filterExplicitSongs()
             .filterSongsByLanguage()
             .toList()
             .takeLast(5)
-            .asReversed()
+            .asReversed() else listOf()
         newSongs
             .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
             .let {
@@ -337,29 +368,32 @@ class HomeViewModel(
                     addAll(it)
                 }
             }
-        displayedRandomCollections = randomCollections
-            .filter { !newCollections.contains(it) }
-            .take(3)
-        displayedRandomCollections
-            .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
-            .let {
-                if (it.isNotEmpty()) {
-                    add(HomeHeaderViewModel(context.getString(R.string.home_random_collections)))
-                    addAll(it)
+        if (shouldShowRandomCollections) {
+            randomCollections
+                .filter { !newCollections.contains(it) }
+                .take(3)
+                .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
+                .let {
+                    if (it.isNotEmpty()) {
+                        add(HomeHeaderViewModel(context.getString(R.string.home_random_collections)))
+                        addAll(it)
+                    }
                 }
-            }
-        firstRandomSongIndex = size - 1
-        displayedRandomSongs = randomSongs
-            .filter { !newSongs.contains(it) }
-            .take(10)
-        displayedRandomSongs
-            .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
-            .let {
-                if (it.isNotEmpty()) {
-                    add(HomeHeaderViewModel(context.getString(R.string.home_random_songs)))
-                    addAll(it)
+        }
+        firstRandomSongIndex = if (shouldShowRandomSongs) size - 1 else Int.MAX_VALUE
+        if (shouldShowRandomSongs) {
+            displayedRandomSongs = randomSongs
+                .filter { !newSongs.contains(it) }
+                .take(10)
+            displayedRandomSongs
+                .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
+                .let {
+                    if (it.isNotEmpty()) {
+                        add(HomeHeaderViewModel(context.getString(R.string.home_random_songs)))
+                        addAll(it)
+                    }
                 }
-            }
+        }
     }
 
     private fun Sequence<Collection>.filterCollectionsByLanguage() = filter {

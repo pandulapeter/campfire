@@ -24,6 +24,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_SONG_VISUALIZED = "song_visualized"
         private const val EVENT_PLAYLIST_CREATED = "playlist_created"
         private const val EVENT_PLAYLIST_EDITED = "playlist_edited"
+        private const val EVENT_HOME_FILTER_TOGGLED = "home_filter_toggled"
         private const val EVENT_COLLECTION_BOOKMARKED_STATE_CHANGED = "collection_bookmarked_state_changed"
         private const val EVENT_COLLECTION_SORTING_MODE_UPDATED = "collection_sorting_mode_updated"
         private const val EVENT_COLLECTION_FILTER_TOGGLED = "collection_filter_toggled"
@@ -112,6 +113,10 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         const val PARAM_VALUE_BY_POPULARITY = "by_popularity"
         const val PARAM_VALUE_BY_ARTIST = "by_artist"
         const val PARAM_VALUE_FILTER_BOOKMARKED_ONLY = "bookmarked_only"
+        const val PARAM_VALUE_FILTER_SHOW_NEW_COLLECTIONS = "show_new_collections"
+        const val PARAM_VALUE_FILTER_SHOW_NEW_SONGS = "show_new_songs"
+        const val PARAM_VALUE_FILTER_SHOW_RANDOM_COLLECTIONS = "show_random_collections"
+        const val PARAM_VALUE_FILTER_SHOW_RANDOM_SONGS = "show_random_songs"
         const val PARAM_VALUE_FILTER_SHOW_EXPLICIT = "show_explicit"
         const val PARAM_VALUE_FILTER_LANGUAGE = "language_"
         const val PARAM_VALUE_FILTER_DOWNLOADED_ONLY = "downloaded_only"
@@ -224,6 +229,12 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
 
     fun onCollectionFilterToggled(filter: String, state: Boolean) = trackAnalyticsEvent(
         EVENT_COLLECTION_FILTER_TOGGLED,
+        PARAM_KEY_FILTER to filter,
+        PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF
+    )
+
+    fun onHomeFilterToggled(filter: String, state: Boolean) = trackAnalyticsEvent(
+        EVENT_HOME_FILTER_TOGGLED,
         PARAM_KEY_FILTER to filter,
         PARAM_KEY_STATE to if (state) PARAM_VALUE_ON else PARAM_VALUE_OFF
     )

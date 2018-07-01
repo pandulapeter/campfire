@@ -42,6 +42,10 @@ class PreferenceDatabase(context: Context) {
 
     // Home
     var isOnboardingDone by PreferenceFieldDelegate.Boolean("isOnboardingDone", false)
+    var shouldShowNewCollections by PreferenceFieldDelegate.Boolean("shouldShowNewCollections", true)
+    var shouldShowNewSongs by PreferenceFieldDelegate.Boolean("shouldShowNewSongs", true)
+    var shouldShowRandomCollections by PreferenceFieldDelegate.Boolean("shouldShowRandomCollections", true)
+    var shouldShowRandomSongs by PreferenceFieldDelegate.Boolean("shouldShowRandomSongs", true)
 
     // Collections
     var lastCollectionsUpdateTimestamp by PreferenceFieldDelegate.Long("lastCollectionsUpdateTimestamp")
