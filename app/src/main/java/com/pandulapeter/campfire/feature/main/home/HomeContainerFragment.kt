@@ -41,6 +41,11 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
         }
     }
 
+    override fun updateUI() {
+        super.updateUI()
+        (childFragmentManager.findFragmentById(R.id.home_container) as? HomeFragment)?.updateUI()
+    }
+
     override fun onNavigationItemSelected(menuItem: MenuItem) =
         (childFragmentManager.findFragmentById(R.id.home_container) as? HomeFragment)?.onNavigationItemSelected(menuItem) ?: super.onNavigationItemSelected(menuItem)
 

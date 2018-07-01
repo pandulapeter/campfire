@@ -25,6 +25,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
     private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
+    override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     override val viewModel: HomeViewModel by lazy {
         HomeViewModel(
             onDataLoaded = { languages ->
@@ -126,6 +127,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.collection?.let {
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
+                            viewModel.isDetailScreenOpen = true
                         }
                         getCampfireActivity().isUiBlocked = true
                         viewModel.collectionRepository.onCollectionOpened(it.id)
@@ -147,6 +149,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     (items[position] as? SongListItemViewModel.SongViewModel)?.song?.let {
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
+                            viewModel.isDetailScreenOpen = true
                         }
                         getCampfireActivity().isUiBlocked = true
                         getCampfireActivity().openDetailScreen(

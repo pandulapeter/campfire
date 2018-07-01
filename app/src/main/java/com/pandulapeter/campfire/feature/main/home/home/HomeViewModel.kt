@@ -50,6 +50,7 @@ class HomeViewModel(
     private val songRepository by inject<SongRepository>()
     private val songDetailRepository by inject<SongDetailRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
+    var isDetailScreenOpen = false
     private val newText = context.getString(R.string.new_tag)
     private var coroutine: CoroutineContext? = null
     private var collections = sequenceOf<Collection>()
@@ -122,6 +123,7 @@ class HomeViewModel(
         songRepository.subscribe(this)
         songDetailRepository.subscribe(this)
         playlistRepository.subscribe(this)
+        isDetailScreenOpen = false
     }
 
     override fun unsubscribe() {
