@@ -113,7 +113,7 @@ class HomeViewModel(
             if (field != value) {
                 field = value
                 preferenceDatabase.disabledLanguageFilters = value
-                updateAdapterItems(true)
+                updateAdapterItems(true, true)
             }
         }
     var languages = mutableListOf<Language>()
