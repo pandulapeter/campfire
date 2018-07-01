@@ -1,8 +1,7 @@
 # Campfire (Android)
-*Explore a hand-picked library of high quality song lyrics and chords.*
+<img src="screenshots/promo.png" width="100%" />
 
 Become a beta tester [here](https://play.google.com/apps/testing/com.pandulapeter.campfire)
-
 Find the backend project [here](https://github.com/pandulapeter/campfire-backend).
 
 ### Screenshots
