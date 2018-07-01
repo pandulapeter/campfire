@@ -4,8 +4,12 @@ import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
+import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewHolder
+import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewHolder
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
 
-class HomeAdapter : RecyclerView.Adapter<HomeItemViewHolder<*, *>>() {
+class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         private const val VIEW_TYPE_HEADER = 0
@@ -27,21 +31,19 @@ class HomeAdapter : RecyclerView.Adapter<HomeItemViewHolder<*, *>>() {
                     val old = oldItems[oldItemPosition]
                     val new = newItems[newItemPosition]
                     return when (old) {
-                        is HomeItemViewModel.HeaderViewModel -> when (new) {
-                            is HomeItemViewModel.HeaderViewModel -> old.title == new.title
-                            is HomeItemViewModel.CollectionViewModel -> false
-                            is HomeItemViewModel.SongViewModel -> false
+                        is HomeHeaderViewModel -> when (new) {
+                            is HomeHeaderViewModel -> old.title == new.title
+                            else -> false
                         }
-                        is HomeItemViewModel.CollectionViewModel -> when (new) {
-                            is HomeItemViewModel.HeaderViewModel -> false
-                            is HomeItemViewModel.CollectionViewModel -> old.collection.id == new.collection.id
-                            is HomeItemViewModel.SongViewModel -> false
+                        is CollectionListItemViewModel.CollectionViewModel -> when (new) {
+                            is CollectionListItemViewModel.CollectionViewModel -> old.collection.id == new.collection.id
+                            else -> false
                         }
-                        is HomeItemViewModel.SongViewModel -> when (new) {
-                            is HomeItemViewModel.HeaderViewModel -> false
-                            is HomeItemViewModel.CollectionViewModel -> false
-                            is HomeItemViewModel.SongViewModel -> old.song.id == new.song.id
+                        is SongListItemViewModel.SongViewModel -> when (new) {
+                            is SongListItemViewModel.SongViewModel -> old.song.id == new.song.id
+                            else -> false
                         }
+                        else -> false
                     }
                 }
 
@@ -54,7 +56,10 @@ class HomeAdapter : RecyclerView.Adapter<HomeItemViewHolder<*, *>>() {
             field = newItems
         }
     var collectionClickListener: (position: Int, clickedView: View, image: View) -> Unit = { _, _, _ -> }
+    var bookmarkActionClickListener: ((position: Int) -> Unit)? = null
     var songClickListener: (position: Int, clickedView: View) -> Unit = { _, _ -> }
+    var playlistActionClickListener: ((position: Int) -> Unit)? = null
+    var downloadActionClickListener: ((position: Int) -> Unit)? = null
 
     init {
         setHasStableIds(true)
@@ -69,30 +74,34 @@ class HomeAdapter : RecyclerView.Adapter<HomeItemViewHolder<*, *>>() {
     }
 
     override fun getItemViewType(position: Int) = when (items[position]) {
-        is HomeItemViewModel.HeaderViewModel -> VIEW_TYPE_HEADER
-        is HomeItemViewModel.CollectionViewModel -> VIEW_TYPE_COLLECTION
-        is HomeItemViewModel.SongViewModel -> VIEW_TYPE_SONG
+        is HomeHeaderViewModel -> VIEW_TYPE_HEADER
+        is CollectionListItemViewModel.CollectionViewModel -> VIEW_TYPE_COLLECTION
+        is SongListItemViewModel.SongViewModel -> VIEW_TYPE_SONG
+        else -> throw IllegalArgumentException("Unsupported item type.")
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = when (viewType) {
-        VIEW_TYPE_HEADER -> HomeItemViewHolder.HeaderViewHolder(parent)
-        VIEW_TYPE_COLLECTION -> HomeItemViewHolder.CollectionViewHolder(parent).apply {
+        VIEW_TYPE_HEADER -> HomeHeaderViewHolder.HeaderViewHolder(parent)
+        VIEW_TYPE_COLLECTION -> CollectionListItemViewHolder.CollectionViewHolder(parent).apply {
             setItemClickListener(collectionClickListener)
+            setSaveActionClickListener(bookmarkActionClickListener)
         }
-        VIEW_TYPE_SONG -> HomeItemViewHolder.SongViewHolder(parent).apply {
+        VIEW_TYPE_SONG -> SongListItemViewHolder.SongViewHolder(parent).apply {
             setItemClickListener(songClickListener)
+            setPlaylistActionClickListener(playlistActionClickListener)
+            setDownloadActionClickListener(downloadActionClickListener)
         }
         else -> throw IllegalArgumentException("Unsupported item type.")
     }
 
 
-    override fun onBindViewHolder(holder: HomeItemViewHolder<*, *>, position: Int) = Unit
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) = Unit
 
-    override fun onBindViewHolder(holder: HomeItemViewHolder<*, *>, position: Int, payloads: List<Any>) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: List<Any>) {
         when (holder) {
-            is HomeItemViewHolder.HeaderViewHolder -> (items[position] as? HomeItemViewModel.HeaderViewModel)?.let { holder.bind(it) }
-            is HomeItemViewHolder.CollectionViewHolder -> {
-                (items[position] as? HomeItemViewModel.CollectionViewModel)?.run {
+            is HomeHeaderViewHolder.HeaderViewHolder -> (items[position] as? HomeHeaderViewModel)?.let { holder.bind(it) }
+            is CollectionListItemViewHolder.CollectionViewHolder -> {
+                (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.run {
                     payloads.forEach { payload ->
                         when (payload) {
                             is Payload.BookmarkedStateChanged -> collection.isBookmarked = payload.isBookmarked
@@ -101,8 +110,14 @@ class HomeAdapter : RecyclerView.Adapter<HomeItemViewHolder<*, *>>() {
                     holder.bind(this, payloads.isEmpty())
                 }
             }
-            is HomeItemViewHolder.SongViewHolder -> {
-                (items[position] as? HomeItemViewModel.SongViewModel)?.run {
+            is SongListItemViewHolder.SongViewHolder -> {
+                (items[position] as? SongListItemViewModel.SongViewModel)?.run {
+                    payloads.forEach { payload ->
+                        when (payload) {
+                            is Payload.DownloadStateChanged -> downloadState = payload.downloadState
+                            is Payload.IsSongInAPlaylistChanged -> isOnAnyPlaylists = payload.isSongInAPlaylist
+                        }
+                    }
                     holder.bind(this, payloads.isEmpty())
                 }
             }
@@ -115,5 +130,7 @@ class HomeAdapter : RecyclerView.Adapter<HomeItemViewHolder<*, *>>() {
 
     sealed class Payload {
         class BookmarkedStateChanged(val isBookmarked: Boolean) : Payload()
+        class DownloadStateChanged(val downloadState: SongListItemViewModel.SongViewModel.DownloadState) : Payload()
+        class IsSongInAPlaylistChanged(val isSongInAPlaylist: Boolean) : Payload()
     }
 }

@@ -6,7 +6,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.main.home.home.HomeItemViewModel.HeaderViewModel" />
+            type="com.pandulapeter.campfire.feature.main.home.home.HomeHeaderViewModel" />
 
     </data>
 

@@ -5,10 +5,9 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
+import com.pandulapeter.campfire.feature.main.home.home.HomeItemViewModel
 
-sealed class SongListItemViewModel {
-
-    abstract fun getItemId(): Long
+sealed class SongListItemViewModel : HomeItemViewModel {
 
     data class SongViewModel(
         private val context: Context,

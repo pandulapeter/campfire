@@ -1,10 +1,9 @@
 package com.pandulapeter.campfire.feature.main.collections
 
 import com.pandulapeter.campfire.data.model.remote.Collection
+import com.pandulapeter.campfire.feature.main.home.home.HomeItemViewModel
 
-sealed class CollectionListItemViewModel {
-
-    abstract fun getItemId(): Long
+sealed class CollectionListItemViewModel : HomeItemViewModel {
 
     data class CollectionViewModel(val collection: Collection, private val newText: String) : CollectionListItemViewModel() {
 

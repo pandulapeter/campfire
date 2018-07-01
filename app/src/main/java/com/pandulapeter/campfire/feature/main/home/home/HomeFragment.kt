@@ -11,7 +11,10 @@ import android.view.ViewTreeObserver
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentHomeBinding
+import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -42,7 +45,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     ))
             },
             openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() },
-            newText = getString(R.string.new_tag)
+            context = getCampfireActivity()
         )
     }
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
@@ -52,7 +55,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
                 var index =
-                    viewModel.adapter.items.indexOfFirst { it is HomeItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
+                    viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
                 if (index != RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
@@ -63,7 +66,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                         sharedElements[names[1]] = image
                     }
                 } else {
-                    index = viewModel.adapter.items.indexOfFirst { it is HomeItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
+                    index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
                     if (index != RecyclerView.NO_POSITION) {
                         (binding.recyclerView.findViewHolderForAdapterPosition(index)
                                 ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
@@ -87,6 +90,17 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                 message = R.string.collections_update_error,
                 action = { viewModel.updateData() })
         }
+        viewModel.downloadSongError.onEventTriggered(this) { song ->
+            song?.let {
+                binding.root.post {
+                    if (isAdded) {
+                        showSnackbar(
+                            message = getCampfireActivity().getString(R.string.songs_song_download_error, song.title),
+                            action = { viewModel.downloadSong(song) })
+                    }
+                }
+            }
+        }
         viewModel.isLoading.onPropertyChanged(this) {
             if (viewModel.state.get() == StateLayout.State.NORMAL) {
                 binding.swipeRefreshLayout.isRefreshing = it
@@ -104,7 +118,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         viewModel.adapter.apply {
             collectionClickListener = { position, clickedView, image ->
                 if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
-                    (items[position] as? HomeItemViewModel.CollectionViewModel)?.collection?.let {
+                    (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.collection?.let {
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
                         }
@@ -114,9 +128,18 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     }
                 }
             }
+            bookmarkActionClickListener = { position ->
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
+                    viewModel.adapter.items[position].let {
+                        if (it is CollectionListItemViewModel.CollectionViewModel) {
+                            viewModel.onBookmarkClicked(position, it.collection)
+                        }
+                    }
+                }
+            }
             songClickListener = { position, clickedView ->
                 if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
-                    (items[position] as? HomeItemViewModel.SongViewModel)?.song?.let {
+                    (items[position] as? SongListItemViewModel.SongViewModel)?.song?.let {
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
                         }
@@ -131,6 +154,26 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     }
                 }
             }
+            downloadActionClickListener = { position ->
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
+                    (items[position] as? SongListItemViewModel.SongViewModel)?.let {
+                        analyticsManager.onDownloadButtonPressed(it.song.id)
+                        viewModel.downloadSong(it.song)
+                    }
+                }
+            }
+            playlistActionClickListener = { position ->
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
+                    (items[position] as? SongListItemViewModel.SongViewModel)?.let {
+                        if (viewModel.areThereMoreThanOnePlaylists()) {
+                            getCampfireActivity().isUiBlocked = true
+                            PlaylistChooserBottomSheetFragment.show(childFragmentManager, it.song.id, AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
+                        } else {
+                            viewModel.toggleFavoritesState(it.song.id)
+                        }
+                    }
+                }
+            }
         }
         binding.recyclerView.addOnLayoutChangeListener(
             object : View.OnLayoutChangeListener {
@@ -138,7 +181,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     binding.recyclerView.removeOnLayoutChangeListener(this)
                     if (reenterTransition != null) {
                         var index =
-                            viewModel.adapter.items.indexOfFirst { it is HomeItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
+                            viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
                         if (index != RecyclerView.NO_POSITION) {
                             val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                             if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
@@ -146,7 +189,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                                 binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
                             }
                         } else {
-                            index = viewModel.adapter.items.indexOfFirst { it is HomeItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
+                            index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
                             if (index != RecyclerView.NO_POSITION) {
                                 val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                 if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
