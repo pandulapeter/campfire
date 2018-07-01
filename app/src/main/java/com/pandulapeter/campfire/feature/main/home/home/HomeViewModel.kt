@@ -334,6 +334,7 @@ class HomeViewModel(
                     .filterCollectionsByLanguage()
                     .toList()
                     .shuffled()
+                    .takeLast(RANDOM_COLLECTION_COUNT + NEW_COLLECTION_COUNT)
             }
             if (randomSongs.isEmpty()) {
                 randomSongs = songs
@@ -341,6 +342,7 @@ class HomeViewModel(
                     .filterSongsByLanguage()
                     .toList()
                     .shuffled()
+                    .takeLast(RANDOM_SONG_COUNT + NEW_SONG_COUNT)
             }
             coroutine?.cancel()
             coroutine = launch(UI) {
