@@ -37,6 +37,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
                     (binding.recyclerView.findViewHolderForAdapterPosition(index)
                             ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
                         sharedElements[names[0]] = it.itemView
+                        getCampfireActivity().lastSongId = ""
                     }
                 }
             }

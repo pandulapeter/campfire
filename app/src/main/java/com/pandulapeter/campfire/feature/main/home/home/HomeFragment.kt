@@ -76,6 +76,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                                 ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
                             sharedElements[names[0]] = it.itemView
                         }
+                        getCampfireActivity().lastSongId = ""
                     }
                 }
             }
@@ -227,7 +228,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                             transition?.removeListener(this)
                         }
                     })
-                    startPostponedEnterTransition()
+                    parentFragment?.startPostponedEnterTransition()
                     return true
                 }
             })

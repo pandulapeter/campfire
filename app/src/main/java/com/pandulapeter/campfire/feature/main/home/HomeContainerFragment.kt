@@ -26,6 +26,9 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
     private val preferenceDatabase by inject<PreferenceDatabase>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        if (preferenceDatabase.isOnboardingDone) {
+            postponeEnterTransition()
+        }
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
         defaultToolbar.updateToolbarTitle(R.string.main_home)
