@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.main.home
 
 import android.os.Bundle
+import android.support.v4.app.FragmentManager
 import android.transition.Slide
 import android.view.Gravity
 import android.view.MenuItem
@@ -12,6 +13,7 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.databinding.FragmentHomeContainerBinding
 import com.pandulapeter.campfire.feature.main.home.home.HomeFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingFragment
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import io.fabric.sdk.android.Fabric
@@ -28,7 +30,11 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
         defaultToolbar.updateToolbarTitle(R.string.main_home)
         if (savedInstanceState == null) {
-            childFragmentManager.beginTransaction().replace(R.id.home_container, if (preferenceDatabase.isOnboardingDone) HomeFragment() else OnboardingFragment()).commit()
+            if (preferenceDatabase.isOnboardingDone) {
+                childFragmentManager.handleReplace { HomeFragment() }
+            } else {
+                childFragmentManager.handleReplace { OnboardingFragment() }
+            }
         }
     }
 
@@ -51,4 +57,8 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
             .replace(R.id.home_container, HomeFragment().apply { enterTransition = Slide(Gravity.BOTTOM) })
             .commit()
     }
+
+    private inline fun <reified T : CampfireFragment<*, *>> FragmentManager.handleReplace(tag: String = T::class.java.name, crossinline newInstance: () -> T) = beginTransaction()
+        .replace(R.id.home_container, findFragmentByTag(tag) ?: newInstance.invoke(), tag)
+        .commit()
 }
