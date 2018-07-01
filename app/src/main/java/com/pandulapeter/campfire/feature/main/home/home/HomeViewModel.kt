@@ -92,7 +92,7 @@ class HomeViewModel(
 
     override fun onCollectionsUpdated(data: List<Collection>) {
         collections = data.asSequence()
-        updateAdapterItems(true)
+        updateAdapterItems(false)
     }
 
     override fun onCollectionsLoadingStateChanged(isLoading: Boolean) {
@@ -106,7 +106,7 @@ class HomeViewModel(
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
         songs = data.asSequence()
-        updateAdapterItems(true)
+        updateAdapterItems(false)
     }
 
     override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {
@@ -226,6 +226,8 @@ class HomeViewModel(
     }
 
     fun updateData() {
+        randomCollections = listOf()
+        randomSongs = listOf()
         collectionRepository.updateData()
         songRepository.updateData()
     }
@@ -285,13 +287,11 @@ class HomeViewModel(
                     .filterCollectionsByLanguage()
                     .toList()
                     .shuffled()
-                    .take(3)
                 randomSongs = songs
                     .filterExplicitSongs()
                     .filterSongsByLanguage()
                     .toList()
                     .shuffled()
-                    .take(5)
             }
             coroutine?.cancel()
             coroutine = launch(UI) {
@@ -306,12 +306,13 @@ class HomeViewModel(
     }
 
     private fun createViewModels() = mutableListOf<HomeItemViewModel>().apply {
-        collections
+        val newCollections = collections
             .filterExplicitCollections()
             .filterCollectionsByLanguage()
             .toList()
             .takeLast(3)
             .asReversed()
+        newCollections
             .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
             .let {
                 if (it.isNotEmpty()) {
@@ -319,12 +320,13 @@ class HomeViewModel(
                     addAll(it)
                 }
             }
-        songs
+        val newSongs = songs
             .filterExplicitSongs()
             .filterSongsByLanguage()
             .toList()
             .takeLast(5)
             .asReversed()
+        newSongs
             .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
             .let {
                 if (it.isNotEmpty()) {
@@ -333,6 +335,8 @@ class HomeViewModel(
                 }
             }
         randomCollections
+            .filter { !newCollections.contains(it) }
+            .take(3)
             .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
             .let {
                 if (it.isNotEmpty()) {
@@ -341,6 +345,8 @@ class HomeViewModel(
                 }
             }
         randomSongs
+            .filter { !newSongs.contains(it) }
+            .take(5)
             .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
             .let {
                 if (it.isNotEmpty()) {
