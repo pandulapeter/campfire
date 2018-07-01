@@ -37,6 +37,13 @@ class HomeViewModel(
     private val context: Context
 ) : CampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
 
+    companion object {
+        private const val RANDOM_COLLECTION_COUNT = 3
+        private const val NEW_SONG_COUNT = 5
+        private const val NEW_COLLECTION_COUNT = 3
+        private const val RANDOM_SONG_COUNT = 10
+    }
+
     private val analyticsManager by inject<AnalyticsManager>()
     private val preferenceDatabase by inject<PreferenceDatabase>()
     val collectionRepository by inject<CollectionRepository>()
@@ -350,21 +357,32 @@ class HomeViewModel(
             .filterExplicitCollections()
             .filterCollectionsByLanguage()
             .toList()
-            .takeLast(3)
+            .takeLast(NEW_COLLECTION_COUNT)
             .asReversed() else listOf()
-        newCollections
-            .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
-            .let {
-                if (it.isNotEmpty()) {
-                    add(HomeHeaderViewModel(context.getString(R.string.home_new_collections)))
-                    addAll(it)
+        if (shouldShowRandomCollections) {
+            var totalRandomCollectionCount = 0
+            randomCollections
+                .filter { !newCollections.contains(it) }
+                .apply { totalRandomCollectionCount = size }
+                .take(RANDOM_COLLECTION_COUNT)
+                .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
+                .let {
+                    if (it.isNotEmpty()) {
+                        add(
+                            HomeHeaderViewModel(
+                                context.getString(R.string.home_random_collections),
+                                if (totalRandomCollectionCount > RANDOM_COLLECTION_COUNT) ::refreshRandomCollections else null
+                            )
+                        )
+                        addAll(it)
+                    }
                 }
-            }
+        }
         val newSongs = if (shouldShowNewSongs) songs
             .filterExplicitSongs()
             .filterSongsByLanguage()
             .toList()
-            .takeLast(5)
+            .takeLast(NEW_SONG_COUNT)
             .asReversed() else listOf()
         newSongs
             .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
@@ -374,28 +392,26 @@ class HomeViewModel(
                     addAll(it)
                 }
             }
-        if (shouldShowRandomCollections) {
-            randomCollections
-                .filter { !newCollections.contains(it) }
-                .take(3)
-                .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
-                .let {
-                    if (it.isNotEmpty()) {
-                        add(HomeHeaderViewModel(context.getString(R.string.home_random_collections), ::refreshRandomCollections))
-                        addAll(it)
-                    }
+        newCollections
+            .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
+            .let {
+                if (it.isNotEmpty()) {
+                    add(HomeHeaderViewModel(context.getString(R.string.home_new_collections)))
+                    addAll(it)
                 }
-        }
+            }
         firstRandomSongIndex = if (shouldShowRandomSongs) size - 1 else Int.MAX_VALUE
         if (shouldShowRandomSongs) {
+            var totalRandomSongCount = 0
             displayedRandomSongs = randomSongs
                 .filter { !newSongs.contains(it) }
-                .take(10)
+                .apply { totalRandomSongCount = size }
+                .take(RANDOM_SONG_COUNT)
             displayedRandomSongs
                 .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
                 .let {
                     if (it.isNotEmpty()) {
-                        add(HomeHeaderViewModel(context.getString(R.string.home_random_songs), ::refreshRandomSongs))
+                        add(HomeHeaderViewModel(context.getString(R.string.home_random_songs), if (totalRandomSongCount > RANDOM_SONG_COUNT) ::refreshRandomSongs else null))
                         addAll(it)
                     }
                 }
@@ -406,6 +422,7 @@ class HomeViewModel(
         randomCollections = listOf()
         updateAdapterItems(false, false)
     }
+
 
     private fun refreshRandomSongs() {
         randomSongs = listOf()
