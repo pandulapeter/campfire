@@ -64,6 +64,7 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
             .beginTransaction()
             .replace(R.id.home_container, HomeFragment().apply { enterTransition = Slide(Gravity.BOTTOM) })
             .commit()
+        getCampfireActivity().onScreenChanged()
     }
 
     private inline fun <reified T : CampfireFragment<*, *>> FragmentManager.handleReplace(tag: String = T::class.java.name, crossinline newInstance: () -> T) = beginTransaction()
