@@ -13,7 +13,7 @@ class SongParser(private val context: Context) {
     private val regexSection = Regex("\\{(.*?)[}]")
     private val regexConsecutiveWhitespaces = Regex("[ ][ ]+")
     private val regexEmptyLine = Regex("(\\n){3,}")
-    private val regexSpaceBetweenWords = Regex("\\b(\\s)\\b")
+    private val regexSpaceBetweenWords = Regex("\\b(␣)\\b")
     private val regexInstrumentalPart = Regex("]([ \\t]+)\\[")
 
     fun parseSong(text: String, shouldShowChords: Boolean, shouldUseGermanNotation: Boolean, transposition: Int): SpannableString {
