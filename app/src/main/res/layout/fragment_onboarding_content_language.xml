@@ -26,8 +26,8 @@
             android:layout_height="wrap_content"
             android:animateLayoutChanges="true"
             android:clipToPadding="false"
-            android:paddingEnd="@dimen/large_content_padding"
-            android:paddingStart="@dimen/large_content_padding">
+            android:paddingEnd="@dimen/first_keyline"
+            android:paddingStart="@dimen/first_keyline">
 
             <TextView
                 android:id="@+id/title"

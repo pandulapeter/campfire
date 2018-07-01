@@ -24,6 +24,14 @@ import com.pandulapeter.campfire.util.*
 
 class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layout.fragment_home) {
 
+    companion object {
+        private var Bundle.shouldAnimate by BundleArgumentDelegate.Boolean("shouldAnimate")
+
+        fun newInstance(shouldAnimate: Boolean) = HomeFragment().withArguments {
+            it.shouldAnimate = shouldAnimate
+        }
+    }
+
     private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
     private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
@@ -90,6 +98,24 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        if (arguments?.shouldAnimate == true) {
+            arguments?.shouldAnimate = false
+            view.alpha = 0f
+            view.waitForPreDraw {
+                view.translationY = view.height.toFloat()
+                view
+                    .animate()
+                    .translationY(0f)
+                    .alpha(1f)
+                    .apply {
+                        startDelay = 300
+                        duration = 600
+                    }
+                    .start()
+                getCampfireActivity().onScreenChanged()
+                false
+            }
+        }
         savedInstanceState?.let {
             viewModel.placeholderText.set(it.placeholderText)
             viewModel.buttonText.set(it.buttonText)

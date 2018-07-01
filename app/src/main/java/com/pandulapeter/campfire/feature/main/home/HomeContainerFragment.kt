@@ -2,8 +2,6 @@ package com.pandulapeter.campfire.feature.main.home
 
 import android.os.Bundle
 import android.support.v4.app.FragmentManager
-import android.transition.Slide
-import android.view.Gravity
 import android.view.MenuItem
 import android.view.View
 import com.crashlytics.android.Crashlytics
@@ -24,6 +22,7 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
     override val viewModel = HomeContainerViewModel()
     override val shouldShowAppBar get() = preferenceDatabase.isOnboardingDone
     private val preferenceDatabase by inject<PreferenceDatabase>()
+    private val currentFragment get() = childFragmentManager.findFragmentById(R.id.home_container)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         if (preferenceDatabase.isOnboardingDone) {
@@ -43,11 +42,11 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
 
     override fun updateUI() {
         super.updateUI()
-        (childFragmentManager.findFragmentById(R.id.home_container) as? HomeFragment)?.updateUI()
+        (currentFragment as? HomeFragment)?.updateUI()
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem) =
-        (childFragmentManager.findFragmentById(R.id.home_container) as? HomeFragment)?.onNavigationItemSelected(menuItem) ?: super.onNavigationItemSelected(menuItem)
+        (currentFragment as? HomeFragment)?.onNavigationItemSelected(menuItem) ?: super.onNavigationItemSelected(menuItem)
 
     fun navigateToHome() {
         // Save the fact that the user is done with the onboarding flow.
@@ -62,9 +61,8 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
         // Inflate the Home Fragment.
         childFragmentManager
             .beginTransaction()
-            .replace(R.id.home_container, HomeFragment().apply { enterTransition = Slide(Gravity.BOTTOM) })
+            .replace(R.id.home_container, HomeFragment.newInstance(true))
             .commit()
-        getCampfireActivity().onScreenChanged()
     }
 
     private inline fun <reified T : CampfireFragment<*, *>> FragmentManager.handleReplace(tag: String = T::class.java.name, crossinline newInstance: () -> T) = beginTransaction()
