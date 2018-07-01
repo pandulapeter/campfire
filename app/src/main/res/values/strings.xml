@@ -91,6 +91,10 @@
     <string name="home_placeholder">No content to display. Double-check the filters you set up</string>
     <string name="home_initializing_error">Something went wrong while trying to load the home screen</string>
     <string name="home_update_error">Something went wrong while updating the home screen</string>
+    <string name="home_new_collections">New collections</string>
+    <string name="home_new_songs">New songs</string>
+    <string name="home_random_collections">Random collections</string>
+    <string name="home_random_songs">Random songs</string>
 
     <!-- Collections screen -->
     <string name="collections_placeholder">No matching collections found. Double-check the filters you set up</string>
@@ -187,7 +191,7 @@
     <string name="options_changelog_0_7_0_version_name" translatable="false">v0.7</string>
     <string name="options_changelog_0_7_0_description">
         <Data><![CDATA[
-        • <strong>Home screen</strong> that contains personalised song suggestions, featured collections and random playlists
+        • <strong>Home screen</strong> that contains song and collection suggestions
         ]]></Data>
     </string>
     <string name="options_changelog_0_6_0_version_name" translatable="false">v0.6</string>

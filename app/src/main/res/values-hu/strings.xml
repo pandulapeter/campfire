@@ -90,6 +90,10 @@
     <string name="home_placeholder">Nincs megjeleníthető tartalom. Ellenőrizd a beállított szűrőket</string>
     <string name="home_initializing_error">Hiba történt a kezdőképernyő betöltése közben</string>
     <string name="home_update_error">Hiba történt a kezdőképernyő frissítése közben</string>
+    <string name="home_new_collections">Új gyűjtemények</string>
+    <string name="home_new_songs">Új dalok</string>
+    <string name="home_random_collections">Véletlenszerű gyűjtemények</string>
+    <string name="home_random_songs">Véletlenszerű dalok</string>
 
     <!-- Collections screen -->
     <string name="collections_placeholder">Nem található megfelelő gyűjtemény. Ellenőrizd a beállított szűrőket</string>
@@ -185,7 +189,7 @@
     <string name="options_changelog_what_is_new">Újdonságok</string>
     <string name="options_changelog_0_7_0_description">
         <Data><![CDATA[
-        • <strong>Kezdőképernyő</strong> ami személyre szabott dal ajánlásokat, kiemelt gyűjteményeket és véletlenszerű listákat tartalmaz
+        • <strong>Kezdőképernyő</strong> ami dal és gyűjtemény ajánlásokat tartalmaz
         ]]></Data>
     </string>
     <string name="options_changelog_0_6_0_description">
