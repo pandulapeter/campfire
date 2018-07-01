@@ -55,8 +55,8 @@ class HomeViewModel(
     private var coroutine: CoroutineContext? = null
     private var collections = sequenceOf<Collection>()
     private var songs = sequenceOf<Song>()
-    private var randomCollections = listOf<Collection>()
-    private var randomSongs = listOf<Song>()
+    var randomCollections = listOf<Collection>()
+    var randomSongs = listOf<Song>()
     var displayedRandomSongs = listOf<Song>()
     var firstRandomSongIndex = 0
     val adapter = HomeAdapter()

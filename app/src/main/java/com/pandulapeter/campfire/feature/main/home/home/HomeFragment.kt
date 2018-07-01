@@ -10,6 +10,8 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.remote.Collection
+import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.databinding.FragmentHomeBinding
 import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
@@ -26,6 +28,8 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
     private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
     private var Bundle.wasLastTransitionForACollection by BundleArgumentDelegate.Boolean("wasLastTransitionForACollection")
+    private var Bundle.randomCollections by BundleArgumentDelegate.ParcelableArrayList<Collection>("randomCollections")
+    private var Bundle.randomSongs by BundleArgumentDelegate.ParcelableArrayList<Song>("randomSongs")
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     override val viewModel: HomeViewModel by lazy {
         HomeViewModel(
@@ -91,6 +95,8 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             viewModel.buttonText.set(it.buttonText)
             viewModel.buttonIcon.set(it.buttonIcon)
             wasLastTransitionForACollection = it.wasLastTransitionForACollection
+            viewModel.randomCollections = it.randomCollections
+            viewModel.randomSongs = it.randomSongs
         }
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
             showSnackbar(
@@ -248,6 +254,8 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         outState.buttonText = viewModel.buttonText.get()
         outState.buttonIcon = viewModel.buttonIcon.get()
         outState.wasLastTransitionForACollection = wasLastTransitionForACollection
+        outState.randomCollections = ArrayList(viewModel.randomCollections)
+        outState.randomSongs = ArrayList(viewModel.randomSongs)
     }
 
     override fun onResume() {

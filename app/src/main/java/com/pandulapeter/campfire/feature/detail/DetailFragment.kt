@@ -38,7 +38,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         private const val FONT_SIZE_MAX = 1.8f
         private const val FONT_SIZE_MIN = 0.8f
         private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
-        private var Bundle.songs by BundleArgumentDelegate.ParcelableArrayList("songs")
+        private var Bundle.songs by BundleArgumentDelegate.ParcelableArrayList<Song>("songs")
         private var Bundle.index by BundleArgumentDelegate.Int("index")
         private var Bundle.shouldShowManagePlaylist by BundleArgumentDelegate.Boolean("shouldShowManagePlaylist")
         private var Bundle.hasNoTransition by BundleArgumentDelegate.Boolean("hasNoTransition")
@@ -67,7 +67,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
     private val detailEventBus by inject<DetailEventBus>()
     private val detailPageEventBus by inject<DetailPageEventBus>()
-    private val songs by lazy { arguments?.songs?.filterIsInstance<Song>() ?: listOf() }
+    private val songs by lazy { arguments?.songs ?: listOf<Song>() }
     private val drawablePlayToPause by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
     private val drawablePauseToPlay by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
     private val addedToPlaylist by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_added_to_playlists_24dp) }
