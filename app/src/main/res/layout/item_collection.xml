@@ -17,12 +17,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/border"
-        android:layout_marginEnd="@dimen/negative_card_corner_large"
+        android:layout_marginEnd="@dimen/collections_negative_card_corner"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:elevation="@dimen/card_elevation"
         android:foreground="?attr/selectableItemBackground"
-        app:cardCornerRadius="@dimen/collections_image_size"
+        app:cardCornerRadius="@dimen/collections_card_corner"
         app:contentPadding="@dimen/content_padding"
         app:visibility="@{viewModel!=null}">
 
@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:clipChildren="false"
             android:clipToPadding="false"
-            android:paddingEnd="@dimen/collections_image_size"
+            android:paddingEnd="@dimen/collections_card_corner"
             android:paddingStart="@dimen/nothing">
 
             <ImageView
