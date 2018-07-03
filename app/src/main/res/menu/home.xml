@@ -9,8 +9,8 @@
         <menu>
 
             <item
-                android:id="@+id/random_collections"
-                android:title="@string/home_random_collections"
+                android:id="@+id/new_collections"
+                android:title="@string/home_new_collections"
                 app:actionLayout="@layout/widget_switch" />
 
             <item
@@ -19,8 +19,8 @@
                 app:actionLayout="@layout/widget_switch" />
 
             <item
-                android:id="@+id/new_collections"
-                android:title="@string/home_new_collections"
+                android:id="@+id/random_collections"
+                android:title="@string/home_random_collections"
                 app:actionLayout="@layout/widget_switch" />
 
             <item

@@ -38,9 +38,9 @@ class HomeViewModel(
 ) : CampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
 
     companion object {
-        const val RANDOM_COLLECTION_COUNT = 3
-        const val NEW_SONG_COUNT = 5
         const val NEW_COLLECTION_COUNT = 3
+        const val NEW_SONG_COUNT = 5
+        const val RANDOM_COLLECTION_COUNT = 3
         const val RANDOM_SONG_COUNT = 10
     }
 
@@ -357,12 +357,40 @@ class HomeViewModel(
     }
 
     private fun createViewModels() = mutableListOf<HomeItemViewModel>().apply {
+
+        // Add the New Collections module.
         val newCollections = if (shouldShowNewCollections) collections
             .filterExplicitCollections()
             .filterCollectionsByLanguage()
             .toList()
             .takeLast(NEW_COLLECTION_COUNT)
             .asReversed() else listOf()
+        newCollections
+            .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
+            .let {
+                if (it.isNotEmpty()) {
+                    add(HomeHeaderViewModel(context.getString(R.string.home_new_collections)))
+                    addAll(it)
+                }
+            }
+
+        // Add the New Songs module.
+        val newSongs = if (shouldShowNewSongs) songs
+            .filterExplicitSongs()
+            .filterSongsByLanguage()
+            .toList()
+            .takeLast(NEW_SONG_COUNT)
+            .asReversed() else listOf()
+        newSongs
+            .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
+            .let {
+                if (it.isNotEmpty()) {
+                    add(HomeHeaderViewModel(context.getString(R.string.home_new_songs)))
+                    addAll(it)
+                }
+            }
+
+        // Add the Random Collections module.
         if (shouldShowRandomCollections) {
             var totalRandomCollectionCount = 0
             randomCollections
@@ -382,28 +410,8 @@ class HomeViewModel(
                     }
                 }
         }
-        val newSongs = if (shouldShowNewSongs) songs
-            .filterExplicitSongs()
-            .filterSongsByLanguage()
-            .toList()
-            .takeLast(NEW_SONG_COUNT)
-            .asReversed() else listOf()
-        newSongs
-            .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
-            .let {
-                if (it.isNotEmpty()) {
-                    add(HomeHeaderViewModel(context.getString(R.string.home_new_songs)))
-                    addAll(it)
-                }
-            }
-        newCollections
-            .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
-            .let {
-                if (it.isNotEmpty()) {
-                    add(HomeHeaderViewModel(context.getString(R.string.home_new_collections)))
-                    addAll(it)
-                }
-            }
+
+        // Add the Random Songs module.
         firstRandomSongIndex = if (shouldShowRandomSongs) size - 1 else Int.MAX_VALUE
         if (shouldShowRandomSongs) {
             var totalRandomSongCount = 0
