@@ -2,7 +2,7 @@
 <img src="screenshots/promo.png" width="100%" />
 
 * Become a beta tester [here](https://play.google.com/apps/testing/com.pandulapeter.campfire)
-* Find the backend project [here](https://github.com/pandulapeter/campfire-backend).
+* Find the backend project [here](https://github.com/pandulapeter/campfire-backend)
 
 ### How to build
 The **master** branch should always be buildable, you just need to create three configuration files after cloning the project (as these files contain sensitive information, they are not part of the repository).

@@ -19,6 +19,7 @@
     <dimen name="card_corner">16dp</dimen>
     <dimen name="card_elevation">2dp</dimen>
     <dimen name="negative_card_corner">-16dp</dimen>
+    <dimen name="negative_card_corner_large">-48dp</dimen>
 
     <!-- Text -->
     <dimen name="text_header">12sp</dimen>
@@ -43,7 +44,7 @@
     <dimen name="onboarding_logo_margin">24dp</dimen>
 
     <!-- Collections -->
-    <dimen name="collections_image_small">48dp</dimen>
+    <dimen name="collections_image_size">48dp</dimen>
 
     <!-- Options screen / Preferences -->
     <dimen name="options_preferences_checkbox_margin">8dp</dimen>
