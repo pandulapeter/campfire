@@ -110,7 +110,7 @@
     <string name="songs_placeholder">Nem található megfelelő dal. Ellenőrizd a beállított szűrőket</string>
     <string name="songs_initializing_error">Hiba történt a dalok betöltése közben</string>
     <string name="songs_update_error">Hiba történt a dalok frissítése közben</string>
-    <string name="songs_song_download_error">Hiba történt a dal letöltése közben: %s</string>
+    <string name="songs_song_download_error">Hiba történt a dal letöltése közben: \"%s\"</string>
     <string name="songs_search">Keresés</string>
     <string name="songs_close">Bezárás</string>
     <string name="songs_sort_by">Rendezés</string>
@@ -125,7 +125,7 @@
     <!-- History screen -->
     <string name="history_clear_confirmation_message">Minden előzmény törölve lesz.</string>
     <string name="history_clear_confirmation_clear">Összes törlése</string>
-    <string name="history_song_removed_message">%s eltávolítva</string>
+    <string name="history_song_removed_message">\"%s\" eltávolítva</string>
     <string name="history_all_songs_removed_message">Előzmények törölve</string>
     <string name="history_now">Most</string>
     <string name="history_today">Korábban ma</string>
@@ -263,7 +263,7 @@
     <string name="playlist_enter_title">Add meg a lista címét</string>
     <string name="playlist_title">Cím</string>
     <string name="playlist_placeholder">Ahhoz, hogy dalokat adj hozzá ehhez a listához, koppints a címek melletti csillag ikonra</string>
-    <string name="playlist_song_removed_message">%s eltávolítva</string>
+    <string name="playlist_song_removed_message">\"%s\" eltávolítva</string>
     <string name="playlist_hint_swipe">Vonszold vízszintesen a dalokat, hogy eltávolítsd őket ebből a listából</string>
     <string name="playlist_hint_drag">Vonszold függőlegesen a dalokat a sorrend átrendezéséhez</string>
 
@@ -282,14 +282,14 @@
     <string name="manage_playlists_delete_all_confirmation_message">Az összes lista törölve lesz a Kedvencek kivételével.</string>
     <string name="manage_playlists_delete_all_confirmation_clear">Összes törlése</string>
     <string name="manage_playlists_all_playlists_deleted">Az összes lista törölve</string>
-    <string name="manage_playlists_playlist_deleted_message">%s törölve</string>
+    <string name="manage_playlists_playlist_deleted_message">\"%s\" törölve</string>
 
     <!-- Manage downloads screen -->
     <string name="manage_downloads_no_downloads">Nincsenek letöltött dalok</string>
     <string name="manage_downloads_delete_all_confirmation_message">Az összes letöltött dal törölve lesz.</string>
     <string name="manage_downloads_delete_all_confirmation_clear">Összes törlése</string>
     <string name="manage_downloads_delete_all_message">Az összes letöltött dal törölve</string>
-    <string name="manage_downloads_song_deleted_message">%s törölve</string>
+    <string name="manage_downloads_song_deleted_message">\"%s\" törölve</string>
     <string name="manage_downloads_hint">Vonszold vízszintesen a dalokat, hogy kitöröld őket a letöltések közül</string>
     <string name="manage_downloads_placeholder">Nincsenek letöltött dalok</string>
 

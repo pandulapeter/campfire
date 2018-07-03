@@ -110,7 +110,7 @@
     <string name="songs_placeholder">Nu s-au găsit piese pentru criteriile de căutare. Te rog să verifici filtrele</string>
     <string name="songs_initializing_error">A intervenit o eroare la descărcarea pieselor</string>
     <string name="songs_update_error">A intervenit o eroare la actualizarea pieselor</string>
-    <string name="songs_song_download_error">A intervenit o eroare la descărcarea piesei: %s</string>
+    <string name="songs_song_download_error">A intervenit o eroare la descărcarea piesei \"%s\"</string>
     <string name="songs_search">Căutare</string>
     <string name="songs_close">Închidere</string>
     <string name="songs_sort_by">Sortează după</string>
@@ -125,7 +125,7 @@
     <!-- History screen -->
     <string name="history_clear_confirmation_message">Tot istoricul va fi șters.</string>
     <string name="history_clear_confirmation_clear">Ștergere</string>
-    <string name="history_song_removed_message">%s șters</string>
+    <string name="history_song_removed_message">Piesa \"%s\" a fost ștearsă</string>
     <string name="history_all_songs_removed_message">Tot istoricul a fost șters</string>
     <string name="history_now">Acum</string>
     <string name="history_today">Azi mai devreme</string>
@@ -264,7 +264,7 @@
     <string name="playlist_enter_title">Introdu titlul listei</string>
     <string name="playlist_title">Titlu</string>
     <string name="playlist_placeholder">Pentru a adăuga piese în listă, atinge steluța de lângă titlurile pieselor</string>
-    <string name="playlist_song_removed_message">Piesa "%s" a fost ștearsă</string>
+    <string name="playlist_song_removed_message">Piesa \"%s\" a fost ștearsă</string>
     <string name="playlist_hint_swipe">Glisează orizontal piesele pentru a le șterge din listă</string>
     <string name="playlist_hint_drag">Glisează vertical piesele pentru a le reordona</string>
 
@@ -285,14 +285,14 @@
     <string name="manage_playlists_delete_all_confirmation_message">Toate listele vor fi șterse în afară de Favorite.</string>
     <string name="manage_playlists_delete_all_confirmation_clear">Ștergere</string>
     <string name="manage_playlists_all_playlists_deleted">Toate listele au fost șterse</string>
-    <string name="manage_playlists_playlist_deleted_message">Lista "%s" a fost ștearsă</string>
+    <string name="manage_playlists_playlist_deleted_message">Lista \"%s\" a fost ștearsă</string>
 
     <!-- Manage downloads screen -->
     <string name="manage_downloads_no_downloads">Nicio piesă descărcată</string>
     <string name="manage_downloads_delete_all_confirmation_message">Toate piesele descărcate vor fi șterse.</string>
     <string name="manage_downloads_delete_all_confirmation_clear">Ștergere</string>
     <string name="manage_downloads_delete_all_message">Toate piesele descărcate au fost șterse</string>
-    <string name="manage_downloads_song_deleted_message">Piesa "%s" a fost ștearsă</string>
+    <string name="manage_downloads_song_deleted_message">Piesa \"%s\" a fost ștearsă</string>
     <string name="manage_downloads_hint">Glisează orizontal piesele pentru a le șterge din lista pieselor descărcate</string>
     <string name="manage_downloads_placeholder">Nicio piesă descărcată</string>
 

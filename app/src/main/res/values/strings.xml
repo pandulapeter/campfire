@@ -111,7 +111,7 @@
     <string name="songs_placeholder">No matching songs found. Double-check the filters you set up</string>
     <string name="songs_initializing_error">Something went wrong while trying to load the songs</string>
     <string name="songs_update_error">Something went wrong while updating the songs</string>
-    <string name="songs_song_download_error">Error downloading %s</string>
+    <string name="songs_song_download_error">Error downloading \"%s\"</string>
     <string name="songs_search">Search</string>
     <string name="songs_close">Close</string>
     <string name="songs_sort_by">Sort by</string>
@@ -126,7 +126,7 @@
     <!-- History screen -->
     <string name="history_clear_confirmation_message">This will remove all items from your history.</string>
     <string name="history_clear_confirmation_clear">Delete all</string>
-    <string name="history_song_removed_message">%s removed</string>
+    <string name="history_song_removed_message">\"%s\" removed</string>
     <string name="history_all_songs_removed_message">All history items removed</string>
     <string name="history_now">Now</string>
     <string name="history_today">Earlier today</string>
@@ -271,7 +271,7 @@
     <string name="playlist_enter_title">Enter the name of the playlist</string>
     <string name="playlist_title">Playlist title</string>
     <string name="playlist_placeholder">To start adding songs to this playlist, tap on the star icon near song titles</string>
-    <string name="playlist_song_removed_message">%s removed</string>
+    <string name="playlist_song_removed_message">\"%s\" removed</string>
     <string name="playlist_hint_swipe">Swipe the songs away horizontally to remove them from this playlist</string>
     <string name="playlist_hint_drag">Drag the songs vertically to rearrange them</string>
 
@@ -290,14 +290,14 @@
     <string name="manage_playlists_delete_all_confirmation_message">This will remove all playlists except for Favorites.</string>
     <string name="manage_playlists_delete_all_confirmation_clear">Delete all</string>
     <string name="manage_playlists_all_playlists_deleted">All playlists deleted</string>
-    <string name="manage_playlists_playlist_deleted_message">%s deleted</string>
+    <string name="manage_playlists_playlist_deleted_message">\"%s\" deleted</string>
 
     <!-- Manage downloads screen -->
     <string name="manage_downloads_no_downloads">No downloaded songs</string>
     <string name="manage_downloads_delete_all_confirmation_message">This will remove all downloaded songs.</string>
     <string name="manage_downloads_delete_all_confirmation_clear">Delete all</string>
     <string name="manage_downloads_delete_all_message">All downloaded songs deleted</string>
-    <string name="manage_downloads_song_deleted_message">%s deleted</string>
+    <string name="manage_downloads_song_deleted_message">\"%s\" deleted</string>
     <string name="manage_downloads_hint">Swipe items away to remove them from your downloads</string>
     <string name="manage_downloads_placeholder">You don\'t have any\ndownloaded songs</string>
 
