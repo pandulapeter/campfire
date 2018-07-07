@@ -51,7 +51,7 @@
     <string name="user_data_title">Date personale</string>
     <string name="user_data_message_start">Pentru a ne ajuta în îmbunătățirea aplicației, te rog să accepți următoarele moduri de colectare a datelor:</string>
     <string name="user_data_analytics_checkbox">Statistici de utilizare prin serviciul Google Firebase</string>
-    <string name="user_data_crash_reporting_checkbox">Raporturi de erori prin serviciul Google Crashlytics</string>
+    <string name="user_data_crash_reporting_checkbox">Raporturi de eroare prin serviciul Google Crashlytics</string>
     <string name="user_data_message_end">Aceste preferințe pot fi modificate oricând.</string>
 
     <!-- Onboarding screen / Song appearance -->
@@ -76,7 +76,7 @@
     <string name="main_home">Pagină de start</string>
     <string name="main_collections">Colecții</string>
     <string name="main_songs">Piese</string>
-    <string name="main_options">Oțiuni</string>
+    <string name="main_options">Opțiuni</string>
     <string name="main_history">Istoric</string>
     <string name="main_playlists">Liste</string>
     <string name="main_favorites">Favorite</string>
@@ -157,8 +157,8 @@
     <string name="options_preferences_app_theme">Temă</string>
     <string name="options_preferences_app_theme_automatic">Automată</string>
     <string name="options_preferences_app_theme_automatic_description">Schimbă tema în funcție de perioada zilei</string>
-    <string name="options_preferences_app_theme_dark">Întunecată</string>
-    <string name="options_preferences_app_theme_dark_description">Folosește întotdeauna tema întunecată</string>
+    <string name="options_preferences_app_theme_dark">Întunerică</string>
+    <string name="options_preferences_app_theme_dark_description">Folosește întotdeauna tema întunerică</string>
     <string name="options_preferences_app_theme_light">Luminată</string>
     <string name="options_preferences_app_theme_light_description">Folosește întotdeauna tema luminată</string>
     <string name="options_preferences_language">Limbă</string>
@@ -179,9 +179,9 @@
     <string name="options_preferences_share_usage_data">Statistici de utilizare</string>
     <string name="options_preferences_share_usage_data_enabled">Trimite statistici anonime către dezvoltator prin serviciul Google Firebase</string>
     <string name="options_preferences_share_usage_data_disabled">Nu trimite statistici de utilizare</string>
-    <string name="options_preferences_share_crash_reports">Raporturi de erori</string>
-    <string name="options_preferences_share_crash_reports_enabled">Trimite eventualele raporturi de erori, în mod anonim, către dezvoltator prin serviciul Google Crashlyitics</string>
-    <string name="options_preferences_share_crash_reports_disabled">Raportarea automată a erorilor este dezactivată</string>
+    <string name="options_preferences_share_crash_reports">Raporturi de eroare</string>
+    <string name="options_preferences_share_crash_reports_enabled">Trimite eventualele raporturi de eroare, în mod anonim, către dezvoltator prin serviciul Google Crashlyitics</string>
+    <string name="options_preferences_share_crash_reports_disabled">Raportarea automată a eroarelor este dezactivată</string>
     <string name="options_preferences_share_usage_data_restart_hint">Te rog repornește aplicația pentru aplicarea modificărilor</string>
     <string name="options_preferences_share_usage_data_restart_action">Repornește</string>
 
@@ -218,7 +218,7 @@
         <Data><![CDATA[
         • Posibilitatea de a crea <strong>liste</strong> locale<br>
         • Versuri <strong>paginate</strong> pentru piese din liste<br>
-        • Suport pentru <strong>comezni rapide</strong> pentru sistemele Android 7.1 sau mai recente
+        • Suport pentru <strong>comenzi rapide</strong> pentru sistemele Android 7.1 sau mai recente
         ]]></Data>
     </string>
     <string name="options_changelog_0_2_0_description">
