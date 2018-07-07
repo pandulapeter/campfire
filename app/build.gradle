@@ -8,7 +8,7 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.pandulapeter.campfire"
-        minSdkVersion 21
+        minSdkVersion 22
         targetSdkVersion 27
         versionCode 7
         versionName "0.7.2"
@@ -75,10 +75,10 @@ dependencies {
 
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.kotlinVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.23.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.23.4"
 
     // Dependency injection
-    implementation "org.koin:koin-android:0.8.0"
+    implementation "org.koin:koin-android:0.9.3"
 
     // Networking
     implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"

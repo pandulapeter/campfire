@@ -15,32 +15,32 @@ import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import org.koin.dsl.module.applicationContext
 
 val integrationModule = applicationContext {
-    provide { AppShortcutManager(get(), get(), get()) }
-    provide { DeepLinkManager() }
-    provide { FirstTimeUserExperienceManager(get()) }
+    bean { AppShortcutManager(get(), get(), get()) }
+    bean { DeepLinkManager() }
+    bean { FirstTimeUserExperienceManager(get()) }
 }
 
 val networkingModule = applicationContext {
-    provide { GsonBuilder().create() }
-    provide { AnalyticsManager(get(), get(), get()) }
-    provide { NetworkManager(get()) }
+    bean { GsonBuilder().create() }
+    bean { AnalyticsManager(get(), get(), get()) }
+    bean { NetworkManager(get()) }
 }
 
 val repositoryModule = applicationContext {
-    provide { SongRepository(get(), get(), get()) }
-    provide { SongDetailRepository(get(), get()) }
-    provide { ChangelogRepository() }
-    provide { HistoryRepository(get()) }
-    provide { PlaylistRepository(get()) }
-    provide { CollectionRepository(get(), get(), get()) }
+    bean { SongRepository(get(), get(), get()) }
+    bean { SongDetailRepository(get(), get()) }
+    bean { ChangelogRepository() }
+    bean { HistoryRepository(get()) }
+    bean { PlaylistRepository(get()) }
+    bean { CollectionRepository(get(), get(), get()) }
 }
 
 val persistenceModule = applicationContext {
-    provide { PreferenceDatabase(get()) }
-    provide { Room.databaseBuilder(get(), Database::class.java, "songDatabase.db").build() }
+    bean { PreferenceDatabase(get()) }
+    bean { Room.databaseBuilder(get(), Database::class.java, "songDatabase.db").build() }
 }
 
 val detailModule = applicationContext {
-    provide { DetailEventBus() }
-    provide { DetailPageEventBus() }
+    bean { DetailEventBus() }
+    bean { DetailPageEventBus() }
 }
