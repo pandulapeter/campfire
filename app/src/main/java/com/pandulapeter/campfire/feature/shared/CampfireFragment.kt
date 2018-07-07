@@ -85,7 +85,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     protected inline fun Context.createToolbarButton(@DrawableRes drawableRes: Int, crossinline onClickListener: (View) -> Unit) = ToolbarButton(this).apply {
         setImageDrawable(drawable(drawableRes))
-        setOnClickListener { if (!getCampfireActivity().isUiBlocked) onClickListener(it) }
+        setOnClickListener { if (isAdded && !getCampfireActivity().isUiBlocked) onClickListener(it) }
     }
 
     private fun getNextAnimationDuration(fragment: Fragment, defValue: Long): Long {
