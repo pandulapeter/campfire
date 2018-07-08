@@ -311,8 +311,9 @@
     <string name="detail_intro">Intro</string>
     <string name="detail_verse">Strofa</string>
     <string name="detail_bridge">Bridge</string>
+    <string name="detail_pre_chorus">Pre-refren</string>
+    <string name="detail_chorus">Refren</string>
     <string name="detail_solo">Solo</string>
     <string name="detail_outro">Outro</string>
-    <string name="detail_chorus">Refren</string>
 
 </resources>

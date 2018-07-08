@@ -308,8 +308,9 @@
     <string name="detail_intro">Bevezető</string>
     <string name="detail_verse">Szakasz</string>
     <string name="detail_bridge">Átkötő</string>
+    <string name="detail_pre_chorus">Felvezető</string>
+    <string name="detail_chorus">Refrén</string>
     <string name="detail_solo">Szóló</string>
     <string name="detail_outro">Lezárás</string>
-    <string name="detail_chorus">Refrén</string>
 
 </resources>
