@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.main.home.home
 
 import android.os.Bundle
 import android.support.v4.app.SharedElementCallback
+import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.RecyclerView
 import android.transition.Transition
 import android.view.MenuItem
@@ -154,6 +155,11 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         }
         linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())
         binding.recyclerView.layoutManager = linearLayoutManager
+        binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
+            init {
+                supportsChangeAnimations = false
+            }
+        }
         viewModel.adapter.apply {
             collectionClickListener = { position, clickedView, image ->
                 if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
@@ -266,7 +272,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                             transition?.removeListener(this)
                         }
                     })
-                    binding.root.post { parentFragment?.startPostponedEnterTransition() }
+                    binding.recyclerView.postDelayed({ if (isAdded) parentFragment?.startPostponedEnterTransition() }, 50)
                     return true
                 }
             })
