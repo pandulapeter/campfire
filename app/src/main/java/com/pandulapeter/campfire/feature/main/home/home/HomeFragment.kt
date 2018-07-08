@@ -266,7 +266,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                             transition?.removeListener(this)
                         }
                     })
-                    parentFragment?.startPostponedEnterTransition()
+                    binding.root.post { parentFragment?.startPostponedEnterTransition() }
                     return true
                 }
             })
