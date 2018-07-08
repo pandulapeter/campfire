@@ -29,6 +29,7 @@ class SongParser(private val context: Context) {
             .replace(regexChord, "") // Remove chords.
             .replace(regexConsecutiveWhitespaces, "") // Remove groups of multiple whitespaces within a single line.
             .replace(regexEmptyLine, "") // Remove lines consisting only of empty space.
+            .replace("}", "}\n") // Make sure all section headers are followed by a line break.
             .replace("\n\n", "\n") // Remove consecutive line breaks.
             .let { returnValue ->
                 returnValue
