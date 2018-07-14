@@ -4,8 +4,9 @@ import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
+import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
 
-class SongListAdapter : RecyclerView.Adapter<SongListItemViewHolder<*, *>>() {
+class SongListAdapter : RecyclerView.Adapter<SongListItemViewHolder<*, *>>(), FastScrollRecyclerView.SectionedAdapter {
 
     companion object {
         private const val VIEW_TYPE_SONG = 0
@@ -97,6 +98,13 @@ class SongListAdapter : RecyclerView.Adapter<SongListItemViewHolder<*, *>>() {
     override fun getItemCount() = items.size
 
     override fun getItemId(position: Int) = items[position].getItemId()
+
+    override fun getSectionName(position: Int) = items[position].let {
+        when (it) {
+            is SongListItemViewModel.HeaderViewModel -> it.title[0].toString()
+            is SongListItemViewModel.SongViewModel -> it.song.title[0].toString()
+        }
+    }
 
     sealed class Payload {
         class DownloadStateChanged(val downloadState: SongListItemViewModel.SongViewModel.DownloadState) : Payload()
