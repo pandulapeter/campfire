@@ -21,7 +21,8 @@ class SongsViewModel(
     val toolbarTextInputView: ToolbarTextInputView,
     private val updateSearchToggleDrawable: (Boolean) -> Unit,
     private val onDataLoaded: (languages: List<Language>) -> Unit,
-    private val openSecondaryNavigationDrawer: () -> Unit
+    private val openSecondaryNavigationDrawer: () -> Unit,
+    private val setFastScrollEnabled: (Boolean) -> Unit
 ) : BaseSongListViewModel(context) {
 
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_SONGS
@@ -90,6 +91,18 @@ class SongsViewModel(
             textInput.onTextChanged { if (isTextInputVisible) query = it }
         }
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_SONGS
+        adapter.itemTitleCallback = {
+            adapter.items[it].let {
+                when (it) {
+                    is SongListItemViewModel.HeaderViewModel -> it.title[0].toString()
+                    is SongListItemViewModel.SongViewModel -> when (sortingMode) {
+                        SongsViewModel.SortingMode.TITLE -> it.song.getNormalizedTitle().removePrefixes()[0].toString()
+                        SongsViewModel.SortingMode.ARTIST -> it.song.getNormalizedArtist().removePrefixes()[0].toString()
+                        SongsViewModel.SortingMode.POPULARITY -> ""
+                    }
+                }
+            }
+        }
     }
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
@@ -106,6 +119,7 @@ class SongsViewModel(
             placeholderText.set(R.string.songs_placeholder)
             buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
             buttonIcon.set(R.drawable.ic_filter_and_sort_24dp)
+            setFastScrollEnabled(sortingMode != SortingMode.POPULARITY)
         }
     }
 

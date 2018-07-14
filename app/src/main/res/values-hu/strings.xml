@@ -190,7 +190,8 @@
     <string name="options_changelog_what_is_new">Újdonságok</string>
     <string name="options_changelog_0_7_0_description">
         <Data><![CDATA[
-        • <strong>Kezdőképernyő</strong> ami dal és gyűjtemény ajánlásokat tartalmaz
+        • <strong>Kezdőképernyő</strong> ami dal és gyűjtemény ajánlásokat tartalmaz<br>
+        • <strong>Gyors görgető</strong> a Dalok képernyőn
         ]]></Data>
     </string>
     <string name="options_changelog_0_6_0_description">

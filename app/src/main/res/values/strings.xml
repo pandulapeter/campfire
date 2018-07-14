@@ -192,7 +192,8 @@
     <string name="options_changelog_0_7_0_version_name" translatable="false">v0.7</string>
     <string name="options_changelog_0_7_0_description">
         <Data><![CDATA[
-        • <strong>Home screen</strong> that contains song and collection suggestions
+        • <strong>Home screen</strong> that contains song and collection suggestions<br>
+        • <strong>Fast scroller</strong> on the Songs screen
         ]]></Data>
     </string>
     <string name="options_changelog_0_6_0_version_name" translatable="false">v0.6</string>

@@ -17,6 +17,7 @@ class SongListAdapter(private val songItemHeight: Int, private val headerItemHei
 
     private var recyclerView: RecyclerView? = null
     var shouldScrollToTop = false
+    var itemTitleCallback: (Int) -> String = { "" }
     var items = listOf<SongListItemViewModel>()
         set(newItems) {
             val oldItems = items
@@ -104,12 +105,7 @@ class SongListAdapter(private val songItemHeight: Int, private val headerItemHei
 
     override fun getItemId(position: Int) = items[position].getItemId()
 
-    override fun getSectionName(position: Int) = items[position].let {
-        when (it) {
-            is SongListItemViewModel.HeaderViewModel -> it.title[0].toString()
-            is SongListItemViewModel.SongViewModel -> it.song.title[0].toString()
-        }
-    }
+    override fun getSectionName(position: Int) = itemTitleCallback(position)
 
     sealed class Payload {
         class DownloadStateChanged(val downloadState: SongListItemViewModel.SongViewModel.DownloadState) : Payload()

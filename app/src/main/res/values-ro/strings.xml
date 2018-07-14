@@ -190,7 +190,8 @@
     <string name="options_changelog_what_is_new">Ce e nou</string>
     <string name="options_changelog_0_7_0_description">
         <Data><![CDATA[
-        • <strong>Pagină de start</strong> care conține sugestii de piese și colecții
+        • <strong>Pagină de start</strong> care conține sugestii de piese și colecții<br>
+        • <strong>Derulare rapidă</strong> pe pagina de Piese
         ]]></Data>
     </string>
     <string name="options_changelog_0_6_0_description">

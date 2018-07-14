@@ -93,9 +93,10 @@
                     android:paddingStart="@dimen/content_padding"
                     android:paddingTop="@dimen/content_padding"
                     app:adapter="@{viewModel.adapter}"
+                    app:fastScrollAutoHide="false"
                     app:fastScrollPopupBgColor="@color/accent"
-                    app:fastScrollPopupTextColor="@android:color/primary_text_dark"
-                    app:fastScrollThumbColor="@color/accent"
+                    app:fastScrollPopupTextColor="@color/white"
+                    app:fastScrollThumbEnabled="false"
                     app:hasFixedSize="@{true}" />
 
             </android.support.v4.widget.SwipeRefreshLayout>

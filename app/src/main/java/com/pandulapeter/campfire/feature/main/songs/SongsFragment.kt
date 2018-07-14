@@ -71,7 +71,8 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
                         ))
                 }
             },
-            openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() }
+            openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() },
+            setFastScrollEnabled = { binding.recyclerView.setFastScrollEnabled(it) }
         )
     }
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
