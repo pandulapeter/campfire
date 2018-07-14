@@ -83,7 +83,7 @@
     <string name="main_new_playlist">Listă nouă</string>
     <string name="main_manage_playlists">@string/manage_playlists</string>
     <string name="main_manage_downloads">Gestionează descărcările</string>
-    <string name="main_exit_confirmation_message">Ești sigur că vrei să închizi aplicația?</string>
+    <string name="main_exit_confirmation_message">Într-adevăr vrei să închizi aplicația?</string>
     <string name="main_exit_confirmation_close">Ieșire</string>
 
     <!-- Home screen -->
