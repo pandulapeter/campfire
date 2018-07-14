@@ -6,7 +6,7 @@
     <string name="go_to_songs">@string/main_songs</string>
     <string name="try_again">Reîncearcă</string>
     <string name="are_you_sure">Ești sigur?</string>
-    <string name="undo">Renunță</string>
+    <string name="undo">Anulează</string>
     <string name="ok">OK</string>
     <string name="cancel">Renunță</string>
     <string name="loading">Se încarcă…</string>
@@ -157,8 +157,8 @@
     <string name="options_preferences_app_theme">Temă</string>
     <string name="options_preferences_app_theme_automatic">Automată</string>
     <string name="options_preferences_app_theme_automatic_description">Schimbă tema în funcție de perioada zilei</string>
-    <string name="options_preferences_app_theme_dark">Întunerică</string>
-    <string name="options_preferences_app_theme_dark_description">Folosește întotdeauna tema întunerică</string>
+    <string name="options_preferences_app_theme_dark">Întunecată</string>
+    <string name="options_preferences_app_theme_dark_description">Folosește întotdeauna tema întunecată</string>
     <string name="options_preferences_app_theme_light">Luminată</string>
     <string name="options_preferences_app_theme_light_description">Folosește întotdeauna tema luminată</string>
     <string name="options_preferences_language">Limbă</string>
@@ -203,7 +203,7 @@
     <string name="options_changelog_0_5_0_description">
         <Data><![CDATA[
         • <strong>Setări de limbă</strong> și traducere <strong>maghiară</strong><br>
-        • Opțiune de schimbare automată între temă <strong>întunerică</strong> și <strong>luminată</strong> în funcție de perioada zilei<br>
+        • Opțiune de schimbare automată între temă <strong>întunecată</strong> și <strong>luminată</strong> în funcție de perioada zilei<br>
         • <strong>Statistici de utilizare</strong> și <strong>raporturi de eroare</strong> opționale
         ]]></Data>
     </string>
