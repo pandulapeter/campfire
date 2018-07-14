@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
 
-class SongListAdapter(private val songItemHeight: Int, private val headerItemHeight: Int) : RecyclerView.Adapter<SongListItemViewHolder<*, *>>(),
+class SongListAdapter : RecyclerView.Adapter<SongListItemViewHolder<*, *>>(),
     FastScrollRecyclerView.SectionedAdapter,
     FastScrollRecyclerView.MeasurableAdapter<SongListItemViewHolder<*, *>> {
 
@@ -16,6 +16,22 @@ class SongListAdapter(private val songItemHeight: Int, private val headerItemHei
     }
 
     private var recyclerView: RecyclerView? = null
+    private val headerItemHeight by lazy {
+        recyclerView?.run {
+            onCreateViewHolder(this, VIEW_TYPE_HEADER).itemView.let {
+                it.measure(measuredWidth, measuredHeight)
+                it.measuredHeight
+            }
+        } ?: 0
+    }
+    private val songItemHeight by lazy {
+        recyclerView?.run {
+            onCreateViewHolder(this, VIEW_TYPE_SONG).itemView.let {
+                it.measure(measuredWidth, measuredHeight)
+                it.measuredHeight
+            }
+        } ?: 0
+    }
     var shouldScrollToTop = false
     var itemTitleCallback: (Int) -> String = { "" }
     var items = listOf<SongListItemViewModel>()

@@ -19,7 +19,6 @@ import com.pandulapeter.campfire.feature.main.collections.CollectionListItemView
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.dimension
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.cancel
@@ -40,7 +39,7 @@ abstract class BaseSongListViewModel(protected val context: Context) : CampfireV
     private var coroutine: CoroutineContext? = null
     protected var songs = sequenceOf<Song>()
     val collection = ObservableField<CollectionListItemViewModel.CollectionViewModel?>()
-    val adapter = SongListAdapter(context.dimension(R.dimen.list_item_song), context.dimension(R.dimen.list_item_header))
+    val adapter = SongListAdapter()
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
     val downloadSongError = ObservableField<Song?>()
     val isLoading = ObservableBoolean()
