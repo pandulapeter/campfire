@@ -148,7 +148,7 @@ fun setTitleDescription(view: TextView, title: String?, description: String?) {
 @BindingAdapter(value = ["primaryText", "secondaryText", "extraText", "shouldEllipsize"], requireAll = false)
 fun setListItemText(view: TextView, primaryText: String, secondaryText: String?, extraText: String?, shouldEllipsize: Boolean?) {
     view.setLineSpacing(0f, 0.9f)
-    view.text = SpannableString("$primaryText${secondaryText?.let { "\n$it" } ?: ""}${extraText?.let { "\n$it" } ?: ""}").apply {
+    view.text = SpannableString("$primaryText${secondaryText?.let { "\n$it" } ?: ""}${extraText?.let { " $it" } ?: ""}").apply {
         setSpan(
             ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorPrimary)),
             0,

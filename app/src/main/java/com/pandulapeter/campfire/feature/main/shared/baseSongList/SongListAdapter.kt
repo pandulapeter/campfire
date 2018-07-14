@@ -6,7 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
 
-class SongListAdapter : RecyclerView.Adapter<SongListItemViewHolder<*, *>>(), FastScrollRecyclerView.SectionedAdapter {
+class SongListAdapter(private val songItemHeight: Int, private val headerItemHeight: Int) : RecyclerView.Adapter<SongListItemViewHolder<*, *>>(),
+    FastScrollRecyclerView.SectionedAdapter,
+    FastScrollRecyclerView.MeasurableAdapter<SongListItemViewHolder<*, *>> {
 
     companion object {
         private const val VIEW_TYPE_SONG = 0
@@ -94,6 +96,9 @@ class SongListAdapter : RecyclerView.Adapter<SongListItemViewHolder<*, *>>(), Fa
             is SongListItemViewHolder.HeaderViewHolder -> (items[position] as? SongListItemViewModel.HeaderViewModel)?.let { holder.bind(it) }
         }
     }
+
+    override fun getViewTypeHeight(recyclerView: RecyclerView?, viewHolder: SongListItemViewHolder<*, *>?, viewType: Int) =
+        if (viewType == VIEW_TYPE_SONG) songItemHeight else headerItemHeight
 
     override fun getItemCount() = items.size
 

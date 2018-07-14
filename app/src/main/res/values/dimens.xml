@@ -37,6 +37,8 @@
     <!-- List items -->
     <dimen name="list_item_minimum_height">40dp</dimen>
     <dimen name="list_item_loading_indicator_size">36dp</dimen>
+    <dimen name="list_item_song">56dp</dimen>
+    <dimen name="list_item_header">36dp</dimen>
 
     <!-- Onboarding screens -->
     <dimen name="onboarding_bottom_margin">56dp</dimen>
