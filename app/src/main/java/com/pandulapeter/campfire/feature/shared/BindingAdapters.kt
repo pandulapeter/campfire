@@ -157,7 +157,7 @@ fun setListItemText(view: TextView, primaryText: String, secondaryText: String?,
         )
         secondaryText?.let {
             setSpan(
-                EllipsizeLineSpan(view.context.obtainColor(android.R.attr.textColorSecondary)),
+                ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorSecondary)),
                 primaryText.length + 1,
                 length,
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE
@@ -179,7 +179,7 @@ fun setListItemText(view: TextView, primaryText: String, secondaryText: String?,
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE
             )
             setSpan(
-                EllipsizeLineSpan(view.context.color(R.color.accent)),
+                ForegroundColorSpan(view.context.color(R.color.accent)),
                 length - it.length,
                 length,
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE

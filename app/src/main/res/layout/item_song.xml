@@ -31,7 +31,7 @@
 
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/list_item_song"
+            android:layout_height="wrap_content"
             android:animateLayoutChanges="true"
             android:clipChildren="false"
             android:clipToPadding="false"
@@ -133,6 +133,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:alpha="@{viewModel.downloadState instanceof DownloadState.Downloaded ? 1f : 0.5f}"
+                android:ellipsize="end"
+                android:lines="2"
                 app:extraText="@{viewModel.alertText}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/download_action_container"
