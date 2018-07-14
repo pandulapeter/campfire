@@ -150,14 +150,14 @@ fun setListItemText(view: TextView, primaryText: String, secondaryText: String?,
     view.setLineSpacing(0f, 0.9f)
     view.text = SpannableString("$primaryText${secondaryText?.let { "\n$it" } ?: ""}${extraText?.let { " $it" } ?: ""}").apply {
         setSpan(
-            ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorPrimary)),
+            EllipsizeLineSpan(view.context.obtainColor(android.R.attr.textColorPrimary)),
             0,
             primaryText.length,
             Spannable.SPAN_INCLUSIVE_INCLUSIVE
         )
         secondaryText?.let {
             setSpan(
-                ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorSecondary)),
+                EllipsizeLineSpan(view.context.obtainColor(android.R.attr.textColorSecondary)),
                 primaryText.length + 1,
                 length,
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE
@@ -179,7 +179,7 @@ fun setListItemText(view: TextView, primaryText: String, secondaryText: String?,
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE
             )
             setSpan(
-                ForegroundColorSpan(view.context.color(R.color.accent)),
+                EllipsizeLineSpan(view.context.color(R.color.accent)),
                 length - it.length,
                 length,
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE

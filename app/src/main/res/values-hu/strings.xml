@@ -27,8 +27,8 @@
     <string name="download">Letöltés</string>
     <string name="update">Frissítés</string>
     <string name="manage_playlists">Listák kezelése</string>
-    <string name="new_version_available">Frissítés elérhető</string>
-    <string name="new_tag">Új</string>
+    <string name="new_version_available">(Frissítés elérhető)</string>
+    <string name="new_tag">(Új)</string>
     <string name="popular_tag">Népszerű</string>
     <string name="drag_to_rearrange">Húzd az átrendezéshez</string>
 

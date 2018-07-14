@@ -27,8 +27,8 @@
     <string name="download">Descarcă</string>
     <string name="update">Actualizează</string>
     <string name="manage_playlists">Gestionează listele</string>
-    <string name="new_version_available">O nouă versiune este disponibilă</string>
-    <string name="new_tag">Nou</string>
+    <string name="new_version_available">(O versiune nouă este disponibilă)</string>
+    <string name="new_tag">(Nou)</string>
     <string name="popular_tag">Popular</string>
     <string name="drag_to_rearrange">Glisează pentru a rearanja</string>
 

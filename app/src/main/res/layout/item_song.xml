@@ -17,9 +17,11 @@
 
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="@dimen/list_item_song"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/border"
         android:layout_marginEnd="@dimen/negative_card_corner"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:elevation="@dimen/card_elevation"
         android:foreground="?attr/selectableItemBackground"
         android:transitionGroup="true"
@@ -29,8 +31,10 @@
 
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/list_item_song"
             android:animateLayoutChanges="true"
+            android:clipChildren="false"
+            android:clipToPadding="false"
             android:minHeight="@dimen/list_item_minimum_height"
             android:paddingEnd="@dimen/card_corner"
             android:paddingStart="@dimen/nothing">
@@ -48,6 +52,7 @@
                 android:contentDescription="@string/drag_to_rearrange"
                 android:padding="@dimen/content_padding"
                 android:tint="?android:attr/textColorSecondary"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/space_1"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/ic_drag_handle_24dp"
@@ -69,6 +74,7 @@
                 android:tint="?android:attr/textColorSecondary"
                 app:animation="@{viewModel.isOnAnyPlaylists ? R.drawable.avd_added_to_playlists_24dp : R.drawable.avd_removed_from_playlists_24dp}"
                 app:lastFrame="@{viewModel.isOnAnyPlaylists ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/space_2"
                 app:layout_constraintTop_toTopOf="parent"
                 app:visibility="@{viewModel.shouldShowPlaylistButton}"
@@ -84,6 +90,7 @@
                 android:id="@+id/download_action_container"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/space_3"
                 app:layout_constraintTop_toTopOf="parent">
 
