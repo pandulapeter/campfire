@@ -172,6 +172,7 @@ class SongsViewModel(
         if (languages.isNotEmpty()) {
             onDataLoaded(languages)
         }
+        setFastScrollEnabled(sortingMode != SortingMode.POPULARITY)
     }
 
     fun toggleTextInputVisibility() {
