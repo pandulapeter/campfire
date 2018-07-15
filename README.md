@@ -13,7 +13,7 @@ Campfire is completely free, without any ads.
 ### How to build
 The **master** branch should always be buildable, you just need to create three configuration files after cloning the project (as these files contain sensitive information, they are not part of the repository).
 
-*  Copy your **google-services.json** file to the **app** folder for the Firebase configuration. This does not need to be valid, as the **debug** build type will never use the Firebase API and I don't recommend compiling the other versions.
+*  Copy your **google-services.json** file into the **app** folder for the Firebase configuration. This does not need to be valid, as the **debug** build type will never use the Firebase API and I don't recommend compiling the other build types.
 *  In the **app** folder, duplicate the **internal.keystore** file with the name **release.keystore**.
 *  In the **app** folder, duplicate the **internal.keystore.properties** file with the name **release.keystore.properties**.
 
@@ -24,7 +24,7 @@ The **master** branch should always be buildable, you just need to create three 
 <img src="screenshots/07.png" width="20%" /> <img src="screenshots/08.png" width="20%" />
 
 ### Pull requests
-In general I'm not accepting pull requests for this project, it is only open-sourced only for educational purposes. If you find a bug or any possibility for improvements, I'd very much appreciate your feedback but I'd like to be the one fixing the issues. If you'd like to help me by adding more songs to the database, check out the backend project [here](https://github.com/pandulapeter/campfire-backend).
+In general I'm not accepting pull requests for this project, it is open-sourced only for educational purposes. If you find a bug or any possibility for improvements, I'd very much appreciate your feedback but I'd like to be the one fixing the issues. If you'd like to help me by adding more songs to the database, check out the backend project [here](https://github.com/pandulapeter/campfire-backend).
 
 ### Terms and Conditions
 You are not allowed to publish a copy of the application, or any large part of it, or to make derivative versions. You are permitted to take inspiration from certain technical solutions, but pieces of software resulting from my work can only be used in non-competing products. The app itself and all the trademarks, copyright, database rights and other intellectual property rights related to it belong to me.
