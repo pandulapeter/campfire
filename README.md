@@ -18,8 +18,9 @@ The **master** branch should always be buildable, you just need to create three 
 *  In the **app** folder, duplicate the **internal.keystore.properties** file with the name **release.keystore.properties**.
 
 ### Screenshots
-<img src="screenshots/06.png" width="20%" /> <img src="screenshots/05.png" width="20%" /> <img src="screenshots/01.png" width="20%" />
-<img src="screenshots/02.png" width="20%" /> <img src="screenshots/03.png" width="20%" /> <img src="screenshots/04.png" width="20%" />
+<img src="screenshots/01.png" width="20%" /> <img src="screenshots/02.png" width="20%" />
+<img src="screenshots/03.png" width="20%" /> <img src="screenshots/04.png" width="20%" />
+<img src="screenshots/05.png" width="20%" /> <img src="screenshots/06.png" width="20%" />
 <img src="screenshots/07.png" width="20%" /> <img src="screenshots/08.png" width="20%" />
 
 ### Pull requests
