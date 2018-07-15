@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.shared.widget
 
 import android.content.Context
 import android.databinding.DataBindingUtil
+import android.graphics.PorterDuff
 import android.support.annotation.StringRes
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -55,6 +56,7 @@ class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSe
             buttonText = getString(R.styleable.StateLayout_buttonText)
             getString(R.styleable.StateLayout_text)?.let { text = it }
         }
+        binding.loadingIndicator.indeterminateDrawable.setColorFilter(context.color(R.color.accent), PorterDuff.Mode.SRC_IN)
         postDelayed({
             if (isAttachedToWindow) {
                 if (displayedChild == 0) {
