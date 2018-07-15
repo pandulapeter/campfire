@@ -1,7 +1,13 @@
 # Campfire (Android)
-<img src="screenshots/promo.png" width="100%" />
+Explore a hand-picked library of high quality song lyrics and chords
 
-* Become a beta tester [here](https://play.google.com/apps/testing/com.pandulapeter.campfire)
+Campfire is a companion app for musicians and people who like to sing. It contains a small, but growing number of songs and song collections as well as useful features such as transposing the key signature, auto-scroll or creating your own playlists.
+
+The app follows the latest Material design guidelines, featuring beautiful animations and supporting both light and dark themes. 
+
+Campfire is completely free, without any ads.
+
+* Download from [Google Play](https://play.google.com/apps/testing/com.pandulapeter.campfire)
 * Find the backend project [here](https://github.com/pandulapeter/campfire-backend)
 
 ### How to build
