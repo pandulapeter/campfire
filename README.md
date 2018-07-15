@@ -1,5 +1,5 @@
 # Campfire (Android)
-Explore a hand-picked library of high quality song lyrics and chords
+*Explore a handpicked library of high quality song lyrics and chords.*
 
 Campfire is a companion app for musicians and people who like to sing. It contains a small, but growing number of songs and song collections as well as useful features such as transposing the key signature, auto-scroll or creating your own playlists.
 
