@@ -7,8 +7,9 @@ The app follows the latest Material design guidelines, featuring beautiful anima
 
 Campfire is completely free, without any ads.
 
-* Download from [Google Play](https://play.google.com/store/apps/details?id=com.pandulapeter.campfire)
-* Find the backend project [here](https://github.com/pandulapeter/campfire-backend)
+[<img src="https://play.google.com/intl/en_us/badges/images/badge_new.png" />](https://play.google.com/store/apps/details?id=com.pandulapeter.campfire)
+
+You can find the source code of the backend project [here](https://github.com/pandulapeter/campfire-backend).
 
 ### How to build
 The **master** branch should always be buildable, you just need to create three configuration files after cloning the project (as these files contain sensitive information, they are not part of the repository).
