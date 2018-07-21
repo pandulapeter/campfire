@@ -67,18 +67,42 @@
                 tools:src="@drawable/ic_bookmarked_24dp" />
 
             <TextView
+                android:id="@+id/text"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/content_padding"
-                app:extraText="@{viewModel.alertText}"
-                app:layout_constraintBottom_toBottomOf="parent"
+                android:ellipsize="end"
+                android:lines="2"
+                app:layout_constraintBottom_toBottomOf="@+id/space_2"
                 app:layout_constraintEnd_toStartOf="@id/bookmark"
                 app:layout_constraintStart_toEndOf="@id/image"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_chainStyle="packed"
                 app:primaryText="@{viewModel.collection.title}"
                 app:secondaryText="@{viewModel.collection.description}"
-                app:shouldEllipsize="@{true}"
+                tools:text="Collection title/nCollection description" />
+
+            <Space
+                android:id="@+id/space_2"
+                app:layout_constraintTop_toTopOf="@+id/tag"
+                app:layout_constraintBottom_toBottomOf="@id/text"
+                android:layout_width="wrap_content"
+                android:layout_height="4dp" />
+
+            <TextView
+                android:id="@+id/tag"
+                style="@style/Caption"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/content_padding"
+                android:text="@{viewModel.alertText}"
+                android:textColor="@color/accent"
+                android:visibility="@{viewModel.alertText != null}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/bookmark"
+                app:layout_constraintStart_toEndOf="@id/image"
+                app:layout_constraintTop_toBottomOf="@+id/space_2"
+                app:layout_constraintVertical_chainStyle="packed"
                 tools:text="Collection title/nCollection description" />
 
         </android.support.constraint.ConstraintLayout>

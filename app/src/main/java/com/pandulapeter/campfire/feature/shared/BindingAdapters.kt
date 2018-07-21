@@ -145,8 +145,8 @@ fun setTitleDescription(view: TextView, title: String?, description: String?) {
     }
 }
 
-@BindingAdapter(value = ["primaryText", "secondaryText", "extraText", "shouldEllipsize"], requireAll = false)
-fun setListItemText(view: TextView, primaryText: String, secondaryText: String?, extraText: String?, shouldEllipsize: Boolean?) {
+@BindingAdapter(value = ["primaryText", "secondaryText", "extraText"], requireAll = false)
+fun setListItemText(view: TextView, primaryText: String, secondaryText: String?, extraText: String?) {
     view.setLineSpacing(0f, 0.9f)
     view.text = SpannableString("$primaryText${secondaryText?.let { "\n$it" } ?: ""}${extraText?.let { " $it" } ?: ""}").apply {
         setSpan(
@@ -162,14 +162,6 @@ fun setListItemText(view: TextView, primaryText: String, secondaryText: String?,
                 length,
                 Spannable.SPAN_INCLUSIVE_INCLUSIVE
             )
-            if (shouldEllipsize == true) {
-                setSpan(
-                    EllipsizeLineSpan(),
-                    primaryText.length + 1,
-                    primaryText.length + 1 + it.length,
-                    Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                )
-            }
         }
         extraText?.let {
             setSpan(
