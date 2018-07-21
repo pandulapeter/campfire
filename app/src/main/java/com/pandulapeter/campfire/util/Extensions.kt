@@ -189,12 +189,6 @@ inline fun View.waitForPreDraw(crossinline block: () -> Boolean) = with(viewTree
         }
 
     })
-//    addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-//        override fun onGlobalLayout() {
-//            block()
-//            viewTreeObserver.removeOnGlobalLayoutListener(this)
-//        }
-//    })
 }
 
 inline fun Animator.addListener(
