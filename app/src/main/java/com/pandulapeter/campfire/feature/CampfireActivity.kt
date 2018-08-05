@@ -321,7 +321,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 it.notifyTransitionEnd()
             }
         }
-        
+
         // Set the task description.
         @Suppress("ConstantConditionIf")
         setTaskDescription(
@@ -590,6 +590,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
         }
     }
+
+    fun openNavigationDrawer() = binding.drawerLayout.apply { postDelayed({ openDrawer(Gravity.START) }, 900) }
 
     private fun handleNewIntent() {
         if (currentFragment is DetailFragment) {
