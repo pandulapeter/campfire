@@ -85,6 +85,10 @@
     <string name="main_manage_downloads">Gestionează descărcările</string>
     <string name="main_exit_confirmation_message">Într-adevăr vrei să închizi aplicația?</string>
     <string name="main_exit_confirmation_close">Ieșire</string>
+    <string name="main_play_store_rating_title">Evaluează aplicația</string>
+    <string name="main_play_store_rating_message">Dacă îți place Campfire, te rog să-l evaluezi pe Play Store!</string>
+    <string name="main_play_store_rating_positive">Evaluează</string>
+    <string name="main_play_store_rating_negative">Nu mai întreba</string>
 
     <!-- Home screen -->
     <string name="home_placeholder">Conținutul nu este disponibil. Te rog să verifici filtrele</string>

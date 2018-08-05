@@ -10,12 +10,13 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.toUrlIntent
 import org.koin.android.ext.android.inject
 
 class AboutViewModel(private val isUiBlocked: () -> Boolean) : CampfireViewModel() {
 
     companion object {
-        private const val PLAY_STORE_URL = "market://details?id=com.pandulapeter.campfire"
+        const val PLAY_STORE_URL = "market://details?id=com.pandulapeter.campfire"
         private const val GIT_HUB_URL = "https://github.com/pandulapeter/campfire-android"
         const val TERMS_AND_CONDITIONS_URL = "https://campfire-test1.herokuapp.com/v1/terms-and-conditions"
         const val PRIVACY_POLICY_URL = "https://campfire-test1.herokuapp.com/v1/privacy-policy"
@@ -109,6 +110,4 @@ class AboutViewModel(private val isUiBlocked: () -> Boolean) : CampfireViewModel
                 .launchUrl(this, Uri.parse(url))
         }
     }
-
-    private fun String.toUrlIntent() = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(this@toUrlIntent) }
 }

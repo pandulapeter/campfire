@@ -12,12 +12,14 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
+import org.koin.android.ext.android.inject
 
 
 class SongsFragment : BaseSongListFragment<SongsViewModel>() {
@@ -25,6 +27,8 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
     companion object {
         private const val COMPOUND_BUTTON_LONG_TRANSITION_DELAY = 300L
     }
+
+    private val preferenceDatabase by inject<PreferenceDatabase>()
 
     override val viewModel: SongsViewModel by lazy {
         SongsViewModel(
@@ -118,6 +122,14 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         viewModel.shouldEnableEraseButton.onPropertyChanged {
             eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
             eraseButton.isEnabled = it
+        }
+        if (preferenceDatabase.songsOpened > 10 && !preferenceDatabase.ratingDialogShown) {
+            binding.root.postDelayed({
+                if (isAdded) {
+                    getCampfireActivity().showPlayStoreRatingDialog()
+                    preferenceDatabase.ratingDialogShown = true
+                }
+            }, 600)
         }
         savedInstanceState?.let {
             searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)

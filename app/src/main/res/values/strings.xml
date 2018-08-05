@@ -86,6 +86,10 @@
     <string name="main_manage_downloads">Manage downloads</string>
     <string name="main_exit_confirmation_message">Do you really want to close the app?</string>
     <string name="main_exit_confirmation_close">Close</string>
+    <string name="main_play_store_rating_title">Rate the app</string>
+    <string name="main_play_store_rating_message">If you enjoy Campfire, please consider rating it on the Play Store!</string>
+    <string name="main_play_store_rating_positive">Rate</string>
+    <string name="main_play_store_rating_negative">Don\'t ask again</string>
 
     <!-- Home screen -->
     <string name="home_placeholder">No content to display. Double-check the filters you set up</string>

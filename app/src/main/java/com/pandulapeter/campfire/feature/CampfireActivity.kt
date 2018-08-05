@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature
 import android.animation.Animator
 import android.animation.LayoutTransition
 import android.app.ActivityManager
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -48,6 +49,7 @@ import com.pandulapeter.campfire.feature.main.home.HomeContainerFragment
 import com.pandulapeter.campfire.feature.main.manageDownloads.ManageDownloadsFragment
 import com.pandulapeter.campfire.feature.main.managePlaylists.ManagePlaylistsFragment
 import com.pandulapeter.campfire.feature.main.options.OptionsFragment
+import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.main.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.main.songs.SongsFragment
@@ -66,6 +68,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     companion object {
         private const val DIALOG_ID_EXIT_CONFIRMATION = 1
+        private const val DIALOG_ID_PLAY_STORE_RATING = 2
         const val SCREEN_HOME = "home"
         const val SCREEN_COLLECTIONS = "collections"
         const val SCREEN_SONGS = "songs"
@@ -394,6 +397,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     override fun onPositiveButtonSelected(id: Int) {
         when (id) {
             DIALOG_ID_EXIT_CONFIRMATION -> supportFinishAfterTransition()
+            DIALOG_ID_PLAY_STORE_RATING -> tryToOpenIntent(AboutViewModel.PLAY_STORE_URL.toUrlIntent())
         }
     }
 
@@ -404,6 +408,15 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     override fun onSongAddedToPlaylistForTheFirstTime(songId: String) = Unit
 
     override fun onSongRemovedFromAllPlaylists(songId: String) = Unit
+
+    fun showPlayStoreRatingDialog() = AlertDialogFragment.show(
+        id = DIALOG_ID_PLAY_STORE_RATING,
+        fragmentManager = supportFragmentManager,
+        title = R.string.main_play_store_rating_title,
+        message = R.string.main_play_store_rating_message,
+        positiveButton = R.string.main_play_store_rating_positive,
+        negativeButton = R.string.main_play_store_rating_negative
+    )
 
     fun invalidateAppBar() = binding.toolbarContainer.requestLayout()
 
@@ -872,5 +885,16 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     private fun NavigationView.disableScrollbars() {
         (getChildAt(0) as? NavigationMenuView)?.isVerticalScrollBarEnabled = false
+    }
+
+    private fun Context.tryToOpenIntent(intent: Intent) {
+        if (!isUiBlocked) {
+            try {
+                startActivity(intent)
+                isUiBlocked = true
+            } catch (exception: ActivityNotFoundException) {
+                currentFragment?.showSnackbar(R.string.options_about_error)
+            }
+        }
     }
 }

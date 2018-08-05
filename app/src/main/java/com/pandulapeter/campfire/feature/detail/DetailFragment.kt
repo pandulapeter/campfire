@@ -349,6 +349,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 analyticsManager.onSongVisualized(songId)
                 songRepository.onSongOpened(songId)
                 lastSongId = songId
+                preferenceDatabase.songsOpened++
             }
             binding.root.postDelayed({ if (isAdded) showHintIfNeeded() }, 300)
         }

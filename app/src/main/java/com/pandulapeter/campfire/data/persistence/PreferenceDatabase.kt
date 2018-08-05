@@ -38,10 +38,10 @@ class PreferenceDatabase(context: Context) {
     // General
     var lastScreen by PreferenceFieldDelegate.String("lastScreen", "")
     var disabledLanguageFilters by PreferenceFieldDelegate.StringSet("disabledLanguageFilters", getDefaultLanguageFilters(locale))
-    var shouldShowExplicit by PreferenceFieldDelegate.Boolean("shouldShowExplicit", false)
+    var shouldShowExplicit by PreferenceFieldDelegate.Boolean("shouldShowExplicit")
 
     // Home
-    var isOnboardingDone by PreferenceFieldDelegate.Boolean("isOnboardingDone", false)
+    var isOnboardingDone by PreferenceFieldDelegate.Boolean("isOnboardingDone")
     var shouldShowNewCollections by PreferenceFieldDelegate.Boolean("shouldShowNewCollections", true)
     var shouldShowNewSongs by PreferenceFieldDelegate.Boolean("shouldShowNewSongs", true)
     var shouldShowRandomCollections by PreferenceFieldDelegate.Boolean("shouldShowRandomCollections", true)
@@ -50,14 +50,14 @@ class PreferenceDatabase(context: Context) {
     // Collections
     var lastCollectionsUpdateTimestamp by PreferenceFieldDelegate.Long("lastCollectionsUpdateTimestamp")
     var collectionsSortingMode by PreferenceFieldDelegate.Int("collectionsSortingMode", CollectionsViewModel.SortingMode.TITLE.intValue)
-    var shouldShowSavedOnly by PreferenceFieldDelegate.Boolean("shouldShowSavedOnly", false)
+    var shouldShowSavedOnly by PreferenceFieldDelegate.Boolean("shouldShowSavedOnly")
 
     // Songs
     var lastSongsUpdateTimestamp by PreferenceFieldDelegate.Long("lastSongsUpdateTimestamp")
     var songsSortingMode by PreferenceFieldDelegate.Int("songsSortingMode", SongsViewModel.SortingMode.TITLE.intValue)
     var shouldSearchInArtists by PreferenceFieldDelegate.Boolean("shouldSearchInArtists", true)
     var shouldSearchInTitles by PreferenceFieldDelegate.Boolean("shouldSearchInTitles", true)
-    var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("shouldShowDownloadedOnly", false)
+    var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("shouldShowDownloadedOnly")
 
     // Preferences
     var shouldShowChords by PreferenceFieldDelegate.Boolean("shouldShowChords", true)
@@ -66,20 +66,22 @@ class PreferenceDatabase(context: Context) {
     var theme by PreferenceFieldDelegate.Int("theme", PreferencesViewModel.Theme.AUTOMATIC.id)
     var language by PreferenceFieldDelegate.String("language", PreferencesViewModel.Language.AUTOMATIC.id)
     var shouldShowExitConfirmation by PreferenceFieldDelegate.Boolean("shouldShowExitConfirmation", true)
-    var shouldShareCrashReports by PreferenceFieldDelegate.Boolean("shouldShareCrashReports", false)
-    var shouldShareUsageData by PreferenceFieldDelegate.Boolean("shouldShareUsageData", false)
+    var shouldShareCrashReports by PreferenceFieldDelegate.Boolean("shouldShareCrashReports")
+    var shouldShareUsageData by PreferenceFieldDelegate.Boolean("shouldShareUsageData")
     var playlistHistory by PreferenceFieldDelegate.StringSet("playlistHistory", setOf())
 
     // First time user experience
-    var ftuxLastSeenChangelog by PreferenceFieldDelegate.Int("ftuxLastSeenChangelog", 0)
-    var ftuxHistoryCompleted by PreferenceFieldDelegate.Boolean("ftuxHistoryCompleted", false)
-    var ftuxPlaylistSwipeCompleted by PreferenceFieldDelegate.Boolean("ftuxPlaylistSwipeCompleted", false)
-    var ftuxPlaylistDragCompleted by PreferenceFieldDelegate.Boolean("ftuxPlaylistDragCompleted", false)
-    var ftuxManagePlaylistsSwipeCompleted by PreferenceFieldDelegate.Boolean("ftuxManagePlaylistsSwipeCompleted", false)
-    var ftuxManagePlaylistsDragCompleted by PreferenceFieldDelegate.Boolean("ftuxManagePlaylistsDragCompleted", false)
-    var ftuxManageDownloadsCompleted by PreferenceFieldDelegate.Boolean("ftuxManageDownloadsCompleted", false)
-    var ftuxPlaylistPagerSwipeCompleted by PreferenceFieldDelegate.Boolean("ftuxPlaylistPagerSwipeCompleted", false)
-    var fontSizePinchCompleted by PreferenceFieldDelegate.Boolean("fontSizePinchCompleted", false)
+    var ftuxLastSeenChangelog by PreferenceFieldDelegate.Int("ftuxLastSeenChangelog")
+    var ftuxHistoryCompleted by PreferenceFieldDelegate.Boolean("ftuxHistoryCompleted")
+    var ftuxPlaylistSwipeCompleted by PreferenceFieldDelegate.Boolean("ftuxPlaylistSwipeCompleted")
+    var ftuxPlaylistDragCompleted by PreferenceFieldDelegate.Boolean("ftuxPlaylistDragCompleted")
+    var ftuxManagePlaylistsSwipeCompleted by PreferenceFieldDelegate.Boolean("ftuxManagePlaylistsSwipeCompleted")
+    var ftuxManagePlaylistsDragCompleted by PreferenceFieldDelegate.Boolean("ftuxManagePlaylistsDragCompleted")
+    var ftuxManageDownloadsCompleted by PreferenceFieldDelegate.Boolean("ftuxManageDownloadsCompleted")
+    var ftuxPlaylistPagerSwipeCompleted by PreferenceFieldDelegate.Boolean("ftuxPlaylistPagerSwipeCompleted")
+    var fontSizePinchCompleted by PreferenceFieldDelegate.Boolean("fontSizePinchCompleted")
+    var songsOpened by PreferenceFieldDelegate.Int("songsOpened")
+    var ratingDialogShown by PreferenceFieldDelegate.Boolean("ratingDialogShown")
 
     // Song transposition values
     fun getTransposition(songId: String) = preferences.getInt(TRANSPOSITION_PREFIX + songId, 0)

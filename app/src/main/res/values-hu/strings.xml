@@ -85,6 +85,10 @@
     <string name="main_manage_downloads">Letöltések kezelése</string>
     <string name="main_exit_confirmation_message">Tényleg ki szeretnél lépni az alkalmazásból?</string>
     <string name="main_exit_confirmation_close">Kilépés</string>
+    <string name="main_play_store_rating_title">Értékeld az alkalmazást</string>
+    <string name="main_play_store_rating_message">Ha tetszik a Campfire, kérlek adj egy értékelést a Play Store-on!</string>
+    <string name="main_play_store_rating_positive">Értékelés</string>
+    <string name="main_play_store_rating_negative">Ne mutassa többször</string>
 
     <!-- Home screen -->
     <string name="home_placeholder">Nincs megjeleníthető tartalom. Ellenőrizd a beállított szűrőket</string>

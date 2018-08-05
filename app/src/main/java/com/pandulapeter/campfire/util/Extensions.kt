@@ -2,8 +2,10 @@ package com.pandulapeter.campfire.util
 
 import android.animation.Animator
 import android.content.Context
+import android.content.Intent
 import android.content.res.TypedArray
 import android.databinding.*
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.annotation.*
@@ -260,3 +262,5 @@ fun ViewPager.addPageScrollListener(onPageSelected: (Int) -> Unit = {}, onPageSc
 
         override fun onPageSelected(position: Int) = onPageSelected(position)
     })
+
+fun String.toUrlIntent() = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(this@toUrlIntent) }
