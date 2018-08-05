@@ -156,6 +156,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             })
             requestLayout()
         }
+        getCampfireActivity().showPlayStoreRatingDialogIfNeeded()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

@@ -412,14 +412,24 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     override fun onSongRemovedFromAllPlaylists(songId: String) = Unit
 
-    fun showPlayStoreRatingDialog() = AlertDialogFragment.show(
-        id = DIALOG_ID_PLAY_STORE_RATING,
-        fragmentManager = supportFragmentManager,
-        title = R.string.main_play_store_rating_title,
-        message = R.string.main_play_store_rating_message,
-        positiveButton = R.string.main_play_store_rating_positive,
-        negativeButton = R.string.main_play_store_rating_negative
-    )
+    fun showPlayStoreRatingDialogIfNeeded() {
+        if (preferenceDatabase.songsOpened > 10 && !preferenceDatabase.ratingDialogShown) {
+            binding.root.postDelayed({
+                if (!preferenceDatabase.ratingDialogShown) {
+                    analyticsManager.trackAskForRating()
+                    AlertDialogFragment.show(
+                        id = DIALOG_ID_PLAY_STORE_RATING,
+                        fragmentManager = supportFragmentManager,
+                        title = R.string.main_play_store_rating_title,
+                        message = R.string.main_play_store_rating_message,
+                        positiveButton = R.string.main_play_store_rating_positive,
+                        negativeButton = R.string.main_play_store_rating_negative
+                    )
+                    preferenceDatabase.ratingDialogShown = true
+                }
+            }, 600)
+        }
+    }
 
     fun invalidateAppBar() = binding.toolbarContainer.requestLayout()
 
@@ -891,13 +901,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     private fun Context.tryToOpenIntent(intent: Intent) {
-        if (!isUiBlocked) {
-            try {
-                startActivity(intent)
-                isUiBlocked = true
-            } catch (exception: ActivityNotFoundException) {
-                currentFragment?.showSnackbar(R.string.options_about_error)
-            }
+        try {
+            startActivity(intent)
+            isUiBlocked = true
+        } catch (exception: ActivityNotFoundException) {
+            currentFragment?.showSnackbar(R.string.options_about_error)
         }
     }
 }
