@@ -287,6 +287,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             override fun onStopTrackingTouch(seekBar: SeekBar?) = analyticsManager.onAutoScrollSpeedChanged(binding.autoScrollSeekBar.progress)
         })
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInMultiWindowMode) {
+            analyticsManager.trackSplitScreenEntered()
+        }
+
         // Restore instance state if possible.
         if (savedInstanceState == null) {
             handleNewIntent()
@@ -307,6 +311,14 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         super.onNewIntent(intent)
         this.intent = intent
         handleNewIntent()
+    }
+
+    override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration?) {
+        if (isInMultiWindowMode) {
+            analyticsManager.trackSplitScreenEntered()
+        } else {
+            analyticsManager.trackSplitScreenClosed()
+        }
     }
 
     override fun onResume() {
