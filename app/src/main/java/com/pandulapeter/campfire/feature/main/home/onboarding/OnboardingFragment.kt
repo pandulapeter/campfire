@@ -94,7 +94,13 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
                 when (viewBinding) {
                     is FragmentOnboardingWelcomeBinding -> {
                         view.applyStandardTransformation()
-                        binding.textBottom.translationY = binding.textBottom.height * absoluteOffset * 4
+                        binding.textBottom.apply {
+                            if (height == 0) {
+                                post { translationY = height * absoluteOffset * 4 }
+                            } else {
+                                translationY = height * absoluteOffset * 4
+                            }
+                        }
                         binding.textBottom.alpha = 1 - absoluteOffset * 5
                         viewBinding.logo.translationX = width * offset * 0.3f
                         viewBinding.logo.translationY = interpolator.getInterpolation(absoluteOffset) * viewBinding.logo.height * 0.5f
