@@ -126,6 +126,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         if (preferenceDatabase.songsOpened > 10 && !preferenceDatabase.ratingDialogShown) {
             binding.root.postDelayed({
                 if (isAdded) {
+                    analyticsManager.trackAskForRating()
                     getCampfireActivity().showPlayStoreRatingDialog()
                     preferenceDatabase.ratingDialogShown = true
                 }

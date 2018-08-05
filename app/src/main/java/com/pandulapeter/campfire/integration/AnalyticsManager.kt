@@ -57,6 +57,8 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_ABOUT_LEGAL_PAGE_OPENED = "about_legal_page_opened"
         private const val EVENT_SPLIT_SCREEN_ENTERED = "split_screen_entered"
         private const val EVENT_SPLIT_SCREEN_CLOSED = "split_screen_closed"
+        private const val EVENT_ASK_FOR_RATING = "ask_for_rating"
+        private const val EVENT_RATE_APP = "rate_app"
 
         // Keys
         private const val PARAM_KEY_TIMESTAMP = "timestamp"
@@ -384,9 +386,21 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_LEGAL_PAGE to legalPage
     )
 
-    fun trackSplitScreenEntered() = trackAnalyticsEvent(EVENT_SPLIT_SCREEN_ENTERED)
+    fun trackSplitScreenEntered() = trackAnalyticsEvent(
+        EVENT_SPLIT_SCREEN_ENTERED
+    )
 
-    fun trackSplitScreenClosed() = trackAnalyticsEvent(EVENT_SPLIT_SCREEN_CLOSED)
+    fun trackSplitScreenClosed() = trackAnalyticsEvent(
+        EVENT_SPLIT_SCREEN_CLOSED
+    )
+
+    fun trackAskForRating() = trackAnalyticsEvent(
+        EVENT_ASK_FOR_RATING
+    )
+
+    fun trackRateApp() = trackAnalyticsEvent(
+        EVENT_RATE_APP
+    )
 
     fun trackNonFatalError(throwable: Throwable) {
         if (preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {

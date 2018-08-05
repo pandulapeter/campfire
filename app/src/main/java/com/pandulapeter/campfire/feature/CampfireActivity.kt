@@ -397,7 +397,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     override fun onPositiveButtonSelected(id: Int) {
         when (id) {
             DIALOG_ID_EXIT_CONFIRMATION -> supportFinishAfterTransition()
-            DIALOG_ID_PLAY_STORE_RATING -> tryToOpenIntent(AboutViewModel.PLAY_STORE_URL.toUrlIntent())
+            DIALOG_ID_PLAY_STORE_RATING -> {
+                analyticsManager.trackRateApp()
+                tryToOpenIntent(AboutViewModel.PLAY_STORE_URL.toUrlIntent())
+            }
         }
     }
 
