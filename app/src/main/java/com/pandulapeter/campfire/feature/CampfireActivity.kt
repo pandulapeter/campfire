@@ -686,7 +686,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         return AnalyticsManager.PARAM_VALUE_SCREEN_HOME
     }
 
-    fun openCollectionsScreen(): String {
+    private fun openCollectionsScreen(): String {
         if (currentFragment !is CollectionsFragment) {
             supportFragmentManager.clearBackStack()
             supportFragmentManager.handleReplace { CollectionsFragment() }
@@ -770,7 +770,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         return AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS
     }
 
-    fun openPlaylistScreen(playlistId: String): String {
+    private fun openPlaylistScreen(playlistId: String): String {
         if (currentFragment !is PlaylistFragment || currentPlaylistId != playlistId) {
             supportFragmentManager.clearBackStack()
             playlistIdMap.forEach {

@@ -128,7 +128,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         }
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
             showSnackbar(
-                message = R.string.collections_update_error,
+                message = R.string.home_update_error,
                 action = { viewModel.updateData() })
         }
         viewModel.downloadSongError.onEventTriggered(this) { song ->

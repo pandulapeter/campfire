@@ -40,7 +40,7 @@ class ManagePlaylistListAdapter : RecyclerView.Adapter<ManagePlaylistListAdapter
             }
         }
 
-    var itemClickListener: (position: Int) -> Unit = { _ -> }
+    private var itemClickListener: (position: Int) -> Unit = { _ -> }
     var dragHandleTouchListener: ((position: Int) -> Unit)? = null
 
     init {
