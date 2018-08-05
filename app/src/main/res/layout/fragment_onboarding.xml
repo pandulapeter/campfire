@@ -36,13 +36,13 @@
             android:textAllCaps="false"
             android:textSize="8sp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/next_button"
-            app:layout_constraintStart_toEndOf="@+id/skip_button"
+            app:layout_constraintEnd_toStartOf="@id/next_button"
+            app:layout_constraintStart_toEndOf="@id/skip_button"
             tools:ignore="SmallSp"
             tools:text="@string/welcome_conditions_part_1" />
 
         <Button
-            android:id="@id/skip_button"
+            android:id="@+id/skip_button"
             style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -57,7 +57,7 @@
             app:translationMultiplierX="@{-viewModel.doneButtonOffset}" />
 
         <Button
-            android:id="@id/next_button"
+            android:id="@+id/next_button"
             style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

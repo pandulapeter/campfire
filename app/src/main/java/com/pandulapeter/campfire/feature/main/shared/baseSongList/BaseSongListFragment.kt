@@ -52,7 +52,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
         viewModel.adapter.run {
             itemClickListener = { position, clickedView ->
                 if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
-                    (items[position] as? SongListItemViewModel.SongViewModel)?.let {
+                    (items[position] as? SongListItemViewModel.SongViewModel)?.let { songViewModel ->
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
                             viewModel.isDetailScreenOpen = true
@@ -62,7 +62,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
                         val shouldSendMultipleSongs = viewModel is PlaylistViewModel || viewModel is CollectionDetailViewModel
                         getCampfireActivity().openDetailScreen(
                             clickedView,
-                            if (shouldSendMultipleSongs) items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song } else listOf(it.song),
+                            if (shouldSendMultipleSongs) items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song } else listOf(songViewModel.song),
                             items.size > 1,
                             if (shouldSendMultipleSongs) position else 0,
                             viewModel !is PlaylistViewModel

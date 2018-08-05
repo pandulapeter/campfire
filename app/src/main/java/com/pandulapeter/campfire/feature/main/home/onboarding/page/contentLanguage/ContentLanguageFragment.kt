@@ -12,6 +12,7 @@ import org.koin.android.ext.android.inject
 
 class ContentLanguageFragment : OnboardingPageFragment<FragmentOnboardingContentLanguageBinding, ContentLanguageViewModel>(R.layout.fragment_onboarding_content_language) {
 
+    private var selectedLanguageCount = 0
     override val viewModel = ContentLanguageViewModel {
         if (isAdded) {
             totalLanguageCount = it.size
@@ -23,9 +24,17 @@ class ContentLanguageFragment : OnboardingPageFragment<FragmentOnboardingContent
                         setText(it.nameResource)
                         setPadding(contentPadding, 0, 0, 0)
                         isChecked = !preferenceDatabase.disabledLanguageFilters.contains(it.id)
-                        setOnCheckedChangeListener { _, _ ->
+                        if (isChecked) {
+                            selectedLanguageCount++
+                        }
+                        setOnCheckedChangeListener { _, isChecked ->
                             preferenceDatabase.disabledLanguageFilters =
                                     preferenceDatabase.disabledLanguageFilters.toMutableSet().apply { if (contains(it.id)) remove(it.id) else add(it.id) }
+                            if (isChecked) {
+                                selectedLanguageCount++
+                            } else {
+                                selectedLanguageCount--
+                            }
                             onLanguageFiltersUpdated()
                         }
                     }, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -38,9 +47,7 @@ class ContentLanguageFragment : OnboardingPageFragment<FragmentOnboardingContent
     private var totalLanguageCount = 0
 
     private fun onLanguageFiltersUpdated() {
-        (totalLanguageCount - preferenceDatabase.disabledLanguageFilters.size).let { selectedLanguageCount ->
-            (parentFragment as OnboardingFragment).languageFiltersUpdated(selectedLanguageCount)
-            viewModel.shouldShowError.set(selectedLanguageCount == 0)
-        }
+        (parentFragment as OnboardingFragment).languageFiltersUpdated(selectedLanguageCount)
+        viewModel.shouldShowError.set(selectedLanguageCount == 0)
     }
 }
