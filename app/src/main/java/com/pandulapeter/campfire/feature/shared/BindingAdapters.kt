@@ -110,15 +110,17 @@ fun setAnimation(view: ImageView, @DrawableRes drawableRes: Int, lastFrame: Draw
 }
 
 @BindingAdapter(value = ["title", "subtitle"], requireAll = false)
-fun setTitleSubtitle(view: TextView, title: String, subtitle: String?) {
+fun setTitleSubtitle(view: TextView, title: String?, subtitle: String?) {
     view.setLineSpacing(0f, 0.9f)
-    view.text = SpannableString("$title${subtitle?.let { "\n$it" } ?: ""}").apply {
-        setSpan(TextAppearanceSpan(view.context, R.style.Title), 0, title.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        setSpan(EllipsizeLineSpan(view.context.obtainColor(android.R.attr.textColorPrimary)), 0, title.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        subtitle?.let {
-            setSpan(EllipsizeLineSpan(view.context.obtainColor(android.R.attr.textColorSecondary)), title.length + 1, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    if (title != null) {
+        view.text = SpannableString("$title${subtitle?.let { "\n$it" } ?: ""}").apply {
+            setSpan(TextAppearanceSpan(view.context, R.style.Title), 0, title.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            setSpan(EllipsizeLineSpan(view.context.obtainColor(android.R.attr.textColorPrimary)), 0, title.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            subtitle?.let {
+                setSpan(EllipsizeLineSpan(view.context.obtainColor(android.R.attr.textColorSecondary)), title.length + 1, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+            setSpan(FontFamilySpan(view.context.font(R.font.regular)), 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
-        setSpan(FontFamilySpan(view.context.font(R.font.regular)), 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
 }
 
