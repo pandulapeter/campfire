@@ -94,7 +94,7 @@ class SongsViewModel(
         adapter.itemTitleCallback = {
             adapter.items[it].let {
                 when (it) {
-                    is SongListItemViewModel.HeaderViewModel -> it.title[0].toString()
+                    is SongListItemViewModel.HeaderViewModel -> it.title.normalize().removePrefixes()[0].toString()
                     is SongListItemViewModel.SongViewModel -> when (sortingMode) {
                         SongsViewModel.SortingMode.TITLE -> it.song.getNormalizedTitle().removePrefixes()[0].toString()
                         SongsViewModel.SortingMode.ARTIST -> it.song.getNormalizedArtist().removePrefixes()[0].toString()
