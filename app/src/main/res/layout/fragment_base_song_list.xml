@@ -94,7 +94,7 @@
                     android:paddingTop="@dimen/content_padding"
                     app:adapter="@{viewModel.adapter}"
                     app:fastScrollAutoHide="false"
-                    app:fastScrollPopupBackgroundSize="56dp"
+                    app:fastScrollPopupBackgroundSize="72dp"
                     app:fastScrollPopupBgColor="@color/accent"
                     app:fastScrollPopupTextColor="@color/white"
                     app:fastScrollPopupTextSize="24sp"
