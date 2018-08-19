@@ -200,6 +200,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         }
         enterTransition = null
         exitTransition = null
+        getCampfireActivity().isUiBlocked = false
     }
 
     override fun onTransitionResume(transition: Transition?) = Unit

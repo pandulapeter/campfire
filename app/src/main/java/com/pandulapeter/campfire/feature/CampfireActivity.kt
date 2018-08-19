@@ -112,7 +112,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private var newPlaylistId = 0
     private var startTime = 0L
     private val isBackStackEmpty get() = supportFragmentManager.backStackEntryCount == 0
-    var isUiBlocked = false
+    var isUiBlocked = true
     var lastSongId: String = ""
     var lastCollectionId: String = ""
     val autoScrollControl: View get() = binding.autoScrollControl
@@ -208,6 +208,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     hideKeyboard(currentFocus)
                     binding.drawerLayout.openDrawer(Gravity.START)
                 } else {
+                    isUiBlocked = true
                     supportFragmentManager.popBackStack()
                 }
             }
@@ -331,11 +332,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             binding.drawerLayout.run { post { closeDrawers() } }
         }
         isUiBlocked = false
-        currentFragment?.let {
-            if (it is DetailFragment) {
-                it.notifyTransitionEnd()
-            }
-        }
+        (currentFragment as? DetailFragment)?.notifyTransitionEnd()
 
         // Set the task description.
         @Suppress("ConstantConditionIf")
@@ -377,6 +374,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                                 onPositiveButtonSelected(DIALOG_ID_EXIT_CONFIRMATION)
                             }
                         } else {
+                            isUiBlocked = true
                             super.onBackPressed()
                         }
                     }
