@@ -95,6 +95,7 @@
     <string name="home_initializing_error">Hiba történt a kezdőképernyő betöltése közben</string>
     <string name="home_update_error">Hiba történt a kezdőképernyő frissítése közben</string>
     <string name="home_modules">Modulok</string>
+    <string name="home_song_of_the_day">A nap dala</string>
     <string name="home_new_collections">Új gyűjtemények</string>
     <string name="home_new_songs">Új dalok</string>
     <string name="home_random_collections">Véletlenszerű gyűjtemények</string>

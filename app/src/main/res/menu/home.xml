@@ -9,6 +9,11 @@
         <menu>
 
             <item
+                android:id="@+id/song_of_the_day"
+                android:title="@string/home_song_of_the_day"
+                app:actionLayout="@layout/widget_switch" />
+
+            <item
                 android:id="@+id/new_collections"
                 android:title="@string/home_new_collections"
                 app:actionLayout="@layout/widget_switch" />

@@ -95,6 +95,7 @@
     <string name="home_initializing_error">A intervenit o eroare la descărcarea paginei de start</string>
     <string name="home_update_error">A intervenit o eroare la actualizarea paginei de start</string>
     <string name="home_modules">Module</string>
+    <string name="home_song_of_the_day">Piesa zilei</string>
     <string name="home_new_collections">Colecții noi</string>
     <string name="home_new_songs">Piese noi</string>
     <string name="home_random_collections">Colecții aleatoare</string>

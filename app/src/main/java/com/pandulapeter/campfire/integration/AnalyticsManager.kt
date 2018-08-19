@@ -117,6 +117,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         const val PARAM_VALUE_BY_POPULARITY = "by_popularity"
         const val PARAM_VALUE_BY_ARTIST = "by_artist"
         const val PARAM_VALUE_FILTER_BOOKMARKED_ONLY = "bookmarked_only"
+        const val PARAM_VALUE_FILTER_SHOW_SONG_OF_THE_DAY = "show_song_of_the_day"
         const val PARAM_VALUE_FILTER_SHOW_NEW_COLLECTIONS = "show_new_collections"
         const val PARAM_VALUE_FILTER_SHOW_NEW_SONGS = "show_new_songs"
         const val PARAM_VALUE_FILTER_SHOW_RANDOM_COLLECTIONS = "show_random_collections"

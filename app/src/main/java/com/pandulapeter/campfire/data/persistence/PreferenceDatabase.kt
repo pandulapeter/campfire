@@ -42,6 +42,7 @@ class PreferenceDatabase(context: Context) {
 
     // Home
     var isOnboardingDone by PreferenceFieldDelegate.Boolean("isOnboardingDone")
+    var shouldShowSongOfTheDay by PreferenceFieldDelegate.Boolean("shouldShowSongOfTheDay", true)
     var shouldShowNewCollections by PreferenceFieldDelegate.Boolean("shouldShowNewCollections", true)
     var shouldShowNewSongs by PreferenceFieldDelegate.Boolean("shouldShowNewSongs", true)
     var shouldShowRandomCollections by PreferenceFieldDelegate.Boolean("shouldShowRandomCollections", true)

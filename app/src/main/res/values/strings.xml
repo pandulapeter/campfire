@@ -96,6 +96,7 @@
     <string name="home_initializing_error">Something went wrong while trying to load the home screen</string>
     <string name="home_update_error">Something went wrong while updating the home screen</string>
     <string name="home_modules">Modules</string>
+    <string name="home_song_of_the_day">Song of the day</string>
     <string name="home_new_collections">New collections</string>
     <string name="home_new_songs">New songs</string>
     <string name="home_random_collections">Random collections</string>

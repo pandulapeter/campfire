@@ -44,6 +44,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         HomeViewModel(
             onDataLoaded = { languages ->
                 getCampfireActivity().enableSecondaryNavigationDrawer(R.menu.home)
+                initializeCompoundButton(R.id.song_of_the_day) { viewModel.shouldShowSongOfTheDay }
                 initializeCompoundButton(R.id.new_collections) { viewModel.shouldShowNewCollections }
                 initializeCompoundButton(R.id.new_songs) { viewModel.shouldShowNewSongs }
                 initializeCompoundButton(R.id.random_collections) { viewModel.shouldShowRandomCollections }
@@ -304,6 +305,10 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
         when (menuItem.itemId) {
+            R.id.song_of_the_day -> consumeAndUpdateBoolean(menuItem, {
+                analyticsManager.onHomeFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_SHOW_SONG_OF_THE_DAY, it)
+                shouldShowSongOfTheDay = it
+            }, { shouldShowSongOfTheDay })
             R.id.new_collections -> consumeAndUpdateBoolean(menuItem, {
                 analyticsManager.onHomeFilterToggled(AnalyticsManager.PARAM_VALUE_FILTER_SHOW_NEW_COLLECTIONS, it)
                 shouldShowNewCollections = it

@@ -29,6 +29,7 @@ import kotlinx.coroutines.experimental.cancel
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.withContext
 import org.koin.android.ext.android.inject
+import java.util.*
 import kotlin.coroutines.experimental.CoroutineContext
 
 class HomeViewModel(
@@ -68,6 +69,14 @@ class HomeViewModel(
     val buttonText = ObservableInt(R.string.try_again)
     val buttonIcon = ObservableInt()
     private var isFirstLoadingDone = false
+    var shouldShowSongOfTheDay = preferenceDatabase.shouldShowSongOfTheDay
+        set(value) {
+            if (field != value) {
+                field = value
+                preferenceDatabase.shouldShowSongOfTheDay = value
+                updateAdapterItems(true, true)
+            }
+        }
     var shouldShowNewCollections = preferenceDatabase.shouldShowNewCollections
         set(value) {
             if (field != value) {
@@ -358,6 +367,27 @@ class HomeViewModel(
 
     private fun createViewModels() = mutableListOf<HomeItemViewModel>().apply {
 
+        // Add the Song of the day module. TODO
+        val songOfTheDay = if (shouldShowSongOfTheDay) songs
+            .filterExplicitSongs()
+            .filterSongsByLanguage()
+            .toList()
+            .let {
+                if (it.isNotEmpty()) {
+                    var today = Calendar.getInstance().run { get(Calendar.DAY_OF_YEAR) + get(Calendar.YEAR) }
+                    while (today >= it.size) {
+                        today -= it.size
+                    }
+                    return@let it[today]
+                }
+                return@let null
+            }
+        else null
+        songOfTheDay?.also {
+            add(HomeHeaderViewModel(context.getString(R.string.home_song_of_the_day)))
+            add(SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it))
+        }
+
         // Add the New Collections module.
         val newCollections = if (shouldShowNewCollections) collections
             .filterExplicitCollections()
@@ -379,6 +409,7 @@ class HomeViewModel(
             .filterExplicitSongs()
             .filterSongsByLanguage()
             .toList()
+            .filterNot { it.id == songOfTheDay?.id }
             .takeLast(NEW_SONG_COUNT)
             .asReversed() else listOf()
         newSongs
@@ -416,6 +447,7 @@ class HomeViewModel(
         if (shouldShowRandomSongs) {
             var totalRandomSongCount = 0
             displayedRandomSongs = randomSongs
+                .filterNot { it.id == songOfTheDay?.id }
                 .filterNot { newSongs.contains(it) }
                 .apply { totalRandomSongCount = size }
                 .take(RANDOM_SONG_COUNT)
