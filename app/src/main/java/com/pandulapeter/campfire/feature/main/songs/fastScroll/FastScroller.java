@@ -10,10 +10,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.graphics.Typeface;
-import android.support.annotation.ColorInt;
 import android.support.annotation.IntDef;
-import android.support.annotation.Keep;
 import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.support.v7.widget.RecyclerView;
@@ -28,42 +25,30 @@ import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 public class FastScroller {
-    private static final int DEFAULT_AUTO_HIDE_DELAY = 1500;
-
-    private FastScrollRecyclerView mRecyclerView;
-    private FastScrollPopup mPopup;
-
-    private int mThumbHeight;
-    private int mWidth;
-
-    private Paint mThumb;
-    private Paint mTrack;
-
-    private Rect mTmpRect = new Rect();
-    private Rect mInvalidateRect = new Rect();
-    private Rect mInvalidateTmpRect = new Rect();
-
+    private FastScrollRecyclerView recyclerView;
+    private FastScrollPopup popup;
+    private int thumbHeight;
+    private int width;
+    private Paint thumb;
+    private Paint track;
+    private Rect tempRect = new Rect();
+    private Rect invalidateRect = new Rect();
+    private Rect invalidateTmpRect = new Rect();
     // The inset is the buffer around which a point will still register as a click on the scrollbar
-    private int mTouchInset;
-
+    private int touchInset;
     // This is the offset from the top of the scrollbar when the user first starts touching.  To
     // prevent jumping, this offset is applied as the user scrolls.
-    private int mTouchOffset;
-
-    private Point mThumbPosition = new Point(-1, -1);
-    private Point mOffset = new Point(0, 0);
-
-    private boolean mIsDragging;
-
-    private Animator mAutoHideAnimator;
-    private boolean mAnimatingShow;
-    private int mAutoHideDelay = DEFAULT_AUTO_HIDE_DELAY;
-    private boolean mAutoHideEnabled = true;
-    private final Runnable mHideRunnable;
-
-    private int mThumbActiveColor;
-    private int mThumbInactiveColor = 0x79000000;
-    private boolean mThumbInactiveState;
+    private int touchOffset;
+    private Point thumbPosition = new Point(-1, -1);
+    private Point offset = new Point(0, 0);
+    private boolean isDragging;
+    private Animator autoHideAnimator;
+    private boolean animatingShow;
+    private boolean autoHideEnabled;
+    private final Runnable hideRunnable;
+    private int thumbActiveColor = 0x79000000;
+    private int thumbInactiveColor = 0x79000000;
+    private boolean thumbInactiveState = true;
 
     @Retention(SOURCE)
     @IntDef({FastScroller.FastScrollerPopupPosition.ADJACENT, FastScroller.FastScrollerPopupPosition.CENTER})
@@ -72,291 +57,197 @@ public class FastScroller {
         int CENTER = 1;
     }
 
-    public FastScroller(Context context, FastScrollRecyclerView recyclerView, AttributeSet attrs) {
-
+    FastScroller(Context context, FastScrollRecyclerView recyclerView, AttributeSet attrs) {
         Resources resources = context.getResources();
-
-        mRecyclerView = recyclerView;
-        mPopup = new FastScrollPopup(resources, recyclerView);
-
-        mThumbHeight = Utils.toPixels(resources, 48);
-        mWidth = Utils.toPixels(resources, 8);
-
-        mTouchInset = Utils.toPixels(resources, -24);
-
-        mThumb = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mTrack = new Paint(Paint.ANTI_ALIAS_FLAG);
-
-        TypedArray typedArray = context.getTheme().obtainStyledAttributes(
-                attrs, R.styleable.FastScrollRecyclerView, 0, 0);
+        this.recyclerView = recyclerView;
+        popup = new FastScrollPopup(resources, recyclerView);
+        thumbHeight = Utils.toPixels(resources, 48);
+        width = Utils.toPixels(resources, 8);
+        touchInset = Utils.toPixels(resources, -24);
+        thumb = new Paint(Paint.ANTI_ALIAS_FLAG);
+        track = new Paint(Paint.ANTI_ALIAS_FLAG);
+        TypedArray typedArray = context.getTheme().obtainStyledAttributes(attrs, R.styleable.FastScrollRecyclerView, 0, 0);
         try {
-            mAutoHideEnabled = typedArray.getBoolean(R.styleable.FastScrollRecyclerView_fastScrollAutoHide, true);
-            mAutoHideDelay = typedArray.getInteger(R.styleable.FastScrollRecyclerView_fastScrollAutoHideDelay, DEFAULT_AUTO_HIDE_DELAY);
-            mThumbInactiveState = typedArray.getBoolean(R.styleable.FastScrollRecyclerView_fastScrollEnableThumbInactiveColor, true);
-            mThumbActiveColor = typedArray.getColor(R.styleable.FastScrollRecyclerView_fastScrollThumbColor, 0x79000000);
-            mThumbInactiveColor = typedArray.getColor(R.styleable.FastScrollRecyclerView_fastScrollThumbInactiveColor, 0x79000000);
-
-            int trackColor = typedArray.getColor(R.styleable.FastScrollRecyclerView_fastScrollTrackColor, 0x28000000);
+            autoHideEnabled = typedArray.getBoolean(R.styleable.FastScrollRecyclerView_fastScrollAutoHide, true);
             int popupBgColor = typedArray.getColor(R.styleable.FastScrollRecyclerView_fastScrollPopupBgColor, 0xff000000);
             int popupTextColor = typedArray.getColor(R.styleable.FastScrollRecyclerView_fastScrollPopupTextColor, 0xffffffff);
             int popupTextSize = typedArray.getDimensionPixelSize(R.styleable.FastScrollRecyclerView_fastScrollPopupTextSize, Utils.toScreenPixels(resources, 44));
             int popupBackgroundSize = typedArray.getDimensionPixelSize(R.styleable.FastScrollRecyclerView_fastScrollPopupBackgroundSize, Utils.toPixels(resources, 88));
-            @FastScroller.FastScrollerPopupPosition int popupPosition = typedArray.getInteger(R.styleable.FastScrollRecyclerView_fastScrollPopupPosition, FastScroller.FastScrollerPopupPosition.ADJACENT);
-
-            mTrack.setColor(trackColor);
-            mThumb.setColor(mThumbInactiveState ? mThumbInactiveColor : mThumbActiveColor);
-            mPopup.setBgColor(popupBgColor);
-            mPopup.setTextColor(popupTextColor);
-            mPopup.setTextSize(popupTextSize);
-            mPopup.setBackgroundSize(popupBackgroundSize);
-            mPopup.setPopupPosition(popupPosition);
+            track.setColor(0x28000000);
+            thumb.setColor(thumbInactiveState ? thumbInactiveColor : thumbActiveColor);
+            popup.setBgColor(popupBgColor);
+            popup.setTextColor(popupTextColor);
+            popup.setTextSize(popupTextSize);
+            popup.setBackgroundSize(popupBackgroundSize);
+            popup.setPopupPosition(FastScroller.FastScrollerPopupPosition.ADJACENT);
         } finally {
             typedArray.recycle();
         }
 
-        mHideRunnable = new Runnable() {
+        hideRunnable = new Runnable() {
             @Override
             public void run() {
-                if (!mIsDragging) {
-                    if (mAutoHideAnimator != null) {
-                        mAutoHideAnimator.cancel();
+                if (!isDragging) {
+                    if (autoHideAnimator != null) {
+                        autoHideAnimator.cancel();
                     }
-                    mAutoHideAnimator = ObjectAnimator.ofInt(FastScroller.this, "offsetX", (Utils.isRtl(mRecyclerView.getResources()) ? -1 : 1) * mWidth);
-                    mAutoHideAnimator.setInterpolator(new FastOutLinearInInterpolator());
-                    mAutoHideAnimator.setDuration(200);
-                    mAutoHideAnimator.start();
+                    autoHideAnimator = ObjectAnimator.ofInt(FastScroller.this, "offsetX", (Utils.isRtl(FastScroller.this.recyclerView.getResources()) ? -1 : 1) * width);
+                    autoHideAnimator.setInterpolator(new FastOutLinearInInterpolator());
+                    autoHideAnimator.setDuration(200);
+                    autoHideAnimator.start();
                 }
             }
         };
 
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        this.recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
 
-                if (!mRecyclerView.isInEditMode()) {
+                if (!FastScroller.this.recyclerView.isInEditMode()) {
                     show();
                 }
             }
         });
 
-        if (mAutoHideEnabled) {
+        if (autoHideEnabled) {
             postAutoHideDelayed();
         }
     }
 
-    public int getThumbHeight() {
-        return mThumbHeight;
+    int getThumbHeight() {
+        return thumbHeight;
     }
 
     public int getWidth() {
-        return mWidth;
+        return width;
     }
 
-    public boolean isDragging() {
-        return mIsDragging;
+    boolean isDragging() {
+        return isDragging;
     }
 
     /**
      * Handles the touch event and determines whether to show the fast scroller (or updates it if
      * it is already showing).
      */
-    public void handleTouchEvent(MotionEvent ev, int downX, int downY, int lastY,
-                                 OnFastScrollStateChangeListener stateChangeListener) {
-        ViewConfiguration config = ViewConfiguration.get(mRecyclerView.getContext());
+    void handleTouchEvent(MotionEvent ev, int downX, int downY, int lastY,
+                          OnFastScrollStateChangeListener stateChangeListener) {
+        ViewConfiguration config = ViewConfiguration.get(recyclerView.getContext());
 
         int action = ev.getAction();
         int y = (int) ev.getY();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 if (isNearPoint(downX, downY)) {
-                    mTouchOffset = downY - mThumbPosition.y;
+                    touchOffset = downY - thumbPosition.y;
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
                 // Check if we should start scrolling
-                if (!mIsDragging && isNearPoint(downX, downY) &&
+                if (!isDragging && isNearPoint(downX, downY) &&
                         Math.abs(y - downY) > config.getScaledTouchSlop()) {
-                    mRecyclerView.getParent().requestDisallowInterceptTouchEvent(true);
-                    mIsDragging = true;
-                    mTouchOffset += (lastY - downY);
-                    mPopup.animateVisibility(true);
+                    recyclerView.getParent().requestDisallowInterceptTouchEvent(true);
+                    isDragging = true;
+                    touchOffset += (lastY - downY);
+                    popup.animateVisibility(true);
                     if (stateChangeListener != null) {
                         stateChangeListener.onFastScrollStart();
                     }
-                    if (mThumbInactiveState) {
-                        mThumb.setColor(mThumbActiveColor);
+                    if (thumbInactiveState) {
+                        thumb.setColor(thumbActiveColor);
                     }
                 }
-                if (mIsDragging) {
+                if (isDragging) {
                     // Update the fastscroller section name at this touch position
                     int top = 0;
-                    int bottom = mRecyclerView.getHeight() - mThumbHeight;
-                    float boundedY = (float) Math.max(top, Math.min(bottom, y - mTouchOffset));
-                    String sectionName = mRecyclerView.scrollToPositionAtProgress((boundedY - top) / (bottom - top));
-                    mPopup.setSectionName(sectionName);
-                    mPopup.animateVisibility(!sectionName.isEmpty());
-                    mRecyclerView.invalidate(mPopup.updateFastScrollerBounds(mRecyclerView, mThumbPosition.y));
+                    int bottom = recyclerView.getHeight() - thumbHeight;
+                    float boundedY = (float) Math.max(top, Math.min(bottom, y - touchOffset));
+                    String sectionName = recyclerView.scrollToPositionAtProgress((boundedY - top) / (bottom - top));
+                    popup.setSectionName(sectionName);
+                    popup.animateVisibility(!sectionName.isEmpty());
+                    recyclerView.invalidate(popup.updateFastScrollerBounds(recyclerView, thumbPosition.y));
                 }
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                mTouchOffset = 0;
-                if (mIsDragging) {
-                    mIsDragging = false;
-                    mPopup.animateVisibility(false);
+                touchOffset = 0;
+                if (isDragging) {
+                    isDragging = false;
+                    popup.animateVisibility(false);
                     if (stateChangeListener != null) {
                         stateChangeListener.onFastScrollStop();
                     }
                 }
-                if (mThumbInactiveState) {
-                    mThumb.setColor(mThumbInactiveColor);
+                if (thumbInactiveState) {
+                    thumb.setColor(thumbInactiveColor);
                 }
                 break;
         }
     }
 
-    public void draw(Canvas canvas) {
+    void draw(Canvas canvas) {
 
-        if (mThumbPosition.x < 0 || mThumbPosition.y < 0) {
+        if (thumbPosition.x < 0 || thumbPosition.y < 0) {
             return;
         }
 
         //Background
-        canvas.drawRect(mThumbPosition.x + mOffset.x, mOffset.y, mThumbPosition.x + mOffset.x + mWidth, mRecyclerView.getHeight() + mOffset.y, mTrack);
+        canvas.drawRect(thumbPosition.x + offset.x, offset.y, thumbPosition.x + offset.x + width, recyclerView.getHeight() + offset.y, track);
 
         //Handle
-        canvas.drawRect(mThumbPosition.x + mOffset.x, mThumbPosition.y + mOffset.y, mThumbPosition.x + mOffset.x + mWidth, mThumbPosition.y + mOffset.y + mThumbHeight, mThumb);
+        canvas.drawRect(thumbPosition.x + offset.x, thumbPosition.y + offset.y, thumbPosition.x + offset.x + width, thumbPosition.y + offset.y + thumbHeight, thumb);
 
         //Popup
-        mPopup.draw(canvas);
+        popup.draw(canvas);
     }
 
     /**
      * Returns whether the specified points are near the scroll bar bounds.
      */
     private boolean isNearPoint(int x, int y) {
-        mTmpRect.set(mThumbPosition.x, mThumbPosition.y, mThumbPosition.x + mWidth,
-                mThumbPosition.y + mThumbHeight);
-        mTmpRect.inset(mTouchInset, mTouchInset);
-        return mTmpRect.contains(x, y);
+        tempRect.set(thumbPosition.x, thumbPosition.y, thumbPosition.x + width,
+                thumbPosition.y + thumbHeight);
+        tempRect.inset(touchInset, touchInset);
+        return tempRect.contains(x, y);
     }
 
-    public void setThumbPosition(int x, int y) {
-        if (mThumbPosition.x == x && mThumbPosition.y == y) {
+    void setThumbPosition(int x, int y) {
+        if (thumbPosition.x == x && thumbPosition.y == y) {
             return;
         }
         // do not create new objects here, this is called quite often
-        mInvalidateRect.set(mThumbPosition.x + mOffset.x, mOffset.y, mThumbPosition.x + mOffset.x + mWidth, mRecyclerView.getHeight() + mOffset.y);
-        mThumbPosition.set(x, y);
-        mInvalidateTmpRect.set(mThumbPosition.x + mOffset.x, mOffset.y, mThumbPosition.x + mOffset.x + mWidth, mRecyclerView.getHeight() + mOffset.y);
-        mInvalidateRect.union(mInvalidateTmpRect);
-        mRecyclerView.invalidate(mInvalidateRect);
-    }
-
-
-    public void setOffset(int x, int y) {
-        if (mOffset.x == x && mOffset.y == y) {
-            return;
-        }
-        // do not create new objects here, this is called quite often
-        mInvalidateRect.set(mThumbPosition.x + mOffset.x, mOffset.y, mThumbPosition.x + mOffset.x + mWidth, mRecyclerView.getHeight() + mOffset.y);
-        mOffset.set(x, y);
-        mInvalidateTmpRect.set(mThumbPosition.x + mOffset.x, mOffset.y, mThumbPosition.x + mOffset.x + mWidth, mRecyclerView.getHeight() + mOffset.y);
-        mInvalidateRect.union(mInvalidateTmpRect);
-        mRecyclerView.invalidate(mInvalidateRect);
-    }
-
-    // Setter/getter for the popup alpha for animations
-    @Keep
-    public void setOffsetX(int x) {
-        setOffset(x, mOffset.y);
-    }
-
-    @Keep
-    public int getOffsetX() {
-        return mOffset.x;
+        invalidateRect.set(thumbPosition.x + offset.x, offset.y, thumbPosition.x + offset.x + width, recyclerView.getHeight() + offset.y);
+        thumbPosition.set(x, y);
+        invalidateTmpRect.set(thumbPosition.x + offset.x, offset.y, thumbPosition.x + offset.x + width, recyclerView.getHeight() + offset.y);
+        invalidateRect.union(invalidateTmpRect);
+        recyclerView.invalidate(invalidateRect);
     }
 
     public void show() {
-        if (!mAnimatingShow) {
-            if (mAutoHideAnimator != null) {
-                mAutoHideAnimator.cancel();
+        if (!animatingShow) {
+            if (autoHideAnimator != null) {
+                autoHideAnimator.cancel();
             }
-            mAutoHideAnimator = ObjectAnimator.ofInt(this, "offsetX", 0);
-            mAutoHideAnimator.setInterpolator(new LinearOutSlowInInterpolator());
-            mAutoHideAnimator.setDuration(150);
-            mAutoHideAnimator.addListener(new AnimatorListenerAdapter() {
+            autoHideAnimator = ObjectAnimator.ofInt(this, "offsetX", 0);
+            autoHideAnimator.setInterpolator(new LinearOutSlowInInterpolator());
+            autoHideAnimator.setDuration(150);
+            autoHideAnimator.addListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationCancel(Animator animation) {
                     super.onAnimationCancel(animation);
-                    mAnimatingShow = false;
+                    animatingShow = false;
                 }
 
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     super.onAnimationEnd(animation);
-                    mAnimatingShow = false;
+                    animatingShow = false;
                 }
             });
-            mAnimatingShow = true;
-            mAutoHideAnimator.start();
+            animatingShow = true;
+            autoHideAnimator.start();
         }
-        if (mAutoHideEnabled) {
-            postAutoHideDelayed();
-        } else {
-            cancelAutoHide();
-        }
-    }
-
-    protected void postAutoHideDelayed() {
-        if (mRecyclerView != null) {
-            cancelAutoHide();
-            mRecyclerView.postDelayed(mHideRunnable, mAutoHideDelay);
-        }
-    }
-
-    protected void cancelAutoHide() {
-        if (mRecyclerView != null) {
-            mRecyclerView.removeCallbacks(mHideRunnable);
-        }
-    }
-
-    public void setThumbColor(@ColorInt int color) {
-        mThumb.setColor(color);
-        mRecyclerView.invalidate(mInvalidateRect);
-    }
-
-    public void setTrackColor(@ColorInt int color) {
-        mTrack.setColor(color);
-        mRecyclerView.invalidate(mInvalidateRect);
-    }
-
-    public void setPopupBgColor(@ColorInt int color) {
-        mPopup.setBgColor(color);
-    }
-
-    public void setPopupTextColor(@ColorInt int color) {
-        mPopup.setTextColor(color);
-    }
-
-    public void setPopupTypeface(Typeface typeface) {
-        mPopup.setTypeface(typeface);
-    }
-
-    public void setPopupTextSize(int size) {
-        mPopup.setTextSize(size);
-    }
-
-    public void setAutoHideDelay(int hideDelay) {
-        mAutoHideDelay = hideDelay;
-        if (mAutoHideEnabled) {
-            postAutoHideDelayed();
-        }
-    }
-
-    public void setAutoHideEnabled(boolean autoHideEnabled) {
-        mAutoHideEnabled = autoHideEnabled;
         if (autoHideEnabled) {
             postAutoHideDelayed();
         } else {
@@ -364,22 +255,22 @@ public class FastScroller {
         }
     }
 
-    public void setPopupPosition(@FastScroller.FastScrollerPopupPosition int popupPosition) {
-        mPopup.setPopupPosition(popupPosition);
+    private void postAutoHideDelayed() {
+        if (recyclerView != null) {
+            cancelAutoHide();
+            int autoHideDelay = 1500;
+            recyclerView.postDelayed(hideRunnable, autoHideDelay);
+        }
     }
 
-    public void setThumbInactiveColor(@ColorInt int color) {
-        mThumbInactiveColor = color;
-        enableThumbInactiveColor(true);
+    private void cancelAutoHide() {
+        if (recyclerView != null) {
+            recyclerView.removeCallbacks(hideRunnable);
+        }
     }
 
-    public void enableThumbInactiveColor(boolean enableInactiveColor) {
-        mThumbInactiveState = enableInactiveColor;
-        mThumb.setColor(mThumbInactiveState ? mThumbInactiveColor : mThumbActiveColor);
-    }
-
-    @Deprecated
-    public void setThumbInactiveColor(boolean thumbInactiveColor) {
-        enableThumbInactiveColor(thumbInactiveColor);
+    void enableThumbInactiveColor(boolean enableInactiveColor) {
+        thumbInactiveState = enableInactiveColor;
+        thumb.setColor(thumbInactiveState ? thumbInactiveColor : thumbActiveColor);
     }
 }

@@ -60,7 +60,7 @@ public class FastScrollPopup {
         setBackgroundSize(Utils.toPixels(mRes, 88));
     }
 
-    public void setBgColor(int color) {
+    void setBgColor(int color) {
         mBackgroundColor = color;
         mBackgroundPaint.setColor(color);
         mRecyclerView.invalidate(mBgBounds);
@@ -76,7 +76,7 @@ public class FastScrollPopup {
         mRecyclerView.invalidate(mBgBounds);
     }
 
-    public void setBackgroundSize(int size) {
+    void setBackgroundSize(int size) {
         mBackgroundSize = size;
         mCornerRadius = mBackgroundSize / 2;
         mRecyclerView.invalidate(mBgBounds);
@@ -90,7 +90,7 @@ public class FastScrollPopup {
     /**
      * Animates the visibility of the fast scroller popup.
      */
-    public void animateVisibility(boolean visible) {
+    void animateVisibility(boolean visible) {
         if (mVisible != visible) {
             mVisible = visible;
             if (mAlphaAnimator != null) {
@@ -114,13 +114,8 @@ public class FastScrollPopup {
         return mAlpha;
     }
 
-    public void setPopupPosition(@FastScroller.FastScrollerPopupPosition int position) {
+    void setPopupPosition(@FastScroller.FastScrollerPopupPosition int position) {
         mPosition = position;
-    }
-
-    @FastScroller.FastScrollerPopupPosition
-    public int getPopupPosition() {
-        return mPosition;
     }
 
     private float[] createRadii() {
@@ -135,7 +130,7 @@ public class FastScrollPopup {
         }
     }
 
-    public void draw(Canvas canvas) {
+    void draw(Canvas canvas) {
         if (isVisible()) {
             // Draw the fast scroller popup
             int restoreCount = canvas.save(Canvas.MATRIX_SAVE_FLAG);
@@ -160,7 +155,7 @@ public class FastScrollPopup {
         }
     }
 
-    public void setSectionName(String sectionName) {
+    void setSectionName(String sectionName) {
         if (!sectionName.equals(mSectionName)) {
             mSectionName = sectionName;
             mTextPaint.getTextBounds(sectionName, 0, sectionName.length(), mTextBounds);
@@ -174,7 +169,7 @@ public class FastScrollPopup {
      *
      * @return the invalidation rect for this update.
      */
-    public Rect updateFastScrollerBounds(FastScrollRecyclerView recyclerView, int thumbOffsetY) {
+    Rect updateFastScrollerBounds(FastScrollRecyclerView recyclerView, int thumbOffsetY) {
         mInvalidateRect.set(mBgBounds);
 
         if (isVisible()) {
