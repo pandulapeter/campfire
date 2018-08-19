@@ -4,8 +4,6 @@ package com.pandulapeter.campfire.feature.main.songs.fastScroll;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
-import android.graphics.Typeface;
-import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.GridLayoutManager;
@@ -18,7 +16,6 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.pandulapeter.campfire.R;
-
 
 public class FastScrollRecyclerView extends RecyclerView implements RecyclerView.OnItemTouchListener {
 
@@ -124,26 +121,29 @@ public class FastScrollRecyclerView extends RecyclerView implements RecyclerView
      * it is already showing).
      */
     private boolean handleTouchEvent(MotionEvent ev) {
-        int action = ev.getAction();
-        int x = (int) ev.getX();
-        int y = (int) ev.getY();
-        switch (action) {
-            case MotionEvent.ACTION_DOWN:
-                // Keep track of the down positions
-                mDownX = x;
-                mDownY = mLastY = y;
-                mScrollbar.handleTouchEvent(ev, mDownX, mDownY, mLastY, mStateChangeListener);
-                break;
-            case MotionEvent.ACTION_MOVE:
-                mLastY = y;
-                mScrollbar.handleTouchEvent(ev, mDownX, mDownY, mLastY, mStateChangeListener);
-                break;
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
-                mScrollbar.handleTouchEvent(ev, mDownX, mDownY, mLastY, mStateChangeListener);
-                break;
+        if (mFastScrollEnabled) {
+            int action = ev.getAction();
+            int x = (int) ev.getX();
+            int y = (int) ev.getY();
+            switch (action) {
+                case MotionEvent.ACTION_DOWN:
+                    // Keep track of the down positions
+                    mDownX = x;
+                    mDownY = mLastY = y;
+                    mScrollbar.handleTouchEvent(ev, mDownX, mDownY, mLastY, mStateChangeListener);
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    mLastY = y;
+                    mScrollbar.handleTouchEvent(ev, mDownX, mDownY, mLastY, mStateChangeListener);
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    mScrollbar.handleTouchEvent(ev, mDownX, mDownY, mLastY, mStateChangeListener);
+                    break;
+            }
+            return mScrollbar.isDragging();
         }
-        return mScrollbar.isDragging();
+        return false;
     }
 
     @Override
@@ -412,42 +412,6 @@ public class FastScrollRecyclerView extends RecyclerView implements RecyclerView
         return calculateScrollDistanceToPosition(getAdapter().getItemCount());
     }
 
-    public void showScrollbar() {
-        mScrollbar.show();
-    }
-
-    public void setThumbColor(@ColorInt int color) {
-        mScrollbar.setThumbColor(color);
-    }
-
-    public void setTrackColor(@ColorInt int color) {
-        mScrollbar.setTrackColor(color);
-    }
-
-    public void setPopupBgColor(@ColorInt int color) {
-        mScrollbar.setPopupBgColor(color);
-    }
-
-    public void setPopupTextColor(@ColorInt int color) {
-        mScrollbar.setPopupTextColor(color);
-    }
-
-    public void setPopupTextSize(int textSize) {
-        mScrollbar.setPopupTextSize(textSize);
-    }
-
-    public void setPopUpTypeface(Typeface typeface) {
-        mScrollbar.setPopupTypeface(typeface);
-    }
-
-    public void setAutoHideDelay(int hideDelay) {
-        mScrollbar.setAutoHideDelay(hideDelay);
-    }
-
-    public void setAutoHideEnabled(boolean autoHideEnabled) {
-        mScrollbar.setAutoHideEnabled(autoHideEnabled);
-    }
-
     public void setOnFastScrollStateChangeListener(OnFastScrollStateChangeListener stateChangeListener) {
         mStateChangeListener = stateChangeListener;
     }
@@ -455,10 +419,6 @@ public class FastScrollRecyclerView extends RecyclerView implements RecyclerView
     @Deprecated
     public void setStateChangeListener(OnFastScrollStateChangeListener stateChangeListener) {
         setOnFastScrollStateChangeListener(stateChangeListener);
-    }
-
-    public void setThumbInactiveColor(@ColorInt int color) {
-        mScrollbar.setThumbInactiveColor(color);
     }
 
     public void allowThumbInactiveColor(boolean allowInactiveColor) {
@@ -477,15 +437,6 @@ public class FastScrollRecyclerView extends RecyclerView implements RecyclerView
     @Deprecated
     public void setThumbEnabled(boolean thumbEnabled) {
         setFastScrollEnabled(thumbEnabled);
-    }
-
-    /**
-     * Set the FastScroll Popup position. This is either {@link FastScroller.FastScrollerPopupPosition#ADJACENT},
-     * meaning the popup moves adjacent to the FastScroll thumb, or {@link FastScroller.FastScrollerPopupPosition#CENTER},
-     * meaning the popup is static and centered within the RecyclerView.
-     */
-    public void setPopupPosition(@FastScroller.FastScrollerPopupPosition int popupPosition) {
-        mScrollbar.setPopupPosition(popupPosition);
     }
 
     private class ScrollOffsetInvalidator extends AdapterDataObserver {
