@@ -83,7 +83,7 @@
                 android:layout_height="match_parent"
                 android:clipChildren="false">
 
-                <com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
+                <com.pandulapeter.campfire.feature.main.songs.fastScroll.FastScrollRecyclerView
                     android:id="@+id/recycler_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"

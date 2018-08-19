@@ -66,7 +66,7 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
             )
         }
         viewModel.shouldUpdatePlaylists.onEventTriggered(this@PlaylistChooserBottomSheetFragment) { refreshPlaylistCheckboxes() }
-        binding.container.nestedScrollView?.setOnScrollChangeListener { _: NestedScrollView?, _: Int, scrollY: Int, _: Int, _: Int ->
+        binding.container.nestedScrollView.setOnScrollChangeListener { _: NestedScrollView?, _: Int, scrollY: Int, _: Int, _: Int ->
             scrollViewOffset = scrollY
         }
     }
@@ -116,9 +116,9 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
 
     private fun refreshPlaylistCheckboxes() {
         context?.let { context ->
-            binding.container.playlistContainer?.removeAllViews()
+            binding.container.playlistContainer.removeAllViews()
             playlistRepository.cache.sortedBy { it.order }.forEach { playlist ->
-                binding.container.playlistContainer?.addView(AppCompatCheckBox(context).apply {
+                binding.container.playlistContainer.addView(AppCompatCheckBox(context).apply {
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(contentPadding, contentPadding, contentPadding, contentPadding)
                     text = playlist.title ?: getString(R.string.main_favorites)
@@ -148,10 +148,10 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
                     }
                 }, ViewGroup.LayoutParams.MATCH_PARENT, checkBoxHeight)
             }
-            binding.container.newPlaylist?.visibility = if (playlistRepository.cache.size < Playlist.MAXIMUM_PLAYLIST_COUNT) View.VISIBLE else View.GONE
+            binding.container.newPlaylist.visibility = if (playlistRepository.cache.size < Playlist.MAXIMUM_PLAYLIST_COUNT) View.VISIBLE else View.GONE
             checkIfToolbarTransformationIsNeeded()
             if (shouldScrollToBottom) {
-                binding.container.nestedScrollView?.run { post { if (isAdded) fullScroll(View.FOCUS_DOWN) } }
+                binding.container.nestedScrollView.run { post { if (isAdded) fullScroll(View.FOCUS_DOWN) } }
             }
             shouldScrollToBottom = true
         }
@@ -160,14 +160,14 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
     private fun checkIfToolbarTransformationIsNeeded() {
         binding.root.post {
             val screenHeight = activity?.window?.decorView?.findViewById<View?>(android.R.id.content)?.height ?: 0
-            if (binding.root.height > screenHeight - (binding.container.fakeAppBar?.height ?: 0) && isFullWidth) {
+            if (binding.root.height > screenHeight - (binding.container.fakeAppBar.height) && isFullWidth) {
                 val layoutParams = binding.root.layoutParams
                 layoutParams.height = screenHeight
                 binding.root.layoutParams = layoutParams
                 shouldTransformTopToAppBar = true
-                binding.container.contentContainer?.setPadding(0, 0, 0, contentBottomMargin)
+                binding.container.contentContainer.setPadding(0, 0, 0, contentBottomMargin)
                 viewModel.updateSlideState(if (behavior.state == BottomSheetBehavior.STATE_EXPANDED) 1f else 0f, scrollViewOffset)
-                binding.container.nestedScrollView?.run { setPadding(0, paddingTop, 0, 0) }
+                binding.container.nestedScrollView.run { setPadding(0, paddingTop, 0, 0) }
             }
             behavior.peekHeight = Math.min(binding.root.height, screenHeight / 2)
         }

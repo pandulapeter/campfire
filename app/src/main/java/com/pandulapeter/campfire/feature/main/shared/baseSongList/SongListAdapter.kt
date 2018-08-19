@@ -4,7 +4,7 @@ import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
-import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
+import com.pandulapeter.campfire.feature.main.songs.fastScroll.FastScrollRecyclerView
 
 class SongListAdapter : RecyclerView.Adapter<SongListItemViewHolder<*, *>>(),
     FastScrollRecyclerView.SectionedAdapter,
