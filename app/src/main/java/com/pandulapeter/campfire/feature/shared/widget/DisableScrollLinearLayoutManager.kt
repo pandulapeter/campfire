@@ -21,5 +21,5 @@ class DisableScrollLinearLayoutManager(context: Context) : LinearLayoutManager(c
     }
 
     @Parcelize
-    data class State(val isScrollEnabled: Boolean, val superState: Parcelable) : Parcelable
+    data class State(val isScrollEnabled: Boolean, val superState: Parcelable?) : Parcelable
 }

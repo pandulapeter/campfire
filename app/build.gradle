@@ -5,11 +5,11 @@ apply plugin: "kotlin-kapt"
 apply plugin: "io.fabric"
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
     defaultConfig {
         applicationId "com.pandulapeter.campfire"
         minSdkVersion 22
-        targetSdkVersion 27
+        targetSdkVersion 28
         versionCode 13
         versionName "0.7.8"
         vectorDrawables.useSupportLibrary = true
@@ -106,7 +106,7 @@ dependencies {
 
     // Support library
     //TODO: Blocker in AndroidX: AVD-s on FAB not visible.
-    def supportLibraryVersion = "27.1.1"
+    def supportLibraryVersion = "28.0.0"
     implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
     implementation "com.android.support:support-v4:$supportLibraryVersion"
     implementation "com.android.support:design:$supportLibraryVersion"

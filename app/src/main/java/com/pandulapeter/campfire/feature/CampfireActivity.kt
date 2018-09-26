@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.Bundle
 import android.support.annotation.MenuRes
 import android.support.design.internal.NavigationMenuView
+import android.support.design.widget.AppBarLayout
 import android.support.design.widget.NavigationView
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentTransaction
@@ -213,7 +214,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 }
             }
         }
-        binding.appBarLayout.addOnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) }
+        binding.appBarLayout.addOnOffsetChangedListener(AppBarLayout.OnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) })
 
         // Initialize the drawer layout.
         binding.drawerLayout.addDrawerListener(
