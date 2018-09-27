@@ -87,19 +87,9 @@ var View.animatedVisibilityEnd: Boolean
         animateCircularReveal(value, false)
     }
 
-var View.animatedVisibilityCenter: Boolean
-    get() = visibleOrGone
-    set(value) {
-        animateCircularReveal(value, null)
-    }
-
-private fun View.animateCircularReveal(isVisible: Boolean, start: Boolean?) {
+private fun View.animateCircularReveal(isVisible: Boolean, start: Boolean) {
     if (isAttachedToWindow) {
-        val cx = when (start) {
-            null -> width / 2
-            true -> 0
-            false -> width
-        }
+        val cx = if (start) 0 else width
         val cy = height / 2
         val maxRadius = Math.hypot(width.toDouble(), height.toDouble()).toFloat()
         visibleOrGone = true

@@ -528,13 +528,13 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     fun closeSecondaryNavigationDrawer() = binding.drawerLayout.closeDrawer(Gravity.END)
 
-    fun isFloatingActionButtonEnabled() = binding.floatingActionButton.animatedVisibilityCenter
+    fun isFloatingActionButtonEnabled() = binding.floatingActionButton.isVisible()
 
     fun enableFloatingActionButton() {
-        binding.floatingActionButton.visibleOrInvisible = true
+        binding.floatingActionButton.show()
         binding.autoScrollControl.run {
             (tag as? Animator)?.let {
-                it.addListener(onAnimationEnd = { binding.floatingActionButton.animatedVisibilityCenter = true })
+                it.addListener(onAnimationEnd = { binding.floatingActionButton.show() })
             }
         }
         binding.floatingActionButton.tag = null
@@ -546,14 +546,14 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             animatedVisibilityEnd = false
             (tag as? Animator)?.let {
                 it.addListener(onAnimationEnd = {
-                    binding.floatingActionButton.animatedVisibilityCenter = false
+                    binding.floatingActionButton.hide()
                     tag = null
                     visibleOrGone = false
 
                 })
             }
         } else {
-            binding.floatingActionButton.animatedVisibilityCenter = false
+            binding.floatingActionButton.hide()
         }
     }
 
