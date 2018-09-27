@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <android.support.v4.widget.DrawerLayout
         android:id="@+id/drawer_layout"
@@ -41,6 +42,7 @@
                             android:id="@+id/toolbar_bottom"
                             android:layout_width="0dp"
                             android:layout_height="@dimen/toolbar_height"
+                            app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
                         <android.support.v4.widget.Space
@@ -48,7 +50,8 @@
                             android:layout_width="@dimen/toolbar_first_keyline_fix"
                             android:layout_height="0dp"
                             android:orientation="vertical"
-                            app:layout_constraintEnd_toStartOf="parent" />
+                            app:layout_constraintEnd_toStartOf="parent"
+                            app:layout_constraintStart_toStartOf="parent" />
 
                         <com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
                             android:id="@+id/toolbar_main_button"
@@ -137,15 +140,17 @@
 
             </android.support.v7.widget.CardView>
 
-            <android.support.design.widget.FloatingActionButton
+            <ImageButton
                 android:id="@+id/floating_action_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.FloatingActionButton"
+                android:layout_width="@dimen/floating_action_button_size"
+                android:layout_height="@dimen/floating_action_button_size"
                 android:layout_gravity="bottom|end"
                 android:layout_margin="@dimen/large_content_padding"
-                android:theme="@style/ButtonTheme"
-                android:visibility="invisible"
-                app:fabSize="normal" />
+                android:background="@drawable/bg_fab"
+                android:elevation="@dimen/floating_action_button_elevation"
+                android:visibility="gone"
+                tools:ignore="ContentDescription" />
 
         </com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout>
 
