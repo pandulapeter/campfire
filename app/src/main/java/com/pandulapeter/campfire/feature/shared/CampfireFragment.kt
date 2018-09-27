@@ -141,8 +141,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     open fun onBackPressed() = false
 
-    @Suppress("NOTHING_TO_INLINE") // Needed for ProGuard
-    protected inline fun getCampfireActivity() = (activity as? CampfireActivity) ?: throw IllegalStateException("The Fragment is not attached to CampfireActivity.")
+    fun getCampfireActivity() = (activity as? CampfireActivity) ?: throw IllegalStateException("The Fragment is not attached to CampfireActivity.")
 
     protected fun showHint(@StringRes message: Int, action: () -> Unit) {
         snackbar?.dismiss()
@@ -208,15 +207,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     override fun onTransitionPause(transition: Transition?) = Unit
 
     @CallSuper
-    override fun onTransitionCancel(transition: Transition?) {
-        transition?.removeListener(this)
-        if (isResumingDelayed) {
-            updateUI()
-            isResumingDelayed = false
-        }
-        enterTransition = null
-        exitTransition = null
-    }
+    override fun onTransitionCancel(transition: Transition?) = onTransitionEnd(transition)
 
     override fun onTransitionStart(transition: Transition?) = Unit
 }

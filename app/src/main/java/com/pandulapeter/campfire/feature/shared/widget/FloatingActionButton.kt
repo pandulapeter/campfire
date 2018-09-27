@@ -43,6 +43,6 @@ class FloatingActionButton @JvmOverloads constructor(context: Context, attrs: At
     fun isVisible() = alpha > 0
 
     companion object {
-        private const val ANIMATION_DURATION = 500L
+        private const val ANIMATION_DURATION = 300L
     }
 }
