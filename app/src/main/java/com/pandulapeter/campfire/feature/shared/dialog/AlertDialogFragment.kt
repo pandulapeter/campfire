@@ -15,6 +15,7 @@ class AlertDialogFragment : BaseDialogFragment() {
         private var Bundle?.message by BundleArgumentDelegate.Int("message")
         private var Bundle?.positiveButton by BundleArgumentDelegate.Int("positiveButton")
         private var Bundle?.negativeButton by BundleArgumentDelegate.Int("negativeButton")
+        private var Bundle?.cancellable by BundleArgumentDelegate.Boolean("cancellable")
 
         fun show(
             id: Int,
@@ -22,13 +23,15 @@ class AlertDialogFragment : BaseDialogFragment() {
             @StringRes title: Int,
             @StringRes message: Int,
             @StringRes positiveButton: Int,
-            @StringRes negativeButton: Int
+            @StringRes negativeButton: Int,
+            cancellable: Boolean = true
         ) = AlertDialogFragment().withArguments {
             it.id = id
             it.title = title
             it.message = message
             it.positiveButton = positiveButton
             it.negativeButton = negativeButton
+            it.cancellable = cancellable
         }.run {
             show(fragmentManager, tag)
         }
@@ -39,4 +42,8 @@ class AlertDialogFragment : BaseDialogFragment() {
         .setPositiveButton(arguments.positiveButton) { _, _ -> onDialogItemSelectedListener?.onPositiveButtonSelected(arguments.id) }
         .setNegativeButton(arguments.negativeButton) { _, _ -> onDialogItemSelectedListener?.onNegativeButtonSelected(arguments.id) }
         .create()
+
+    override fun onCreateDialog(savedInstanceState: Bundle?) = super.onCreateDialog(savedInstanceState).also {
+        isCancelable = arguments?.cancellable == true
+    }
 }

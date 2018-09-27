@@ -420,7 +420,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                         title = R.string.main_play_store_rating_title,
                         message = R.string.main_play_store_rating_message,
                         positiveButton = R.string.main_play_store_rating_positive,
-                        negativeButton = R.string.main_play_store_rating_negative
+                        negativeButton = R.string.main_play_store_rating_negative,
+                        cancellable = false
                     )
                     preferenceDatabase.ratingDialogShown = true
                 }
