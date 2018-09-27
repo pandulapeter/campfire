@@ -209,5 +209,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     @CallSuper
     override fun onTransitionCancel(transition: Transition?) = onTransitionEnd(transition)
 
-    override fun onTransitionStart(transition: Transition?) = Unit
+    override fun onTransitionStart(transition: Transition?) {
+        getCampfireActivity().isUiBlocked = true
+    }
 }

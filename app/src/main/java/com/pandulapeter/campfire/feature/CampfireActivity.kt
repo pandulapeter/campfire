@@ -209,7 +209,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     hideKeyboard(currentFocus)
                     binding.drawerLayout.openDrawer(Gravity.START)
                 } else {
-                    isUiBlocked = true
                     supportFragmentManager.popBackStack()
                 }
             }
@@ -375,7 +374,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                                 onPositiveButtonSelected(DIALOG_ID_EXIT_CONFIRMATION)
                             }
                         } else {
-                            isUiBlocked = true
                             super.onBackPressed()
                         }
                     }
