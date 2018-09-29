@@ -2,7 +2,6 @@ package com.pandulapeter.campfire.feature.main.options
 
 import android.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.design.widget.TabLayout
 import android.view.LayoutInflater
 import android.view.View
 import com.pandulapeter.campfire.R
@@ -23,12 +22,12 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
     }
 
     override val viewModel = OptionsViewModel()
-    override val appBarView: TabLayout by lazy {
+    override val appBarView by lazy {
         DataBindingUtil.inflate<ViewOptionsTabsBinding>(
             LayoutInflater.from(getCampfireActivity().toolbarContext), R.layout.view_options_tabs, null, false
-        ).tabLayout.apply {
-            setupWithViewPager(binding.viewPager)
-        }
+        ).apply {
+            tabLayout.setupWithViewPager(binding.viewPager)
+        }.root
     }
     private val pagerAdapter by lazy { OptionsFragmentPagerAdapter(getCampfireActivity(), childFragmentManager) }
 
