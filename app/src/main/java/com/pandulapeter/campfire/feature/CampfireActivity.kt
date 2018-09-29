@@ -627,8 +627,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
     }
 
-    fun openNavigationDrawer() = binding.drawerLayout.apply { postDelayed({ openDrawer(Gravity.START) }, 900) }
-
     private fun handleNewIntent() {
         if (currentFragment is DetailFragment) {
             if (intent.screenToOpen.isEmpty()) {
