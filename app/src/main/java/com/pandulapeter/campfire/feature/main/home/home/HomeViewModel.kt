@@ -49,6 +49,8 @@ class HomeViewModel(
         const val NEW_SONG_COUNT = 5
         const val RANDOM_COLLECTION_COUNT = 3
         const val RANDOM_SONG_COUNT = 10
+        const val SEARCH_SONG_LIMIT = 6
+        const val SEARCH_COLLECTION_LIMIT = 6
     }
 
     private val analyticsManager by inject<AnalyticsManager>()
@@ -424,6 +426,7 @@ class HomeViewModel(
                 .filterSongsByQuery()
                 .filterExplicitSongs()
                 .filterSongsByLanguage()
+                .take(SEARCH_SONG_LIMIT)
                 .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
                 .toList()
 
@@ -432,6 +435,7 @@ class HomeViewModel(
                 .filterCollectionsByQuery()
                 .filterExplicitCollections()
                 .filterCollectionsByLanguage()
+                .take(SEARCH_COLLECTION_LIMIT)
                 .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
                 .toList()
 
