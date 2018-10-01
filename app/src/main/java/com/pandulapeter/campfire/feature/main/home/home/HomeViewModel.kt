@@ -424,7 +424,6 @@ class HomeViewModel(
                 .filterSongsByQuery()
                 .filterExplicitSongs()
                 .filterSongsByLanguage()
-                .take(5)
                 .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
                 .toList()
 
@@ -433,7 +432,6 @@ class HomeViewModel(
                 .filterCollectionsByQuery()
                 .filterExplicitCollections()
                 .filterCollectionsByLanguage()
-                .take(3)
                 .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
                 .toList()
 
