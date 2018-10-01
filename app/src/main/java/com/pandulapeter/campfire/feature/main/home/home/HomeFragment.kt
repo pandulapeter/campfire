@@ -270,11 +270,13 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                         }
                         getCampfireActivity().isUiBlocked = true
                         toggleSearchViewIfEmpty()
+                        val shouldSendMultipleSongs =
+                            position > viewModel.firstRandomSongIndex && !(viewModel.query.isNotEmpty() && viewModel.toolbarTextInputView.isTextInputVisible)
                         getCampfireActivity().openDetailScreen(
                             clickedView,
-                            if (position > viewModel.firstRandomSongIndex) viewModel.displayedRandomSongs else listOf(it),
+                            if (shouldSendMultipleSongs) viewModel.displayedRandomSongs else listOf(it),
                             items.size > 1,
-                            if (position > viewModel.firstRandomSongIndex) position - viewModel.firstRandomSongIndex - 2 else 0,
+                            if (shouldSendMultipleSongs) position - viewModel.firstRandomSongIndex - 2 else 0,
                             true
                         )
                         wasLastTransitionForACollection = false
