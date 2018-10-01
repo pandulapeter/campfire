@@ -168,6 +168,19 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
             eraseButton.isEnabled = it
         }
+        fun updateModuleSwitchStates(isEnabled: Boolean) {
+            getCampfireActivity().secondaryNavigationMenu.apply {
+                listOf(
+                    findItem(R.id.song_of_the_day),
+                    findItem(R.id.new_collections),
+                    findItem(R.id.new_songs),
+                    findItem(R.id.random_collections),
+                    findItem(R.id.random_songs)
+                ).map { it.actionView as CompoundButton }.forEach { it.isEnabled = !isEnabled }
+            }
+        }
+        updateModuleSwitchStates(viewModel.isInSearchMode.get())
+        viewModel.isInSearchMode.onPropertyChanged { updateModuleSwitchStates(it) }
         savedInstanceState?.let {
             viewModel.placeholderText.set(it.placeholderText)
             viewModel.buttonText.set(it.buttonText)
@@ -270,8 +283,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                         }
                         getCampfireActivity().isUiBlocked = true
                         toggleSearchViewIfEmpty()
-                        val shouldSendMultipleSongs =
-                            position > viewModel.firstRandomSongIndex && !(viewModel.query.isNotEmpty() && viewModel.toolbarTextInputView.isTextInputVisible)
+                        val shouldSendMultipleSongs = position > viewModel.firstRandomSongIndex && !viewModel.isInSearchMode.get()
                         getCampfireActivity().openDetailScreen(
                             clickedView,
                             if (shouldSendMultipleSongs) viewModel.displayedRandomSongs else listOf(it),

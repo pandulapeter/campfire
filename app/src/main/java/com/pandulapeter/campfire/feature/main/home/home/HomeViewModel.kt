@@ -76,6 +76,7 @@ class HomeViewModel(
     val placeholderText = ObservableInt(R.string.home_initializing_error)
     val buttonText = ObservableInt(R.string.try_again)
     val buttonIcon = ObservableInt()
+    val isInSearchMode = ObservableBoolean()
     private var lastErrorTimestamp = 0L
     private var isFirstLoadingDone = false
     var shouldShowSongOfTheDay = preferenceDatabase.shouldShowSongOfTheDay
@@ -151,6 +152,7 @@ class HomeViewModel(
                     analyticsManager.onHomeSearchQueryChanged(query)
                 }
                 shouldEnableEraseButton.set(query.isNotEmpty())
+                isInSearchMode.set(toolbarTextInputView.isTextInputVisible && query.isNotEmpty())
             }
         }
 
@@ -175,6 +177,7 @@ class HomeViewModel(
                 buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
             }
             shouldShowEraseButton.set(isTextInputVisible)
+            isInSearchMode.set(isTextInputVisible && query.isNotEmpty())
         }
     }
 
