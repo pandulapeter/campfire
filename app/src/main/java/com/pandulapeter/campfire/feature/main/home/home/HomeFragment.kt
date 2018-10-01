@@ -135,7 +135,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
                     if (index != RecyclerView.NO_POSITION) {
                         (binding.recyclerView.findViewHolderForAdapterPosition(index)
-                                ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
+                            ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
                             sharedElements[names[0]] = it.itemView
                         }
                     }
@@ -224,6 +224,11 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             }
         }
         getCampfireActivity().updateToolbarTitleView(viewModel.toolbarTextInputView, toolbarWidth)
+        fun toggleSearchViewIfEmpty() {
+            if (viewModel.toolbarTextInputView.isTextInputVisible && viewModel.query.trim().isEmpty()) {
+                viewModel.toggleTextInputVisibility()
+            }
+        }
         viewModel.adapter.apply {
             collectionClickListener = { position, clickedView, image ->
                 if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
@@ -233,6 +238,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                             viewModel.isDetailScreenOpen = true
                         }
                         getCampfireActivity().isUiBlocked = true
+                        toggleSearchViewIfEmpty()
                         viewModel.collectionRepository.onCollectionOpened(it.id)
                         getCampfireActivity().openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
                         wasLastTransitionForACollection = true
@@ -256,6 +262,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                             viewModel.isDetailScreenOpen = true
                         }
                         getCampfireActivity().isUiBlocked = true
+                        toggleSearchViewIfEmpty()
                         getCampfireActivity().openDetailScreen(
                             clickedView,
                             if (position > viewModel.firstRandomSongIndex) viewModel.displayedRandomSongs else listOf(it),
