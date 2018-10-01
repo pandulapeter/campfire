@@ -193,6 +193,12 @@
     <!-- Options screen / Changelog -->
     <string name="options_changelog_app_updated">Az alkalmazás frissítve lett</string>
     <string name="options_changelog_what_is_new">Újdonságok</string>
+    <string name="options_changelog_0_8_0_description">
+        <Data><![CDATA[
+        • <strong>Keresés</strong> gomb a kezdőképernyőn és a gyűjtemények képernyőn<br>
+        • <strong>Hívj meg egy sörre</strong> opció a fejlesztés támogatásához
+        ]]></Data>
+    </string>
     <string name="options_changelog_0_7_0_description">
         <Data><![CDATA[
         • <strong>Kezdőképernyő</strong> ami dal és gyűjtemény ajánlásokat tartalmaz<br>

@@ -194,6 +194,13 @@
     <!-- Options screen / Changelog -->
     <string name="options_changelog_app_updated">The app has been updated</string>
     <string name="options_changelog_what_is_new">What\'s new</string>
+    <string name="options_changelog_0_8_0_version_name" translatable="false">v0.8</string>
+    <string name="options_changelog_0_8_0_description">
+        <Data><![CDATA[
+        • Added <strong>search</strong> option to the Home and Collections screens<br>
+        • <strong>Buy me a beer</strong> feature to support the developer
+        ]]></Data>
+    </string>
     <string name="options_changelog_0_7_0_version_name" translatable="false">v0.7</string>
     <string name="options_changelog_0_7_0_description">
         <Data><![CDATA[

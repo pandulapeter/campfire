@@ -126,16 +126,13 @@
                         android:onClick="@{() -> viewModel.onContactClicked(context)}"
                         android:text="@string/options_about_contact" />
 
-                    <!-- TODO: Implement in-app purchases. -->
-
                     <TextView
                         style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:drawableStart="@drawable/ic_beer_24dp"
                         android:onClick="@{() -> viewModel.onBuyMeABeerClicked()}"
-                        android:text="@string/options_about_buy_me_a_beer"
-                        android:visibility="gone" />
+                        android:text="@string/options_about_buy_me_a_beer" />
 
                 </LinearLayout>
 

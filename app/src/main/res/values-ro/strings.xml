@@ -193,6 +193,12 @@
     <!-- Options screen / Changelog -->
     <string name="options_changelog_app_updated">Aplicația a fost actualizată</string>
     <string name="options_changelog_what_is_new">Ce e nou</string>
+    <string name="options_changelog_0_8_0_description">
+        <Data><![CDATA[
+        • Buton de <strong>căutare</strong> pe pagina de start și pe pagina de colecții<br>
+        • Opțiunea de <strong>a plăti o bere</strong> pentru dezvoltator
+        ]]></Data>
+    </string>
     <string name="options_changelog_0_7_0_description">
         <Data><![CDATA[
         • <strong>Pagină de start</strong> care conține sugestii de piese și colecții<br>
