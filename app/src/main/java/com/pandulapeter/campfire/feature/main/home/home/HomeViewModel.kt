@@ -144,7 +144,7 @@ class HomeViewModel(
         set(value) {
             if (field != value) {
                 field = value
-                updateAdapterItems(true)
+                updateAdapterItems(false, true)
                 if (value.isNotEmpty()) {
                     analyticsManager.onHomeSearchQueryChanged(query)
                 }
@@ -168,7 +168,7 @@ class HomeViewModel(
                 }
                 updateSearchToggleDrawable(toolbarTextInputView.isTextInputVisible)
                 if (shouldScrollToTop) {
-                    updateAdapterItems(!isTextInputVisible)
+                    updateAdapterItems(false, !isTextInputVisible)
                 }
                 buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
             }
@@ -419,8 +419,33 @@ class HomeViewModel(
 
     private fun createViewModels() = mutableListOf<HomeItemViewModel>().apply {
         if (toolbarTextInputView.isTextInputVisible && query.isNotEmpty()) {
-            //TODO: Search
+            // Search in songs.
+            val matchingSongs = songs
+                .filterSongsByQuery()
+                .filterExplicitSongs()
+                .filterSongsByLanguage()
+                .take(5)
+                .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
+                .toList()
 
+            // Search in collections.
+            val matchingCollections = collections
+                .filterCollectionsByQuery()
+                .filterExplicitCollections()
+                .filterCollectionsByLanguage()
+                .take(3)
+                .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
+                .toList()
+
+            // Add results.
+            if (matchingSongs.isNotEmpty()) {
+                add(HomeHeaderViewModel(context.getString(R.string.main_songs)))
+                addAll(matchingSongs)
+            }
+            if (matchingCollections.isNotEmpty()) {
+                add(HomeHeaderViewModel(context.getString(R.string.main_collections)))
+                addAll(matchingCollections)
+            }
         } else {
 
             // Add the Song of the day module.
@@ -530,12 +555,19 @@ class HomeViewModel(
         updateAdapterItems(false, false)
     }
 
-
     //TODO: Prioritize results that begin with the searchQuery.
-    private fun Sequence<Song>.filterByQuery() =
+    private fun Sequence<Song>.filterSongsByQuery() =
         query.trim().normalize().let { query ->
             filter {
-                (it.getNormalizedTitle().contains(query, true)) || (it.getNormalizedArtist().contains(query, true))
+                it.getNormalizedTitle().contains(query, true) || it.getNormalizedArtist().contains(query, true)
+            }
+        }
+
+    //TODO: Prioritize results that begin with the searchQuery.
+    private fun Sequence<Collection>.filterCollectionsByQuery() =
+        query.trim().normalize().let { query ->
+            filter {
+                it.getNormalizedTitle().contains(query, true) || it.getNormalizedDescription().contains(query, true)
             }
         }
 

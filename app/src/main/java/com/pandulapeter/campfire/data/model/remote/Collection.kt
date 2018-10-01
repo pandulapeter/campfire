@@ -34,6 +34,11 @@ data class Collection(
     @IgnoredOnParcel
     @Ignore
     @Transient
+    private var normalizedDescription: String? = null
+
+    @IgnoredOnParcel
+    @Ignore
+    @Transient
     var isNew = false
 
     fun getNormalizedTitle(): String {
@@ -41,6 +46,13 @@ data class Collection(
             normalizedTitle = title.normalize()
         }
         return normalizedTitle ?: ""
+    }
+
+    fun getNormalizedDescription(): String {
+        if (normalizedDescription == null) {
+            normalizedDescription = description.normalize()
+        }
+        return normalizedDescription ?: ""
     }
 
     companion object {

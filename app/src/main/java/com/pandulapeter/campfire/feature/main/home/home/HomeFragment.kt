@@ -218,6 +218,13 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         }
         linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())
         binding.recyclerView.layoutManager = linearLayoutManager
+        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                if (dy > 0 && !recyclerView.isAnimating) {
+                    hideKeyboard(activity?.currentFocus)
+                }
+            }
+        })
         binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
             init {
                 supportsChangeAnimations = false
