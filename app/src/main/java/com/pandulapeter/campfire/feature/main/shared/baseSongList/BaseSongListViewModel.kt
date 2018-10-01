@@ -35,6 +35,7 @@ abstract class BaseSongListViewModel(protected val context: Context) : CampfireV
     protected val preferenceDatabase by inject<PreferenceDatabase>()
     protected val playlistRepository by inject<PlaylistRepository>()
     private val analyticsManager by inject<AnalyticsManager>()
+    val isSwipeRefreshEnabled = ObservableBoolean(true)
     abstract val screenName: String
     private var coroutine: CoroutineContext? = null
     protected var songs = sequenceOf<Song>()

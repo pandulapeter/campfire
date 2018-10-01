@@ -10,10 +10,7 @@ import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListVi
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.normalize
-import com.pandulapeter.campfire.util.onTextChanged
-import com.pandulapeter.campfire.util.removePrefixes
-import com.pandulapeter.campfire.util.swap
+import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
 class SongsViewModel(
@@ -29,7 +26,11 @@ class SongsViewModel(
     private val analyticsManager by inject<AnalyticsManager>()
     private val popularString = context.getString(R.string.popular_tag)
     private val newString = context.getString(R.string.new_tag)
-    val shouldShowEraseButton = ObservableBoolean()
+    val shouldShowEraseButton = ObservableBoolean().apply {
+        onPropertyChanged {
+            isSwipeRefreshEnabled.set(!it)
+        }
+    }
     val shouldEnableEraseButton = ObservableBoolean()
     var query = ""
         set(value) {

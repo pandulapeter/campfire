@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.onTextChanged
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
@@ -72,6 +73,7 @@ class HomeViewModel(
     val placeholderText = ObservableInt(R.string.home_initializing_error)
     val buttonText = ObservableInt(R.string.try_again)
     val buttonIcon = ObservableInt()
+    private var lastErrorTimestamp = 0L
     private var isFirstLoadingDone = false
     var shouldShowSongOfTheDay = preferenceDatabase.shouldShowSongOfTheDay
         set(value) {
@@ -130,7 +132,12 @@ class HomeViewModel(
             }
         }
     var languages = mutableListOf<Language>()
-    val shouldShowEraseButton = ObservableBoolean()
+    val isSwipeRefreshEnabled = ObservableBoolean(true)
+    val shouldShowEraseButton = ObservableBoolean().apply {
+        onPropertyChanged {
+            isSwipeRefreshEnabled.set(!it)
+        }
+    }
     val shouldEnableEraseButton = ObservableBoolean()
     var query = ""
         set(value) {
@@ -292,13 +299,16 @@ class HomeViewModel(
     override fun onPlaylistOrderChanged(playlists: List<Playlist>) = Unit
 
     private fun onError() {
-        if (collections.toList().isEmpty() || songs.toList().isEmpty()) {
-            analyticsManager.onConnectionError(true, AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
-            state.set(StateLayout.State.ERROR)
-        } else {
-            analyticsManager.onConnectionError(false, AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
-            shouldShowUpdateErrorSnackbar.set(true)
+        if (System.currentTimeMillis() - lastErrorTimestamp > 200) {
+            if (collections.toList().isEmpty() || songs.toList().isEmpty()) {
+                analyticsManager.onConnectionError(true, AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
+                state.set(StateLayout.State.ERROR)
+            } else {
+                analyticsManager.onConnectionError(false, AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
+                shouldShowUpdateErrorSnackbar.set(true)
+            }
         }
+        lastErrorTimestamp = System.currentTimeMillis()
     }
 
     private fun onListUpdated(items: List<HomeItemViewModel>) {
