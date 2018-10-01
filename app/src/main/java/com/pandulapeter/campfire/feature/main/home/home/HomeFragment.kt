@@ -20,7 +20,6 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.databinding.FragmentHomeBinding
 import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
-import com.pandulapeter.campfire.feature.main.songs.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.setTitleSubtitle
@@ -47,6 +46,10 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     private var Bundle.wasLastTransitionForACollection by BundleArgumentDelegate.Boolean("wasLastTransitionForACollection")
     private var Bundle.randomCollections by BundleArgumentDelegate.ParcelableArrayList<Collection>("randomCollections")
     private var Bundle.randomSongs by BundleArgumentDelegate.ParcelableArrayList<Song>("randomSongs")
+    private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
+    private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
+    private var Bundle.isEraseButtonVisible by BundleArgumentDelegate.Boolean("isEraseButtonVisible")
+    private var Bundle.isEraseButtonEnabled by BundleArgumentDelegate.Boolean("isEraseButtonEnabled")
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     private val drawableCloseToSearch by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_close_to_search_24dp) else getCampfireActivity().drawable(R.drawable.ic_search_24dp)
@@ -59,6 +62,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             viewModel.toggleTextInputVisibility()
         }
     }
+    private var toolbarWidth = 0
     private val eraseButton: ToolbarButton by lazy {
         getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) {
             viewModel.toolbarTextInputView.textInput.setText("")
@@ -69,7 +73,6 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             isEnabled = false
         }
     }
-    private val searchControlsViewModel = SearchControlsViewModel()
     override val viewModel: HomeViewModel by lazy {
         HomeViewModel(
             onDataLoaded = { languages ->
@@ -100,18 +103,13 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                 getCampfireActivity().toolbarContext,
                 R.string.songs_search,
                 true
-            ).apply { title.updateToolbarTitle(R.string.main_songs) },
+            ).apply { title.updateToolbarTitle(R.string.main_home) },
             openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() },
             updateSearchToggleDrawable = {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
                 getCampfireActivity().transitionMode = true
                 binding.swipeRefreshLayout.isEnabled = !it
                 binding.swipeRefreshLayout.isRefreshing = viewModel.isLoading.get()
-                binding.root.post {
-                    if (isAdded) {
-                        searchControlsViewModel.isVisible.set(it)
-                    }
-                }
             },
             context = getCampfireActivity()
         )
@@ -166,6 +164,11 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                 false
             }
         }
+        viewModel.shouldShowEraseButton.onPropertyChanged { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
+        viewModel.shouldEnableEraseButton.onPropertyChanged {
+            eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
+            eraseButton.isEnabled = it
+        }
         savedInstanceState?.let {
             viewModel.placeholderText.set(it.placeholderText)
             viewModel.buttonText.set(it.buttonText)
@@ -173,7 +176,19 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             wasLastTransitionForACollection = it.wasLastTransitionForACollection
             viewModel.randomCollections = it.randomCollections
             viewModel.randomSongs = it.randomSongs
+            if (it.isTextInputVisible) {
+                searchToggle.setImageDrawable(getCampfireActivity().drawable(R.drawable.ic_close_24dp))
+                viewModel.toolbarTextInputView.textInput.run {
+                    setText(savedInstanceState.searchQuery)
+                    setSelection(text.length)
+                    viewModel.query = text.toString()
+                }
+                viewModel.toolbarTextInputView.showTextInput()
+            }
+            viewModel.shouldShowEraseButton.set(savedInstanceState.isEraseButtonVisible)
+            viewModel.shouldEnableEraseButton.set(savedInstanceState.isEraseButtonEnabled)
         }
+        viewModel.toolbarTextInputView.textInput.requestFocus()
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
             showSnackbar(
                 message = R.string.home_update_error,
@@ -209,6 +224,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                 supportsChangeAnimations = false
             }
         }
+        getCampfireActivity().updateToolbarTitleView(viewModel.toolbarTextInputView, toolbarWidth)
         viewModel.adapter.apply {
             collectionClickListener = { position, clickedView, image ->
                 if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
@@ -338,6 +354,10 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         outState.wasLastTransitionForACollection = wasLastTransitionForACollection
         outState.randomCollections = ArrayList(viewModel.randomCollections.take(HomeViewModel.RANDOM_COLLECTION_COUNT + HomeViewModel.NEW_COLLECTION_COUNT + 1))
         outState.randomSongs = ArrayList(viewModel.randomSongs.take(HomeViewModel.RANDOM_SONG_COUNT + HomeViewModel.NEW_SONG_COUNT + 1))
+        outState.isTextInputVisible = viewModel.toolbarTextInputView.isTextInputVisible
+        outState.searchQuery = viewModel.query
+        outState.isEraseButtonVisible = viewModel.shouldShowEraseButton.get()
+        outState.isEraseButtonEnabled = viewModel.shouldEnableEraseButton.get()
     }
 
     override fun onResume() {
@@ -345,10 +365,20 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         viewModel.restoreToolbarButtons()
     }
 
+    override fun onPause() {
+        super.onPause()
+        toolbarWidth = viewModel.toolbarTextInputView.width
+    }
+
     override fun updateUI() {
         super.updateUI()
         linearLayoutManager.isScrollEnabled = true
     }
+
+    override fun onBackPressed() = if (viewModel.toolbarTextInputView.isTextInputVisible) {
+        viewModel.toggleTextInputVisibility()
+        true
+    } else super.onBackPressed()
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
         when (menuItem.itemId) {

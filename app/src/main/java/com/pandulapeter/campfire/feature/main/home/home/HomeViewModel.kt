@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.util.onTextChanged
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -136,10 +137,18 @@ class HomeViewModel(
             if (field != value) {
                 field = value
                 updateAdapterItems(true)
-//TODO                trackSearchEvent()
+                if (value.isNotEmpty()) {
+                    analyticsManager.onHomeSearchQueryChanged(query)
+                }
                 shouldEnableEraseButton.set(query.isNotEmpty())
             }
         }
+
+    init {
+        toolbarTextInputView.apply {
+            textInput.onTextChanged { if (isTextInputVisible) query = it }
+        }
+    }
 
     fun toggleTextInputVisibility() {
         toolbarTextInputView.run {

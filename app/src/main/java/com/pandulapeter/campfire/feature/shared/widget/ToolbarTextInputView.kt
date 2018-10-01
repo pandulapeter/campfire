@@ -80,5 +80,5 @@ class ToolbarTextInputView(context: Context, @StringRes hintText: Int, isSearch:
     }
 
     @Parcelize
-    private data class State(val state: Parcelable, val isTextInputVisible: Boolean) : BaseSavedState(state), Parcelable
+    private data class State(val state: Parcelable?, val isTextInputVisible: Boolean) : BaseSavedState(state), Parcelable
 }

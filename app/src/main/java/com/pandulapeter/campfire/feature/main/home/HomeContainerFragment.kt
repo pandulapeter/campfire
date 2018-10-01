@@ -45,6 +45,8 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
         (currentFragment as? HomeFragment)?.updateUI()
     }
 
+    override fun onBackPressed() = (currentFragment as? HomeFragment)?.onBackPressed() == true
+
     override fun onNavigationItemSelected(menuItem: MenuItem) =
         (currentFragment as? HomeFragment)?.onNavigationItemSelected(menuItem) ?: super.onNavigationItemSelected(menuItem)
 
