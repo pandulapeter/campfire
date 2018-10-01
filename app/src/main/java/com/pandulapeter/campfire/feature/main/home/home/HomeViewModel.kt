@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.feature.main.collections.CollectionListItemView
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
@@ -35,6 +36,8 @@ import kotlin.coroutines.experimental.CoroutineContext
 class HomeViewModel(
     private val onDataLoaded: (languages: List<Language>) -> Unit,
     private val openSecondaryNavigationDrawer: () -> Unit,
+    val toolbarTextInputView: ToolbarTextInputView,
+    private val updateSearchToggleDrawable: (Boolean) -> Unit,
     private val context: Context
 ) : CampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
 
@@ -126,6 +129,35 @@ class HomeViewModel(
             }
         }
     var languages = mutableListOf<Language>()
+    val shouldShowEraseButton = ObservableBoolean()
+    val shouldEnableEraseButton = ObservableBoolean()
+    var query = ""
+        set(value) {
+            if (field != value) {
+                field = value
+                updateAdapterItems(true)
+//TODO                trackSearchEvent()
+                shouldEnableEraseButton.set(query.isNotEmpty())
+            }
+        }
+
+    fun toggleTextInputVisibility() {
+        toolbarTextInputView.run {
+            if (title.tag == null) {
+                val shouldScrollToTop = !query.isEmpty()
+                animateTextInputVisibility(!isTextInputVisible)
+                if (isTextInputVisible) {
+                    textInput.setText("")
+                }
+                updateSearchToggleDrawable(toolbarTextInputView.isTextInputVisible)
+                if (shouldScrollToTop) {
+                    updateAdapterItems(!isTextInputVisible)
+                }
+                buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
+            }
+            shouldShowEraseButton.set(isTextInputVisible)
+        }
+    }
 
     override fun subscribe() {
         collectionRepository.subscribe(this)

@@ -1,6 +1,9 @@
 package com.pandulapeter.campfire.feature.main.home.home
 
+import android.os.Build
 import android.os.Bundle
+import android.support.annotation.StringRes
+import android.support.graphics.drawable.AnimatedVectorDrawableCompat
 import android.support.v4.app.SharedElementCallback
 import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.RecyclerView
@@ -10,16 +13,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.CompoundButton
+import android.widget.TextView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.databinding.FragmentHomeBinding
 import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
+import com.pandulapeter.campfire.feature.main.songs.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
+import com.pandulapeter.campfire.feature.shared.setTitleSubtitle
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
+import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 
@@ -40,6 +48,28 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     private var Bundle.randomCollections by BundleArgumentDelegate.ParcelableArrayList<Collection>("randomCollections")
     private var Bundle.randomSongs by BundleArgumentDelegate.ParcelableArrayList<Song>("randomSongs")
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
+    private val drawableCloseToSearch by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_close_to_search_24dp) else getCampfireActivity().drawable(R.drawable.ic_search_24dp)
+    }
+    private val drawableSearchToClose by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_search_to_close_24dp) else getCampfireActivity().drawable(R.drawable.ic_close_24dp)
+    }
+    private val searchToggle: ToolbarButton by lazy {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) {
+            viewModel.toggleTextInputVisibility()
+        }
+    }
+    private val eraseButton: ToolbarButton by lazy {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) {
+            viewModel.toolbarTextInputView.textInput.setText("")
+        }.apply {
+            scaleX = 0f
+            scaleY = 0f
+            alpha = 0.5f
+            isEnabled = false
+        }
+    }
+    private val searchControlsViewModel = SearchControlsViewModel()
     override val viewModel: HomeViewModel by lazy {
         HomeViewModel(
             onDataLoaded = { languages ->
@@ -61,10 +91,28 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                 }
                 getCampfireActivity().updateToolbarButtons(
                     listOf(
+                        eraseButton,
+                        searchToggle,
                         getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity().openSecondaryNavigationDrawer() }
                     ))
             },
+            toolbarTextInputView = ToolbarTextInputView(
+                getCampfireActivity().toolbarContext,
+                R.string.songs_search,
+                true
+            ).apply { title.updateToolbarTitle(R.string.main_songs) },
             openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() },
+            updateSearchToggleDrawable = {
+                searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
+                getCampfireActivity().transitionMode = true
+                binding.swipeRefreshLayout.isEnabled = !it
+                binding.swipeRefreshLayout.isRefreshing = viewModel.isLoading.get()
+                binding.root.post {
+                    if (isAdded) {
+                        searchControlsViewModel.isVisible.set(it)
+                    }
+                }
+            },
             context = getCampfireActivity()
         )
     }
@@ -339,4 +387,6 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             (menuItem.actionView as? CompoundButton).updateCheckedStateWithDelay(contains(languageId))
         }
     }
+
+    private fun TextView.updateToolbarTitle(@StringRes titleRes: Int, subtitle: String? = null) = setTitleSubtitle(this, context.getString(titleRes), subtitle)
 }
