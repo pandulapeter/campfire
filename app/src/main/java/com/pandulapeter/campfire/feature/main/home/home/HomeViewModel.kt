@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.onTextChanged
 import com.pandulapeter.campfire.util.swap
@@ -315,7 +316,7 @@ class HomeViewModel(
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
         if (collections.toList().isNotEmpty()) {
             placeholderText.set(R.string.home_placeholder)
-            buttonText.set(R.string.filters)
+            buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
             buttonIcon.set(R.drawable.ic_filter_and_sort_24dp)
         }
     }
@@ -417,99 +418,104 @@ class HomeViewModel(
     }
 
     private fun createViewModels() = mutableListOf<HomeItemViewModel>().apply {
+        if (toolbarTextInputView.isTextInputVisible && query.isNotEmpty()) {
+            //TODO: Search
 
-        // Add the Song of the day module. TODO
-        val songOfTheDay = if (shouldShowSongOfTheDay) songs
-            .filterExplicitSongs()
-            .filterSongsByLanguage()
-            .toList()
-            .let {
-                if (it.isNotEmpty()) {
-                    var today = Calendar.getInstance().run { get(Calendar.DAY_OF_YEAR) + get(Calendar.YEAR) }
-                    while (today >= it.size) {
-                        today -= it.size
+        } else {
+
+            // Add the Song of the day module.
+            val songOfTheDay = if (shouldShowSongOfTheDay) songs
+                .filterExplicitSongs()
+                .filterSongsByLanguage()
+                .toList()
+                .let {
+                    if (it.isNotEmpty()) {
+                        var today = Calendar.getInstance().run { get(Calendar.DAY_OF_YEAR) + get(Calendar.YEAR) }
+                        while (today >= it.size) {
+                            today -= it.size
+                        }
+                        return@let it[today]
                     }
-                    return@let it[today]
+                    return@let null
                 }
-                return@let null
-            }
-        else null
-        songOfTheDay?.also {
-            add(HomeHeaderViewModel(context.getString(R.string.home_song_of_the_day)))
-            add(SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it))
-        }
-
-        // Add the New Collections module.
-        val newCollections = if (shouldShowNewCollections) collections
-            .filterExplicitCollections()
-            .filterCollectionsByLanguage()
-            .toList()
-            .takeLast(NEW_COLLECTION_COUNT)
-            .asReversed() else listOf()
-        newCollections
-            .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
-            .let {
-                if (it.isNotEmpty()) {
-                    add(HomeHeaderViewModel(context.getString(R.string.home_new_collections)))
-                    addAll(it)
-                }
+            else null
+            songOfTheDay?.also {
+                add(HomeHeaderViewModel(context.getString(R.string.home_song_of_the_day)))
+                add(SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it))
             }
 
-        // Add the New Songs module.
-        val newSongs = if (shouldShowNewSongs) songs
-            .filterExplicitSongs()
-            .filterSongsByLanguage()
-            .toList()
-            .filterNot { it.id == songOfTheDay?.id }
-            .takeLast(NEW_SONG_COUNT)
-            .asReversed() else listOf()
-        newSongs
-            .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
-            .let {
-                if (it.isNotEmpty()) {
-                    add(HomeHeaderViewModel(context.getString(R.string.home_new_songs)))
-                    addAll(it)
-                }
-            }
-
-        // Add the Random Collections module.
-        if (shouldShowRandomCollections) {
-            var totalRandomCollectionCount = 0
-            randomCollections
-                .filterNot { newCollections.contains(it) }
-                .apply { totalRandomCollectionCount = size }
-                .take(RANDOM_COLLECTION_COUNT)
+            // Add the New Collections module.
+            val newCollections = if (shouldShowNewCollections) collections
+                .filterExplicitCollections()
+                .filterCollectionsByLanguage()
+                .toList()
+                .takeLast(NEW_COLLECTION_COUNT)
+                .asReversed() else listOf()
+            newCollections
                 .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
                 .let {
                     if (it.isNotEmpty()) {
-                        add(
-                            HomeHeaderViewModel(
-                                context.getString(R.string.home_random_collections),
-                                if (totalRandomCollectionCount > RANDOM_COLLECTION_COUNT) ::refreshRandomCollections else null
-                            )
-                        )
+                        add(HomeHeaderViewModel(context.getString(R.string.home_new_collections)))
                         addAll(it)
                     }
                 }
-        }
 
-        // Add the Random Songs module.
-        firstRandomSongIndex = if (shouldShowRandomSongs) size - 1 else Int.MAX_VALUE
-        if (shouldShowRandomSongs) {
-            var totalRandomSongCount = 0
-            displayedRandomSongs = randomSongs
+            // Add the New Songs module.
+            val newSongs = if (shouldShowNewSongs) songs
+                .filterExplicitSongs()
+                .filterSongsByLanguage()
+                .toList()
                 .filterNot { it.id == songOfTheDay?.id }
-                .filterNot { newSongs.contains(it) }
-                .apply { totalRandomSongCount = size }
-                .take(RANDOM_SONG_COUNT)
-            displayedRandomSongs
+                .takeLast(NEW_SONG_COUNT)
+                .asReversed() else listOf()
+            newSongs
                 .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
                 .let {
                     if (it.isNotEmpty()) {
-                        add(HomeHeaderViewModel(context.getString(R.string.home_random_songs), if (totalRandomSongCount > RANDOM_SONG_COUNT) ::refreshRandomSongs else null))
+                        add(HomeHeaderViewModel(context.getString(R.string.home_new_songs)))
                         addAll(it)
                     }
                 }
+
+            // Add the Random Collections module.
+            if (shouldShowRandomCollections) {
+                var totalRandomCollectionCount = 0
+                randomCollections
+                    .filterNot { newCollections.contains(it) }
+                    .apply { totalRandomCollectionCount = size }
+                    .take(RANDOM_COLLECTION_COUNT)
+                    .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
+                    .let {
+                        if (it.isNotEmpty()) {
+                            add(
+                                HomeHeaderViewModel(
+                                    context.getString(R.string.home_random_collections),
+                                    if (totalRandomCollectionCount > RANDOM_COLLECTION_COUNT) ::refreshRandomCollections else null
+                                )
+                            )
+                            addAll(it)
+                        }
+                    }
+            }
+
+            // Add the Random Songs module.
+            firstRandomSongIndex = if (shouldShowRandomSongs) size - 1 else Int.MAX_VALUE
+            if (shouldShowRandomSongs) {
+                var totalRandomSongCount = 0
+                displayedRandomSongs = randomSongs
+                    .filterNot { it.id == songOfTheDay?.id }
+                    .filterNot { newSongs.contains(it) }
+                    .apply { totalRandomSongCount = size }
+                    .take(RANDOM_SONG_COUNT)
+                displayedRandomSongs
+                    .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
+                    .let {
+                        if (it.isNotEmpty()) {
+                            add(HomeHeaderViewModel(context.getString(R.string.home_random_songs), if (totalRandomSongCount > RANDOM_SONG_COUNT) ::refreshRandomSongs else null))
+                            addAll(it)
+                        }
+                    }
+            }
         }
     }
 
@@ -523,6 +529,15 @@ class HomeViewModel(
         randomSongs = listOf()
         updateAdapterItems(false, false)
     }
+
+
+    //TODO: Prioritize results that begin with the searchQuery.
+    private fun Sequence<Song>.filterByQuery() =
+        query.trim().normalize().let { query ->
+            filter {
+                (it.getNormalizedTitle().contains(query, true)) || (it.getNormalizedArtist().contains(query, true))
+            }
+        }
 
     private fun Sequence<Collection>.filterCollectionsByLanguage() = filter {
         var shouldFilter = false
