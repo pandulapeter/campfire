@@ -562,6 +562,7 @@ class HomeViewModel(
             filter {
                 it.getNormalizedTitle().contains(query, true) || it.getNormalizedArtist().contains(query, true)
             }
+                .sortedByDescending { it.getNormalizedTitle().contains(query, true) }
                 .sortedByDescending { it.getNormalizedArtist().startsWith(query, true) }
                 .sortedByDescending { it.getNormalizedTitle().startsWith(query, true) }
         }
@@ -571,6 +572,7 @@ class HomeViewModel(
             filter {
                 it.getNormalizedTitle().contains(query, true) || it.getNormalizedDescription().contains(query, true)
             }
+                .sortedByDescending { it.getNormalizedTitle().contains(query, true) }
                 .sortedByDescending { it.getNormalizedDescription().startsWith(query, true) }
                 .sortedByDescending { it.getNormalizedTitle().startsWith(query, true) }
         }
