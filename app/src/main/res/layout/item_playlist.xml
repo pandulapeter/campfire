@@ -34,7 +34,8 @@
                 android:id="@+id/space"
                 android:layout_width="2dp"
                 android:layout_height="0dp"
-                app:layout_constraintStart_toEndOf="parent" />
+                app:layout_constraintStart_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView
                 android:id="@+id/drag_handle"
@@ -44,6 +45,7 @@
                 android:padding="@dimen/content_padding"
                 android:tint="?android:attr/textColorSecondary"
                 app:layout_constraintEnd_toEndOf="@id/space"
+                app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/ic_drag_handle_24dp"
                 app:visibility="@{viewModel.shouldShowDragHandle}" />
 

@@ -11,6 +11,7 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.support.annotation.IntDef;
+import android.support.annotation.Keep;
 import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
 import android.support.v7.widget.RecyclerView;
@@ -113,6 +114,11 @@ public class FastScroller {
         if (autoHideEnabled) {
             postAutoHideDelayed();
         }
+    }
+
+    @Keep
+    public void setOffsetX(int offsetX) {
+        offset.x = offsetX;
     }
 
     int getThumbHeight() {

@@ -21,10 +21,13 @@
 
         <android.support.constraint.ConstraintLayout
             android:id="@+id/fake_app_bar"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:clipChildren="false"
-            android:elevation="@{viewModel.appBarElevation}">
+            android:elevation="@{viewModel.appBarElevation}"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <View
                 android:id="@+id/background"
@@ -38,17 +41,21 @@
 
             <android.support.constraint.ConstraintLayout
                 android:id="@id/toolbar_container"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="@dimen/toolbar_height"
                 android:clipChildren="false"
                 android:elevation="@{viewModel.appBarElevation}"
-                android:paddingTop="@{viewModel.containerPadding}">
+                android:paddingTop="@{viewModel.containerPadding}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
                 <android.support.v4.widget.Space
                     android:id="@+id/space"
                     android:layout_width="@dimen/toolbar_first_keyline_fix"
                     android:layout_height="0dp"
-                    app:layout_constraintEnd_toStartOf="parent" />
+                    app:layout_constraintEnd_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
                     android:id="@+id/close"

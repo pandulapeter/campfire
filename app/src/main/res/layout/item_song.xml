@@ -43,7 +43,8 @@
                 android:id="@+id/space_1"
                 android:layout_width="2dp"
                 android:layout_height="0dp"
-                app:layout_constraintStart_toEndOf="parent" />
+                app:layout_constraintStart_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView
                 android:id="@+id/drag_handle"
@@ -62,7 +63,8 @@
                 android:id="@+id/space_2"
                 android:layout_width="2dp"
                 android:layout_height="0dp"
-                app:layout_constraintStart_toStartOf="@id/drag_handle" />
+                app:layout_constraintStart_toStartOf="@id/drag_handle"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView
                 android:id="@+id/playlist_action"
@@ -84,7 +86,8 @@
                 android:id="@+id/space_3"
                 android:layout_width="2dp"
                 android:layout_height="0dp"
-                app:layout_constraintStart_toStartOf="@id/playlist_action" />
+                app:layout_constraintStart_toStartOf="@id/playlist_action"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <FrameLayout
                 android:id="@+id/download_action_container"
