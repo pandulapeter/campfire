@@ -3,6 +3,33 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/filter_by_type"
+        android:title="@string/filter_by_type">
+
+        <menu>
+
+            <item
+                android:id="@+id/show_explicit"
+                android:title="@string/show_explicit"
+                app:actionLayout="@layout/widget_switch" />
+
+        </menu>
+
+    </item>
+
+    <item
+        android:id="@+id/filter_by_language"
+        android:title="@string/filter_by_language">
+
+        <menu>
+
+            <group android:id="@+id/language_container" />
+
+        </menu>
+
+    </item>
+
+    <item
         android:id="@+id/sections"
         android:title="@string/home_modules">
 
@@ -32,33 +59,6 @@
                 android:id="@+id/random_songs"
                 android:title="@string/home_random_songs"
                 app:actionLayout="@layout/widget_switch" />
-
-        </menu>
-
-    </item>
-
-    <item
-        android:id="@+id/filter_by_type"
-        android:title="@string/filter_by_type">
-
-        <menu>
-
-            <item
-                android:id="@+id/show_explicit"
-                android:title="@string/show_explicit"
-                app:actionLayout="@layout/widget_switch" />
-
-        </menu>
-
-    </item>
-
-    <item
-        android:id="@+id/filter_by_language"
-        android:title="@string/filter_by_language">
-
-        <menu>
-
-            <group android:id="@+id/language_container" />
 
         </menu>
 
