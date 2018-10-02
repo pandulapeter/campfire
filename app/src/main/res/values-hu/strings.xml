@@ -196,6 +196,7 @@
     <string name="options_changelog_0_8_0_description">
         <Data><![CDATA[
         • <strong>Keresés</strong> gomb a kezdőképernyőn és a gyűjtemények képernyőn<br>
+        • Okosabb <strong>kereső algoritmus</strong><br>
         • <strong>Hívj meg egy sörre</strong> opció a fejlesztés támogatásához
         ]]></Data>
     </string>

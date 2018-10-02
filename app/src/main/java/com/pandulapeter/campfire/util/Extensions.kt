@@ -248,6 +248,7 @@ fun String.normalize() = toUpperCase()
     .replace("'", "")
     .replace("/", "")
     .replace("-", "")
+    .replace(" ", "")
 
 fun String.removePrefixes() = this
     .removePrefix("A ")

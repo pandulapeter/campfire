@@ -196,6 +196,7 @@
     <string name="options_changelog_0_8_0_description">
         <Data><![CDATA[
         • Buton de <strong>căutare</strong> pe pagina de start și pe pagina de colecții<br>
+        • <strong>Algoritm de căutare</strong> îmbunătățit<br>
         • Opțiunea de <strong>a plăti o bere</strong> pentru dezvoltator
         ]]></Data>
     </string>

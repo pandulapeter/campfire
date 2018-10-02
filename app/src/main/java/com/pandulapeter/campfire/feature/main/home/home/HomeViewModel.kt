@@ -557,20 +557,22 @@ class HomeViewModel(
         updateAdapterItems(false, false)
     }
 
-    //TODO: Prioritize results that begin with the searchQuery.
     private fun Sequence<Song>.filterSongsByQuery() =
         query.trim().normalize().let { query ->
             filter {
                 it.getNormalizedTitle().contains(query, true) || it.getNormalizedArtist().contains(query, true)
             }
+                .sortedByDescending { it.getNormalizedArtist().startsWith(query, true) }
+                .sortedByDescending { it.getNormalizedTitle().startsWith(query, true) }
         }
 
-    //TODO: Prioritize results that begin with the searchQuery.
     private fun Sequence<Collection>.filterCollectionsByQuery() =
         query.trim().normalize().let { query ->
             filter {
                 it.getNormalizedTitle().contains(query, true) || it.getNormalizedDescription().contains(query, true)
             }
+                .sortedByDescending { it.getNormalizedDescription().startsWith(query, true) }
+                .sortedByDescending { it.getNormalizedTitle().startsWith(query, true) }
         }
 
     private fun Sequence<Collection>.filterCollectionsByLanguage() = filter {
