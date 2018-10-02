@@ -10,7 +10,9 @@
         app:tabGravity="fill"
         app:tabIndicatorFullWidth="false"
         app:tabMode="scrollable"
+        app:tabRippleColor="@color/tab_ripple"
         app:tabTextAppearance="@style/Tab"
+        app:tabTextColor="@color/menu_item_text"
         app:tabUnboundedRipple="true" />
 
 </layout>
