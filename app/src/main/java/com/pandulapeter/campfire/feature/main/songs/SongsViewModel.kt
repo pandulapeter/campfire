@@ -194,7 +194,6 @@ class SongsViewModel(
         }
     }
 
-    //TODO: Prioritize results that begin with the searchQuery.
     private fun Sequence<Song>.filterByQuery() = if (toolbarTextInputView.isTextInputVisible) {
         query.trim().normalize().let { query ->
             filter {

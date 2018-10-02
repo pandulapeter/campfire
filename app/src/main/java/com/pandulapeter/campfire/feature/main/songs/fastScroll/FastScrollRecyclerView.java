@@ -378,8 +378,6 @@ public class FastScrollRecyclerView extends RecyclerView implements RecyclerView
         int totalHeight = 0;
         FastScrollRecyclerView.MeasurableAdapter measurer = (FastScrollRecyclerView.MeasurableAdapter) getAdapter();
 
-        // TODO Take grid layouts into account
-
         for (int i = 0; i < adapterIndex; i++) {
             mScrollOffsets.put(i, totalHeight);
             int viewType = getAdapter().getItemViewType(i);
