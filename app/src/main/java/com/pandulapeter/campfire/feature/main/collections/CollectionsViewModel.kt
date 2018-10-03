@@ -13,10 +13,7 @@ import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.onPropertyChanged
-import com.pandulapeter.campfire.util.onTextChanged
-import com.pandulapeter.campfire.util.removePrefixes
-import com.pandulapeter.campfire.util.swap
+import com.pandulapeter.campfire.util.*
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.cancel
@@ -141,7 +138,7 @@ class CollectionsViewModel(
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
         if (collections.toList().isNotEmpty()) {
             placeholderText.set(R.string.collections_placeholder)
-            buttonText.set(R.string.filters)
+            buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
             buttonIcon.set(R.drawable.ic_filter_and_sort_24dp)
         }
     }
@@ -156,7 +153,8 @@ class CollectionsViewModel(
 
     fun updateData() = collectionRepository.updateData()
 
-    private fun Sequence<Collection>.createViewModels() = filterSaved()
+    private fun Sequence<Collection>.createViewModels() = filterCollectionsByQuery()
+        .filterSaved()
         .filterExplicit()
         .filterByLanguage()
         .sort()
@@ -217,6 +215,14 @@ class CollectionsViewModel(
             }
         }
     }
+
+    private fun Sequence<Collection>.filterCollectionsByQuery() = if (toolbarTextInputView.isTextInputVisible && query.isNotEmpty()) {
+        query.trim().normalize().let { query ->
+            filter {
+                it.getNormalizedTitle().contains(query, true) || it.getNormalizedDescription().contains(query, true)
+            }
+        }
+    } else this
 
     private fun Sequence<Collection>.filterSaved() = if (shouldShowSavedOnly) filter { it.isBookmarked ?: false } else this
 

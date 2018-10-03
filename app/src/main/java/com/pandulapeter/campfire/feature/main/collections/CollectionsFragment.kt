@@ -239,6 +239,11 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         viewModel.restoreToolbarButtons()
     }
 
+    override fun onBackPressed() = if (viewModel.toolbarTextInputView.isTextInputVisible) {
+        viewModel.toggleTextInputVisibility()
+        true
+    } else super.onBackPressed()
+
     override fun updateUI() {
         super.updateUI()
         linearLayoutManager.isScrollEnabled = true
