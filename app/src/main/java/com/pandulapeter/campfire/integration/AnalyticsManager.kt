@@ -26,6 +26,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_PLAYLIST_EDITED = "playlist_edited"
         private const val EVENT_HOME_FILTER_TOGGLED = "home_filter_toggled"
         private const val EVENT_HOME_SEARCH_QUERY_CHANGED = "home_search_query_changed"
+        private const val EVENT_COLLECTIONS_SEARCH_QUERY_CHANGED = "collections_search_query_changed"
         private const val EVENT_COLLECTION_BOOKMARKED_STATE_CHANGED = "collection_bookmarked_state_changed"
         private const val EVENT_COLLECTION_SORTING_MODE_UPDATED = "collection_sorting_mode_updated"
         private const val EVENT_COLLECTION_FILTER_TOGGLED = "collection_filter_toggled"
@@ -223,6 +224,11 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
 
     fun onHomeSearchQueryChanged(query: String) = trackAnalyticsEvent(
         EVENT_HOME_SEARCH_QUERY_CHANGED,
+        PARAM_KEY_QUERY to query
+    )
+
+    fun onCollectionsSearchQueryChanged(query: String) = trackAnalyticsEvent(
+        EVENT_COLLECTIONS_SEARCH_QUERY_CHANGED,
         PARAM_KEY_QUERY to query
     )
 

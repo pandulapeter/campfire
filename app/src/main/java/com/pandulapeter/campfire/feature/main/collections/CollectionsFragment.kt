@@ -1,7 +1,10 @@
 package com.pandulapeter.campfire.feature.main.collections
 
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.support.annotation.IdRes
+import android.support.graphics.drawable.AnimatedVectorDrawableCompat
 import android.support.v4.app.SharedElementCallback
 import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.RecyclerView
@@ -12,6 +15,8 @@ import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
+import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 
@@ -21,10 +26,45 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
     private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
     private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
+    private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
+    private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
+    private var Bundle.isEraseButtonVisible by BundleArgumentDelegate.Boolean("isEraseButtonVisible")
+    private var Bundle.isEraseButtonEnabled by BundleArgumentDelegate.Boolean("isEraseButtonEnabled")
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
+    private val searchToggle: ToolbarButton by lazy {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) {
+            viewModel.toggleTextInputVisibility()
+        }
+    }
+    private val drawableCloseToSearch by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_close_to_search_24dp) else getCampfireActivity().drawable(R.drawable.ic_search_24dp)
+    }
+    private val drawableSearchToClose by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_search_to_close_24dp) else getCampfireActivity().drawable(R.drawable.ic_close_24dp)
+    }
+    private val eraseButton: ToolbarButton by lazy {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) {
+            viewModel.toolbarTextInputView.textInput.setText("")
+        }.apply {
+            scaleX = 0f
+            scaleY = 0f
+            alpha = 0.5f
+            isEnabled = false
+        }
+    }
     override val viewModel: CollectionsViewModel by lazy {
         CollectionsViewModel(
+            toolbarTextInputView = ToolbarTextInputView(
+                getCampfireActivity().toolbarContext,
+                R.string.songs_search,
+                true
+            ).apply { title.updateToolbarTitle(R.string.main_collections) },
+            updateSearchToggleDrawable = {
+                searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
+                getCampfireActivity().transitionMode = true
+                binding.swipeRefreshLayout.isRefreshing = viewModel.isLoading.get()
+            },
             onDataLoaded = { languages ->
                 getCampfireActivity().enableSecondaryNavigationDrawer(R.menu.collections)
                 initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == CollectionsViewModel.SortingMode.TITLE }
@@ -43,6 +83,8 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                 }
                 getCampfireActivity().updateToolbarButtons(
                     listOf(
+                        eraseButton,
+                        searchToggle,
                         getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity().openSecondaryNavigationDrawer() }
                     ))
             },
@@ -75,10 +117,27 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
+        viewModel.shouldShowEraseButton.onPropertyChanged { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
+        viewModel.shouldEnableEraseButton.onPropertyChanged {
+            eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
+            eraseButton.isEnabled = it
+        }
+        viewModel.toolbarTextInputView.textInput.requestFocus()
         savedInstanceState?.let {
             viewModel.placeholderText.set(it.placeholderText)
             viewModel.buttonText.set(it.buttonText)
             viewModel.buttonIcon.set(it.buttonIcon)
+            if (it.isTextInputVisible) {
+                searchToggle.setImageDrawable(getCampfireActivity().drawable(R.drawable.ic_close_24dp))
+                viewModel.toolbarTextInputView.textInput.run {
+                    setText(savedInstanceState.searchQuery)
+                    setSelection(text.length)
+                    viewModel.query = text.toString()
+                }
+                viewModel.toolbarTextInputView.showTextInput()
+            }
+            viewModel.shouldShowEraseButton.set(savedInstanceState.isEraseButtonVisible)
+            viewModel.shouldEnableEraseButton.set(savedInstanceState.isEraseButtonEnabled)
         }
         defaultToolbar.updateToolbarTitle(R.string.main_collections)
         viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
@@ -100,6 +159,9 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                             viewModel.isDetailScreenOpen = true
                         }
                         getCampfireActivity().isUiBlocked = true
+                        if (viewModel.toolbarTextInputView.isTextInputVisible && viewModel.query.trim().isEmpty()) {
+                            viewModel.toggleTextInputVisibility()
+                        }
                         viewModel.collectionRepository.onCollectionOpened(it.id)
                         getCampfireActivity().openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
                     }
@@ -161,10 +223,16 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+        outState.isTextInputVisible = viewModel.toolbarTextInputView.isTextInputVisible
+        outState.searchQuery = viewModel.query
+        outState.isEraseButtonVisible = viewModel.shouldShowEraseButton.get()
+        outState.isEraseButtonEnabled = viewModel.shouldEnableEraseButton.get()
         outState.placeholderText = viewModel.placeholderText.get()
         outState.buttonText = viewModel.buttonText.get()
         outState.buttonIcon = viewModel.buttonIcon.get()
     }
+
+    override fun inflateToolbarTitle(context: Context) = viewModel.toolbarTextInputView
 
     override fun onResume() {
         super.onResume()

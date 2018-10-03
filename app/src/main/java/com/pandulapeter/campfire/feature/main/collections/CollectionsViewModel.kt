@@ -11,7 +11,10 @@ import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.onTextChanged
 import com.pandulapeter.campfire.util.removePrefixes
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.experimental.CommonPool
@@ -23,6 +26,8 @@ import org.koin.android.ext.android.inject
 import kotlin.coroutines.experimental.CoroutineContext
 
 class CollectionsViewModel(
+    val toolbarTextInputView: ToolbarTextInputView,
+    private val updateSearchToggleDrawable: (Boolean) -> Unit,
     private val onDataLoaded: (languages: List<Language>) -> Unit,
     private val openSecondaryNavigationDrawer: () -> Unit,
     private val newText: String
@@ -41,6 +46,22 @@ class CollectionsViewModel(
     val buttonText = ObservableInt(R.string.try_again)
     val buttonIcon = ObservableInt()
     val adapter = CollectionListAdapter()
+    val isSwipeRefreshEnabled = ObservableBoolean(true)
+    val shouldShowEraseButton = ObservableBoolean().apply {
+        onPropertyChanged {
+            isSwipeRefreshEnabled.set(!it)
+        }
+    }
+    val shouldEnableEraseButton = ObservableBoolean()
+    var query = ""
+        set(value) {
+            if (field != value) {
+                field = value
+                updateAdapterItems(true)
+                trackSearchEvent()
+                shouldEnableEraseButton.set(query.isNotEmpty())
+            }
+        }
 
     var sortingMode = SortingMode.fromIntValue(preferenceDatabase.collectionsSortingMode)
         set(value) {
@@ -78,6 +99,9 @@ class CollectionsViewModel(
 
     init {
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_COLLECTIONS
+        toolbarTextInputView.apply {
+            textInput.onTextChanged { if (isTextInputVisible) query = it }
+        }
     }
 
     override fun subscribe() {
@@ -142,6 +166,30 @@ class CollectionsViewModel(
     fun restoreToolbarButtons() {
         if (languages.isNotEmpty()) {
             onDataLoaded(languages)
+        }
+    }
+
+    fun toggleTextInputVisibility() {
+        toolbarTextInputView.run {
+            if (title.tag == null) {
+                val shouldScrollToTop = !query.isEmpty()
+                animateTextInputVisibility(!isTextInputVisible)
+                if (isTextInputVisible) {
+                    textInput.setText("")
+                }
+                updateSearchToggleDrawable(toolbarTextInputView.isTextInputVisible)
+                if (shouldScrollToTop) {
+                    updateAdapterItems(!isTextInputVisible)
+                }
+                buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
+            }
+            shouldShowEraseButton.set(isTextInputVisible)
+        }
+    }
+
+    private fun trackSearchEvent() {
+        if (query.isNotEmpty()) {
+            analyticsManager.onCollectionsSearchQueryChanged(query)
         }
     }
 
