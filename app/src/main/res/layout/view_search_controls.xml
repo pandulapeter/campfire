@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!--suppress AndroidElementNotAllowed -->
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
@@ -37,7 +38,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/content_padding"
             android:checked="@={viewModel.searchInArtists}"
-            android:text="@string/songs_search_in_artists" />
+            android:text="@{viewModel.isForCollections ? @string/collections_search_in_descriptions :  @string/songs_search_in_artists}"
+            tools:text="@string/songs_search_in_artists" />
 
     </LinearLayout>
 

@@ -52,12 +52,14 @@ class PreferenceDatabase(context: Context) {
     var lastCollectionsUpdateTimestamp by PreferenceFieldDelegate.Long("lastCollectionsUpdateTimestamp")
     var collectionsSortingMode by PreferenceFieldDelegate.Int("collectionsSortingMode", CollectionsViewModel.SortingMode.TITLE.intValue)
     var shouldShowSavedOnly by PreferenceFieldDelegate.Boolean("shouldShowSavedOnly")
+    var shouldSearchInCollectionTitles by PreferenceFieldDelegate.Boolean("shouldSearchInCollectionTitles", true)
+    var shouldSearchInCollectionDescriptions by PreferenceFieldDelegate.Boolean("shouldSearchInCollectionDescriptions", true)
 
     // Songs
     var lastSongsUpdateTimestamp by PreferenceFieldDelegate.Long("lastSongsUpdateTimestamp")
     var songsSortingMode by PreferenceFieldDelegate.Int("songsSortingMode", SongsViewModel.SortingMode.TITLE.intValue)
-    var shouldSearchInArtists by PreferenceFieldDelegate.Boolean("shouldSearchInArtists", true)
     var shouldSearchInTitles by PreferenceFieldDelegate.Boolean("shouldSearchInTitles", true)
+    var shouldSearchInArtists by PreferenceFieldDelegate.Boolean("shouldSearchInArtists", true)
     var shouldShowDownloadedOnly by PreferenceFieldDelegate.Boolean("shouldShowDownloadedOnly")
 
     // Preferences

@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.main.collections
 
 import android.content.Context
+import android.databinding.DataBindingUtil
 import android.os.Build
 import android.os.Bundle
 import android.support.annotation.IdRes
@@ -12,6 +13,9 @@ import android.view.*
 import android.widget.CompoundButton
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
+import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
+import com.pandulapeter.campfire.feature.main.songs.SearchControlsViewModel
+import com.pandulapeter.campfire.feature.main.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
@@ -43,6 +47,13 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
     private val drawableSearchToClose by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_search_to_close_24dp) else getCampfireActivity().drawable(R.drawable.ic_close_24dp)
     }
+    private val searchControlsViewModel = SearchControlsViewModel(true)
+    private val searchControlsBinding by lazy {
+        DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity().toolbarContext), R.layout.view_search_controls, null, false).apply {
+            viewModel = searchControlsViewModel
+            executePendingBindings()
+        }
+    }
     private val eraseButton: ToolbarButton by lazy {
         getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) {
             viewModel.toolbarTextInputView.textInput.setText("")
@@ -64,8 +75,14 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
                 getCampfireActivity().transitionMode = true
                 binding.swipeRefreshLayout.isRefreshing = viewModel.isLoading.get()
+                binding.root.post {
+                    if (isAdded) {
+                        searchControlsViewModel.isVisible.set(it)
+                    }
+                }
             },
             onDataLoaded = { languages ->
+                getCampfireActivity().updateAppBarView(searchControlsBinding.root)
                 getCampfireActivity().enableSecondaryNavigationDrawer(R.menu.collections)
                 initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == CollectionsViewModel.SortingMode.TITLE }
                 initializeCompoundButton(R.id.sort_by_date) { viewModel.sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE }
@@ -124,6 +141,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         }
         viewModel.toolbarTextInputView.textInput.requestFocus()
         savedInstanceState?.let {
+            searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
             viewModel.placeholderText.set(it.placeholderText)
             viewModel.buttonText.set(it.buttonText)
             viewModel.buttonIcon.set(it.buttonIcon)
@@ -149,6 +167,18 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             if (viewModel.state.get() == StateLayout.State.NORMAL) {
                 binding.swipeRefreshLayout.isRefreshing = it
             }
+        }
+        searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
+            binding.root.postDelayed(
+                { if (isAdded) viewModel.shouldSearchInTitles = it },
+                SongsFragment.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
+            )
+        }
+        searchControlsViewModel.searchInArtists.onPropertyChanged(this) {
+            binding.root.postDelayed(
+                { if (isAdded) viewModel.shouldSearchInDescriptions = it },
+                SongsFragment.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
+            )
         }
         viewModel.adapter.apply {
             itemClickListener = { position, clickedView, image ->

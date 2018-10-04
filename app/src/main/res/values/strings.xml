@@ -111,6 +111,7 @@
     <string name="collections_sort_by_date">Upload date</string>
     <string name="collections_sort_by_popularity">Popularity</string>
     <string name="collections_bookmarked_only">Bookmarked only</string>
+    <string name="collections_search_in_descriptions">Descriptions</string>
 
     <!-- Songs screen -->
     <string name="songs_placeholder">No matching songs found. Double-check the filters you set up</string>

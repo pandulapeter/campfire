@@ -92,6 +92,18 @@ class CollectionsViewModel(
                 updateAdapterItems(true)
             }
         }
+    var shouldSearchInTitles = preferenceDatabase.shouldSearchInCollectionTitles
+        set(value) {
+            field = value
+            updateAdapterItems(true)
+            trackSearchEvent()
+        }
+    var shouldSearchInDescriptions = preferenceDatabase.shouldSearchInCollectionDescriptions
+        set(value) {
+            field = value
+            updateAdapterItems(true)
+            trackSearchEvent()
+        }
     var languages = mutableListOf<Language>()
 
     init {
@@ -153,13 +165,13 @@ class CollectionsViewModel(
 
     fun updateData() = collectionRepository.updateData()
 
-    private fun Sequence<Collection>.createViewModels() = filterCollectionsByQuery()
+    private fun Sequence<Collection>.createViewModels() = filterByQuery()
         .filterSaved()
         .filterExplicit()
         .filterByLanguage()
         .sort()
         .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
-        .toList<CollectionListItemViewModel>()
+        .toList()
 
     fun restoreToolbarButtons() {
         if (languages.isNotEmpty()) {
@@ -187,7 +199,7 @@ class CollectionsViewModel(
 
     private fun trackSearchEvent() {
         if (query.isNotEmpty()) {
-            analyticsManager.onCollectionsSearchQueryChanged(query)
+            analyticsManager.onCollectionsSearchQueryChanged(query, shouldSearchInTitles, shouldSearchInDescriptions)
         }
     }
 
@@ -216,10 +228,10 @@ class CollectionsViewModel(
         }
     }
 
-    private fun Sequence<Collection>.filterCollectionsByQuery() = if (toolbarTextInputView.isTextInputVisible && query.isNotEmpty()) {
+    private fun Sequence<Collection>.filterByQuery() = if (toolbarTextInputView.isTextInputVisible && query.isNotEmpty()) {
         query.trim().normalize().let { query ->
             filter {
-                it.getNormalizedTitle().contains(query, true) || it.getNormalizedDescription().contains(query, true)
+                (it.getNormalizedTitle().contains(query, true) && shouldSearchInTitles) || (it.getNormalizedDescription().contains(query, true) && shouldSearchInDescriptions)
             }
         }
     } else this

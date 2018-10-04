@@ -84,6 +84,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_QUERY = "query"
         private const val PARAM_KEY_SEARCH_IN_ARTISTS = "search_in_artists"
         private const val PARAM_KEY_SEARCH_IN_TITLES = "search_in_titles"
+        private const val PARAM_KEY_SEARCH_IN_DESCRIPTIONS = "search_in_descriptions"
         private const val PARAM_KEY_STATE = "state"
         private const val PARAM_KEY_SHOULD_USE_GERMAN_NOTATION = "should_use_german_notation"
         private const val PARAM_KEY_SPEED = "speed"
@@ -227,9 +228,11 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_QUERY to query
     )
 
-    fun onCollectionsSearchQueryChanged(query: String) = trackAnalyticsEvent(
+    fun onCollectionsSearchQueryChanged(query: String, shouldSearchInTitles: Boolean, shouldSearchInDescriptions: Boolean) = trackAnalyticsEvent(
         EVENT_COLLECTIONS_SEARCH_QUERY_CHANGED,
-        PARAM_KEY_QUERY to query
+        PARAM_KEY_QUERY to query,
+        PARAM_KEY_SEARCH_IN_TITLES to if (shouldSearchInTitles) PARAM_VALUE_ON else PARAM_VALUE_OFF,
+        PARAM_KEY_SEARCH_IN_DESCRIPTIONS to if (shouldSearchInDescriptions) PARAM_VALUE_ON else PARAM_VALUE_OFF
     )
 
     fun onCollectionBookmarkedStateChanged(collectionId: String, isBookmarked: Boolean, source: String) = trackAnalyticsEvent(

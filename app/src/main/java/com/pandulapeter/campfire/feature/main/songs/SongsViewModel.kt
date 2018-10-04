@@ -194,7 +194,7 @@ class SongsViewModel(
         }
     }
 
-    private fun Sequence<Song>.filterByQuery() = if (toolbarTextInputView.isTextInputVisible) {
+    private fun Sequence<Song>.filterByQuery() = if (toolbarTextInputView.isTextInputVisible && query.isNotEmpty()) {
         query.trim().normalize().let { query ->
             filter {
                 (it.getNormalizedTitle().contains(query, true) && shouldSearchInTitles) || (it.getNormalizedArtist().contains(query, true) && shouldSearchInArtists)
