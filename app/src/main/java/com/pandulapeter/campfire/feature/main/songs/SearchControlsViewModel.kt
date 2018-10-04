@@ -10,21 +10,29 @@ class SearchControlsViewModel(val isForCollections: Boolean) : CampfireViewModel
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
     val isVisible = ObservableBoolean()
-    val searchInArtists = ObservableBoolean(preferenceDatabase.shouldSearchInArtists)
-    val searchInTitles = ObservableBoolean(preferenceDatabase.shouldSearchInTitles)
+    val searchInArtists = ObservableBoolean(if (isForCollections) preferenceDatabase.shouldSearchInCollectionDescriptions else preferenceDatabase.shouldSearchInArtists)
+    val searchInTitles = ObservableBoolean(if (isForCollections) preferenceDatabase.shouldSearchInCollectionTitles else preferenceDatabase.shouldSearchInTitles)
 
     init {
         searchInArtists.onPropertyChanged {
             if (!it) {
                 searchInTitles.set(true)
             }
-            preferenceDatabase.shouldSearchInArtists = it
+            if (isForCollections) {
+                preferenceDatabase.shouldSearchInCollectionDescriptions = it
+            } else {
+                preferenceDatabase.shouldSearchInArtists = it
+            }
         }
         searchInTitles.onPropertyChanged {
             if (!it) {
                 searchInArtists.set(true)
             }
-            preferenceDatabase.shouldSearchInTitles = it
+            if (isForCollections) {
+                preferenceDatabase.shouldSearchInCollectionTitles = it
+            } else {
+                preferenceDatabase.shouldSearchInTitles = it
+            }
         }
     }
 }
