@@ -32,7 +32,7 @@
             android:gravity="center"
             android:onClick="@{() -> viewModel.onLegalDocumentsClicked()}"
             android:textAllCaps="false"
-            android:textSize="8sp"
+            android:textSize="11sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/next_button"
             app:layout_constraintStart_toEndOf="@id/skip_button"

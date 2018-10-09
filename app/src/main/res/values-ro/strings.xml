@@ -41,10 +41,10 @@
     <string name="welcome_title">Bine ai venit!</string>
     <string name="welcome_language">Limba:</string>
     <string name="welcome_theme">Tema:</string>
-    <string name="welcome_conditions_part_1">"Prin folosirea aplicației confirmi acceptarea "</string>
-    <string name="welcome_conditions_part_2">termenilor de utilizare</string>
-    <string name="welcome_conditions_part_3">" și a "</string>
-    <string name="welcome_conditions_part_4">politicii de confidențialitate</string>
+    <string name="welcome_conditions_part_1">"Prin continuare accepți "</string>
+    <string name="welcome_conditions_part_2">termenii de utilizare</string>
+    <string name="welcome_conditions_part_3">" și "</string>
+    <string name="welcome_conditions_part_4">politica de confidențialitate</string>
     <string name="welcome_conditions_part_5">.</string>
 
     <!-- Onboarding screen / User data -->
