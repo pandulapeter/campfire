@@ -195,9 +195,9 @@
     <string name="options_changelog_what_is_new">Ce e nou</string>
     <string name="options_changelog_0_8_0_description">
         <Data><![CDATA[
-        • Buton de <strong>căutare</strong> pe pagina de start și pe pagina de colecții<br>
+        • Buton de <strong>căutare</strong> pe paginile de Start și Colecții<br>
         • <strong>Algoritm de căutare</strong> îmbunătățit<br>
-        • Opțiunea de <strong>a plăti o bere</strong> pentru dezvoltator
+        • Opțiunea de <strong>a cumpăra o bere</strong> dezvoltatorului
         ]]></Data>
     </string>
     <string name="options_changelog_0_7_0_description">

@@ -198,9 +198,9 @@
     <string name="options_changelog_0_8_0_version_name" translatable="false">v0.8</string>
     <string name="options_changelog_0_8_0_description">
         <Data><![CDATA[
-        • Added <strong>search</strong> option to the Home and Collections screens<br>
-        • Make the <strong>search algorithm</strong> smarter<br>
-        • Optional <strong>buy me a beer</strong> feature to support the developer
+        • <strong>Search</strong> button on the Home and Collections screens<br>
+        • Smarter <strong>search algorithm</strong><br>
+        • Optional <strong>buy me a beer</strong> feature for supporting the development
         ]]></Data>
     </string>
     <string name="options_changelog_0_7_0_version_name" translatable="false">v0.7</string>
