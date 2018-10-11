@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Splash" parent="Theme.AppCompat.NoActionBar">
+    <style name="SplashBase" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@drawable/bg_splash</item>
         <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
     </style>
+
+    <style name="Splash" parent="SplashBase" />
 
     <style name="AppThemeBase" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="colorAccent">@color/accent</item>
