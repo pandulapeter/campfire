@@ -27,8 +27,8 @@ class AboutViewModel(private val isUiBlocked: () -> Boolean) : CampfireViewModel
     private val analyticsManager by inject<AnalyticsManager>()
     val shouldShowErrorShowSnackbar = ObservableBoolean()
     val shouldShowNoEasterEggSnackbar = ObservableBoolean()
-    val shouldShowWorkInProgressSnackbar = ObservableBoolean()
     val shouldBlockUi = ObservableBoolean()
+    val shouldStartPurchaseFlow = ObservableBoolean()
 
     fun onLogoClicked() {
         analyticsManager.trackAboutLogoPressed()
@@ -71,8 +71,11 @@ class AboutViewModel(private val isUiBlocked: () -> Boolean) : CampfireViewModel
     }
 
     fun onBuyMeABeerClicked() {
-        analyticsManager.trackAboutLinkOpened(AnalyticsManager.PARAM_VALUE_ABOUT_BUY_ME_A_BEER)
-        shouldShowWorkInProgressSnackbar.set(true)
+        if (!isUiBlocked()) {
+            shouldBlockUi.set(true)
+            analyticsManager.trackAboutLinkOpened(AnalyticsManager.PARAM_VALUE_ABOUT_BUY_ME_A_BEER)
+            shouldStartPurchaseFlow.set(true)
+        }
     }
 
     fun onTermsAndConditionsClicked(context: Context) {

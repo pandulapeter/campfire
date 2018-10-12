@@ -256,7 +256,7 @@
         Az alkalmazást Pandula Péter készítette.
         ]]></Data>
     </string>
-    <string name="options_about_no_in_app_purchase">Ez még nincs kész… De azért köszönöm!</string>
+    <string name="options_about_in_app_purchase_success">Köszönöm szépen!</string>
     <string name="options_about_links">Külső hivatkozások</string>
     <string name="options_about_google_play">Értékelés Google Play-en</string>
     <string name="options_about_github">Megtekintés GitHub-on</string>

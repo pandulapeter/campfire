@@ -265,7 +265,7 @@
         This app was created by Pandula Péter.
         ]]></Data>
     </string>
-    <string name="options_about_no_in_app_purchase">Work in progress… But thanks anyway!</string>
+    <string name="options_about_in_app_purchase_success">Thank you very much!</string>
     <string name="options_about_links">External links</string>
     <string name="options_about_google_play">Rate on Google Play</string>
     <string name="options_about_github">View on GitHub</string>

@@ -256,7 +256,7 @@
         Aplicația a fost creată de Pandula Péter.
         ]]></Data>
     </string>
-    <string name="options_about_no_in_app_purchase">Încă lucrez la asta… Dar mersi oricum!</string>
+    <string name="options_about_in_app_purchase_success">Mulțumesc mult!</string>
     <string name="options_about_links">Linkuri externe</string>
     <string name="options_about_google_play">Scrie o recenzie pe Google Play</string>
     <string name="options_about_github">Vizualizează pe GitHub</string>
