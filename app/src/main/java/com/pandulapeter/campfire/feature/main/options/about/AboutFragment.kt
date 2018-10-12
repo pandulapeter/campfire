@@ -46,10 +46,16 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
     }
 
     override fun onPurchasesUpdated(@BillingClient.BillingResponse responseCode: Int, purchases: List<Purchase>?) {
-        if (responseCode == BillingClient.BillingResponse.OK && purchases != null) {
-            showSnackbar(R.string.options_about_in_app_purchase_success)
+        if (responseCode == BillingClient.BillingResponse.OK && purchases != null && purchases.isNotEmpty()) {
+            purchases[0].let { purchase ->
+                billingClient.consumeAsync(purchase.purchaseToken) { responseCode, _ ->
+                    if (responseCode == BillingClient.BillingResponse.OK) {
+                        showSnackbar(R.string.options_about_in_app_purchase_success)
+                    }
+                    getCampfireActivity().isUiBlocked = false
+                }
+            }
         }
-        getCampfireActivity().isUiBlocked = false
     }
 
     private fun startPurchaseFlow() {
