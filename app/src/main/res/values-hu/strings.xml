@@ -110,6 +110,7 @@
     <string name="collections_sort_by_date">Feltöltés dátuma</string>
     <string name="collections_sort_by_popularity">Népszerűség</string>
     <string name="collections_bookmarked_only">Csak cimkézett</string>
+    <string name="collections_search_in_descriptions">Leírásokban</string>
 
     <!-- Songs screen -->
     <string name="songs_placeholder">Nem található megfelelő dal. Ellenőrizd a beállított szűrőket</string>

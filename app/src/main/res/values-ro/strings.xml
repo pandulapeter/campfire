@@ -110,6 +110,7 @@
     <string name="collections_sort_by_date">Dată</string>
     <string name="collections_sort_by_popularity">Popularitate</string>
     <string name="collections_bookmarked_only">Doar cele marcate</string>
+    <string name="collections_search_in_descriptions">Descripții</string>
 
     <!-- Songs screen -->
     <string name="songs_placeholder">Nu s-au găsit piese pentru criteriile de căutare. Te rog să verifici filtrele</string>
