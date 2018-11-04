@@ -251,9 +251,11 @@ class CollectionsViewModel(
     }
 
     private fun Sequence<Collection>.sort() = when (sortingMode) {
-        SortingMode.TITLE -> sortedBy { it.date }.sortedBy { it.getNormalizedTitle().removePrefixes() }
-        SortingMode.UPLOAD_DATE -> sortedBy { it.getNormalizedTitle().removePrefixes() }.sortedBy { it.date }
-        SortingMode.POPULARITY -> sortedBy { it.date }.sortedBy { it.getNormalizedTitle().removePrefixes() }.sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
+        SortingMode.TITLE -> sortedByDescending { it.date }.sortedBy { it.getNormalizedTitle().removePrefixes() }
+        SortingMode.UPLOAD_DATE -> sortedBy { it.getNormalizedTitle().removePrefixes() }.sortedByDescending { it.date }
+        SortingMode.POPULARITY -> sortedByDescending { it.date }.sortedBy {
+            it.getNormalizedTitle().removePrefixes()
+        }.sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
     }
 
     enum class SortingMode(val intValue: Int) {

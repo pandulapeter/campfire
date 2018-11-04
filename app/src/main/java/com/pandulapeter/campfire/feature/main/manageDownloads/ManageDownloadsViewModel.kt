@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.util.removePrefixes
 
 class ManageDownloadsViewModel(context: Context, private val openSongs: () -> Unit) : BaseSongListViewModel(context) {
 
@@ -26,6 +27,7 @@ class ManageDownloadsViewModel(context: Context, private val openSongs: () -> Un
 
     override fun Sequence<Song>.createViewModels() = filter { songDetailRepository.isSongDownloaded(it.id) }
         .filter { it.id != songToDeleteId }
+        .sortedBy { it.getNormalizedTitle().removePrefixes() }
         .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
         .toList()
 
