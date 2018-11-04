@@ -82,6 +82,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipChildren="false"
+                app:refreshing="@{viewModel.isLoading}"
                 app:enabled="@{viewModel.isSwipeRefreshEnabled}">
 
                 <com.pandulapeter.campfire.feature.main.songs.fastScroll.FastScrollRecyclerView

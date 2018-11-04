@@ -17,11 +17,9 @@ import com.pandulapeter.campfire.feature.main.playlist.PlaylistViewModel
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
-import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
-import com.pandulapeter.campfire.util.onPropertyChanged
 
 
 abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFragment<FragmentBaseSongListBinding, VM>(R.layout.fragment_base_song_list) {
@@ -105,11 +103,6 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
                             action = { viewModel.downloadSong(song) })
                     }
                 }
-            }
-        }
-        viewModel.isLoading.onPropertyChanged(this) {
-            if (viewModel.state.get() == StateLayout.State.NORMAL) {
-                binding.swipeRefreshLayout.isRefreshing = it
             }
         }
         binding.swipeRefreshLayout.run {

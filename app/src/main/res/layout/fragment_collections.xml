@@ -24,7 +24,8 @@
             android:id="@+id/swipe_refresh_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:enabled="@{viewModel.isSwipeRefreshEnabled}">
+            app:enabled="@{viewModel.isSwipeRefreshEnabled}"
+            app:refreshing="@{viewModel.isLoading}">
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recycler_view"

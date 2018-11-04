@@ -24,7 +24,6 @@ import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.setTitleSubtitle
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
-import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -108,7 +107,6 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             updateSearchToggleDrawable = {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
                 getCampfireActivity().transitionMode = true
-                binding.swipeRefreshLayout.isRefreshing = viewModel.isLoading.get()
             },
             context = getCampfireActivity()
         )
@@ -202,11 +200,6 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                             action = { viewModel.downloadSong(song) })
                     }
                 }
-            }
-        }
-        viewModel.isLoading.onPropertyChanged(this) {
-            if (viewModel.state.get() == StateLayout.State.NORMAL) {
-                binding.swipeRefreshLayout.isRefreshing = it
             }
         }
         binding.swipeRefreshLayout.run {

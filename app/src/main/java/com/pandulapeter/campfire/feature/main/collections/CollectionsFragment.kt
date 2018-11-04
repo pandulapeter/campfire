@@ -18,7 +18,6 @@ import com.pandulapeter.campfire.feature.main.songs.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.main.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
-import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -74,7 +73,6 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             updateSearchToggleDrawable = {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
                 getCampfireActivity().transitionMode = true
-                binding.swipeRefreshLayout.isRefreshing = viewModel.isLoading.get()
                 binding.root.post {
                     if (isAdded) {
                         searchControlsViewModel.isVisible.set(it)
@@ -162,11 +160,6 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             showSnackbar(
                 message = R.string.collections_update_error,
                 action = { viewModel.updateData() })
-        }
-        viewModel.isLoading.onPropertyChanged(this) {
-            if (viewModel.state.get() == StateLayout.State.NORMAL) {
-                binding.swipeRefreshLayout.isRefreshing = it
-            }
         }
         searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
             binding.root.postDelayed(
