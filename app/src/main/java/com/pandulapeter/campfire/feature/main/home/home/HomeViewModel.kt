@@ -23,18 +23,14 @@ import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.normalize
-import com.pandulapeter.campfire.util.onPropertyChanged
-import com.pandulapeter.campfire.util.onTextChanged
-import com.pandulapeter.campfire.util.swap
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.cancel
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.withContext
+import com.pandulapeter.campfire.util.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.util.*
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.CoroutineContext
 
 class HomeViewModel(
     private val onDataLoaded: (languages: List<Language>) -> Unit,
@@ -383,8 +379,8 @@ class HomeViewModel(
     private fun updateAdapterItems(shouldRefreshRandom: Boolean, shouldScrollToTop: Boolean = false) {
         if (collectionRepository.isCacheLoaded() && songRepository.isCacheLoaded() && collections.toList().isNotEmpty() && songs.toList().isNotEmpty()) {
             coroutine?.cancel()
-            coroutine = launch(UI) {
-                withContext(CommonPool) {
+            coroutine = GlobalScope.launch(WORKER) {
+                async(UI) {
                     if (shouldRefreshRandom) {
                         randomSongs = listOf()
                         randomCollections = listOf()
@@ -404,7 +400,7 @@ class HomeViewModel(
                             .shuffled()
                     }
                     createViewModels()
-                }.let {
+                }.await().let {
                     adapter.shouldScrollToTop = shouldScrollToTop
                     adapter.items = it
                     onListUpdated(it)

@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.main.managePlaylists
 import android.annotation.SuppressLint
 import android.databinding.DataBindingUtil
 import android.support.annotation.LayoutRes
+import android.support.v7.recyclerview.extensions.ListAdapter
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -10,34 +11,16 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import com.pandulapeter.campfire.PlaylistItemBinding
 import com.pandulapeter.campfire.R
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.cancel
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.withContext
-import kotlin.coroutines.experimental.CoroutineContext
 
-class ManagePlaylistListAdapter : RecyclerView.Adapter<ManagePlaylistListAdapter.PlaylistViewHolder>() {
-    private var coroutine: CoroutineContext? = null
+class ManagePlaylistListAdapter : ListAdapter<PlaylistViewModel, ManagePlaylistListAdapter.PlaylistViewHolder>(object : DiffUtil.ItemCallback<PlaylistViewModel>() {
+    override fun areItemsTheSame(old: PlaylistViewModel, new: PlaylistViewModel) = old.playlist.id == new.playlist.id
+
+    override fun areContentsTheSame(old: PlaylistViewModel, new: PlaylistViewModel) = old == new
+}) {
     var items = listOf<PlaylistViewModel>()
         set(newItems) {
-            coroutine?.cancel()
-            coroutine = launch(UI) {
-                val oldItems = items
-                withContext(CommonPool) {
-                    DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-                        override fun getOldListSize() = oldItems.size
-
-                        override fun getNewListSize() = newItems.size
-
-                        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int) =
-                            oldItems[oldItemPosition].playlist.id == newItems[newItemPosition].playlist.id
-
-                        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
-                    })
-                }.dispatchUpdatesTo(this@ManagePlaylistListAdapter)
-                field = newItems
-            }
+            field = newItems
+            submitList(newItems)
         }
 
     private var itemClickListener: (position: Int) -> Unit = { _ -> }
@@ -59,9 +42,7 @@ class ManagePlaylistListAdapter : RecyclerView.Adapter<ManagePlaylistListAdapter
         holder.binding.executePendingBindings()
     }
 
-    override fun getItemCount() = items.size
-
-    override fun getItemId(position: Int) = items[position].playlist.id.hashCode().toLong()
+    override fun getItemId(position: Int) = getItem(position).playlist.id.hashCode().toLong()
 
     class PlaylistViewHolder(val binding: PlaylistItemBinding) : RecyclerView.ViewHolder(binding.root) {
 

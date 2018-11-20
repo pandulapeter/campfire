@@ -3,11 +3,12 @@ package com.pandulapeter.campfire.data.repository
 import com.pandulapeter.campfire.data.model.local.HistoryItem
 import com.pandulapeter.campfire.data.persistence.Database
 import com.pandulapeter.campfire.data.repository.shared.BaseRepository
+import com.pandulapeter.campfire.util.UI
+import com.pandulapeter.campfire.util.WORKER
 import com.pandulapeter.campfire.util.swap
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 class HistoryRepository(private val database: Database) : BaseRepository<HistoryRepository.Subscriber>() {
     private val data = mutableListOf<HistoryItem>()
@@ -25,35 +26,27 @@ class HistoryRepository(private val database: Database) : BaseRepository<History
     fun isCacheLoaded() = isCacheLoaded
 
     fun addHistoryItem(historyItem: HistoryItem) {
-        launch(UI) {
-            data.swap(data.filter { it.id != historyItem.id })
-            data.add(historyItem)
-            withContext(CommonPool) { database.historyDao().insert(historyItem) }
-            notifyDataChanged()
-        }
+        data.swap(data.filter { it.id != historyItem.id })
+        data.add(historyItem)
+        notifyDataChanged()
+        GlobalScope.launch(WORKER) { database.historyDao().insert(historyItem) }
     }
 
     fun deleteHistoryItem(songId: String) {
         data.swap(data.filter { it.id != songId })
-        launch(UI) {
-            withContext(CommonPool) { database.historyDao().delete(songId) }
-            notifyDataChanged()
-        }
+        notifyDataChanged()
+        GlobalScope.launch(WORKER) { database.historyDao().delete(songId) }
     }
 
     fun deleteAllHistory() {
         data.clear()
-        launch(UI) {
-            withContext(CommonPool) { database.historyDao().deleteAll() }
-            notifyDataChanged()
-        }
+        notifyDataChanged()
+        GlobalScope.launch(WORKER) { database.historyDao().deleteAll() }
     }
 
     private fun refreshDataSet() {
-        launch(UI) {
-            withContext(CommonPool) {
-                database.historyDao().getAll()
-            }.let {
+        GlobalScope.launch(WORKER) {
+            async(UI) { database.historyDao().getAll() }.await().let {
                 data.swap(it)
                 isCacheLoaded = true
                 notifyDataChanged()
@@ -61,7 +54,7 @@ class HistoryRepository(private val database: Database) : BaseRepository<History
         }
     }
 
-    private fun notifyDataChanged() = subscribers.forEach { it.onHistoryUpdated(data) }
+    private fun notifyDataChanged() = GlobalScope.launch(UI) { subscribers.forEach { it.onHistoryUpdated(data) } }
 
     interface Subscriber {
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import com.pandulapeter.campfire.feature.detail.page.parsing.Note
+import kotlinx.coroutines.Dispatchers
 
 fun consume(action: () -> Unit): Boolean {
     action()
@@ -34,3 +35,6 @@ fun generateNotationExample(shouldUseGermanNotation: Boolean) = listOf(
     Note.ASharp.getName(shouldUseGermanNotation),
     Note.B.getName(shouldUseGermanNotation)
 ).joinToString(", ")
+
+val UI = Dispatchers.Main
+val WORKER = Dispatchers.Default

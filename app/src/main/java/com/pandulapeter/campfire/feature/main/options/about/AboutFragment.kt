@@ -26,18 +26,16 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
             shouldBlockUi.onEventTriggered { getCampfireActivity().isUiBlocked = true }
         }
     }
-    private val scale by lazy {
-        object : Property<View, Float>(Float::class.java, "scale") {
+    private val scale = object : Property<View, Float>(Float::class.java, "scale") {
 
-            override fun set(view: View?, value: Float) {
-                view?.run {
-                    view.scaleX = value
-                    view.scaleY = value
-                }
+        override fun set(view: View?, value: Float) {
+            view?.run {
+                view.scaleX = value
+                view.scaleY = value
             }
-
-            override fun get(view: View) = view.scaleX
         }
+
+        override fun get(view: View) = view.scaleX
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

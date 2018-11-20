@@ -6,13 +6,12 @@ import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.Database
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.shared.BaseRepository
+import com.pandulapeter.campfire.util.UI
+import com.pandulapeter.campfire.util.WORKER
 import com.pandulapeter.campfire.util.enqueueCall
 import com.pandulapeter.campfire.util.swap
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class CollectionRepository(
     private val preferenceDatabase: PreferenceDatabase,
@@ -36,11 +35,9 @@ class CollectionRepository(
         }
 
     init {
-        launch(UI) {
-            withContext(CommonPool) {
-                data.swap(database.collectionDao().getAll())
-                updateLanguages()
-            }
+        GlobalScope.launch(WORKER) {
+            data.swap(database.collectionDao().getAll())
+            updateLanguages()
             if (System.currentTimeMillis() - preferenceDatabase.lastCollectionsUpdateTimestamp > UPDATE_LIMIT) {
                 updateData()
             } else {
@@ -70,27 +67,24 @@ class CollectionRepository(
         isLoading = true
         networkManager.service.getCollections().enqueueCall(
             onSuccess = { newData ->
-                launch(UI) {
-                    withContext(CommonPool) {
-                        if (data.isNotEmpty()) {
-                            newData.forEach { song ->
-                                val oldSong = data.find { it.id == song.id }
-                                if (oldSong == null) {
-                                    song.isNew = true
-                                } else {
-                                    song.isBookmarked = oldSong.isBookmarked
-                                }
+                GlobalScope.launch(WORKER) {
+                    if (data.isNotEmpty()) {
+                        newData.forEach { song ->
+                            val oldSong = data.find { it.id == song.id }
+                            if (oldSong == null) {
+                                song.isNew = true
+                            } else {
+                                song.isBookmarked = oldSong.isBookmarked
                             }
                         }
-                        data.swap(newData)
-                        updateLanguages()
                     }
-                    launch(CommonPool) { database.collectionDao().updateAll(data) }
-                    notifyDataChanged()
-                    isLoading = false
-                    preferenceDatabase.lastCollectionsUpdateTimestamp = System.currentTimeMillis()
-
+                    data.swap(newData)
+                    updateLanguages()
                 }
+                database.collectionDao().updateAll(data)
+                notifyDataChanged()
+                isLoading = false
+                preferenceDatabase.lastCollectionsUpdateTimestamp = System.currentTimeMillis()
             },
             onFailure = {
                 isLoading = false
@@ -110,7 +104,7 @@ class CollectionRepository(
     fun toggleBookmarkedState(collectionId: String) {
         data.find { it.id == collectionId }?.let {
             it.isBookmarked = !(it.isBookmarked ?: false)
-            async(CommonPool) { database.collectionDao().insert(it) }
+            GlobalScope.launch(WORKER) { database.collectionDao().insert(it) }
         }
     }
 
@@ -132,7 +126,7 @@ class CollectionRepository(
         languages.swap(languages.distinct().sortedBy { it.nameResource })
     }
 
-    private fun notifyDataChanged() = subscribers.forEach { it.onCollectionsUpdated(data) }
+    private fun notifyDataChanged() = GlobalScope.launch(UI) { subscribers.forEach { it.onCollectionsUpdated(data) } }
 
     interface Subscriber {
 

@@ -14,13 +14,12 @@ import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.cancel
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import kotlin.coroutines.experimental.CoroutineContext
+import kotlin.coroutines.CoroutineContext
 
 class CollectionsViewModel(
     val toolbarTextInputView: ToolbarTextInputView,
@@ -217,8 +216,8 @@ class CollectionsViewModel(
     private fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
         if (collectionRepository.isCacheLoaded()) {
             coroutine?.cancel()
-            coroutine = launch(UI) {
-                withContext(CommonPool) { collections.createViewModels() }.let {
+            coroutine = GlobalScope.launch(WORKER) {
+                async(UI) { collections.createViewModels() }.await().let {
                     adapter.shouldScrollToTop = shouldScrollToTop
                     adapter.items = it
                     onListUpdated(it)

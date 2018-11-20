@@ -6,13 +6,14 @@ import com.pandulapeter.campfire.data.model.remote.SongDetail
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.Database
 import com.pandulapeter.campfire.data.repository.shared.BaseRepository
+import com.pandulapeter.campfire.util.UI
+import com.pandulapeter.campfire.util.WORKER
 import com.pandulapeter.campfire.util.enqueueCall
 import com.pandulapeter.campfire.util.swap
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.delay
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class SongDetailRepository(
     private val networkManager: NetworkManager,
@@ -37,13 +38,13 @@ class SongDetailRepository(
     fun getSongDetail(song: Song, shouldDelay: Boolean = false) {
         if (!isSongDownloading(song.id)) {
             if (isSongDownloaded(song.id)) {
-                launch(UI) {
-                    withContext(CommonPool) { database.songDetailDao().get(song.id) }.let { songDetail ->
+                GlobalScope.launch(WORKER) {
+                    database.songDetailDao().get(song.id).also { songDetail ->
                         if (songDetail == null) {
                             deleteSong(song.id)
-                            getSongDetail(song)
+                            launch(UI) { getSongDetail(song) }
                         } else {
-                            subscribers.forEach { it.onSongDetailRepositoryDownloadSuccess(songDetail) }
+                            launch(UI) { subscribers.forEach { it.onSongDetailRepositoryDownloadSuccess(songDetail) } }
                         }
                     }
                 }
@@ -57,13 +58,13 @@ class SongDetailRepository(
             networkManager.service.getSong(song.id).enqueueCall(
                 onSuccess = { songDetail ->
                     songDetail.version = song.version ?: 0
-                    launch(UI) {
-                        withContext(CommonPool) { database.songDetailDao().insert(songDetail) }
+                    GlobalScope.launch(WORKER) {
+                        database.songDetailDao().insert(songDetail)
                         if (shouldDelay && System.currentTimeMillis() - started < 300) {
                             delay(300)
                         }
                         refreshDataSet()
-                        subscribers.forEach { it.onSongDetailRepositoryDownloadSuccess(songDetail) }
+                        launch(UI) { subscribers.forEach { it.onSongDetailRepositoryDownloadSuccess(songDetail) } }
                         downloadQueue.remove(song.id)
                         notifyDownloadQueChanged()
                     }
@@ -85,25 +86,19 @@ class SongDetailRepository(
 
     fun deleteSong(songId: String) {
         data.swap(data.filter { it.id != songId })
-        launch(UI) {
-            withContext(CommonPool) { database.songDetailDao().delete(songId) }
-            notifyDataChanged()
-        }
+        notifyDataChanged()
+        GlobalScope.launch(WORKER) { database.songDetailDao().delete(songId) }
     }
 
     fun deleteAllSongs() {
         data.clear()
-        launch(UI) {
-            withContext(CommonPool) { database.songDetailDao().deleteAll() }
-            notifyDataChanged()
-        }
+        notifyDataChanged()
+        GlobalScope.launch(WORKER) { database.songDetailDao().deleteAll() }
     }
 
     private fun refreshDataSet() {
-        launch(UI) {
-            withContext(CommonPool) {
-                database.songDetailDao().getAllMetadata()
-            }.let {
+        GlobalScope.launch(WORKER) {
+            async(UI) { database.songDetailDao().getAllMetadata() }.await().let {
                 data.swap(it)
                 isCacheLoaded = true
                 notifyDataChanged()
@@ -111,9 +106,9 @@ class SongDetailRepository(
         }
     }
 
-    private fun notifyDataChanged() = subscribers.forEach { it.onSongDetailRepositoryUpdated(data) }
+    private fun notifyDataChanged() = GlobalScope.launch(UI) { subscribers.forEach { it.onSongDetailRepositoryUpdated(data) } }
 
-    private fun notifyDownloadQueChanged() = subscribers.forEach { it.onSongDetailRepositoryDownloadQueueChanged(downloadQueue) }
+    private fun notifyDownloadQueChanged() = GlobalScope.launch(UI) { subscribers.forEach { it.onSongDetailRepositoryDownloadQueueChanged(downloadQueue) } }
 
     interface Subscriber {
 

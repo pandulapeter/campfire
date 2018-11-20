@@ -6,12 +6,12 @@ import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.Database
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.shared.BaseRepository
+import com.pandulapeter.campfire.util.UI
+import com.pandulapeter.campfire.util.WORKER
 import com.pandulapeter.campfire.util.enqueueCall
 import com.pandulapeter.campfire.util.swap
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class SongRepository(
     private val preferenceDatabase: PreferenceDatabase,
@@ -30,16 +30,14 @@ class SongRepository(
         set(value) {
             if (field != value) {
                 field = value
-                subscribers.forEach { it.onSongRepositoryLoadingStateChanged(value) }
+                GlobalScope.launch(UI) { subscribers.forEach { it.onSongRepositoryLoadingStateChanged(value) } }
             }
         }
 
     init {
-        launch(UI) {
-            withContext(CommonPool) {
-                data.swap(database.songDao().getAll())
-                updateLanguages()
-            }
+        GlobalScope.launch(WORKER) {
+            data.swap(database.songDao().getAll())
+            updateLanguages()
             if (System.currentTimeMillis() - preferenceDatabase.lastSongsUpdateTimestamp > UPDATE_LIMIT) {
                 updateData()
             } else {
@@ -69,19 +67,17 @@ class SongRepository(
         isLoading = true
         networkManager.service.getSongs().enqueueCall(
             onSuccess = { newData ->
-                launch(UI) {
-                    withContext(CommonPool) {
-                        if (data.isNotEmpty()) {
-                            newData.forEach { song ->
-                                if (data.find { it.id == song.id } == null) {
-                                    song.isNew = true
-                                }
+                GlobalScope.launch(WORKER) {
+                    if (data.isNotEmpty()) {
+                        newData.forEach { song ->
+                            if (data.find { it.id == song.id } == null) {
+                                song.isNew = true
                             }
                         }
-                        data.swap(newData)
-                        updateLanguages()
                     }
-                    launch(CommonPool) { database.songDao().updateAll(data) }
+                    data.swap(newData)
+                    updateLanguages()
+                    database.songDao().updateAll(data)
                     notifyDataChanged()
                     isLoading = false
                     preferenceDatabase.lastSongsUpdateTimestamp = System.currentTimeMillis()
@@ -119,7 +115,7 @@ class SongRepository(
         )
     }
 
-    private fun notifyDataChanged() = subscribers.forEach { it.onSongRepositoryDataUpdated(data) }
+    private fun notifyDataChanged() = GlobalScope.launch(UI) { subscribers.forEach { it.onSongRepositoryDataUpdated(data) } }
 
     interface Subscriber {
 

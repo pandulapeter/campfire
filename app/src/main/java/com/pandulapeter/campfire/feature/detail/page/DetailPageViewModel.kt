@@ -13,11 +13,11 @@ import com.pandulapeter.campfire.feature.detail.page.parsing.SongParser
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.util.UI
+import com.pandulapeter.campfire.util.WORKER
 import com.pandulapeter.campfire.util.onPropertyChanged
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class DetailPageViewModel(
@@ -97,13 +97,12 @@ class DetailPageViewModel(
     fun updateTextSize() = textSize.set(preferenceDatabase.fontSize * initialTextSize)
 
     fun refreshText(onDone: () -> Unit = {}) {
-        launch(UI) {
-            text.set(
-                withContext(CommonPool) {
-                    songParser.parseSong(rawText, preferenceDatabase.shouldShowChords, preferenceDatabase.shouldUseGermanNotation, transposition.get())
-                }
-            )
-            onDone()
+        GlobalScope.launch(WORKER) {
+            val parsed = songParser.parseSong(rawText, preferenceDatabase.shouldShowChords, preferenceDatabase.shouldUseGermanNotation, transposition.get())
+            launch(UI) {
+                text.set(parsed)
+                onDone()
+            }
         }
     }
 }
