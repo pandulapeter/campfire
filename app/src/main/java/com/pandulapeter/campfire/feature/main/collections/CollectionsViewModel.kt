@@ -216,8 +216,8 @@ class CollectionsViewModel(
     private fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
         if (collectionRepository.isCacheLoaded()) {
             coroutine?.cancel()
-            coroutine = GlobalScope.launch(WORKER) {
-                async(UI) { collections.createViewModels() }.await().let {
+            coroutine = GlobalScope.launch(UI) {
+                async(WORKER) { collections.createViewModels() }.await().let {
                     adapter.shouldScrollToTop = shouldScrollToTop
                     adapter.items = it
                     onListUpdated(it)

@@ -379,8 +379,8 @@ class HomeViewModel(
     private fun updateAdapterItems(shouldRefreshRandom: Boolean, shouldScrollToTop: Boolean = false) {
         if (collectionRepository.isCacheLoaded() && songRepository.isCacheLoaded() && collections.toList().isNotEmpty() && songs.toList().isNotEmpty()) {
             coroutine?.cancel()
-            coroutine = GlobalScope.launch(WORKER) {
-                async(UI) {
+            coroutine = GlobalScope.launch(UI) {
+                async(WORKER) {
                     if (shouldRefreshRandom) {
                         randomSongs = listOf()
                         randomCollections = listOf()

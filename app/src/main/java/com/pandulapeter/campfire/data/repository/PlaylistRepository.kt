@@ -144,8 +144,8 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
     }
 
     private fun refreshDataSet() {
-        GlobalScope.launch(WORKER) {
-            async(UI) { database.playlistDao().getAll() }.await().let { newData ->
+        GlobalScope.launch(UI) {
+            async(WORKER) { database.playlistDao().getAll() }.await().let { newData ->
                 val finalNewData = newData.toMutableList()
                 val favorites = Playlist(
                     id = Playlist.FAVORITES_ID,

@@ -45,8 +45,8 @@ class HistoryRepository(private val database: Database) : BaseRepository<History
     }
 
     private fun refreshDataSet() {
-        GlobalScope.launch(WORKER) {
-            async(UI) { database.historyDao().getAll() }.await().let {
+        GlobalScope.launch(UI) {
+            async(WORKER) { database.historyDao().getAll() }.await().let {
                 data.swap(it)
                 isCacheLoaded = true
                 notifyDataChanged()

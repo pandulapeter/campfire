@@ -97,8 +97,8 @@ class SongDetailRepository(
     }
 
     private fun refreshDataSet() {
-        GlobalScope.launch(WORKER) {
-            async(UI) { database.songDetailDao().getAllMetadata() }.await().let {
+        GlobalScope.launch(UI) {
+            async(WORKER) { database.songDetailDao().getAllMetadata() }.await().let {
                 data.swap(it)
                 isCacheLoaded = true
                 notifyDataChanged()
