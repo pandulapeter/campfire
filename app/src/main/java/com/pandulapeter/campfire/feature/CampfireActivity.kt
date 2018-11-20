@@ -216,12 +216,16 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         binding.appBarLayout.addOnOffsetChangedListener(AppBarLayout.OnOffsetChangedListener { appBarLayout, _ -> ViewCompat.setElevation(appBarLayout, appBarElevation) })
 
         // Initialize the drawer layout.
+        val header = binding.primaryNavigation.getHeaderView(0)
         binding.drawerLayout.addDrawerListener(
             onDrawerStateChanged = {
                 currentFragment?.onDrawerStateChanged(it)
                 if (it == DrawerLayout.STATE_DRAGGING) {
                     hideKeyboard(currentFocus)
                 }
+            },
+            onDrawerSlide = {
+                header.translationX = (1 - it) * header.width / 2
             })
 
         // Initialize the primary side navigation drawer.
