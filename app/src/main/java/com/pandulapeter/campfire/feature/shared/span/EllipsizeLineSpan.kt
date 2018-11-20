@@ -53,11 +53,15 @@ class EllipsizeLineSpan(@ColorInt private val color: Int? = null) : ReplacementS
             } else {
                 val ellipsizeWidth = paint.measureText(ELLIPSIZE_CHARACTER)
                 var newEnd = start + paint.breakText(text, start, end, true, layoutRight - x - ellipsizeWidth, null)
-                while (text[newEnd - 1] == ' ' || text[newEnd - 1] == ',' || text[newEnd - 1] == '.') {
-                    newEnd--
+                if (newEnd > 0) {
+                    while (text[newEnd - 1] == ' ' || text[newEnd - 1] == ',' || text[newEnd - 1] == '.') {
+                        newEnd--
+                    }
+                    canvas.drawText(text, start, newEnd, x, y.toFloat(), paint)
+                    canvas.drawText(ELLIPSIZE_CHARACTER, x + paint.measureText(text, start, newEnd), y.toFloat(), paint)
+                } else {
+                    canvas.drawText(ELLIPSIZE_CHARACTER, x, y.toFloat(), paint)
                 }
-                canvas.drawText(text, start, newEnd, x, y.toFloat(), paint)
-                canvas.drawText(ELLIPSIZE_CHARACTER, x + paint.measureText(text, start, newEnd), y.toFloat(), paint)
             }
         }
     }
