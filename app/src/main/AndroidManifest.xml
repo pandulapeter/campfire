@@ -28,6 +28,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <layout
+                android:minHeight="250dp"
+                android:minWidth="300dp" />
+
         </activity>
 
         <meta-data
