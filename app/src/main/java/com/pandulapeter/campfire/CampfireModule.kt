@@ -12,35 +12,35 @@ import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
-import org.koin.dsl.module.applicationContext
+import org.koin.dsl.module.module
 
-val integrationModule = applicationContext {
-    bean { AppShortcutManager(get(), get(), get()) }
-    bean { DeepLinkManager() }
-    bean { FirstTimeUserExperienceManager(get()) }
+val integrationModule = module {
+    factory { AppShortcutManager(get(), get(), get()) }
+    factory { DeepLinkManager() }
+    factory { FirstTimeUserExperienceManager(get()) }
 }
 
-val networkingModule = applicationContext {
-    bean { GsonBuilder().create() }
-    bean { AnalyticsManager(get(), get(), get()) }
-    bean { NetworkManager(get()) }
+val networkingModule = module {
+    single { GsonBuilder().create() }
+    factory { AnalyticsManager(get(), get(), get()) }
+    factory { NetworkManager(get()) }
 }
 
-val repositoryModule = applicationContext {
-    bean { SongRepository(get(), get(), get()) }
-    bean { SongDetailRepository(get(), get()) }
-    bean { ChangelogRepository() }
-    bean { HistoryRepository(get()) }
-    bean { PlaylistRepository(get()) }
-    bean { CollectionRepository(get(), get(), get()) }
+val repositoryModule = module {
+    single { SongRepository(get(), get(), get()) }
+    single { SongDetailRepository(get(), get()) }
+    single { ChangelogRepository() }
+    single { HistoryRepository(get()) }
+    single { PlaylistRepository(get()) }
+    single { CollectionRepository(get(), get(), get()) }
 }
 
-val persistenceModule = applicationContext {
-    bean { PreferenceDatabase(get()) }
-    bean { Room.databaseBuilder(get(), Database::class.java, "songDatabase.db").build() }
+val persistenceModule = module {
+    single { PreferenceDatabase(get()) }
+    single { Room.databaseBuilder(get(), Database::class.java, "songDatabase.db").build() }
 }
 
-val detailModule = applicationContext {
-    bean { DetailEventBus() }
-    bean { DetailPageEventBus() }
+val detailModule = module {
+    single { DetailEventBus() }
+    single { DetailPageEventBus() }
 }
