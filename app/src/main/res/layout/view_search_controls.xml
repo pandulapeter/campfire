@@ -31,6 +31,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/content_padding"
             android:checked="@={viewModel.searchInTitles}"
+            android:ellipsize="end"
+            android:lines="1"
             android:text="@string/songs_search_in_titles" />
 
         <CheckBox
@@ -38,6 +40,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/content_padding"
             android:checked="@={viewModel.searchInArtists}"
+            android:ellipsize="end"
+            android:lines="1"
             android:text="@{viewModel.isForCollections ? @string/collections_search_in_descriptions :  @string/songs_search_in_artists}"
             tools:text="@string/songs_search_in_artists" />
 

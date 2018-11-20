@@ -18,6 +18,7 @@
 
         <activity
             android:name=".feature.CampfireActivity"
+            android:configChanges="orientation|screenSize|screenLayout"
             android:launchMode="singleTop"
             android:theme="@style/Splash"
             android:windowSoftInputMode="adjustNothing">
