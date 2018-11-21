@@ -2,9 +2,8 @@ package com.pandulapeter.campfire.feature.main.shared
 
 import android.animation.ObjectAnimator
 import android.graphics.Canvas
-import android.support.v4.view.ViewCompat
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.helper.ItemTouchHelper
+import androidx.core.view.ViewCompat
+import androidx.recyclerview.widget.ItemTouchHelper
 
 abstract class ElevationItemTouchHelperCallback(
     private val activeElevationChange: Float,
@@ -16,8 +15,8 @@ abstract class ElevationItemTouchHelperCallback(
 
     override fun onChildDraw(
         canvas: Canvas,
-        recyclerView: RecyclerView,
-        viewHolder: RecyclerView.ViewHolder,
+        recyclerView: androidx.recyclerview.widget.RecyclerView,
+        viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
         dX: Float,
         dY: Float,
         actionState: Int,
@@ -29,12 +28,12 @@ abstract class ElevationItemTouchHelperCallback(
         }
     }
 
-    override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
+    override fun clearView(recyclerView: androidx.recyclerview.widget.RecyclerView, viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder) {
         super.clearView(recyclerView, viewHolder)
         updateElevation(recyclerView, viewHolder, false)
     }
 
-    private fun updateElevation(recyclerView: RecyclerView, holder: RecyclerView.ViewHolder, elevate: Boolean) {
+    private fun updateElevation(recyclerView: androidx.recyclerview.widget.RecyclerView, holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, elevate: Boolean) {
         if (elevate) {
             originalElevation = ViewCompat.getElevation(holder.itemView)
             ObjectAnimator.ofFloat(
@@ -60,7 +59,7 @@ abstract class ElevationItemTouchHelperCallback(
         }
     }
 
-    private fun findMaxElevation(recyclerView: RecyclerView) = (0 until recyclerView.childCount)
+    private fun findMaxElevation(recyclerView: androidx.recyclerview.widget.RecyclerView) = (0 until recyclerView.childCount)
         .map { ViewCompat.getElevation(recyclerView.getChildAt(it)) }
         .max() ?: 0f
 }

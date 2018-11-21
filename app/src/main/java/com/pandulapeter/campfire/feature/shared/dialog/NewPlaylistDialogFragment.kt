@@ -1,12 +1,11 @@
 package com.pandulapeter.campfire.feature.shared.dialog
 
-import android.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.v4.app.FragmentManager
-import android.support.v7.app.AlertDialog
 import android.view.LayoutInflater
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
+import androidx.appcompat.app.AlertDialog
+import androidx.databinding.DataBindingUtil
 import com.pandulapeter.campfire.NewPlaylistBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
@@ -19,7 +18,7 @@ class NewPlaylistDialogFragment : BaseDialogFragment() {
     companion object {
         private var Bundle.source by BundleArgumentDelegate.String("source")
 
-        fun show(fragmentManager: FragmentManager, source: String) {
+        fun show(fragmentManager: androidx.fragment.app.FragmentManager, source: String) {
             NewPlaylistDialogFragment().withArguments { it.source = source }.let { it.show(fragmentManager, it.tag) }
         }
     }

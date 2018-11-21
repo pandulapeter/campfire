@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature.main.home
 
 import android.os.Bundle
-import android.support.v4.app.FragmentManager
 import android.view.MenuItem
 import android.view.View
 import com.crashlytics.android.Crashlytics
@@ -67,7 +66,10 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
             .commit()
     }
 
-    private inline fun <reified T : CampfireFragment<*, *>> FragmentManager.handleReplace(tag: String = T::class.java.name, crossinline newInstance: () -> T) = beginTransaction()
+    private inline fun <reified T : CampfireFragment<*, *>> androidx.fragment.app.FragmentManager.handleReplace(
+        tag: String = T::class.java.name,
+        crossinline newInstance: () -> T
+    ) = beginTransaction()
         .replace(R.id.home_container, findFragmentByTag(tag) ?: newInstance.invoke(), tag)
         .commit()
 }

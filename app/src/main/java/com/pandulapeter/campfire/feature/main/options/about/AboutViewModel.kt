@@ -3,9 +3,9 @@ package com.pandulapeter.campfire.feature.main.options.about
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.databinding.ObservableBoolean
 import android.net.Uri
-import android.support.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager

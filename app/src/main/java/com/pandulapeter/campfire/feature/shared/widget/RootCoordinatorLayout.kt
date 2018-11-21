@@ -3,12 +3,12 @@ package com.pandulapeter.campfire.feature.shared.widget
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.support.design.widget.CoordinatorLayout
 import android.util.AttributeSet
 import android.view.WindowInsets
 import com.pandulapeter.campfire.util.obtainColor
 
-class RootCoordinatorLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : CoordinatorLayout(context, attrs, defStyleAttr) {
+class RootCoordinatorLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+    androidx.coordinatorlayout.widget.CoordinatorLayout(context, attrs, defStyleAttr) {
 
     private val paint = Paint().apply { color = context.obtainColor(android.R.attr.colorPrimary) }
     var insetChangeListener: (statusBarHeight: Int) -> Unit = {}

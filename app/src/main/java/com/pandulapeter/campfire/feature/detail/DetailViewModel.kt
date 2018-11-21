@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire.feature.detail
 
-import android.databinding.ObservableField
+import androidx.databinding.ObservableField
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel

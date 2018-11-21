@@ -12,7 +12,7 @@
 
     </data>
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/border"
@@ -22,7 +22,7 @@
         app:cardCornerRadius="@dimen/card_corner"
         app:contentPadding="@dimen/content_padding">
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:animateLayoutChanges="true"
@@ -30,7 +30,7 @@
             android:paddingEnd="@dimen/card_corner"
             android:paddingStart="@dimen/nothing">
 
-            <android.support.v4.widget.Space
+            <androidx.legacy.widget.Space
                 android:id="@+id/space"
                 android:layout_width="2dp"
                 android:layout_height="0dp"
@@ -60,8 +60,8 @@
                 app:secondaryText="@{viewModel.itemCount == 0 ? @string/manage_playlists_song_count_empty : @plurals/manage_playlists_song_count(viewModel.itemCount, viewModel.itemCount)}"
                 tools:text="Playlist title\nSong count" />
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
 </layout>

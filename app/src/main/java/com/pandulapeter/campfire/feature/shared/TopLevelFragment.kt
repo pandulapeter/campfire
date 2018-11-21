@@ -1,15 +1,15 @@
 package com.pandulapeter.campfire.feature.shared
 
 import android.content.Context
-import android.databinding.ViewDataBinding
 import android.os.Bundle
-import android.support.annotation.CallSuper
-import android.support.annotation.LayoutRes
-import android.support.annotation.StringRes
-import android.support.v7.widget.AppCompatTextView
 import android.view.Gravity
 import android.view.View
 import android.widget.TextView
+import androidx.annotation.CallSuper
+import androidx.annotation.LayoutRes
+import androidx.annotation.StringRes
+import androidx.appcompat.widget.AppCompatTextView
+import androidx.databinding.ViewDataBinding
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.main.songs.SongsFragment
 

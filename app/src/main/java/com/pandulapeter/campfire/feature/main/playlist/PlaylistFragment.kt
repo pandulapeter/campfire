@@ -2,9 +2,9 @@ package com.pandulapeter.campfire.feature.main.playlist
 
 import android.content.Context
 import android.os.Bundle
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.feature.main.shared.ElevationItemTouchHelperCallback
@@ -93,14 +93,18 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         viewModel.toolbarTextInputView?.textInput?.requestFocus()
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
 
-            override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) =
+            override fun getMovementFlags(recyclerView: androidx.recyclerview.widget.RecyclerView, viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder) =
                 if (viewModel.isInEditMode.get())
                     makeMovementFlags(
                         if (viewModel.adapter.itemCount > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
                         ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     ) else 0
 
-            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) =
+            override fun onMove(
+                recyclerView: androidx.recyclerview.widget.RecyclerView,
+                viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
+                target: androidx.recyclerview.widget.RecyclerView.ViewHolder
+            ) =
                 consume {
                     viewHolder.adapterPosition.let { originalPosition ->
                         target.adapterPosition.let { targetPosition ->
@@ -115,9 +119,9 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
                     }
                 }
 
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+            override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {
                 viewHolder.adapterPosition.let { position ->
-                    if (position != RecyclerView.NO_POSITION) {
+                    if (position != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                         analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST)
                         viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.playlistSwipeCompleted = true

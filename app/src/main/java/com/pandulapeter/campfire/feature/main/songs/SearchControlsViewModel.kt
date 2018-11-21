@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire.feature.main.songs
 
-import android.databinding.ObservableBoolean
+import androidx.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.util.onPropertyChanged

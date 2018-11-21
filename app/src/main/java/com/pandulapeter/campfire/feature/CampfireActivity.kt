@@ -8,21 +8,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
-import android.databinding.DataBindingUtil
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
-import android.support.annotation.MenuRes
-import android.support.design.internal.NavigationMenuView
-import android.support.design.widget.AppBarLayout
-import android.support.design.widget.NavigationView
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
-import android.support.v4.view.ViewCompat
-import android.support.v4.widget.DrawerLayout
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.app.AppCompatDelegate
 import android.transition.Explode
 import android.view.Gravity
 import android.view.SubMenu
@@ -32,7 +21,16 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.annotation.MenuRes
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.ViewCompat
+import androidx.databinding.DataBindingUtil
+import androidx.drawerlayout.widget.DrawerLayout
 import com.crashlytics.android.Crashlytics
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.internal.NavigationMenuView
+import com.google.android.material.navigation.NavigationView
 import com.jakewharton.processphoenix.ProcessPhoenix
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
@@ -220,7 +218,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         binding.drawerLayout.addDrawerListener(
             onDrawerStateChanged = {
                 currentFragment?.onDrawerStateChanged(it)
-                if (it == DrawerLayout.STATE_DRAGGING) {
+                if (it == androidx.drawerlayout.widget.DrawerLayout.STATE_DRAGGING) {
                     hideKeyboard(currentFocus)
                 }
             },
@@ -310,7 +308,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             lastCollectionId = savedInstanceState.lastCollectionId
         }
         binding.drawerLayout.setDrawerLockMode(
-            if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
+            if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED else androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED,
             Gravity.START
         )
     }
@@ -519,7 +517,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     fun enableSecondaryNavigationDrawer(@MenuRes menuResourceId: Int) {
-        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.END)
+        binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.END)
         binding.secondaryNavigation.menu.clear()
         binding.secondaryNavigation.inflateMenu(menuResourceId)
     }
@@ -605,12 +603,12 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
         // Reset the primary navigation drawer.
         binding.drawerLayout.setDrawerLockMode(
-            if (isBackStackEmpty && shouldShowAppBar) DrawerLayout.LOCK_MODE_UNLOCKED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED,
+            if (isBackStackEmpty && shouldShowAppBar) androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED else androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED,
             Gravity.START
         )
 
         // Reset the secondary navigation drawer.
-        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.END)
+        binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.END)
         binding.secondaryNavigation.menu.clear()
 
         // Reset the floating action button.
@@ -730,7 +728,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 .replace(R.id.fragment_container, CollectionDetailFragment.newInstance(collection))
                 .apply {
                     if (clickedView == null || image == null) {
-                        setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                        setTransition(androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                     } else {
                         setReorderingAllowed(true)
                         clickedView.transitionName = "card-$lastCollectionId"
@@ -832,7 +830,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             .replace(R.id.fragment_container, DetailFragment.newInstance(songs, index, shouldShowManagePlaylist, clickedView == null))
             .apply {
                 if (clickedView == null) {
-                    setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                    setTransition(androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                 } else {
                     setReorderingAllowed(true)
                     addSharedElement(clickedView, clickedView.transitionName)
@@ -881,13 +879,16 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
     }
 
-    private fun FragmentManager.clearBackStack() = (0..backStackEntryCount).forEach { popBackStackImmediate() }
+    private fun androidx.fragment.app.FragmentManager.clearBackStack() = (0..backStackEntryCount).forEach { popBackStackImmediate() }
 
-    private inline fun <reified T : TopLevelFragment<*, *>> FragmentManager.handleReplace(tag: String = T::class.java.name, crossinline newInstance: () -> T) {
+    private inline fun <reified T : TopLevelFragment<*, *>> androidx.fragment.app.FragmentManager.handleReplace(
+        tag: String = T::class.java.name,
+        crossinline newInstance: () -> T
+    ) {
         currentFragment?.exitTransition = null
         beginTransaction()
             .replace(R.id.fragment_container, findFragmentByTag(tag) ?: newInstance.invoke(), tag)
-            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+            .setTransition(androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_FADE)
             .commit()
     }
 

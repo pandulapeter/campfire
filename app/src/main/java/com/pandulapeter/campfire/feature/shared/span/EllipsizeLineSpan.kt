@@ -3,9 +3,9 @@ package com.pandulapeter.campfire.feature.shared.span
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
-import android.support.annotation.ColorInt
 import android.text.style.LineBackgroundSpan
 import android.text.style.ReplacementSpan
+import androidx.annotation.ColorInt
 import kotlin.math.ceil
 
 class EllipsizeLineSpan(@ColorInt private val color: Int? = null) : ReplacementSpan(), LineBackgroundSpan {

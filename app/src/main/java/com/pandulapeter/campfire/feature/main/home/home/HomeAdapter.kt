@@ -1,16 +1,15 @@
 package com.pandulapeter.campfire.feature.main.home.home
 
-import android.support.v7.recyclerview.extensions.ListAdapter
-import android.support.v7.util.DiffUtil
-import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewHolder
 import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewHolder
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
 
-class HomeAdapter : ListAdapter<Any, RecyclerView.ViewHolder>(object : DiffUtil.ItemCallback<Any>() {
+class HomeAdapter : ListAdapter<Any, androidx.recyclerview.widget.RecyclerView.ViewHolder>(object : DiffUtil.ItemCallback<Any>() {
     override fun areItemsTheSame(old: Any, new: Any) = when (old) {
         is HomeHeaderViewModel -> when (new) {
             is HomeHeaderViewModel -> old.title == new.title
@@ -37,7 +36,7 @@ class HomeAdapter : ListAdapter<Any, RecyclerView.ViewHolder>(object : DiffUtil.
         private const val VIEW_TYPE_SONG = 2
     }
 
-    private var recyclerView: RecyclerView? = null
+    private var recyclerView: androidx.recyclerview.widget.RecyclerView? = null
     var shouldScrollToTop = false
     var items = listOf<HomeItemViewModel>()
         set(newItems) {
@@ -58,11 +57,11 @@ class HomeAdapter : ListAdapter<Any, RecyclerView.ViewHolder>(object : DiffUtil.
         setHasStableIds(true)
     }
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+    override fun onAttachedToRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
         this.recyclerView = recyclerView
     }
 
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+    override fun onDetachedFromRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
         this.recyclerView = null
     }
 
@@ -87,9 +86,9 @@ class HomeAdapter : ListAdapter<Any, RecyclerView.ViewHolder>(object : DiffUtil.
         else -> throw IllegalArgumentException("Unsupported item type.")
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) = Unit
+    override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) = Unit
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: List<Any>) {
+    override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int, payloads: List<Any>) {
         when (holder) {
             is HomeHeaderViewHolder.HeaderViewHolder -> (getItem(position) as? HomeHeaderViewModel)?.let { holder.bind(it) }
             is CollectionListItemViewHolder.CollectionViewHolder -> {

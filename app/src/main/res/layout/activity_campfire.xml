@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <android.support.v4.widget.DrawerLayout
+    <androidx.drawerlayout.widget.DrawerLayout
         android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -16,13 +16,13 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <android.support.design.widget.CoordinatorLayout
+            <androidx.coordinatorlayout.widget.CoordinatorLayout
                 android:id="@+id/coordinator_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false">
 
-                <android.support.design.widget.AppBarLayout
+                <com.google.android.material.appbar.AppBarLayout
                     android:id="@+id/app_bar_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -30,7 +30,7 @@
                     android:visibility="invisible"
                     app:elevation="@dimen/toolbar_elevation">
 
-                    <android.support.constraint.ConstraintLayout
+                    <androidx.constraintlayout.widget.ConstraintLayout
                         android:id="@+id/toolbar_container"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -38,14 +38,14 @@
                         android:clipChildren="false"
                         android:clipToPadding="false">
 
-                        <android.support.v4.widget.Space
+                        <androidx.legacy.widget.Space
                             android:id="@+id/toolbar_bottom"
                             android:layout_width="0dp"
                             android:layout_height="@dimen/toolbar_height"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
-                        <android.support.v4.widget.Space
+                        <androidx.legacy.widget.Space
                             android:id="@+id/first_keyline_fix"
                             android:layout_width="@dimen/toolbar_first_keyline_fix"
                             android:layout_height="0dp"
@@ -103,9 +103,9 @@
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
-                    </android.support.constraint.ConstraintLayout>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
-                </android.support.design.widget.AppBarLayout>
+                </com.google.android.material.appbar.AppBarLayout>
 
                 <FrameLayout
                     android:id="@+id/fragment_container"
@@ -114,9 +114,9 @@
                     android:clipChildren="false"
                     app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-            </android.support.design.widget.CoordinatorLayout>
+            </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-            <android.support.v7.widget.CardView
+            <androidx.cardview.widget.CardView
                 android:id="@+id/auto_scroll_control"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -139,11 +139,10 @@
                     android:padding="@dimen/content_padding"
                     android:progress="2" />
 
-            </android.support.v7.widget.CardView>
+            </androidx.cardview.widget.CardView>
 
             <com.pandulapeter.campfire.feature.shared.widget.FloatingActionButton
                 android:id="@+id/floating_action_button"
-                style="@style/Widget.MaterialComponents.FloatingActionButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
@@ -157,7 +156,7 @@
 
         </com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout>
 
-        <android.support.design.widget.NavigationView
+        <com.google.android.material.navigation.NavigationView
             android:id="@+id/primary_navigation"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -169,13 +168,13 @@
             app:itemTextColor="@color/menu_item_text"
             app:menu="@menu/campfire" />
 
-        <android.support.design.widget.NavigationView
+        <com.google.android.material.navigation.NavigationView
             android:id="@+id/secondary_navigation"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="end"
             app:insetForeground="?attr/colorPrimary" />
 
-    </android.support.v4.widget.DrawerLayout>
+    </androidx.drawerlayout.widget.DrawerLayout>
 
 </layout>

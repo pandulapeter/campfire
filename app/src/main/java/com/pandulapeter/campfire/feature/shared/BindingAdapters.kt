@@ -1,10 +1,6 @@
 package com.pandulapeter.campfire.feature.shared
 
-import android.databinding.BindingAdapter
 import android.graphics.drawable.Drawable
-import android.support.annotation.DrawableRes
-import android.support.annotation.StringRes
-import android.support.graphics.drawable.AnimatedVectorDrawableCompat
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextUtils
@@ -14,6 +10,10 @@ import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
+import androidx.databinding.BindingAdapter
+import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.pandulapeter.campfire.R

@@ -1,8 +1,8 @@
 package com.pandulapeter.campfire.feature.detail.page
 
-import android.databinding.ObservableField
-import android.databinding.ObservableFloat
-import android.databinding.ObservableInt
+import androidx.databinding.ObservableField
+import androidx.databinding.ObservableFloat
+import androidx.databinding.ObservableInt
 import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.model.remote.SongDetail

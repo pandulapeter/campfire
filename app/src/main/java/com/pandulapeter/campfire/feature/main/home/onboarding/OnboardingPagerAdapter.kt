@@ -1,13 +1,11 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding
 
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentStatePagerAdapter
 import com.pandulapeter.campfire.feature.main.home.onboarding.page.contentLanguage.ContentLanguageFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.page.songAppearance.SongAppearanceFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.page.userData.UserDataFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.page.welcome.WelcomeFragment
 
-class OnboardingPagerAdapter(fragmentManager: FragmentManager) : FragmentStatePagerAdapter(fragmentManager) {
+class OnboardingPagerAdapter(fragmentManager: androidx.fragment.app.FragmentManager) : androidx.fragment.app.FragmentStatePagerAdapter(fragmentManager) {
 
     override fun getItem(position: Int) = when (position) {
         0 -> WelcomeFragment()

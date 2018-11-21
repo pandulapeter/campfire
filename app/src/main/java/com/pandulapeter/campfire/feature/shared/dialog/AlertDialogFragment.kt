@@ -1,9 +1,8 @@
 package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.os.Bundle
-import android.support.annotation.StringRes
-import android.support.v4.app.FragmentManager
-import android.support.v7.app.AlertDialog
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AlertDialog
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.withArguments
 
@@ -19,7 +18,7 @@ class AlertDialogFragment : BaseDialogFragment() {
 
         fun show(
             id: Int,
-            fragmentManager: FragmentManager,
+            fragmentManager: androidx.fragment.app.FragmentManager,
             @StringRes title: Int,
             @StringRes message: Int,
             @StringRes positiveButton: Int,

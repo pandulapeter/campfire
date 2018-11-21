@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.feature.main.options.changelog
 
 import android.os.Bundle
-import android.support.v7.widget.DefaultItemAnimator
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsChangelogBinding
@@ -12,7 +11,7 @@ class ChangelogFragment : CampfireFragment<FragmentOptionsChangelogBinding, Chan
     override val viewModel = ChangelogViewModel()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
+        binding.recyclerView.itemAnimator = object : androidx.recyclerview.widget.DefaultItemAnimator() {
             init {
                 supportsChangeAnimations = false
             }

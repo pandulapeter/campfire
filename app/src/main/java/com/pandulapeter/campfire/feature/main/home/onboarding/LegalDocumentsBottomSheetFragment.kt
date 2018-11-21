@@ -1,10 +1,8 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding
 
 import android.net.Uri
-import android.support.customtabs.CustomTabsIntent
-import android.support.v4.app.DialogFragment
-import android.support.v4.app.FragmentManager
 import android.widget.TextView
+import androidx.browser.customtabs.CustomTabsIntent
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentLegalDocumentsBottomSheetBinding
 import com.pandulapeter.campfire.feature.CampfireActivity
@@ -15,8 +13,8 @@ import com.pandulapeter.campfire.util.color
 class LegalDocumentsBottomSheetFragment : BaseBottomSheetDialogFragment<FragmentLegalDocumentsBottomSheetBinding>(R.layout.fragment_legal_documents_bottom_sheet) {
 
     companion object {
-        fun show(fragmentManager: FragmentManager) {
-            LegalDocumentsBottomSheetFragment().run { (this as DialogFragment).show(fragmentManager, tag) }
+        fun show(fragmentManager: androidx.fragment.app.FragmentManager) {
+            LegalDocumentsBottomSheetFragment().run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
         }
     }
 

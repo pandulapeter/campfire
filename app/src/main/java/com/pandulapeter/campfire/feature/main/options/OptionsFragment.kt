@@ -1,9 +1,9 @@
 package com.pandulapeter.campfire.feature.main.options
 
-import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import androidx.databinding.DataBindingUtil
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsBinding
 import com.pandulapeter.campfire.databinding.ViewOptionsTabsBinding

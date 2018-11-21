@@ -1,10 +1,9 @@
 package com.pandulapeter.campfire.feature.main.shared.baseSongList
 
-import android.support.v7.recyclerview.extensions.ListAdapter
-import android.support.v7.util.DiffUtil
-import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import com.pandulapeter.campfire.feature.main.songs.fastScroll.FastScrollRecyclerView
 
 class SongListAdapter : ListAdapter<SongListItemViewModel, SongListItemViewHolder<*, *>>(object : DiffUtil.ItemCallback<SongListItemViewModel>() {
@@ -24,7 +23,7 @@ class SongListAdapter : ListAdapter<SongListItemViewModel, SongListItemViewHolde
         private const val VIEW_TYPE_HEADER = 1
     }
 
-    private var recyclerView: RecyclerView? = null
+    private var recyclerView: androidx.recyclerview.widget.RecyclerView? = null
     private val headerItemHeight by lazy {
         recyclerView?.run {
             onCreateViewHolder(this, VIEW_TYPE_HEADER).itemView.let {
@@ -61,11 +60,11 @@ class SongListAdapter : ListAdapter<SongListItemViewModel, SongListItemViewHolde
         setHasStableIds(true)
     }
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+    override fun onAttachedToRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
         this.recyclerView = recyclerView
     }
 
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+    override fun onDetachedFromRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
         this.recyclerView = null
     }
 
@@ -106,7 +105,7 @@ class SongListAdapter : ListAdapter<SongListItemViewModel, SongListItemViewHolde
         }
     }
 
-    override fun getViewTypeHeight(recyclerView: RecyclerView?, viewHolder: SongListItemViewHolder<*, *>?, viewType: Int) =
+    override fun getViewTypeHeight(recyclerView: androidx.recyclerview.widget.RecyclerView?, viewHolder: SongListItemViewHolder<*, *>?, viewType: Int) =
         if (viewType == VIEW_TYPE_SONG) songItemHeight else headerItemHeight
 
     override fun getItemId(position: Int) = getItem(position).getItemId()

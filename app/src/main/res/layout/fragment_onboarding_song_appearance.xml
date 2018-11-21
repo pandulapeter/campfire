@@ -19,7 +19,7 @@
         android:paddingBottom="@dimen/onboarding_bottom_margin"
         android:scrollbars="none">
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipToPadding="false"
@@ -102,7 +102,7 @@
                 app:title="@{@string/song_appearance_lyrics_only}"
                 tools:text="@string/song_appearance_lyrics_only" />
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </ScrollView>
 

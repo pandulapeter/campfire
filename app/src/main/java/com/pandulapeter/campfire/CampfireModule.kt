@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire
 
-import android.arch.persistence.room.Room
+import androidx.room.Room
 import com.google.gson.GsonBuilder
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.Database

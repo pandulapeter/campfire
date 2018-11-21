@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire.data.model.local
 
-import android.support.annotation.StringRes
+import androidx.annotation.StringRes
 import com.pandulapeter.campfire.R
 
 sealed class Language(val id: String, @StringRes val nameResource: Int) {

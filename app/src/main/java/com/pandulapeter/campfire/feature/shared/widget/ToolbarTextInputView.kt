@@ -2,15 +2,15 @@ package com.pandulapeter.campfire.feature.shared.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.databinding.DataBindingUtil
 import android.os.Parcelable
-import android.support.annotation.StringRes
 import android.text.InputFilter
 import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.annotation.StringRes
+import androidx.databinding.DataBindingUtil
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewToolbarTextInputBinding
 import com.pandulapeter.campfire.util.*

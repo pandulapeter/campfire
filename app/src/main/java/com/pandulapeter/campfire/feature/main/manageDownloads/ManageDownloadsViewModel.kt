@@ -1,8 +1,8 @@
 package com.pandulapeter.campfire.feature.main.manageDownloads
 
 import android.content.Context
-import android.databinding.ObservableBoolean
-import android.databinding.ObservableInt
+import androidx.databinding.ObservableBoolean
+import androidx.databinding.ObservableInt
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.feature.CampfireActivity

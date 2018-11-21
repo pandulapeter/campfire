@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.feature.main.history
 
 import android.content.Context
-import android.databinding.ObservableBoolean
+import androidx.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.HistoryItem
 import com.pandulapeter.campfire.data.model.remote.Song

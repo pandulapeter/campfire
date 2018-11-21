@@ -1,10 +1,9 @@
 package com.pandulapeter.campfire.feature.main.collections
 
-import android.support.v7.recyclerview.extensions.ListAdapter
-import android.support.v7.util.DiffUtil
-import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 
 class CollectionListAdapter : ListAdapter<CollectionListItemViewModel, CollectionListItemViewHolder<*, *>>(object : DiffUtil.ItemCallback<CollectionListItemViewModel>() {
 
@@ -22,7 +21,7 @@ class CollectionListAdapter : ListAdapter<CollectionListItemViewModel, Collectio
         private const val VIEW_TYPE_HEADER = 1
     }
 
-    private var recyclerView: RecyclerView? = null
+    private var recyclerView: androidx.recyclerview.widget.RecyclerView? = null
     var shouldScrollToTop = false
     var items = listOf<CollectionListItemViewModel>()
         set(newItems) {
@@ -40,11 +39,11 @@ class CollectionListAdapter : ListAdapter<CollectionListItemViewModel, Collectio
         setHasStableIds(true)
     }
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+    override fun onAttachedToRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
         this.recyclerView = recyclerView
     }
 
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+    override fun onDetachedFromRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
         this.recyclerView = null
     }
 

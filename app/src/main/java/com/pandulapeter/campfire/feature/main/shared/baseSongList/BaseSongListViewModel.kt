@@ -1,11 +1,11 @@
 package com.pandulapeter.campfire.feature.main.shared.baseSongList
 
 import android.content.Context
-import android.databinding.ObservableBoolean
-import android.databinding.ObservableField
-import android.databinding.ObservableInt
-import android.support.annotation.CallSuper
-import android.support.v7.widget.RecyclerView
+import androidx.annotation.CallSuper
+import androidx.databinding.ObservableBoolean
+import androidx.databinding.ObservableField
+import androidx.databinding.ObservableInt
+import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
@@ -99,7 +99,7 @@ abstract class BaseSongListViewModel(protected val context: Context) : CampfireV
 
     override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) {
         adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songDetail.id }.let { index ->
-            if (index != RecyclerView.NO_POSITION && (adapter.items[index] as? SongListItemViewModel.SongViewModel)?.song?.version == songDetail.version) {
+            if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION && (adapter.items[index] as? SongListItemViewModel.SongViewModel)?.song?.version == songDetail.version) {
                 adapter.notifyItemChanged(
                     index,
                     SongListAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloaded.UpToDate)
@@ -111,7 +111,7 @@ abstract class BaseSongListViewModel(protected val context: Context) : CampfireV
     override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) {
         songIds.forEach { songId ->
             adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
-                if (index != RecyclerView.NO_POSITION) {
+                if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                     adapter.notifyItemChanged(
                         index,
                         SongListAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloading)
@@ -125,7 +125,7 @@ abstract class BaseSongListViewModel(protected val context: Context) : CampfireV
         analyticsManager.onConnectionError(!songDetailRepository.isSongDownloaded(song.id), song.id)
         downloadSongError.set(song)
         adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == song.id }.let { index ->
-            if (index != RecyclerView.NO_POSITION) {
+            if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
                     SongListAdapter.Payload.DownloadStateChanged(
@@ -148,7 +148,7 @@ abstract class BaseSongListViewModel(protected val context: Context) : CampfireV
 
     override fun onSongAddedToPlaylistForTheFirstTime(songId: String) {
         adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
-            if (index != RecyclerView.NO_POSITION) {
+            if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
                     SongListAdapter.Payload.IsSongInAPlaylistChanged(true)
@@ -159,7 +159,7 @@ abstract class BaseSongListViewModel(protected val context: Context) : CampfireV
 
     override fun onSongRemovedFromAllPlaylists(songId: String) {
         adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
-            if (index != RecyclerView.NO_POSITION) {
+            if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
                     SongListAdapter.Payload.IsSongInAPlaylistChanged(false)

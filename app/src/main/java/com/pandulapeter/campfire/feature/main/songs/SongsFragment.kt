@@ -1,16 +1,16 @@
 package com.pandulapeter.campfire.feature.main.songs
 
 import android.content.Context
-import android.databinding.DataBindingUtil
 import android.os.Build
 import android.os.Bundle
-import android.support.annotation.IdRes
-import android.support.graphics.drawable.AnimatedVectorDrawableCompat
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.CompoundButton
+import androidx.annotation.IdRes
+import androidx.databinding.DataBindingUtil
+import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment

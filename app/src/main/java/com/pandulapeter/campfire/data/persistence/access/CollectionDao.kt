@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire.data.persistence.access
 
-import android.arch.persistence.room.*
+import androidx.room.*
 import com.pandulapeter.campfire.data.model.remote.Collection
 
 @Dao

@@ -4,14 +4,12 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import android.support.design.widget.BottomSheetBehavior
-import android.support.v4.app.DialogFragment
-import android.support.v4.app.FragmentManager
-import android.support.v4.widget.NestedScrollView
-import android.support.v7.widget.AppCompatCheckBox
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.widget.AppCompatCheckBox
+import androidx.core.widget.NestedScrollView
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.pandulapeter.campfire.PlaylistChooserBottomSheetBinding
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
@@ -31,11 +29,11 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
         private var Bundle?.songId by BundleArgumentDelegate.String("songId")
         private var Bundle?.screenName by BundleArgumentDelegate.String("screenName")
 
-        fun show(fragmentManager: FragmentManager, songId: String, screenName: String) {
+        fun show(fragmentManager: androidx.fragment.app.FragmentManager, songId: String, screenName: String) {
             PlaylistChooserBottomSheetFragment().withArguments {
                 it.songId = songId
                 it.screenName = screenName
-            }.run { (this as DialogFragment).show(fragmentManager, tag) }
+            }.run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
         }
     }
 

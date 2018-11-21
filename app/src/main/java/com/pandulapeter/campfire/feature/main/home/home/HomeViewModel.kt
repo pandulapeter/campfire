@@ -1,10 +1,10 @@
 package com.pandulapeter.campfire.feature.main.home.home
 
 import android.content.Context
-import android.databinding.ObservableBoolean
-import android.databinding.ObservableField
-import android.databinding.ObservableInt
-import android.support.v7.widget.RecyclerView
+import androidx.databinding.ObservableBoolean
+import androidx.databinding.ObservableField
+import androidx.databinding.ObservableInt
+import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.local.Playlist
@@ -226,7 +226,7 @@ class HomeViewModel(
 
     override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) {
         adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songDetail.id }.let { index ->
-            if (index != RecyclerView.NO_POSITION && (adapter.items[index] as? SongListItemViewModel.SongViewModel)?.song?.version == songDetail.version) {
+            if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION && (adapter.items[index] as? SongListItemViewModel.SongViewModel)?.song?.version == songDetail.version) {
                 adapter.notifyItemChanged(
                     index,
                     HomeAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloaded.UpToDate)
@@ -238,7 +238,7 @@ class HomeViewModel(
     override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) {
         songIds.forEach { songId ->
             adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
-                if (index != RecyclerView.NO_POSITION) {
+                if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                     adapter.notifyItemChanged(
                         index,
                         HomeAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloading)
@@ -252,7 +252,7 @@ class HomeViewModel(
         analyticsManager.onConnectionError(!songDetailRepository.isSongDownloaded(song.id), song.id)
         downloadSongError.set(song)
         adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == song.id }.let { index ->
-            if (index != RecyclerView.NO_POSITION) {
+            if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
                     HomeAdapter.Payload.DownloadStateChanged(
@@ -275,7 +275,7 @@ class HomeViewModel(
 
     override fun onSongAddedToPlaylistForTheFirstTime(songId: String) {
         adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
-            if (index != RecyclerView.NO_POSITION) {
+            if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
                     HomeAdapter.Payload.IsSongInAPlaylistChanged(true)
@@ -286,7 +286,7 @@ class HomeViewModel(
 
     override fun onSongRemovedFromAllPlaylists(songId: String) {
         adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
-            if (index != RecyclerView.NO_POSITION) {
+            if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
                     HomeAdapter.Payload.IsSongInAPlaylistChanged(false)

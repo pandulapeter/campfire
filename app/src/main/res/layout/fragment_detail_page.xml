@@ -22,7 +22,7 @@
         app:state="@{viewModel.state}"
         app:text="@string/detail_placeholder_error">
 
-        <android.support.v4.widget.NestedScrollView
+        <androidx.core.widget.NestedScrollView
             android:id="@+id/scroll_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -43,7 +43,7 @@
                 android:text="@{viewModel.text}"
                 android:textSize="@{viewModel.textSize}" />
 
-        </android.support.v4.widget.NestedScrollView>
+        </androidx.core.widget.NestedScrollView>
 
     </com.pandulapeter.campfire.feature.shared.widget.StateLayout>
 

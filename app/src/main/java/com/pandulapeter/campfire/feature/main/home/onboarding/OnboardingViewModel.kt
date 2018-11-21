@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding
 
-import android.databinding.ObservableBoolean
-import android.databinding.ObservableFloat
+import androidx.databinding.ObservableBoolean
+import androidx.databinding.ObservableFloat
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 
 class OnboardingViewModel(

@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding.page.contentLanguage
 
-import android.support.v7.widget.AppCompatCheckBox
 import android.view.ViewGroup
+import androidx.appcompat.widget.AppCompatCheckBox
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.databinding.FragmentOnboardingContentLanguageBinding

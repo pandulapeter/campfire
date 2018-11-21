@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire.data.repository.shared
 
-import android.support.annotation.CallSuper
+import androidx.annotation.CallSuper
 
 abstract class BaseRepository<T> {
 

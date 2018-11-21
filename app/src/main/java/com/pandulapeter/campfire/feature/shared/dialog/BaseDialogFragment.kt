@@ -2,8 +2,8 @@ package com.pandulapeter.campfire.feature.shared.dialog
 
 import android.content.DialogInterface
 import android.os.Bundle
-import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatDialogFragment
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDialogFragment
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.CampfireActivity
 

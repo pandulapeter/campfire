@@ -6,8 +6,8 @@ import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.graphics.drawable.Icon
 import android.os.Build
-import android.support.annotation.DrawableRes
-import android.support.annotation.RequiresApi
+import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase

@@ -1,8 +1,6 @@
 package com.pandulapeter.campfire.feature.main.options.preferences
 
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
-import android.support.v4.app.FragmentManager
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentThemeSelectorBottomSheetBinding
 import com.pandulapeter.campfire.feature.shared.dialog.BaseBottomSheetDialogFragment
@@ -14,8 +12,9 @@ class ThemeSelectorBottomSheetFragment : BaseBottomSheetDialogFragment<FragmentT
     companion object {
         private var Bundle?.selectedThemeId by BundleArgumentDelegate.Int("selectedThemeId")
 
-        fun show(fragmentManager: FragmentManager, selectedThemeId: Int) {
-            ThemeSelectorBottomSheetFragment().withArguments { it.selectedThemeId = selectedThemeId }.run { (this as DialogFragment).show(fragmentManager, tag) }
+        fun show(fragmentManager: androidx.fragment.app.FragmentManager, selectedThemeId: Int) {
+            ThemeSelectorBottomSheetFragment().withArguments { it.selectedThemeId = selectedThemeId }
+                .run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
         }
     }
 

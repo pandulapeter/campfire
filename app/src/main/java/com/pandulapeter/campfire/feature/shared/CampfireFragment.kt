@@ -2,15 +2,7 @@ package com.pandulapeter.campfire.feature.shared
 
 import android.content.Context
 import android.content.res.Resources
-import android.databinding.DataBindingUtil
-import android.databinding.ViewDataBinding
 import android.os.Bundle
-import android.support.annotation.CallSuper
-import android.support.annotation.DrawableRes
-import android.support.annotation.LayoutRes
-import android.support.annotation.StringRes
-import android.support.design.widget.Snackbar
-import android.support.v4.app.Fragment
 import android.transition.Transition
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -21,6 +13,13 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.CompoundButton
 import android.widget.TextView
+import androidx.annotation.CallSuper
+import androidx.annotation.DrawableRes
+import androidx.annotation.LayoutRes
+import androidx.annotation.StringRes
+import androidx.databinding.DataBindingUtil
+import androidx.databinding.ViewDataBinding
+import com.google.android.material.snackbar.Snackbar
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.CampfireActivity
@@ -30,7 +29,8 @@ import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
 
-abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : Fragment(), Transition.TransitionListener {
+abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : androidx.fragment.app.Fragment(),
+    Transition.TransitionListener {
 
     companion object {
         private const val SNACKBAR_SHORT_DURATION = 4000
@@ -88,9 +88,9 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         setOnClickListener { if (isAdded && !getCampfireActivity().isUiBlocked) onClickListener(it) }
     }
 
-    private fun getNextAnimationDuration(fragment: Fragment, defValue: Long): Long {
+    private fun getNextAnimationDuration(fragment: androidx.fragment.app.Fragment, defValue: Long): Long {
         try {
-            val animInfoField = Fragment::class.java.getDeclaredField("mAnimationInfo")
+            val animInfoField = androidx.fragment.app.Fragment::class.java.getDeclaredField("mAnimationInfo")
             animInfoField.isAccessible = true
             val animationInfo = animInfoField.get(fragment)
             val nextAnimField = animationInfo.javaClass.getDeclaredField("mNextAnim")
@@ -176,7 +176,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     private fun View.makeSnackbar(message: String, duration: Int, dismissAction: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {
         view.setBackgroundColor(snackbarBackgroundColor)
-        view.findViewById<TextView>(android.support.design.R.id.snackbar_text).setTextColor(snackbarTextColor)
+        view.findViewById<TextView>(com.google.android.material.R.id.snackbar_text).setTextColor(snackbarTextColor)
         setActionTextColor(snackbarActionTextColor)
         getCampfireActivity().currentFocus?.let { hideKeyboard(it) }
         dismissAction?.let {

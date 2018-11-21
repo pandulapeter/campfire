@@ -1,16 +1,15 @@
 package com.pandulapeter.campfire.feature.main.collections
 
 import android.content.Context
-import android.databinding.DataBindingUtil
 import android.os.Build
 import android.os.Bundle
-import android.support.annotation.IdRes
-import android.support.graphics.drawable.AnimatedVectorDrawableCompat
-import android.support.v4.app.SharedElementCallback
-import android.support.v7.widget.DefaultItemAnimator
-import android.support.v7.widget.RecyclerView
 import android.view.*
 import android.widget.CompoundButton
+import androidx.annotation.IdRes
+import androidx.core.app.SharedElementCallback
+import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.RecyclerView
+import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
@@ -114,7 +113,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
                 val index =
                     viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
-                if (index != RecyclerView.NO_POSITION) {
+                if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
                         view.transitionName = "card-${getCampfireActivity().lastCollectionId}"
@@ -209,7 +208,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         }
         linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())
         binding.recyclerView.layoutManager = linearLayoutManager
-        binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
+        binding.recyclerView.itemAnimator = object : androidx.recyclerview.widget.DefaultItemAnimator() {
             init {
                 supportsChangeAnimations = false
             }
@@ -221,7 +220,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                     if (reenterTransition != null) {
                         val index =
                             viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
-                        if (index != RecyclerView.NO_POSITION) {
+                        if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                             val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                             if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
                                 linearLayoutManager.isScrollEnabled = true

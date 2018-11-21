@@ -1,13 +1,13 @@
 package com.pandulapeter.campfire.feature.shared.widget
 
 import android.content.Context
-import android.databinding.DataBindingUtil
 import android.graphics.PorterDuff
-import android.support.annotation.StringRes
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.animation.AnimationUtils
 import android.widget.ViewFlipper
+import androidx.annotation.StringRes
+import androidx.databinding.DataBindingUtil
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewStateLayoutBinding
 import com.pandulapeter.campfire.util.*

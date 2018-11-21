@@ -2,8 +2,8 @@ package com.pandulapeter.campfire.feature.shared.widget
 
 import android.animation.Animator
 import android.content.Context
-import android.support.v7.widget.AppCompatImageView
 import android.util.AttributeSet
+import androidx.appcompat.widget.AppCompatImageView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.util.dimension
 

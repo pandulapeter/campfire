@@ -19,7 +19,7 @@
         android:paddingBottom="@dimen/onboarding_bottom_margin"
         android:scrollbars="none">
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipToPadding="false"
@@ -84,7 +84,7 @@
                 app:layout_constraintVertical_chainStyle="packed"
                 tools:text="@string/options_preferences_app_theme" />
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </ScrollView>
 

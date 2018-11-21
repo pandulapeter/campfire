@@ -7,11 +7,11 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.support.v4.app.SharedElementCallback
-import android.support.v4.view.ViewPager
-import android.support.v7.widget.AppCompatTextView
 import android.transition.*
 import android.view.*
+import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.app.SharedElementCallback
+import androidx.viewpager.widget.ViewPager
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.HistoryItem
 import com.pandulapeter.campfire.data.model.remote.Song
@@ -171,7 +171,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 viewModel.songId.set(songs[it].id)
             },
             onPageScrollStateChanged = {
-                if (pagerAdapter.count > 1 && it == ViewPager.SCROLL_STATE_DRAGGING && isAutoScrollActive) {
+                if (pagerAdapter.count > 1 && it == androidx.viewpager.widget.ViewPager.SCROLL_STATE_DRAGGING && isAutoScrollActive) {
                     toggleAutoScroll()
                 }
             }

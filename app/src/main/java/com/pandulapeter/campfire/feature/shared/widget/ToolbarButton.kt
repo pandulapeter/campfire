@@ -3,13 +3,13 @@ package com.pandulapeter.campfire.feature.shared.widget
 import android.content.Context
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
-import android.support.v7.widget.AppCompatImageView
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.TouchDelegate
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.widget.AppCompatImageView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.obtainColor
@@ -52,7 +52,7 @@ class ToolbarButton @JvmOverloads constructor(context: Context, attrs: Attribute
             bounds.top -= extraTouchArea
             bounds.right += extraTouchArea
             bounds.bottom += extraTouchArea
-            //TODO: Does not seem to be working.
+            //TODO: Does not seem to be working, the touch target is too small.
             parent.touchDelegate = (parent.touchDelegate as? TouchDelegateComposite) ?: TouchDelegateComposite(this).apply {
                 addDelegate(TouchDelegate(bounds, this@ToolbarButton))
             }

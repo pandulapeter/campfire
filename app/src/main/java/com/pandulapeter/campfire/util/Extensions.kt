@@ -4,18 +4,9 @@ import android.animation.Animator
 import android.content.Context
 import android.content.Intent
 import android.content.res.TypedArray
-import android.databinding.*
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.support.annotation.*
-import android.support.graphics.drawable.AnimatedVectorDrawableCompat
-import android.support.v4.app.Fragment
-import android.support.v4.content.ContextCompat
-import android.support.v4.content.res.ResourcesCompat
-import android.support.v4.view.ViewPager
-import android.support.v4.widget.DrawerLayout
-import android.support.v7.content.res.AppCompatResources
 import android.text.Editable
 import android.text.Html
 import android.text.TextWatcher
@@ -25,6 +16,12 @@ import android.view.View
 import android.view.ViewAnimationUtils
 import android.view.ViewTreeObserver
 import android.widget.EditText
+import androidx.annotation.*
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
+import androidx.databinding.*
+import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -115,7 +112,7 @@ inline fun View.useStyledAttributes(set: AttributeSet?, @StyleableRes attrs: Int
         }
     }
 
-inline fun ObservableBoolean.onPropertyChanged(fragment: Fragment? = null, crossinline callback: (Boolean) -> Unit) {
+inline fun ObservableBoolean.onPropertyChanged(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: (Boolean) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
             if (fragment?.isAdded != false) {
@@ -125,7 +122,7 @@ inline fun ObservableBoolean.onPropertyChanged(fragment: Fragment? = null, cross
     })
 }
 
-inline fun ObservableInt.onPropertyChanged(fragment: Fragment? = null, crossinline callback: (Int) -> Unit) {
+inline fun ObservableInt.onPropertyChanged(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: (Int) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
             if (fragment?.isAdded != false) {
@@ -135,7 +132,7 @@ inline fun ObservableInt.onPropertyChanged(fragment: Fragment? = null, crossinli
     })
 }
 
-inline fun <T> ObservableField<T>.onPropertyChanged(fragment: Fragment? = null, crossinline callback: (T) -> Unit) {
+inline fun <T> ObservableField<T>.onPropertyChanged(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: (T) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
             if (fragment?.isAdded != false) {
@@ -145,7 +142,7 @@ inline fun <T> ObservableField<T>.onPropertyChanged(fragment: Fragment? = null, 
     })
 }
 
-inline fun ObservableBoolean.onEventTriggered(fragment: Fragment? = null, crossinline callback: () -> Unit) {
+inline fun ObservableBoolean.onEventTriggered(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: () -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
             if (get() && fragment?.isAdded != false) {
@@ -156,7 +153,7 @@ inline fun ObservableBoolean.onEventTriggered(fragment: Fragment? = null, crossi
     })
 }
 
-inline fun <T> ObservableField<T>.onEventTriggered(fragment: Fragment? = null, crossinline callback: (T) -> Unit) {
+inline fun <T> ObservableField<T>.onEventTriggered(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: (T) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
             if (get() != null && fragment?.isAdded != false) {
@@ -167,12 +164,12 @@ inline fun <T> ObservableField<T>.onEventTriggered(fragment: Fragment? = null, c
     })
 }
 
-inline fun DrawerLayout.addDrawerListener(
+inline fun androidx.drawerlayout.widget.DrawerLayout.addDrawerListener(
     crossinline onDrawerStateChanged: (newState: Int) -> Unit = {},
     crossinline onDrawerSlide: (offset: Float) -> Unit = {},
     crossinline onDrawerClosed: () -> Unit = {},
     crossinline onDrawerOpened: () -> Unit = {}
-) = addDrawerListener(object : DrawerLayout.DrawerListener {
+) = addDrawerListener(object : androidx.drawerlayout.widget.DrawerLayout.DrawerListener {
     override fun onDrawerStateChanged(newState: Int) = onDrawerStateChanged(newState)
 
     override fun onDrawerSlide(drawerView: View, slideOffset: Float) = onDrawerSlide(slideOffset)
@@ -216,7 +213,7 @@ inline fun EditText.onTextChanged(crossinline callback: (String) -> Unit) = addT
     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = callback(s?.toString() ?: "")
 })
 
-inline fun <T : Fragment> T.withArguments(bundleOperations: (Bundle) -> Unit): T = apply {
+inline fun <T : androidx.fragment.app.Fragment> T.withArguments(bundleOperations: (Bundle) -> Unit): T = apply {
     arguments = Bundle().apply { bundleOperations(this) }
 }
 
@@ -257,8 +254,12 @@ fun String.removePrefixes() = this
     .removePrefix("AZ ")
     .removePrefix("THE ")
 
-fun ViewPager.addPageScrollListener(onPageSelected: (Int) -> Unit = {}, onPageScrollStateChanged: (Int) -> Unit = {}, onPageScrolled: (Int, Float) -> Unit = { _, _ -> }) =
-    addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+fun androidx.viewpager.widget.ViewPager.addPageScrollListener(
+    onPageSelected: (Int) -> Unit = {},
+    onPageScrollStateChanged: (Int) -> Unit = {},
+    onPageScrolled: (Int, Float) -> Unit = { _, _ -> }
+) =
+    addOnPageChangeListener(object : androidx.viewpager.widget.ViewPager.OnPageChangeListener {
 
         override fun onPageScrollStateChanged(state: Int) = onPageScrollStateChanged(state)
 

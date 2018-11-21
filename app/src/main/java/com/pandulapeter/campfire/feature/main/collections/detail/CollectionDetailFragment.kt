@@ -1,9 +1,9 @@
 package com.pandulapeter.campfire.feature.main.collections.detail
 
 import android.os.Bundle
-import android.support.v4.app.SharedElementCallback
 import android.transition.*
 import android.view.View
+import androidx.core.app.SharedElementCallback
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.feature.detail.DetailFragment

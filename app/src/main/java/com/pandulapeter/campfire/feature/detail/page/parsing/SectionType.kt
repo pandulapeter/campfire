@@ -1,6 +1,6 @@
 package com.pandulapeter.campfire.feature.detail.page.parsing
 
-import android.support.annotation.StringRes
+import androidx.annotation.StringRes
 import com.pandulapeter.campfire.R
 
 enum class SectionType(val abbreviation: Char, @StringRes val nameResourceId: Int) {

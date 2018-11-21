@@ -1,14 +1,14 @@
 package com.pandulapeter.campfire.feature.main.managePlaylists
 
 import android.annotation.SuppressLint
-import android.databinding.DataBindingUtil
-import android.support.annotation.LayoutRes
-import android.support.v7.recyclerview.extensions.ListAdapter
-import android.support.v7.util.DiffUtil
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.ViewGroup
+import androidx.annotation.LayoutRes
+import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.PlaylistItemBinding
 import com.pandulapeter.campfire.R
 
@@ -44,11 +44,11 @@ class ManagePlaylistListAdapter : ListAdapter<PlaylistViewModel, ManagePlaylistL
 
     override fun getItemId(position: Int) = getItem(position).playlist.id.hashCode().toLong()
 
-    class PlaylistViewHolder(val binding: PlaylistItemBinding) : RecyclerView.ViewHolder(binding.root) {
+    class PlaylistViewHolder(val binding: PlaylistItemBinding) : androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root) {
 
         fun setItemClickListener(itemClickListener: (position: Int) -> Unit) {
             binding.root.setOnClickListener {
-                if (adapterPosition != RecyclerView.NO_POSITION) {
+                if (adapterPosition != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                     itemClickListener(adapterPosition)
                 }
             }
@@ -58,7 +58,7 @@ class ManagePlaylistListAdapter : ListAdapter<PlaylistViewModel, ManagePlaylistL
         fun setDragHandleTouchListener(itemTouchListener: ((position: Int) -> Unit)?) {
             if (itemTouchListener != null) {
                 binding.dragHandle.setOnTouchListener { _, event ->
-                    if (event.actionMasked == MotionEvent.ACTION_DOWN && adapterPosition != RecyclerView.NO_POSITION) {
+                    if (event.actionMasked == MotionEvent.ACTION_DOWN && adapterPosition != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
                         itemTouchListener(adapterPosition)
                     }
                     false

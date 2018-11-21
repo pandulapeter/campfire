@@ -10,11 +10,6 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.support.annotation.IntDef;
-import android.support.annotation.Keep;
-import android.support.v4.view.animation.FastOutLinearInInterpolator;
-import android.support.v4.view.animation.LinearOutSlowInInterpolator;
-import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;
@@ -22,6 +17,12 @@ import android.view.ViewConfiguration;
 import com.pandulapeter.campfire.R;
 
 import java.lang.annotation.Retention;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.Keep;
+import androidx.interpolator.view.animation.FastOutLinearInInterpolator;
+import androidx.interpolator.view.animation.LinearOutSlowInInterpolator;
+import androidx.recyclerview.widget.RecyclerView;
 
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 

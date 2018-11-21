@@ -13,7 +13,7 @@
 
     </data>
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/border"
@@ -26,7 +26,7 @@
         app:contentPadding="@dimen/content_padding"
         app:visibility="@{viewModel!=null}">
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipChildren="false"
@@ -46,7 +46,7 @@
                 app:layout_constraintTop_toTopOf="parent"
                 tools:src="@tools:sample/avatars" />
 
-            <android.support.v4.widget.Space
+            <androidx.legacy.widget.Space
                 android:id="@+id/space"
                 android:layout_width="4dp"
                 android:layout_height="0dp"
@@ -108,8 +108,8 @@
                 app:layout_constraintVertical_chainStyle="packed"
                 tools:text="Collection title/nCollection description" />
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
 </layout>

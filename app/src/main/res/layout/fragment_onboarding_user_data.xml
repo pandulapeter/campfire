@@ -18,7 +18,7 @@
         android:paddingBottom="@dimen/onboarding_bottom_margin"
         android:scrollbars="none">
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipToPadding="false"
@@ -92,7 +92,7 @@
                 app:layout_constraintTop_toBottomOf="@id/checkbox_crash_reporting"
                 app:layout_constraintVertical_chainStyle="packed" />
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </ScrollView>
 
