@@ -54,9 +54,9 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
     }
 
     fun addSongToPlaylist(playlistId: String, songId: String) {
-        GlobalScope.launch(WORKER) {
+        GlobalScope.launch(UI) {
             var shouldNotify = false
-            async(UI) {
+            async(WORKER) {
                 shouldNotify = !isSongInAnyPlaylist(songId)
                 val playlist = data.find { it.id == playlistId }
                 if (playlist?.songIds?.contains(songId) == false) {
@@ -73,9 +73,9 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
     }
 
     fun removeSongFromPlaylist(playlistId: String, songId: String) {
-        GlobalScope.launch(WORKER) {
+        GlobalScope.launch(UI) {
             var shouldNotify = false
-            async(UI) {
+            async(WORKER) {
                 val playlist = data.find { it.id == playlistId }
                 if (playlist?.songIds?.contains(songId) == true) {
                     playlist.songIds.remove(songId)

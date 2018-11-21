@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.main.home.home
 
+import android.support.v7.recyclerview.extensions.ListAdapter
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.view.View
@@ -9,7 +10,26 @@ import com.pandulapeter.campfire.feature.main.collections.CollectionListItemView
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewHolder
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
 
-class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class HomeAdapter : ListAdapter<Any, RecyclerView.ViewHolder>(object : DiffUtil.ItemCallback<Any>() {
+    override fun areItemsTheSame(old: Any, new: Any) = when (old) {
+        is HomeHeaderViewModel -> when (new) {
+            is HomeHeaderViewModel -> old.title == new.title
+            else -> false
+        }
+        is CollectionListItemViewModel.CollectionViewModel -> when (new) {
+            is CollectionListItemViewModel.CollectionViewModel -> old.collection.id == new.collection.id
+            else -> false
+        }
+        is SongListItemViewModel.SongViewModel -> when (new) {
+            is SongListItemViewModel.SongViewModel -> old.song.id == new.song.id
+            else -> false
+        }
+        else -> false
+    }
+
+    override fun areContentsTheSame(old: Any, new: Any) = old == new
+
+}) {
 
     companion object {
         private const val VIEW_TYPE_HEADER = 0
@@ -21,34 +41,7 @@ class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     var shouldScrollToTop = false
     var items = listOf<HomeItemViewModel>()
         set(newItems) {
-            val oldItems = items
-            DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-                override fun getOldListSize() = oldItems.size
-
-                override fun getNewListSize() = newItems.size
-
-                override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                    val old = oldItems[oldItemPosition]
-                    val new = newItems[newItemPosition]
-                    return when (old) {
-                        is HomeHeaderViewModel -> when (new) {
-                            is HomeHeaderViewModel -> old.title == new.title
-                            else -> false
-                        }
-                        is CollectionListItemViewModel.CollectionViewModel -> when (new) {
-                            is CollectionListItemViewModel.CollectionViewModel -> old.collection.id == new.collection.id
-                            else -> false
-                        }
-                        is SongListItemViewModel.SongViewModel -> when (new) {
-                            is SongListItemViewModel.SongViewModel -> old.song.id == new.song.id
-                            else -> false
-                        }
-                        else -> false
-                    }
-                }
-
-                override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = oldItems[oldItemPosition] == newItems[newItemPosition]
-            }).dispatchUpdatesTo(this@HomeAdapter)
+            submitList(newItems)
             if (shouldScrollToTop) {
                 recyclerView?.run { scrollToPosition(0) }
                 shouldScrollToTop = false
@@ -94,7 +87,6 @@ class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         else -> throw IllegalArgumentException("Unsupported item type.")
     }
 
-
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) = Unit
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: List<Any>) {
@@ -123,8 +115,6 @@ class HomeAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             }
         }
     }
-
-    override fun getItemCount() = items.size
 
     override fun getItemId(position: Int) = items[position].getItemId()
 
