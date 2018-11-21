@@ -80,11 +80,11 @@ class CollectionRepository(
                     }
                     data.swap(newData)
                     updateLanguages()
+                    database.collectionDao().updateAll(data)
+                    notifyDataChanged()
+                    isLoading = false
+                    preferenceDatabase.lastCollectionsUpdateTimestamp = System.currentTimeMillis()
                 }
-                database.collectionDao().updateAll(data)
-                notifyDataChanged()
-                isLoading = false
-                preferenceDatabase.lastCollectionsUpdateTimestamp = System.currentTimeMillis()
             },
             onFailure = {
                 isLoading = false
