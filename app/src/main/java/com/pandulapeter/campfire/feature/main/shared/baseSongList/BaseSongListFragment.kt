@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import androidx.annotation.CallSuper
 import androidx.core.app.SharedElementCallback
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentBaseSongListBinding
@@ -31,9 +32,9 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
         setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
                 val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
-                if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                if (index != RecyclerView.NO_POSITION) {
                     (binding.recyclerView.findViewHolderForAdapterPosition(index)
-                            ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
+                        ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
                         sharedElements[names[0]] = it.itemView
                         getCampfireActivity().lastSongId = ""
                     }
@@ -114,8 +115,8 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
         linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())
         binding.recyclerView.run {
             layoutManager = linearLayoutManager
-            addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     if (dy > 0 && !recyclerView.isAnimating) {
                         hideKeyboard(activity?.currentFocus)
                     }
@@ -127,7 +128,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
                         binding.recyclerView.removeOnLayoutChangeListener(this)
                         if (reenterTransition != null) {
                             val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
-                            if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                            if (index != RecyclerView.NO_POSITION) {
                                 val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                 if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
                                     linearLayoutManager.isScrollEnabled = true
@@ -137,7 +138,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
                         }
                     }
                 })
-            itemAnimator = object : androidx.recyclerview.widget.DefaultItemAnimator() {
+            itemAnimator = object : DefaultItemAnimator() {
                 init {
                     supportsChangeAnimations = false
                 }

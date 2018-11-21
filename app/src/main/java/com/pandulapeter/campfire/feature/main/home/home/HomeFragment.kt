@@ -11,6 +11,7 @@ import android.widget.CompoundButton
 import android.widget.TextView
 import androidx.annotation.StringRes
 import androidx.core.app.SharedElementCallback
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.pandulapeter.campfire.R
@@ -119,7 +120,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
                 var index =
                     viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
-                if (wasLastTransitionForACollection && index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                if (wasLastTransitionForACollection && index != RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
                         view.transitionName = "card-${getCampfireActivity().lastCollectionId}"
@@ -130,7 +131,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     }
                 } else {
                     index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
-                    if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                    if (index != RecyclerView.NO_POSITION) {
                         (binding.recyclerView.findViewHolderForAdapterPosition(index)
                             ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
                             sharedElements[names[0]] = it.itemView
@@ -210,14 +211,14 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         }
         linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())
         binding.recyclerView.layoutManager = linearLayoutManager
-        binding.recyclerView.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 if (dy > 0 && !recyclerView.isAnimating) {
                     hideKeyboard(activity?.currentFocus)
                 }
             }
         })
-        binding.recyclerView.itemAnimator = object : androidx.recyclerview.widget.DefaultItemAnimator() {
+        binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
             init {
                 supportsChangeAnimations = false
             }
@@ -303,7 +304,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     if (reenterTransition != null) {
                         var index =
                             viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
-                        if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                        if (index != RecyclerView.NO_POSITION) {
                             val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                             if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
                                 linearLayoutManager.isScrollEnabled = true
@@ -311,7 +312,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                             }
                         } else {
                             index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
-                            if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                            if (index != RecyclerView.NO_POSITION) {
                                 val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                 if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
                                     linearLayoutManager.isScrollEnabled = true

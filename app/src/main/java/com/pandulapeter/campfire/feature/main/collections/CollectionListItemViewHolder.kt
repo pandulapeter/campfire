@@ -11,8 +11,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ItemCollectionBinding
 import com.pandulapeter.campfire.databinding.ItemHeaderBinding
 
-sealed class CollectionListItemViewHolder<out B : ViewDataBinding, in VM : CollectionListItemViewModel>(protected val binding: B) :
-    androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root) {
+sealed class CollectionListItemViewHolder<out B : ViewDataBinding, in VM : CollectionListItemViewModel>(protected val binding: B) : RecyclerView.ViewHolder(binding.root) {
 
     open fun bind(viewModel: VM, skipAnimations: Boolean = false) {
         binding.setVariable(BR.viewModel, viewModel)
@@ -29,7 +28,7 @@ sealed class CollectionListItemViewHolder<out B : ViewDataBinding, in VM : Colle
 
         fun setItemClickListener(itemClickListener: (position: Int, clickedView: View, image: View) -> Unit) {
             binding.root.setOnClickListener {
-                if (adapterPosition != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                if (adapterPosition != RecyclerView.NO_POSITION) {
                     itemClickListener(adapterPosition, binding.root, binding.image)
                 }
             }
@@ -37,7 +36,7 @@ sealed class CollectionListItemViewHolder<out B : ViewDataBinding, in VM : Colle
 
         fun setSaveActionClickListener(saveActionClickListener: ((position: Int) -> Unit)?) {
             binding.bookmark.setOnClickListener {
-                if (adapterPosition != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                if (adapterPosition != RecyclerView.NO_POSITION) {
                     saveActionClickListener?.invoke(adapterPosition)
                 }
             }

@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator
 import android.graphics.Canvas
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 
 abstract class ElevationItemTouchHelperCallback(
     private val activeElevationChange: Float,
@@ -15,8 +16,8 @@ abstract class ElevationItemTouchHelperCallback(
 
     override fun onChildDraw(
         canvas: Canvas,
-        recyclerView: androidx.recyclerview.widget.RecyclerView,
-        viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
+        recyclerView: RecyclerView,
+        viewHolder: RecyclerView.ViewHolder,
         dX: Float,
         dY: Float,
         actionState: Int,
@@ -28,12 +29,12 @@ abstract class ElevationItemTouchHelperCallback(
         }
     }
 
-    override fun clearView(recyclerView: androidx.recyclerview.widget.RecyclerView, viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder) {
+    override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
         super.clearView(recyclerView, viewHolder)
         updateElevation(recyclerView, viewHolder, false)
     }
 
-    private fun updateElevation(recyclerView: androidx.recyclerview.widget.RecyclerView, holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, elevate: Boolean) {
+    private fun updateElevation(recyclerView: RecyclerView, holder: RecyclerView.ViewHolder, elevate: Boolean) {
         if (elevate) {
             originalElevation = ViewCompat.getElevation(holder.itemView)
             ObjectAnimator.ofFloat(
@@ -59,7 +60,7 @@ abstract class ElevationItemTouchHelperCallback(
         }
     }
 
-    private fun findMaxElevation(recyclerView: androidx.recyclerview.widget.RecyclerView) = (0 until recyclerView.childCount)
+    private fun findMaxElevation(recyclerView: RecyclerView) = (0 until recyclerView.childCount)
         .map { ViewCompat.getElevation(recyclerView.getChildAt(it)) }
         .max() ?: 0f
 }

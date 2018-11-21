@@ -28,6 +28,7 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.databinding.DataBindingUtil
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.fragment.app.FragmentManager
 import com.crashlytics.android.Crashlytics
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.internal.NavigationMenuView
@@ -219,7 +220,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         binding.drawerLayout.addDrawerListener(
             onDrawerStateChanged = {
                 currentFragment?.onDrawerStateChanged(it)
-                if (it == androidx.drawerlayout.widget.DrawerLayout.STATE_DRAGGING) {
+                if (it == DrawerLayout.STATE_DRAGGING) {
                     hideKeyboard(currentFocus)
                 }
             },
@@ -309,7 +310,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             lastCollectionId = savedInstanceState.lastCollectionId
         }
         binding.drawerLayout.setDrawerLockMode(
-            if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED else androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED,
+            if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
             GravityCompat.START
         )
     }
@@ -518,7 +519,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     fun enableSecondaryNavigationDrawer(@MenuRes menuResourceId: Int) {
-        binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
+        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
         binding.secondaryNavigation.menu.clear()
         binding.secondaryNavigation.inflateMenu(menuResourceId)
     }
@@ -604,12 +605,12 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
         // Reset the primary navigation drawer.
         binding.drawerLayout.setDrawerLockMode(
-            if (isBackStackEmpty && shouldShowAppBar) androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED else androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED,
+            if (isBackStackEmpty && shouldShowAppBar) DrawerLayout.LOCK_MODE_UNLOCKED else DrawerLayout.LOCK_MODE_LOCKED_CLOSED,
             GravityCompat.START
         )
 
         // Reset the secondary navigation drawer.
-        binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.END)
+        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.END)
         binding.secondaryNavigation.menu.clear()
 
         // Reset the floating action button.
@@ -880,7 +881,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
     }
 
-    private fun androidx.fragment.app.FragmentManager.clearBackStack() = (0..backStackEntryCount).forEach { popBackStackImmediate() }
+    private fun FragmentManager.clearBackStack() = (0..backStackEntryCount).forEach { popBackStackImmediate() }
 
     private inline fun <reified T : TopLevelFragment<*, *>> androidx.fragment.app.FragmentManager.handleReplace(
         tag: String = T::class.java.name,

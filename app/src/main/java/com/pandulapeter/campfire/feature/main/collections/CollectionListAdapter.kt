@@ -4,6 +4,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 
 class CollectionListAdapter : ListAdapter<CollectionListItemViewModel, CollectionListItemViewHolder<*, *>>(object : DiffUtil.ItemCallback<CollectionListItemViewModel>() {
 
@@ -21,7 +22,7 @@ class CollectionListAdapter : ListAdapter<CollectionListItemViewModel, Collectio
         private const val VIEW_TYPE_HEADER = 1
     }
 
-    private var recyclerView: androidx.recyclerview.widget.RecyclerView? = null
+    private var recyclerView: RecyclerView? = null
     var shouldScrollToTop = false
     var items = listOf<CollectionListItemViewModel>()
         set(newItems) {
@@ -39,11 +40,11 @@ class CollectionListAdapter : ListAdapter<CollectionListItemViewModel, Collectio
         setHasStableIds(true)
     }
 
-    override fun onAttachedToRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         this.recyclerView = recyclerView
     }
 
-    override fun onDetachedFromRecyclerView(recyclerView: androidx.recyclerview.widget.RecyclerView) {
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         this.recyclerView = null
     }
 

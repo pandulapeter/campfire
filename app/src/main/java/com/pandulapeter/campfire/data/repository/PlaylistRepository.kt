@@ -122,7 +122,7 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
         val playlist = data.find { it.id == playlistId }
         playlist?.also {
             it.title = title
-            subscribers.forEach { notifyDataChanged() }
+            notifyDataChanged()
             GlobalScope.launch(WORKER) { database.playlistDao().insert(it) }
         }
     }

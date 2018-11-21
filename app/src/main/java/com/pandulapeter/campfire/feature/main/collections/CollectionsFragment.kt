@@ -8,6 +8,7 @@ import android.widget.CompoundButton
 import androidx.annotation.IdRes
 import androidx.core.app.SharedElementCallback
 import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.pandulapeter.campfire.R
@@ -113,7 +114,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
                 val index =
                     viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
-                if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                if (index != RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
                         view.transitionName = "card-${getCampfireActivity().lastCollectionId}"
@@ -208,7 +209,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         }
         linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())
         binding.recyclerView.layoutManager = linearLayoutManager
-        binding.recyclerView.itemAnimator = object : androidx.recyclerview.widget.DefaultItemAnimator() {
+        binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
             init {
                 supportsChangeAnimations = false
             }
@@ -220,7 +221,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                     if (reenterTransition != null) {
                         val index =
                             viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
-                        if (index != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                        if (index != RecyclerView.NO_POSITION) {
                             val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                             if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
                                 linearLayoutManager.isScrollEnabled = true

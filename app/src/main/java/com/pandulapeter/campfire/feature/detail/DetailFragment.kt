@@ -171,7 +171,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 viewModel.songId.set(songs[it].id)
             },
             onPageScrollStateChanged = {
-                if (pagerAdapter.count > 1 && it == androidx.viewpager.widget.ViewPager.SCROLL_STATE_DRAGGING && isAutoScrollActive) {
+                if (pagerAdapter.count > 1 && it == ViewPager.SCROLL_STATE_DRAGGING && isAutoScrollActive) {
                     toggleAutoScroll()
                 }
             }

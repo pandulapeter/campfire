@@ -56,23 +56,23 @@ class ManageDownloadsFragment : BaseSongListFragment<ManageDownloadsViewModel>()
             ElevationItemTouchHelperCallback((getCampfireActivity().dimension(R.dimen.content_padding)).toFloat(), 0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
             override fun onMove(
-                recyclerView: androidx.recyclerview.widget.RecyclerView,
-                viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
-                target: androidx.recyclerview.widget.RecyclerView.ViewHolder
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
             ) = false
 
-            override fun getSwipeDirs(recyclerView: androidx.recyclerview.widget.RecyclerView, viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder): Int {
+            override fun getSwipeDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
                 viewHolder.adapterPosition.let { position ->
-                    if (position != androidx.recyclerview.widget.RecyclerView.NO_POSITION && viewModel.adapter.items[position] is SongListItemViewModel.SongViewModel) {
+                    if (position != RecyclerView.NO_POSITION && viewModel.adapter.items[position] is SongListItemViewModel.SongViewModel) {
                         return ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     }
                 }
                 return 0
             }
 
-            override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 viewHolder.adapterPosition.let { position ->
-                    if (position != androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                    if (position != RecyclerView.NO_POSITION) {
                         analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS)
                         viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.manageDownloadsCompleted = true

@@ -2,9 +2,10 @@ package com.pandulapeter.campfire.feature.shared.widget
 
 import android.content.Context
 import android.os.Parcelable
+import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.parcel.Parcelize
 
-class DisableScrollLinearLayoutManager(context: Context) : androidx.recyclerview.widget.LinearLayoutManager(context) {
+class DisableScrollLinearLayoutManager(context: Context) : LinearLayoutManager(context) {
 
     var isScrollEnabled = false
 
