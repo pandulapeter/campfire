@@ -66,7 +66,7 @@ class HomeAdapter : ListAdapter<Any, RecyclerView.ViewHolder>(object : DiffUtil.
         this.recyclerView = null
     }
 
-    override fun getItemViewType(position: Int) = when (items[position]) {
+    override fun getItemViewType(position: Int) = when (getItem(position)) {
         is HomeHeaderViewModel -> VIEW_TYPE_HEADER
         is CollectionListItemViewModel.CollectionViewModel -> VIEW_TYPE_COLLECTION
         is SongListItemViewModel.SongViewModel -> VIEW_TYPE_SONG
@@ -91,9 +91,9 @@ class HomeAdapter : ListAdapter<Any, RecyclerView.ViewHolder>(object : DiffUtil.
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: List<Any>) {
         when (holder) {
-            is HomeHeaderViewHolder.HeaderViewHolder -> (items[position] as? HomeHeaderViewModel)?.let { holder.bind(it) }
+            is HomeHeaderViewHolder.HeaderViewHolder -> (getItem(position) as? HomeHeaderViewModel)?.let { holder.bind(it) }
             is CollectionListItemViewHolder.CollectionViewHolder -> {
-                (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.run {
+                (getItem(position) as? CollectionListItemViewModel.CollectionViewModel)?.run {
                     payloads.forEach { payload ->
                         when (payload) {
                             is Payload.BookmarkedStateChanged -> collection.isBookmarked = payload.isBookmarked
@@ -103,7 +103,7 @@ class HomeAdapter : ListAdapter<Any, RecyclerView.ViewHolder>(object : DiffUtil.
                 }
             }
             is SongListItemViewHolder.SongViewHolder -> {
-                (items[position] as? SongListItemViewModel.SongViewModel)?.run {
+                (getItem(position) as? SongListItemViewModel.SongViewModel)?.run {
                     payloads.forEach { payload ->
                         when (payload) {
                             is Payload.DownloadStateChanged -> downloadState = payload.downloadState
@@ -116,7 +116,7 @@ class HomeAdapter : ListAdapter<Any, RecyclerView.ViewHolder>(object : DiffUtil.
         }
     }
 
-    override fun getItemId(position: Int) = items[position].getItemId()
+    override fun getItemId(position: Int) = (getItem(position) as? HomeItemViewModel)?.getItemId() ?: 0
 
     sealed class Payload {
         class BookmarkedStateChanged(val isBookmarked: Boolean) : Payload()
