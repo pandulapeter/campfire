@@ -28,6 +28,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!--suppress AndroidElementNotAllowed -->
             <layout
                 android:minHeight="250dp"
                 android:minWidth="300dp" />

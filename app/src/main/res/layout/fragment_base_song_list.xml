@@ -85,7 +85,7 @@
                 app:refreshing="@{viewModel.isLoading}"
                 app:enabled="@{viewModel.isSwipeRefreshEnabled}">
 
-                <com.pandulapeter.campfire.feature.main.songs.fastScroll.FastScrollRecyclerView
+                <com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
                     android:id="@+id/recycler_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"

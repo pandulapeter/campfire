@@ -24,6 +24,7 @@ import android.widget.TextView
 import androidx.annotation.MenuRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.databinding.DataBindingUtil
 import androidx.drawerlayout.widget.DrawerLayout
@@ -205,7 +206,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             if (!isUiBlocked) {
                 if (isBackStackEmpty) {
                     hideKeyboard(currentFocus)
-                    binding.drawerLayout.openDrawer(Gravity.START)
+                    binding.drawerLayout.openDrawer(GravityCompat.START)
                 } else {
                     supportFragmentManager.popBackStack()
                 }
@@ -309,7 +310,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
         binding.drawerLayout.setDrawerLockMode(
             if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED else androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED,
-            Gravity.START
+            GravityCompat.START
         )
     }
 
@@ -354,11 +355,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     override fun onBackPressed() {
         if (!isUiBlocked) {
-            if (binding.drawerLayout.isDrawerOpen(Gravity.START)) {
-                binding.drawerLayout.closeDrawer(Gravity.START)
+            if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
             } else {
-                if (binding.drawerLayout.isDrawerOpen(Gravity.END)) {
-                    binding.drawerLayout.closeDrawer(Gravity.END)
+                if (binding.drawerLayout.isDrawerOpen(GravityCompat.END)) {
+                    binding.drawerLayout.closeDrawer(GravityCompat.END)
                 } else {
                     val fragment = currentFragment
                     if (fragment == null || !fragment.onBackPressed()) {
@@ -517,17 +518,17 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     fun enableSecondaryNavigationDrawer(@MenuRes menuResourceId: Int) {
-        binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.END)
+        binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
         binding.secondaryNavigation.menu.clear()
         binding.secondaryNavigation.inflateMenu(menuResourceId)
     }
 
     fun openSecondaryNavigationDrawer() {
         hideKeyboard(currentFocus)
-        binding.drawerLayout.openDrawer(Gravity.END)
+        binding.drawerLayout.openDrawer(GravityCompat.END)
     }
 
-    fun closeSecondaryNavigationDrawer() = binding.drawerLayout.closeDrawer(Gravity.END)
+    fun closeSecondaryNavigationDrawer() = binding.drawerLayout.closeDrawer(GravityCompat.END)
 
     fun isFloatingActionButtonEnabled() = binding.floatingActionButton.isVisible()
 
@@ -604,11 +605,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         // Reset the primary navigation drawer.
         binding.drawerLayout.setDrawerLockMode(
             if (isBackStackEmpty && shouldShowAppBar) androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED else androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED,
-            Gravity.START
+            GravityCompat.START
         )
 
         // Reset the secondary navigation drawer.
-        binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.END)
+        binding.drawerLayout.setDrawerLockMode(androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.END)
         binding.secondaryNavigation.menu.clear()
 
         // Reset the floating action button.

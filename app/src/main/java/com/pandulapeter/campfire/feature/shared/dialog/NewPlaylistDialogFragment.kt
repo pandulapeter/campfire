@@ -39,7 +39,7 @@ class NewPlaylistDialogFragment : BaseDialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        dialog.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN)
+        dialog?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN)
         binding.root.post {
             showKeyboard(binding.inputField)
             binding.inputField.setSelection(binding.inputField.text?.length ?: 0)

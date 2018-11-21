@@ -4,7 +4,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import com.pandulapeter.campfire.feature.main.songs.fastScroll.FastScrollRecyclerView
+import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
 
 class SongListAdapter : ListAdapter<SongListItemViewModel, SongListItemViewHolder<*, *>>(object : DiffUtil.ItemCallback<SongListItemViewModel>() {
 

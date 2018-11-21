@@ -38,7 +38,7 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
 
     open fun updateSystemWindows() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_NO) {
-            dialog.window.decorView.systemUiVisibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else 0
+            dialog?.window?.decorView?.systemUiVisibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else 0
         }
     }
 
@@ -73,8 +73,8 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             if (!isFullWidth) {
-                window.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
-                window.setGravity(Gravity.BOTTOM)
+                window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
+                window?.setGravity(Gravity.BOTTOM)
             }
         }
     }

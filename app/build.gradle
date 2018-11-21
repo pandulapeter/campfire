@@ -62,11 +62,6 @@ repositories {
         url "https://maven.google.com"
     }
 }
-kotlin {
-    experimental {
-        coroutines "enable"
-    }
-}
 androidExtensions {
     experimental = true
 }
@@ -86,9 +81,9 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
 
     // Persistence
-    def roomVersion = "1.1.1"
-    implementation 'androidx.room:room-runtime:2.1.0-alpha02'
-    kapt 'androidx.room:room-compiler:2.1.0-alpha02'
+    def roomVersion = "2.1.0-alpha02"
+    implementation "androidx.room:room-runtime:$roomVersion"
+    kapt "androidx.room:room-compiler:$roomVersion"
 
     // Image loading
     def glideVersion = "4.8.0"
@@ -98,19 +93,20 @@ dependencies {
     // Process handling
     implementation "com.jakewharton:process-phoenix:2.0.0"
 
-    // Firebase
+    // Analytics
     implementation "com.google.firebase:firebase-core:16.0.5"
 
     // Crash reporting
     implementation "com.crashlytics.sdk.android:crashlytics:2.9.6"
 
-    // Support library
+    // UI components
     implementation "androidx.appcompat:appcompat:1.0.2"
     implementation "androidx.legacy:legacy-support-v4:1.0.0"
     implementation "com.google.android.material:material:1.1.0-alpha01"
     implementation "androidx.cardview:cardview:1.0.0"
     implementation "androidx.browser:browser:1.0.0"
     implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha2"
+    implementation "com.simplecityapps:recyclerview-fastscroll:1.0.20"
 
     // In-app purchases
     implementation "com.android.billingclient:billing:1.1"

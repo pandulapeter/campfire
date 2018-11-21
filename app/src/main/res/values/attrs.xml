@@ -6,13 +6,4 @@
         <attr name="text" format="string" />
     </declare-styleable>
 
-    <declare-styleable name="FastScrollRecyclerView">
-        <attr name="fastScrollAutoHide" format="reference|boolean" />
-        <attr name="fastScrollPopupBackgroundSize" format="reference|dimension" />
-        <attr name="fastScrollPopupBgColor" format="reference|color" />
-        <attr name="fastScrollPopupTextColor" format="reference|color" />
-        <attr name="fastScrollPopupTextSize" format="reference|dimension" />
-        <attr name="fastScrollThumbEnabled" format="reference|boolean" />
-    </declare-styleable>
-
 </resources>
