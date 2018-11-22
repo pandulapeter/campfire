@@ -33,13 +33,13 @@ class CollectionDetailFragment : BaseSongListFragment<CollectionDetailViewModel>
         ) { shuffleButton.visibleOrGone = true }
     }
     private val shuffleButton: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL) }
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL) }
             .apply { visibleOrGone = false }
     }
-    private val drawableBookmarkedToNotBookmarked by lazy { getCampfireActivity()!!.animatedDrawable(R.drawable.avd_bookmarked_to_not_bookmarked_24dp) }
-    private val drawableNotBookmarkedToBookmarked by lazy { getCampfireActivity()!!.animatedDrawable(R.drawable.avd_not_bookmarked_to_bookmarked_24dp) }
+    private val drawableBookmarkedToNotBookmarked by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_bookmarked_to_not_bookmarked_24dp) }
+    private val drawableNotBookmarkedToBookmarked by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_not_bookmarked_to_bookmarked_24dp) }
     private val bookmarkedButton: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(if (viewModel.collection.get()?.collection?.isBookmarked == true) R.drawable.ic_bookmarked_24dp else R.drawable.ic_not_bookmarked_24dp) {
+        getCampfireActivity().toolbarContext.createToolbarButton(if (viewModel.collection.get()?.collection?.isBookmarked == true) R.drawable.ic_bookmarked_24dp else R.drawable.ic_not_bookmarked_24dp) {
             viewModel.collection.get()?.collection?.let {
                 viewModel.collectionRepository.toggleBookmarkedState(it.id)
                 analyticsManager.onCollectionBookmarkedStateChanged(it.id, it.isBookmarked == true, AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL)
@@ -74,7 +74,7 @@ class CollectionDetailFragment : BaseSongListFragment<CollectionDetailViewModel>
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.swipeRefreshLayout.isEnabled = false
-        getCampfireActivity()!!.updateToolbarButtons(listOf(bookmarkedButton, shuffleButton))
+        getCampfireActivity().updateToolbarButtons(listOf(bookmarkedButton, shuffleButton))
         (arguments?.collection as? Collection).let {
             if (it == null) {
                 defaultToolbar.updateToolbarTitle(R.string.main_collections)
@@ -85,7 +85,7 @@ class CollectionDetailFragment : BaseSongListFragment<CollectionDetailViewModel>
                     it.title, if (songCount == 0) {
                         getString(R.string.manage_playlists_song_count_empty)
                     } else {
-                        getCampfireActivity()!!.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
+                        getCampfireActivity().resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
                     }
                 )
             }

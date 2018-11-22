@@ -44,9 +44,9 @@ abstract class OldCampfireFragment<B : ViewDataBinding, out VM : OldCampfireView
     protected val analyticsManager by inject<AnalyticsManager>()
     private var snackbar: Snackbar? = null
     private var isResumingDelayed = false
-    private val snackbarBackgroundColor by lazy { getCampfireActivity()!!.obtainColor(android.R.attr.textColorPrimary) }
-    private val snackbarTextColor by lazy { getCampfireActivity()!!.obtainColor(android.R.attr.colorPrimary) }
-    private val snackbarActionTextColor by lazy { getCampfireActivity()!!.color(R.color.accent) }
+    private val snackbarBackgroundColor by lazy { getCampfireActivity().obtainColor(android.R.attr.textColorPrimary) }
+    private val snackbarTextColor by lazy { getCampfireActivity().obtainColor(android.R.attr.colorPrimary) }
+    private val snackbarActionTextColor by lazy { getCampfireActivity().color(R.color.accent) }
 
     final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         viewModel.componentCallbacks = this
@@ -71,7 +71,7 @@ abstract class OldCampfireFragment<B : ViewDataBinding, out VM : OldCampfireView
     open fun onNavigationItemSelected(menuItem: MenuItem) = false
 
     protected fun initializeCompoundButton(itemId: Int, getValue: () -> Boolean) = consume {
-        getCampfireActivity()!!.secondaryNavigationMenu.findItem(itemId)?.let {
+        getCampfireActivity().secondaryNavigationMenu.findItem(itemId)?.let {
             (it.actionView as? CompoundButton)?.run {
                 isChecked = getValue()
                 setOnCheckedChangeListener { _, isChecked ->
@@ -85,7 +85,7 @@ abstract class OldCampfireFragment<B : ViewDataBinding, out VM : OldCampfireView
 
     protected inline fun Context.createToolbarButton(@DrawableRes drawableRes: Int, crossinline onClickListener: (View) -> Unit) = ToolbarButton(this).apply {
         setImageDrawable(drawable(drawableRes))
-        setOnClickListener { if (isAdded && !getCampfireActivity()!!.isUiBlocked) onClickListener(it) }
+        setOnClickListener { if (isAdded && !getCampfireActivity().isUiBlocked) onClickListener(it) }
     }
 
     private fun getNextAnimationDuration(fragment: androidx.fragment.app.Fragment, defValue: Long): Long {
@@ -145,7 +145,7 @@ abstract class OldCampfireFragment<B : ViewDataBinding, out VM : OldCampfireView
 
     protected fun showHint(@StringRes message: Int, action: () -> Unit) {
         snackbar?.dismiss()
-        snackbar = getCampfireActivity()!!.snackbarRoot
+        snackbar = getCampfireActivity().snackbarRoot
             .makeSnackbar(getString(message), Snackbar.LENGTH_INDEFINITE)
             .apply { setAction(R.string.got_it) { action() } }
         snackbar?.show()
@@ -159,7 +159,7 @@ abstract class OldCampfireFragment<B : ViewDataBinding, out VM : OldCampfireView
         showSnackbar(getString(message), actionText, action, dismissAction)
 
     protected fun showSnackbar(message: String, @StringRes actionText: Int = R.string.try_again, action: (() -> Unit)? = null, dismissAction: (() -> Unit)? = null) {
-        snackbar = getCampfireActivity()!!.snackbarRoot
+        snackbar = getCampfireActivity().snackbarRoot
             .makeSnackbar(message, if (action == null && dismissAction == null) SNACKBAR_SHORT_DURATION else SNACKBAR_LONG_DURATION, dismissAction)
             .apply { action?.let { setAction(actionText) { action() } } }
         snackbar?.show()
@@ -178,7 +178,7 @@ abstract class OldCampfireFragment<B : ViewDataBinding, out VM : OldCampfireView
         view.setBackgroundColor(snackbarBackgroundColor)
         view.findViewById<TextView>(com.google.android.material.R.id.snackbar_text).setTextColor(snackbarTextColor)
         setActionTextColor(snackbarActionTextColor)
-        getCampfireActivity()!!.currentFocus?.let { hideKeyboard(it) }
+        getCampfireActivity().currentFocus?.let { hideKeyboard(it) }
         dismissAction?.let {
             addCallback(object : Snackbar.Callback() {
                 override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
@@ -199,7 +199,7 @@ abstract class OldCampfireFragment<B : ViewDataBinding, out VM : OldCampfireView
         }
         enterTransition = null
         exitTransition = null
-        getCampfireActivity()!!.isUiBlocked = false
+        getCampfireActivity().isUiBlocked = false
     }
 
     override fun onTransitionResume(transition: Transition?) = Unit
@@ -210,6 +210,6 @@ abstract class OldCampfireFragment<B : ViewDataBinding, out VM : OldCampfireView
     override fun onTransitionCancel(transition: Transition?) = onTransitionEnd(transition)
 
     override fun onTransitionStart(transition: Transition?) {
-        getCampfireActivity()!!.isUiBlocked = true
+        getCampfireActivity().isUiBlocked = true
     }
 }

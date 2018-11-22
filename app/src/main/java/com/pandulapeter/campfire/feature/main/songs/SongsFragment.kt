@@ -30,13 +30,13 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         SongsViewModel(
             context = getCampfireActivity(),
             toolbarTextInputView = ToolbarTextInputView(
-                getCampfireActivity()!!.toolbarContext,
+                getCampfireActivity().toolbarContext,
                 R.string.songs_search,
                 true
             ).apply { title.updateToolbarTitle(R.string.main_songs) },
             updateSearchToggleDrawable = {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
-                getCampfireActivity()!!.transitionMode = true
+                getCampfireActivity().transitionMode = true
                 binding.root.post {
                     if (isAdded) {
                         searchControlsViewModel.isVisible.set(it)
@@ -44,14 +44,14 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
                 }
             },
             onDataLoaded = { languages ->
-                getCampfireActivity()!!.updateAppBarView(searchControlsBinding.root)
-                getCampfireActivity()!!.enableSecondaryNavigationDrawer(R.menu.songs)
+                getCampfireActivity().updateAppBarView(searchControlsBinding.root)
+                getCampfireActivity().enableSecondaryNavigationDrawer(R.menu.songs)
                 initializeCompoundButton(R.id.downloaded_only) { viewModel.shouldShowDownloadedOnly }
                 initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
                 initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == SongsViewModel.SortingMode.TITLE }
                 initializeCompoundButton(R.id.sort_by_artist) { viewModel.sortingMode == SongsViewModel.SortingMode.ARTIST }
                 initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == SongsViewModel.SortingMode.POPULARITY }
-                getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
+                getCampfireActivity().secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
                     clear()
                     languages.forEachIndexed { index, language ->
                         add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
@@ -60,16 +60,16 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
                         }
                     }
                 }
-                getCampfireActivity()!!.toolbarContext.let { context ->
-                    getCampfireActivity()!!.updateToolbarButtons(
+                getCampfireActivity().toolbarContext.let { context ->
+                    getCampfireActivity().updateToolbarButtons(
                         listOf(
                             eraseButton,
                             searchToggle,
-                            context.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity()!!.openSecondaryNavigationDrawer() }
+                            context.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity().openSecondaryNavigationDrawer() }
                         ))
                 }
             },
-            openSecondaryNavigationDrawer = { getCampfireActivity()!!.openSecondaryNavigationDrawer() },
+            openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() },
             setFastScrollEnabled = { binding.recyclerView.setFastScrollEnabled(it) }
         )
     }
@@ -81,12 +81,12 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
     private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
     private val searchToggle: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) {
             viewModel.toggleTextInputVisibility()
         }
     }
     private val eraseButton: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) {
             viewModel.toolbarTextInputView.textInput.setText("")
         }.apply {
             scaleX = 0f
@@ -96,14 +96,14 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         }
     }
     private val drawableCloseToSearch by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity()!!.animatedDrawable(R.drawable.avd_close_to_search_24dp) else getCampfireActivity()!!.drawable(R.drawable.ic_search_24dp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_close_to_search_24dp) else getCampfireActivity().drawable(R.drawable.ic_search_24dp)
     }
     private val drawableSearchToClose by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity()!!.animatedDrawable(R.drawable.avd_search_to_close_24dp) else getCampfireActivity()!!.drawable(R.drawable.ic_close_24dp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_search_to_close_24dp) else getCampfireActivity().drawable(R.drawable.ic_close_24dp)
     }
     private val searchControlsViewModel = SearchControlsViewModel(false)
     private val searchControlsBinding by lazy {
-        DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity()!!.toolbarContext), R.layout.view_search_controls, null, false).apply {
+        DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity().toolbarContext), R.layout.view_search_controls, null, false).apply {
             viewModel = searchControlsViewModel
             executePendingBindings()
         }
@@ -120,7 +120,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         savedInstanceState?.let {
             searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
             if (it.isTextInputVisible) {
-                searchToggle.setImageDrawable(getCampfireActivity()!!.drawable(R.drawable.ic_close_24dp))
+                searchToggle.setImageDrawable(getCampfireActivity().drawable(R.drawable.ic_close_24dp))
                 viewModel.toolbarTextInputView.textInput.run {
                     setText(savedInstanceState.searchQuery)
                     setSelection(text.length)
@@ -147,7 +147,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
                 COMPOUND_BUTTON_LONG_TRANSITION_DELAY
             )
         }
-        getCampfireActivity()!!.showPlayStoreRatingDialogIfNeeded()
+        getCampfireActivity().showPlayStoreRatingDialogIfNeeded()
     }
 
     override fun onResume() {
@@ -220,9 +220,9 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
 
     private inline fun consumeAndUpdateSortingMode(sortingMode: SongsViewModel.SortingMode, crossinline setValue: (SongsViewModel.SortingMode) -> Unit) = consume {
         setValue(sortingMode)
-        (getCampfireActivity()!!.secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == SongsViewModel.SortingMode.TITLE)
-        (getCampfireActivity()!!.secondaryNavigationMenu[R.id.sort_by_artist].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == SongsViewModel.SortingMode.ARTIST)
-        (getCampfireActivity()!!.secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.updateCheckedStateWithDelay(sortingMode == SongsViewModel.SortingMode.POPULARITY)
+        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == SongsViewModel.SortingMode.TITLE)
+        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_artist].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == SongsViewModel.SortingMode.ARTIST)
+        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.updateCheckedStateWithDelay(sortingMode == SongsViewModel.SortingMode.POPULARITY)
     }
 
     private operator fun Menu.get(@IdRes id: Int) = findItem(id)

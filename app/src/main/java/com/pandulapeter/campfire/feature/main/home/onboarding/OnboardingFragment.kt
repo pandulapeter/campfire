@@ -34,13 +34,13 @@ class OnboardingFragment : OldCampfireFragment<FragmentOnboardingBinding, Onboar
         binding.root.apply {
             waitForPreDraw {
                 if (isAdded) {
-                    layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity()!!.toolbarHeight, 0, 0) }
+                    layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
                 }
                 false
             }
         }
         viewModel.shouldShowLegalDocuments.onEventTriggered(this) {
-            if (!getCampfireActivity()!!.isUiBlocked) {
+            if (!getCampfireActivity().isUiBlocked) {
                 LegalDocumentsBottomSheetFragment.show(childFragmentManager)
             }
         }
@@ -51,13 +51,13 @@ class OnboardingFragment : OldCampfireFragment<FragmentOnboardingBinding, Onboar
         val fifth = getString(R.string.welcome_conditions_part_5)
         binding.textBottom.text = SpannableString("$first$second$third$fourth$fifth").apply {
             setSpan(
-                ForegroundColorSpan(getCampfireActivity()!!.color(R.color.accent)),
+                ForegroundColorSpan(getCampfireActivity().color(R.color.accent)),
                 first.length,
                 first.length + second.length,
                 Spanned.SPAN_INCLUSIVE_INCLUSIVE
             )
             setSpan(
-                ForegroundColorSpan(getCampfireActivity()!!.color(R.color.accent)),
+                ForegroundColorSpan(getCampfireActivity().color(R.color.accent)),
                 first.length + second.length + third.length,
                 length - fifth.length,
                 Spanned.SPAN_INCLUSIVE_INCLUSIVE

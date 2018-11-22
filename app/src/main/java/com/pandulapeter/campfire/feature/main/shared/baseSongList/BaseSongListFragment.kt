@@ -31,12 +31,12 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
         super.onCreate(savedInstanceState)
         setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
-                val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity()!!.lastSongId }
+                val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
                 if (index != RecyclerView.NO_POSITION) {
                     (binding.recyclerView.findViewHolderForAdapterPosition(index)
                         ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
                         sharedElements[names[0]] = it.itemView
-                        getCampfireActivity()!!.lastSongId = ""
+                        getCampfireActivity().lastSongId = ""
                     }
                 }
             }
@@ -49,16 +49,16 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
         super.onViewCreated(view, savedInstanceState)
         viewModel.adapter.run {
             itemClickListener = { position, clickedView ->
-                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity()!!.isUiBlocked) {
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
                     (items[position] as? SongListItemViewModel.SongViewModel)?.let { songViewModel ->
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
                             viewModel.isDetailScreenOpen = true
                         }
-                        getCampfireActivity()!!.isUiBlocked = true
+                        getCampfireActivity().isUiBlocked = true
                         onDetailScreenOpened()
                         val shouldSendMultipleSongs = viewModel is PlaylistViewModel || viewModel is CollectionDetailViewModel
-                        getCampfireActivity()!!.openDetailScreen(
+                        getCampfireActivity().openDetailScreen(
                             clickedView,
                             if (shouldSendMultipleSongs) items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song } else listOf(songViewModel.song),
                             items.size > 1,
@@ -69,7 +69,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
                 }
             }
             downloadActionClickListener = { position ->
-                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity()!!.isUiBlocked) {
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
                     (items[position] as? SongListItemViewModel.SongViewModel)?.let {
                         analyticsManager.onDownloadButtonPressed(it.song.id)
                         viewModel.downloadSong(it.song)
@@ -77,10 +77,10 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
                 }
             }
             playlistActionClickListener = { position ->
-                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity()!!.isUiBlocked) {
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
                     (items[position] as? SongListItemViewModel.SongViewModel)?.let {
                         if (viewModel.areThereMoreThanOnePlaylists()) {
-                            getCampfireActivity()!!.isUiBlocked = true
+                            getCampfireActivity().isUiBlocked = true
                             PlaylistChooserBottomSheetFragment.show(childFragmentManager, it.song.id, viewModel.screenName)
                         } else {
                             viewModel.toggleFavoritesState(it.song.id)
@@ -99,7 +99,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
                 binding.root.post {
                     if (isAdded) {
                         showSnackbar(
-                            message = getCampfireActivity()!!.getString(R.string.songs_song_download_error, song.title),
+                            message = getCampfireActivity().getString(R.string.songs_song_download_error, song.title),
                             action = { viewModel.downloadSong(song) })
                     }
                 }
@@ -127,7 +127,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
                     override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
                         binding.recyclerView.removeOnLayoutChangeListener(this)
                         if (reenterTransition != null) {
-                            val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity()!!.lastSongId }
+                            val index = viewModel.adapter.items.indexOfFirst { it is SongListItemViewModel.SongViewModel && it.song.id == getCampfireActivity().lastSongId }
                             if (index != RecyclerView.NO_POSITION) {
                                 val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                 if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
@@ -157,12 +157,12 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
                         override fun onTransitionPause(transition: Transition?) = Unit
 
                         override fun onTransitionEnd(transition: Transition?) {
-                            getCampfireActivity()!!.isUiBlocked = false
+                            getCampfireActivity().isUiBlocked = false
                             transition?.removeListener(this)
                         }
 
                         override fun onTransitionCancel(transition: Transition?) {
-                            getCampfireActivity()!!.isUiBlocked = false
+                            getCampfireActivity().isUiBlocked = false
                             transition?.removeListener(this)
                         }
                     })
@@ -187,6 +187,6 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFr
         val tempList = viewModel.adapter.items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song }.toMutableList()
         tempList.shuffle()
         analyticsManager.onShuffleButtonPressed(source, tempList.size)
-        getCampfireActivity()!!.openDetailScreen(null, tempList, false, 0, viewModel is CollectionDetailViewModel)
+        getCampfireActivity().openDetailScreen(null, tempList, false, 0, viewModel is CollectionDetailViewModel)
     }
 }

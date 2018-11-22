@@ -30,28 +30,28 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         PlaylistViewModel(
             context = getCampfireActivity(),
             playlistId = arguments.playlistId,
-            openSongs = { getCampfireActivity()!!.openSongsScreen() },
+            openSongs = { getCampfireActivity().openSongsScreen() },
             toolbarTextInputView = if (arguments?.playlistId == Playlist.FAVORITES_ID) null else ToolbarTextInputView(
-                getCampfireActivity()!!.toolbarContext,
+                getCampfireActivity().toolbarContext,
                 R.string.playlist_title,
                 false
             ),
-            onDataLoaded = { getCampfireActivity()!!.updateToolbarButtons(listOf(editToggle, shuffleButton)) }
+            onDataLoaded = { getCampfireActivity().updateToolbarButtons(listOf(editToggle, shuffleButton)) }
         )
     }
     private var Bundle.isInEditMode by BundleArgumentDelegate.Boolean("isInEditMode")
     private val editToggle: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_edit_24dp) { viewModel.toggleEditMode() }.apply {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_edit_24dp) { viewModel.toggleEditMode() }.apply {
             visibleOrGone = false
         }
     }
     private val shuffleButton: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST) }.apply {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST) }.apply {
             visibleOrGone = false
         }
     }
-    private val drawableEditToDone by lazy { getCampfireActivity()!!.animatedDrawable(R.drawable.avd_edit_to_done_24dp) }
-    private val drawableDoneToEdit by lazy { getCampfireActivity()!!.animatedDrawable(R.drawable.avd_done_to_edit_24dp) }
+    private val drawableEditToDone by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_edit_to_done_24dp) }
+    private val drawableDoneToEdit by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_done_to_edit_24dp) }
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -64,7 +64,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
             editToggle.visibleOrGone = arguments?.playlistId != Playlist.FAVORITES_ID || it > 0
             shuffleButton.visibleOrGone = it > 1
             if (shuffleButton.visibleOrGone != previousVisibility && viewModel.isInEditMode.get()) {
-                getCampfireActivity()!!.invalidateAppBar()
+                getCampfireActivity().invalidateAppBar()
             }
         }
         viewModel.state.onPropertyChanged(this) { updateToolbarTitle() }
@@ -82,7 +82,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         savedInstanceState?.let {
             if (it.isInEditMode) {
                 viewModel.isInEditMode.set(true)
-                editToggle.setImageDrawable(getCampfireActivity()!!.drawable(R.drawable.ic_done_24dp))
+                editToggle.setImageDrawable(getCampfireActivity().drawable(R.drawable.ic_done_24dp))
                 viewModel.toolbarTextInputView?.textInput?.run {
                     setText(viewModel.playlist.get()?.title)
                     setSelection(text.length)
@@ -175,7 +175,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         if (songCount == -1) {
             getString(if (viewModel.state.get() == StateLayout.State.LOADING) R.string.loading else R.string.manage_playlists_song_count_empty)
         } else {
-            getCampfireActivity()!!.resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
+            getCampfireActivity().resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
         }
     )
 

@@ -36,25 +36,25 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
     private val searchToggle: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) {
             viewModel.toggleTextInputVisibility()
         }
     }
     private val drawableCloseToSearch by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity()!!.animatedDrawable(R.drawable.avd_close_to_search_24dp) else getCampfireActivity()!!.drawable(R.drawable.ic_search_24dp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_close_to_search_24dp) else getCampfireActivity().drawable(R.drawable.ic_search_24dp)
     }
     private val drawableSearchToClose by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity()!!.animatedDrawable(R.drawable.avd_search_to_close_24dp) else getCampfireActivity()!!.drawable(R.drawable.ic_close_24dp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_search_to_close_24dp) else getCampfireActivity().drawable(R.drawable.ic_close_24dp)
     }
     private val searchControlsViewModel = SearchControlsViewModel(true)
     private val searchControlsBinding by lazy {
-        DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity()!!.toolbarContext), R.layout.view_search_controls, null, false).apply {
+        DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity().toolbarContext), R.layout.view_search_controls, null, false).apply {
             viewModel = searchControlsViewModel
             executePendingBindings()
         }
     }
     private val eraseButton: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) {
+        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) {
             viewModel.toolbarTextInputView.textInput.setText("")
         }.apply {
             scaleX = 0f
@@ -66,13 +66,13 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
     override val viewModel: CollectionsViewModel by lazy {
         CollectionsViewModel(
             toolbarTextInputView = ToolbarTextInputView(
-                getCampfireActivity()!!.toolbarContext,
+                getCampfireActivity().toolbarContext,
                 R.string.songs_search,
                 true
             ).apply { title.updateToolbarTitle(R.string.main_collections) },
             updateSearchToggleDrawable = {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
-                getCampfireActivity()!!.transitionMode = true
+                getCampfireActivity().transitionMode = true
                 binding.root.post {
                     if (isAdded) {
                         searchControlsViewModel.isVisible.set(it)
@@ -80,14 +80,14 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                 }
             },
             onDataLoaded = { languages ->
-                getCampfireActivity()!!.updateAppBarView(searchControlsBinding.root)
-                getCampfireActivity()!!.enableSecondaryNavigationDrawer(R.menu.collections)
+                getCampfireActivity().updateAppBarView(searchControlsBinding.root)
+                getCampfireActivity().enableSecondaryNavigationDrawer(R.menu.collections)
                 initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == CollectionsViewModel.SortingMode.TITLE }
                 initializeCompoundButton(R.id.sort_by_date) { viewModel.sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE }
                 initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == CollectionsViewModel.SortingMode.POPULARITY }
                 initializeCompoundButton(R.id.bookmarked_only) { viewModel.shouldShowSavedOnly }
                 initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
-                getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
+                getCampfireActivity().secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
                     clear()
                     languages.forEachIndexed { index, language ->
                         add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
@@ -96,14 +96,14 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                         }
                     }
                 }
-                getCampfireActivity()!!.updateToolbarButtons(
+                getCampfireActivity().updateToolbarButtons(
                     listOf(
                         eraseButton,
                         searchToggle,
-                        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity()!!.openSecondaryNavigationDrawer() }
+                        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity().openSecondaryNavigationDrawer() }
                     ))
             },
-            openSecondaryNavigationDrawer = { getCampfireActivity()!!.openSecondaryNavigationDrawer() },
+            openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() },
             newText = getString(R.string.new_tag)
         )
     }
@@ -113,14 +113,14 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
                 val index =
-                    viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity()!!.lastCollectionId }
+                    viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
                 if (index != RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
-                        view.transitionName = "card-${getCampfireActivity()!!.lastCollectionId}"
+                        view.transitionName = "card-${getCampfireActivity().lastCollectionId}"
                         sharedElements[names[0]] = view
                         val image = view.findViewById<View>(R.id.image)
-                        image.transitionName = "image-${getCampfireActivity()!!.lastCollectionId}"
+                        image.transitionName = "image-${getCampfireActivity().lastCollectionId}"
                         sharedElements[names[1]] = image
                     }
                 }
@@ -144,7 +144,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             viewModel.buttonText.set(it.buttonText)
             viewModel.buttonIcon.set(it.buttonIcon)
             if (it.isTextInputVisible) {
-                searchToggle.setImageDrawable(getCampfireActivity()!!.drawable(R.drawable.ic_close_24dp))
+                searchToggle.setImageDrawable(getCampfireActivity().drawable(R.drawable.ic_close_24dp))
                 viewModel.toolbarTextInputView.textInput.run {
                     setText(savedInstanceState.searchQuery)
                     setSelection(text.length)
@@ -175,23 +175,23 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
         }
         viewModel.adapter.apply {
             itemClickListener = { position, clickedView, image ->
-                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity()!!.isUiBlocked) {
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
                     (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.collection?.let {
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
                             viewModel.isDetailScreenOpen = true
                         }
-                        getCampfireActivity()!!.isUiBlocked = true
+                        getCampfireActivity().isUiBlocked = true
                         if (viewModel.toolbarTextInputView.isTextInputVisible && viewModel.query.trim().isEmpty()) {
                             viewModel.toggleTextInputVisibility()
                         }
                         viewModel.collectionRepository.onCollectionOpened(it.id)
-                        getCampfireActivity()!!.openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
+                        getCampfireActivity().openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
                     }
                 }
             }
             bookmarkActionClickListener = { position ->
-                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity()!!.isUiBlocked) {
+                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
                     viewModel.adapter.items[position].let {
                         if (it is CollectionListItemViewModel.CollectionViewModel) {
                             viewModel.onBookmarkClicked(position, it.collection)
@@ -220,7 +220,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
                     binding.recyclerView.removeOnLayoutChangeListener(this)
                     if (reenterTransition != null) {
                         val index =
-                            viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity()!!.lastCollectionId }
+                            viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
                         if (index != RecyclerView.NO_POSITION) {
                             val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                             if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
@@ -241,7 +241,7 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
             })
             requestLayout()
         }
-        getCampfireActivity()!!.showPlayStoreRatingDialogIfNeeded()
+        getCampfireActivity().showPlayStoreRatingDialogIfNeeded()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -308,9 +308,9 @@ class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, Collect
 
     private inline fun consumeAndUpdateSortingMode(sortingMode: CollectionsViewModel.SortingMode, crossinline setValue: (CollectionsViewModel.SortingMode) -> Unit) = consume {
         setValue(sortingMode)
-        (getCampfireActivity()!!.secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.TITLE)
-        (getCampfireActivity()!!.secondaryNavigationMenu[R.id.sort_by_date].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE)
-        (getCampfireActivity()!!.secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.POPULARITY)
+        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_title].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.TITLE)
+        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_date].actionView as? CompoundButton).updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE)
+        (getCampfireActivity().secondaryNavigationMenu[R.id.sort_by_popularity].actionView as? CompoundButton)?.updateCheckedStateWithDelay(sortingMode == CollectionsViewModel.SortingMode.POPULARITY)
     }
 
     private operator fun Menu.get(@IdRes id: Int) = findItem(id)

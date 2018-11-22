@@ -24,7 +24,7 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
     override val viewModel = OptionsViewModel()
     override val appBarView by lazy {
         DataBindingUtil.inflate<ViewOptionsTabsBinding>(
-            LayoutInflater.from(getCampfireActivity()!!.toolbarContext), R.layout.view_options_tabs, null, false
+            LayoutInflater.from(getCampfireActivity().toolbarContext), R.layout.view_options_tabs, null, false
         ).apply {
             tabLayout.setupWithViewPager(binding.viewPager)
         }.root
