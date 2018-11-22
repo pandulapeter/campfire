@@ -14,4 +14,8 @@ abstract class CampfireViewModel : ViewModel(), CoroutineScope {
         super.onCleared()
         job.cancel()
     }
+
+    open fun subscribe() = Unit
+
+    open fun unsubscribe() = Unit
 }

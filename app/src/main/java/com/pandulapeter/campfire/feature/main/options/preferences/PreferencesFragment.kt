@@ -4,14 +4,14 @@ import com.crashlytics.android.Crashlytics
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsPreferencesBinding
-import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.feature.shared.OldCampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.onPropertyChanged
 import io.fabric.sdk.android.Fabric
 
-class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, PreferencesViewModel>(R.layout.fragment_options_preferences),
+class PreferencesFragment : OldCampfireFragment<FragmentOptionsPreferencesBinding, PreferencesViewModel>(R.layout.fragment_options_preferences),
     BaseDialogFragment.OnDialogItemSelectedListener,
     ThemeSelectorBottomSheetFragment.OnThemeSelectedListener,
     LanguageSelectorBottomSheetFragment.OnLanguageSelectedListener {

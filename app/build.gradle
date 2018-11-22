@@ -73,7 +73,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.0.1"
 
     // Service locator
-    implementation "org.koin:koin-android:1.0.2"
+    implementation "org.koin:koin-androidx-viewmodel:1.0.2"
 
     // Networking
     def retrofitVersion = "2.3.0"

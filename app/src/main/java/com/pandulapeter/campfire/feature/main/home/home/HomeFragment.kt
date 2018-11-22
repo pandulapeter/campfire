@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.databinding.FragmentHomeBinding
 import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
-import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.feature.shared.OldCampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.setTitleSubtitle
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 
-class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layout.fragment_home) {
+class HomeFragment : OldCampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layout.fragment_home) {
 
     companion object {
         private var Bundle.shouldAnimate by BundleArgumentDelegate.Boolean("shouldAnimate")

@@ -8,24 +8,12 @@ import com.android.billingclient.api.*
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsAboutBinding
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
-import com.pandulapeter.campfire.util.onEventTriggered
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewModel>(R.layout.fragment_options_about), PurchasesUpdatedListener {
 
+    override val viewModel by viewModel<AboutViewModel>()
     private val billingClient by lazy { BillingClient.newBuilder(requireContext()).setListener(this).build() }
-
-    override val viewModel by lazy {
-        AboutViewModel { getCampfireActivity().isUiBlocked }.apply {
-            shouldShowErrorShowSnackbar.onEventTriggered(this@AboutFragment) { showSnackbar(R.string.options_about_error) }
-            shouldShowNoEasterEggSnackbar.onEventTriggered(this@AboutFragment) {
-                ObjectAnimator
-                    .ofFloat(binding.logo, scale, 1f, 1.5f, 0.5f, 1.25f, 0.75f, 1.1f, 0.9f, 1f)
-                    .setDuration(800)
-                    .start()
-            }
-            shouldBlockUi.onEventTriggered { getCampfireActivity().isUiBlocked = true }
-        }
-    }
     private val scale = object : Property<View, Float>(Float::class.java, "scale") {
 
         override fun set(view: View?, value: Float) {
@@ -39,8 +27,18 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        viewModel.shouldStartPurchaseFlow.onEventTriggered { startPurchaseFlow() }
+        viewModel.apply {
+            isUiBlocked = { getCampfireActivity().isUiBlocked }
+            shouldStartPurchaseFlow.observeAndReset { startPurchaseFlow() }
+            shouldShowErrorShowSnackbar.observeAndReset { showSnackbar(R.string.options_about_error) }
+            shouldShowNoEasterEggSnackbar.observeAndReset {
+                ObjectAnimator
+                    .ofFloat(binding.logo, scale, 1f, 1.5f, 0.5f, 1.25f, 0.75f, 1.1f, 0.9f, 1f)
+                    .setDuration(800)
+                    .start()
+            }
+            shouldBlockUi.observeAndReset { getCampfireActivity().isUiBlocked = true }
+        }
     }
 
     override fun onPurchasesUpdated(@BillingClient.BillingResponse responseCode: Int, purchases: List<Purchase>?) {

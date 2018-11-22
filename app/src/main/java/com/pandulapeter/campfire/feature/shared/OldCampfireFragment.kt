@@ -19,9 +19,6 @@ import androidx.annotation.LayoutRes
 import androidx.annotation.StringRes
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import com.google.android.material.snackbar.Snackbar
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
@@ -31,7 +28,9 @@ import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
-abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : Fragment(), Transition.TransitionListener {
+@Deprecated("Use CampfireFragment instead.")
+abstract class OldCampfireFragment<B : ViewDataBinding, out VM : OldCampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : androidx.fragment.app.Fragment(),
+    Transition.TransitionListener {
 
     companion object {
         private const val SNACKBAR_SHORT_DURATION = 4000
@@ -50,8 +49,8 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     private val snackbarActionTextColor by lazy { getCampfireActivity().color(R.color.accent) }
 
     final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        viewModel.componentCallbacks = this
         binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)
-        binding.setLifecycleOwner(viewLifecycleOwner)
         binding.setVariable(BR.viewModel, viewModel)
         binding.executePendingBindings()
         return binding.root
@@ -122,6 +121,11 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         isResumingDelayed = false
         snackbar?.dismiss()
         viewModel.unsubscribe()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewModel.componentCallbacks = null
     }
 
     override fun setReenterTransition(transition: Any?) {
@@ -208,11 +212,4 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     override fun onTransitionStart(transition: Transition?) {
         getCampfireActivity().isUiBlocked = true
     }
-
-    protected inline fun <T> MutableLiveData<T?>.observeAndReset(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {
-        if (it != null) {
-            callback(it)
-            value = null
-        }
-    })
 }

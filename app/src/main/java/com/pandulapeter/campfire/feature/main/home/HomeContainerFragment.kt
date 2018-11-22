@@ -10,7 +10,7 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.databinding.FragmentHomeContainerBinding
 import com.pandulapeter.campfire.feature.main.home.home.HomeFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingFragment
-import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.feature.shared.OldCampfireFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import io.fabric.sdk.android.Fabric
@@ -66,7 +66,7 @@ class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, Hom
             .commit()
     }
 
-    private inline fun <reified T : CampfireFragment<*, *>> androidx.fragment.app.FragmentManager.handleReplace(
+    private inline fun <reified T : OldCampfireFragment<*, *>> androidx.fragment.app.FragmentManager.handleReplace(
         tag: String = T::class.java.name,
         crossinline newInstance: () -> T
     ) = beginTransaction()

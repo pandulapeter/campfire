@@ -5,9 +5,9 @@ import android.view.View
 import androidx.recyclerview.widget.DefaultItemAnimator
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsChangelogBinding
-import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.feature.shared.OldCampfireFragment
 
-class ChangelogFragment : CampfireFragment<FragmentOptionsChangelogBinding, ChangelogViewModel>(R.layout.fragment_options_changelog) {
+class ChangelogFragment : OldCampfireFragment<FragmentOptionsChangelogBinding, ChangelogViewModel>(R.layout.fragment_options_changelog) {
 
     override val viewModel = ChangelogViewModel()
 

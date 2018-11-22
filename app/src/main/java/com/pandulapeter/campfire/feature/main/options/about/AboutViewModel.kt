@@ -5,15 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
-import androidx.databinding.ObservableBoolean
+import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.toUrlIntent
-import org.koin.android.ext.android.inject
 
-class AboutViewModel(private val isUiBlocked: () -> Boolean) : OldCampfireViewModel() {
+class AboutViewModel(private val analyticsManager: AnalyticsManager) : CampfireViewModel() {
 
     companion object {
         const val PLAY_STORE_URL = "market://details?id=com.pandulapeter.campfire"
@@ -24,15 +23,15 @@ class AboutViewModel(private val isUiBlocked: () -> Boolean) : OldCampfireViewMo
         const val EMAIL_ADDRESS = "pandulapeter@gmail.com"
     }
 
-    private val analyticsManager by inject<AnalyticsManager>()
-    val shouldShowErrorShowSnackbar = ObservableBoolean()
-    val shouldShowNoEasterEggSnackbar = ObservableBoolean()
-    val shouldBlockUi = ObservableBoolean()
-    val shouldStartPurchaseFlow = ObservableBoolean()
+    val shouldShowErrorShowSnackbar = MutableLiveData<Boolean?>()
+    val shouldShowNoEasterEggSnackbar = MutableLiveData<Boolean?>()
+    val shouldBlockUi = MutableLiveData<Boolean?>()
+    val shouldStartPurchaseFlow = MutableLiveData<Boolean?>()
+    lateinit var isUiBlocked: () -> Boolean
 
     fun onLogoClicked() {
         analyticsManager.trackAboutLogoPressed()
-        shouldShowNoEasterEggSnackbar.set(true)
+        shouldShowNoEasterEggSnackbar.value = true
     }
 
     fun onGooglePlayClicked(context: Context) {
@@ -72,9 +71,9 @@ class AboutViewModel(private val isUiBlocked: () -> Boolean) : OldCampfireViewMo
 
     fun onBuyMeABeerClicked() {
         if (!isUiBlocked()) {
-            shouldBlockUi.set(true)
+            shouldBlockUi.value = true
             analyticsManager.trackAboutLinkOpened(AnalyticsManager.PARAM_VALUE_ABOUT_BUY_ME_A_BEER)
-            shouldStartPurchaseFlow.set(true)
+            shouldStartPurchaseFlow.value = true
         }
     }
 
@@ -97,16 +96,16 @@ class AboutViewModel(private val isUiBlocked: () -> Boolean) : OldCampfireViewMo
         if (!isUiBlocked()) {
             try {
                 startActivity(intent)
-                shouldBlockUi.set(true)
+                shouldBlockUi.value = true
             } catch (exception: ActivityNotFoundException) {
-                shouldShowErrorShowSnackbar.set(true)
+                shouldShowErrorShowSnackbar.value = true
             }
         }
     }
 
     private fun Context.openInCustomTab(url: String) {
         if (!isUiBlocked()) {
-            shouldBlockUi.set(true)
+            shouldBlockUi.value = true
             CustomTabsIntent.Builder()
                 .setToolbarColor(color(R.color.accent))
                 .build()

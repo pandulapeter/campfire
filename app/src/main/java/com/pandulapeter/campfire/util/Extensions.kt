@@ -112,6 +112,7 @@ inline fun View.useStyledAttributes(set: AttributeSet?, @StyleableRes attrs: Int
         }
     }
 
+@Deprecated("Use LiveData instead.")
 inline fun ObservableBoolean.onPropertyChanged(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: (Boolean) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
@@ -122,6 +123,7 @@ inline fun ObservableBoolean.onPropertyChanged(fragment: androidx.fragment.app.F
     })
 }
 
+@Deprecated("Use LiveData instead.")
 inline fun ObservableInt.onPropertyChanged(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: (Int) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
@@ -132,6 +134,7 @@ inline fun ObservableInt.onPropertyChanged(fragment: androidx.fragment.app.Fragm
     })
 }
 
+@Deprecated("Use LiveData instead.")
 inline fun <T> ObservableField<T>.onPropertyChanged(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: (T) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
@@ -142,6 +145,7 @@ inline fun <T> ObservableField<T>.onPropertyChanged(fragment: androidx.fragment.
     })
 }
 
+@Deprecated("Use LiveData instead.")
 inline fun ObservableBoolean.onEventTriggered(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: () -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
@@ -153,6 +157,7 @@ inline fun ObservableBoolean.onEventTriggered(fragment: androidx.fragment.app.Fr
     })
 }
 
+@Deprecated("Use LiveData instead.")
 inline fun <T> ObservableField<T>.onEventTriggered(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: (T) -> Unit) {
     addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
         override fun onPropertyChanged(sender: Observable?, propertyId: Int) {

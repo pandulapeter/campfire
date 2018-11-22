@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.main.options
 
 import android.content.Context
+import androidx.fragment.app.Fragment
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.main.options.about.AboutFragment
 import com.pandulapeter.campfire.feature.main.options.changelog.ChangelogFragment
@@ -9,7 +10,7 @@ import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesFra
 class OptionsFragmentPagerAdapter(private val context: Context, fragmentManager: androidx.fragment.app.FragmentManager) :
     androidx.fragment.app.FragmentPagerAdapter(fragmentManager) {
 
-    override fun getItem(position: Int) = when (position) {
+    override fun getItem(position: Int): Fragment = when (position) {
         0 -> PreferencesFragment()
         1 -> ChangelogFragment()
         2 -> AboutFragment()
