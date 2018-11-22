@@ -25,9 +25,9 @@ class HistoryFragment : BaseSongListFragment<HistoryViewModel>(), BaseDialogFrag
     }
 
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
-    override val viewModel by lazy { HistoryViewModel(getCampfireActivity()) { getCampfireActivity().openSongsScreen() } }
+    override val viewModel by lazy { HistoryViewModel(getCampfireActivity()) { getCampfireActivity()!!.openSongsScreen() } }
     private val deleteAllButton by lazy {
-        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
             AlertDialogFragment.show(
                 DIALOG_ID_DELETE_ALL_CONFIRMATION,
                 childFragmentManager,
@@ -44,12 +44,12 @@ class HistoryFragment : BaseSongListFragment<HistoryViewModel>(), BaseDialogFrag
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_HISTORY)
         binding.swipeRefreshLayout.isEnabled = false
         defaultToolbar.updateToolbarTitle(R.string.main_history)
-        getCampfireActivity().updateToolbarButtons(listOf(deleteAllButton))
+        getCampfireActivity()!!.updateToolbarButtons(listOf(deleteAllButton))
         viewModel.shouldShowDeleteAll.onPropertyChanged(this) {
             deleteAllButton.visibleOrGone = it
             showHintIfNeeded()
         }
-        ItemTouchHelper(object : ElevationItemTouchHelperCallback((getCampfireActivity().dimension(R.dimen.content_padding)).toFloat(), 0, 0) {
+        ItemTouchHelper(object : ElevationItemTouchHelperCallback((getCampfireActivity()!!.dimension(R.dimen.content_padding)).toFloat(), 0, 0) {
 
             override fun onMove(
                 recyclerView: RecyclerView,

@@ -28,7 +28,7 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel.apply {
-            isUiBlocked = { getCampfireActivity().isUiBlocked }
+            isUiBlocked = { getCampfireActivity()?.isUiBlocked == true }
             shouldStartPurchaseFlow.observeAndReset { startPurchaseFlow() }
             shouldShowErrorShowSnackbar.observeAndReset { showSnackbar(R.string.options_about_error) }
             shouldShowNoEasterEggSnackbar.observeAndReset {
@@ -37,7 +37,7 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
                     .setDuration(800)
                     .start()
             }
-            shouldBlockUi.observeAndReset { getCampfireActivity().isUiBlocked = true }
+            shouldBlockUi.observeAndReset { getCampfireActivity()?.isUiBlocked = true }
         }
     }
 
@@ -48,7 +48,7 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
                     if (responseCode == BillingClient.BillingResponse.OK) {
                         showSnackbar(R.string.options_about_in_app_purchase_success)
                     }
-                    getCampfireActivity().isUiBlocked = false
+                    getCampfireActivity()?.isUiBlocked = false
                 }
             }
         }
@@ -65,12 +65,12 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
                             .build()
                     )
                 } else {
-                    getCampfireActivity().isUiBlocked = false
+                    getCampfireActivity()?.isUiBlocked = false
                 }
             }
 
             override fun onBillingServiceDisconnected() {
-                getCampfireActivity().isUiBlocked = false
+                getCampfireActivity()?.isUiBlocked = false
             }
         })
     }

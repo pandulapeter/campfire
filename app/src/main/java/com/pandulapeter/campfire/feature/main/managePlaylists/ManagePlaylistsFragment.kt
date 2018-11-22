@@ -29,7 +29,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
     override val viewModel = ManagePlaylistsViewModel()
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
     private val deleteAllButton by lazy {
-        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
             AlertDialogFragment.show(
                 DIALOG_ID_DELETE_ALL_CONFIRMATION,
                 childFragmentManager,
@@ -47,8 +47,8 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS)
         defaultToolbar.updateToolbarTitle(R.string.main_manage_playlists, getString(R.string.loading))
-        getCampfireActivity().updateToolbarButtons(listOf(deleteAllButton))
-        getCampfireActivity().updateFloatingActionButtonDrawable(getCampfireActivity().drawable(R.drawable.ic_add_24dp))
+        getCampfireActivity()!!.updateToolbarButtons(listOf(deleteAllButton))
+        getCampfireActivity()!!.updateFloatingActionButtonDrawable(getCampfireActivity()!!.drawable(R.drawable.ic_add_24dp))
         binding.recyclerView.layoutManager = LinearLayoutManager(getCampfireActivity())
         binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
             init {
@@ -60,9 +60,9 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             updateToolbarTitle(it)
             showHintIfNeeded()
             if (it < Playlist.MAXIMUM_PLAYLIST_COUNT) {
-                getCampfireActivity().enableFloatingActionButton()
+                getCampfireActivity()!!.enableFloatingActionButton()
             } else {
-                getCampfireActivity().disableFloatingActionButton()
+                getCampfireActivity()!!.disableFloatingActionButton()
             }
         }
         viewModel.shouldShowDeleteAllButton.onPropertyChanged(this) {
@@ -70,7 +70,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
             showHintIfNeeded()
         }
         // Disabled due to the navigation stack inconsistency it causes.
-        // viewModel.adapter.run { itemClickListener = { getCampfireActivity().openPlaylistScreen(items[it].playlist.id) } }
+        // viewModel.adapter.run { itemClickListener = { getCampfireActivity()!!.openPlaylistScreen(items[it].playlist.id) } }
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
 
             override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) =
@@ -146,7 +146,7 @@ class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding,
 
     private fun updateToolbarTitle(playlistCount: Int) = defaultToolbar.updateToolbarTitle(
         R.string.main_manage_playlists,
-        getCampfireActivity().resources.getQuantityString(R.plurals.manage_playlists_subtitle, playlistCount, playlistCount)
+        getCampfireActivity()!!.resources.getQuantityString(R.plurals.manage_playlists_subtitle, playlistCount, playlistCount)
     )
 
     private fun showHintIfNeeded() {

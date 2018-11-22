@@ -68,18 +68,18 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val detailEventBus by inject<DetailEventBus>()
     private val detailPageEventBus by inject<DetailPageEventBus>()
     private val songs by lazy { arguments?.songs ?: listOf<Song>() }
-    private val drawablePlayToPause by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
-    private val drawablePauseToPlay by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
-    private val addedToPlaylist by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_added_to_playlists_24dp) }
-    private val removedFromPlaylist by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_removed_from_playlists_24dp) }
-    private val transposeHigher by lazy { getCampfireActivity().secondaryNavigationMenu.findItem(R.id.transpose_higher) }
-    private val transposeLower by lazy { getCampfireActivity().secondaryNavigationMenu.findItem(R.id.transpose_lower) }
+    private val drawablePlayToPause by lazy { getCampfireActivity()!!.animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
+    private val drawablePauseToPlay by lazy { getCampfireActivity()!!.animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
+    private val addedToPlaylist by lazy { getCampfireActivity()!!.animatedDrawable(R.drawable.avd_added_to_playlists_24dp) }
+    private val removedFromPlaylist by lazy { getCampfireActivity()!!.animatedDrawable(R.drawable.avd_removed_from_playlists_24dp) }
+    private val transposeHigher by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.transpose_higher) }
+    private val transposeLower by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.transpose_lower) }
     private var isPinchHintVisible = false
-    private val transposeContainer by lazy { getCampfireActivity().secondaryNavigationMenu.findItem(R.id.transpose_container) }
+    private val transposeContainer by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.transpose_container) }
     private val playlistButton: ToolbarButton by lazy {
-        getCampfireActivity().toolbarContext.createToolbarButton(if (viewModel.isSongInAnyPlaylists()) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp) {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(if (viewModel.isSongInAnyPlaylists()) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp) {
             if (viewModel.areThereMoreThanOnePlaylists()) {
-                if (!getCampfireActivity().isUiBlocked) {
+                if (!getCampfireActivity()!!.isUiBlocked) {
                     viewModel.songId.get()?.let { PlaylistChooserBottomSheetFragment.show(childFragmentManager, it, AnalyticsManager.PARAM_VALUE_SCREEN_SONG_DETAIL) }
                 }
             } else {
@@ -90,8 +90,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     private val multiWindowFlags =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT else Intent.FLAG_ACTIVITY_NEW_TASK
     private var lastSongId = ""
-    private val isAutoScrollActive get() = getCampfireActivity().autoScrollControl.visibleOrInvisible
-    private val isSongLoaded get() = getCampfireActivity().isFloatingActionButtonEnabled()
+    private val isAutoScrollActive get() = getCampfireActivity()!!.autoScrollControl.visibleOrInvisible
+    private val isSongLoaded get() = getCampfireActivity()!!.isFloatingActionButtonEnabled()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -118,8 +118,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onSongDetailScreenOpened(songs.size)
-        getCampfireActivity().updateFloatingActionButtonDrawable(getCampfireActivity().drawable(R.drawable.ic_play_24dp))
-        getCampfireActivity().autoScrollControl.visibleOrGone = false
+        getCampfireActivity()!!.updateFloatingActionButtonDrawable(getCampfireActivity()!!.drawable(R.drawable.ic_play_24dp))
+        getCampfireActivity()!!.autoScrollControl.visibleOrGone = false
         if (savedInstanceState != null) {
             lastSongId = savedInstanceState.lastSongId
         }
@@ -136,13 +136,13 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                         override fun onTransitionPause(transition: Transition?) = Unit
 
                         override fun onTransitionEnd(transition: Transition?) {
-                            getCampfireActivity().isUiBlocked = false
+                            getCampfireActivity()!!.isUiBlocked = false
                             detailEventBus.notifyTransitionEnd()
                             transition?.removeListener(this)
                         }
 
                         override fun onTransitionCancel(transition: Transition?) {
-                            getCampfireActivity().isUiBlocked = false
+                            getCampfireActivity()!!.isUiBlocked = false
                             detailEventBus.notifyTransitionEnd()
                             transition?.removeListener(this)
                         }
@@ -152,21 +152,21 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 }
             })
         }
-        getCampfireActivity().enableSecondaryNavigationDrawer(R.menu.detail)
+        getCampfireActivity()!!.enableSecondaryNavigationDrawer(R.menu.detail)
         initializeCompoundButton(R.id.should_show_chords) { preferenceDatabase.shouldShowChords }
         updateTransposeControls()
         viewModel.songId.onPropertyChanged(this) {
-            getCampfireActivity().lastSongId = it
-            getCampfireActivity().updateToolbarTitleView(inflateToolbarTitle(getCampfireActivity().toolbarContext), toolbarWidth)
+            getCampfireActivity()!!.lastSongId = it
+            getCampfireActivity()!!.updateToolbarTitleView(inflateToolbarTitle(getCampfireActivity()!!.toolbarContext), toolbarWidth)
             detailEventBus.notifyTransitionEnd()
             onTranspositionChanged(it, preferenceDatabase.getTransposition(it))
         }
         binding.viewPager.adapter = pagerAdapter
         binding.viewPager.addPageScrollListener(
             onPageSelected = {
-                getCampfireActivity().disableFloatingActionButton()
+                getCampfireActivity()!!.disableFloatingActionButton()
                 if (isAutoScrollActive) {
-                    getCampfireActivity().updateFloatingActionButtonDrawable(drawablePauseToPlay?.apply { start() })
+                    getCampfireActivity()!!.updateFloatingActionButtonDrawable(drawablePauseToPlay?.apply { start() })
                 }
                 viewModel.songId.set(songs[it].id)
             },
@@ -183,8 +183,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                 binding.viewPager.currentItem = it
             }
         }
-        getCampfireActivity().updateToolbarButtons(
-            mutableListOf(getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_song_options_24dp) { getCampfireActivity().openSecondaryNavigationDrawer() }).apply {
+        getCampfireActivity()!!.updateToolbarButtons(
+            mutableListOf(getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_song_options_24dp) { getCampfireActivity()!!.openSecondaryNavigationDrawer() }).apply {
                 if (arguments?.shouldShowManagePlaylist == true) {
                     add(0, playlistButton)
                 }
@@ -224,7 +224,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             override fun run() {
                 if (isAdded) {
                     viewModel.songId.get()?.let { songId ->
-                        getCampfireActivity().autoScrollSpeed.let {
+                        getCampfireActivity()!!.autoScrollSpeed.let {
                             if (it >= 0)
                                 detailEventBus.notifyScroll(songId, it)
                         }
@@ -238,14 +238,14 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     override fun onResume() {
         super.onResume()
         detailPageEventBus.subscribe(this)
-        (getCampfireActivity().autoScrollControl.tag as? Animator)?.let {
+        (getCampfireActivity()!!.autoScrollControl.tag as? Animator)?.let {
             it.cancel()
-            getCampfireActivity().autoScrollControl.tag = null
+            getCampfireActivity()!!.autoScrollControl.tag = null
         }
-        getCampfireActivity().autoScrollControl.visibleOrInvisible = false
-        getCampfireActivity().updateFloatingActionButtonDrawable(getCampfireActivity().drawable(R.drawable.ic_play_24dp))
+        getCampfireActivity()!!.autoScrollControl.visibleOrInvisible = false
+        getCampfireActivity()!!.updateFloatingActionButtonDrawable(getCampfireActivity()!!.drawable(R.drawable.ic_play_24dp))
         showHintIfNeeded()
-        getCampfireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        getCampfireActivity()!!.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     override fun onPause() {
@@ -254,7 +254,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         }
         super.onPause()
         detailPageEventBus.unsubscribe(this)
-        getCampfireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        getCampfireActivity()!!.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -290,8 +290,8 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
         R.id.transpose_higher -> consume { viewModel.songId.get()?.let { detailEventBus.notifyTranspositionChanged(it, 1) } }
         R.id.transpose_lower -> consume { viewModel.songId.get()?.let { detailEventBus.notifyTranspositionChanged(it, -1) } }
         R.id.play_in_youtube -> consumeAndCloseDrawer {
-            if (!getCampfireActivity().isUiBlocked) {
-                getCampfireActivity().isUiBlocked = true
+            if (!getCampfireActivity()!!.isUiBlocked) {
+                getCampfireActivity()!!.isUiBlocked = true
                 val song = songs[arguments?.index ?: 0]
                 analyticsManager.onPlayOriginalSelected(song.id)
                 "${song.title} - ${song.artist}".let {
@@ -308,7 +308,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
             }
         }
         R.id.report -> consumeAndCloseDrawer {
-            if (!getCampfireActivity().isUiBlocked) {
+            if (!getCampfireActivity()!!.isUiBlocked) {
                 val song = songs[binding.viewPager.currentItem]
                 analyticsManager.onReportAProblemSelected(song.id)
                 try {
@@ -321,7 +321,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
                             }.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), null
                         )
                     )
-                    getCampfireActivity().isUiBlocked = true
+                    getCampfireActivity()!!.isUiBlocked = true
                 } catch (exception: ActivityNotFoundException) {
                     showSnackbar(R.string.options_about_error)
                 }
@@ -343,7 +343,7 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
 
     fun onDataLoaded(songId: String) {
         if (songId == viewModel.songId.get()) {
-            getCampfireActivity().enableFloatingActionButton()
+            getCampfireActivity()!!.enableFloatingActionButton()
             historyRepository.addHistoryItem(HistoryItem(songId, System.currentTimeMillis()))
             if (lastSongId != songId) {
                 analyticsManager.onSongVisualized(songId)
@@ -363,15 +363,15 @@ class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(
     }.putExtra("query", query)
 
     private inline fun consumeAndCloseDrawer(crossinline action: () -> Unit) = consume {
-        getCampfireActivity().closeSecondaryNavigationDrawer()
+        getCampfireActivity()!!.closeSecondaryNavigationDrawer()
         action()
     }
 
-    private fun toggleAutoScroll() = getCampfireActivity().autoScrollControl.run {
+    private fun toggleAutoScroll() = getCampfireActivity()!!.autoScrollControl.run {
         if (tag == null) {
             analyticsManager.onAutoScrollToggled(!visibleOrInvisible)
             val drawable = if (visibleOrInvisible) drawablePauseToPlay else drawablePlayToPause
-            getCampfireActivity().updateFloatingActionButtonDrawable(drawable)
+            getCampfireActivity()!!.updateFloatingActionButtonDrawable(drawable)
             animatedVisibilityEnd = !animatedVisibilityEnd
             drawable?.start()
         }

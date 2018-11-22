@@ -23,12 +23,12 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : OldCampfireViewMod
 
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        getCampfireActivity().onScreenChanged()
+        getCampfireActivity()!!.onScreenChanged()
         if (this !is DetailFragment) {
-            getCampfireActivity().updateToolbarTitleView(inflateToolbarTitle(getCampfireActivity().toolbarContext), toolbarWidth)
+            getCampfireActivity()!!.updateToolbarTitleView(inflateToolbarTitle(getCampfireActivity()!!.toolbarContext), toolbarWidth)
         }
         if (savedInstanceState == null || this !is SongsFragment) {
-            getCampfireActivity().updateAppBarView(appBarView, savedInstanceState != null)
+            getCampfireActivity()!!.updateAppBarView(appBarView, savedInstanceState != null)
         }
     }
 
