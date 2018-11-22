@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.shared
+package com.pandulapeter.campfire.feature.shared.deprecated
 
 import android.content.Context
 import android.os.Bundle
@@ -12,8 +12,9 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.databinding.ViewDataBinding
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.main.songs.SongsFragment
+import com.pandulapeter.campfire.feature.shared.setTitleSubtitle
 
-
+@Deprecated("Use CampfireFragment instead.")
 abstract class TopLevelFragment<B : ViewDataBinding, out VM : OldCampfireViewModel>(@LayoutRes layoutResourceId: Int) : OldCampfireFragment<B, VM>(layoutResourceId) {
 
     protected val defaultToolbar by lazy { AppCompatTextView(context).apply { gravity = Gravity.CENTER_VERTICAL } }

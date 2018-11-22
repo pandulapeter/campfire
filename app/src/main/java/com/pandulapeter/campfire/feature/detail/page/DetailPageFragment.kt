@@ -8,7 +8,7 @@ import com.pandulapeter.campfire.databinding.FragmentDetailPageBinding
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.detail.page.parsing.SongParser
-import com.pandulapeter.campfire.feature.shared.OldCampfireFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.withArguments

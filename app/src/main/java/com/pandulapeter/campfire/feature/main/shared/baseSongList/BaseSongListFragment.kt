@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentBaseSongListBinding
 import com.pandulapeter.campfire.feature.main.collections.detail.CollectionDetailViewModel
 import com.pandulapeter.campfire.feature.main.playlist.PlaylistViewModel
-import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.util.color

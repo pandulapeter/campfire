@@ -11,7 +11,7 @@ import android.widget.FrameLayout
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.*
 import com.pandulapeter.campfire.feature.main.home.HomeContainerFragment
-import com.pandulapeter.campfire.feature.shared.OldCampfireFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireFragment
 import com.pandulapeter.campfire.util.addPageScrollListener
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.onEventTriggered

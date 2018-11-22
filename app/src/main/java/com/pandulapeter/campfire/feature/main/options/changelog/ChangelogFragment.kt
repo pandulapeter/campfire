@@ -5,7 +5,7 @@ import android.view.View
 import androidx.recyclerview.widget.DefaultItemAnimator
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsChangelogBinding
-import com.pandulapeter.campfire.feature.shared.OldCampfireFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireFragment
 
 class ChangelogFragment : OldCampfireFragment<FragmentOptionsChangelogBinding, ChangelogViewModel>(R.layout.fragment_options_changelog) {
 

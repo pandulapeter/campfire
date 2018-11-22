@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
-import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
+import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager

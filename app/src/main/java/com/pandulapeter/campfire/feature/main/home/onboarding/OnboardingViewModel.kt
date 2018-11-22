@@ -2,7 +2,7 @@ package com.pandulapeter.campfire.feature.main.home.onboarding
 
 import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableFloat
-import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
+import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
 
 class OnboardingViewModel(
     private val skip: () -> Unit,

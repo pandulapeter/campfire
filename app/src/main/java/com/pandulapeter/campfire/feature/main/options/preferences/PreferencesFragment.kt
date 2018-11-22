@@ -4,7 +4,7 @@ import com.crashlytics.android.Crashlytics
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsPreferencesBinding
-import com.pandulapeter.campfire.feature.shared.OldCampfireFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.util.onEventTriggered

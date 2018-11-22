@@ -99,7 +99,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:drawableStart="@drawable/ic_google_play_24dp"
-                        android:onClick="@{() -> viewModel.onGooglePlayClicked(context)}"
+                        android:onClick="@{() -> viewModel.onGooglePlayClicked()}"
                         android:text="@string/options_about_google_play" />
 
                     <TextView
@@ -107,7 +107,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:drawableStart="@drawable/ic_github_24dp"
-                        android:onClick="@{() -> viewModel.onGitHubClicked(context)}"
+                        android:onClick="@{() -> viewModel.onGitHubClicked()}"
                         android:text="@string/options_about_github" />
 
                     <TextView
@@ -115,7 +115,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:drawableStart="@drawable/ic_share_24dp"
-                        android:onClick="@{() -> viewModel.onShareClicked(context)}"
+                        android:onClick="@{() -> viewModel.onShareClicked()}"
                         android:text="@string/options_about_share" />
 
                     <TextView
@@ -123,7 +123,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:drawableStart="@drawable/ic_contact_24dp"
-                        android:onClick="@{() -> viewModel.onContactClicked(context)}"
+                        android:onClick="@{() -> viewModel.onContactClicked()}"
                         android:text="@string/options_about_contact" />
 
                     <TextView
@@ -160,21 +160,21 @@
                         style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:onClick="@{() -> viewModel.onTermsAndConditionsClicked(context)}"
+                        android:onClick="@{() -> viewModel.onTermsAndConditionsClicked()}"
                         android:text="@string/options_about_terms_and_conditions" />
 
                     <TextView
                         style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:onClick="@{() -> viewModel.onPrivacyPolicyClicked(context)}"
+                        android:onClick="@{() -> viewModel.onPrivacyPolicyClicked()}"
                         android:text="@string/options_about_privacy_policy" />
 
                     <TextView
                         style="@style/OptionsItem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:onClick="@{() -> viewModel.onLicensesClicked(context)}"
+                        android:onClick="@{() -> viewModel.onLicensesClicked()}"
                         android:text="@string/options_about_licenses" />
 
                 </LinearLayout>

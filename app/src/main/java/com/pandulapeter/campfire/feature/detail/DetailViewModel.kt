@@ -3,7 +3,7 @@ package com.pandulapeter.campfire.feature.detail
 import androidx.databinding.ObservableField
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
+import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject

@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.databinding.FragmentHomeBinding
 import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
-import com.pandulapeter.campfire.feature.shared.OldCampfireFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.setTitleSubtitle
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager

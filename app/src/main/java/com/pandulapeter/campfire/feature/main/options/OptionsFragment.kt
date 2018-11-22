@@ -7,7 +7,7 @@ import androidx.databinding.DataBindingUtil
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsBinding
 import com.pandulapeter.campfire.databinding.ViewOptionsTabsBinding
-import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.TopLevelFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.addPageScrollListener

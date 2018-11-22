@@ -10,8 +10,8 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.databinding.FragmentHomeContainerBinding
 import com.pandulapeter.campfire.feature.main.home.home.HomeFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingFragment
-import com.pandulapeter.campfire.feature.shared.OldCampfireFragment
-import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.TopLevelFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import io.fabric.sdk.android.Fabric
 import org.koin.android.ext.android.inject

@@ -1,13 +1,17 @@
 package com.pandulapeter.campfire.feature.main.options.about
 
 import android.animation.ObjectAnimator
+import android.content.ActivityNotFoundException
+import android.net.Uri
 import android.os.Bundle
 import android.util.Property
 import android.view.View
+import androidx.browser.customtabs.CustomTabsIntent
 import com.android.billingclient.api.*
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsAboutBinding
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.util.color
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewModel>(R.layout.fragment_options_about), PurchasesUpdatedListener {
@@ -28,8 +32,32 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel.apply {
-            isUiBlocked = { getCampfireActivity()?.isUiBlocked == true }
-            shouldStartPurchaseFlow.observeAndReset { startPurchaseFlow() }
+            intentToStart.observeAndReset {
+                if (!isUiBlocked) {
+                    try {
+                        startActivity(it)
+                        isUiBlocked = true
+                    } catch (exception: ActivityNotFoundException) {
+                        shouldShowErrorShowSnackbar.value = true
+                    }
+                }
+            }
+            urlToStart.observeAndReset { url ->
+                context?.let { context ->
+                    if (!isUiBlocked) {
+                        isUiBlocked = true
+                        CustomTabsIntent.Builder()
+                            .setToolbarColor(context.color(R.color.accent))
+                            .build()
+                            .launchUrl(context, Uri.parse(url))
+                    }
+                }
+            }
+            shouldStartPurchaseFlow.observeAndReset {
+                if (!isUiBlocked) {
+                    startPurchaseFlow()
+                }
+            }
             shouldShowErrorShowSnackbar.observeAndReset { showSnackbar(R.string.options_about_error) }
             shouldShowNoEasterEggSnackbar.observeAndReset {
                 ObjectAnimator

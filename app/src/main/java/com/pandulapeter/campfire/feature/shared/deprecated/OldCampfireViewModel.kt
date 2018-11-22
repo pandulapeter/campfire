@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.shared
+package com.pandulapeter.campfire.feature.shared.deprecated
 
 import android.content.ComponentCallbacks
 import android.content.res.Configuration

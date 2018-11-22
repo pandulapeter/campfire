@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.feature.main.options.changelog
 
 import com.pandulapeter.campfire.data.repository.ChangelogRepository
-import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
+import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
 import org.koin.android.ext.android.inject
 
 class ChangelogViewModel : OldCampfireViewModel() {
