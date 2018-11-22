@@ -9,7 +9,7 @@ import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -27,7 +27,7 @@ class CollectionsViewModel(
     private val onDataLoaded: (languages: List<Language>) -> Unit,
     private val openSecondaryNavigationDrawer: () -> Unit,
     private val newText: String
-) : CampfireViewModel(), CollectionRepository.Subscriber {
+) : OldCampfireViewModel(), CollectionRepository.Subscriber {
 
     var isDetailScreenOpen = false
     private val preferenceDatabase by inject<PreferenceDatabase>()

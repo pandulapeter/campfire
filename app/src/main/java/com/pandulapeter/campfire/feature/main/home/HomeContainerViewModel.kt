@@ -4,10 +4,10 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
 import org.koin.android.ext.android.inject
 
-class HomeContainerViewModel : CampfireViewModel() {
+class HomeContainerViewModel : OldCampfireViewModel() {
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private val collectionRepository by inject<CollectionRepository>()

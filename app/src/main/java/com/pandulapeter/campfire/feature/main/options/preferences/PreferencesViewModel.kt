@@ -5,14 +5,14 @@ import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableField
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.generateNotationExample
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
-class PreferencesViewModel(private val context: Context) : CampfireViewModel() {
+class PreferencesViewModel(private val context: Context) : OldCampfireViewModel() {
 
     val preferenceDatabase by inject<PreferenceDatabase>()
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()

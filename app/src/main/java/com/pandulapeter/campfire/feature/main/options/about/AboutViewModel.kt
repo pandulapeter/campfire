@@ -7,13 +7,13 @@ import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.toUrlIntent
 import org.koin.android.ext.android.inject
 
-class AboutViewModel(private val isUiBlocked: () -> Boolean) : CampfireViewModel() {
+class AboutViewModel(private val isUiBlocked: () -> Boolean) : OldCampfireViewModel() {
 
     companion object {
         const val PLAY_STORE_URL = "market://details?id=com.pandulapeter.campfire"

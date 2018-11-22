@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
 
-abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : androidx.fragment.app.Fragment(),
+abstract class CampfireFragment<B : ViewDataBinding, out VM : OldCampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : androidx.fragment.app.Fragment(),
     Transition.TransitionListener {
 
     companion object {

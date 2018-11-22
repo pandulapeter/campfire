@@ -5,11 +5,11 @@ import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableField
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
-import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
-class WelcomeViewModel : CampfireViewModel() {
+class WelcomeViewModel : OldCampfireViewModel() {
     private val preferenceDatabase by inject<PreferenceDatabase>()
     val shouldShowThemeSelector = ObservableBoolean()
     val shouldShowLanguageSelector = ObservableBoolean()

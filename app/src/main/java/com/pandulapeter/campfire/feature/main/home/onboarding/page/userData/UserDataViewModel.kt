@@ -2,12 +2,12 @@ package com.pandulapeter.campfire.feature.main.home.onboarding.page.userData
 
 import androidx.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
-class UserDataViewModel : CampfireViewModel() {
+class UserDataViewModel : OldCampfireViewModel() {
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private val analyticsManager by inject<AnalyticsManager>()

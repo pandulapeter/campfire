@@ -7,13 +7,13 @@ import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import org.koin.android.ext.android.inject
 import java.util.*
 
-class ManagePlaylistsViewModel : CampfireViewModel(), PlaylistRepository.Subscriber {
+class ManagePlaylistsViewModel : OldCampfireViewModel(), PlaylistRepository.Subscriber {
 
     private val playlistRepository by inject<PlaylistRepository>()
     private val appShortcutManager by inject<AppShortcutManager>()

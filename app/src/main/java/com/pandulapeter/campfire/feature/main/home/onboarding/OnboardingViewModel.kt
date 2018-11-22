@@ -2,12 +2,12 @@ package com.pandulapeter.campfire.feature.main.home.onboarding
 
 import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableFloat
-import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
 
 class OnboardingViewModel(
     private val skip: () -> Unit,
     private val navigateToNextPage: () -> Unit
-) : CampfireViewModel() {
+) : OldCampfireViewModel() {
 
     val doneButtonOffset = ObservableFloat()
     val canSkip = ObservableBoolean()

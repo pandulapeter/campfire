@@ -8,12 +8,12 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
-import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
-class ContentLanguageViewModel(private val onLanguagesLoaded: (List<Language>) -> Unit) : CampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber {
+class ContentLanguageViewModel(private val onLanguagesLoaded: (List<Language>) -> Unit) : OldCampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber {
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private val collectionRepository by inject<CollectionRepository>()

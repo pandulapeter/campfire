@@ -2,12 +2,12 @@ package com.pandulapeter.campfire.feature.main.home.onboarding.page.songAppearan
 
 import androidx.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
 import com.pandulapeter.campfire.util.generateNotationExample
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
-class SongAppearanceViewModel : CampfireViewModel() {
+class SongAppearanceViewModel : OldCampfireViewModel() {
     private val preferenceDatabase by inject<PreferenceDatabase>()
     private var areListenersSet = false
     val englishNotationExample = generateNotationExample(false)

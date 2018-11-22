@@ -2,10 +2,10 @@ package com.pandulapeter.campfire.feature.main.options
 
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.OldCampfireViewModel
 import org.koin.android.ext.android.inject
 
-class OptionsViewModel : CampfireViewModel() {
+class OptionsViewModel : OldCampfireViewModel() {
 
     private val preferenceDatabase by inject<PreferenceDatabase>()
 
