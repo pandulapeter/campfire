@@ -113,6 +113,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private var newPlaylistId = 0
     private var startTime = 0L
     private val isBackStackEmpty get() = supportFragmentManager.backStackEntryCount == 0
+    @Deprecated("Use flag in viewModel.")
     var isUiBlocked = true
     var lastSongId: String = ""
     var lastCollectionId: String = ""

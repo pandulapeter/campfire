@@ -9,6 +9,7 @@ abstract class CampfireViewModel : ViewModel(), CoroutineScope {
 
     private val job = Job()
     override val coroutineContext = job + Dispatchers.Main
+    var isUiBlocked = true
 
     override fun onCleared() {
         super.onCleared()

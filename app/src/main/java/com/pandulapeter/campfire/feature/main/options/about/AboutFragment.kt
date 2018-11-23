@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature.main.options.about
 
 import android.animation.ObjectAnimator
 import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Property
@@ -22,8 +23,8 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
 
         override fun set(view: View?, value: Float) {
             view?.run {
-                view.scaleX = value
-                view.scaleY = value
+                scaleX = value
+                scaleY = value
             }
         }
 
@@ -32,40 +33,11 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel.apply {
-            intentToStart.observeAndReset {
-                if (!isUiBlocked) {
-                    try {
-                        startActivity(it)
-                        isUiBlocked = true
-                    } catch (exception: ActivityNotFoundException) {
-                        shouldShowErrorShowSnackbar.value = true
-                    }
-                }
-            }
-            urlToStart.observeAndReset { url ->
-                context?.let { context ->
-                    if (!isUiBlocked) {
-                        isUiBlocked = true
-                        CustomTabsIntent.Builder()
-                            .setToolbarColor(context.color(R.color.accent))
-                            .build()
-                            .launchUrl(context, Uri.parse(url))
-                    }
-                }
-            }
-            shouldStartPurchaseFlow.observeAndReset {
-                if (!isUiBlocked) {
-                    startPurchaseFlow()
-                }
-            }
+            intentToStart.observeAndReset { startActivityFromIntent(it) }
+            urlToStart.observeAndReset { openCustomTabFromUrl(it) }
+            shouldStartPurchaseFlow.observeAndReset { startPurchaseFlow() }
             shouldShowErrorShowSnackbar.observeAndReset { showSnackbar(R.string.options_about_error) }
-            shouldShowNoEasterEggSnackbar.observeAndReset {
-                ObjectAnimator
-                    .ofFloat(binding.logo, scale, 1f, 1.5f, 0.5f, 1.25f, 0.75f, 1.1f, 0.9f, 1f)
-                    .setDuration(800)
-                    .start()
-            }
-            shouldBlockUi.observeAndReset { getCampfireActivity()?.isUiBlocked = true }
+            shouldAnimateLogo.observeAndReset { animateLogo() }
         }
     }
 
@@ -76,9 +48,26 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
                     if (responseCode == BillingClient.BillingResponse.OK) {
                         showSnackbar(R.string.options_about_in_app_purchase_success)
                     }
-                    getCampfireActivity()?.isUiBlocked = false
+                    viewModel.isUiBlocked = false
                 }
             }
+        }
+    }
+
+    private fun startActivityFromIntent(intent: Intent) {
+        try {
+            startActivity(intent)
+        } catch (exception: ActivityNotFoundException) {
+            viewModel.shouldShowErrorShowSnackbar.value = true
+        }
+    }
+
+    private fun openCustomTabFromUrl(url: String) {
+        context?.let { context ->
+            CustomTabsIntent.Builder()
+                .setToolbarColor(context.color(R.color.accent))
+                .build()
+                .launchUrl(context, Uri.parse(url))
         }
     }
 
@@ -93,13 +82,18 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
                             .build()
                     )
                 } else {
-                    getCampfireActivity()?.isUiBlocked = false
+                    viewModel.isUiBlocked = false
                 }
             }
 
             override fun onBillingServiceDisconnected() {
-                getCampfireActivity()?.isUiBlocked = false
+                viewModel.isUiBlocked = false
             }
         })
     }
+
+    private fun animateLogo() = ObjectAnimator
+        .ofFloat(binding.logo, scale, 1f, 1.5f, 0.5f, 1.25f, 0.75f, 1.1f, 0.9f, 1f)
+        .setDuration(800)
+        .start()
 }

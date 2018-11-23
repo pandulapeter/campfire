@@ -43,11 +43,6 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected abstract val viewModel: VM
     protected open val shouldDelaySubscribing = false
     protected val analyticsManager by inject<AnalyticsManager>()
-    protected var isUiBlocked
-        get() = getCampfireActivity()?.isUiBlocked == true
-        set(value) {
-            getCampfireActivity()?.isUiBlocked = value
-        }
     private var snackbar: Snackbar? = null
     private var isResumingDelayed = false
     private val snackbarBackgroundColor by lazy { requireContext().obtainColor(android.R.attr.textColorPrimary) }
@@ -60,6 +55,11 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         binding.setVariable(BR.viewModel, viewModel)
         binding.executePendingBindings()
         return binding.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.isUiBlocked = false
     }
 
     override fun onCreateAnimation(transit: Int, enter: Boolean, nextAnim: Int): Animation? {
