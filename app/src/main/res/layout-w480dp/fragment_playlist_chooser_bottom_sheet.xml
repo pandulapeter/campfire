@@ -17,7 +17,7 @@
 
         <include
             android:id="@+id/container"
-            layout="@layout/item_playlist_chooser_bottom_sheet_content"
+            layout="@layout/view_playlist_chooser_bottom_sheet_content"
             app:viewModel="@{viewModel}" />
 
     </androidx.core.widget.NestedScrollView>
