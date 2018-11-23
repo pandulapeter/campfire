@@ -1,11 +1,9 @@
 package com.pandulapeter.campfire.feature.main.options.changelog
 
 import com.pandulapeter.campfire.data.repository.ChangelogRepository
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
-import org.koin.android.ext.android.inject
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 
-class ChangelogViewModel : OldCampfireViewModel() {
+class ChangelogViewModel(changelogRepository: ChangelogRepository) : CampfireViewModel() {
 
-    private val changelogRepository by inject<ChangelogRepository>()
     val adapter = ChangelogAdapter(changelogRepository.data)
 }
