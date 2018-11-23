@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.shared.recycler.viewModel.HeaderItemViewModel" />
+            type="com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel" />
 
     </data>
 

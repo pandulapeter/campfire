@@ -1,17 +1,19 @@
-package com.pandulapeter.campfire.feature.shared.recycler
+package com.pandulapeter.campfire.feature.main.shared.recycler
 
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.pandulapeter.campfire.feature.shared.recycler.viewHolder.CollectionViewHolder
-import com.pandulapeter.campfire.feature.shared.recycler.viewHolder.HeaderViewHolder
-import com.pandulapeter.campfire.feature.shared.recycler.viewHolder.SongViewHolder
-import com.pandulapeter.campfire.feature.shared.recycler.viewModel.CollectionItemViewModel
-import com.pandulapeter.campfire.feature.shared.recycler.viewModel.HeaderItemViewModel
-import com.pandulapeter.campfire.feature.shared.recycler.viewModel.ItemViewModel
-import com.pandulapeter.campfire.feature.shared.recycler.viewModel.SongItemViewModel
+import com.pandulapeter.campfire.data.model.remote.Collection
+import com.pandulapeter.campfire.data.model.remote.Song
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewHolder.CollectionViewHolder
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewHolder.HeaderViewHolder
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewHolder.SongViewHolder
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 
 class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(object : DiffUtil.ItemCallback<ItemViewModel>() {
 
@@ -39,22 +41,26 @@ class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(obje
     var shouldScrollToTop = false
     var items = listOf<ItemViewModel>()
         set(newItems) {
-            submitList(newItems)
             if (shouldScrollToTop) {
-                recyclerView?.run { scrollToPosition(0) }
+                recyclerView?.run { post { scrollToPosition(0) } }
                 shouldScrollToTop = false
             }
             field = newItems
+            submitList(newItems)
         }
-    var collectionClickListener: (position: Int, clickedView: View, image: View) -> Unit = { _, _, _ -> }
-    var collectionBookmarkClickListener: ((position: Int) -> Unit)? = null
-    var songClickListener: (position: Int, clickedView: View) -> Unit = { _, _ -> }
-    var songDragTouchListener: ((position: Int) -> Unit)? = null
-    var songPlaylistClickListener: ((position: Int) -> Unit)? = null
-    var songDownloadClickListener: ((position: Int) -> Unit)? = null
+    var collectionClickListener: (collection: Collection, clickedView: View, image: View) -> Unit = { _, _, _ -> }
+    var collectionBookmarkClickListener: (collection: Collection, position: Int) -> Unit = { _, _ -> }
+    var songClickListener: (song: Song, position: Int, clickedView: View) -> Unit = { _, _, _ -> }
+    var songDragTouchListener: (position: Int) -> Unit = {}
+    var songPlaylistClickListener: (song: Song) -> Unit = { }
+    var songDownloadClickListener: (song: Song) -> Unit = { }
 
     init {
         setHasStableIds(true)
+    }
+
+    public override fun getItem(position: Int): ItemViewModel {
+        return super.getItem(position)
     }
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
@@ -74,8 +80,18 @@ class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(obje
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = when (viewType) {
         VIEW_TYPE_HEADER -> HeaderViewHolder.create(parent)
-        VIEW_TYPE_COLLECTION -> CollectionViewHolder.create(parent, collectionClickListener, collectionBookmarkClickListener)
-        VIEW_TYPE_SONG -> SongViewHolder.create(parent, songClickListener, songDragTouchListener, songPlaylistClickListener, songDownloadClickListener)
+        VIEW_TYPE_COLLECTION -> CollectionViewHolder.create(
+            parent = parent,
+            itemClickListener = { position, clickedView, image -> collectionClickListener((getItem(position) as CollectionItemViewModel).collection, clickedView, image) },
+            bookmarkClickListener = { position -> collectionBookmarkClickListener((getItem(position) as CollectionItemViewModel).collection, position) }
+        )
+        VIEW_TYPE_SONG -> SongViewHolder.create(
+            parent = parent,
+            itemClickListener = { position, clickedView -> songClickListener((getItem(position) as SongItemViewModel).song, position, clickedView) },
+            itemTouchListener = songDragTouchListener,
+            playlistClickListener = { position -> songPlaylistClickListener((getItem(position) as SongItemViewModel).song) },
+            downloadClickListener = { position -> songDownloadClickListener((getItem(position) as SongItemViewModel).song) }
+        )
         else -> throw IllegalArgumentException("Unsupported item type.")
     }
 

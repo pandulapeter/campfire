@@ -1,5 +1,6 @@
-package com.pandulapeter.campfire.feature.shared.recycler.viewHolder
+package com.pandulapeter.campfire.feature.main.shared.recycler.viewHolder
 
+import android.annotation.SuppressLint
 import android.graphics.PorterDuff
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -9,9 +10,10 @@ import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ItemListSongBinding
-import com.pandulapeter.campfire.feature.shared.recycler.viewModel.SongItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.util.obtainColor
 
+@SuppressLint("ClickableViewAccessibility")
 class SongViewHolder(
     private val binding: ItemListSongBinding,
     itemClickListener: (position: Int, clickedView: View) -> Unit,
@@ -64,14 +66,14 @@ class SongViewHolder(
             parent: ViewGroup,
             itemClickListener: (position: Int, clickedView: View) -> Unit,
             itemTouchListener: ((position: Int) -> Unit)?,
-            playlistActionListener: ((position: Int) -> Unit)?,
-            downloadActionListener: ((position: Int) -> Unit)?
+            playlistClickListener: ((position: Int) -> Unit)?,
+            downloadClickListener: ((position: Int) -> Unit)?
         ) = SongViewHolder(
             DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_list_song, parent, false),
             itemClickListener,
             itemTouchListener,
-            playlistActionListener,
-            downloadActionListener
+            playlistClickListener,
+            downloadClickListener
         )
     }
 }

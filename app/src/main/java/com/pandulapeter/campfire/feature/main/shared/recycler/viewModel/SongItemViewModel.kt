@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.shared.recycler.viewModel
+package com.pandulapeter.campfire.feature.main.shared.recycler.viewModel
 
 import android.content.Context
 import com.pandulapeter.campfire.R

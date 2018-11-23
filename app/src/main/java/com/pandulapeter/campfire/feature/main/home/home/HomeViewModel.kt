@@ -17,8 +17,11 @@ import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
-import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewModel
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
@@ -64,7 +67,7 @@ class HomeViewModel(
     var randomSongs = listOf<Song>()
     var displayedRandomSongs = listOf<Song>()
     var firstRandomSongIndex = 0
-    val adapter = HomeAdapter()
+    val adapter = RecyclerAdapter()
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
     val isLoading = ObservableBoolean()
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
@@ -225,11 +228,11 @@ class HomeViewModel(
     }
 
     override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) {
-        adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songDetail.id }.let { index ->
-            if (index != RecyclerView.NO_POSITION && (adapter.items[index] as? SongListItemViewModel.SongViewModel)?.song?.version == songDetail.version) {
+        adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == songDetail.id }.let { index ->
+            if (index != RecyclerView.NO_POSITION && (adapter.items[index] as? SongItemViewModel)?.song?.version == songDetail.version) {
                 adapter.notifyItemChanged(
                     index,
-                    HomeAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloaded.UpToDate)
+                    RecyclerAdapter.Payload.DownloadStateChanged(SongItemViewModel.DownloadState.Downloaded.UpToDate)
                 )
             }
         }
@@ -237,11 +240,11 @@ class HomeViewModel(
 
     override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) {
         songIds.forEach { songId ->
-            adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
+            adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == songId }.let { index ->
                 if (index != RecyclerView.NO_POSITION) {
                     adapter.notifyItemChanged(
                         index,
-                        HomeAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloading)
+                        RecyclerAdapter.Payload.DownloadStateChanged(SongItemViewModel.DownloadState.Downloading)
                     )
                 }
             }
@@ -251,15 +254,15 @@ class HomeViewModel(
     override fun onSongDetailRepositoryDownloadError(song: Song) {
         analyticsManager.onConnectionError(!songDetailRepository.isSongDownloaded(song.id), song.id)
         downloadSongError.set(song)
-        adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == song.id }.let { index ->
+        adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == song.id }.let { index ->
             if (index != RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
-                    HomeAdapter.Payload.DownloadStateChanged(
+                    RecyclerAdapter.Payload.DownloadStateChanged(
                         when {
-                            songDetailRepository.isSongDownloaded(song.id) -> SongListItemViewModel.SongViewModel.DownloadState.Downloaded.Deprecated
-                            song.isNew -> SongListItemViewModel.SongViewModel.DownloadState.NotDownloaded.New
-                            else -> SongListItemViewModel.SongViewModel.DownloadState.NotDownloaded.Old
+                            songDetailRepository.isSongDownloaded(song.id) -> SongItemViewModel.DownloadState.Downloaded.Deprecated
+                            song.isNew -> SongItemViewModel.DownloadState.NotDownloaded.New
+                            else -> SongItemViewModel.DownloadState.NotDownloaded.Old
                         }
                     )
                 )
@@ -274,22 +277,22 @@ class HomeViewModel(
     }
 
     override fun onSongAddedToPlaylistForTheFirstTime(songId: String) {
-        adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
+        adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == songId }.let { index ->
             if (index != RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
-                    HomeAdapter.Payload.IsSongInAPlaylistChanged(true)
+                    RecyclerAdapter.Payload.IsSongInAPlaylistChanged(true)
                 )
             }
         }
     }
 
     override fun onSongRemovedFromAllPlaylists(songId: String) {
-        adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
+        adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == songId }.let { index ->
             if (index != RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
-                    HomeAdapter.Payload.IsSongInAPlaylistChanged(false)
+                    RecyclerAdapter.Payload.IsSongInAPlaylistChanged(false)
                 )
             }
         }
@@ -310,7 +313,7 @@ class HomeViewModel(
         lastErrorTimestamp = System.currentTimeMillis()
     }
 
-    private fun onListUpdated(items: List<HomeItemViewModel>) {
+    private fun onListUpdated(items: List<ItemViewModel>) {
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
         if (collections.toList().isNotEmpty()) {
             placeholderText.set(R.string.home_placeholder)
@@ -370,7 +373,7 @@ class HomeViewModel(
             collection.isBookmarked == true,
             AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS
         )
-        adapter.notifyItemChanged(position, HomeAdapter.Payload.BookmarkedStateChanged(collection.isBookmarked ?: false))
+        adapter.notifyItemChanged(position, RecyclerAdapter.Payload.BookmarkedStateChanged(collection.isBookmarked ?: false))
         updateAdapterItems(false)
     }
 
@@ -415,7 +418,7 @@ class HomeViewModel(
         }
     }
 
-    private fun createViewModels() = mutableListOf<HomeItemViewModel>().apply {
+    private fun createViewModels() = mutableListOf<ItemViewModel>().apply {
         if (toolbarTextInputView.isTextInputVisible && query.isNotEmpty()) {
             // Search in songs.
             val matchingSongs = songs
@@ -423,7 +426,7 @@ class HomeViewModel(
                 .filterExplicitSongs()
                 .filterSongsByLanguage()
                 .take(SEARCH_SONG_LIMIT)
-                .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
+                .map { SongItemViewModel(context, songDetailRepository, playlistRepository, it) }
                 .toList()
 
             // Search in collections.
@@ -432,16 +435,16 @@ class HomeViewModel(
                 .filterExplicitCollections()
                 .filterCollectionsByLanguage()
                 .take(SEARCH_COLLECTION_LIMIT)
-                .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
+                .map { CollectionItemViewModel(it, newText) }
                 .toList()
 
             // Add results.
             if (matchingSongs.isNotEmpty()) {
-                add(HomeHeaderViewModel(context.getString(R.string.main_songs)))
+                add(HeaderItemViewModel(context.getString(R.string.main_songs)))
                 addAll(matchingSongs)
             }
             if (matchingCollections.isNotEmpty()) {
-                add(HomeHeaderViewModel(context.getString(R.string.main_collections)))
+                add(HeaderItemViewModel(context.getString(R.string.main_collections)))
                 addAll(matchingCollections)
             }
         } else {
@@ -463,8 +466,8 @@ class HomeViewModel(
                 }
             else null
             songOfTheDay?.also {
-                add(HomeHeaderViewModel(context.getString(R.string.home_song_of_the_day)))
-                add(SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it))
+                add(HeaderItemViewModel(context.getString(R.string.home_song_of_the_day)))
+                add(SongItemViewModel(context, songDetailRepository, playlistRepository, it))
             }
 
             // Add the New Collections module.
@@ -475,10 +478,10 @@ class HomeViewModel(
                 .takeLast(NEW_COLLECTION_COUNT)
                 .asReversed() else listOf()
             newCollections
-                .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
+                .map { CollectionItemViewModel(it, newText) }
                 .let {
                     if (it.isNotEmpty()) {
-                        add(HomeHeaderViewModel(context.getString(R.string.home_new_collections)))
+                        add(HeaderItemViewModel(context.getString(R.string.home_new_collections)))
                         addAll(it)
                     }
                 }
@@ -492,10 +495,10 @@ class HomeViewModel(
                 .takeLast(NEW_SONG_COUNT)
                 .asReversed() else listOf()
             newSongs
-                .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
+                .map { SongItemViewModel(context, songDetailRepository, playlistRepository, it) }
                 .let {
                     if (it.isNotEmpty()) {
-                        add(HomeHeaderViewModel(context.getString(R.string.home_new_songs)))
+                        add(HeaderItemViewModel(context.getString(R.string.home_new_songs)))
                         addAll(it)
                     }
                 }
@@ -507,11 +510,11 @@ class HomeViewModel(
                     .filterNot { newCollections.contains(it) }
                     .apply { totalRandomCollectionCount = size }
                     .take(RANDOM_COLLECTION_COUNT)
-                    .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
+                    .map { CollectionItemViewModel(it, newText) }
                     .let {
                         if (it.isNotEmpty()) {
                             add(
-                                HomeHeaderViewModel(
+                                HeaderItemViewModel(
                                     context.getString(R.string.home_random_collections),
                                     if (totalRandomCollectionCount > RANDOM_COLLECTION_COUNT) ::refreshRandomCollections else null
                                 )
@@ -531,10 +534,10 @@ class HomeViewModel(
                     .apply { totalRandomSongCount = size }
                     .take(RANDOM_SONG_COUNT)
                 displayedRandomSongs
-                    .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
+                    .map { SongItemViewModel(context, songDetailRepository, playlistRepository, it) }
                     .let {
                         if (it.isNotEmpty()) {
-                            add(HomeHeaderViewModel(context.getString(R.string.home_random_songs), if (totalRandomSongCount > RANDOM_SONG_COUNT) ::refreshRandomSongs else null))
+                            add(HeaderItemViewModel(context.getString(R.string.home_random_songs), if (totalRandomSongCount > RANDOM_SONG_COUNT) ::refreshRandomSongs else null))
                             addAll(it)
                         }
                     }

@@ -5,5 +5,5 @@ import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 
 class ChangelogViewModel(changelogRepository: ChangelogRepository) : CampfireViewModel() {
 
-    val adapter = ChangelogAdapter(changelogRepository.data)
+    val data = changelogRepository.data
 }

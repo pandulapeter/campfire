@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.shared.recycler.viewHolder
+package com.pandulapeter.campfire.feature.main.shared.recycler.viewHolder
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,7 +7,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ItemListCollectionBinding
-import com.pandulapeter.campfire.feature.shared.recycler.viewModel.CollectionItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 
 class CollectionViewHolder(
     private val binding: ItemListCollectionBinding,
@@ -39,11 +39,11 @@ class CollectionViewHolder(
         fun create(
             parent: ViewGroup,
             itemClickListener: (position: Int, clickedView: View, image: View) -> Unit,
-            saveActionClickListener: ((position: Int) -> Unit)?
+            bookmarkClickListener: ((position: Int) -> Unit)?
         ) = CollectionViewHolder(
             DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_list_collection, parent, false),
             itemClickListener,
-            saveActionClickListener
+            bookmarkClickListener
         )
     }
 }
