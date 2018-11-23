@@ -7,29 +7,29 @@ import androidx.databinding.DataBindingUtil
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsBinding
 import com.pandulapeter.campfire.databinding.ViewOptionsTabsBinding
-import com.pandulapeter.campfire.feature.shared.deprecated.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.addPageScrollListener
 import com.pandulapeter.campfire.util.withArguments
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewModel>(R.layout.fragment_options) {
 
-    companion object {
-        private var Bundle.shouldOpenChangelog by BundleArgumentDelegate.Boolean("shouldOpenChangelog")
-
-        fun newInstance(shouldOpenChangelog: Boolean) = OptionsFragment().withArguments { it.shouldOpenChangelog = shouldOpenChangelog }
-    }
-
-    override val viewModel = OptionsViewModel()
+    override val viewModel by viewModel<OptionsViewModel>()
     override val appBarView by lazy {
         DataBindingUtil.inflate<ViewOptionsTabsBinding>(
-            LayoutInflater.from(getCampfireActivity().toolbarContext), R.layout.view_options_tabs, null, false
+            LayoutInflater.from(getCampfireActivity()?.toolbarContext), R.layout.view_options_tabs, null, false
         ).apply {
             tabLayout.setupWithViewPager(binding.viewPager)
         }.root
     }
-    private val pagerAdapter by lazy { OptionsFragmentPagerAdapter(getCampfireActivity(), childFragmentManager) }
+    private val pagerAdapter by lazy {
+        OptionsFragmentPagerAdapter(
+            getCampfireActivity() ?: throw IllegalStateException("OptionsFragment not attached to activity."),
+            childFragmentManager
+        )
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -56,5 +56,12 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
 
     fun navigateToChangelog() {
         binding.viewPager.currentItem = 1
+    }
+
+    companion object {
+
+        private var Bundle.shouldOpenChangelog by BundleArgumentDelegate.Boolean("shouldOpenChangelog")
+
+        fun newInstance(shouldOpenChangelog: Boolean) = OptionsFragment().withArguments { it.shouldOpenChangelog = shouldOpenChangelog }
     }
 }

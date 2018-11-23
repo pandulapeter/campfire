@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.*
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.detail.DetailPageEventBus
+import com.pandulapeter.campfire.feature.main.options.OptionsViewModel
 import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.main.options.changelog.ChangelogViewModel
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
@@ -50,6 +51,7 @@ val detailModule = module {
 }
 
 val featureModule = module {
+    viewModel { OptionsViewModel(get()) }
     viewModel { AboutViewModel(get()) }
     viewModel { ChangelogViewModel(get()) }
     viewModel { PreferencesViewModel(get(), get(), get(), get()) }

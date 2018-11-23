@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentDetailBinding
 import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
-import com.pandulapeter.campfire.feature.shared.deprecated.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -30,7 +30,7 @@ import org.koin.android.ext.android.inject
 import java.net.URLEncoder
 
 
-class DetailFragment : TopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail), DetailPageEventBus.Subscriber {
+class DetailFragment : OldTopLevelFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail), DetailPageEventBus.Subscriber {
 
     companion object {
         const val TRANSITION_DELAY = 20L

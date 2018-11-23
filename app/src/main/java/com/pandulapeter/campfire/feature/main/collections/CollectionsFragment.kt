@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
 import com.pandulapeter.campfire.feature.main.songs.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.main.songs.SongsFragment
-import com.pandulapeter.campfire.feature.shared.deprecated.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
@@ -24,7 +24,7 @@ import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 
 
-class CollectionsFragment : TopLevelFragment<FragmentCollectionsBinding, CollectionsViewModel>(R.layout.fragment_collections) {
+class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, CollectionsViewModel>(R.layout.fragment_collections) {
 
     private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")

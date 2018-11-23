@@ -11,12 +11,12 @@ import com.pandulapeter.campfire.databinding.FragmentHomeContainerBinding
 import com.pandulapeter.campfire.feature.main.home.home.HomeFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingFragment
 import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireFragment
-import com.pandulapeter.campfire.feature.shared.deprecated.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import io.fabric.sdk.android.Fabric
 import org.koin.android.ext.android.inject
 
-class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, HomeContainerViewModel>(R.layout.fragment_home_container) {
+class HomeContainerFragment : OldTopLevelFragment<FragmentHomeContainerBinding, HomeContainerViewModel>(R.layout.fragment_home_container) {
 
     override val viewModel = HomeContainerViewModel()
     override val shouldShowAppBar get() = preferenceDatabase.isOnboardingDone

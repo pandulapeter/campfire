@@ -10,7 +10,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.databinding.FragmentManagePlaylistsBinding
 import com.pandulapeter.campfire.feature.main.shared.ElevationItemTouchHelperCallback
-import com.pandulapeter.campfire.feature.shared.deprecated.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.*
 import org.koin.android.ext.android.inject
 
-class ManagePlaylistsFragment : TopLevelFragment<FragmentManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists),
+class ManagePlaylistsFragment : OldTopLevelFragment<FragmentManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists),
     BaseDialogFragment.OnDialogItemSelectedListener {
 
     companion object {

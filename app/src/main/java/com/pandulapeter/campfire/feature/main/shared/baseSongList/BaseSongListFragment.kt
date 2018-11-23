@@ -14,7 +14,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentBaseSongListBinding
 import com.pandulapeter.campfire.feature.main.collections.detail.CollectionDetailViewModel
 import com.pandulapeter.campfire.feature.main.playlist.PlaylistViewModel
-import com.pandulapeter.campfire.feature.shared.deprecated.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.util.color
@@ -22,7 +22,7 @@ import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
 
 
-abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : TopLevelFragment<FragmentBaseSongListBinding, VM>(R.layout.fragment_base_song_list) {
+abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : OldTopLevelFragment<FragmentBaseSongListBinding, VM>(R.layout.fragment_base_song_list) {
 
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     protected lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
