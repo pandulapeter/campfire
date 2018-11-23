@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.main.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -59,7 +59,7 @@ class HistoryFragment : BaseSongListFragment<HistoryViewModel>(), BaseDialogFrag
 
             override fun getSwipeDirs(recyclerView: androidx.recyclerview.widget.RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
                 viewHolder.adapterPosition.let { position ->
-                    if (position != RecyclerView.NO_POSITION && viewModel.adapter.items[position] is SongListItemViewModel.SongViewModel) {
+                    if (position != RecyclerView.NO_POSITION && viewModel.adapter.items[position] is SongItemViewModel) {
                         return ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     }
                 }
@@ -72,7 +72,7 @@ class HistoryFragment : BaseSongListFragment<HistoryViewModel>(), BaseDialogFrag
                         analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_HISTORY)
                         viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.historyCompleted = true
-                        val song = (viewModel.adapter.items[position] as SongListItemViewModel.SongViewModel).song
+                        val song = (viewModel.adapter.items[position] as SongItemViewModel).song
                         showSnackbar(
                             message = getString(R.string.history_song_removed_message, song.title),
                             actionText = R.string.undo,

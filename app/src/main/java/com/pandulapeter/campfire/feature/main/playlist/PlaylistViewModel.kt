@@ -8,8 +8,9 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListAdapter
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
@@ -45,7 +46,7 @@ class PlaylistViewModel(
         }
         isInEditMode.onPropertyChanged {
             if (adapter.itemCount > 1) {
-                adapter.notifyItemRangeChanged(0, adapter.itemCount, SongListAdapter.Payload.EditModeChanged(it))
+                adapter.notifyItemRangeChanged(0, adapter.itemCount, RecyclerAdapter.Payload.EditModeChanged(it))
                 updateAdapterItems()
             }
         }
@@ -53,13 +54,13 @@ class PlaylistViewModel(
 
     override fun onActionButtonClicked() = openSongs()
 
-    override fun Sequence<Song>.createViewModels(): List<SongListItemViewModel> {
+    override fun Sequence<Song>.createViewModels(): List<ItemViewModel> {
         val list = (playlist.get()?.songIds ?: listOf<String>())
             .mapNotNull { songId -> find { it.id == songId } }
             .filter { it.id != songToDeleteId }
             .toList()
         return list.map {
-            SongListItemViewModel.SongViewModel(
+            SongItemViewModel(
                 context = context,
                 songDetailRepository = songDetailRepository,
                 playlistRepository = playlistRepository,
@@ -79,7 +80,7 @@ class PlaylistViewModel(
         }
     }
 
-    override fun onListUpdated(items: List<SongListItemViewModel>) {
+    override fun onListUpdated(items: List<ItemViewModel>) {
         super.onListUpdated(items)
         songCount.set(items.size)
     }
@@ -128,7 +129,7 @@ class PlaylistViewModel(
         }
         playlist.get()?.let {
             adapter.notifyItemMoved(originalPosition, targetPosition)
-            val newList = adapter.items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song.id }.toMutableList()
+            val newList = adapter.items.filterIsInstance<SongItemViewModel>().map { it.song.id }.toMutableList()
             it.songIds = newList
             playlistRepository.updatePlaylistSongIds(it.id, newList)
         }
@@ -153,7 +154,7 @@ class PlaylistViewModel(
     fun deleteSongPermanently() {
         songToDeleteId?.let {
             playlist.get()?.let {
-                val newList = adapter.items.filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song.id }.toMutableList()
+                val newList = adapter.items.filterIsInstance<SongItemViewModel>().map { it.song.id }.toMutableList()
                 it.songIds = newList
                 playlistRepository.updatePlaylistSongIds(it.id, newList)
             }

@@ -7,7 +7,10 @@ import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
@@ -93,15 +96,15 @@ class SongsViewModel(
         }
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_SONGS
         adapter.itemTitleCallback = {
-            adapter.items[it].let {
-                when (it) {
-                    is SongListItemViewModel.HeaderViewModel -> it.title.normalize().removePrefixes()[0].toString()
-                    is SongListItemViewModel.SongViewModel -> when (sortingMode) {
-                        SongsViewModel.SortingMode.TITLE -> it.song.getNormalizedTitle().removePrefixes()[0].toString()
-                        SongsViewModel.SortingMode.ARTIST -> it.song.getNormalizedArtist().removePrefixes()[0].toString()
-                        SongsViewModel.SortingMode.POPULARITY -> ""
-                    }
+            when (it) {
+                is HeaderItemViewModel -> it.title.normalize().removePrefixes()[0].toString()
+                is CollectionItemViewModel -> ""
+                is SongItemViewModel -> when (sortingMode) {
+                    SongsViewModel.SortingMode.TITLE -> it.song.getNormalizedTitle().removePrefixes()[0].toString()
+                    SongsViewModel.SortingMode.ARTIST -> it.song.getNormalizedArtist().removePrefixes()[0].toString()
+                    SongsViewModel.SortingMode.POPULARITY -> ""
                 }
+                else -> ""
             }
         }
     }
@@ -114,7 +117,7 @@ class SongsViewModel(
         }
     }
 
-    override fun onListUpdated(items: List<SongListItemViewModel>) {
+    override fun onListUpdated(items: List<ItemViewModel>) {
         super.onListUpdated(items)
         if (songs.toList().isNotEmpty()) {
             placeholderText.set(R.string.songs_placeholder)
@@ -137,11 +140,11 @@ class SongsViewModel(
         .filterByLanguage()
         .filterExplicit()
         .sort()
-        .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
-        .toMutableList<SongListItemViewModel>()
+        .map { SongItemViewModel(context, songDetailRepository, playlistRepository, it) }
+        .toMutableList<ItemViewModel>()
         .apply {
             val headerIndices = mutableListOf<Int>()
-            val songsOnly = filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song }
+            val songsOnly = filterIsInstance<SongItemViewModel>().map { it.song }
             songsOnly.forEachIndexed { index, song ->
                 if (when (sortingMode) {
                         SortingMode.TITLE -> {
@@ -158,7 +161,7 @@ class SongsViewModel(
             (headerIndices.size - 1 downTo 0).forEach { position ->
                 val index = headerIndices[position]
                 add(
-                    index, SongListItemViewModel.HeaderViewModel(
+                    index, HeaderItemViewModel(
                         when (sortingMode) {
                             SortingMode.TITLE -> songsOnly[index].getNormalizedTitle().removePrefixes()[0].let { if (it.isDigit()) "0 - 9" else it.toString() }
                             SortingMode.ARTIST -> songsOnly[index].artist

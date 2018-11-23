@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.Collecti
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
+import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
 
 class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(object : DiffUtil.ItemCallback<ItemViewModel>() {
 
@@ -35,9 +36,8 @@ class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(obje
 
     override fun areContentsTheSame(old: ItemViewModel, new: ItemViewModel) = old == new
 
-}) {
+}), FastScrollRecyclerView.SectionedAdapter, FastScrollRecyclerView.MeasurableAdapter<RecyclerView.ViewHolder> {
 
-    private var recyclerView: RecyclerView? = null
     var shouldScrollToTop = false
     var items = listOf<ItemViewModel>()
         set(newItems) {
@@ -55,6 +55,32 @@ class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(obje
     var songDragTouchListener: (position: Int) -> Unit = {}
     var songPlaylistClickListener: (song: Song) -> Unit = { }
     var songDownloadClickListener: (song: Song) -> Unit = { }
+    var itemTitleCallback: (item: ItemViewModel) -> String = { "" }
+    private var recyclerView: RecyclerView? = null
+    private val headerItemHeight by lazy {
+        recyclerView?.run {
+            onCreateViewHolder(this, VIEW_TYPE_HEADER).itemView.let {
+                it.measure(measuredWidth, measuredHeight)
+                it.measuredHeight
+            }
+        } ?: 0
+    }
+    private val collectionItemHeight by lazy {
+        recyclerView?.run {
+            onCreateViewHolder(this, VIEW_TYPE_COLLECTION).itemView.let {
+                it.measure(measuredWidth, measuredHeight)
+                it.measuredHeight
+            }
+        } ?: 0
+    }
+    private val songItemHeight by lazy {
+        recyclerView?.run {
+            onCreateViewHolder(this, VIEW_TYPE_SONG).itemView.let {
+                it.measure(measuredWidth, measuredHeight)
+                it.measuredHeight
+            }
+        } ?: 0
+    }
 
     init {
         setHasStableIds(true)
@@ -117,6 +143,7 @@ class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(obje
                         when (payload) {
                             is Payload.DownloadStateChanged -> it.downloadState = payload.downloadState
                             is Payload.IsSongInAPlaylistChanged -> it.isOnAnyPlaylists = payload.isSongInAPlaylist
+                            is Payload.EditModeChanged -> it.shouldShowDragHandle = payload.shouldShowDragHandle
                         }
                     }
                     holder.bind(it, payloads.isEmpty())
@@ -125,12 +152,23 @@ class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(obje
         }
     }
 
-    override fun getItemId(position: Int) = getItem(position)?.getItemId() ?: 0
+    override fun getViewTypeHeight(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, viewType: Int) =
+        when (viewType) {
+            VIEW_TYPE_HEADER -> headerItemHeight
+            VIEW_TYPE_COLLECTION -> collectionItemHeight
+            VIEW_TYPE_SONG -> songItemHeight
+            else -> 0
+        }
+
+    override fun getSectionName(position: Int) = itemTitleCallback(getItem(position))
+
+    override fun getItemId(position: Int) = getItem(position).getItemId()
 
     sealed class Payload {
         class BookmarkedStateChanged(val isBookmarked: Boolean) : Payload()
         class DownloadStateChanged(val downloadState: SongItemViewModel.DownloadState) : Payload()
         class IsSongInAPlaylistChanged(val isSongInAPlaylist: Boolean) : Payload()
+        class EditModeChanged(val shouldShowDragHandle: Boolean) : Payload()
     }
 
     companion object {

@@ -6,8 +6,8 @@ import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import org.koin.android.ext.android.inject
 
@@ -38,7 +38,7 @@ class CollectionDetailViewModel(
     override fun Sequence<Song>.createViewModels() = (collection.get()?.collection?.songs ?: listOf())
         .mapNotNull { songId -> find { it.id == songId } }
         .map {
-            SongListItemViewModel.SongViewModel(
+            SongItemViewModel(
                 context = context,
                 songDetailRepository = songDetailRepository,
                 playlistRepository = playlistRepository,

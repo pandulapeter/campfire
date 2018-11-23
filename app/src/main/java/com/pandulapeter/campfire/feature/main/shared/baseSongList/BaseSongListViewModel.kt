@@ -15,7 +15,10 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
+import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -41,7 +44,7 @@ abstract class BaseSongListViewModel(protected val context: Context) : OldCampfi
     private var coroutine: CoroutineContext? = null
     protected var songs = sequenceOf<Song>()
     val collection = ObservableField<CollectionItemViewModel?>()
-    val adapter = SongListAdapter()
+    val adapter = RecyclerAdapter()
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
     val downloadSongError = ObservableField<Song?>()
     val isLoading = ObservableBoolean()
@@ -98,11 +101,11 @@ abstract class BaseSongListViewModel(protected val context: Context) : OldCampfi
     }
 
     override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) {
-        adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songDetail.id }.let { index ->
-            if (index != RecyclerView.NO_POSITION && (adapter.items[index] as? SongListItemViewModel.SongViewModel)?.song?.version == songDetail.version) {
+        adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == songDetail.id }.let { index ->
+            if (index != RecyclerView.NO_POSITION && (adapter.items[index] as? SongItemViewModel)?.song?.version == songDetail.version) {
                 adapter.notifyItemChanged(
                     index,
-                    SongListAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloaded.UpToDate)
+                    RecyclerAdapter.Payload.DownloadStateChanged(SongItemViewModel.DownloadState.Downloaded.UpToDate)
                 )
             }
         }
@@ -110,11 +113,11 @@ abstract class BaseSongListViewModel(protected val context: Context) : OldCampfi
 
     override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) {
         songIds.forEach { songId ->
-            adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
+            adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == songId }.let { index ->
                 if (index != RecyclerView.NO_POSITION) {
                     adapter.notifyItemChanged(
                         index,
-                        SongListAdapter.Payload.DownloadStateChanged(SongListItemViewModel.SongViewModel.DownloadState.Downloading)
+                        RecyclerAdapter.Payload.DownloadStateChanged(SongItemViewModel.DownloadState.Downloading)
                     )
                 }
             }
@@ -124,15 +127,15 @@ abstract class BaseSongListViewModel(protected val context: Context) : OldCampfi
     override fun onSongDetailRepositoryDownloadError(song: Song) {
         analyticsManager.onConnectionError(!songDetailRepository.isSongDownloaded(song.id), song.id)
         downloadSongError.set(song)
-        adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == song.id }.let { index ->
+        adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == song.id }.let { index ->
             if (index != RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
-                    SongListAdapter.Payload.DownloadStateChanged(
+                    RecyclerAdapter.Payload.DownloadStateChanged(
                         when {
-                            songDetailRepository.isSongDownloaded(song.id) -> SongListItemViewModel.SongViewModel.DownloadState.Downloaded.Deprecated
-                            song.isNew -> SongListItemViewModel.SongViewModel.DownloadState.NotDownloaded.New
-                            else -> SongListItemViewModel.SongViewModel.DownloadState.NotDownloaded.Old
+                            songDetailRepository.isSongDownloaded(song.id) -> SongItemViewModel.DownloadState.Downloaded.Deprecated
+                            song.isNew -> SongItemViewModel.DownloadState.NotDownloaded.New
+                            else -> SongItemViewModel.DownloadState.NotDownloaded.Old
                         }
                     )
                 )
@@ -147,22 +150,22 @@ abstract class BaseSongListViewModel(protected val context: Context) : OldCampfi
     }
 
     override fun onSongAddedToPlaylistForTheFirstTime(songId: String) {
-        adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
+        adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == songId }.let { index ->
             if (index != RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
-                    SongListAdapter.Payload.IsSongInAPlaylistChanged(true)
+                    RecyclerAdapter.Payload.IsSongInAPlaylistChanged(true)
                 )
             }
         }
     }
 
     override fun onSongRemovedFromAllPlaylists(songId: String) {
-        adapter.items.indexOfLast { it is SongListItemViewModel.SongViewModel && it.song.id == songId }.let { index ->
+        adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == songId }.let { index ->
             if (index != RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
                     index,
-                    SongListAdapter.Payload.IsSongInAPlaylistChanged(false)
+                    RecyclerAdapter.Payload.IsSongInAPlaylistChanged(false)
                 )
             }
         }
@@ -200,10 +203,10 @@ abstract class BaseSongListViewModel(protected val context: Context) : OldCampfi
 
     protected open fun canUpdateUI() = true
 
-    protected abstract fun Sequence<Song>.createViewModels(): List<SongListItemViewModel>
+    protected abstract fun Sequence<Song>.createViewModels(): List<ItemViewModel>
 
     @CallSuper
-    protected open fun onListUpdated(items: List<SongListItemViewModel>) {
+    protected open fun onListUpdated(items: List<ItemViewModel>) {
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
     }
 

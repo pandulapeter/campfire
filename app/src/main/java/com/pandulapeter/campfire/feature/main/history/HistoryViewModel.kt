@@ -8,7 +8,9 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import org.koin.android.ext.android.inject
 import java.util.*
@@ -47,11 +49,11 @@ class HistoryViewModel(context: Context, private val openSongs: () -> Unit) : Ba
     override fun Sequence<Song>.createViewModels() = filter { it.id != songToDeleteId }
         .filter { song -> history.firstOrNull { it.id == song.id } != null }
         .sortedByDescending { song -> history.first { it.id == song.id }.lastOpenedAt }
-        .map { SongListItemViewModel.SongViewModel(context, songDetailRepository, playlistRepository, it) }
-        .toMutableList<SongListItemViewModel>()
+        .map { SongItemViewModel(context, songDetailRepository, playlistRepository, it) }
+        .toMutableList<ItemViewModel>()
         .apply {
             val headerIndices = mutableListOf<Int>()
-            val songsOnly = filterIsInstance<SongListItemViewModel.SongViewModel>().map { it.song }
+            val songsOnly = filterIsInstance<SongItemViewModel>().map { it.song }
             songsOnly.forEachIndexed { index, _ ->
                 if (index == 0 || getHeaderTitle(index, songsOnly) != getHeaderTitle(index - 1, songsOnly)) {
                     headerIndices.add(index)
@@ -59,11 +61,11 @@ class HistoryViewModel(context: Context, private val openSongs: () -> Unit) : Ba
             }
             (headerIndices.size - 1 downTo 0).forEach { position ->
                 val index = headerIndices[position]
-                add(index, SongListItemViewModel.HeaderViewModel(context.getString(getHeaderTitle(index, songsOnly))))
+                add(index, HeaderItemViewModel(context.getString(getHeaderTitle(index, songsOnly))))
             }
         }
 
-    override fun onListUpdated(items: List<SongListItemViewModel>) {
+    override fun onListUpdated(items: List<ItemViewModel>) {
         super.onListUpdated(items)
         shouldShowDeleteAll.set(items.isNotEmpty())
     }

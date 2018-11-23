@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.main.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
@@ -63,7 +63,7 @@ class ManageDownloadsFragment : BaseSongListFragment<ManageDownloadsViewModel>()
 
             override fun getSwipeDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
                 viewHolder.adapterPosition.let { position ->
-                    if (position != RecyclerView.NO_POSITION && viewModel.adapter.items[position] is SongListItemViewModel.SongViewModel) {
+                    if (position != RecyclerView.NO_POSITION && viewModel.adapter.items[position] is SongItemViewModel) {
                         return ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     }
                 }
@@ -76,7 +76,7 @@ class ManageDownloadsFragment : BaseSongListFragment<ManageDownloadsViewModel>()
                         analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS)
                         viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.manageDownloadsCompleted = true
-                        val song = (viewModel.adapter.items[position] as SongListItemViewModel.SongViewModel).song
+                        val song = (viewModel.adapter.items[position] as SongItemViewModel).song
                         showSnackbar(
                             message = getString(R.string.manage_downloads_song_deleted_message, song.title),
                             actionText = R.string.undo,

@@ -9,7 +9,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.feature.main.shared.ElevationItemTouchHelperCallback
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
@@ -125,7 +125,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
                         analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST)
                         viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.playlistSwipeCompleted = true
-                        (viewModel.adapter.items[position] as? SongListItemViewModel.SongViewModel)?.song?.let { song ->
+                        (viewModel.adapter.items[position] as? SongItemViewModel)?.song?.let { song ->
                             showSnackbar(
                                 message = getString(R.string.playlist_song_removed_message, song.title),
                                 actionText = R.string.undo,
@@ -142,7 +142,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
             }
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
-        viewModel.adapter.dragHandleTouchListener = { position -> binding.recyclerView.findViewHolderForAdapterPosition(position)?.let { itemTouchHelper.startDrag(it) } }
+        viewModel.adapter.songDragTouchListener = { position -> binding.recyclerView.findViewHolderForAdapterPosition(position)?.let { itemTouchHelper.startDrag(it) } }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
