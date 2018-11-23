@@ -1,106 +1,121 @@
 package com.pandulapeter.campfire.feature.main.options.preferences
 
 import android.content.Context
-import androidx.databinding.ObservableBoolean
-import androidx.databinding.ObservableField
+import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.generateNotationExample
-import com.pandulapeter.campfire.util.onPropertyChanged
-import org.koin.android.ext.android.inject
 
-class PreferencesViewModel(private val context: Context) : OldCampfireViewModel() {
+class PreferencesViewModel(
+    private val context: Context,
+    private val preferenceDatabase: PreferenceDatabase,
+    private val firstTimeUserExperienceManager: FirstTimeUserExperienceManager,
+    private val analyticsManager: AnalyticsManager
+) : CampfireViewModel() {
 
-    val preferenceDatabase by inject<PreferenceDatabase>()
-    private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
-    private val analyticsManager by inject<AnalyticsManager>()
-    val shouldShowChords = ObservableBoolean(preferenceDatabase.shouldShowChords)
-    val shouldUseGermanNotation = ObservableBoolean(preferenceDatabase.shouldUseGermanNotation)
+    val shouldShowChords = MutableLiveData<Boolean>().apply { value = preferenceDatabase.shouldShowChords }
+    val shouldUseGermanNotation = MutableLiveData<Boolean>().apply { value = preferenceDatabase.shouldUseGermanNotation }
     val englishNotationExample = generateNotationExample(false)
     val germanNotationExample = generateNotationExample(true)
-    val theme = ObservableField<Theme>(Theme.fromId(preferenceDatabase.theme))
-    val themeDescription = ObservableField("")
-    val language = ObservableField<Language>(Language.fromId(preferenceDatabase.language))
-    val languageDescription = ObservableField("")
-    val shouldShowThemeSelector = ObservableBoolean()
-    val shouldShowLanguageSelector = ObservableBoolean()
-    val shouldShowExitConfirmation = ObservableBoolean(preferenceDatabase.shouldShowExitConfirmation)
-    val shouldShowHintsResetConfirmation = ObservableBoolean()
-    val shouldShowHintsResetSnackbar = ObservableBoolean()
-    val shouldShareUsageData = ObservableBoolean(preferenceDatabase.shouldShareUsageData)
-    val shouldShareCrashReports = ObservableBoolean(preferenceDatabase.shouldShareCrashReports)
+    val theme = MutableLiveData<Theme>().apply { value = Theme.fromId(preferenceDatabase.theme) }
+    val themeDescription = MutableLiveData<String>().apply { value = "" }
+    val language = MutableLiveData<Language>().apply { value = Language.fromId(preferenceDatabase.language) }
+    val languageDescription = MutableLiveData<String>().apply { value = "" }
+    val shouldShowExitConfirmation = MutableLiveData<Boolean>().apply { value = preferenceDatabase.shouldShowExitConfirmation }
+    val shouldShareUsageData = MutableLiveData<Boolean>().apply { value = preferenceDatabase.shouldShareUsageData }
+    val shouldShareCrashReports = MutableLiveData<Boolean>().apply { value = preferenceDatabase.shouldShareCrashReports }
+    val shouldShowHintsResetConfirmation = MutableLiveData<Boolean?>()
+    val shouldShowHintsResetSnackbar = MutableLiveData<Boolean?>()
+    val shouldShowThemeSelector = MutableLiveData<Boolean?>()
+    val shouldShowLanguageSelector = MutableLiveData<Boolean?>()
 
     init {
-        shouldShowChords.onPropertyChanged {
+        shouldShowChords.observeForever {
             analyticsManager.onShouldShowChordsToggled(it, AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_PREFERENCES)
             preferenceDatabase.shouldShowChords = it
         }
-        shouldUseGermanNotation.onPropertyChanged {
+        shouldUseGermanNotation.observeForever {
             analyticsManager.onNotationModeChanged(it)
             preferenceDatabase.shouldUseGermanNotation = it
         }
-        theme.onPropertyChanged {
-            preferenceDatabase.theme = it.id
-            updateThemeDescription()
-            analyticsManager.onThemeChanged(
-                when (it) {
-                    PreferencesViewModel.Theme.AUTOMATIC -> AnalyticsManager.PARAM_VALUE_AUTOMATIC
-                    PreferencesViewModel.Theme.LIGHT -> AnalyticsManager.PARAM_VALUE_LIGHT
-                    PreferencesViewModel.Theme.DARK -> AnalyticsManager.PARAM_VALUE_DARK
-                }
-            )
+        theme.observeForever {
+            if (it != null) {
+                preferenceDatabase.theme = it.id
+                updateThemeDescription()
+                analyticsManager.onThemeChanged(
+                    when (it) {
+                        PreferencesViewModel.Theme.AUTOMATIC -> AnalyticsManager.PARAM_VALUE_AUTOMATIC
+                        PreferencesViewModel.Theme.LIGHT -> AnalyticsManager.PARAM_VALUE_LIGHT
+                        PreferencesViewModel.Theme.DARK -> AnalyticsManager.PARAM_VALUE_DARK
+                    }
+                )
+            }
         }
-        language.onPropertyChanged {
+        language.observeForever {
             preferenceDatabase.language = it.id
             updateLanguageDescription()
             analyticsManager.onLanguageChanged(if (it == PreferencesViewModel.Language.AUTOMATIC) AnalyticsManager.PARAM_VALUE_AUTOMATIC else it.id)
         }
-        shouldShowExitConfirmation.onPropertyChanged {
+        shouldShowExitConfirmation.observeForever {
             analyticsManager.onExitConfirmationToggled(it)
             preferenceDatabase.shouldShowExitConfirmation = it
         }
-        shouldShareUsageData.onPropertyChanged { preferenceDatabase.shouldShareUsageData = it }
-        shouldShareCrashReports.onPropertyChanged { preferenceDatabase.shouldShareCrashReports = it }
+        shouldShareUsageData.observeForever {
+            analyticsManager.updateCollectionEnabledState()
+            preferenceDatabase.shouldShareUsageData = it
+        }
+        shouldShareCrashReports.observeForever { preferenceDatabase.shouldShareCrashReports = it }
         updateThemeDescription()
         updateLanguageDescription()
     }
 
-    fun onThemeClicked() = shouldShowThemeSelector.set(true)
+    fun onThemeClicked() {
+        if (!isUiBlocked) {
+            shouldShowThemeSelector.value = true
+        }
+    }
 
-    fun onLanguageClicked() = shouldShowLanguageSelector.set(true)
+    fun onLanguageClicked() {
+        if (!isUiBlocked) {
+            shouldShowLanguageSelector.value = true
+        }
+    }
 
     fun onResetHintsClicked() {
-        shouldShowHintsResetConfirmation.set(true)
+        if (!isUiBlocked) {
+            shouldShowHintsResetConfirmation.value = true
+        }
     }
 
     fun resetHints() {
         firstTimeUserExperienceManager.resetAll()
-        shouldShowHintsResetSnackbar.set(true)
+        shouldShowHintsResetSnackbar.value = true
     }
 
-    private fun updateThemeDescription() = themeDescription.set(
-        context.getString(
-            when (theme.get()) {
+    private fun updateThemeDescription() {
+        themeDescription.value = context.getString(
+            when (theme.value) {
                 null, PreferencesViewModel.Theme.AUTOMATIC -> R.string.options_preferences_app_theme_automatic_description
                 PreferencesViewModel.Theme.DARK -> R.string.options_preferences_app_theme_dark_description
                 PreferencesViewModel.Theme.LIGHT -> R.string.options_preferences_app_theme_light_description
             }
         )
-    )
+    }
 
-    private fun updateLanguageDescription() = languageDescription.set(
-        context.getString(
-            when (language.get()) {
-                null, PreferencesViewModel.Language.AUTOMATIC -> R.string.options_preferences_language_automatic_description
-                PreferencesViewModel.Language.ENGLISH -> R.string.options_preferences_language_english_description
-                PreferencesViewModel.Language.HUNGARIAN -> R.string.options_preferences_language_hungarian_description
-                PreferencesViewModel.Language.ROMANIAN -> R.string.options_preferences_language_romanian_description
-            }
-        )
-    )
+    private fun updateLanguageDescription() {
+        languageDescription.value =
+                context.getString(
+                    when (language.value) {
+                        null, PreferencesViewModel.Language.AUTOMATIC -> R.string.options_preferences_language_automatic_description
+                        PreferencesViewModel.Language.ENGLISH -> R.string.options_preferences_language_english_description
+                        PreferencesViewModel.Language.HUNGARIAN -> R.string.options_preferences_language_hungarian_description
+                        PreferencesViewModel.Language.ROMANIAN -> R.string.options_preferences_language_romanian_description
+                    }
+                )
+    }
 
     enum class Theme(val id: Int) {
         AUTOMATIC(0),

@@ -9,15 +9,6 @@ import com.pandulapeter.campfire.util.withArguments
 
 class LanguageSelectorBottomSheetFragment : BaseBottomSheetDialogFragment<FragmentLanguageSelectorBottomSheetBinding>(R.layout.fragment_language_selector_bottom_sheet) {
 
-    companion object {
-        private var Bundle?.selectedLanguageId by BundleArgumentDelegate.String("selectedLanguageId")
-
-        fun show(fragmentManager: androidx.fragment.app.FragmentManager, selectedLanguageId: String) {
-            LanguageSelectorBottomSheetFragment().withArguments { it.selectedLanguageId = selectedLanguageId }
-                .run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
-        }
-    }
-
     private val onLanguageSelectedListener get() = parentFragment as? OnLanguageSelectedListener
 
     override fun onDialogCreated() {
@@ -43,4 +34,15 @@ class LanguageSelectorBottomSheetFragment : BaseBottomSheetDialogFragment<Fragme
 
         fun onLanguageSelected(language: PreferencesViewModel.Language)
     }
+
+    companion object {
+
+        private var Bundle?.selectedLanguageId by BundleArgumentDelegate.String("selectedLanguageId")
+
+        fun show(fragmentManager: androidx.fragment.app.FragmentManager, selectedLanguageId: String) {
+            LanguageSelectorBottomSheetFragment().withArguments { it.selectedLanguageId = selectedLanguageId }
+                .run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
+        }
+    }
+
 }

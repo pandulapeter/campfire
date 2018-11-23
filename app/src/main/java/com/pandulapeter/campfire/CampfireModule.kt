@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.detail.DetailPageEventBus
 import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.main.options.changelog.ChangelogViewModel
+import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
@@ -51,4 +52,5 @@ val detailModule = module {
 val featureModule = module {
     viewModel { AboutViewModel(get()) }
     viewModel { ChangelogViewModel(get()) }
+    viewModel { PreferencesViewModel(get(), get(), get(), get()) }
 }

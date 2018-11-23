@@ -9,15 +9,6 @@ import com.pandulapeter.campfire.util.withArguments
 
 class ThemeSelectorBottomSheetFragment : BaseBottomSheetDialogFragment<FragmentThemeSelectorBottomSheetBinding>(R.layout.fragment_theme_selector_bottom_sheet) {
 
-    companion object {
-        private var Bundle?.selectedThemeId by BundleArgumentDelegate.Int("selectedThemeId")
-
-        fun show(fragmentManager: androidx.fragment.app.FragmentManager, selectedThemeId: Int) {
-            ThemeSelectorBottomSheetFragment().withArguments { it.selectedThemeId = selectedThemeId }
-                .run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
-        }
-    }
-
     private val onThemeSelectedListener get() = parentFragment as? OnThemeSelectedListener
 
     override fun onDialogCreated() {
@@ -40,5 +31,15 @@ class ThemeSelectorBottomSheetFragment : BaseBottomSheetDialogFragment<FragmentT
     interface OnThemeSelectedListener {
 
         fun onThemeSelected(theme: PreferencesViewModel.Theme)
+    }
+
+    companion object {
+
+        private var Bundle?.selectedThemeId by BundleArgumentDelegate.Int("selectedThemeId")
+
+        fun show(fragmentManager: androidx.fragment.app.FragmentManager, selectedThemeId: Int) {
+            ThemeSelectorBottomSheetFragment().withArguments { it.selectedThemeId = selectedThemeId }
+                .run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
+        }
     }
 }

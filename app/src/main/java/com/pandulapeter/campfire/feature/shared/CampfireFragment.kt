@@ -20,6 +20,7 @@ import androidx.annotation.StringRes
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.google.android.material.snackbar.Snackbar
@@ -48,6 +49,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     private val snackbarBackgroundColor by lazy { requireContext().obtainColor(android.R.attr.textColorPrimary) }
     private val snackbarTextColor by lazy { requireContext().obtainColor(android.R.attr.colorPrimary) }
     private val snackbarActionTextColor by lazy { requireContext().color(R.color.accent) }
+    var hasStartedObserving = false
 
     final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)
@@ -57,9 +59,26 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         return binding.root
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (shouldDelaySubscribing) {
+            isResumingDelayed = true
+        } else {
+            updateUI()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         viewModel.isUiBlocked = false
+        hasStartedObserving = true
+    }
+
+    override fun onStop() {
+        super.onStop()
+        isResumingDelayed = false
+        snackbar?.dismiss()
+        viewModel.unsubscribe()
     }
 
     override fun onCreateAnimation(transit: Int, enter: Boolean, nextAnim: Int): Animation? {
@@ -115,22 +134,6 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         } catch (ex: Resources.NotFoundException) {
             return defValue
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        if (shouldDelaySubscribing) {
-            isResumingDelayed = true
-        } else {
-            updateUI()
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        isResumingDelayed = false
-        snackbar?.dismiss()
-        viewModel.unsubscribe()
     }
 
     override fun setReenterTransition(transition: Any?) {
@@ -218,8 +221,14 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         getCampfireActivity()?.isUiBlocked = true
     }
 
+    protected inline fun <T> LiveData<T>.observe(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {
+        if (hasStartedObserving) {
+            callback(it)
+        }
+    })
+
     protected inline fun <T> MutableLiveData<T?>.observeAndReset(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {
-        if (it != null) {
+        if (hasStartedObserving && it != null) {
             callback(it)
             value = null
         }
