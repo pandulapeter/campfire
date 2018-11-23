@@ -9,6 +9,8 @@ import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
+import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
@@ -41,7 +43,7 @@ class CollectionsViewModel(
     val placeholderText = ObservableInt(R.string.collections_initializing_error)
     val buttonText = ObservableInt(R.string.try_again)
     val buttonIcon = ObservableInt()
-    val adapter = CollectionListAdapter()
+    val adapter = RecyclerAdapter()
     val isSwipeRefreshEnabled = ObservableBoolean(true)
     val shouldShowEraseButton = ObservableBoolean().apply {
         onPropertyChanged {
@@ -145,7 +147,7 @@ class CollectionsViewModel(
         }
     }
 
-    private fun onListUpdated(items: List<CollectionListItemViewModel>) {
+    private fun onListUpdated(items: List<CollectionItemViewModel>) {
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
         if (collections.toList().isNotEmpty()) {
             placeholderText.set(R.string.collections_placeholder)
@@ -169,7 +171,7 @@ class CollectionsViewModel(
         .filterExplicit()
         .filterByLanguage()
         .sort()
-        .map { CollectionListItemViewModel.CollectionViewModel(it, newText) }
+        .map { CollectionItemViewModel(it, newText) }
         .toList()
 
     fun restoreToolbarButtons() {
@@ -209,7 +211,7 @@ class CollectionsViewModel(
             collection.isBookmarked == true,
             AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS
         )
-        adapter.notifyItemChanged(position, CollectionListAdapter.Payload.BookmarkedStateChanged(collection.isBookmarked ?: false))
+        adapter.notifyItemChanged(position, RecyclerAdapter.Payload.BookmarkedStateChanged(collection.isBookmarked ?: false))
         updateAdapterItems()
     }
 

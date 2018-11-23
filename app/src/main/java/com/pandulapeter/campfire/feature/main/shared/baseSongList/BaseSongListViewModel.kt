@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
-import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -40,7 +40,7 @@ abstract class BaseSongListViewModel(protected val context: Context) : OldCampfi
     abstract val screenName: String
     private var coroutine: CoroutineContext? = null
     protected var songs = sequenceOf<Song>()
-    val collection = ObservableField<CollectionListItemViewModel.CollectionViewModel?>()
+    val collection = ObservableField<CollectionItemViewModel?>()
     val adapter = SongListAdapter()
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
     val downloadSongError = ObservableField<Song?>()

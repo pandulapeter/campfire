@@ -14,6 +14,7 @@ import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.feature.main.songs.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.main.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
@@ -112,8 +113,7 @@ class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, Coll
         super.onCreate(savedInstanceState)
         setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
-                val index =
-                    viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
+                val index = viewModel.adapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
                 if (index != RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
@@ -174,29 +174,23 @@ class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, Coll
             )
         }
         viewModel.adapter.apply {
-            itemClickListener = { position, clickedView, image ->
+            collectionClickListener = { collection, clickedView, image ->
                 if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
-                    (items[position] as? CollectionListItemViewModel.CollectionViewModel)?.collection?.let {
-                        if (items.size > 1) {
-                            linearLayoutManager.isScrollEnabled = false
-                            viewModel.isDetailScreenOpen = true
-                        }
-                        getCampfireActivity().isUiBlocked = true
-                        if (viewModel.toolbarTextInputView.isTextInputVisible && viewModel.query.trim().isEmpty()) {
-                            viewModel.toggleTextInputVisibility()
-                        }
-                        viewModel.collectionRepository.onCollectionOpened(it.id)
-                        getCampfireActivity().openCollectionDetailsScreen(it, clickedView, image, items.size > 1)
+                    if (items.size > 1) {
+                        linearLayoutManager.isScrollEnabled = false
+                        viewModel.isDetailScreenOpen = true
                     }
+                    getCampfireActivity().isUiBlocked = true
+                    if (viewModel.toolbarTextInputView.isTextInputVisible && viewModel.query.trim().isEmpty()) {
+                        viewModel.toggleTextInputVisibility()
+                    }
+                    viewModel.collectionRepository.onCollectionOpened(collection.id)
+                    getCampfireActivity().openCollectionDetailsScreen(collection, clickedView, image, items.size > 1)
                 }
             }
-            bookmarkActionClickListener = { position ->
+            collectionBookmarkClickListener = { collection, position ->
                 if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
-                    viewModel.adapter.items[position].let {
-                        if (it is CollectionListItemViewModel.CollectionViewModel) {
-                            viewModel.onBookmarkClicked(position, it.collection)
-                        }
-                    }
+                    viewModel.onBookmarkClicked(position, collection)
                 }
             }
         }
@@ -219,8 +213,7 @@ class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, Coll
                 override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
                     binding.recyclerView.removeOnLayoutChangeListener(this)
                     if (reenterTransition != null) {
-                        val index =
-                            viewModel.adapter.items.indexOfFirst { it is CollectionListItemViewModel.CollectionViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
+                        val index = viewModel.adapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
                         if (index != RecyclerView.NO_POSITION) {
                             val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                             if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {

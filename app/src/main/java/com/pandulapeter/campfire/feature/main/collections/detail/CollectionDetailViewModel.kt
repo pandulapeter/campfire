@@ -5,9 +5,9 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.repository.CollectionRepository
-import com.pandulapeter.campfire.feature.main.collections.CollectionListItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.SongListItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import org.koin.android.ext.android.inject
 
@@ -23,7 +23,7 @@ class CollectionDetailViewModel(
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL
 
     init {
-        this.collection.set(CollectionListItemViewModel.CollectionViewModel(collection, context.getString(R.string.new_tag)))
+        this.collection.set(CollectionItemViewModel(collection, context.getString(R.string.new_tag)))
     }
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {

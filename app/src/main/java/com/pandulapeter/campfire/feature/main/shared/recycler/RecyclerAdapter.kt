@@ -42,7 +42,8 @@ class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(obje
     var items = listOf<ItemViewModel>()
         set(newItems) {
             if (shouldScrollToTop) {
-                recyclerView?.run { post { scrollToPosition(0) } }
+                //TODO: Does not seem to work.
+                recyclerView?.scrollToPosition(0)
                 shouldScrollToTop = false
             }
             field = newItems
