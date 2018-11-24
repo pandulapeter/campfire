@@ -16,43 +16,45 @@ import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
-import org.koin.androidx.viewmodel.ext.koin.viewModel
+import org.koin.androidx.viewmodel.experimental.builder.viewModel
 import org.koin.dsl.module.module
+import org.koin.experimental.builder.factory
+import org.koin.experimental.builder.single
 
 val integrationModule = module {
-    factory { AppShortcutManager(get(), get(), get()) }
-    factory { DeepLinkManager() }
-    factory { FirstTimeUserExperienceManager(get()) }
+    factory<AppShortcutManager>()
+    factory<DeepLinkManager>()
+    factory<FirstTimeUserExperienceManager>()
 }
 
 val networkingModule = module {
     single { GsonBuilder().create() }
-    factory { AnalyticsManager(get(), get(), get()) }
-    factory { NetworkManager(get()) }
+    factory<AnalyticsManager>()
+    factory<NetworkManager>()
 }
 
 val repositoryModule = module {
-    single { SongRepository(get(), get(), get()) }
-    single { SongDetailRepository(get(), get()) }
-    single { ChangelogRepository() }
-    single { HistoryRepository(get()) }
-    single { PlaylistRepository(get()) }
-    single { CollectionRepository(get(), get(), get()) }
+    single<SongRepository>()
+    single<SongDetailRepository>()
+    single<ChangelogRepository>()
+    single<HistoryRepository>()
+    single<PlaylistRepository>()
+    single<CollectionRepository>()
 }
 
 val persistenceModule = module {
-    single { PreferenceDatabase(get()) }
+    single<PreferenceDatabase>()
     single { Room.databaseBuilder(get(), Database::class.java, "songDatabase.db").build() }
 }
 
 val detailModule = module {
-    single { DetailEventBus() }
-    single { DetailPageEventBus() }
+    single<DetailEventBus>()
+    single<DetailPageEventBus>()
 }
 
 val featureModule = module {
-    viewModel { OptionsViewModel(get()) }
-    viewModel { AboutViewModel(get()) }
-    viewModel { ChangelogViewModel(get()) }
-    viewModel { PreferencesViewModel(get(), get(), get(), get()) }
+    viewModel<OptionsViewModel>()
+    viewModel<AboutViewModel>()
+    viewModel<ChangelogViewModel>()
+    viewModel<PreferencesViewModel>()
 }
