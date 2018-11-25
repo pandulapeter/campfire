@@ -57,4 +57,9 @@ class ContentLanguageFragment : OnboardingPageFragment<FragmentOnboardingContent
         (parentFragment as OnboardingFragment).languageFiltersUpdated(viewModel.selectedLanguageCount)
         viewModel.shouldShowError.value = viewModel.selectedLanguageCount == 0
     }
+
+    companion object {
+
+        fun newInstance() = ContentLanguageFragment()
+    }
 }

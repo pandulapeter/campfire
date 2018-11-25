@@ -255,7 +255,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     R.id.home -> consumeAndCloseDrawers {
                         supportFragmentManager.handleReplace {
                             appShortcutManager.onHomeOpened()
-                            HomeContainerFragment()
+                            HomeContainerFragment.newInstance()
                         }
                     }
                     R.id.collections -> consumeAndCloseDrawers {
@@ -269,7 +269,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                         supportFragmentManager.handleReplace { SongsFragment() }
                     }
                     R.id.history -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { HistoryFragment() } }
-                    R.id.options -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { OptionsFragment() } }
+                    R.id.options -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { OptionsFragment.newInstance(false) } }
                     R.id.manage_playlists -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManagePlaylistsFragment() } }
                     R.id.manage_downloads -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { ManageDownloadsFragment() } }
                     newPlaylistId -> {
@@ -390,7 +390,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     binding.drawerLayout.closeDrawer(GravityCompat.END)
                 } else {
                     val fragment = currentFragment
-                    if (fragment == null || (fragment as? TopLevelFragment<*, *>)?.onBackPressed() != true || (fragment as? OldTopLevelFragment<*, *>)?.onBackPressed() != true) {
+                    //TODO: Simplify this
+                    if (fragment == null || ((fragment as? TopLevelFragment<*, *>)?.onBackPressed() != true && (fragment as? OldTopLevelFragment<*, *>)?.onBackPressed() != true)) {
                         if (isBackStackEmpty) {
                             if (preferenceDatabase.shouldShowExitConfirmation) {
                                 AlertDialogFragment.show(
@@ -727,7 +728,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private fun openHomeScreen(): String {
         if (currentFragment !is HomeContainerFragment) {
             supportFragmentManager.clearBackStack()
-            supportFragmentManager.handleReplace { HomeContainerFragment() }
+            supportFragmentManager.handleReplace { HomeContainerFragment.newInstance() }
             currentScreenId = R.id.home
             binding.primaryNavigation.setCheckedItem(R.id.home)
             appShortcutManager.onHomeOpened()

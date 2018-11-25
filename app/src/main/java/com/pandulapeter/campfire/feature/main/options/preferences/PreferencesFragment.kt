@@ -86,5 +86,7 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
 
     companion object {
         private const val DIALOG_ID_RESET_HINTS_CONFIRMATION = 3
+
+        fun newInstance() = PreferencesFragment()
     }
 }

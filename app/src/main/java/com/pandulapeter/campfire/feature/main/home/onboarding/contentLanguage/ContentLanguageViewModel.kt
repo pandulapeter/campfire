@@ -9,9 +9,7 @@ import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
-import com.pandulapeter.campfire.util.UI
 import com.pandulapeter.campfire.util.mutableLiveDataOf
-import kotlinx.coroutines.launch
 
 class ContentLanguageViewModel(
     private val preferenceDatabase: PreferenceDatabase,
@@ -77,16 +75,14 @@ class ContentLanguageViewModel(
 
     private fun refreshLoadingState() {
         if ((areCollectionsLoading || areSongsLoading) && state.value != StateLayout.State.ERROR) {
-            state.value = StateLayout.State.LOADING
+            state.postValue(StateLayout.State.LOADING)
         }
     }
 
     private fun updateLanguages() {
         if (!areCollectionsLoading && !areSongsLoading) {
-            launch(UI) {
-                languages.value = collectionRepository.languages.union(songRepository.languages).toList()
-                state.value = StateLayout.State.NORMAL
-            }
+            languages.postValue(collectionRepository.languages.union(songRepository.languages).toList())
+            state.postValue(StateLayout.State.NORMAL)
         }
     }
 }

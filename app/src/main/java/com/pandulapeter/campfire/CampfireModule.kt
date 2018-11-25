@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.*
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.detail.DetailPageEventBus
+import com.pandulapeter.campfire.feature.main.home.HomeContainerViewModel
 import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingViewModel
 import com.pandulapeter.campfire.feature.main.home.onboarding.contentLanguage.ContentLanguageViewModel
 import com.pandulapeter.campfire.feature.main.home.onboarding.songAppearance.SongAppearanceViewModel
@@ -58,6 +59,7 @@ val detailModule = module {
 }
 
 val featureModule = module {
+    viewModel<HomeContainerViewModel>()
     viewModel<OnboardingViewModel>()
     viewModel<WelcomeViewModel>()
     viewModel<UserDataViewModel>()

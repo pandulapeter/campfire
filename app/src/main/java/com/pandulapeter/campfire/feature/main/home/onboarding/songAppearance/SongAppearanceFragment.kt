@@ -13,4 +13,9 @@ class SongAppearanceFragment : OnboardingPageFragment<FragmentOnboardingSongAppe
         super.onResume()
         viewModel.initialize()
     }
+
+    companion object {
+
+        fun newInstance() = SongAppearanceFragment()
+    }
 }

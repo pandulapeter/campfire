@@ -8,34 +8,32 @@ import androidx.fragment.app.FragmentManager
 import com.crashlytics.android.Crashlytics
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.databinding.FragmentHomeContainerBinding
 import com.pandulapeter.campfire.feature.main.home.home.HomeFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingFragment
-import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
+import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import io.fabric.sdk.android.Fabric
-import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class HomeContainerFragment : OldTopLevelFragment<FragmentHomeContainerBinding, HomeContainerViewModel>(R.layout.fragment_home_container) {
+class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, HomeContainerViewModel>(R.layout.fragment_home_container) {
 
-    override val viewModel = HomeContainerViewModel()
-    override val shouldShowAppBar get() = preferenceDatabase.isOnboardingDone
-    private val preferenceDatabase by inject<PreferenceDatabase>()
+    override val viewModel by viewModel<HomeContainerViewModel>()
+    override val shouldShowAppBar get() = viewModel.preferenceDatabase.isOnboardingDone
     private val currentFragment get() = childFragmentManager.findFragmentById(R.id.home_container)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        if (preferenceDatabase.isOnboardingDone) {
+        if (viewModel.preferenceDatabase.isOnboardingDone) {
             postponeEnterTransition()
         }
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
         defaultToolbar.updateToolbarTitle(R.string.main_home)
         if (savedInstanceState == null) {
-            if (preferenceDatabase.isOnboardingDone) {
-                childFragmentManager.handleReplace { HomeFragment() }
+            if (viewModel.preferenceDatabase.isOnboardingDone) {
+                childFragmentManager.handleReplace { HomeFragment.newInstance(false) }
             } else {
-                childFragmentManager.handleReplace { OnboardingFragment() }
+                childFragmentManager.handleReplace { OnboardingFragment.newInstance() }
             }
         }
     }
@@ -45,26 +43,24 @@ class HomeContainerFragment : OldTopLevelFragment<FragmentHomeContainerBinding, 
         (currentFragment as? HomeFragment)?.updateUI()
     }
 
-    override fun onBackPressed() = (currentFragment as? HomeFragment)?.onBackPressed() == true
+    //TODO: Simplify this
+    override fun onBackPressed() = (currentFragment as? HomeFragment)?.onBackPressed() == true || (currentFragment as? OnboardingFragment)?.onBackPressed() == true
 
     override fun onNavigationItemSelected(menuItem: MenuItem) =
         (currentFragment as? HomeFragment)?.onNavigationItemSelected(menuItem) ?: super.onNavigationItemSelected(menuItem)
 
     fun navigateToHome() {
         // Save the fact that the user is done with the onboarding flow.
-        preferenceDatabase.isOnboardingDone = true
+        viewModel.preferenceDatabase.isOnboardingDone = true
 
         // Set up crash reporting.
         @Suppress("ConstantConditionIf")
-        if (preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
+        if (viewModel.preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
             Fabric.with(requireContext().applicationContext, Crashlytics())
         }
 
         // Inflate the Home Fragment.
-        childFragmentManager
-            .beginTransaction()
-            .replace(R.id.home_container, HomeFragment.newInstance(true))
-            .commit()
+        childFragmentManager.handleReplace { HomeFragment.newInstance(true) }
     }
 
     private inline fun <reified T : Fragment> FragmentManager.handleReplace(
@@ -73,4 +69,9 @@ class HomeContainerFragment : OldTopLevelFragment<FragmentHomeContainerBinding, 
     ) = beginTransaction()
         .replace(R.id.home_container, findFragmentByTag(tag) ?: newInstance.invoke(), tag)
         .commit()
+
+    companion object {
+
+        fun newInstance() = HomeContainerFragment()
+    }
 }

@@ -11,9 +11,9 @@ import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesFra
 class OptionsFragmentPagerAdapter(private val context: Context, fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
 
     override fun getItem(position: Int) = when (position) {
-        0 -> PreferencesFragment()
-        1 -> ChangelogFragment()
-        2 -> AboutFragment()
+        0 -> PreferencesFragment.newInstance()
+        1 -> ChangelogFragment.newInstance()
+        2 -> AboutFragment.newInstance()
         else -> throw IllegalArgumentException("The pager has no Fragment for position $position.")
     }
 

@@ -4,14 +4,13 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
-import org.koin.android.ext.android.inject
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 
-class HomeContainerViewModel : OldCampfireViewModel() {
-
-    private val preferenceDatabase by inject<PreferenceDatabase>()
-    private val collectionRepository by inject<CollectionRepository>()
-    private val songRepository by inject<SongRepository>()
+class HomeContainerViewModel(
+    val preferenceDatabase: PreferenceDatabase,
+    collectionRepository: CollectionRepository,
+    songRepository: SongRepository
+) : CampfireViewModel() {
 
     init {
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_HOME

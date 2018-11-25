@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.feature.main.home.onboarding.welcome.LegalDocum
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.addPageScrollListener
 import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.waitForPreDraw
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -37,6 +38,8 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
         setupLegalMessageView()
         setupViewPager()
     }
+
+    override fun onBackPressed() = binding.viewPager.run { if (currentItem == 0) false else consume { currentItem-- } }
 
     fun languageFiltersUpdated(selectedLanguageCount: Int) {
         viewModel.canSkip.value = selectedLanguageCount > 0
@@ -148,5 +151,10 @@ class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, Onboardin
         if (binding.viewPager.currentItem + 1 < binding.viewPager.adapter?.count ?: 0) {
             binding.viewPager.setCurrentItem(binding.viewPager.currentItem + 1, true)
         }
+    }
+
+    companion object {
+
+        fun newInstance() = OnboardingFragment()
     }
 }

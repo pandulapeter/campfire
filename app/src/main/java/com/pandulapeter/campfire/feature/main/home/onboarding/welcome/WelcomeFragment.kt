@@ -80,4 +80,9 @@ class WelcomeFragment : OnboardingPageFragment<FragmentOnboardingWelcomeBinding,
             )}"
         ).apply { setSpan(ForegroundColorSpan(secondaryTextColor), themeText.length, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
     }
+
+    companion object {
+
+        fun newInstance() = WelcomeFragment()
+    }
 }

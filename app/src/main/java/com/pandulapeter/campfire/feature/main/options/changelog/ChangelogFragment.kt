@@ -25,4 +25,9 @@ class ChangelogFragment : CampfireFragment<FragmentOptionsChangelogBinding, Chan
             }
         }
     }
+
+    companion object {
+
+        fun newInstance() = ChangelogFragment()
+    }
 }
