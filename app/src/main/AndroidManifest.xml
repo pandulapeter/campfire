@@ -30,6 +30,8 @@
 
             <!--suppress AndroidElementNotAllowed -->
             <layout
+                android:defaultHeight="600dp"
+                android:defaultWidth="720dp"
                 android:minHeight="250dp"
                 android:minWidth="300dp" />
 
