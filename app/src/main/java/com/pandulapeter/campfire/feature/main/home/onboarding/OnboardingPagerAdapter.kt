@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding
 
+import androidx.fragment.app.Fragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.contentLanguage.ContentLanguageFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.songAppearance.SongAppearanceFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.userData.UserDataFragment
@@ -7,7 +8,7 @@ import com.pandulapeter.campfire.feature.main.home.onboarding.welcome.WelcomeFra
 
 class OnboardingPagerAdapter(fragmentManager: androidx.fragment.app.FragmentManager) : androidx.fragment.app.FragmentStatePagerAdapter(fragmentManager) {
 
-    override fun getItem(position: Int) = when (position) {
+    override fun getItem(position: Int): Fragment = when (position) {
         0 -> WelcomeFragment()
         1 -> UserDataFragment()
         2 -> SongAppearanceFragment()

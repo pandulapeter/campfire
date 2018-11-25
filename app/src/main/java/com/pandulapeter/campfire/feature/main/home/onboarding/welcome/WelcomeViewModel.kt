@@ -1,24 +1,22 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding.welcome
 
 import android.content.res.Resources
-import androidx.databinding.ObservableBoolean
-import androidx.databinding.ObservableField
+import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
-import com.pandulapeter.campfire.util.onPropertyChanged
-import org.koin.android.ext.android.inject
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 
-class WelcomeViewModel : OldCampfireViewModel() {
-    private val preferenceDatabase by inject<PreferenceDatabase>()
-    val shouldShowThemeSelector = ObservableBoolean()
-    val shouldShowLanguageSelector = ObservableBoolean()
-    val language = ObservableField<PreferencesViewModel.Language>(PreferencesViewModel.Language.fromId(preferenceDatabase.language))
-    val theme = ObservableField<PreferencesViewModel.Theme>(PreferencesViewModel.Theme.fromId(preferenceDatabase.theme))
+class WelcomeViewModel(private val preferenceDatabase: PreferenceDatabase) : CampfireViewModel() {
+
+    val shouldShowThemeSelector = MutableLiveData<Boolean?>()
+    val shouldShowLanguageSelector = MutableLiveData<Boolean?>()
+    val language = MutableLiveData<PreferencesViewModel.Language>().apply { value = PreferencesViewModel.Language.fromId(preferenceDatabase.language) }
+    val theme = MutableLiveData<PreferencesViewModel.Theme>().apply { value = PreferencesViewModel.Theme.fromId(preferenceDatabase.theme) }
 
     init {
         val automaticLocaleCode = Resources.getSystem().configuration.locale.isO3Country.toUpperCase()
-        language.onPropertyChanged {
+        language.observeForever {
+            isUiBlocked = true
             preferenceDatabase.language = it.id
             preferenceDatabase.disabledLanguageFilters = if (it == PreferencesViewModel.Language.AUTOMATIC) {
                 PreferenceDatabase.getDefaultLanguageFilters(automaticLocaleCode)
@@ -30,12 +28,26 @@ class WelcomeViewModel : OldCampfireViewModel() {
                 PreferencesViewModel.Language.ENGLISH -> false
                 PreferencesViewModel.Language.HUNGARIAN -> true
                 PreferencesViewModel.Language.ROMANIAN -> false
+                null -> false
             }
         }
-        theme.onPropertyChanged { preferenceDatabase.theme = it.id }
+        theme.observeForever {
+            isUiBlocked = true
+            preferenceDatabase.theme = it.id
+        }
     }
 
-    fun onThemeClicked() = shouldShowThemeSelector.set(true)
+    fun onThemeClicked() {
+        if (!isUiBlocked) {
+            isUiBlocked = true
+            shouldShowThemeSelector.value = true
+        }
+    }
 
-    fun onLanguageClicked() = shouldShowLanguageSelector.set(true)
+    fun onLanguageClicked() {
+        if (!isUiBlocked) {
+            isUiBlocked = true
+            shouldShowLanguageSelector.value = true
+        }
+    }
 }

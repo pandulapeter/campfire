@@ -7,58 +7,56 @@ import android.text.style.ForegroundColorSpan
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOnboardingWelcomeBinding
-import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingPageFragment
 import com.pandulapeter.campfire.feature.main.options.preferences.LanguageSelectorBottomSheetFragment
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.main.options.preferences.ThemeSelectorBottomSheetFragment
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.obtainColor
-import com.pandulapeter.campfire.util.onEventTriggered
-import com.pandulapeter.campfire.util.onPropertyChanged
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
-class WelcomeFragment : OnboardingPageFragment<FragmentOnboardingWelcomeBinding, WelcomeViewModel>(R.layout.fragment_onboarding_welcome),
+class WelcomeFragment : CampfireFragment<FragmentOnboardingWelcomeBinding, WelcomeViewModel>(R.layout.fragment_onboarding_welcome),
     ThemeSelectorBottomSheetFragment.OnThemeSelectedListener,
     LanguageSelectorBottomSheetFragment.OnLanguageSelectedListener {
 
-    override val viewModel = WelcomeViewModel()
+    override val viewModel by viewModel<WelcomeViewModel>()
     private val languageText by lazy { getString(R.string.welcome_language) }
     private val themeText by lazy { getString(R.string.welcome_theme) }
-    private val secondaryTextColor by lazy { getCampfireActivity().obtainColor(android.R.attr.textColorSecondary) }
+    private val secondaryTextColor by lazy { requireContext().obtainColor(android.R.attr.textColorSecondary) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.shouldShowLanguageSelector.onEventTriggered(this) {
-            if (!getCampfireActivity().isUiBlocked) {
-                viewModel.language.get()?.let { LanguageSelectorBottomSheetFragment.show(childFragmentManager, it.id) }
-            }
-        }
-        viewModel.language.onPropertyChanged(this) {
-            getCampfireActivity().isUiBlocked = true
-            binding.root.post { if (isAdded) getCampfireActivity().recreate() }
+        binding.root.tag = binding //TODO: remove
+        viewModel.shouldShowLanguageSelector.observeAndReset { showLanguageSelectorBottomSheet() }
+        viewModel.language.observe {
+            binding.root.post { if (isAdded) activity?.recreate() }
             updateLanguageDescription()
         }
-        viewModel.shouldShowThemeSelector.onEventTriggered(this) {
-            if (!getCampfireActivity().isUiBlocked) {
-                viewModel.theme.get()?.let { ThemeSelectorBottomSheetFragment.show(childFragmentManager, it.id) }
-            }
-        }
-        viewModel.theme.onPropertyChanged(this@WelcomeFragment) {
-            getCampfireActivity().isUiBlocked = true
-            binding.root.post { if (isAdded) getCampfireActivity().recreate() }
+        viewModel.shouldShowThemeSelector.observeAndReset { showThemeSelectorBottomSheet() }
+        viewModel.theme.observe {
+            binding.root.post { if (isAdded) activity?.recreate() }
             updateThemeDescription()
         }
         updateLanguageDescription()
         updateThemeDescription()
     }
 
-    override fun onThemeSelected(theme: PreferencesViewModel.Theme) = viewModel.theme.set(theme)
+    override fun onThemeSelected(theme: PreferencesViewModel.Theme) {
+        viewModel.theme.value = theme
+    }
 
-    override fun onLanguageSelected(language: PreferencesViewModel.Language) = viewModel.language.set(language)
+    override fun onLanguageSelected(language: PreferencesViewModel.Language) {
+        viewModel.language.value = language
+    }
+
+    private fun showLanguageSelectorBottomSheet() {
+        viewModel.language.value?.let { language -> LanguageSelectorBottomSheetFragment.show(childFragmentManager, language.id) }
+    }
 
     private fun updateLanguageDescription() {
         binding.language.text = SpannableString(
             "$languageText ${getString(
-                when (viewModel.language.get()) {
+                when (viewModel.language.value) {
                     null, PreferencesViewModel.Language.AUTOMATIC -> R.string.options_preferences_language_automatic
                     PreferencesViewModel.Language.ENGLISH -> R.string.options_preferences_language_english
                     PreferencesViewModel.Language.HUNGARIAN -> R.string.options_preferences_language_hungarian
@@ -68,10 +66,14 @@ class WelcomeFragment : OnboardingPageFragment<FragmentOnboardingWelcomeBinding,
         ).apply { setSpan(ForegroundColorSpan(secondaryTextColor), languageText.length, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
     }
 
+    private fun showThemeSelectorBottomSheet() {
+        viewModel.theme.value?.let { theme -> ThemeSelectorBottomSheetFragment.show(childFragmentManager, theme.id) }
+    }
+
     private fun updateThemeDescription() {
         binding.theme.text = SpannableString(
             "$themeText ${getString(
-                when (viewModel.theme.get()) {
+                when (viewModel.theme.value) {
                     null, PreferencesViewModel.Theme.AUTOMATIC -> R.string.options_preferences_app_theme_automatic
                     PreferencesViewModel.Theme.DARK -> R.string.options_preferences_app_theme_dark
                     PreferencesViewModel.Theme.LIGHT -> R.string.options_preferences_app_theme_light

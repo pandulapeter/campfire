@@ -25,6 +25,7 @@ class OnboardingViewModel : CampfireViewModel() {
 
     fun onLegalDocumentsClicked() {
         if (!isUiBlocked) {
+            isUiBlocked = true
             shouldShowLegalDocuments.value = true
         }
     }
