@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.generateNotationExample
+import com.pandulapeter.campfire.util.mutableLiveDataOf
 
 class PreferencesViewModel(
     private val context: Context,
@@ -16,61 +17,21 @@ class PreferencesViewModel(
     private val analyticsManager: AnalyticsManager
 ) : CampfireViewModel() {
 
-    val shouldShowChords = MutableLiveData<Boolean>().apply { value = preferenceDatabase.shouldShowChords }
-    val shouldUseGermanNotation = MutableLiveData<Boolean>().apply { value = preferenceDatabase.shouldUseGermanNotation }
+    val shouldShowChords = mutableLiveDataOf(preferenceDatabase.shouldShowChords) { onShouldShowChordsChanged(it) }
+    val shouldUseGermanNotation = mutableLiveDataOf(preferenceDatabase.shouldUseGermanNotation) { onShouldUseGermanNotationChanged(it) }
     val englishNotationExample = generateNotationExample(false)
     val germanNotationExample = generateNotationExample(true)
-    val theme = MutableLiveData<Theme>().apply { value = Theme.fromId(preferenceDatabase.theme) }
-    val themeDescription = MutableLiveData<String>().apply { value = "" }
-    val language = MutableLiveData<Language>().apply { value = Language.fromId(preferenceDatabase.language) }
-    val languageDescription = MutableLiveData<String>().apply { value = "" }
-    val shouldShowExitConfirmation = MutableLiveData<Boolean>().apply { value = preferenceDatabase.shouldShowExitConfirmation }
-    val shouldShareUsageData = MutableLiveData<Boolean>().apply { value = preferenceDatabase.shouldShareUsageData }
-    val shouldShareCrashReports = MutableLiveData<Boolean>().apply { value = preferenceDatabase.shouldShareCrashReports }
+    val themeDescription = mutableLiveDataOf("")
+    val theme = mutableLiveDataOf(Theme.fromId(preferenceDatabase.theme)) { onThemeChanged(it) }
+    val languageDescription = mutableLiveDataOf("")
+    val language = mutableLiveDataOf(Language.fromId(preferenceDatabase.language)) { onLanguageChanged(it) }
+    val shouldShowExitConfirmation = mutableLiveDataOf(preferenceDatabase.shouldShowExitConfirmation) { onShouldShowExitConfirmationChanged(it) }
+    val shouldShareUsageData = mutableLiveDataOf(preferenceDatabase.shouldShareUsageData) { onShouldShareUsageDataChanged(it) }
+    val shouldShareCrashReports = mutableLiveDataOf(preferenceDatabase.shouldShareCrashReports) { onShouldShareCrashReportsChanged(it) }
     val shouldShowHintsResetConfirmation = MutableLiveData<Boolean?>()
     val shouldShowHintsResetSnackbar = MutableLiveData<Boolean?>()
     val shouldShowThemeSelector = MutableLiveData<Boolean?>()
     val shouldShowLanguageSelector = MutableLiveData<Boolean?>()
-
-    init {
-        shouldShowChords.observeForever {
-            analyticsManager.onShouldShowChordsToggled(it, AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_PREFERENCES)
-            preferenceDatabase.shouldShowChords = it
-        }
-        shouldUseGermanNotation.observeForever {
-            analyticsManager.onNotationModeChanged(it)
-            preferenceDatabase.shouldUseGermanNotation = it
-        }
-        theme.observeForever {
-            if (it != null) {
-                preferenceDatabase.theme = it.id
-                updateThemeDescription()
-                analyticsManager.onThemeChanged(
-                    when (it) {
-                        PreferencesViewModel.Theme.AUTOMATIC -> AnalyticsManager.PARAM_VALUE_AUTOMATIC
-                        PreferencesViewModel.Theme.LIGHT -> AnalyticsManager.PARAM_VALUE_LIGHT
-                        PreferencesViewModel.Theme.DARK -> AnalyticsManager.PARAM_VALUE_DARK
-                    }
-                )
-            }
-        }
-        language.observeForever {
-            preferenceDatabase.language = it.id
-            updateLanguageDescription()
-            analyticsManager.onLanguageChanged(if (it == PreferencesViewModel.Language.AUTOMATIC) AnalyticsManager.PARAM_VALUE_AUTOMATIC else it.id)
-        }
-        shouldShowExitConfirmation.observeForever {
-            analyticsManager.onExitConfirmationToggled(it)
-            preferenceDatabase.shouldShowExitConfirmation = it
-        }
-        shouldShareUsageData.observeForever {
-            analyticsManager.updateCollectionEnabledState()
-            preferenceDatabase.shouldShareUsageData = it
-        }
-        shouldShareCrashReports.observeForever { preferenceDatabase.shouldShareCrashReports = it }
-        updateThemeDescription()
-        updateLanguageDescription()
-    }
 
     fun onThemeClicked() {
         if (!isUiBlocked) {
@@ -95,26 +56,68 @@ class PreferencesViewModel(
         shouldShowHintsResetSnackbar.value = true
     }
 
-    private fun updateThemeDescription() {
+    private fun onShouldShowChordsChanged(shouldShowChords: Boolean) {
+        analyticsManager.onShouldShowChordsToggled(shouldShowChords, AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_PREFERENCES)
+        preferenceDatabase.shouldShowChords = shouldShowChords
+    }
+
+    private fun onShouldUseGermanNotationChanged(shouldUseGermanNotation: Boolean) {
+        analyticsManager.onNotationModeChanged(shouldUseGermanNotation)
+        preferenceDatabase.shouldUseGermanNotation = shouldUseGermanNotation
+    }
+
+    private fun onThemeChanged(theme: Theme) {
+        preferenceDatabase.theme = theme.id
+        updateThemeDescription(theme)
+        analyticsManager.onThemeChanged(
+            when (theme) {
+                PreferencesViewModel.Theme.AUTOMATIC -> AnalyticsManager.PARAM_VALUE_AUTOMATIC
+                PreferencesViewModel.Theme.LIGHT -> AnalyticsManager.PARAM_VALUE_LIGHT
+                PreferencesViewModel.Theme.DARK -> AnalyticsManager.PARAM_VALUE_DARK
+            }
+        )
+    }
+
+    private fun updateThemeDescription(theme: Theme) {
         themeDescription.value = context.getString(
-            when (theme.value) {
-                null, PreferencesViewModel.Theme.AUTOMATIC -> R.string.options_preferences_app_theme_automatic_description
+            when (theme) {
+                PreferencesViewModel.Theme.AUTOMATIC -> R.string.options_preferences_app_theme_automatic_description
                 PreferencesViewModel.Theme.DARK -> R.string.options_preferences_app_theme_dark_description
                 PreferencesViewModel.Theme.LIGHT -> R.string.options_preferences_app_theme_light_description
             }
         )
     }
 
-    private fun updateLanguageDescription() {
+    private fun onLanguageChanged(language: Language) {
+        preferenceDatabase.language = language.id
+        updateLanguageDescription(language)
+        analyticsManager.onLanguageChanged(if (language == PreferencesViewModel.Language.AUTOMATIC) AnalyticsManager.PARAM_VALUE_AUTOMATIC else language.id)
+    }
+
+    private fun updateLanguageDescription(language: Language) {
         languageDescription.value =
                 context.getString(
-                    when (language.value) {
-                        null, PreferencesViewModel.Language.AUTOMATIC -> R.string.options_preferences_language_automatic_description
+                    when (language) {
+                        PreferencesViewModel.Language.AUTOMATIC -> R.string.options_preferences_language_automatic_description
                         PreferencesViewModel.Language.ENGLISH -> R.string.options_preferences_language_english_description
                         PreferencesViewModel.Language.HUNGARIAN -> R.string.options_preferences_language_hungarian_description
                         PreferencesViewModel.Language.ROMANIAN -> R.string.options_preferences_language_romanian_description
                     }
                 )
+    }
+
+    private fun onShouldShowExitConfirmationChanged(shouldShowExitConfirmation: Boolean) {
+        analyticsManager.onExitConfirmationToggled(shouldShowExitConfirmation)
+        preferenceDatabase.shouldShowExitConfirmation = shouldShowExitConfirmation
+    }
+
+    private fun onShouldShareUsageDataChanged(shouldShareUsageData: Boolean) {
+        analyticsManager.updateCollectionEnabledState()
+        preferenceDatabase.shouldShareUsageData = shouldShareUsageData
+    }
+
+    private fun onShouldShareCrashReportsChanged(shouldShareCrashReports: Boolean) {
+        preferenceDatabase.shouldShareCrashReports = shouldShareCrashReports
     }
 
     enum class Theme(val id: Int) {

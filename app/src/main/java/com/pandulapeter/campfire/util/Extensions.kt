@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.*
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
+import androidx.viewpager.widget.ViewPager
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -259,12 +260,12 @@ fun String.removePrefixes() = this
     .removePrefix("AZ ")
     .removePrefix("THE ")
 
-fun androidx.viewpager.widget.ViewPager.addPageScrollListener(
+fun ViewPager.addPageScrollListener(
     onPageSelected: (Int) -> Unit = {},
     onPageScrollStateChanged: (Int) -> Unit = {},
     onPageScrolled: (Int, Float) -> Unit = { _, _ -> }
 ) =
-    addOnPageChangeListener(object : androidx.viewpager.widget.ViewPager.OnPageChangeListener {
+    addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
 
         override fun onPageScrollStateChanged(state: Int) = onPageScrollStateChanged(state)
 

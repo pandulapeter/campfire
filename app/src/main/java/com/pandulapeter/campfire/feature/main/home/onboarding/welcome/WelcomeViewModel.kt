@@ -5,35 +5,20 @@ import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.util.mutableLiveDataOf
 
 class WelcomeViewModel(private val preferenceDatabase: PreferenceDatabase) : CampfireViewModel() {
 
     val shouldShowThemeSelector = MutableLiveData<Boolean?>()
     val shouldShowLanguageSelector = MutableLiveData<Boolean?>()
-    val language = MutableLiveData<PreferencesViewModel.Language>().apply { value = PreferencesViewModel.Language.fromId(preferenceDatabase.language) }
-    val theme = MutableLiveData<PreferencesViewModel.Theme>().apply { value = PreferencesViewModel.Theme.fromId(preferenceDatabase.theme) }
+    val language = mutableLiveDataOf(PreferencesViewModel.Language.fromId(preferenceDatabase.language)) { onLanguageChanged(it) }
+    val theme = mutableLiveDataOf(PreferencesViewModel.Theme.fromId(preferenceDatabase.theme)) { onThemeChanged(it) }
+    private val automaticLocaleCode = Resources.getSystem().configuration.locale.isO3Country.toUpperCase()
 
-    init {
-        val automaticLocaleCode = Resources.getSystem().configuration.locale.isO3Country.toUpperCase()
-        language.observeForever {
+    fun onLanguageClicked() {
+        if (!isUiBlocked) {
             isUiBlocked = true
-            preferenceDatabase.language = it.id
-            preferenceDatabase.disabledLanguageFilters = if (it == PreferencesViewModel.Language.AUTOMATIC) {
-                PreferenceDatabase.getDefaultLanguageFilters(automaticLocaleCode)
-            } else {
-                preferenceDatabase.disabledLanguageFilters.toMutableSet().apply { remove(it.id) }
-            }
-            preferenceDatabase.shouldUseGermanNotation = when (it) {
-                PreferencesViewModel.Language.AUTOMATIC -> PreferenceDatabase.shouldEnableGermanNotationByDefault(automaticLocaleCode)
-                PreferencesViewModel.Language.ENGLISH -> false
-                PreferencesViewModel.Language.HUNGARIAN -> true
-                PreferencesViewModel.Language.ROMANIAN -> false
-                null -> false
-            }
-        }
-        theme.observeForever {
-            isUiBlocked = true
-            preferenceDatabase.theme = it.id
+            shouldShowLanguageSelector.value = true
         }
     }
 
@@ -44,10 +29,24 @@ class WelcomeViewModel(private val preferenceDatabase: PreferenceDatabase) : Cam
         }
     }
 
-    fun onLanguageClicked() {
-        if (!isUiBlocked) {
-            isUiBlocked = true
-            shouldShowLanguageSelector.value = true
+    private fun onLanguageChanged(language: PreferencesViewModel.Language) {
+        isUiBlocked = true
+        preferenceDatabase.language = language.id
+        preferenceDatabase.disabledLanguageFilters = if (language == PreferencesViewModel.Language.AUTOMATIC) {
+            PreferenceDatabase.getDefaultLanguageFilters(automaticLocaleCode)
+        } else {
+            preferenceDatabase.disabledLanguageFilters.toMutableSet().apply { remove(language.id) }
         }
+        preferenceDatabase.shouldUseGermanNotation = when (language) {
+            PreferencesViewModel.Language.AUTOMATIC -> PreferenceDatabase.shouldEnableGermanNotationByDefault(automaticLocaleCode)
+            PreferencesViewModel.Language.ENGLISH -> false
+            PreferencesViewModel.Language.HUNGARIAN -> true
+            PreferencesViewModel.Language.ROMANIAN -> false
+        }
+    }
+
+    private fun onThemeChanged(theme: PreferencesViewModel.Theme) {
+        isUiBlocked = true
+        preferenceDatabase.theme = theme.id
     }
 }

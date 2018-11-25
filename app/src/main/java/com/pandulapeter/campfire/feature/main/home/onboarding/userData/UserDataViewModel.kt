@@ -1,27 +1,27 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding.userData
 
-import androidx.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.onPropertyChanged
-import org.koin.android.ext.android.inject
+import com.pandulapeter.campfire.util.mutableLiveDataOf
 
-class UserDataViewModel : OldCampfireViewModel() {
+class UserDataViewModel(
+    private val preferenceDatabase: PreferenceDatabase,
+    private val analyticsManager: AnalyticsManager
+) : CampfireViewModel() {
 
-    private val preferenceDatabase by inject<PreferenceDatabase>()
-    private val analyticsManager by inject<AnalyticsManager>()
-    val isAnalyticsEnabled = ObservableBoolean(preferenceDatabase.shouldShareUsageData)
-    val isCrashReportingEnabled = ObservableBoolean(preferenceDatabase.shouldShareCrashReports)
+    val isAnalyticsEnabled = mutableLiveDataOf(preferenceDatabase.shouldShareUsageData) { onAnalyticsEnabledChanged(it) }
+    val isCrashReportingEnabled = mutableLiveDataOf(preferenceDatabase.shouldShareCrashReports) { onCrashReportingEnabledChanged(it) }
 
-    init {
-        isAnalyticsEnabled.onPropertyChanged {
-            preferenceDatabase.shouldShareUsageData = it
-            analyticsManager.updateCollectionEnabledState()
-            if (it) {
-                analyticsManager.onConsentGiven(System.currentTimeMillis())
-            }
+    private fun onAnalyticsEnabledChanged(isAnalyticsEnabled: Boolean) {
+        preferenceDatabase.shouldShareUsageData = isAnalyticsEnabled
+        analyticsManager.updateCollectionEnabledState()
+        if (isAnalyticsEnabled) {
+            analyticsManager.onConsentGiven(System.currentTimeMillis())
         }
-        isCrashReportingEnabled.onPropertyChanged { preferenceDatabase.shouldShareCrashReports = it }
+    }
+
+    private fun onCrashReportingEnabledChanged(isCrashReportingEnabled: Boolean) {
+        preferenceDatabase.shouldShareCrashReports = isCrashReportingEnabled
     }
 }

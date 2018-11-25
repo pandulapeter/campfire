@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.util
 import android.content.Context
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.feature.detail.page.parsing.Note
 import kotlinx.coroutines.Dispatchers
 
@@ -35,6 +36,12 @@ fun generateNotationExample(shouldUseGermanNotation: Boolean) = listOf(
     Note.ASharp.getName(shouldUseGermanNotation),
     Note.B.getName(shouldUseGermanNotation)
 ).joinToString(", ")
+
+fun <T> mutableLiveDataOf(initialValue: T) = MutableLiveData<T>().apply { value = initialValue }
+
+inline fun <T> mutableLiveDataOf(initialValue: T, crossinline observer: ((T) -> Unit)) = mutableLiveDataOf(initialValue).apply {
+    observeForever { observer(it) }
+}
 
 val UI = Dispatchers.Main
 val WORKER = Dispatchers.Default
