@@ -25,9 +25,9 @@ abstract class TopLevelFragment<B : ViewDataBinding, out VM : CampfireViewModel>
             //TODO: if (this !is DetailFragment) {
             updateToolbarTitleView(inflateToolbarTitle(toolbarContext), toolbarWidth)
 //        }
-            if (savedInstanceState == null) {//TODO || this !is SongsFragment) {
-                updateAppBarView(appBarView, savedInstanceState != null)
-            }
+            //TODO   if (savedInstanceState == null || this !is SongsFragment) {
+            updateAppBarView(appBarView, savedInstanceState != null)
+//            }
         }
     }
 

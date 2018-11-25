@@ -24,16 +24,19 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
             tabLayout.setupWithViewPager(binding.viewPager)
         }.root
     }
-    private val pagerAdapter by lazy {
-        OptionsFragmentPagerAdapter(
-            getCampfireActivity() ?: throw IllegalStateException("OptionsFragment not attached to activity."),
-            childFragmentManager
-        )
-    }
+    private val pagerAdapter by lazy { OptionsFragmentPagerAdapter(requireContext(), childFragmentManager) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         defaultToolbar.updateToolbarTitle(R.string.main_options)
+        setupViewPager()
+    }
+
+    fun navigateToChangelog() {
+        binding.viewPager.currentItem = 1
+    }
+
+    private fun setupViewPager() {
         binding.viewPager.apply {
             adapter = pagerAdapter
             offscreenPageLimit = 2
@@ -52,10 +55,6 @@ class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewMode
                 analyticsManager.onOptionsScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_PREFERENCES)
             }
         }
-    }
-
-    fun navigateToChangelog() {
-        binding.viewPager.currentItem = 1
     }
 
     companion object {
