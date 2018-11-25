@@ -12,39 +12,48 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.*
 import com.pandulapeter.campfire.feature.main.home.HomeContainerFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.welcome.LegalDocumentsBottomSheetFragment
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireFragment
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.addPageScrollListener
 import com.pandulapeter.campfire.util.color
-import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.waitForPreDraw
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class OnboardingFragment : OldCampfireFragment<FragmentOnboardingBinding, OnboardingViewModel>(R.layout.fragment_onboarding) {
+class OnboardingFragment : CampfireFragment<FragmentOnboardingBinding, OnboardingViewModel>(R.layout.fragment_onboarding) {
+
+    override val viewModel by viewModel<OnboardingViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         exitTransition = Fade()
     }
 
-    override val viewModel = OnboardingViewModel(::navigateToHome) {
-        if (binding.viewPager.currentItem + 1 < binding.viewPager.adapter?.count ?: 0) {
-            binding.viewPager.setCurrentItem(binding.viewPager.currentItem + 1, true)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        viewModel.apply {
+            shouldShowLegalDocuments.observeAndReset { showLegalDocumentsBottomSheet() }
+            shouldSkip.observeAndReset { navigateToHome() }
+            shouldNavigateToNextPage.observeAndReset { navigateToNextPage() }
         }
+        hideToolbarMargin()
+        setupLegalMessageView()
+        setupViewPager()
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    fun languageFiltersUpdated(selectedLanguageCount: Int) {
+        viewModel.canSkip.value = selectedLanguageCount > 0
+    }
+
+    private fun hideToolbarMargin() {
         binding.root.apply {
             waitForPreDraw {
                 if (isAdded) {
-                    layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -getCampfireActivity().toolbarHeight, 0, 0) }
+                    layoutParams = (layoutParams as FrameLayout.LayoutParams).apply { setMargins(0, -(getCampfireActivity()?.toolbarHeight ?: 0), 0, 0) }
                 }
                 false
             }
         }
-        viewModel.shouldShowLegalDocuments.onEventTriggered(this) {
-            if (!getCampfireActivity().isUiBlocked) {
-                LegalDocumentsBottomSheetFragment.show(childFragmentManager)
-            }
-        }
+    }
+
+    private fun setupLegalMessageView() {
         val first = getString(R.string.welcome_conditions_part_1)
         val second = getString(R.string.welcome_conditions_part_2)
         val third = getString(R.string.welcome_conditions_part_3)
@@ -52,29 +61,30 @@ class OnboardingFragment : OldCampfireFragment<FragmentOnboardingBinding, Onboar
         val fifth = getString(R.string.welcome_conditions_part_5)
         binding.textBottom.text = SpannableString("$first$second$third$fourth$fifth").apply {
             setSpan(
-                ForegroundColorSpan(getCampfireActivity().color(R.color.accent)),
+                ForegroundColorSpan(requireContext().color(R.color.accent)),
                 first.length,
                 first.length + second.length,
                 Spanned.SPAN_INCLUSIVE_INCLUSIVE
             )
             setSpan(
-                ForegroundColorSpan(getCampfireActivity().color(R.color.accent)),
+                ForegroundColorSpan(requireContext().color(R.color.accent)),
                 first.length + second.length + third.length,
                 length - fifth.length,
                 Spanned.SPAN_INCLUSIVE_INCLUSIVE
             )
         }
+    }
+
+    private fun setupViewPager() {
         val interpolator = AccelerateInterpolator()
         binding.viewPager.apply {
             addPageScrollListener(
                 onPageScrolled = { index, offset ->
-                    viewModel.doneButtonOffset.set(
-                        when (binding.viewPager.adapter?.count) {
-                            index + 2 -> offset
-                            index + 1 -> 1f
-                            else -> 0f
-                        }
-                    )
+                    viewModel.doneButtonOffset.value = when (binding.viewPager.adapter?.count) {
+                        index + 2 -> offset
+                        index + 1 -> 1f
+                        else -> 0f
+                    }
                 }
             )
             setPageTransformer(false) { view, offset ->
@@ -128,11 +138,15 @@ class OnboardingFragment : OldCampfireFragment<FragmentOnboardingBinding, Onboar
         }
     }
 
-    fun languageFiltersUpdated(selectedLanguageCount: Int) {
-        viewModel.canSkip.set(selectedLanguageCount > 0)
-    }
+    private fun showLegalDocumentsBottomSheet() = LegalDocumentsBottomSheetFragment.show(childFragmentManager)
 
     private fun navigateToHome() {
         (parentFragment as? HomeContainerFragment)?.navigateToHome()
+    }
+
+    private fun navigateToNextPage() {
+        if (binding.viewPager.currentItem + 1 < binding.viewPager.adapter?.count ?: 0) {
+            binding.viewPager.setCurrentItem(binding.viewPager.currentItem + 1, true)
+        }
     }
 }

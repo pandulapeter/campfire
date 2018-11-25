@@ -81,6 +81,14 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         viewModel.unsubscribe()
     }
 
+    fun onDialogOpened() {
+        viewModel.isUiBlocked = true
+    }
+
+    fun onDialogDismissed() {
+        viewModel.isUiBlocked = false
+    }
+
     override fun onCreateAnimation(transit: Int, enter: Boolean, nextAnim: Int): Animation? {
         val parent = parentFragment
         return if (!enter && parent != null && parent.isRemoving) {

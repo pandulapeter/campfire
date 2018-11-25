@@ -1,21 +1,31 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding
 
-import androidx.databinding.ObservableBoolean
-import androidx.databinding.ObservableFloat
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
+import androidx.lifecycle.MutableLiveData
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 
-class OnboardingViewModel(
-    private val skip: () -> Unit,
-    private val navigateToNextPage: () -> Unit
-) : OldCampfireViewModel() {
+class OnboardingViewModel : CampfireViewModel() {
 
-    val doneButtonOffset = ObservableFloat()
-    val canSkip = ObservableBoolean()
-    val shouldShowLegalDocuments = ObservableBoolean()
+    val doneButtonOffset = MutableLiveData<Float>()
+    val canSkip = MutableLiveData<Boolean>()
+    val shouldShowLegalDocuments = MutableLiveData<Boolean?>()
+    val shouldNavigateToNextPage = MutableLiveData<Boolean?>()
+    val shouldSkip = MutableLiveData<Boolean?>()
 
-    fun onSkipButtonClicked() = skip()
+    fun onSkipButtonClicked() {
+        if (!isUiBlocked) {
+            shouldSkip.value = true
+        }
+    }
 
-    fun onNextButtonClicked() = navigateToNextPage()
+    fun onNextButtonClicked() {
+        if (!isUiBlocked) {
+            shouldNavigateToNextPage.value = true
+        }
+    }
 
-    fun onLegalDocumentsClicked() = shouldShowLegalDocuments.set(true)
+    fun onLegalDocumentsClicked() {
+        if (!isUiBlocked) {
+            shouldShowLegalDocuments.value = true
+        }
+    }
 }

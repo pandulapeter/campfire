@@ -12,18 +12,20 @@ import android.view.ViewGroup
 import androidx.annotation.LayoutRes
 import androidx.annotation.StyleRes
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.CampfireActivity
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.dimension
 
 abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes private val layoutResourceId: Int) : AppCompatDialogFragment() {
 
     protected lateinit var binding: B
-    protected val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
+    protected val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
     protected val isFullWidth get() = (dialog as CustomWidthBottomSheetDialog).isFullWidth
 
     open fun initializeDialog(context: Context, savedInstanceState: Bundle?) = Unit
@@ -44,6 +46,7 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->
         (activity as? CampfireActivity)?.isUiBlocked = true
+        (parentFragment as? CampfireFragment<*, *>)?.onDialogOpened()
         CustomWidthBottomSheetDialog(context, R.style.BottomSheetDialogTheme).apply {
             binding = DataBindingUtil.inflate(LayoutInflater.from(context), layoutResourceId, null, false)
             initializeDialog(context, savedInstanceState)
@@ -58,11 +61,13 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
     }
 
     override fun onCancel(dialog: DialogInterface?) {
+        (parentFragment as? CampfireFragment<*, *>)?.onDialogDismissed()
         (activity as? CampfireActivity)?.isUiBlocked = false
     }
 
     override fun onDismiss(dialog: DialogInterface?) {
         super.onDismiss(dialog)
+        (parentFragment as? CampfireFragment<*, *>)?.onDialogDismissed()
         (activity as? CampfireActivity)?.isUiBlocked = false
     }
 
