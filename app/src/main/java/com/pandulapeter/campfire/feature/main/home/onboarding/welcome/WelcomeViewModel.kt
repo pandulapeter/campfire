@@ -9,11 +9,11 @@ import com.pandulapeter.campfire.util.mutableLiveDataOf
 
 class WelcomeViewModel(private val preferenceDatabase: PreferenceDatabase) : CampfireViewModel() {
 
+    private val automaticLocaleCode = Resources.getSystem().configuration.locale.isO3Country.toUpperCase()
     val shouldShowThemeSelector = MutableLiveData<Boolean?>()
     val shouldShowLanguageSelector = MutableLiveData<Boolean?>()
     val language = mutableLiveDataOf(PreferencesViewModel.Language.fromId(preferenceDatabase.language)) { onLanguageChanged(it) }
     val theme = mutableLiveDataOf(PreferencesViewModel.Theme.fromId(preferenceDatabase.theme)) { onThemeChanged(it) }
-    private val automaticLocaleCode = Resources.getSystem().configuration.locale.isO3Country.toUpperCase()
 
     fun onLanguageClicked() {
         if (!isUiBlocked) {

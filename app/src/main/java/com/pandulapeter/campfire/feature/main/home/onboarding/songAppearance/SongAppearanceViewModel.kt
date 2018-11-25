@@ -7,14 +7,24 @@ import com.pandulapeter.campfire.util.mutableLiveDataOf
 
 class SongAppearanceViewModel(private val preferenceDatabase: PreferenceDatabase) : CampfireViewModel() {
 
+    var isInitialized = false
     val englishNotationExample = generateNotationExample(false)
     val germanNotationExample = generateNotationExample(true)
-    val isFirstOptionSelected = mutableLiveDataOf(preferenceDatabase.shouldShowChords && !preferenceDatabase.shouldUseGermanNotation) { onFirstOptionChanged(it) }
-    val isSecondOptionSelected = mutableLiveDataOf(preferenceDatabase.shouldShowChords && preferenceDatabase.shouldUseGermanNotation) { onSecondOptionChanged(it) }
-    val isThirdOptionSelected = mutableLiveDataOf(!preferenceDatabase.shouldShowChords) { onThirdOptionChanged(it) }
+    val isFirstOptionSelected = mutableLiveDataOf(false) { onFirstOptionChanged(it) }
+    val isSecondOptionSelected = mutableLiveDataOf(false) { onSecondOptionChanged(it) }
+    val isThirdOptionSelected = mutableLiveDataOf(false) { onThirdOptionChanged(it) }
+
+    fun initialize() {
+        if (!isInitialized) {
+            isFirstOptionSelected.value = preferenceDatabase.shouldShowChords && !preferenceDatabase.shouldUseGermanNotation
+            isSecondOptionSelected.value = preferenceDatabase.shouldShowChords && preferenceDatabase.shouldUseGermanNotation
+            isThirdOptionSelected.value = !preferenceDatabase.shouldShowChords
+            isInitialized = true
+        }
+    }
 
     private fun onFirstOptionChanged(isEnabled: Boolean) {
-        if (isEnabled) {
+        if (isEnabled && isInitialized) {
             isSecondOptionSelected.value = false
             isThirdOptionSelected.value = false
             preferenceDatabase.shouldShowChords = true
@@ -23,7 +33,7 @@ class SongAppearanceViewModel(private val preferenceDatabase: PreferenceDatabase
     }
 
     private fun onSecondOptionChanged(isEnabled: Boolean) {
-        if (isEnabled) {
+        if (isEnabled && isInitialized) {
             isFirstOptionSelected.value = false
             isThirdOptionSelected.value = false
             preferenceDatabase.shouldShowChords = true
@@ -32,7 +42,7 @@ class SongAppearanceViewModel(private val preferenceDatabase: PreferenceDatabase
     }
 
     private fun onThirdOptionChanged(isEnabled: Boolean) {
-        if (isEnabled) {
+        if (isEnabled && isInitialized) {
             isFirstOptionSelected.value = false
             isSecondOptionSelected.value = false
             preferenceDatabase.shouldShowChords = false

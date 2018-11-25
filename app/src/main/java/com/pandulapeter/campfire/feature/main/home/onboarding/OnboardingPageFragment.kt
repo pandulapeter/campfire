@@ -4,10 +4,10 @@ import android.os.Bundle
 import android.view.View
 import androidx.annotation.LayoutRes
 import androidx.databinding.ViewDataBinding
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireFragment
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 
-abstract class OnboardingPageFragment<B : ViewDataBinding, VM : OldCampfireViewModel>(@LayoutRes layoutResourceId: Int) : OldCampfireFragment<B, VM>(layoutResourceId) {
+abstract class OnboardingPageFragment<B : ViewDataBinding, VM : CampfireViewModel>(@LayoutRes layoutResourceId: Int) : CampfireFragment<B, VM>(layoutResourceId) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.root.tag = binding

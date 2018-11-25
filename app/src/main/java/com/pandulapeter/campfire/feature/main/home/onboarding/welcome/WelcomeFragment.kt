@@ -7,15 +7,15 @@ import android.text.style.ForegroundColorSpan
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOnboardingWelcomeBinding
+import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingPageFragment
 import com.pandulapeter.campfire.feature.main.options.preferences.LanguageSelectorBottomSheetFragment
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.main.options.preferences.ThemeSelectorBottomSheetFragment
-import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.obtainColor
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
-class WelcomeFragment : CampfireFragment<FragmentOnboardingWelcomeBinding, WelcomeViewModel>(R.layout.fragment_onboarding_welcome),
+class WelcomeFragment : OnboardingPageFragment<FragmentOnboardingWelcomeBinding, WelcomeViewModel>(R.layout.fragment_onboarding_welcome),
     ThemeSelectorBottomSheetFragment.OnThemeSelectedListener,
     LanguageSelectorBottomSheetFragment.OnLanguageSelectedListener {
 
@@ -26,7 +26,6 @@ class WelcomeFragment : CampfireFragment<FragmentOnboardingWelcomeBinding, Welco
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.root.tag = binding //TODO: remove
         viewModel.shouldShowLanguageSelector.observeAndReset { showLanguageSelectorBottomSheet() }
         viewModel.language.observe {
             binding.root.post { if (isAdded) activity?.recreate() }
