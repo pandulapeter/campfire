@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.main.home.onboarding.page.welcome
+package com.pandulapeter.campfire.feature.main.home.onboarding.welcome
 
 import android.os.Bundle
 import android.text.SpannableString
@@ -7,7 +7,7 @@ import android.text.style.ForegroundColorSpan
 import android.view.View
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOnboardingWelcomeBinding
-import com.pandulapeter.campfire.feature.main.home.onboarding.page.OnboardingPageFragment
+import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingPageFragment
 import com.pandulapeter.campfire.feature.main.options.preferences.LanguageSelectorBottomSheetFragment
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.main.options.preferences.ThemeSelectorBottomSheetFragment

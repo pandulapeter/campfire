@@ -1,8 +1,8 @@
-package com.pandulapeter.campfire.feature.main.home.onboarding.page.songAppearance
+package com.pandulapeter.campfire.feature.main.home.onboarding.songAppearance
 
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOnboardingSongAppearanceBinding
-import com.pandulapeter.campfire.feature.main.home.onboarding.page.OnboardingPageFragment
+import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingPageFragment
 
 class SongAppearanceFragment : OnboardingPageFragment<FragmentOnboardingSongAppearanceBinding, SongAppearanceViewModel>(R.layout.fragment_onboarding_song_appearance) {
 

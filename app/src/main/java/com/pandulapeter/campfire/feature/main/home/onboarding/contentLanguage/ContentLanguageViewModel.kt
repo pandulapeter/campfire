@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.main.home.onboarding.page.contentLanguage
+package com.pandulapeter.campfire.feature.main.home.onboarding.contentLanguage
 
 import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableField

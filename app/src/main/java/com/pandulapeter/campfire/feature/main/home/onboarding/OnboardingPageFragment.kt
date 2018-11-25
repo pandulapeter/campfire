@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.main.home.onboarding.page
+package com.pandulapeter.campfire.feature.main.home.onboarding
 
 import android.os.Bundle
 import android.view.View

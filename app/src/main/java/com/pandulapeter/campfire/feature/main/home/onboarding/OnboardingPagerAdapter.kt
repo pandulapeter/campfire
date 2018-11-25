@@ -1,9 +1,9 @@
 package com.pandulapeter.campfire.feature.main.home.onboarding
 
-import com.pandulapeter.campfire.feature.main.home.onboarding.page.contentLanguage.ContentLanguageFragment
-import com.pandulapeter.campfire.feature.main.home.onboarding.page.songAppearance.SongAppearanceFragment
-import com.pandulapeter.campfire.feature.main.home.onboarding.page.userData.UserDataFragment
-import com.pandulapeter.campfire.feature.main.home.onboarding.page.welcome.WelcomeFragment
+import com.pandulapeter.campfire.feature.main.home.onboarding.contentLanguage.ContentLanguageFragment
+import com.pandulapeter.campfire.feature.main.home.onboarding.songAppearance.SongAppearanceFragment
+import com.pandulapeter.campfire.feature.main.home.onboarding.userData.UserDataFragment
+import com.pandulapeter.campfire.feature.main.home.onboarding.welcome.WelcomeFragment
 
 class OnboardingPagerAdapter(fragmentManager: androidx.fragment.app.FragmentManager) : androidx.fragment.app.FragmentStatePagerAdapter(fragmentManager) {
 

@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.main.home.onboarding.page.userData
+package com.pandulapeter.campfire.feature.main.home.onboarding.userData
 
 import androidx.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase

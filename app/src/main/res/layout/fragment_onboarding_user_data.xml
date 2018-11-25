@@ -6,7 +6,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.main.home.onboarding.page.userData.UserDataViewModel" />
+            type="com.pandulapeter.campfire.feature.main.home.onboarding.userData.UserDataViewModel" />
 
     </data>
 

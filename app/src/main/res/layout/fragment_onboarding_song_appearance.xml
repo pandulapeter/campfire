@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.main.home.onboarding.page.songAppearance.SongAppearanceViewModel" />
+            type="com.pandulapeter.campfire.feature.main.home.onboarding.songAppearance.SongAppearanceViewModel" />
 
     </data>
 

@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.main.home.onboarding.page.contentLanguage
+package com.pandulapeter.campfire.feature.main.home.onboarding.contentLanguage
 
 import android.view.ViewGroup
 import androidx.appcompat.widget.AppCompatCheckBox
@@ -6,7 +6,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.databinding.FragmentOnboardingContentLanguageBinding
 import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingFragment
-import com.pandulapeter.campfire.feature.main.home.onboarding.page.OnboardingPageFragment
+import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingPageFragment
 import com.pandulapeter.campfire.util.dimension
 import org.koin.android.ext.android.inject
 

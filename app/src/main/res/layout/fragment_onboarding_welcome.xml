@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.main.home.onboarding.page.welcome.WelcomeViewModel" />
+            type="com.pandulapeter.campfire.feature.main.home.onboarding.welcome.WelcomeViewModel" />
 
     </data>
 

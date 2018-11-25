@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.main.home.onboarding.page.welcome
+package com.pandulapeter.campfire.feature.main.home.onboarding.welcome
 
 import android.content.res.Resources
 import androidx.databinding.ObservableBoolean

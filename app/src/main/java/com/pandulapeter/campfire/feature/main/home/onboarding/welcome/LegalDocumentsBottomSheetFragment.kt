@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.main.home.onboarding
+package com.pandulapeter.campfire.feature.main.home.onboarding.welcome
 
 import android.net.Uri
 import android.widget.TextView
@@ -14,7 +14,8 @@ class LegalDocumentsBottomSheetFragment : BaseBottomSheetDialogFragment<Fragment
 
     companion object {
         fun show(fragmentManager: androidx.fragment.app.FragmentManager) {
-            LegalDocumentsBottomSheetFragment().run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
+            LegalDocumentsBottomSheetFragment()
+                .run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
         }
     }
 

@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.main.home.onboarding.page.songAppearance
+package com.pandulapeter.campfire.feature.main.home.onboarding.songAppearance
 
 import androidx.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase

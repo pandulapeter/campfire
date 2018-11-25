@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.main.home.onboarding.page.contentLanguage.ContentLanguageViewModel" />
+            type="com.pandulapeter.campfire.feature.main.home.onboarding.contentLanguage.ContentLanguageViewModel" />
 
         <import type="com.pandulapeter.campfire.feature.shared.widget.StateLayout.State" />
 
