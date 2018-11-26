@@ -18,11 +18,11 @@ class ManageDownloadsViewModel(context: Context, private val openSongs: () -> Un
     val songCount = ObservableInt()
     private var songToDeleteId: String? = null
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS
+    override val placeholderText = R.string.manage_downloads_placeholder
+    override val buttonIcon = R.drawable.ic_songs_24dp
 
     init {
-        placeholderText.set(R.string.manage_downloads_placeholder)
-        buttonText.set(R.string.go_to_songs)
-        buttonIcon.set(R.drawable.ic_songs_24dp)
+        buttonText.value = R.string.go_to_songs
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_MANAGE_DOWNLOADS
     }
 

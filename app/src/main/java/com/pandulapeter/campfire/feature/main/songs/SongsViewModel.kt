@@ -26,9 +26,11 @@ class SongsViewModel(
 ) : BaseSongListViewModel(context) {
 
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_SONGS
+    override val buttonIcon = R.drawable.ic_filter_and_sort_24dp
     private val analyticsManager by inject<AnalyticsManager>()
     private val popularString = context.getString(R.string.popular_tag)
     private val newString = context.getString(R.string.new_tag)
+    override val placeholderText = R.string.songs_placeholder
     val shouldShowEraseButton = ObservableBoolean().apply {
         onPropertyChanged {
             isSwipeRefreshEnabled.set(!it)
@@ -120,20 +122,12 @@ class SongsViewModel(
     override fun onListUpdated(items: List<ItemViewModel>) {
         super.onListUpdated(items)
         if (songs.toList().isNotEmpty()) {
-            placeholderText.set(R.string.songs_placeholder)
-            buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
-            buttonIcon.set(R.drawable.ic_filter_and_sort_24dp)
+            buttonText.value = if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters
             setFastScrollEnabled(sortingMode != SortingMode.POPULARITY)
         }
     }
 
-    override fun onActionButtonClicked() {
-        if (buttonIcon.get() == 0) {
-            updateData()
-        } else {
-            openSecondaryNavigationDrawer()
-        }
-    }
+    override fun onActionButtonClicked() = openSecondaryNavigationDrawer()
 
     override fun Sequence<Song>.createViewModels() = filterByQuery()
         .filterDownloaded()
@@ -191,7 +185,7 @@ class SongsViewModel(
                 if (shouldScrollToTop) {
                     updateAdapterItems(!isTextInputVisible)
                 }
-                buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
+                buttonText.value = if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters
             }
             shouldShowEraseButton.set(isTextInputVisible)
         }

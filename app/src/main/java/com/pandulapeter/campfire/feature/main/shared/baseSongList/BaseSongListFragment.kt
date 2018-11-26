@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItem
 import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
@@ -48,6 +49,9 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : OldTopLeve
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
+        if (savedInstanceState != null) {
+            viewModel.buttonText.value = savedInstanceState.buttonText
+        }
         viewModel.adapter.run {
             songClickListener = { song, position, clickedView ->
                 if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
@@ -171,6 +175,11 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : OldTopLeve
 
     override fun onBackPressed() = !linearLayoutManager.isScrollEnabled
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.buttonText = viewModel.buttonText.value ?: 0
+    }
+
     override fun updateUI() {
         super.updateUI()
         linearLayoutManager.isScrollEnabled = true
@@ -183,5 +192,9 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : OldTopLeve
         tempList.shuffle()
         analyticsManager.onShuffleButtonPressed(source, tempList.size)
         getCampfireActivity().openDetailScreen(null, tempList, false, 0, viewModel is CollectionDetailViewModel)
+    }
+
+    companion object {
+        private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
     }
 }

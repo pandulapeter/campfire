@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.annotation.CallSuper
 import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableField
-import androidx.databinding.ObservableInt
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
@@ -49,9 +49,9 @@ abstract class BaseSongListViewModel(protected val context: Context) : OldCampfi
     val downloadSongError = ObservableField<Song?>()
     val isLoading = ObservableBoolean()
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
-    val placeholderText = ObservableInt(R.string.songs_initializing_error)
-    val buttonText = ObservableInt(R.string.try_again)
-    val buttonIcon = ObservableInt()
+    open val placeholderText = R.string.campfire
+    val buttonText = MutableLiveData<Int>()
+    open val buttonIcon = 0
     var isDetailScreenOpen = false
     open val cardTransitionName = ""
     open val imageTransitionName = ""

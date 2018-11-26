@@ -26,11 +26,11 @@ class HistoryViewModel(context: Context, private val openSongs: () -> Unit) : Ba
     private val Calendar.week get() = get(Calendar.WEEK_OF_YEAR)
     private val Calendar.day get() = get(Calendar.DAY_OF_YEAR)
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_HISTORY
+    override val placeholderText = R.string.history_placeholder
+    override val buttonIcon = R.drawable.ic_songs_24dp
 
     init {
-        placeholderText.set(R.string.history_placeholder)
-        buttonText.set(R.string.go_to_songs)
-        buttonIcon.set(R.drawable.ic_songs_24dp)
+        buttonText.value = R.string.go_to_songs
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_HISTORY
     }
 

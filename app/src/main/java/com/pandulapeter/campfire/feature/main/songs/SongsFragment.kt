@@ -77,9 +77,6 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
     private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
     private var Bundle.isEraseButtonVisible by BundleArgumentDelegate.Boolean("isEraseButtonVisible")
     private var Bundle.isEraseButtonEnabled by BundleArgumentDelegate.Boolean("isEraseButtonEnabled")
-    private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
-    private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
-    private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
     private val searchToggle: ToolbarButton by lazy {
         getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) {
             viewModel.toggleTextInputVisibility()
@@ -130,9 +127,6 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
             }
             viewModel.shouldShowEraseButton.set(savedInstanceState.isEraseButtonVisible)
             viewModel.shouldEnableEraseButton.set(savedInstanceState.isEraseButtonEnabled)
-            viewModel.placeholderText.set(savedInstanceState.placeholderText)
-            viewModel.buttonText.set(savedInstanceState.buttonText)
-            viewModel.buttonIcon.set(savedInstanceState.buttonIcon)
         }
         viewModel.toolbarTextInputView.textInput.requestFocus()
         searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
@@ -164,9 +158,6 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         super.onSaveInstanceState(this)
         isTextInputVisible = viewModel.toolbarTextInputView.isTextInputVisible
         searchQuery = viewModel.query
-        placeholderText = viewModel.placeholderText.get()
-        buttonText = viewModel.buttonText.get()
-        buttonIcon = viewModel.buttonIcon.get()
         isEraseButtonVisible = viewModel.shouldShowEraseButton.get()
         isEraseButtonEnabled = viewModel.shouldEnableEraseButton.get()
     }

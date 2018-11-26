@@ -113,7 +113,6 @@
 
     <!-- Songs screen -->
     <string name="songs_placeholder">No matching songs found. Double-check the filters you set up</string>
-    <string name="songs_initializing_error">Something went wrong while trying to load the songs</string>
     <string name="songs_update_error">Something went wrong while updating the songs</string>
     <string name="songs_song_download_error">Error downloading \"%s\"</string>
     <string name="songs_search">Search</string>

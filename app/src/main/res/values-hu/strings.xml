@@ -112,7 +112,6 @@
 
     <!-- Songs screen -->
     <string name="songs_placeholder">Nem található megfelelő dal. Ellenőrizd a beállított szűrőket</string>
-    <string name="songs_initializing_error">Hiba történt a dalok betöltése közben</string>
     <string name="songs_update_error">Hiba történt a dalok frissítése közben</string>
     <string name="songs_song_download_error">Hiba történt a dal letöltése közben: \"%s\"</string>
     <string name="songs_search">Keresés</string>

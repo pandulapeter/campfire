@@ -112,7 +112,6 @@
 
     <!-- Songs screen -->
     <string name="songs_placeholder">Nu s-au găsit piese pentru criteriile de căutare. Te rog să verifici filtrele</string>
-    <string name="songs_initializing_error">A intervenit o eroare la descărcarea pieselor</string>
     <string name="songs_update_error">A intervenit o eroare la actualizarea pieselor</string>
     <string name="songs_song_download_error">A intervenit o eroare la descărcarea piesei \"%s\"</string>
     <string name="songs_search">Căutare</string>

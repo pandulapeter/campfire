@@ -33,11 +33,11 @@ class PlaylistViewModel(
     val songCount = ObservableInt(-1)
     val isInEditMode = ObservableBoolean()
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST
+    override val placeholderText = R.string.playlist_placeholder
+    override val buttonIcon = R.drawable.ic_songs_24dp
 
     init {
-        placeholderText.set(R.string.playlist_placeholder)
-        buttonText.set(R.string.go_to_songs)
-        buttonIcon.set(R.drawable.ic_songs_24dp)
+        buttonText.value = R.string.go_to_songs
         preferenceDatabase.lastScreen = playlistId
         toolbarTextInputView?.onDoneButtonPressed = {
             if (isInEditMode.get()) {
