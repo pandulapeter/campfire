@@ -39,9 +39,7 @@ class HomeFragment : OldCampfireFragment<FragmentHomeBinding, HomeViewModel>(R.l
         }
     }
 
-    private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
-    private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
     private var Bundle.wasLastTransitionForACollection by BundleArgumentDelegate.Boolean("wasLastTransitionForACollection")
     private var Bundle.randomCollections by BundleArgumentDelegate.ParcelableArrayList<Collection>("randomCollections")
     private var Bundle.randomSongs by BundleArgumentDelegate.ParcelableArrayList<Song>("randomSongs")
@@ -166,9 +164,7 @@ class HomeFragment : OldCampfireFragment<FragmentHomeBinding, HomeViewModel>(R.l
             eraseButton.isEnabled = it
         }
         savedInstanceState?.let {
-            viewModel.placeholderText.set(it.placeholderText)
             viewModel.buttonText.set(it.buttonText)
-            viewModel.buttonIcon.set(it.buttonIcon)
             wasLastTransitionForACollection = it.wasLastTransitionForACollection
             viewModel.randomCollections = it.randomCollections
             viewModel.randomSongs = it.randomSongs
@@ -342,9 +338,7 @@ class HomeFragment : OldCampfireFragment<FragmentHomeBinding, HomeViewModel>(R.l
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.placeholderText = viewModel.placeholderText.get()
         outState.buttonText = viewModel.buttonText.get()
-        outState.buttonIcon = viewModel.buttonIcon.get()
         outState.wasLastTransitionForACollection = wasLastTransitionForACollection
         outState.randomCollections = ArrayList(viewModel.randomCollections.take(HomeViewModel.RANDOM_COLLECTION_COUNT + HomeViewModel.NEW_COLLECTION_COUNT + 1))
         outState.randomSongs = ArrayList(viewModel.randomSongs.take(HomeViewModel.RANDOM_SONG_COUNT + HomeViewModel.NEW_SONG_COUNT + 1))

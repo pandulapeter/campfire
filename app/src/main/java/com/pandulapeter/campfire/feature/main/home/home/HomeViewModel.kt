@@ -36,11 +36,11 @@ import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 class HomeViewModel(
+    private val context: Context,
     private val onDataLoaded: (languages: List<Language>) -> Unit,
     private val openSecondaryNavigationDrawer: () -> Unit,
     val toolbarTextInputView: ToolbarTextInputView,
-    private val updateSearchToggleDrawable: (Boolean) -> Unit,
-    private val context: Context
+    private val updateSearchToggleDrawable: (Boolean) -> Unit
 ) : OldCampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
 
     companion object {
@@ -72,9 +72,7 @@ class HomeViewModel(
     val isLoading = ObservableBoolean()
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
     val downloadSongError = ObservableField<Song?>()
-    val placeholderText = ObservableInt(R.string.home_initializing_error)
     val buttonText = ObservableInt(R.string.try_again)
-    val buttonIcon = ObservableInt()
     private var lastErrorTimestamp = 0L
     private var isFirstLoadingDone = false
     var shouldShowSongOfTheDay = preferenceDatabase.shouldShowSongOfTheDay
@@ -316,18 +314,12 @@ class HomeViewModel(
     private fun onListUpdated(items: List<ItemViewModel>) {
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
         if (collections.toList().isNotEmpty()) {
-            placeholderText.set(R.string.home_placeholder)
             buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
-            buttonIcon.set(R.drawable.ic_filter_and_sort_24dp)
         }
     }
 
     fun onActionButtonClicked() {
-        if (buttonIcon.get() == 0) {
-            updateData()
-        } else {
-            openSecondaryNavigationDrawer()
-        }
+        openSecondaryNavigationDrawer()
     }
 
     fun updateData() {
