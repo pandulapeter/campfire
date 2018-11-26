@@ -27,9 +27,7 @@ import com.pandulapeter.campfire.util.*
 
 class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, CollectionsViewModel>(R.layout.fragment_collections) {
 
-    private var Bundle.placeholderText by BundleArgumentDelegate.Int("placeholderText")
     private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
-    private var Bundle.buttonIcon by BundleArgumentDelegate.Int("buttonIcon")
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
     private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
     private var Bundle.isEraseButtonVisible by BundleArgumentDelegate.Boolean("isEraseButtonVisible")
@@ -140,9 +138,7 @@ class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, Coll
         viewModel.toolbarTextInputView.textInput.requestFocus()
         savedInstanceState?.let {
             searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
-            viewModel.placeholderText.set(it.placeholderText)
             viewModel.buttonText.set(it.buttonText)
-            viewModel.buttonIcon.set(it.buttonIcon)
             if (it.isTextInputVisible) {
                 searchToggle.setImageDrawable(getCampfireActivity().drawable(R.drawable.ic_close_24dp))
                 viewModel.toolbarTextInputView.textInput.run {
@@ -243,9 +239,7 @@ class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, Coll
         outState.searchQuery = viewModel.query
         outState.isEraseButtonVisible = viewModel.shouldShowEraseButton.get()
         outState.isEraseButtonEnabled = viewModel.shouldEnableEraseButton.get()
-        outState.placeholderText = viewModel.placeholderText.get()
         outState.buttonText = viewModel.buttonText.get()
-        outState.buttonIcon = viewModel.buttonIcon.get()
     }
 
     override fun inflateToolbarTitle(context: Context) = viewModel.toolbarTextInputView

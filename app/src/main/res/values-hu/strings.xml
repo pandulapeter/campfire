@@ -92,7 +92,6 @@
 
     <!-- Home screen -->
     <string name="home_placeholder">Nincs megjeleníthető tartalom. Ellenőrizd a beállított szűrőket</string>
-    <string name="home_initializing_error">Hiba történt a kezdőképernyő betöltése közben</string>
     <string name="home_update_error">Hiba történt a kezdőképernyő frissítése közben</string>
     <string name="home_modules">Modulok</string>
     <string name="home_song_of_the_day">A nap dala</string>
@@ -103,7 +102,6 @@
 
     <!-- Collections screen -->
     <string name="collections_placeholder">Nem található megfelelő gyűjtemény. Ellenőrizd a beállított szűrőket</string>
-    <string name="collections_initializing_error">Hiba történt a gyűjtemények betöltése közben</string>
     <string name="collections_update_error">Hiba történt a gyűjtemények frissítése közben</string>
     <string name="collections_sort_by">Rendezés</string>
     <string name="collections_sort_by_title">Cím</string>

@@ -92,7 +92,6 @@
 
     <!-- Home screen -->
     <string name="home_placeholder">Conținutul nu este disponibil. Te rog să verifici filtrele</string>
-    <string name="home_initializing_error">A intervenit o eroare la descărcarea paginei de start</string>
     <string name="home_update_error">A intervenit o eroare la actualizarea paginei de start</string>
     <string name="home_modules">Module</string>
     <string name="home_song_of_the_day">Piesa zilei</string>
@@ -103,7 +102,6 @@
 
     <!-- Collections screen -->
     <string name="collections_placeholder">Nu s-au găsit colecții pentru criteriile de căutare. Te rog să verifici filtrele</string>
-    <string name="collections_initializing_error">A intervenit o eroare la descărcarea colecțiilor</string>
     <string name="collections_update_error">A intervenit o eroare la actualizarea colecțiilor</string>
     <string name="collections_sort_by">Sortează după</string>
     <string name="collections_sort_by_title">Titlu</string>

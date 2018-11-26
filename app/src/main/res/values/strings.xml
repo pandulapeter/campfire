@@ -93,7 +93,6 @@
 
     <!-- Home screen -->
     <string name="home_placeholder">No content to display. Double-check the filters you set up</string>
-    <string name="home_initializing_error">Something went wrong while trying to load the home screen</string>
     <string name="home_update_error">Something went wrong while updating the home screen</string>
     <string name="home_modules">Modules</string>
     <string name="home_song_of_the_day">Song of the day</string>
@@ -104,7 +103,6 @@
 
     <!-- Collections screen -->
     <string name="collections_placeholder">No matching collections found. Double-check the filters you set up</string>
-    <string name="collections_initializing_error">Something went wrong while trying to load the list of collections</string>
     <string name="collections_update_error">Something went wrong while updating collections</string>
     <string name="collections_sort_by">Sort by</string>
     <string name="collections_sort_by_title">Title</string>

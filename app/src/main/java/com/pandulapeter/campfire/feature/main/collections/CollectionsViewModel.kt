@@ -40,9 +40,7 @@ class CollectionsViewModel(
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
     val isLoading = ObservableBoolean()
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
-    val placeholderText = ObservableInt(R.string.collections_initializing_error)
     val buttonText = ObservableInt(R.string.try_again)
-    val buttonIcon = ObservableInt()
     val adapter = RecyclerAdapter()
     val isSwipeRefreshEnabled = ObservableBoolean(true)
     val shouldShowEraseButton = ObservableBoolean().apply {
@@ -150,18 +148,12 @@ class CollectionsViewModel(
     private fun onListUpdated(items: List<CollectionItemViewModel>) {
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
         if (collections.toList().isNotEmpty()) {
-            placeholderText.set(R.string.collections_placeholder)
             buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
-            buttonIcon.set(R.drawable.ic_filter_and_sort_24dp)
         }
     }
 
     fun onActionButtonClicked() {
-        if (buttonIcon.get() == 0) {
-            updateData()
-        } else {
-            openSecondaryNavigationDrawer()
-        }
+        openSecondaryNavigationDrawer()
     }
 
     fun updateData() = collectionRepository.updateData()

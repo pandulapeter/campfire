@@ -8,17 +8,19 @@
             name="viewModel"
             type="com.pandulapeter.campfire.feature.main.collections.CollectionsViewModel" />
 
+        <import type="com.pandulapeter.campfire.R" />
+
     </data>
 
     <com.pandulapeter.campfire.feature.shared.widget.StateLayout
         android:id="@+id/state_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:buttonIcon="@{viewModel.buttonIcon}"
+        app:buttonIcon="@{R.drawable.ic_filter_and_sort_24dp}"
         app:buttonText="@{viewModel.buttonText}"
         app:onButtonClicked="@{() -> viewModel.onActionButtonClicked()}"
         app:state="@{viewModel.state}"
-        app:text="@{viewModel.placeholderText}">
+        app:text="@{R.string.collections_placeholder}">
 
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipe_refresh_layout"
