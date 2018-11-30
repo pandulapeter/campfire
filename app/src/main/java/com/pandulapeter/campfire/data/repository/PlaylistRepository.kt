@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.data.repository
 
+import androidx.annotation.Keep
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.persistence.Database
 import com.pandulapeter.campfire.data.repository.shared.BaseRepository
@@ -11,6 +12,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.util.*
 
+@Keep
 class PlaylistRepository(private val database: Database) : BaseRepository<PlaylistRepository.Subscriber>() {
     private val data = mutableListOf<Playlist>()
     private var isCacheLoaded = false

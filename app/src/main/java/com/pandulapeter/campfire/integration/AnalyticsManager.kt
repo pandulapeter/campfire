@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.integration
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import androidx.annotation.Keep
 import com.crashlytics.android.Crashlytics
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.pandulapeter.campfire.BuildConfig
@@ -12,6 +13,7 @@ import com.pandulapeter.campfire.util.enqueueCall
 import java.text.SimpleDateFormat
 import java.util.*
 
+@Keep
 class AnalyticsManager(context: Context, private val preferenceDatabase: PreferenceDatabase, private val networkManager: NetworkManager) {
 
     companion object {

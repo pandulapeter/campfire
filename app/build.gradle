@@ -36,16 +36,22 @@ android {
     }
     buildTypes {
         debug {
+            debuggable true
+            shrinkResources false
             minifyEnabled false
             versionNameSuffix "-debug"
         }
         internal {
+            debuggable false
+            shrinkResources true
             minifyEnabled true
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
             signingConfig signingConfigs.internal
             versionNameSuffix "-internal"
         }
         release {
+            debuggable false
+            shrinkResources true
             minifyEnabled true
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
             signingConfig signingConfigs.release
@@ -73,7 +79,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.0.1"
 
     // Service locator
-    implementation "org.koin:koin-androidx-viewmodel:1.0.2"
+    implementation "org.koin:koin-androidx-viewmodel:1.0.0"
 
     // Networking
     def retrofitVersion = "2.3.0"

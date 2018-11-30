@@ -49,7 +49,7 @@ val repositoryModule = module {
 }
 
 val persistenceModule = module {
-    single<PreferenceDatabase>()
+    factory<PreferenceDatabase>()
     single { Room.databaseBuilder(get(), Database::class.java, "songDatabase.db").build() }
 }
 

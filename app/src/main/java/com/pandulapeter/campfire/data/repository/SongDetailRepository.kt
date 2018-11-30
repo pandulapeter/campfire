@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.data.repository
 
+import androidx.annotation.Keep
 import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.model.remote.SongDetail
@@ -15,6 +16,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@Keep
 class SongDetailRepository(
     private val networkManager: NetworkManager,
     private val database: Database

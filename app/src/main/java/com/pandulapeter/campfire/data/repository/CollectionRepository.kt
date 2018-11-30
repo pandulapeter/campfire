@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.data.repository
 
+import androidx.annotation.Keep
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.networking.NetworkManager
@@ -13,6 +14,7 @@ import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
+@Keep
 class CollectionRepository(
     private val preferenceDatabase: PreferenceDatabase,
     private val networkManager: NetworkManager,
