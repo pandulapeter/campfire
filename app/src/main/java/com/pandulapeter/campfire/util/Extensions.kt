@@ -177,13 +177,13 @@ inline fun <T> ObservableField<T>.onEventTriggered(fragment: androidx.fragment.a
 
 inline fun androidx.drawerlayout.widget.DrawerLayout.addDrawerListener(
     crossinline onDrawerStateChanged: (newState: Int) -> Unit = {},
-    crossinline onDrawerSlide: (offset: Float) -> Unit = {},
+    crossinline onDrawerSlide: (view: View, offset: Float) -> Unit = { _, _ -> },
     crossinline onDrawerClosed: () -> Unit = {},
     crossinline onDrawerOpened: () -> Unit = {}
 ) = addDrawerListener(object : androidx.drawerlayout.widget.DrawerLayout.DrawerListener {
     override fun onDrawerStateChanged(newState: Int) = onDrawerStateChanged(newState)
 
-    override fun onDrawerSlide(drawerView: View, slideOffset: Float) = onDrawerSlide(slideOffset)
+    override fun onDrawerSlide(drawerView: View, slideOffset: Float) = onDrawerSlide(drawerView, slideOffset)
 
     override fun onDrawerClosed(drawerView: View) = onDrawerClosed()
 

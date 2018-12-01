@@ -234,8 +234,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     hideKeyboard(currentFocus)
                 }
             },
-            onDrawerSlide = {
-                header.translationX = (1 - it) * header.width / 2
+            onDrawerSlide = { view, offset ->
+                if (view == binding.primaryNavigation) {
+                    header.translationX = (1 - offset) * header.width / 2
+                }
             })
 
         // Initialize the primary side navigation drawer.
