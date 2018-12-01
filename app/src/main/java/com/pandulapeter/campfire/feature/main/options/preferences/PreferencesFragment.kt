@@ -18,6 +18,7 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
     LanguageSelectorBottomSheetFragment.OnLanguageSelectedListener {
 
     override val viewModel by viewModel<PreferencesViewModel>()
+    private var hasStartedListening = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -26,11 +27,16 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
             shouldShowLanguageSelector.observeAndReset { showLanguageSelector() }
             shouldShowHintsResetConfirmation.observeAndReset { showHintsResetConfirmation() }
             shouldShowHintsResetSnackbar.observeAndReset { showSnackbar(R.string.options_preferences_reset_hints_message) }
-            shouldShareUsageData.observe { onShouldShareUsageDataChanged(it) }
-            shouldShareCrashReports.observe { onShouldShareCrashReportsChanged(it) }
-            theme.observe { binding.root.post { getCampfireActivity()?.recreate() } }
-            language.observe { binding.root.post { getCampfireActivity()?.recreate() } }
+            shouldShareUsageData.observe { if (hasStartedListening) onShouldShareUsageDataChanged(it) }
+            shouldShareCrashReports.observe { if (hasStartedListening) onShouldShareCrashReportsChanged(it) }
+            theme.observe { if (hasStartedListening) binding.root.post { getCampfireActivity()?.recreate() } }
+            language.observe { if (hasStartedListening) binding.root.post { getCampfireActivity()?.recreate() } }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.root.post { hasStartedListening = true }
     }
 
     override fun onPositiveButtonSelected(id: Int) {

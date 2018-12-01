@@ -49,7 +49,6 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     private val snackbarBackgroundColor by lazy { requireContext().obtainColor(android.R.attr.textColorPrimary) }
     private val snackbarTextColor by lazy { requireContext().obtainColor(android.R.attr.colorPrimary) }
     private val snackbarActionTextColor by lazy { requireContext().color(R.color.accent) }
-    var hasStartedObserving = false //TODO: Hacky.
 
     final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)
@@ -71,7 +70,6 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     override fun onResume() {
         super.onResume()
         viewModel.isUiBlocked = false
-        hasStartedObserving = true
     }
 
     override fun onStop() {
@@ -119,7 +117,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected inline fun Context.createToolbarButton(@DrawableRes drawableRes: Int, crossinline onClickListener: (View) -> Unit) = ToolbarButton(this).apply {
         setImageDrawable(drawable(drawableRes))
         setOnClickListener {
-            if (isAdded && getCampfireActivity()?.isUiBlocked != true) {
+            if (isAdded && viewModel.isUiBlocked != true) {
                 onClickListener(it)
             }
         }
@@ -215,7 +213,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         }
         enterTransition = null
         exitTransition = null
-        getCampfireActivity()?.isUiBlocked = false
+        viewModel.isUiBlocked = false
     }
 
     override fun onTransitionResume(transition: Transition?) = Unit
@@ -226,23 +224,21 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     override fun onTransitionCancel(transition: Transition?) = onTransitionEnd(transition)
 
     override fun onTransitionStart(transition: Transition?) {
-        getCampfireActivity()?.isUiBlocked = true
+        viewModel.isUiBlocked = true
     }
 
     protected inline fun <T> LiveData<T>.observe(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {
-        if (hasStartedObserving) {
-            callback(it)
-        }
+        callback(it)
     })
 
     protected inline fun <T> LiveData<T?>.observeNotNull(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {
-        if (hasStartedObserving && it != null) {
+        if (it != null) {
             callback(it)
         }
     })
 
     protected inline fun <T> MutableLiveData<T?>.observeAndReset(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {
-        if (hasStartedObserving && it != null) {
+        if (it != null) {
             callback(it)
             value = null
         }

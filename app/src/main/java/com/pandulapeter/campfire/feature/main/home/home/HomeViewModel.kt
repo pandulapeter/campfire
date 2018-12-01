@@ -1,9 +1,6 @@
 package com.pandulapeter.campfire.feature.main.home.home
 
 import android.content.Context
-import androidx.databinding.ObservableBoolean
-import androidx.databinding.ObservableField
-import androidx.databinding.ObservableInt
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
@@ -23,7 +20,7 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.Collecti
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
@@ -42,7 +39,7 @@ class HomeViewModel(
     private val songRepository: SongRepository,
     private val songDetailRepository: SongDetailRepository,
     private val playlistRepository: PlaylistRepository
-) : OldCampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
+) : CampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
 
     var isDetailScreenOpen = false
     val isSearchToggleVisible = mutableLiveDataOf(false)
@@ -57,11 +54,11 @@ class HomeViewModel(
     var firstRandomSongIndex = 0
     val adapter = RecyclerAdapter()
     val shouldOpenSecondaryNavigationDrawer = MutableLiveData<Boolean?>()
-    val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
-    val isLoading = ObservableBoolean()
-    val shouldShowUpdateErrorSnackbar = ObservableBoolean()
-    val downloadSongError = ObservableField<Song?>()
-    val buttonText = ObservableInt(R.string.try_again)
+    val state = mutableLiveDataOf(StateLayout.State.LOADING)
+    val isLoading = mutableLiveDataOf(true)
+    val shouldShowUpdateErrorSnackbar = MutableLiveData<Boolean?>()
+    val downloadSongError = MutableLiveData<Song?>()
+    val buttonText = mutableLiveDataOf(R.string.try_again)
     private var lastErrorTimestamp = 0L
     private var isFirstLoadingDone = false
     var shouldShowSongOfTheDay = preferenceDatabase.shouldShowSongOfTheDay
@@ -121,13 +118,9 @@ class HomeViewModel(
             }
         }
     var languages = MutableLiveData<List<Language>?>()
-    val isSwipeRefreshEnabled = ObservableBoolean(true)
-    val shouldShowEraseButton = ObservableBoolean().apply {
-        onPropertyChanged {
-            isSwipeRefreshEnabled.set(!it)
-        }
-    }
-    val shouldEnableEraseButton = ObservableBoolean()
+    val isSwipeRefreshEnabled = mutableLiveDataOf(true)
+    val shouldShowEraseButton = mutableLiveDataOf(false) { isSwipeRefreshEnabled.value = !it }
+    val shouldEnableEraseButton = mutableLiveDataOf(false)
     var query = ""
         set(value) {
             if (field != value) {
@@ -136,7 +129,7 @@ class HomeViewModel(
                 if (value.isNotEmpty()) {
                     analyticsManager.onHomeSearchQueryChanged(query)
                 }
-                shouldEnableEraseButton.set(query.isNotEmpty())
+                shouldEnableEraseButton.value = query.isNotEmpty()
             }
         }
 
@@ -161,9 +154,9 @@ class HomeViewModel(
     }
 
     override fun onCollectionsLoadingStateChanged(isLoading: Boolean) {
-        this.isLoading.set(isLoading)
+        this.isLoading.value = isLoading
         if (collections.toList().isEmpty() && isLoading) {
-            state.set(StateLayout.State.LOADING)
+            state.value = StateLayout.State.LOADING
         }
     }
 
@@ -175,14 +168,13 @@ class HomeViewModel(
     }
 
     override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {
-        this.isLoading.set(isLoading)
+        this.isLoading.value = isLoading
         if (songs.toList().isEmpty() && isLoading) {
-            state.set(StateLayout.State.LOADING)
+            state.value = StateLayout.State.LOADING
         }
     }
 
     override fun onSongRepositoryUpdateError() = onError()
-
 
     override fun onSongDetailRepositoryUpdated(downloadedSongs: List<SongDetailMetadata>) {
         if (songs.toList().isNotEmpty()) {
@@ -216,7 +208,7 @@ class HomeViewModel(
 
     override fun onSongDetailRepositoryDownloadError(song: Song) {
         analyticsManager.onConnectionError(!songDetailRepository.isSongDownloaded(song.id), song.id)
-        downloadSongError.set(song)
+        downloadSongError.value = song
         adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == song.id }.let { index ->
             if (index != RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
@@ -263,23 +255,28 @@ class HomeViewModel(
 
     override fun onPlaylistOrderChanged(playlists: List<Playlist>) = Unit
 
+    override fun onCleared() {
+        super.onCleared()
+        coroutine?.cancel()
+    }
+
     private fun onError() {
         if (System.currentTimeMillis() - lastErrorTimestamp > 200) {
             if (collections.toList().isEmpty() || songs.toList().isEmpty()) {
                 analyticsManager.onConnectionError(true, AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
-                state.set(StateLayout.State.ERROR)
+                state.value = StateLayout.State.ERROR
             } else {
                 analyticsManager.onConnectionError(false, AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
-                shouldShowUpdateErrorSnackbar.set(true)
+                shouldShowUpdateErrorSnackbar.value = true
             }
         }
         lastErrorTimestamp = System.currentTimeMillis()
     }
 
     private fun onListUpdated(items: List<ItemViewModel>) {
-        state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
+        state.value = if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL
         if (collections.toList().isNotEmpty()) {
-            buttonText.set(if (isTextInputVisible) 0 else R.string.filters)
+            buttonText.value = if (isTextInputVisible) 0 else R.string.filters
         }
     }
 

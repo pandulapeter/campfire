@@ -8,8 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.CompoundButton
-import android.widget.TextView
-import androidx.annotation.StringRes
 import androidx.core.app.SharedElementCallback
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
@@ -17,63 +15,41 @@ import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.model.remote.Song
-import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.data.repository.CollectionRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.data.repository.SongDetailRepository
-import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.FragmentHomeBinding
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireFragment
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
-import com.pandulapeter.campfire.feature.shared.setTitleSubtitle
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
-import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class HomeFragment : OldCampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layout.fragment_home) {
+class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layout.fragment_home) {
 
+    override val viewModel by viewModel<HomeViewModel>()
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     private val drawableCloseToSearch by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_close_to_search_24dp) else getCampfireActivity().drawable(R.drawable.ic_search_24dp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context?.animatedDrawable(R.drawable.avd_close_to_search_24dp) else context?.drawable(R.drawable.ic_search_24dp)
     }
     private val drawableSearchToClose by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity().animatedDrawable(R.drawable.avd_search_to_close_24dp) else getCampfireActivity().drawable(R.drawable.ic_close_24dp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context?.animatedDrawable(R.drawable.avd_search_to_close_24dp) else context?.drawable(R.drawable.ic_close_24dp)
     }
     private val searchToggle: ToolbarButton by lazy {
-        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) {
             toggleTextInputVisibility()
         }
     }
     private var toolbarWidth = 0
     private val eraseButton: ToolbarButton by lazy {
-        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) { toolbarTextInputView.textInput.setText("") }.apply {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) { toolbarTextInputView.textInput.setText("") }.apply {
             scaleX = 0f
             scaleY = 0f
             alpha = 0.5f
             isEnabled = false
         }
-    }
-
-    private val preferenceDatabase by inject<PreferenceDatabase>()
-    val collectionRepository by inject<CollectionRepository>()
-    private val songRepository by inject<SongRepository>()
-    private val songDetailRepository by inject<SongDetailRepository>()
-    private val playlistRepository by inject<PlaylistRepository>()
-    override val viewModel: HomeViewModel by lazy {
-        HomeViewModel(
-            context = getCampfireActivity(),
-            analyticsManager = analyticsManager,
-            preferenceDatabase = preferenceDatabase,
-            collectionRepository = collectionRepository,
-            songRepository = songRepository,
-            songDetailRepository = songDetailRepository,
-            playlistRepository = playlistRepository
-        )
     }
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
     private var wasLastTransitionForACollection = false
@@ -83,18 +59,18 @@ class HomeFragment : OldCampfireFragment<FragmentHomeBinding, HomeViewModel>(R.l
         super.onCreate(savedInstanceState)
         parentFragment?.setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
-                var index = viewModel.adapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
+                var index = viewModel.adapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
                 if (wasLastTransitionForACollection && index != RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
-                        view.transitionName = "card-${getCampfireActivity().lastCollectionId}"
+                        view.transitionName = "card-${getCampfireActivity()?.lastCollectionId}"
                         sharedElements[names[0]] = view
                         val image = view.findViewById<View>(R.id.image)
-                        image.transitionName = "image-${getCampfireActivity().lastCollectionId}"
+                        image.transitionName = "image-${getCampfireActivity()?.lastCollectionId}"
                         sharedElements[names[1]] = image
                     }
                 } else {
-                    index = viewModel.adapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity().lastSongId }
+                    index = viewModel.adapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId }
                     if (index != RecyclerView.NO_POSITION) {
                         (binding.recyclerView.findViewHolderForAdapterPosition(index)
                             ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
@@ -107,254 +83,254 @@ class HomeFragment : OldCampfireFragment<FragmentHomeBinding, HomeViewModel>(R.l
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        if (arguments?.shouldAnimate == true) {
-            arguments?.shouldAnimate = false
-            view.alpha = 0f
-            view.waitForPreDraw {
-                view.translationY = view.height.toFloat()
-                view
-                    .animate()
-                    .translationY(0f)
-                    .alpha(1f)
-                    .apply {
-                        startDelay = 300
-                        duration = 600
-                    }
-                    .start()
-                getCampfireActivity().onScreenChanged()
-                false
-            }
-        }
-        toolbarTextInputView = ToolbarTextInputView(
-            getCampfireActivity().toolbarContext,
-            R.string.songs_search,
-            true
-        ).apply {
-            if (viewModel.isTextInputVisible) {
-                showTextInput()
-            }
-            textInput.setText(viewModel.query)
-            visibilityChangeListener = { viewModel.isTextInputVisible = it }
-            title.updateToolbarTitle(R.string.main_home)
-            textInput.onTextChanged { if (isTextInputVisible) viewModel.query = it }
-        }
-        viewModel.isSearchToggleVisible.observeNotNull {
-            searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
-            getCampfireActivity().transitionMode = true
-        }
-        viewModel.shouldOpenSecondaryNavigationDrawer.observeAndReset { getCampfireActivity().openSecondaryNavigationDrawer() }
-        viewModel.languages.observeNotNull { languages ->
-            getCampfireActivity().enableSecondaryNavigationDrawer(R.menu.home)
-            initializeCompoundButton(R.id.song_of_the_day) { viewModel.shouldShowSongOfTheDay }
-            initializeCompoundButton(R.id.new_collections) { viewModel.shouldShowNewCollections }
-            initializeCompoundButton(R.id.new_songs) { viewModel.shouldShowNewSongs }
-            initializeCompoundButton(R.id.random_collections) { viewModel.shouldShowRandomCollections }
-            initializeCompoundButton(R.id.random_songs) { viewModel.shouldShowRandomSongs }
-            initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
-            getCampfireActivity().secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
-                clear()
-                languages.forEachIndexed { index, language ->
-                    add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
-                        setActionView(R.layout.widget_checkbox)
-                        initializeCompoundButton(language.nameResource) { !viewModel.disabledLanguageFilters.contains(language.id) }
-                    }
+        getCampfireActivity()?.let { activity ->
+            if (arguments?.shouldAnimate == true) {
+                arguments?.shouldAnimate = false
+                view.alpha = 0f
+                view.waitForPreDraw {
+                    view.translationY = view.height.toFloat()
+                    view
+                        .animate()
+                        .translationY(0f)
+                        .alpha(1f)
+                        .apply {
+                            startDelay = 300
+                            duration = 600
+                        }
+                        .start()
+                    activity.onScreenChanged()
+                    false
                 }
             }
-            getCampfireActivity().updateToolbarButtons(
-                listOf(
-                    eraseButton,
-                    searchToggle,
-                    getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity().openSecondaryNavigationDrawer() }
-                ))
-        }
-        viewModel.shouldShowEraseButton.onPropertyChanged { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
-        viewModel.shouldEnableEraseButton.onPropertyChanged {
-            eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
-            eraseButton.isEnabled = it
-        }
-        savedInstanceState?.let {
-            viewModel.buttonText.set(it.buttonText)
-            wasLastTransitionForACollection = it.wasLastTransitionForACollection
-            viewModel.randomCollections = it.randomCollections
-            viewModel.randomSongs = it.randomSongs
-            if (it.isTextInputVisible) {
-                searchToggle.setImageDrawable(getCampfireActivity().drawable(R.drawable.ic_close_24dp))
-                toolbarTextInputView.textInput.run {
-                    setText(savedInstanceState.searchQuery)
-                    setSelection(text.length)
-                    viewModel.query = text.toString()
+            toolbarTextInputView = ToolbarTextInputView(activity.toolbarContext, R.string.songs_search, true).apply {
+                if (viewModel.isTextInputVisible) {
+                    showTextInput()
                 }
-                toolbarTextInputView.showTextInput()
+                textInput.setText(viewModel.query)
+                visibilityChangeListener = { viewModel.isTextInputVisible = it }
+                title.updateToolbarTitle(R.string.main_home)
+                textInput.onTextChanged { if (isTextInputVisible) viewModel.query = it }
             }
-            viewModel.shouldShowEraseButton.set(savedInstanceState.isEraseButtonVisible)
-            viewModel.shouldEnableEraseButton.set(savedInstanceState.isEraseButtonEnabled)
-        }
-        toolbarTextInputView.textInput.requestFocus()
-        viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
-            showSnackbar(
-                message = R.string.home_update_error,
-                action = { viewModel.updateData() })
-        }
-        viewModel.downloadSongError.onEventTriggered(this) { song ->
-            song?.let {
+            var hasStartedListening = false
+            viewModel.isSearchToggleVisible.observeNotNull {
+                if (hasStartedListening) {
+                    searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
+                    activity.transitionMode = true
+                }
+                hasStartedListening = true
+            }
+            viewModel.shouldOpenSecondaryNavigationDrawer.observeAndReset { getCampfireActivity()?.openSecondaryNavigationDrawer() }
+            viewModel.languages.observeNotNull { languages ->
+                activity.enableSecondaryNavigationDrawer(R.menu.home)
+                initializeCompoundButton(R.id.song_of_the_day) { viewModel.shouldShowSongOfTheDay }
+                initializeCompoundButton(R.id.new_collections) { viewModel.shouldShowNewCollections }
+                initializeCompoundButton(R.id.new_songs) { viewModel.shouldShowNewSongs }
+                initializeCompoundButton(R.id.random_collections) { viewModel.shouldShowRandomCollections }
+                initializeCompoundButton(R.id.random_songs) { viewModel.shouldShowRandomSongs }
+                initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
+                activity.secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
+                    clear()
+                    languages.forEachIndexed { index, language ->
+                        add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
+                            setActionView(R.layout.widget_checkbox)
+                            initializeCompoundButton(language.nameResource) { !viewModel.disabledLanguageFilters.contains(language.id) }
+                        }
+                    }
+                }
+                activity.updateToolbarButtons(
+                    listOf(
+                        eraseButton,
+                        searchToggle,
+                        activity.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { activity.openSecondaryNavigationDrawer() }
+                    ))
+            }
+            viewModel.shouldShowEraseButton.observe { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
+            viewModel.shouldEnableEraseButton.observe {
+                eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
+                eraseButton.isEnabled = it
+            }
+            savedInstanceState?.also {
+                viewModel.buttonText.value = it.buttonText
+                wasLastTransitionForACollection = it.wasLastTransitionForACollection
+                viewModel.randomCollections = it.randomCollections
+                viewModel.randomSongs = it.randomSongs
+                if (it.isTextInputVisible) {
+                    searchToggle.setImageDrawable(context?.drawable(R.drawable.ic_close_24dp))
+                    toolbarTextInputView.textInput.run {
+                        setText(savedInstanceState.searchQuery)
+                        setSelection(text.length)
+                        viewModel.query = text.toString()
+                    }
+                    toolbarTextInputView.showTextInput()
+                }
+                viewModel.shouldShowEraseButton.value = savedInstanceState.isEraseButtonVisible
+                viewModel.shouldEnableEraseButton.value = savedInstanceState.isEraseButtonEnabled
+            }
+            toolbarTextInputView.textInput.requestFocus()
+            viewModel.shouldShowUpdateErrorSnackbar.observeAndReset {
+                showSnackbar(
+                    message = R.string.home_update_error,
+                    action = { viewModel.updateData() })
+            }
+            viewModel.downloadSongError.observeAndReset { song ->
                 binding.root.post {
                     if (isAdded) {
                         showSnackbar(
-                            message = getCampfireActivity().getString(R.string.songs_song_download_error, song.title),
+                            message = getString(R.string.songs_song_download_error, song.title),
                             action = { viewModel.downloadSong(song) })
                     }
                 }
             }
-        }
-        binding.swipeRefreshLayout.run {
-            setOnRefreshListener {
-                analyticsManager.onSwipeToRefreshUsed(AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
-                viewModel.updateData()
-            }
-            setColorSchemeColors(context.color(R.color.accent))
-        }
-        linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())
-        binding.recyclerView.layoutManager = linearLayoutManager
-        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                if (dy > 0 && !recyclerView.isAnimating) {
-                    hideKeyboard(activity?.currentFocus)
+            binding.swipeRefreshLayout.run {
+                setOnRefreshListener {
+                    analyticsManager.onSwipeToRefreshUsed(AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
+                    viewModel.updateData()
                 }
+                setColorSchemeColors(context.color(R.color.accent))
             }
-        })
-        binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
-            init {
-                supportsChangeAnimations = false
-            }
-        }
-        getCampfireActivity().updateToolbarTitleView(toolbarTextInputView, toolbarWidth)
-        fun toggleSearchViewIfEmpty() {
-            if (toolbarTextInputView.isTextInputVisible && viewModel.query.trim().isEmpty()) {
-                toggleTextInputVisibility()
-            }
-        }
-        viewModel.adapter.apply {
-            collectionClickListener = { collection, clickedView, image ->
-                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
-                    if (items.size > 1) {
-                        linearLayoutManager.isScrollEnabled = false
-                        viewModel.isDetailScreenOpen = true
-                    }
-                    getCampfireActivity().isUiBlocked = true
-                    toggleSearchViewIfEmpty()
-                    viewModel.collectionRepository.onCollectionOpened(collection.id)
-                    getCampfireActivity().openCollectionDetailsScreen(collection, clickedView, image, items.size > 1)
-                    wasLastTransitionForACollection = true
-                }
-            }
-            collectionBookmarkClickListener = { collection, position ->
-                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
-                    viewModel.onBookmarkClicked(position, collection)
-                }
-            }
-            songClickListener = { song, position, clickedView ->
-                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
-                    if (items.size > 1) {
-                        linearLayoutManager.isScrollEnabled = false
-                        viewModel.isDetailScreenOpen = true
-                    }
-                    getCampfireActivity().isUiBlocked = true
-                    toggleSearchViewIfEmpty()
-                    val shouldSendMultipleSongs = position > viewModel.firstRandomSongIndex && !(viewModel.query.isNotEmpty() && toolbarTextInputView.isTextInputVisible)
-                    getCampfireActivity().openDetailScreen(
-                        clickedView,
-                        if (shouldSendMultipleSongs) viewModel.displayedRandomSongs else listOf(song),
-                        items.size > 1,
-                        if (shouldSendMultipleSongs) position - viewModel.firstRandomSongIndex - 2 else 0,
-                        true
-                    )
-                    wasLastTransitionForACollection = false
-                }
-            }
-            songPlaylistClickListener = { song ->
-                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
-                    if (viewModel.areThereMoreThanOnePlaylists()) {
-                        getCampfireActivity().isUiBlocked = true
-                        PlaylistChooserBottomSheetFragment.show(childFragmentManager, song.id, AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
-                    } else {
-                        viewModel.toggleFavoritesState(song.id)
+            linearLayoutManager = DisableScrollLinearLayoutManager(activity)
+            binding.recyclerView.layoutManager = linearLayoutManager
+            binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    if (dy > 0 && !recyclerView.isAnimating) {
+                        hideKeyboard(activity.currentFocus)
                     }
                 }
-            }
-            songDownloadClickListener = { song ->
-                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
-                    analyticsManager.onDownloadButtonPressed(song.id)
-                    viewModel.downloadSong(song)
+            })
+            binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
+                init {
+                    supportsChangeAnimations = false
                 }
             }
-        }
-        binding.recyclerView.addOnLayoutChangeListener(
-            object : View.OnLayoutChangeListener {
-                override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
-                    binding.recyclerView.removeOnLayoutChangeListener(this)
-                    if (reenterTransition != null) {
-                        var index =
-                            viewModel.adapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity().lastCollectionId }
-                        if (index != RecyclerView.NO_POSITION) {
-                            val viewAtPosition = linearLayoutManager.findViewByPosition(index)
-                            if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
-                                linearLayoutManager.isScrollEnabled = true
-                                binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
-                            }
+            activity.updateToolbarTitleView(toolbarTextInputView, toolbarWidth)
+            fun toggleSearchViewIfEmpty() {
+                if (toolbarTextInputView.isTextInputVisible && viewModel.query.trim().isEmpty()) {
+                    toggleTextInputVisibility()
+                }
+            }
+            viewModel.adapter.apply {
+                collectionClickListener = { collection, clickedView, image ->
+                    if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
+                        if (items.size > 1) {
+                            linearLayoutManager.isScrollEnabled = false
+                            viewModel.isDetailScreenOpen = true
+                        }
+                        viewModel.isUiBlocked = true
+                        toggleSearchViewIfEmpty()
+                        viewModel.collectionRepository.onCollectionOpened(collection.id)
+                        getCampfireActivity()?.openCollectionDetailsScreen(collection, clickedView, image, items.size > 1)
+                        wasLastTransitionForACollection = true
+                    }
+                }
+                collectionBookmarkClickListener = { collection, position ->
+                    if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
+                        viewModel.onBookmarkClicked(position, collection)
+                    }
+                }
+                songClickListener = { song, position, clickedView ->
+                    if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
+                        if (items.size > 1) {
+                            linearLayoutManager.isScrollEnabled = false
+                            viewModel.isDetailScreenOpen = true
+                        }
+                        viewModel.isUiBlocked = true
+                        toggleSearchViewIfEmpty()
+                        val shouldSendMultipleSongs = position > viewModel.firstRandomSongIndex && !(viewModel.query.isNotEmpty() && toolbarTextInputView.isTextInputVisible)
+                        getCampfireActivity()?.openDetailScreen(
+                            clickedView,
+                            if (shouldSendMultipleSongs) viewModel.displayedRandomSongs else listOf(song),
+                            items.size > 1,
+                            if (shouldSendMultipleSongs) position - viewModel.firstRandomSongIndex - 2 else 0,
+                            true
+                        )
+                        wasLastTransitionForACollection = false
+                    }
+                }
+                songPlaylistClickListener = { song ->
+                    if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
+                        if (viewModel.areThereMoreThanOnePlaylists()) {
+                            viewModel.isUiBlocked = true
+                            PlaylistChooserBottomSheetFragment.show(childFragmentManager, song.id, AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
                         } else {
-                            index = viewModel.adapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity().lastSongId }
+                            viewModel.toggleFavoritesState(song.id)
+                        }
+                    }
+                }
+                songDownloadClickListener = { song ->
+                    if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
+                        analyticsManager.onDownloadButtonPressed(song.id)
+                        viewModel.downloadSong(song)
+                    }
+                }
+            }
+            binding.recyclerView.addOnLayoutChangeListener(
+                object : View.OnLayoutChangeListener {
+                    override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
+                        binding.recyclerView.removeOnLayoutChangeListener(this)
+                        if (reenterTransition != null) {
+                            var index =
+                                viewModel.adapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
                             if (index != RecyclerView.NO_POSITION) {
                                 val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                 if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
                                     linearLayoutManager.isScrollEnabled = true
                                     binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
                                 }
+                            } else {
+                                index = viewModel.adapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId }
+                                if (index != RecyclerView.NO_POSITION) {
+                                    val viewAtPosition = linearLayoutManager.findViewByPosition(index)
+                                    if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
+                                        linearLayoutManager.isScrollEnabled = true
+                                        binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            })
-        (view.parent as? ViewGroup)?.run {
-            viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
-                override fun onPreDraw(): Boolean {
-                    viewTreeObserver?.removeOnPreDrawListener(this)
-                    (sharedElementEnterTransition as? Transition)?.addListener(object : Transition.TransitionListener {
+                })
+            (view.parent as? ViewGroup)?.run {
+                viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+                    override fun onPreDraw(): Boolean {
+                        viewTreeObserver?.removeOnPreDrawListener(this)
+                        (sharedElementEnterTransition as? Transition)?.addListener(object : Transition.TransitionListener {
 
-                        override fun onTransitionStart(transition: Transition?) = Unit
+                            override fun onTransitionStart(transition: Transition?) = Unit
 
-                        override fun onTransitionResume(transition: Transition?) = Unit
+                            override fun onTransitionResume(transition: Transition?) = Unit
 
-                        override fun onTransitionPause(transition: Transition?) = Unit
+                            override fun onTransitionPause(transition: Transition?) = Unit
 
-                        override fun onTransitionEnd(transition: Transition?) {
-                            getCampfireActivity().isUiBlocked = false
-                            transition?.removeListener(this)
-                        }
+                            override fun onTransitionEnd(transition: Transition?) {
+                                viewModel.isUiBlocked = false
+                                transition?.removeListener(this)
+                            }
 
-                        override fun onTransitionCancel(transition: Transition?) {
-                            getCampfireActivity().isUiBlocked = false
-                            transition?.removeListener(this)
-                        }
-                    })
-                    binding.recyclerView.postDelayed({ if (isAdded) parentFragment?.startPostponedEnterTransition() }, 50)
-                    return true
-                }
-            })
-            requestLayout()
+                            override fun onTransitionCancel(transition: Transition?) {
+                                viewModel.isUiBlocked = false
+                                transition?.removeListener(this)
+                            }
+                        })
+                        binding.recyclerView.postDelayed({ if (isAdded) parentFragment?.startPostponedEnterTransition() }, 50)
+                        return true
+                    }
+                })
+                requestLayout()
+            }
+            activity.showPlayStoreRatingDialogIfNeeded()
         }
-        getCampfireActivity().showPlayStoreRatingDialogIfNeeded()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.buttonText = viewModel.buttonText.get()
+        viewModel.buttonText.value?.let { outState.buttonText = it }
         outState.wasLastTransitionForACollection = wasLastTransitionForACollection
         outState.randomCollections = ArrayList(viewModel.randomCollections.take(HomeViewModel.RANDOM_COLLECTION_COUNT + HomeViewModel.NEW_COLLECTION_COUNT + 1))
         outState.randomSongs = ArrayList(viewModel.randomSongs.take(HomeViewModel.RANDOM_SONG_COUNT + HomeViewModel.NEW_SONG_COUNT + 1))
         outState.isTextInputVisible = toolbarTextInputView.isTextInputVisible
         outState.searchQuery = viewModel.query
-        outState.isEraseButtonVisible = viewModel.shouldShowEraseButton.get()
-        outState.isEraseButtonEnabled = viewModel.shouldEnableEraseButton.get()
+        outState.isEraseButtonVisible = viewModel.shouldShowEraseButton.value == true
+        outState.isEraseButtonEnabled = viewModel.shouldEnableEraseButton.value == true
     }
 
     override fun onResume() {
@@ -419,9 +395,9 @@ class HomeFragment : OldCampfireFragment<FragmentHomeBinding, HomeViewModel>(R.l
                 if (shouldScrollToTop) {
                     viewModel.updateAdapterItems(false, !isTextInputVisible)
                 }
-                viewModel.buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
+                viewModel.buttonText.value = if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters
             }
-            viewModel.shouldShowEraseButton.set(isTextInputVisible)
+            viewModel.shouldShowEraseButton.value = isTextInputVisible
         }
     }
 
@@ -432,8 +408,6 @@ class HomeFragment : OldCampfireFragment<FragmentHomeBinding, HomeViewModel>(R.l
             (menuItem.actionView as? CompoundButton).updateCheckedStateWithDelay(contains(languageId))
         }
     }
-
-    private fun TextView.updateToolbarTitle(@StringRes titleRes: Int, subtitle: String? = null) = setTitleSubtitle(this, context.getString(titleRes), subtitle)
 
     companion object {
         private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
