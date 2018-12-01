@@ -11,24 +11,33 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentHomeContainerBinding
 import com.pandulapeter.campfire.feature.main.home.home.HomeFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingFragment
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.behavior.TopLevelBehavior
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import io.fabric.sdk.android.Fabric
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class HomeContainerFragment : TopLevelFragment<FragmentHomeContainerBinding, HomeContainerViewModel>(R.layout.fragment_home_container) {
+class HomeContainerFragment : CampfireFragment<FragmentHomeContainerBinding, HomeContainerViewModel>(R.layout.fragment_home_container), TopLevelFragment {
 
     override val viewModel by viewModel<HomeContainerViewModel>()
     override val shouldShowAppBar get() = viewModel.preferenceDatabase.isOnboardingDone
     private val currentFragment get() = childFragmentManager.findFragmentById(R.id.home_container)
+    override val topLevelBehavior by lazy {
+        TopLevelBehavior(
+            getContext = { context },
+            getCampfireActivity = { getCampfireActivity() }
+        )
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        topLevelBehavior.onViewCreated(savedInstanceState)
         if (viewModel.preferenceDatabase.isOnboardingDone) {
             postponeEnterTransition()
         }
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
-        defaultToolbar.updateToolbarTitle(R.string.main_home)
+        topLevelBehavior.defaultToolbar.updateToolbarTitle(R.string.main_home)
         if (savedInstanceState == null) {
             if (viewModel.preferenceDatabase.isOnboardingDone) {
                 childFragmentManager.handleReplace { HomeFragment.newInstance(false) }

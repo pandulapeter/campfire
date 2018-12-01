@@ -56,6 +56,7 @@ import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.main.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.main.songs.SongsFragment
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
@@ -100,7 +101,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
     private var Bundle.lastCollectionId by BundleArgumentDelegate.String("lastCollectionId")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
-    private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container)
+    private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container)//TODO as? CampfireFragment
     private val drawableMenuToBack by lazy { animatedDrawable(R.drawable.avd_menu_to_back_24dp) }
     private val drawableBackToMenu by lazy { animatedDrawable(R.drawable.avd_back_to_menu_24dp) }
     private val analyticsManager by inject<AnalyticsManager>()
@@ -225,7 +226,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             onDrawerStateChanged = {
                 currentFragment?.also { fragment ->
                     when (fragment) {
-                        is TopLevelFragment<*, *> -> fragment.onDrawerStateChanged(it)
+                        is TopLevelFragment -> fragment.onDrawerStateChanged(it)
                         is OldTopLevelFragment<*, *> -> fragment.onDrawerStateChanged(it)
                     }
                 }
@@ -276,7 +277,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                         if (!isUiBlocked) {
                             currentFragment?.also { fragment ->
                                 when (fragment) {
-                                    is TopLevelFragment<*, *> -> fragment.hideSnackbar()
+                                    is CampfireFragment<*, *> -> fragment.hideSnackbar()
                                     is OldTopLevelFragment<*, *> -> fragment.hideSnackbar()
                                 }
                             }
@@ -295,7 +296,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         binding.secondaryNavigation.setNavigationItemSelectedListener {
             currentFragment?.let { fragment ->
                 when (fragment) {
-                    is TopLevelFragment<*, *> -> fragment.onNavigationItemSelected(it)
+                    is CampfireFragment<*, *> -> fragment.onNavigationItemSelected(it)
                     is OldTopLevelFragment<*, *> -> fragment.onNavigationItemSelected(it)
                     else -> throw IllegalArgumentException("Invalid Fragment")
                 }
@@ -307,7 +308,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             if (binding.autoScrollControl.tag == null && binding.floatingActionButton.isShown && it.tag == null && !isUiBlocked) {
                 currentFragment?.let { fragment ->
                     when (fragment) {
-                        is TopLevelFragment<*, *> -> fragment.onFloatingActionButtonPressed()
+                        is TopLevelFragment -> fragment.onFloatingActionButtonPressed()
                         is OldTopLevelFragment<*, *> -> fragment.onFloatingActionButtonPressed()
                     }
                 }
@@ -391,7 +392,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 } else {
                     val fragment = currentFragment
                     //TODO: Simplify this
-                    if (fragment == null || ((fragment as? TopLevelFragment<*, *>)?.onBackPressed() != true && (fragment as? OldTopLevelFragment<*, *>)?.onBackPressed() != true)) {
+                    if (fragment == null || ((fragment as? CampfireFragment<*, *>)?.onBackPressed() != true && (fragment as? OldTopLevelFragment<*, *>)?.onBackPressed() != true)) {
                         if (isBackStackEmpty) {
                             if (preferenceDatabase.shouldShowExitConfirmation) {
                                 AlertDialogFragment.show(
@@ -531,7 +532,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 //TODO: Properly handle this case.
                 currentFragment?.let { fragment ->
                     when (fragment) {
-                        is TopLevelFragment<*, *> -> fragment.showSnackbar(R.string.known_bug_1)
+                        is CampfireFragment<*, *> -> fragment.showSnackbar(R.string.known_bug_1)
                         is OldTopLevelFragment<*, *> -> fragment.showSnackbar(R.string.known_bug_1)
                     }
                 }
@@ -606,7 +607,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         updateMainToolbarButton(!isBackStackEmpty)
         val shouldShowAppBar = currentFragment?.let { fragment ->
             when (fragment) {
-                is TopLevelFragment<*, *> -> fragment.shouldShowAppBar
+                is TopLevelFragment -> fragment.shouldShowAppBar
                 is OldTopLevelFragment<*, *> -> fragment.shouldShowAppBar
                 else -> false
             }
@@ -661,7 +662,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             if (preferenceDatabase.isOnboardingDone) {
                 currentFragment?.let { fragment ->
                     when (fragment) {
-                        is TopLevelFragment<*, *> -> fragment.showSnackbar(
+                        is TopLevelFragment -> (fragment as CampfireFragment<*, *>).showSnackbar(
                             message = R.string.options_changelog_app_updated,
                             actionText = R.string.options_changelog_what_is_new,
                             action = {
@@ -895,7 +896,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     fun restartProcess() {
         currentFragment?.let { fragment ->
             when (fragment) {
-                is TopLevelFragment<*, *> -> fragment.showSnackbar(
+                is CampfireFragment<*, *> -> fragment.showSnackbar(
                     message = R.string.options_preferences_share_usage_data_restart_hint,
                     actionText = R.string.options_preferences_share_usage_data_restart_action,
                     action = { ProcessPhoenix.triggerRebirth(this, getStartIntent(this)) })
@@ -968,7 +969,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         } catch (exception: ActivityNotFoundException) {
             currentFragment?.let { fragment ->
                 when (fragment) {
-                    is TopLevelFragment<*, *> -> fragment.showSnackbar(R.string.options_about_error)
+                    is CampfireFragment<*, *> -> fragment.showSnackbar(R.string.options_about_error)
                     is OldTopLevelFragment<*, *> -> fragment.showSnackbar(R.string.options_about_error)
                 }
             }

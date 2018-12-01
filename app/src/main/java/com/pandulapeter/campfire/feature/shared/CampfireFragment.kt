@@ -241,4 +241,8 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
             value = null
         }
     })
+
+    protected fun TextView.updateToolbarTitle(@StringRes titleRes: Int, subtitle: String? = null) = updateToolbarTitle(context.getString(titleRes), subtitle)
+
+    protected fun TextView.updateToolbarTitle(title: String, subtitle: String? = null) = setTitleSubtitle(this, title, subtitle)
 }

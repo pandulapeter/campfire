@@ -7,28 +7,34 @@ import androidx.databinding.DataBindingUtil
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsBinding
 import com.pandulapeter.campfire.databinding.ViewOptionsTabsBinding
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.behavior.TopLevelBehavior
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.addPageScrollListener
 import com.pandulapeter.campfire.util.withArguments
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class OptionsFragment : TopLevelFragment<FragmentOptionsBinding, OptionsViewModel>(R.layout.fragment_options) {
+class OptionsFragment : CampfireFragment<FragmentOptionsBinding, OptionsViewModel>(R.layout.fragment_options), TopLevelFragment {
 
     override val viewModel by viewModel<OptionsViewModel>()
-    override val appBarView by lazy {
-        DataBindingUtil.inflate<ViewOptionsTabsBinding>(
-            LayoutInflater.from(getCampfireActivity()?.toolbarContext), R.layout.view_options_tabs, null, false
-        ).apply {
-            tabLayout.setupWithViewPager(binding.viewPager)
-        }.root
-    }
     private val pagerAdapter by lazy { OptionsFragmentPagerAdapter(requireContext(), childFragmentManager) }
+    override val topLevelBehavior by lazy {
+        TopLevelBehavior(
+            getContext = { context },
+            getCampfireActivity = { getCampfireActivity() },
+            appBarView = DataBindingUtil.inflate<ViewOptionsTabsBinding>(
+                LayoutInflater.from(getCampfireActivity()?.toolbarContext), R.layout.view_options_tabs, null, false
+            ).apply {
+                tabLayout.setupWithViewPager(binding.viewPager)
+            }.root
+        )
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        defaultToolbar.updateToolbarTitle(R.string.main_options)
+        topLevelBehavior.defaultToolbar.updateToolbarTitle(R.string.main_options)
+        topLevelBehavior.onViewCreated(savedInstanceState)
         setupViewPager()
     }
 
