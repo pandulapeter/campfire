@@ -49,6 +49,8 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     private val snackbarBackgroundColor by lazy { requireContext().obtainColor(android.R.attr.textColorPrimary) }
     private val snackbarTextColor by lazy { requireContext().obtainColor(android.R.attr.colorPrimary) }
     private val snackbarActionTextColor by lazy { requireContext().color(R.color.accent) }
+    var hasStartedListening = false
+        private set
 
     final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)
@@ -151,7 +153,10 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     @CallSuper
-    open fun updateUI() = viewModel.subscribe()
+    open fun updateUI() {
+        viewModel.subscribe()
+        binding.root.post { hasStartedListening = true }
+    }
 
     open fun onBackPressed() = false
 
@@ -229,6 +234,12 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     protected inline fun <T> LiveData<T>.observe(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {
         callback(it)
+    })
+
+    protected inline fun <T> LiveData<T>.observeAfterDelay(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {
+        if (hasStartedListening) {
+            callback(it)
+        }
     })
 
     protected inline fun <T> LiveData<T?>.observeNotNull(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {

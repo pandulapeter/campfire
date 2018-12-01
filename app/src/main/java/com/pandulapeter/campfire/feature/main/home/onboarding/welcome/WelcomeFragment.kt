@@ -27,12 +27,12 @@ class WelcomeFragment : OnboardingPageFragment<FragmentOnboardingWelcomeBinding,
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.shouldShowLanguageSelector.observeAndReset { showLanguageSelectorBottomSheet() }
-        viewModel.language.observe {
+        viewModel.language.observeAfterDelay {
             binding.root.post { if (isAdded) activity?.recreate() }
             updateLanguageDescription()
         }
         viewModel.shouldShowThemeSelector.observeAndReset { showThemeSelectorBottomSheet() }
-        viewModel.theme.observe {
+        viewModel.theme.observeAfterDelay {
             binding.root.post { if (isAdded) activity?.recreate() }
             updateThemeDescription()
         }

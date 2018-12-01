@@ -116,13 +116,9 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             viewModel.shouldScrollToTop.observeAndReset { recyclerAdapter.shouldScrollToTop = it }
             viewModel.items.observeNotNull { recyclerAdapter.items = it }
             viewModel.changeEvent.observeAndReset { recyclerAdapter.notifyItemChanged(it.first, it.second) }
-            var hasStartedListening = false
-            viewModel.isSearchToggleVisible.observeNotNull {
-                if (hasStartedListening) {
-                    searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
-                    activity.transitionMode = true
-                }
-                hasStartedListening = true
+            viewModel.isSearchToggleVisible.observeAfterDelay {
+                searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
+                activity.transitionMode = true
             }
             viewModel.shouldOpenSecondaryNavigationDrawer.observeAndReset { getCampfireActivity()?.openSecondaryNavigationDrawer() }
             viewModel.languages.observeNotNull { languages ->

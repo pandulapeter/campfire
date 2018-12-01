@@ -32,7 +32,7 @@ class CollectionRepository(
         set(value) {
             if (field != value) {
                 field = value
-                subscribers.forEach { it.onCollectionsLoadingStateChanged(value) }
+                GlobalScope.launch(UI) { subscribers.forEach { it.onCollectionsLoadingStateChanged(value) } }
             }
         }
 
