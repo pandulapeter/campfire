@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableField
 import androidx.databinding.ObservableInt
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Language
@@ -24,50 +25,38 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemView
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
-import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 class HomeViewModel(
     private val context: Context,
-    private val onDataLoaded: (languages: List<Language>) -> Unit,
-    private val openSecondaryNavigationDrawer: () -> Unit,
-    val toolbarTextInputView: ToolbarTextInputView,
-    private val updateSearchToggleDrawable: (Boolean) -> Unit
+    private val analyticsManager: AnalyticsManager,
+    private val preferenceDatabase: PreferenceDatabase,
+    val collectionRepository: CollectionRepository,
+    private val songRepository: SongRepository,
+    private val songDetailRepository: SongDetailRepository,
+    private val playlistRepository: PlaylistRepository
 ) : OldCampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
 
-    companion object {
-        const val NEW_COLLECTION_COUNT = 3
-        const val NEW_SONG_COUNT = 5
-        const val RANDOM_COLLECTION_COUNT = 3
-        const val RANDOM_SONG_COUNT = 10
-        const val SEARCH_SONG_LIMIT = 6
-        const val SEARCH_COLLECTION_LIMIT = 6
-    }
-
-    private val analyticsManager by inject<AnalyticsManager>()
-    private val preferenceDatabase by inject<PreferenceDatabase>()
-    val collectionRepository by inject<CollectionRepository>()
-    private val songRepository by inject<SongRepository>()
-    private val songDetailRepository by inject<SongDetailRepository>()
-    private val playlistRepository by inject<PlaylistRepository>()
     var isDetailScreenOpen = false
+    val isSearchToggleVisible = mutableLiveDataOf(false)
     private val newText = context.getString(R.string.new_tag)
     private var coroutine: CoroutineContext? = null
     private var collections = sequenceOf<Collection>()
     private var songs = sequenceOf<Song>()
+    var isTextInputVisible = false
     var randomCollections = listOf<Collection>()
     var randomSongs = listOf<Song>()
     var displayedRandomSongs = listOf<Song>()
     var firstRandomSongIndex = 0
     val adapter = RecyclerAdapter()
+    val shouldOpenSecondaryNavigationDrawer = MutableLiveData<Boolean?>()
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
     val isLoading = ObservableBoolean()
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
@@ -131,7 +120,7 @@ class HomeViewModel(
                 updateAdapterItems(true, true)
             }
         }
-    var languages = mutableListOf<Language>()
+    var languages = MutableLiveData<List<Language>?>()
     val isSwipeRefreshEnabled = ObservableBoolean(true)
     val shouldShowEraseButton = ObservableBoolean().apply {
         onPropertyChanged {
@@ -150,30 +139,6 @@ class HomeViewModel(
                 shouldEnableEraseButton.set(query.isNotEmpty())
             }
         }
-
-    init {
-        toolbarTextInputView.apply {
-            textInput.onTextChanged { if (isTextInputVisible) query = it }
-        }
-    }
-
-    fun toggleTextInputVisibility() {
-        toolbarTextInputView.run {
-            if (title.tag == null) {
-                val shouldScrollToTop = !query.isEmpty()
-                animateTextInputVisibility(!isTextInputVisible)
-                if (isTextInputVisible) {
-                    textInput.setText("")
-                }
-                updateSearchToggleDrawable(toolbarTextInputView.isTextInputVisible)
-                if (shouldScrollToTop) {
-                    updateAdapterItems(false, !isTextInputVisible)
-                }
-                buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
-            }
-            shouldShowEraseButton.set(isTextInputVisible)
-        }
-    }
 
     override fun subscribe() {
         collectionRepository.subscribe(this)
@@ -314,12 +279,12 @@ class HomeViewModel(
     private fun onListUpdated(items: List<ItemViewModel>) {
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
         if (collections.toList().isNotEmpty()) {
-            buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
+            buttonText.set(if (isTextInputVisible) 0 else R.string.filters)
         }
     }
 
     fun onActionButtonClicked() {
-        openSecondaryNavigationDrawer()
+        shouldOpenSecondaryNavigationDrawer.value = true
     }
 
     fun updateData() {
@@ -329,11 +294,7 @@ class HomeViewModel(
         songRepository.updateData()
     }
 
-    fun restoreToolbarButtons() {
-        if (languages.isNotEmpty()) {
-            onDataLoaded(languages)
-        }
-    }
+    fun restoreToolbarButtons() = languages.triggerUpdate()
 
     fun areThereMoreThanOnePlaylists() = playlistRepository.cache.size > 1
 
@@ -371,7 +332,7 @@ class HomeViewModel(
 
     fun downloadSong(song: Song) = songDetailRepository.getSongDetail(song, true)
 
-    private fun updateAdapterItems(shouldRefreshRandom: Boolean, shouldScrollToTop: Boolean = false) {
+    fun updateAdapterItems(shouldRefreshRandom: Boolean, shouldScrollToTop: Boolean = false) {
         if (collectionRepository.isCacheLoaded() && songRepository.isCacheLoaded() && collections.toList().isNotEmpty() && songs.toList().isNotEmpty()) {
             coroutine?.cancel()
             coroutine = GlobalScope.launch(UI) {
@@ -401,8 +362,7 @@ class HomeViewModel(
                     onListUpdated(it)
                     coroutine = null
                     if (!isFirstLoadingDone) {
-                        languages.swap(collectionRepository.languages.union(songRepository.languages).toList())
-                        onDataLoaded(languages)
+                        languages.value = collectionRepository.languages.union(songRepository.languages).toList()
                         isFirstLoadingDone = true
                     }
                 }
@@ -411,7 +371,7 @@ class HomeViewModel(
     }
 
     private fun createViewModels() = mutableListOf<ItemViewModel>().apply {
-        if (toolbarTextInputView.isTextInputVisible && query.isNotEmpty()) {
+        if (isTextInputVisible && query.isNotEmpty()) {
             // Search in songs.
             val matchingSongs = songs
                 .filterSongsByQuery()
@@ -583,4 +543,13 @@ class HomeViewModel(
     private fun Sequence<Collection>.filterExplicitCollections() = if (!shouldShowExplicit) filter { it.isExplicit != true } else this
 
     private fun Sequence<Song>.filterExplicitSongs() = if (!shouldShowExplicit) filter { it.isExplicit != true } else this
+
+    companion object {
+        const val NEW_COLLECTION_COUNT = 3
+        const val NEW_SONG_COUNT = 5
+        const val RANDOM_COLLECTION_COUNT = 3
+        const val RANDOM_SONG_COUNT = 10
+        const val SEARCH_SONG_LIMIT = 6
+        const val SEARCH_COLLECTION_LIMIT = 6
+    }
 }

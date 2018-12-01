@@ -46,7 +46,12 @@ class ToolbarTextInputView(context: Context, @StringRes hintText: Int, isSearch:
 
     val title: TextView = binding.title
     val textInput: EditText = binding.textInput
+    var visibilityChangeListener: (Boolean) -> Unit = {}
     var isTextInputVisible = false
+        set(value) {
+            field = value
+            visibilityChangeListener(value)
+        }
 
     fun animateTextInputVisibility(isVisible: Boolean) {
         if (isTextInputVisible != isVisible) {

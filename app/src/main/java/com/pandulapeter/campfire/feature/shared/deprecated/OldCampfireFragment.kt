@@ -19,6 +19,9 @@ import androidx.annotation.LayoutRes
 import androidx.annotation.StringRes
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import com.google.android.material.snackbar.Snackbar
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
@@ -189,6 +192,23 @@ abstract class OldCampfireFragment<B : ViewDataBinding, out VM : OldCampfireView
             })
         }
     }
+
+    protected inline fun <T> LiveData<T>.observe(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {
+        callback(it)
+    })
+
+    protected inline fun <T> LiveData<T?>.observeNotNull(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {
+        if (it != null) {
+            callback(it)
+        }
+    })
+
+    protected inline fun <T> MutableLiveData<T?>.observeAndReset(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {
+        if (it != null) {
+            callback(it)
+            value = null
+        }
+    })
 
     @CallSuper
     override fun onTransitionEnd(transition: Transition?) {

@@ -21,6 +21,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.*
+import androidx.lifecycle.MutableLiveData
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import androidx.viewpager.widget.ViewPager
 import retrofit2.Call
@@ -112,6 +113,10 @@ inline fun View.useStyledAttributes(set: AttributeSet?, @StyleableRes attrs: Int
             typedArray.recycle()
         }
     }
+
+fun <T> MutableLiveData<T>.triggerUpdate() {
+    value = value
+}
 
 @Deprecated("Use LiveData instead.")
 inline fun ObservableBoolean.onPropertyChanged(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: (Boolean) -> Unit) {
