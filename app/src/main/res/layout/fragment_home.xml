@@ -37,9 +37,7 @@
                 android:paddingBottom="@dimen/list_bottom_margin"
                 android:paddingEnd="0dp"
                 android:paddingStart="@dimen/content_padding"
-                android:paddingTop="@dimen/content_padding"
-                app:adapter="@{viewModel.adapter}"
-                app:hasFixedSize="@{true}" />
+                android:paddingTop="@dimen/content_padding" />
 
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

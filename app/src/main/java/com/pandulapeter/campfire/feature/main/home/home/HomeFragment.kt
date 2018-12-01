@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.databinding.FragmentHomeBinding
+import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
@@ -54,12 +55,13 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
     private var wasLastTransitionForACollection = false
     private lateinit var toolbarTextInputView: ToolbarTextInputView
+    val recyclerAdapter = RecyclerAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         parentFragment?.setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
-                var index = viewModel.adapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
+                var index = recyclerAdapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
                 if (wasLastTransitionForACollection && index != RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
@@ -70,7 +72,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                         sharedElements[names[1]] = image
                     }
                 } else {
-                    index = viewModel.adapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId }
+                    index = recyclerAdapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId }
                     if (index != RecyclerView.NO_POSITION) {
                         (binding.recyclerView.findViewHolderForAdapterPosition(index)
                             ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
@@ -111,6 +113,9 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                 title.updateToolbarTitle(R.string.main_home)
                 textInput.onTextChanged { if (isTextInputVisible) viewModel.query = it }
             }
+            viewModel.shouldScrollToTop.observeAndReset { recyclerAdapter.shouldScrollToTop = it }
+            viewModel.items.observeNotNull { recyclerAdapter.items = it }
+            viewModel.changeEvent.observeAndReset { recyclerAdapter.notifyItemChanged(it.first, it.second) }
             var hasStartedListening = false
             viewModel.isSearchToggleVisible.observeNotNull {
                 if (hasStartedListening) {
@@ -188,18 +193,22 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                 }
                 setColorSchemeColors(context.color(R.color.accent))
             }
-            linearLayoutManager = DisableScrollLinearLayoutManager(activity)
-            binding.recyclerView.layoutManager = linearLayoutManager
-            binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    if (dy > 0 && !recyclerView.isAnimating) {
-                        hideKeyboard(activity.currentFocus)
+            binding.recyclerView.apply {
+                linearLayoutManager = DisableScrollLinearLayoutManager(activity)
+                layoutManager = linearLayoutManager
+                setHasFixedSize(true)
+                adapter = recyclerAdapter
+                addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                        if (dy > 0 && !recyclerView.isAnimating) {
+                            hideKeyboard(activity.currentFocus)
+                        }
                     }
-                }
-            })
-            binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
-                init {
-                    supportsChangeAnimations = false
+                })
+                itemAnimator = object : DefaultItemAnimator() {
+                    init {
+                        supportsChangeAnimations = false
+                    }
                 }
             }
             activity.updateToolbarTitleView(toolbarTextInputView, toolbarWidth)
@@ -208,7 +217,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     toggleTextInputVisibility()
                 }
             }
-            viewModel.adapter.apply {
+            recyclerAdapter.apply {
                 collectionClickListener = { collection, clickedView, image ->
                     if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
                         if (items.size > 1) {
@@ -268,8 +277,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
                         binding.recyclerView.removeOnLayoutChangeListener(this)
                         if (reenterTransition != null) {
-                            var index =
-                                viewModel.adapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
+                            var index = recyclerAdapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
                             if (index != RecyclerView.NO_POSITION) {
                                 val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                 if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
@@ -277,7 +285,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                                     binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
                                 }
                             } else {
-                                index = viewModel.adapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId }
+                                index = recyclerAdapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId }
                                 if (index != RecyclerView.NO_POSITION) {
                                     val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                     if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {

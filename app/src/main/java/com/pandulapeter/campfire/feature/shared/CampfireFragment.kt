@@ -41,7 +41,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     protected lateinit var binding: B
-    protected abstract val viewModel: VM
+    abstract val viewModel: VM
     protected open val shouldDelaySubscribing = false
     protected val analyticsManager by inject<AnalyticsManager>()
     private var snackbar: Snackbar? = null
@@ -117,7 +117,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected inline fun Context.createToolbarButton(@DrawableRes drawableRes: Int, crossinline onClickListener: (View) -> Unit) = ToolbarButton(this).apply {
         setImageDrawable(drawable(drawableRes))
         setOnClickListener {
-            if (isAdded && viewModel.isUiBlocked != true) {
+            if (isAdded && !viewModel.isUiBlocked) {
                 onClickListener(it)
             }
         }

@@ -52,13 +52,15 @@ class HomeViewModel(
     var randomSongs = listOf<Song>()
     var displayedRandomSongs = listOf<Song>()
     var firstRandomSongIndex = 0
-    val adapter = RecyclerAdapter()
     val shouldOpenSecondaryNavigationDrawer = MutableLiveData<Boolean?>()
     val state = mutableLiveDataOf(StateLayout.State.LOADING)
     val isLoading = mutableLiveDataOf(true)
     val shouldShowUpdateErrorSnackbar = MutableLiveData<Boolean?>()
     val downloadSongError = MutableLiveData<Song?>()
     val buttonText = mutableLiveDataOf(R.string.try_again)
+    val shouldScrollToTop = MutableLiveData<Boolean?>()
+    val items = MutableLiveData<List<ItemViewModel>?>()
+    val changeEvent = MutableLiveData<Pair<Int, RecyclerAdapter.Payload>?>()
     private var lastErrorTimestamp = 0L
     private var isFirstLoadingDone = false
     var shouldShowSongOfTheDay = preferenceDatabase.shouldShowSongOfTheDay
@@ -183,24 +185,22 @@ class HomeViewModel(
     }
 
     override fun onSongDetailRepositoryDownloadSuccess(songDetail: SongDetail) {
-        adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == songDetail.id }.let { index ->
-            if (index != RecyclerView.NO_POSITION && (adapter.items[index] as? SongItemViewModel)?.song?.version == songDetail.version) {
-                adapter.notifyItemChanged(
-                    index,
-                    RecyclerAdapter.Payload.DownloadStateChanged(SongItemViewModel.DownloadState.Downloaded.UpToDate)
-                )
+        items.value.orEmpty().let { items ->
+            items.indexOfLast { it is SongItemViewModel && it.song.id == songDetail.id }.let { index ->
+                if (index != RecyclerView.NO_POSITION && (items[index] as? SongItemViewModel)?.song?.version == songDetail.version) {
+                    changeEvent.value = index to RecyclerAdapter.Payload.DownloadStateChanged(SongItemViewModel.DownloadState.Downloaded.UpToDate)
+                }
             }
         }
     }
 
     override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) {
         songIds.forEach { songId ->
-            adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == songId }.let { index ->
-                if (index != RecyclerView.NO_POSITION) {
-                    adapter.notifyItemChanged(
-                        index,
-                        RecyclerAdapter.Payload.DownloadStateChanged(SongItemViewModel.DownloadState.Downloading)
-                    )
+            items.value.orEmpty().let { items ->
+                items.indexOfLast { it is SongItemViewModel && it.song.id == songId }.let { index ->
+                    if (index != RecyclerView.NO_POSITION) {
+                        changeEvent.value = index to RecyclerAdapter.Payload.DownloadStateChanged(SongItemViewModel.DownloadState.Downloading)
+                    }
                 }
             }
         }
@@ -209,18 +209,17 @@ class HomeViewModel(
     override fun onSongDetailRepositoryDownloadError(song: Song) {
         analyticsManager.onConnectionError(!songDetailRepository.isSongDownloaded(song.id), song.id)
         downloadSongError.value = song
-        adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == song.id }.let { index ->
-            if (index != RecyclerView.NO_POSITION) {
-                adapter.notifyItemChanged(
-                    index,
-                    RecyclerAdapter.Payload.DownloadStateChanged(
+        items.value.orEmpty().let { items ->
+            items.indexOfLast { it is SongItemViewModel && it.song.id == song.id }.let { index ->
+                if (index != RecyclerView.NO_POSITION) {
+                    changeEvent.value = index to RecyclerAdapter.Payload.DownloadStateChanged(
                         when {
                             songDetailRepository.isSongDownloaded(song.id) -> SongItemViewModel.DownloadState.Downloaded.Deprecated
                             song.isNew -> SongItemViewModel.DownloadState.NotDownloaded.New
                             else -> SongItemViewModel.DownloadState.NotDownloaded.Old
                         }
                     )
-                )
+                }
             }
         }
     }
@@ -232,23 +231,21 @@ class HomeViewModel(
     }
 
     override fun onSongAddedToPlaylistForTheFirstTime(songId: String) {
-        adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == songId }.let { index ->
-            if (index != RecyclerView.NO_POSITION) {
-                adapter.notifyItemChanged(
-                    index,
-                    RecyclerAdapter.Payload.IsSongInAPlaylistChanged(true)
-                )
+        items.value.orEmpty().let { items ->
+            items.indexOfLast { it is SongItemViewModel && it.song.id == songId }.let { index ->
+                if (index != RecyclerView.NO_POSITION) {
+                    changeEvent.value = index to RecyclerAdapter.Payload.IsSongInAPlaylistChanged(true)
+                }
             }
         }
     }
 
     override fun onSongRemovedFromAllPlaylists(songId: String) {
-        adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == songId }.let { index ->
-            if (index != RecyclerView.NO_POSITION) {
-                adapter.notifyItemChanged(
-                    index,
-                    RecyclerAdapter.Payload.IsSongInAPlaylistChanged(false)
-                )
+        items.value.orEmpty().let { items ->
+            items.indexOfLast { it is SongItemViewModel && it.song.id == songId }.let { index ->
+                if (index != RecyclerView.NO_POSITION) {
+                    changeEvent.value = index to RecyclerAdapter.Payload.IsSongInAPlaylistChanged(false)
+                }
             }
         }
     }
@@ -323,7 +320,7 @@ class HomeViewModel(
             collection.isBookmarked == true,
             AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS
         )
-        adapter.notifyItemChanged(position, RecyclerAdapter.Payload.BookmarkedStateChanged(collection.isBookmarked ?: false))
+        changeEvent.value = position to RecyclerAdapter.Payload.BookmarkedStateChanged(collection.isBookmarked ?: false)
         updateAdapterItems(false)
     }
 
@@ -354,8 +351,8 @@ class HomeViewModel(
                     }
                     createViewModels()
                 }.await().let {
-                    adapter.shouldScrollToTop = shouldScrollToTop
-                    adapter.items = it
+                    this@HomeViewModel.shouldScrollToTop.value = shouldScrollToTop
+                    items.value = it
                     onListUpdated(it)
                     coroutine = null
                     if (!isFirstLoadingDone) {
