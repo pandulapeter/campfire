@@ -21,6 +21,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.*
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.MutableLiveData
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import androidx.viewpager.widget.ViewPager
@@ -175,12 +176,12 @@ inline fun <T> ObservableField<T>.onEventTriggered(fragment: androidx.fragment.a
     })
 }
 
-inline fun androidx.drawerlayout.widget.DrawerLayout.addDrawerListener(
+inline fun DrawerLayout.addDrawerListener(
     crossinline onDrawerStateChanged: (newState: Int) -> Unit = {},
     crossinline onDrawerSlide: (view: View, offset: Float) -> Unit = { _, _ -> },
     crossinline onDrawerClosed: () -> Unit = {},
     crossinline onDrawerOpened: () -> Unit = {}
-) = addDrawerListener(object : androidx.drawerlayout.widget.DrawerLayout.DrawerListener {
+) = addDrawerListener(object : DrawerLayout.DrawerListener {
     override fun onDrawerStateChanged(newState: Int) = onDrawerStateChanged(newState)
 
     override fun onDrawerSlide(drawerView: View, slideOffset: Float) = onDrawerSlide(drawerView, slideOffset)

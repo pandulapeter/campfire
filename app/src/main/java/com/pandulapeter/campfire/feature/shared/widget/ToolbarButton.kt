@@ -44,17 +44,18 @@ class ToolbarButton @JvmOverloads constructor(context: Context, attrs: Attribute
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         layoutParams = (layoutParams as ViewGroup.MarginLayoutParams).apply { if (marginStart == 0) marginStart = context.dimension(R.dimen.small_content_padding) }
-        (parent as View).let { parent ->
-            val extraTouchArea = context.dimension(R.dimen.toolbar_action_button_extra_touch_area)
-            val bounds = Rect()
-            getHitRect(bounds)
-            bounds.left -= extraTouchArea
-            bounds.top -= extraTouchArea
-            bounds.right += extraTouchArea
-            bounds.bottom += extraTouchArea
-            //TODO: Does not seem to be working, the touch target is too small.
-            parent.touchDelegate = (parent.touchDelegate as? TouchDelegateComposite) ?: TouchDelegateComposite(this).apply {
-                addDelegate(TouchDelegate(bounds, this@ToolbarButton))
+        post {
+            (parent as View).let { parent ->
+                val extraTouchArea = context.dimension(R.dimen.toolbar_action_button_extra_touch_area)
+                val bounds = Rect()
+                getHitRect(bounds)
+                bounds.left -= extraTouchArea
+                bounds.top -= extraTouchArea
+                bounds.right += extraTouchArea
+                bounds.bottom += extraTouchArea
+                parent.touchDelegate = (parent.touchDelegate as? TouchDelegateComposite) ?: TouchDelegateComposite(this).apply {
+                    addDelegate(TouchDelegate(bounds, this@ToolbarButton))
+                }
             }
         }
     }
