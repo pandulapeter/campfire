@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
@@ -23,15 +25,14 @@ import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
+import org.koin.android.ext.android.inject
 
 
 class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, CollectionsViewModel>(R.layout.fragment_collections) {
 
-    private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
-    private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
-    private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
-    private var Bundle.isEraseButtonVisible by BundleArgumentDelegate.Boolean("isEraseButtonVisible")
-    private var Bundle.isEraseButtonEnabled by BundleArgumentDelegate.Boolean("isEraseButtonEnabled")
+    private val preferenceDatabase by inject<PreferenceDatabase>()
+    private val collectionRepository by inject<CollectionRepository>()
+
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
     private val searchToggle: ToolbarButton by lazy {
@@ -61,6 +62,9 @@ class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, Coll
     }
     override val viewModel: CollectionsViewModel by lazy {
         CollectionsViewModel(
+            preferenceDatabase = preferenceDatabase,
+            collectionRepository = collectionRepository,
+            analyticsManager = analyticsManager,
             onDataLoaded = { languages ->
                 getCampfireActivity().updateAppBarView(searchControlsBinding.root)
                 getCampfireActivity().enableSecondaryNavigationDrawer(R.menu.collections)
@@ -172,7 +176,6 @@ class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, Coll
                     if (toolbarTextInputView.isTextInputVisible && viewModel.query.trim().isEmpty()) {
                         toggleTextInputVisibility()
                     }
-                    viewModel.collectionRepository.onCollectionOpened(collection.id)
                     getCampfireActivity().openCollectionDetailsScreen(collection, clickedView, image, items.size > 1)
                 }
             }
@@ -314,4 +317,14 @@ class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, Coll
     }
 
     private operator fun Menu.get(@IdRes id: Int) = findItem(id)
+
+    companion object {
+        private var Bundle.buttonText by BundleArgumentDelegate.Int("buttonText")
+        private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
+        private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
+        private var Bundle.isEraseButtonVisible by BundleArgumentDelegate.Boolean("isEraseButtonVisible")
+        private var Bundle.isEraseButtonEnabled by BundleArgumentDelegate.Boolean("isEraseButtonEnabled")
+
+        fun newInstance() = CollectionsFragment()
+    }
 }

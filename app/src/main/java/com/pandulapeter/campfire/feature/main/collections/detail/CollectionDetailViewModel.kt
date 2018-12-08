@@ -23,6 +23,7 @@ class CollectionDetailViewModel(
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL
 
     init {
+        collectionRepository.onCollectionOpened(collection.id)
         this.collection.set(CollectionItemViewModel(collection, context.getString(R.string.new_tag)))
     }
 

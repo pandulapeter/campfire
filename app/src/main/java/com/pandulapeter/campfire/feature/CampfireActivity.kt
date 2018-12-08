@@ -264,7 +264,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     R.id.collections -> consumeAndCloseDrawers {
                         supportFragmentManager.handleReplace {
                             appShortcutManager.onCollectionsOpened()
-                            CollectionsFragment()
+                            CollectionsFragment.newInstance()
                         }
                     }
                     R.id.songs -> consumeAndCloseDrawers {
@@ -742,7 +742,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private fun openCollectionsScreen(): String {
         if (currentFragment !is CollectionsFragment) {
             supportFragmentManager.clearBackStack()
-            supportFragmentManager.handleReplace { CollectionsFragment() }
+            supportFragmentManager.handleReplace { CollectionsFragment.newInstance() }
             currentScreenId = R.id.collections
             binding.primaryNavigation.setCheckedItem(R.id.collections)
             appShortcutManager.onCollectionsOpened()

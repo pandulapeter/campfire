@@ -19,19 +19,18 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.koin.android.ext.android.inject
 import kotlin.coroutines.CoroutineContext
 
 class CollectionsViewModel(
+    private val preferenceDatabase: PreferenceDatabase,
+    private val collectionRepository: CollectionRepository,
+    private val analyticsManager: AnalyticsManager,
     private val onDataLoaded: (languages: List<Language>) -> Unit,
     private val openSecondaryNavigationDrawer: () -> Unit,
     private val newText: String
 ) : OldCampfireViewModel(), CollectionRepository.Subscriber {
 
     var isDetailScreenOpen = false
-    private val preferenceDatabase by inject<PreferenceDatabase>()
-    val collectionRepository by inject<CollectionRepository>()
-    private val analyticsManager by inject<AnalyticsManager>()
     private var coroutine: CoroutineContext? = null
     private var collections = sequenceOf<Collection>()
     var isTextInputVisible = false

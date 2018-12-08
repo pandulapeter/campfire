@@ -25,9 +25,9 @@ import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
@@ -35,7 +35,7 @@ class HomeViewModel(
     private val context: Context,
     private val analyticsManager: AnalyticsManager,
     private val preferenceDatabase: PreferenceDatabase,
-    val collectionRepository: CollectionRepository,
+    private val collectionRepository: CollectionRepository,
     private val songRepository: SongRepository,
     private val songDetailRepository: SongDetailRepository,
     private val playlistRepository: PlaylistRepository
@@ -330,7 +330,7 @@ class HomeViewModel(
         if (collectionRepository.isCacheLoaded() && songRepository.isCacheLoaded() && collections.toList().isNotEmpty() && songs.toList().isNotEmpty()) {
             coroutine?.cancel()
             coroutine = GlobalScope.launch(UI) {
-                async(WORKER) {
+                withContext(WORKER) {
                     if (shouldRefreshRandom) {
                         randomSongs = listOf()
                         randomCollections = listOf()
@@ -350,7 +350,7 @@ class HomeViewModel(
                             .shuffled()
                     }
                     createViewModels()
-                }.await().let {
+                }.let {
                     this@HomeViewModel.shouldScrollToTop.value = shouldScrollToTop
                     items.value = it
                     onListUpdated(it)

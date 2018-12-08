@@ -222,7 +222,6 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                         }
                         viewModel.isUiBlocked = true
                         toggleSearchViewIfEmpty()
-                        viewModel.collectionRepository.onCollectionOpened(collection.id)
                         getCampfireActivity()?.openCollectionDetailsScreen(collection, clickedView, image, items.size > 1)
                         wasLastTransitionForACollection = true
                     }
