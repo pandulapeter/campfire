@@ -18,6 +18,7 @@ import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
+import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.feature.main.songs.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.main.songs.SongsFragment
@@ -73,12 +74,13 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             isEnabled = false
         }
     }
+    val recyclerAdapter = RecyclerAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
-                val index = viewModel.adapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
+                val index = recyclerAdapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
                 if (index != RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
@@ -134,6 +136,9 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                 }
             }
             analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
+            viewModel.shouldScrollToTop.observeAndReset { recyclerAdapter.shouldScrollToTop = it }
+            viewModel.items.observeNotNull { recyclerAdapter.items = it }
+            viewModel.changeEvent.observeAndReset { recyclerAdapter.notifyItemChanged(it.first, it.second) }
             viewModel.shouldShowEraseButton.observe { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
             viewModel.shouldEnableEraseButton.observe {
                 eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
@@ -182,7 +187,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                     }
                 }
             }
-            viewModel.adapter.apply {
+            recyclerAdapter.apply {
                 collectionClickListener = { collection, clickedView, image ->
                     if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
                         if (items.size > 1) {
@@ -210,28 +215,32 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                 setColorSchemeColors(context.color(R.color.accent))
             }
             linearLayoutManager = DisableScrollLinearLayoutManager(activity)
-            binding.recyclerView.layoutManager = linearLayoutManager
-            binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
-                init {
-                    supportsChangeAnimations = false
+            binding.recyclerView.apply {
+                layoutManager = linearLayoutManager
+                setHasFixedSize(true)
+                adapter = recyclerAdapter
+                itemAnimator = object : DefaultItemAnimator() {
+                    init {
+                        supportsChangeAnimations = false
+                    }
                 }
-            }
-            binding.recyclerView.addOnLayoutChangeListener(
-                object : View.OnLayoutChangeListener {
-                    override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
-                        binding.recyclerView.removeOnLayoutChangeListener(this)
-                        if (reenterTransition != null) {
-                            val index = viewModel.adapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
-                            if (index != RecyclerView.NO_POSITION) {
-                                val viewAtPosition = linearLayoutManager.findViewByPosition(index)
-                                if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
-                                    linearLayoutManager.isScrollEnabled = true
-                                    binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
+                addOnLayoutChangeListener(
+                    object : View.OnLayoutChangeListener {
+                        override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
+                            removeOnLayoutChangeListener(this)
+                            if (reenterTransition != null) {
+                                val index = recyclerAdapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
+                                if (index != RecyclerView.NO_POSITION) {
+                                    val viewAtPosition = linearLayoutManager.findViewByPosition(index)
+                                    if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
+                                        linearLayoutManager.isScrollEnabled = true
+                                        post { if (isAdded) scrollToPosition(index) }
+                                    }
                                 }
                             }
                         }
-                    }
-                })
+                    })
+            }
             (view.parent as? ViewGroup)?.run {
                 viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
                     override fun onPreDraw(): Boolean {

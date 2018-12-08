@@ -34,12 +34,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingBottom="@dimen/list_bottom_margin"
-                android:paddingEnd="0dp"
                 android:paddingStart="@dimen/content_padding"
                 android:paddingTop="@dimen/content_padding"
-                app:adapter="@{viewModel.adapter}"
-                app:hasFixedSize="@{true}" />
+                android:paddingEnd="0dp"
+                android:paddingBottom="@dimen/list_bottom_margin" />
 
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

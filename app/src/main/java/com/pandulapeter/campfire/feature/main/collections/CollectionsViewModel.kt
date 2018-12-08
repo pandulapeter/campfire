@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -19,7 +20,6 @@ import com.pandulapeter.campfire.util.mutableLiveDataOf
 import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.removePrefixes
 import com.pandulapeter.campfire.util.triggerUpdate
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -41,12 +41,14 @@ class CollectionsViewModel(
     val isLoading = mutableLiveDataOf(false)
     val isSearchToggleVisible = mutableLiveDataOf(false)
     val shouldShowUpdateErrorSnackbar = MutableLiveData<Boolean?>()
+    val shouldScrollToTop = MutableLiveData<Boolean?>()
+    val items = MutableLiveData<List<ItemViewModel>?>()
     val buttonText = mutableLiveDataOf(R.string.try_again)
-    val adapter = RecyclerAdapter()
     val shouldOpenSecondaryNavigationDrawer = MutableLiveData<Boolean?>()
     val isSwipeRefreshEnabled = mutableLiveDataOf(true)
     val shouldShowEraseButton = mutableLiveDataOf(false) { isSwipeRefreshEnabled.value = !it }
     val shouldEnableEraseButton = mutableLiveDataOf(false)
+    val changeEvent = MutableLiveData<Pair<Int, RecyclerAdapter.Payload>?>()
     var query = ""
         set(value) {
             if (field != value) {
@@ -175,17 +177,17 @@ class CollectionsViewModel(
             collection.isBookmarked == true,
             AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS
         )
-        adapter.notifyItemChanged(position, RecyclerAdapter.Payload.BookmarkedStateChanged(collection.isBookmarked ?: false))
+        changeEvent.value = position to RecyclerAdapter.Payload.BookmarkedStateChanged(collection.isBookmarked ?: false)
         updateAdapterItems()
     }
 
     fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
         if (collectionRepository.isCacheLoaded()) {
             coroutine?.cancel()
-            coroutine = GlobalScope.launch(UI) {
+            coroutine = launch(UI) {
                 withContext(WORKER) { collections.createViewModels() }.let {
-                    adapter.shouldScrollToTop = shouldScrollToTop
-                    adapter.items = it
+                    this@CollectionsViewModel.shouldScrollToTop.value = shouldScrollToTop
+                    items.value = it
                     onListUpdated(it)
                 }
                 coroutine = null

@@ -23,12 +23,15 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItem
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.*
-import kotlinx.coroutines.GlobalScope
+import com.pandulapeter.campfire.util.UI
+import com.pandulapeter.campfire.util.WORKER
+import com.pandulapeter.campfire.util.mutableLiveDataOf
+import com.pandulapeter.campfire.util.normalize
+import com.pandulapeter.campfire.util.triggerUpdate
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.*
+import java.util.Calendar
 import kotlin.coroutines.CoroutineContext
 
 class HomeViewModel(
@@ -329,7 +332,7 @@ class HomeViewModel(
     fun updateAdapterItems(shouldRefreshRandom: Boolean, shouldScrollToTop: Boolean = false) {
         if (collectionRepository.isCacheLoaded() && songRepository.isCacheLoaded() && collections.toList().isNotEmpty() && songs.toList().isNotEmpty()) {
             coroutine?.cancel()
-            coroutine = GlobalScope.launch(UI) {
+            coroutine = launch(UI) {
                 withContext(WORKER) {
                     if (shouldRefreshRandom) {
                         randomSongs = listOf()
