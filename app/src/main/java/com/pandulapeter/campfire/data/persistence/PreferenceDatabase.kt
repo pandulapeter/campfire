@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.data.persistence
 
 import android.content.Context
-import androidx.annotation.Keep
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.feature.main.collections.CollectionsViewModel
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
@@ -10,7 +9,6 @@ import java.util.*
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-@Keep
 class PreferenceDatabase(context: Context) {
 
     companion object {

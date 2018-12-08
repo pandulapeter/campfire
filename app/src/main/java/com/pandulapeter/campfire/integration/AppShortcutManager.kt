@@ -7,7 +7,6 @@ import android.content.pm.ShortcutManager
 import android.graphics.drawable.Icon
 import android.os.Build
 import androidx.annotation.DrawableRes
-import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
@@ -15,7 +14,6 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
 
-@Keep
 class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabase, playlistRepository: PlaylistRepository) {
 
     private val implementation: Functionality =

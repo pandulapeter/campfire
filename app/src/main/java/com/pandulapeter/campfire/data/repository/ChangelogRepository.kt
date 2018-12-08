@@ -1,10 +1,8 @@
 package com.pandulapeter.campfire.data.repository
 
-import androidx.annotation.Keep
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.ChangelogItem
 
-@Keep
 class ChangelogRepository {
 
     val data = listOf(

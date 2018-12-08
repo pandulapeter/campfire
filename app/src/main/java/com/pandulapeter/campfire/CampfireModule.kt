@@ -23,40 +23,39 @@ import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
+import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.experimental.builder.viewModel
 import org.koin.dsl.module.module
-import org.koin.experimental.builder.factory
-import org.koin.experimental.builder.single
 
 val integrationModule = module {
-    factory<AppShortcutManager>()
-    factory<DeepLinkManager>()
-    factory<FirstTimeUserExperienceManager>()
+    factory { AppShortcutManager(androidContext(), get(), get()) }
+    factory { DeepLinkManager() }
+    factory { FirstTimeUserExperienceManager(get()) }
 }
 
 val networkingModule = module {
     single { GsonBuilder().create() }
-    factory<AnalyticsManager>()
-    factory<NetworkManager>()
-}
-
-val repositoryModule = module {
-    single<SongRepository>()
-    single<SongDetailRepository>()
-    single<ChangelogRepository>()
-    single<HistoryRepository>()
-    single<PlaylistRepository>()
-    single<CollectionRepository>()
+    factory { AnalyticsManager(androidContext(), get(), get()) }
+    factory { NetworkManager(get()) }
 }
 
 val persistenceModule = module {
-    factory<PreferenceDatabase>()
-    single { Room.databaseBuilder(get(), Database::class.java, "songDatabase.db").build() }
+    factory { PreferenceDatabase(androidContext()) }
+    single { Room.databaseBuilder(androidContext(), Database::class.java, "songDatabase.db").build() }
+}
+
+val repositoryModule = module {
+    single { SongRepository(get(), get(), get()) }
+    single { SongDetailRepository(get(), get()) }
+    single { ChangelogRepository() }
+    single { HistoryRepository(get()) }
+    single { PlaylistRepository(get()) }
+    single { CollectionRepository(get(), get(), get()) }
 }
 
 val detailModule = module {
-    single<DetailEventBus>()
-    single<DetailPageEventBus>()
+    single { DetailEventBus() }
+    single { DetailPageEventBus() }
 }
 
 val featureModule = module {

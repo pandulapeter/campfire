@@ -1,11 +1,9 @@
 package com.pandulapeter.campfire.integration
 
-import androidx.annotation.Keep
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
-@Keep
 class FirstTimeUserExperienceManager(private val preferenceDatabase: PreferenceDatabase) {
 
     var historyCompleted by Delegates.observable(preferenceDatabase.ftuxHistoryCompleted) { _: KProperty<*>, old: Boolean, new: Boolean ->
