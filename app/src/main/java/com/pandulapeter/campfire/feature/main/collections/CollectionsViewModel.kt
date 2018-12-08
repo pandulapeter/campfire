@@ -13,7 +13,12 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.Collecti
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.UI
+import com.pandulapeter.campfire.util.WORKER
+import com.pandulapeter.campfire.util.mutableLiveDataOf
+import com.pandulapeter.campfire.util.normalize
+import com.pandulapeter.campfire.util.removePrefixes
+import com.pandulapeter.campfire.util.triggerUpdate
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -34,6 +39,7 @@ class CollectionsViewModel(
     var isTextInputVisible = false
     val state = mutableLiveDataOf(StateLayout.State.LOADING)
     val isLoading = mutableLiveDataOf(false)
+    val isSearchToggleVisible = mutableLiveDataOf(false)
     val shouldShowUpdateErrorSnackbar = MutableLiveData<Boolean?>()
     val buttonText = mutableLiveDataOf(R.string.try_again)
     val adapter = RecyclerAdapter()

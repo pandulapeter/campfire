@@ -96,9 +96,13 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         getCampfireActivity()?.let { activity ->
             toolbarTextInputView = ToolbarTextInputView(activity.toolbarContext, R.string.collections_search, true).apply {
+                if (viewModel.isTextInputVisible) {
+                    showTextInput()
+                }
+                textInput.setText(viewModel.query)
+                visibilityChangeListener = { viewModel.isTextInputVisible = it }
                 title.updateToolbarTitle(R.string.main_collections)
                 textInput.onTextChanged { if (isTextInputVisible) viewModel.query = it }
-                visibilityChangeListener = { viewModel.isTextInputVisible = it }
             }
             topLevelBehavior.onViewCreated(savedInstanceState)
             postponeEnterTransition()
@@ -168,6 +172,15 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                     { if (isAdded) viewModel.shouldSearchInDescriptions = it },
                     SongsFragment.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
                 )
+            }
+            viewModel.isSearchToggleVisible.observeAfterDelay {
+                searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
+                activity.transitionMode = true
+                binding.root.post {
+                    if (isAdded) {
+                        searchControlsViewModel.isVisible.set(it)
+                    }
+                }
             }
             viewModel.adapter.apply {
                 collectionClickListener = { collection, clickedView, image ->
@@ -288,13 +301,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                 if (isTextInputVisible) {
                     textInput.setText("")
                 }
-                searchToggle.setImageDrawable((if (isTextInputVisible) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
-                getCampfireActivity()?.transitionMode = true
-                binding.root.post {
-                    if (isAdded) {
-                        searchControlsViewModel.isVisible.set(isTextInputVisible)
-                    }
-                }
+                viewModel.isSearchToggleVisible.value = toolbarTextInputView.isTextInputVisible
                 if (shouldScrollToTop) {
                     viewModel.updateAdapterItems(!isTextInputVisible)
                 }
