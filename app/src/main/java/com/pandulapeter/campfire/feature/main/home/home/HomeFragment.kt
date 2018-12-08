@@ -104,7 +104,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     false
                 }
             }
-            toolbarTextInputView = ToolbarTextInputView(activity.toolbarContext, R.string.songs_search, true).apply {
+            toolbarTextInputView = ToolbarTextInputView(activity.toolbarContext, R.string.home_search, true).apply {
                 if (viewModel.isTextInputVisible) {
                     showTextInput()
                 }

@@ -117,11 +117,7 @@ class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, Coll
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
-        toolbarTextInputView = ToolbarTextInputView(
-            getCampfireActivity().toolbarContext,
-            R.string.songs_search,
-            true
-        ).apply {
+        toolbarTextInputView = ToolbarTextInputView(getCampfireActivity().toolbarContext, R.string.collections_search, true).apply {
             title.updateToolbarTitle(R.string.main_collections)
             textInput.onTextChanged { if (isTextInputVisible) viewModel.query = it }
             visibilityChangeListener = { viewModel.isTextInputVisible = it }

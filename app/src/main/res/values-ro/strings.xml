@@ -93,6 +93,7 @@
     <!-- Home screen -->
     <string name="home_placeholder">Conținutul nu este disponibil. Te rog să verifici filtrele</string>
     <string name="home_update_error">A intervenit o eroare la actualizarea paginei de start</string>
+    <string name="home_search">Căutare</string>
     <string name="home_modules">Module</string>
     <string name="home_song_of_the_day">Piesa zilei</string>
     <string name="home_new_collections">Colecții noi</string>
@@ -103,6 +104,7 @@
     <!-- Collections screen -->
     <string name="collections_placeholder">Nu s-au găsit colecții pentru criteriile de căutare. Te rog să verifici filtrele</string>
     <string name="collections_update_error">A intervenit o eroare la actualizarea colecțiilor</string>
+    <string name="collections_search">Căutare în colecții</string>
     <string name="collections_sort_by">Sortează după</string>
     <string name="collections_sort_by_title">Titlu</string>
     <string name="collections_sort_by_date">Dată</string>
@@ -114,7 +116,7 @@
     <string name="songs_placeholder">Nu s-au găsit piese pentru criteriile de căutare. Te rog să verifici filtrele</string>
     <string name="songs_update_error">A intervenit o eroare la actualizarea pieselor</string>
     <string name="songs_song_download_error">A intervenit o eroare la descărcarea piesei \"%s\"</string>
-    <string name="songs_search">Căutare</string>
+    <string name="songs_search">Căutare în piese</string>
     <string name="songs_close">Închidere</string>
     <string name="songs_sort_by">Sortează după</string>
     <string name="songs_sort_by_popularity">Popularitate</string>

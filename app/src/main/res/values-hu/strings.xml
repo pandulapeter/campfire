@@ -93,6 +93,7 @@
     <!-- Home screen -->
     <string name="home_placeholder">Nincs megjeleníthető tartalom. Ellenőrizd a beállított szűrőket</string>
     <string name="home_update_error">Hiba történt a kezdőképernyő frissítése közben</string>
+    <string name="home_search">Keresés mindenhol</string>
     <string name="home_modules">Modulok</string>
     <string name="home_song_of_the_day">A nap dala</string>
     <string name="home_new_collections">Új gyűjtemények</string>
@@ -103,6 +104,7 @@
     <!-- Collections screen -->
     <string name="collections_placeholder">Nem található megfelelő gyűjtemény. Ellenőrizd a beállított szűrőket</string>
     <string name="collections_update_error">Hiba történt a gyűjtemények frissítése közben</string>
+    <string name="collections_search">Gyújtemény keresése</string>
     <string name="collections_sort_by">Rendezés</string>
     <string name="collections_sort_by_title">Cím</string>
     <string name="collections_sort_by_date">Feltöltés dátuma</string>
@@ -114,7 +116,7 @@
     <string name="songs_placeholder">Nem található megfelelő dal. Ellenőrizd a beállított szűrőket</string>
     <string name="songs_update_error">Hiba történt a dalok frissítése közben</string>
     <string name="songs_song_download_error">Hiba történt a dal letöltése közben: \"%s\"</string>
-    <string name="songs_search">Keresés</string>
+    <string name="songs_search">Dal keresése</string>
     <string name="songs_close">Bezárás</string>
     <string name="songs_sort_by">Rendezés</string>
     <string name="songs_sort_by_popularity">Népszerűség</string>

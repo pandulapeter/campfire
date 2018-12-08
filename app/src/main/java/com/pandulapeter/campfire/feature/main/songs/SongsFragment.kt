@@ -29,11 +29,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
     override val viewModel: SongsViewModel by lazy {
         SongsViewModel(
             context = getCampfireActivity(),
-            toolbarTextInputView = ToolbarTextInputView(
-                getCampfireActivity().toolbarContext,
-                R.string.songs_search,
-                true
-            ).apply { title.updateToolbarTitle(R.string.main_songs) },
+            toolbarTextInputView = ToolbarTextInputView(getCampfireActivity().toolbarContext, R.string.songs_search, true).apply { title.updateToolbarTitle(R.string.main_songs) },
             updateSearchToggleDrawable = {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
                 getCampfireActivity().transitionMode = true
