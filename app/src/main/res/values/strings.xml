@@ -94,7 +94,7 @@
     <!-- Home screen -->
     <string name="home_placeholder">No content to display. Double-check the filters you set up</string>
     <string name="home_update_error">Something went wrong while updating the home screen</string>
-    <string name="home_search">Search everywhere</string>
+    <string name="home_search">Search</string>
     <string name="home_modules">Modules</string>
     <string name="home_song_of_the_day">Song of the day</string>
     <string name="home_new_collections">New collections</string>
@@ -105,7 +105,7 @@
     <!-- Collections screen -->
     <string name="collections_placeholder">No matching collections found. Double-check the filters you set up</string>
     <string name="collections_update_error">Something went wrong while updating collections</string>
-    <string name="collections_search">Search in collections</string>
+    <string name="collections_search">Collection search</string>
     <string name="collections_sort_by">Sort by</string>
     <string name="collections_sort_by_title">Title</string>
     <string name="collections_sort_by_date">Upload date</string>
@@ -117,7 +117,7 @@
     <string name="songs_placeholder">No matching songs found. Double-check the filters you set up</string>
     <string name="songs_update_error">Something went wrong while updating the songs</string>
     <string name="songs_song_download_error">Error downloading \"%s\"</string>
-    <string name="songs_search">Search in songs</string>
+    <string name="songs_search">Song search</string>
     <string name="songs_close">Close</string>
     <string name="songs_sort_by">Sort by</string>
     <string name="songs_sort_by_popularity">Popularity</string>

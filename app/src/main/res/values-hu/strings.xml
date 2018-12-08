@@ -93,7 +93,7 @@
     <!-- Home screen -->
     <string name="home_placeholder">Nincs megjeleníthető tartalom. Ellenőrizd a beállított szűrőket</string>
     <string name="home_update_error">Hiba történt a kezdőképernyő frissítése közben</string>
-    <string name="home_search">Keresés mindenhol</string>
+    <string name="home_search">Keresés</string>
     <string name="home_modules">Modulok</string>
     <string name="home_song_of_the_day">A nap dala</string>
     <string name="home_new_collections">Új gyűjtemények</string>
