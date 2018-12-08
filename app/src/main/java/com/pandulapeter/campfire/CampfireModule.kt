@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.*
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.detail.DetailPageEventBus
+import com.pandulapeter.campfire.feature.main.collections.CollectionsViewModel
 import com.pandulapeter.campfire.feature.main.home.HomeContainerViewModel
 import com.pandulapeter.campfire.feature.main.home.home.HomeViewModel
 import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingViewModel
@@ -69,6 +70,8 @@ val featureModule = module {
     viewModel<ContentLanguageViewModel>()
 
     viewModel<HomeViewModel>()
+
+    viewModel<CollectionsViewModel>()
 
     viewModel<OptionsViewModel>()
     viewModel<PreferencesViewModel>()
