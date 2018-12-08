@@ -1,8 +1,10 @@
 package com.pandulapeter.campfire.feature.main.collections
 
+import android.content.Context
 import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableField
 import androidx.databinding.ObservableInt
+import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.remote.Collection
@@ -22,23 +24,23 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
 class CollectionsViewModel(
+    context: Context,
     private val preferenceDatabase: PreferenceDatabase,
     private val collectionRepository: CollectionRepository,
-    private val analyticsManager: AnalyticsManager,
-    private val onDataLoaded: (languages: List<Language>) -> Unit,
-    private val openSecondaryNavigationDrawer: () -> Unit,
-    private val newText: String
+    private val analyticsManager: AnalyticsManager
 ) : OldCampfireViewModel(), CollectionRepository.Subscriber {
 
     var isDetailScreenOpen = false
     private var coroutine: CoroutineContext? = null
     private var collections = sequenceOf<Collection>()
+    private val newText = context.getString(R.string.new_tag)
     var isTextInputVisible = false
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
     val isLoading = ObservableBoolean()
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
     val buttonText = ObservableInt(R.string.try_again)
     val adapter = RecyclerAdapter()
+    val shouldOpenSecondaryNavigationDrawer = MutableLiveData<Boolean?>()
     val isSwipeRefreshEnabled = ObservableBoolean(true)
     val shouldShowEraseButton = ObservableBoolean().apply {
         onPropertyChanged {
@@ -100,7 +102,7 @@ class CollectionsViewModel(
             updateAdapterItems(true)
             trackSearchEvent()
         }
-    var languages = mutableListOf<Language>()
+    var languages = MutableLiveData<List<Language>?>()
 
     init {
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_COLLECTIONS
@@ -117,8 +119,7 @@ class CollectionsViewModel(
         collections = data.asSequence()
         updateAdapterItems()
         if (data.isNotEmpty()) {
-            languages.swap(collectionRepository.languages)
-            onDataLoaded(languages)
+            languages.value = collectionRepository.languages
         }
     }
 
@@ -147,7 +148,7 @@ class CollectionsViewModel(
     }
 
     fun onActionButtonClicked() {
-        openSecondaryNavigationDrawer()
+        shouldOpenSecondaryNavigationDrawer.value = true
     }
 
     fun updateData() = collectionRepository.updateData()
@@ -160,11 +161,7 @@ class CollectionsViewModel(
         .map { CollectionItemViewModel(it, newText) }
         .toList()
 
-    fun restoreToolbarButtons() {
-        if (languages.isNotEmpty()) {
-            onDataLoaded(languages)
-        }
-    }
+    fun restoreToolbarButtons() = languages.triggerUpdate()
 
     private fun trackSearchEvent() {
         if (query.isNotEmpty()) {
