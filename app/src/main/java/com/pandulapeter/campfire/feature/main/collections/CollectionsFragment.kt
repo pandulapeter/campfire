@@ -2,7 +2,12 @@ package com.pandulapeter.campfire.feature.main.collections
 
 import android.os.Build
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.CompoundButton
 import androidx.annotation.IdRes
 import androidx.core.app.SharedElementCallback
@@ -17,18 +22,31 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.Collecti
 import com.pandulapeter.campfire.feature.main.songs.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.main.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.behavior.TopLevelBehavior
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.animatedDrawable
+import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.onTextChanged
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
-class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, CollectionsViewModel>(R.layout.fragment_collections) {
+class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, CollectionsViewModel>(R.layout.fragment_collections), TopLevelFragment {
 
     override val viewModel by viewModel<CollectionsViewModel>()
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
+    override val topLevelBehavior by lazy {
+        TopLevelBehavior(
+            inflateToolbarTitle = { toolbarTextInputView },
+            getCampfireActivity = { getCampfireActivity() })
+    }
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
     private val drawableCloseToSearch by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity()?.animatedDrawable(R.drawable.avd_close_to_search_24dp) else getCampfireActivity()?.drawable(R.drawable.ic_search_24dp)
@@ -77,6 +95,12 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         getCampfireActivity()?.let { activity ->
+            toolbarTextInputView = ToolbarTextInputView(activity.toolbarContext, R.string.collections_search, true).apply {
+                title.updateToolbarTitle(R.string.main_collections)
+                textInput.onTextChanged { if (isTextInputVisible) viewModel.query = it }
+                visibilityChangeListener = { viewModel.isTextInputVisible = it }
+            }
+            topLevelBehavior.onViewCreated(savedInstanceState)
             postponeEnterTransition()
             viewModel.shouldOpenSecondaryNavigationDrawer.observeAndReset { getCampfireActivity()?.openSecondaryNavigationDrawer() }
             viewModel.languages.observe { languages ->
@@ -106,17 +130,12 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                 }
             }
             analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
-            toolbarTextInputView = ToolbarTextInputView(activity.toolbarContext, R.string.collections_search, true).apply {
-                title.updateToolbarTitle(R.string.main_collections)
-                textInput.onTextChanged { if (isTextInputVisible) viewModel.query = it }
-                visibilityChangeListener = { viewModel.isTextInputVisible = it }
-            }
             viewModel.shouldShowEraseButton.observe { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
             viewModel.shouldEnableEraseButton.observe {
                 eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
                 eraseButton.isEnabled = it
             }
-            toolbarTextInputView.textInput.requestFocus()
+            topLevelBehavior.defaultToolbar.updateToolbarTitle(R.string.main_collections)
             savedInstanceState?.let {
                 searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
                 viewModel.buttonText.value = it.buttonText
@@ -132,7 +151,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                 viewModel.shouldShowEraseButton.value = savedInstanceState.isEraseButtonVisible
                 viewModel.shouldEnableEraseButton.value = savedInstanceState.isEraseButtonEnabled
             }
-            //TODO: defaultToolbar.updateToolbarTitle(R.string.main_collections)
+            toolbarTextInputView.textInput.requestFocus()
             viewModel.shouldShowUpdateErrorSnackbar.observeAndReset {
                 showSnackbar(
                     message = R.string.collections_update_error,
@@ -222,8 +241,6 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
         outState.isEraseButtonEnabled = viewModel.shouldEnableEraseButton.value == true
         viewModel.buttonText.value?.let { outState.buttonText = it }
     }
-
-    //TODO: override fun inflateToolbarTitle(context: Context) = toolbarTextInputView
 
     override fun onResume() {
         super.onResume()

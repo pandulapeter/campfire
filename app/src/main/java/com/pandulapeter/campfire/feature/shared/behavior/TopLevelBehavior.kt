@@ -8,12 +8,11 @@ import androidx.appcompat.widget.AppCompatTextView
 import com.pandulapeter.campfire.feature.CampfireActivity
 
 class TopLevelBehavior(
-    private val getContext: () -> Context?,
     private val getCampfireActivity: () -> CampfireActivity?,
     private val appBarView: View? = null,
     private val inflateToolbarTitle: ((Context) -> View)? = null
 ) : Behavior() {
-    val defaultToolbar by lazy { AppCompatTextView(getContext()).apply { gravity = Gravity.CENTER_VERTICAL } }
+    val defaultToolbar by lazy { AppCompatTextView(getCampfireActivity()).apply { gravity = Gravity.CENTER_VERTICAL } }
     var toolbarWidth = 0
 
     override fun onViewCreated(savedInstanceState: Bundle?) {

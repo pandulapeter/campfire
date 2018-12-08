@@ -22,13 +22,8 @@ class HomeContainerFragment : CampfireFragment<FragmentHomeContainerBinding, Hom
 
     override val viewModel by viewModel<HomeContainerViewModel>()
     override val shouldShowAppBar get() = viewModel.preferenceDatabase.isOnboardingDone
-    private val currentFragment get() = childFragmentManager.findFragmentById(R.id.home_container)
-    override val topLevelBehavior by lazy {
-        TopLevelBehavior(
-            getContext = { context },
-            getCampfireActivity = { getCampfireActivity() }
-        )
-    }
+    private val currentFragment get() = childFragmentManager.findFragmentById(R.id.home_container) as? CampfireFragment<*, *>?
+    override val topLevelBehavior by lazy { TopLevelBehavior(getCampfireActivity = { getCampfireActivity() }) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         topLevelBehavior.onViewCreated(savedInstanceState)
@@ -52,8 +47,7 @@ class HomeContainerFragment : CampfireFragment<FragmentHomeContainerBinding, Hom
         (currentFragment as? HomeFragment)?.updateUI()
     }
 
-    //TODO: Simplify this
-    override fun onBackPressed() = (currentFragment as? HomeFragment)?.onBackPressed() == true || (currentFragment as? OnboardingFragment)?.onBackPressed() == true
+    override fun onBackPressed() = currentFragment?.onBackPressed() == true
 
     override fun onNavigationItemSelected(menuItem: MenuItem) =
         (currentFragment as? HomeFragment)?.onNavigationItemSelected(menuItem) ?: super.onNavigationItemSelected(menuItem)

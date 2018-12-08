@@ -22,7 +22,6 @@ class OptionsFragment : CampfireFragment<FragmentOptionsBinding, OptionsViewMode
     private val pagerAdapter by lazy { OptionsFragmentPagerAdapter(requireContext(), childFragmentManager) }
     override val topLevelBehavior by lazy {
         TopLevelBehavior(
-            getContext = { context },
             getCampfireActivity = { getCampfireActivity() },
             appBarView = DataBindingUtil.inflate<ViewOptionsTabsBinding>(
                 LayoutInflater.from(getCampfireActivity()?.toolbarContext), R.layout.view_options_tabs, null, false
