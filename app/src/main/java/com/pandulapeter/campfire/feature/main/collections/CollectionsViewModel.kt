@@ -13,19 +13,16 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
-import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.*
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.CoroutineContext
 
 class CollectionsViewModel(
-    val toolbarTextInputView: ToolbarTextInputView,
-    private val updateSearchToggleDrawable: (Boolean) -> Unit,
     private val onDataLoaded: (languages: List<Language>) -> Unit,
     private val openSecondaryNavigationDrawer: () -> Unit,
     private val newText: String
@@ -37,6 +34,7 @@ class CollectionsViewModel(
     private val analyticsManager by inject<AnalyticsManager>()
     private var coroutine: CoroutineContext? = null
     private var collections = sequenceOf<Collection>()
+    var isTextInputVisible = false
     val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
     val isLoading = ObservableBoolean()
     val shouldShowUpdateErrorSnackbar = ObservableBoolean()
@@ -107,9 +105,6 @@ class CollectionsViewModel(
 
     init {
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_COLLECTIONS
-        toolbarTextInputView.apply {
-            textInput.onTextChanged { if (isTextInputVisible) query = it }
-        }
     }
 
     override fun subscribe() {
@@ -148,7 +143,7 @@ class CollectionsViewModel(
     private fun onListUpdated(items: List<CollectionItemViewModel>) {
         state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
         if (collections.toList().isNotEmpty()) {
-            buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
+            buttonText.set(if (isTextInputVisible) 0 else R.string.filters)
         }
     }
 
@@ -172,24 +167,6 @@ class CollectionsViewModel(
         }
     }
 
-    fun toggleTextInputVisibility() {
-        toolbarTextInputView.run {
-            if (title.tag == null) {
-                val shouldScrollToTop = !query.isEmpty()
-                animateTextInputVisibility(!isTextInputVisible)
-                if (isTextInputVisible) {
-                    textInput.setText("")
-                }
-                updateSearchToggleDrawable(toolbarTextInputView.isTextInputVisible)
-                if (shouldScrollToTop) {
-                    updateAdapterItems(!isTextInputVisible)
-                }
-                buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
-            }
-            shouldShowEraseButton.set(isTextInputVisible)
-        }
-    }
-
     private fun trackSearchEvent() {
         if (query.isNotEmpty()) {
             analyticsManager.onCollectionsSearchQueryChanged(query, shouldSearchInTitles, shouldSearchInDescriptions)
@@ -207,11 +184,11 @@ class CollectionsViewModel(
         updateAdapterItems()
     }
 
-    private fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
+    fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
         if (collectionRepository.isCacheLoaded()) {
             coroutine?.cancel()
             coroutine = GlobalScope.launch(UI) {
-                async(WORKER) { collections.createViewModels() }.await().let {
+                withContext(WORKER) { collections.createViewModels() }.let {
                     adapter.shouldScrollToTop = shouldScrollToTop
                     adapter.items = it
                     onListUpdated(it)
@@ -221,7 +198,7 @@ class CollectionsViewModel(
         }
     }
 
-    private fun Sequence<Collection>.filterByQuery() = if (toolbarTextInputView.isTextInputVisible && query.isNotEmpty()) {
+    private fun Sequence<Collection>.filterByQuery() = if (isTextInputVisible && query.isNotEmpty()) {
         query.trim().normalize().let { query ->
             filter {
                 (it.getNormalizedTitle().contains(query, true) && shouldSearchInTitles) || (it.getNormalizedDescription().contains(query, true) && shouldSearchInDescriptions)

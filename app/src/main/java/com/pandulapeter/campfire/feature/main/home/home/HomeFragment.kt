@@ -352,10 +352,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         linearLayoutManager.isScrollEnabled = true
     }
 
-    override fun onBackPressed() = if (toolbarTextInputView.isTextInputVisible) {
-        toggleTextInputVisibility()
-        true
-    } else super.onBackPressed()
+    override fun onBackPressed() = if (toolbarTextInputView.isTextInputVisible) consume { toggleTextInputVisibility() } else super.onBackPressed()
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
         when (menuItem.itemId) {
