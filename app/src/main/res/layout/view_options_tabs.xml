@@ -10,6 +10,7 @@
         app:tabGravity="fill"
         app:tabIndicatorFullWidth="false"
         app:tabMode="scrollable"
+        app:tabIndicatorColor="@color/accent"
         app:tabRippleColor="@color/tab_ripple"
         app:tabTextAppearance="@style/Tab"
         app:tabTextColor="@color/menu_item_text"

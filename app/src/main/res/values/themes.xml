@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="SplashBase" parent="Theme.AppCompat.NoActionBar">
+    <style name="SplashBase" parent="Theme.MaterialComponents.NoActionBar">
         <item name="android:windowBackground">@drawable/bg_splash</item>
         <item name="android:windowTranslucentStatus">true</item>
     </style>
 
     <style name="Splash" parent="SplashBase" />
 
-    <style name="AppThemeBase" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <item name="colorAccent">@color/accent</item>
+    <!--TODO: Add a divider above the navigation bar above Pie. -->
+    <style name="AppThemeBase" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">?android:attr/windowBackground</item>
+        <item name="colorSecondary">@color/accent</item>
         <item name="android:fontFamily">@font/regular</item>
     </style>
 
@@ -18,8 +20,9 @@
         <item name="android:navigationBarColor">?attr/colorPrimaryDark</item>
     </style>
 
-    <style name="DialogTheme" parent="Theme.AppCompat.DayNight.Dialog">
-        <item name="colorAccent">@color/accent</item>
+    <!--TODO: Buttons should not be all-caps. -->
+    <style name="DialogTheme" parent="Theme.MaterialComponents.Light.Dialog">
+        <item name="colorPrimary">@color/accent</item>
     </style>
 
     <style name="BottomSheet" parent="@style/Widget.Design.BottomSheet.Modal">
@@ -36,7 +39,7 @@
         <item name="android:navigationBarColor">?attr/colorPrimaryDark</item>
     </style>
 
-    <style name="ButtonTheme" parent="Theme.AppCompat.NoActionBar">
+    <style name="ButtonTheme" parent="Theme.MaterialComponents">
         <item name="colorAccent">@color/accent</item>
     </style>
 
