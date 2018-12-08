@@ -124,15 +124,15 @@ class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, Coll
             textInput.onTextChanged { if (isTextInputVisible) viewModel.query = it }
             visibilityChangeListener = { viewModel.isTextInputVisible = it }
         }
-        viewModel.shouldShowEraseButton.onPropertyChanged { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
-        viewModel.shouldEnableEraseButton.onPropertyChanged {
+        viewModel.shouldShowEraseButton.observe { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
+        viewModel.shouldEnableEraseButton.observe {
             eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
             eraseButton.isEnabled = it
         }
         toolbarTextInputView.textInput.requestFocus()
         savedInstanceState?.let {
             searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
-            viewModel.buttonText.set(it.buttonText)
+            viewModel.buttonText.value = it.buttonText
             if (it.isTextInputVisible) {
                 searchToggle.setImageDrawable(getCampfireActivity().drawable(R.drawable.ic_close_24dp))
                 toolbarTextInputView.textInput.run {
@@ -142,11 +142,11 @@ class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, Coll
                 }
                 toolbarTextInputView.showTextInput()
             }
-            viewModel.shouldShowEraseButton.set(savedInstanceState.isEraseButtonVisible)
-            viewModel.shouldEnableEraseButton.set(savedInstanceState.isEraseButtonEnabled)
+            viewModel.shouldShowEraseButton.value = savedInstanceState.isEraseButtonVisible
+            viewModel.shouldEnableEraseButton.value = savedInstanceState.isEraseButtonEnabled
         }
         defaultToolbar.updateToolbarTitle(R.string.main_collections)
-        viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
+        viewModel.shouldShowUpdateErrorSnackbar.observeAndReset {
             showSnackbar(
                 message = R.string.collections_update_error,
                 action = { viewModel.updateData() })
@@ -230,9 +230,9 @@ class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, Coll
         super.onSaveInstanceState(outState)
         outState.isTextInputVisible = toolbarTextInputView.isTextInputVisible
         outState.searchQuery = viewModel.query
-        outState.isEraseButtonVisible = viewModel.shouldShowEraseButton.get()
-        outState.isEraseButtonEnabled = viewModel.shouldEnableEraseButton.get()
-        outState.buttonText = viewModel.buttonText.get()
+        outState.isEraseButtonVisible = viewModel.shouldShowEraseButton.value == true
+        outState.isEraseButtonEnabled = viewModel.shouldEnableEraseButton.value == true
+        viewModel.buttonText.value?.let { outState.buttonText = it }
     }
 
     override fun inflateToolbarTitle(context: Context) = toolbarTextInputView
@@ -293,9 +293,9 @@ class CollectionsFragment : OldTopLevelFragment<FragmentCollectionsBinding, Coll
                 if (shouldScrollToTop) {
                     viewModel.updateAdapterItems(!isTextInputVisible)
                 }
-                viewModel.buttonText.set(if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters)
+                viewModel.buttonText.value = if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters
             }
-            viewModel.shouldShowEraseButton.set(isTextInputVisible)
+            viewModel.shouldShowEraseButton.value = isTextInputVisible
         }
     }
 

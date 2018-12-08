@@ -1,9 +1,6 @@
 package com.pandulapeter.campfire.feature.main.collections
 
 import android.content.Context
-import androidx.databinding.ObservableBoolean
-import androidx.databinding.ObservableField
-import androidx.databinding.ObservableInt
 import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Language
@@ -35,26 +32,22 @@ class CollectionsViewModel(
     private var collections = sequenceOf<Collection>()
     private val newText = context.getString(R.string.new_tag)
     var isTextInputVisible = false
-    val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
-    val isLoading = ObservableBoolean()
-    val shouldShowUpdateErrorSnackbar = ObservableBoolean()
-    val buttonText = ObservableInt(R.string.try_again)
+    val state = mutableLiveDataOf(StateLayout.State.LOADING)
+    val isLoading = mutableLiveDataOf(false)
+    val shouldShowUpdateErrorSnackbar = MutableLiveData<Boolean?>()
+    val buttonText = mutableLiveDataOf(R.string.try_again)
     val adapter = RecyclerAdapter()
     val shouldOpenSecondaryNavigationDrawer = MutableLiveData<Boolean?>()
-    val isSwipeRefreshEnabled = ObservableBoolean(true)
-    val shouldShowEraseButton = ObservableBoolean().apply {
-        onPropertyChanged {
-            isSwipeRefreshEnabled.set(!it)
-        }
-    }
-    val shouldEnableEraseButton = ObservableBoolean()
+    val isSwipeRefreshEnabled = mutableLiveDataOf(true)
+    val shouldShowEraseButton = mutableLiveDataOf(false) { isSwipeRefreshEnabled.value = !it }
+    val shouldEnableEraseButton = mutableLiveDataOf(false)
     var query = ""
         set(value) {
             if (field != value) {
                 field = value
                 updateAdapterItems(true)
                 trackSearchEvent()
-                shouldEnableEraseButton.set(query.isNotEmpty())
+                shouldEnableEraseButton.value = query.isNotEmpty()
             }
         }
 
@@ -124,26 +117,26 @@ class CollectionsViewModel(
     }
 
     override fun onCollectionsLoadingStateChanged(isLoading: Boolean) {
-        this.isLoading.set(isLoading)
+        this.isLoading.value = isLoading
         if (collections.toList().isEmpty() && isLoading) {
-            state.set(StateLayout.State.LOADING)
+            state.value = StateLayout.State.LOADING
         }
     }
 
     override fun onCollectionRepositoryUpdateError() {
         if (collections.toList().isEmpty()) {
             analyticsManager.onConnectionError(true, AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
-            state.set(StateLayout.State.ERROR)
+            state.value = StateLayout.State.ERROR
         } else {
             analyticsManager.onConnectionError(false, AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
-            shouldShowUpdateErrorSnackbar.set(true)
+            shouldShowUpdateErrorSnackbar.value = true
         }
     }
 
     private fun onListUpdated(items: List<CollectionItemViewModel>) {
-        state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
+        state.value = if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL
         if (collections.toList().isNotEmpty()) {
-            buttonText.set(if (isTextInputVisible) 0 else R.string.filters)
+            buttonText.value = if (isTextInputVisible) 0 else R.string.filters
         }
     }
 
@@ -208,8 +201,8 @@ class CollectionsViewModel(
 
     private fun Sequence<Collection>.filterByLanguage() = filter {
         var shouldFilter = false
-        it.language?.forEach {
-            if (!disabledLanguageFilters.contains(it)) {
+        it.language?.forEach { language ->
+            if (!disabledLanguageFilters.contains(language)) {
                 shouldFilter = true
             }
         }
