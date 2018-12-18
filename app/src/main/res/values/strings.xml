@@ -194,6 +194,13 @@
     <!-- Options screen / Changelog -->
     <string name="options_changelog_app_updated">The app has been updated</string>
     <string name="options_changelog_what_is_new">What\'s new</string>
+    <string name="options_changelog_0_9_0_version_name" translatable="false">v0.9</string>
+    <string name="options_changelog_0_9_0_description">
+        <Data><![CDATA[
+        • Ability to <strong>share</strong> songs and playlists<br>
+        • Significant <strong>design</strong> and <strong>performance</strong> improvements
+        ]]></Data>
+    </string>
     <string name="options_changelog_0_8_0_version_name" translatable="false">v0.8</string>
     <string name="options_changelog_0_8_0_description">
         <Data><![CDATA[

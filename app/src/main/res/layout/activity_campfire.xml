@@ -97,8 +97,8 @@
                             android:clipToPadding="false"
                             android:gravity="center_vertical|end"
                             android:orientation="horizontal"
-                            android:paddingEnd="@dimen/content_padding"
                             android:paddingStart="@dimen/small_content_padding"
+                            android:paddingEnd="@dimen/content_padding"
                             app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
@@ -133,8 +133,8 @@
                     android:id="@+id/auto_scroll_seek_bar"
                     android:layout_width="@dimen/detail_auto_scroll_control_width"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
                     android:layout_marginStart="@dimen/content_padding"
+                    android:layout_marginEnd="24dp"
                     android:max="9"
                     android:padding="@dimen/content_padding"
                     android:progress="2" />
@@ -161,6 +161,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
+            android:background="?android:attr/colorBackgroundFloating"
             app:headerLayout="@layout/view_menu_header"
             app:insetForeground="?attr/colorPrimary"
             app:itemBackground="?attr/selectableItemBackground"
@@ -173,6 +174,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="end"
+            android:background="?android:attr/colorBackgroundFloating"
             app:insetForeground="?attr/colorPrimary" />
 
     </androidx.drawerlayout.widget.DrawerLayout>

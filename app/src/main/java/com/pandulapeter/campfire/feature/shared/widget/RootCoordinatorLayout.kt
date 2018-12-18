@@ -5,12 +5,17 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.WindowInsets
-import com.pandulapeter.campfire.util.obtainColor
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 
-class RootCoordinatorLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
-    androidx.coordinatorlayout.widget.CoordinatorLayout(context, attrs, defStyleAttr) {
+class RootCoordinatorLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : CoordinatorLayout(context, attrs, defStyleAttr) {
 
-    private val paint = Paint().apply { color = context.obtainColor(android.R.attr.colorPrimary) }
+    var paint: Paint? = null
+        set(value) {
+            if (field != value) {
+                field = value
+                invalidate()
+            }
+        }
     var insetChangeListener: (statusBarHeight: Int) -> Unit = {}
         set(value) {
             field = value
@@ -33,9 +38,7 @@ class RootCoordinatorLayout @JvmOverloads constructor(context: Context, attrs: A
     }
 
     override fun dispatchDraw(canvas: Canvas?) {
-        canvas?.run {
-            drawRect(0f, 0f, width.toFloat(), statusBarHeight.toFloat(), paint)
-            super.dispatchDraw(this)
-        }
+        canvas?.run { paint?.let { paint -> drawRect(0f, 0f, width.toFloat(), statusBarHeight.toFloat(), paint) } }
+        super.dispatchDraw(canvas)
     }
 }

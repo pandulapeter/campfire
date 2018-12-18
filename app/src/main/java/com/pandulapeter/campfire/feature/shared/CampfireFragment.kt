@@ -29,7 +29,11 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.obtainColor
 import org.koin.android.ext.android.inject
 
 abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : Fragment(), Transition.TransitionListener {
@@ -51,6 +55,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     private val snackbarActionTextColor by lazy { requireContext().color(R.color.accent) }
     var hasStartedListening = false
         private set
+    val isUiBlocked get() = viewModel.isUiBlocked
 
     final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)

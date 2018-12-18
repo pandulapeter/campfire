@@ -1,46 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="SplashBase" parent="Theme.MaterialComponents.NoActionBar">
+    <style name="Splash" parent="Theme.MaterialComponents.NoActionBar">
         <item name="android:windowBackground">@drawable/bg_splash</item>
+        <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:windowTranslucentStatus">true</item>
     </style>
-
-    <style name="Splash" parent="SplashBase" />
 
     <!--TODO: Add a divider above the navigation bar above Pie. -->
-    <style name="AppThemeBase" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">?android:attr/windowBackground</item>
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">?android:attr/colorBackgroundFloating</item>
         <item name="colorSecondary">@color/accent</item>
         <item name="android:fontFamily">@font/regular</item>
-    </style>
-
-    <style name="AppTheme" parent="@style/AppThemeBase">
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:navigationBarColor">?attr/colorPrimaryDark</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">?android:attr/colorBackgroundFloating</item>
     </style>
 
     <!--TODO: Buttons should not be all-caps. -->
     <style name="DialogTheme" parent="Theme.MaterialComponents.Light.Dialog">
         <item name="colorPrimary">@color/accent</item>
+        <item name="colorSecondary">@color/accent</item>
     </style>
 
     <style name="BottomSheet" parent="@style/Widget.Design.BottomSheet.Modal">
         <item name="android:background">@drawable/bg_bottom_sheet</item>
     </style>
 
-    <style name="BottomSheetDialogThemeBase" parent="Theme.Design.Light.BottomSheetDialog">
+    <style name="BottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
         <item name="bottomSheetStyle">@style/BottomSheet</item>
-    </style>
-
-    <style name="BottomSheetDialogTheme" parent="BottomSheetDialogThemeBase">
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:navigationBarColor">?attr/colorPrimaryDark</item>
-    </style>
-
-    <style name="ButtonTheme" parent="Theme.MaterialComponents">
-        <item name="colorAccent">@color/accent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
 </resources>

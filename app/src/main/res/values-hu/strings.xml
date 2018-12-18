@@ -193,6 +193,12 @@
     <!-- Options screen / Changelog -->
     <string name="options_changelog_app_updated">Az alkalmazás frissítve lett</string>
     <string name="options_changelog_what_is_new">Újdonságok</string>
+    <string name="options_changelog_0_9_0_description">
+        <Data><![CDATA[
+        • Lehetőség dalok és dallisták <strong>megosztására</strong><br>
+        • Jelentős <strong>design</strong> és <strong>teljesítménybeli</strong> fejlesztések
+        ]]></Data>
+    </string>
     <string name="options_changelog_0_8_0_description">
         <Data><![CDATA[
         • <strong>Keresés</strong> gomb a kezdőképernyőn és a gyűjtemények képernyőn<br>

@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.graphics.Paint
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
@@ -64,10 +65,24 @@ import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.IntentExtraDelegate
+import com.pandulapeter.campfire.util.addDrawerListener
+import com.pandulapeter.campfire.util.addListener
+import com.pandulapeter.campfire.util.animatedDrawable
+import com.pandulapeter.campfire.util.animatedVisibilityEnd
+import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.obtainColor
+import com.pandulapeter.campfire.util.toUrlIntent
+import com.pandulapeter.campfire.util.visibleOrGone
+import com.pandulapeter.campfire.util.visibleOrInvisible
 import io.fabric.sdk.android.Fabric
 import org.koin.android.ext.android.inject
-import java.util.*
+import java.util.Locale
 
 class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSelectedListener, PlaylistRepository.Subscriber {
 
@@ -192,13 +207,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         startTime = System.currentTimeMillis()
 
         // Make sure the status bar color is properly set.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            window.decorView.systemUiVisibility = when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
-                Configuration.UI_MODE_NIGHT_UNDEFINED,
-                Configuration.UI_MODE_NIGHT_NO -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                else -> 0
-            }
+        window.decorView.systemUiVisibility = when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+            Configuration.UI_MODE_NIGHT_UNDEFINED,
+            Configuration.UI_MODE_NIGHT_NO -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+            else -> 0
         }
 
         // Make sure the "What's new" snackbar does not appear after a fresh start.
@@ -209,7 +222,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         // Initialize the app bar.
         val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
         binding.toolbarMainButton.setOnClickListener {
-            if (!isUiBlocked) {
+            if ((currentFragment as? CampfireFragment<*, *>?)?.isUiBlocked != true) {
                 if (isBackStackEmpty) {
                     hideKeyboard(currentFocus)
                     binding.drawerLayout.openDrawer(GravityCompat.START)
@@ -614,6 +627,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 else -> false
             }
         } ?: false
+        binding.rootCoordinatorLayout.paint = Paint().apply { color = obtainColor(if (shouldShowAppBar) android.R.attr.colorPrimary else android.R.attr.windowBackground) }
         binding.coordinatorLayout.clipChildren = shouldShowAppBar
         binding.appBarLayout.apply {
             if (shouldShowAppBar != visibleOrInvisible) {

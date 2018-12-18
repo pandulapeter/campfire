@@ -27,8 +27,8 @@
             android:animateLayoutChanges="true"
             android:clipChildren="false"
             android:clipToPadding="false"
-            android:paddingBottom="@dimen/large_content_padding"
-            android:paddingTop="@dimen/large_content_padding">
+            android:paddingTop="@dimen/large_content_padding"
+            android:paddingBottom="@dimen/large_content_padding">
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guideline_top"
@@ -68,20 +68,29 @@
                 app:layout_constraintTop_toTopOf="@id/guideline_top"
                 tools:text="Text" />
 
-            <Button
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/barrier"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="guideline_bottom,text" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/button"
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/button_height"
-                android:background="@drawable/bg_button"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/content_padding"
                 android:drawablePadding="@dimen/content_padding"
                 android:gravity="center"
+                android:letterSpacing="0"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
-                android:theme="@style/ButtonTheme"
                 android:visibility="gone"
+                app:backgroundTint="@color/accent"
+                app:cornerRadius="@dimen/card_corner"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/guideline_bottom"
+                app:layout_constraintTop_toBottomOf="@id/barrier"
                 tools:text="Button"
                 tools:visibility="visible" />
 

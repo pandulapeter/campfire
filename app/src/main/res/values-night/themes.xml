@@ -1,23 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="AppTheme" parent="@style/AppThemeBase">
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">?attr/colorPrimary</item>
-    </style>
-
     <style name="DialogTheme" parent="Theme.MaterialComponents.Dialog">
         <item name="colorPrimary">@color/accent</item>
+        <item name="colorSecondary">@color/accent</item>
     </style>
 
-    <style name="BottomSheetDialogThemeBase" parent="Theme.Design.BottomSheetDialog">
-        <item name="android:windowIsFloating">false</item>
-        <item name="bottomSheetStyle">@style/BottomSheet</item>
-    </style>
-
-    <style name="BottomSheetDialogTheme" parent="BottomSheetDialogThemeBase">
+    <style name="BottomSheetDialogTheme" parent="Theme.Design.BottomSheetDialog">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">?attr/colorPrimary</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="bottomSheetStyle">@style/BottomSheet</item>
     </style>
 
 </resources>
