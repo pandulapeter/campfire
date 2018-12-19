@@ -398,7 +398,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     override fun onBackPressed() {
-        if (!isUiBlocked) {
+        if ((currentFragment as? CampfireFragment<*, *>)?.isUiBlocked != true) {
             if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
                 binding.drawerLayout.closeDrawer(GravityCompat.START)
             } else {
@@ -409,7 +409,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     //TODO: Simplify this
                     if (fragment == null || ((fragment as? CampfireFragment<*, *>)?.onBackPressed() != true && (fragment as? OldTopLevelFragment<*, *>)?.onBackPressed() != true)) {
                         if (isBackStackEmpty) {
-                            if (preferenceDatabase.shouldShowExitConfirmation) {
+                            if (preferenceDatabase.shouldShowExitConfirmation && preferenceDatabase.isOnboardingDone) {
                                 AlertDialogFragment.show(
                                     id = DIALOG_ID_EXIT_CONFIRMATION,
                                     fragmentManager = supportFragmentManager,

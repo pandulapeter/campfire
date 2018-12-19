@@ -176,7 +176,7 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
             val newDimAmount = if (viewModel.containerAlpha.get() == 1f) 0f else 0.6f
             if (it.attributes.dimAmount != newDimAmount) {
                 it.attributes = it.attributes.apply { dimAmount = newDimAmount }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_NO)
+                if (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_NO)
                     it.decorView.systemUiVisibility = if (newDimAmount == 0F) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
                     } else {

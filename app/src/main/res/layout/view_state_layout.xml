@@ -73,7 +73,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:barrierDirection="bottom"
-                app:constraint_referenced_ids="guideline_bottom,text" />
+                app:constraint_referenced_ids="guideline_bottom,text"
+                tools:ignore="NotSibling" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button"
