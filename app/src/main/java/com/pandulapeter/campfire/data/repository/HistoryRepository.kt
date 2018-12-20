@@ -7,8 +7,8 @@ import com.pandulapeter.campfire.util.UI
 import com.pandulapeter.campfire.util.WORKER
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class HistoryRepository(private val database: Database) : BaseRepository<HistoryRepository.Subscriber>() {
     private val data = mutableListOf<HistoryItem>()
@@ -46,7 +46,7 @@ class HistoryRepository(private val database: Database) : BaseRepository<History
 
     private fun refreshDataSet() {
         GlobalScope.launch(UI) {
-            async(WORKER) { database.historyDao().getAll() }.await().let {
+            withContext(WORKER) { database.historyDao().getAll() }.let {
                 data.swap(it)
                 isCacheLoaded = true
                 notifyDataChanged()

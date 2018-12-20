@@ -3,7 +3,6 @@ package com.pandulapeter.campfire.feature.main.shared.recycler
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.model.remote.Song
@@ -14,40 +13,60 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.Collecti
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
+import com.pandulapeter.campfire.util.UI
+import com.pandulapeter.campfire.util.WORKER
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
-class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(object : DiffUtil.ItemCallback<ItemViewModel>() {
+class RecyclerAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(), FastScrollRecyclerView.SectionedAdapter,
+    FastScrollRecyclerView.MeasurableAdapter<RecyclerView.ViewHolder> {
 
-    override fun areItemsTheSame(old: ItemViewModel, new: ItemViewModel) = when (old) {
-        is HeaderItemViewModel -> when (new) {
-            is HeaderItemViewModel -> old.title == new.title
-            else -> false
-        }
-        is CollectionItemViewModel -> when (new) {
-            is CollectionItemViewModel -> old.collection.id == new.collection.id
-            else -> false
-        }
-        is SongItemViewModel -> when (new) {
-            is SongItemViewModel -> old.song.id == new.song.id
-            else -> false
-        }
-        else -> false
-    }
-
-    override fun areContentsTheSame(old: ItemViewModel, new: ItemViewModel) = old == new
-
-}), FastScrollRecyclerView.SectionedAdapter, FastScrollRecyclerView.MeasurableAdapter<RecyclerView.ViewHolder> {
-
+    private var coroutineContext: CoroutineContext? = null
     var shouldScrollToTop = false
     var items = listOf<ItemViewModel>()
         set(newItems) {
-            if (shouldScrollToTop) {
-                //TODO: Does not seem to work.
-                recyclerView?.scrollToPosition(0)
-                shouldScrollToTop = false
+            coroutineContext?.cancel()
+            coroutineContext = GlobalScope.launch(UI) {
+                withContext(WORKER) {
+                    DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+                        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                            val old = field[oldItemPosition]
+                            val new = newItems[newItemPosition]
+                            return when (old) {
+                                is HeaderItemViewModel -> when (new) {
+                                    is HeaderItemViewModel -> old.title == new.title
+                                    else -> false
+                                }
+                                is CollectionItemViewModel -> when (new) {
+                                    is CollectionItemViewModel -> old.collection.id == new.collection.id
+                                    else -> false
+                                }
+                                is SongItemViewModel -> when (new) {
+                                    is SongItemViewModel -> old.song.id == new.song.id
+                                    else -> false
+                                }
+                                else -> false
+                            }
+                        }
+
+                        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = field[oldItemPosition] == newItems[newItemPosition]
+
+                        override fun getOldListSize() = field.size
+
+                        override fun getNewListSize() = newItems.size
+
+                    })
+                }.dispatchUpdatesTo(this@RecyclerAdapter)
+                if (shouldScrollToTop) {
+                    recyclerView?.scrollToPosition(0)
+                    shouldScrollToTop = false
+                }
+                field = newItems
             }
-            field = newItems
-            submitList(newItems)
         }
     var collectionClickListener: (collection: Collection, clickedView: View, image: View) -> Unit = { _, _, _ -> }
     var collectionBookmarkClickListener: (collection: Collection, position: Int) -> Unit = { _, _ -> }
@@ -86,10 +105,6 @@ class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(obje
         setHasStableIds(true)
     }
 
-    public override fun getItem(position: Int): ItemViewModel {
-        return super.getItem(position)
-    }
-
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         this.recyclerView = recyclerView
     }
@@ -98,7 +113,7 @@ class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(obje
         this.recyclerView = null
     }
 
-    override fun getItemViewType(position: Int) = when (getItem(position)) {
+    override fun getItemViewType(position: Int) = when (items[position]) {
         is HeaderItemViewModel -> VIEW_TYPE_HEADER
         is CollectionItemViewModel -> VIEW_TYPE_COLLECTION
         is SongItemViewModel -> VIEW_TYPE_SONG
@@ -109,15 +124,15 @@ class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(obje
         VIEW_TYPE_HEADER -> HeaderViewHolder.create(parent)
         VIEW_TYPE_COLLECTION -> CollectionViewHolder.create(
             parent = parent,
-            itemClickListener = { position, clickedView, image -> collectionClickListener((getItem(position) as CollectionItemViewModel).collection, clickedView, image) },
-            bookmarkClickListener = { position -> collectionBookmarkClickListener((getItem(position) as CollectionItemViewModel).collection, position) }
+            itemClickListener = { position, clickedView, image -> collectionClickListener((items[position] as CollectionItemViewModel).collection, clickedView, image) },
+            bookmarkClickListener = { position -> collectionBookmarkClickListener((items[position] as CollectionItemViewModel).collection, position) }
         )
         VIEW_TYPE_SONG -> SongViewHolder.create(
             parent = parent,
-            itemClickListener = { position, clickedView -> songClickListener((getItem(position) as SongItemViewModel).song, position, clickedView) },
+            itemClickListener = { position, clickedView -> songClickListener((items[position] as SongItemViewModel).song, position, clickedView) },
             itemTouchListener = songDragTouchListener,
-            playlistClickListener = { position -> songPlaylistClickListener((getItem(position) as SongItemViewModel).song) },
-            downloadClickListener = { position -> songDownloadClickListener((getItem(position) as SongItemViewModel).song) }
+            playlistClickListener = { position -> songPlaylistClickListener((items[position] as SongItemViewModel).song) },
+            downloadClickListener = { position -> songDownloadClickListener((items[position] as SongItemViewModel).song) }
         )
         else -> throw IllegalArgumentException("Unsupported item type.")
     }
@@ -126,19 +141,19 @@ class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(obje
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: List<Any>) {
         when (holder) {
-            is HeaderViewHolder -> holder.bind(getItem(position) as HeaderItemViewModel)
+            is HeaderViewHolder -> holder.bind(items[position] as HeaderItemViewModel)
             is CollectionViewHolder -> {
-                (getItem(position) as CollectionItemViewModel).let {
+                (items[position] as CollectionItemViewModel).let {
                     payloads.forEach { payload ->
                         when (payload) {
                             is Payload.BookmarkedStateChanged -> it.collection.isBookmarked = payload.isBookmarked
                         }
                     }
-                    holder.bind(getItem(position) as CollectionItemViewModel)
+                    holder.bind(items[position] as CollectionItemViewModel)
                 }
             }
             is SongViewHolder -> {
-                (getItem(position) as SongItemViewModel).let {
+                (items[position] as SongItemViewModel).let {
                     payloads.forEach { payload ->
                         when (payload) {
                             is Payload.DownloadStateChanged -> it.downloadState = payload.downloadState
@@ -152,6 +167,8 @@ class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(obje
         }
     }
 
+    override fun getItemCount() = items.size
+
     override fun getViewTypeHeight(recyclerView: RecyclerView?, viewHolder: RecyclerView.ViewHolder?, viewType: Int) =
         when (viewType) {
             VIEW_TYPE_HEADER -> headerItemHeight
@@ -160,9 +177,9 @@ class RecyclerAdapter : ListAdapter<ItemViewModel, RecyclerView.ViewHolder>(obje
             else -> 0
         }
 
-    override fun getSectionName(position: Int) = itemTitleCallback(getItem(position))
+    override fun getSectionName(position: Int) = itemTitleCallback(items[position])
 
-    override fun getItemId(position: Int) = getItem(position).getItemId()
+    override fun getItemId(position: Int) = items[position].getItemId()
 
     sealed class Payload {
         class BookmarkedStateChanged(val isBookmarked: Boolean) : Payload()
