@@ -25,10 +25,10 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
-    <!--TODO: Buttons should not be all-caps. -->
-    <style name="Dialog" parent="Theme.MaterialComponents.Light.Dialog">
+    <style name="Dialog" parent="Theme.MaterialComponents.Light.Dialog.Alert">
         <item name="colorPrimary">@color/accent</item>
         <item name="colorSecondary">@color/accent</item>
+        <item name="buttonBarButtonStyle">@style/FlatButton</item>
     </style>
 
 </resources>

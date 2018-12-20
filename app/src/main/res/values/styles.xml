@@ -20,7 +20,7 @@
         <item name="android:textAllCaps">false</item>
         <item name="android:gravity">center</item>
         <item name="android:textColor">@color/accent</item>
-        <item name="rippleColor">?android:attr/textColorTertiary</item>
+        <item name="rippleColor">?android:attr/colorControlHighlight</item>
     </style>
 
     <style name="Header">
