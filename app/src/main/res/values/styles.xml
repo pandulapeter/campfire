@@ -1,20 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Section">
-        <item name="android:textColor">@color/accent</item>
-    </style>
-
-    <style name="Hint">
-        <item name="android:fontFamily">monospace</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">?android:attr/textColorSecondary</item>
-    </style>
-
-    <style name="Chord" parent="Hint">
-        <item name="android:textColor">@color/accent</item>
-    </style>
-
     <style name="Header">
         <item name="android:textColor">@color/accent</item>
         <item name="android:textStyle">bold</item>
@@ -25,17 +11,7 @@
         <item name="android:paddingBottom">@dimen/content_padding</item>
     </style>
 
-    <style name="Title" parent="TextAppearance.AppCompat.Title">
-        <item name="android:textStyle">normal</item>
-    </style>
-
-    <style name="Tab" parent="TextAppearance.Design.Tab">
-        <item name="textAllCaps">false</item>
-    </style>
-
-    <style name="Caption" parent="TextAppearance.AppCompat.Caption" />
-
-    <style name="RadioButton" parent="Widget.AppCompat.CompoundButton.RadioButton">
+    <style name="RadioButton" parent="Widget.MaterialComponents.CompoundButton.RadioButton">
         <item name="android:gravity">center_vertical</item>
         <item name="android:minHeight">@dimen/touch_target</item>
         <item name="android:paddingBottom">@dimen/content_padding</item>
@@ -44,7 +20,7 @@
         <item name="android:paddingTop">@dimen/content_padding</item>
     </style>
 
-    <style name="OptionsItem" parent="Widget.AppCompat.CompoundButton.CheckBox">
+    <style name="OptionsItem" parent="Widget.MaterialComponents.CompoundButton.CheckBox">
         <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:drawablePadding">@dimen/options_about_drawable_padding</item>
         <item name="android:gravity">center_vertical</item>
