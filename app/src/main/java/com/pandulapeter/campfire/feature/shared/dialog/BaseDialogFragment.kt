@@ -16,7 +16,7 @@ abstract class BaseDialogFragment : AppCompatDialogFragment() {
         context?.let {
             (activity as? CampfireActivity)?.isUiBlocked = true
             (parentFragment as? CampfireFragment<*, *>)?.onDialogOpened()
-            AlertDialog.Builder(it, R.style.DialogTheme).createDialog(arguments)
+            AlertDialog.Builder(it, R.style.Dialog).createDialog(arguments)
         } ?: super.onCreateDialog(savedInstanceState)
 
     abstract fun AlertDialog.Builder.createDialog(arguments: Bundle?): AlertDialog

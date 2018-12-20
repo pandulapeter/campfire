@@ -55,39 +55,33 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/language"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
+                style="@style/FlatButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/onboarding_logo_margin"
-                android:letterSpacing="0"
                 android:onClick="@{() -> viewModel.onLanguageClicked()}"
-                android:textAllCaps="false"
                 android:textColor="?android:attr/textColorSecondary"
                 app:layout_constraintBottom_toTopOf="@id/theme"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/title"
                 app:layout_constraintVertical_chainStyle="packed"
-                app:rippleColor="?android:attr/textColorTertiary"
                 tools:text="@string/options_preferences_language" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/theme"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
+                style="@style/FlatButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/small_content_padding"
                 android:layout_marginBottom="@dimen/large_content_padding"
-                android:letterSpacing="0"
                 android:onClick="@{() -> viewModel.onThemeClicked()}"
-                android:textAllCaps="false"
                 android:textColor="?android:attr/textColorSecondary"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/language"
                 app:layout_constraintVertical_chainStyle="packed"
-                app:rippleColor="?android:attr/textColorTertiary"
                 tools:text="@string/options_preferences_app_theme" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>

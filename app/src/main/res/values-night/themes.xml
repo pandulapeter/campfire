@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="DialogTheme" parent="Theme.MaterialComponents.Dialog">
+    <style name="Dialog" parent="Theme.MaterialComponents.Dialog">
         <item name="colorPrimary">@color/accent</item>
         <item name="colorSecondary">@color/accent</item>
     </style>
 
-    <style name="BottomSheetDialogTheme" parent="Theme.Design.BottomSheetDialog">
+    <style name="BottomSheetDialog" parent="Theme.Design.BottomSheetDialog">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">?attr/colorPrimary</item>
         <item name="android:windowIsFloating">false</item>

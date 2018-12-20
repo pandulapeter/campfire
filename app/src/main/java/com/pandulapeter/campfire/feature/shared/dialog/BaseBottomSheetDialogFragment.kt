@@ -47,7 +47,7 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
     override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->
         (activity as? CampfireActivity)?.isUiBlocked = true
         (parentFragment as? CampfireFragment<*, *>)?.onDialogOpened()
-        CustomWidthBottomSheetDialog(context, R.style.BottomSheetDialogTheme).apply {
+        CustomWidthBottomSheetDialog(context, R.style.BottomSheetDialog).apply {
             binding = DataBindingUtil.inflate(LayoutInflater.from(context), layoutResourceId, null, false)
             initializeDialog(context, savedInstanceState)
             setContentView(binding.root)

@@ -194,7 +194,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 PreferencesViewModel.Theme.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
             }
         )
-        setTheme(R.style.AppTheme)
+        setTheme(R.style.Campfire)
 
         // Set the language
         PreferencesViewModel.Language.fromId(preferenceDatabase.language).run {

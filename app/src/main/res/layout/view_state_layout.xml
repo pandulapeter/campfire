@@ -78,17 +78,11 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button"
+                style="@style/RaisedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/content_padding"
-                android:drawablePadding="@dimen/content_padding"
-                android:gravity="center"
-                android:letterSpacing="0"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
                 android:visibility="gone"
-                app:backgroundTint="@color/accent"
-                app:cornerRadius="@dimen/card_corner"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/barrier"
