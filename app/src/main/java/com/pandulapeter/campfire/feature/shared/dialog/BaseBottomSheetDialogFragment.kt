@@ -18,15 +18,17 @@ import androidx.databinding.ViewDataBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.util.dimension
+import org.koin.android.ext.android.inject
 
 abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes private val layoutResourceId: Int) : AppCompatDialogFragment() {
 
     protected lateinit var binding: B
     protected val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
     protected val isFullWidth get() = (dialog as CustomWidthBottomSheetDialog).isFullWidth
+    private val interactionBlocker by inject<InteractionBlocker>()
 
     open fun initializeDialog(context: Context, savedInstanceState: Bundle?) = Unit
 
@@ -45,7 +47,7 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = context?.let { context ->
-        (activity as? CampfireActivity)?.isUiBlocked = true
+        interactionBlocker.isUiBlocked = true
         (parentFragment as? CampfireFragment<*, *>)?.onDialogOpened()
         CustomWidthBottomSheetDialog(context, R.style.BottomSheetDialog).apply {
             binding = DataBindingUtil.inflate(LayoutInflater.from(context), layoutResourceId, null, false)
@@ -62,13 +64,13 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
 
     override fun onCancel(dialog: DialogInterface?) {
         (parentFragment as? CampfireFragment<*, *>)?.onDialogDismissed()
-        (activity as? CampfireActivity)?.isUiBlocked = false
+        interactionBlocker.isUiBlocked = false
     }
 
     override fun onDismiss(dialog: DialogInterface?) {
         super.onDismiss(dialog)
         (parentFragment as? CampfireFragment<*, *>)?.onDialogDismissed()
-        (activity as? CampfireActivity)?.isUiBlocked = false
+        interactionBlocker.isUiBlocked = false
     }
 
     private class CustomWidthBottomSheetDialog(context: Context, @StyleRes theme: Int) : BottomSheetDialog(context, theme) {

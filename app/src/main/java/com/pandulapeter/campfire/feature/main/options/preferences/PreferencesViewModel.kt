@@ -37,18 +37,21 @@ class PreferencesViewModel(
 
     fun onThemeClicked() {
         if (!isUiBlocked) {
+            isUiBlocked = true
             shouldShowThemeSelector.value = true
         }
     }
 
     fun onLanguageClicked() {
         if (!isUiBlocked) {
+            isUiBlocked = true
             shouldShowLanguageSelector.value = true
         }
     }
 
     fun onResetHintsClicked() {
         if (!isUiBlocked) {
+            isUiBlocked = true
             shouldShowHintsResetConfirmation.value = true
         }
     }
