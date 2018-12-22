@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.detail.DetailPageEventBus
+import com.pandulapeter.campfire.feature.detail.DetailViewModel
 import com.pandulapeter.campfire.feature.main.collections.CollectionsViewModel
 import com.pandulapeter.campfire.feature.main.home.HomeContainerViewModel
 import com.pandulapeter.campfire.feature.main.home.home.HomeViewModel
@@ -85,4 +86,6 @@ val featureModule = module {
     viewModel<PreferencesViewModel>()
     viewModel<ChangelogViewModel>()
     viewModel<AboutViewModel>()
+
+    viewModel<DetailViewModel>()
 }

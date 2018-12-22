@@ -8,7 +8,11 @@ import android.os.Bundle
 import android.util.Property
 import android.view.View
 import androidx.browser.customtabs.CustomTabsIntent
-import com.android.billingclient.api.*
+import com.android.billingclient.api.BillingClient
+import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingFlowParams
+import com.android.billingclient.api.Purchase
+import com.android.billingclient.api.PurchasesUpdatedListener
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsAboutBinding
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
@@ -48,7 +52,7 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
                     if (responseCode == BillingClient.BillingResponse.OK) {
                         showSnackbar(R.string.options_about_in_app_purchase_success)
                     }
-                    viewModel.isUiBlocked = false
+                    isUiBlocked = false
                 }
             }
         }
@@ -82,12 +86,12 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
                             .build()
                     )
                 } else {
-                    viewModel.isUiBlocked = false
+                    isUiBlocked = false
                 }
             }
 
             override fun onBillingServiceDisconnected() {
-                viewModel.isUiBlocked = false
+                isUiBlocked = false
             }
         })
     }

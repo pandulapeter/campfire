@@ -10,7 +10,8 @@ import com.pandulapeter.campfire.feature.CampfireActivity
 class TopLevelBehavior(
     private val getCampfireActivity: () -> CampfireActivity?,
     private val appBarView: View? = null,
-    private val inflateToolbarTitle: ((Context) -> View)? = null
+    private val inflateToolbarTitle: ((Context) -> View)? = null,
+    private val shouldChangeToolbarAutomatically: Boolean = true
 ) : Behavior() {
     val defaultToolbar by lazy { AppCompatTextView(getCampfireActivity()).apply { gravity = Gravity.CENTER_VERTICAL } }
     var toolbarWidth = 0
@@ -18,12 +19,16 @@ class TopLevelBehavior(
     override fun onViewCreated(savedInstanceState: Bundle?) {
         getCampfireActivity()?.run {
             onScreenChanged()
-            //TODO: if (this !is DetailFragment) {
-            updateToolbarTitleView(inflateToolbarTitle?.invoke(toolbarContext) ?: defaultToolbar, toolbarWidth)
-//        }
+            if (shouldChangeToolbarAutomatically) {
+                changeToolbar()
+            }
             //TODO   if (savedInstanceState == null || this !is SongsFragment) {
             updateAppBarView(appBarView, savedInstanceState != null)
 //            }
         }
+    }
+
+    fun changeToolbar() {
+        getCampfireActivity()?.run { updateToolbarTitleView(inflateToolbarTitle?.invoke(toolbarContext) ?: defaultToolbar, toolbarWidth) }
     }
 }

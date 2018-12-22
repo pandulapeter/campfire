@@ -189,12 +189,12 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             }
             recyclerAdapter.apply {
                 collectionClickListener = { collection, clickedView, image ->
-                    if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
+                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
                             viewModel.isDetailScreenOpen = true
                         }
-                        viewModel.isUiBlocked = true
+                        isUiBlocked = true
                         if (toolbarTextInputView.isTextInputVisible && viewModel.query.trim().isEmpty()) {
                             toggleTextInputVisibility()
                         }
@@ -202,7 +202,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                     }
                 }
                 collectionBookmarkClickListener = { collection, position ->
-                    if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
+                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
                         viewModel.onBookmarkClicked(position, collection)
                     }
                 }

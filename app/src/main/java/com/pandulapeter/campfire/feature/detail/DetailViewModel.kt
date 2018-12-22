@@ -1,23 +1,24 @@
 package com.pandulapeter.campfire.feature.detail
 
-import androidx.databinding.ObservableField
 import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.onPropertyChanged
-import org.koin.android.ext.android.inject
+import com.pandulapeter.campfire.util.mutableLiveDataOf
 
-class DetailViewModel : OldCampfireViewModel(), PlaylistRepository.Subscriber {
+class DetailViewModel(
+    private val playlistRepository: PlaylistRepository,
+    private val analyticsManager: AnalyticsManager,
+    interactionBlocker: InteractionBlocker
+) : CampfireViewModel(interactionBlocker), PlaylistRepository.Subscriber {
 
-    private val playlistRepository by inject<PlaylistRepository>()
-    private val analyticsManager by inject<AnalyticsManager>()
     val shouldUpdatePlaylistIcon = MutableLiveData<Boolean?>()
-    val songId = ObservableField("")
+    val songId = mutableLiveDataOf("")
 
     init {
-        songId.onPropertyChanged { updatePlaylistIconState() }
+        songId.observeForever { updatePlaylistIconState() }
     }
 
     override fun subscribe() = playlistRepository.subscribe(this)
@@ -29,13 +30,13 @@ class DetailViewModel : OldCampfireViewModel(), PlaylistRepository.Subscriber {
     override fun onPlaylistOrderChanged(playlists: List<Playlist>) = updatePlaylistIconState()
 
     override fun onSongAddedToPlaylistForTheFirstTime(songId: String) {
-        if (songId == this.songId.get()) {
+        if (songId == this.songId.value) {
             updatePlaylistIconState()
         }
     }
 
     override fun onSongRemovedFromAllPlaylists(songId: String) {
-        if (songId == this.songId.get()) {
+        if (songId == this.songId.value) {
             updatePlaylistIconState()
         }
     }
@@ -43,7 +44,7 @@ class DetailViewModel : OldCampfireViewModel(), PlaylistRepository.Subscriber {
     fun areThereMoreThanOnePlaylists() = playlistRepository.cache.size > 1
 
     fun toggleFavoritesState() {
-        songId.get()?.also {
+        songId.value?.also {
             if (playlistRepository.isSongInPlaylist(Playlist.FAVORITES_ID, it)) {
                 analyticsManager.onSongPlaylistStateChanged(
                     it,
@@ -63,9 +64,9 @@ class DetailViewModel : OldCampfireViewModel(), PlaylistRepository.Subscriber {
         }
     }
 
-    fun isSongInAnyPlaylists() = songId.get()?.let { playlistRepository.isSongInAnyPlaylist(it) } ?: false
+    fun isSongInAnyPlaylists() = songId.value?.let { playlistRepository.isSongInAnyPlaylist(it) } ?: false
 
     private fun updatePlaylistIconState() {
-        songId.get()?.let { shouldUpdatePlaylistIcon.value = playlistRepository.isSongInAnyPlaylist(it) }
+        songId.value?.let { shouldUpdatePlaylistIcon.value = playlistRepository.isSongInAnyPlaylist(it) }
     }
 }

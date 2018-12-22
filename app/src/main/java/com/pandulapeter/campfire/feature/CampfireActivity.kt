@@ -202,6 +202,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         setTheme(R.style.Campfire)
 
         // Set the language
+        @Suppress("DEPRECATION")
         PreferencesViewModel.Language.fromId(preferenceDatabase.language).run {
             (if (this == PreferencesViewModel.Language.AUTOMATIC) Resources.getSystem().configuration.locale else Locale(id)).let {
                 Locale.setDefault(it)
@@ -227,7 +228,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         // Initialize the app bar.
         val appBarElevation = dimension(R.dimen.toolbar_elevation).toFloat()
         binding.toolbarMainButton.setOnClickListener {
-            if ((currentFragment as? CampfireFragment<*, *>?)?.isUiBlocked != true) {
+            if (!isUiBlocked) {
                 if (isBackStackEmpty) {
                     hideKeyboard(currentFocus)
                     binding.drawerLayout.openDrawer(GravityCompat.START)

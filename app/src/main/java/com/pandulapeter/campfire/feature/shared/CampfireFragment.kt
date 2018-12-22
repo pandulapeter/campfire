@@ -55,7 +55,11 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     private val snackbarActionTextColor by lazy { requireContext().color(R.color.accent) }
     var hasStartedListening = false
         private set
-    val isUiBlocked get() = viewModel.isUiBlocked
+    var isUiBlocked
+        get() = viewModel.isUiBlocked
+        set(value) {
+            viewModel.isUiBlocked = value
+        }
 
     final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)
@@ -76,7 +80,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     override fun onResume() {
         super.onResume()
-        viewModel.isUiBlocked = false
+        isUiBlocked = false
     }
 
     override fun onStop() {
@@ -87,11 +91,11 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     fun onDialogOpened() {
-        viewModel.isUiBlocked = true
+        isUiBlocked = true
     }
 
     fun onDialogDismissed() {
-        viewModel.isUiBlocked = false
+        isUiBlocked = false
     }
 
     override fun onCreateAnimation(transit: Int, enter: Boolean, nextAnim: Int): Animation? {
@@ -124,7 +128,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected inline fun Context.createToolbarButton(@DrawableRes drawableRes: Int, crossinline onClickListener: (View) -> Unit) = ToolbarButton(this).apply {
         setImageDrawable(drawable(drawableRes))
         setOnClickListener {
-            if (isAdded && !viewModel.isUiBlocked) {
+            if (isAdded && !isUiBlocked) {
                 onClickListener(it)
             }
         }
@@ -223,7 +227,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         }
         enterTransition = null
         exitTransition = null
-        viewModel.isUiBlocked = false
+        isUiBlocked = false
     }
 
     override fun onTransitionResume(transition: Transition?) = Unit
@@ -234,7 +238,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     override fun onTransitionCancel(transition: Transition?) = onTransitionEnd(transition)
 
     override fun onTransitionStart(transition: Transition?) {
-        viewModel.isUiBlocked = true
+        isUiBlocked = true
     }
 
     protected inline fun <T> LiveData<T>.observe(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {

@@ -25,7 +25,15 @@ import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.animatedDrawable
+import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.onTextChanged
+import com.pandulapeter.campfire.util.waitForPreDraw
+import com.pandulapeter.campfire.util.withArguments
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layout.fragment_home) {
@@ -215,29 +223,29 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             }
             recyclerAdapter.apply {
                 collectionClickListener = { collection, clickedView, image ->
-                    if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
+                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
                             viewModel.isDetailScreenOpen = true
                         }
-                        viewModel.isUiBlocked = true
+                        isUiBlocked = true
                         toggleSearchViewIfEmpty()
                         getCampfireActivity()?.openCollectionDetailsScreen(collection, clickedView, image, items.size > 1)
                         wasLastTransitionForACollection = true
                     }
                 }
                 collectionBookmarkClickListener = { collection, position ->
-                    if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
+                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
                         viewModel.onBookmarkClicked(position, collection)
                     }
                 }
                 songClickListener = { song, position, clickedView ->
-                    if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
+                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
                         if (items.size > 1) {
                             linearLayoutManager.isScrollEnabled = false
                             viewModel.isDetailScreenOpen = true
                         }
-                        viewModel.isUiBlocked = true
+                        isUiBlocked = true
                         toggleSearchViewIfEmpty()
                         val shouldSendMultipleSongs = position > viewModel.firstRandomSongIndex && !(viewModel.query.isNotEmpty() && toolbarTextInputView.isTextInputVisible)
                         getCampfireActivity()?.openDetailScreen(
@@ -251,9 +259,9 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     }
                 }
                 songPlaylistClickListener = { song ->
-                    if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
+                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
                         if (viewModel.areThereMoreThanOnePlaylists()) {
-                            viewModel.isUiBlocked = true
+                            isUiBlocked = true
                             PlaylistChooserBottomSheetFragment.show(childFragmentManager, song.id, AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
                         } else {
                             viewModel.toggleFavoritesState(song.id)
@@ -261,7 +269,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     }
                 }
                 songDownloadClickListener = { song ->
-                    if (linearLayoutManager.isScrollEnabled && !viewModel.isUiBlocked) {
+                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
                         analyticsManager.onDownloadButtonPressed(song.id)
                         viewModel.downloadSong(song)
                     }
@@ -305,12 +313,12 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                             override fun onTransitionPause(transition: Transition?) = Unit
 
                             override fun onTransitionEnd(transition: Transition?) {
-                                viewModel.isUiBlocked = false
+                                isUiBlocked = false
                                 transition?.removeListener(this)
                             }
 
                             override fun onTransitionCancel(transition: Transition?) {
-                                viewModel.isUiBlocked = false
+                                isUiBlocked = false
                                 transition?.removeListener(this)
                             }
                         })

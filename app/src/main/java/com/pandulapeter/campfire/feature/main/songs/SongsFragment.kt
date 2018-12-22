@@ -17,7 +17,11 @@ import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFr
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.animatedDrawable
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.onPropertyChanged
 
 
 class SongsFragment : BaseSongListFragment<SongsViewModel>() {
