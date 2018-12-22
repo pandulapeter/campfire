@@ -5,11 +5,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 
-abstract class CampfireViewModel : ViewModel(), CoroutineScope {
+abstract class CampfireViewModel(private val interactionBlocker: InteractionBlocker) : ViewModel(), CoroutineScope {
 
     private val job = Job()
     override val coroutineContext = job + Dispatchers.Main
-    var isUiBlocked = true
+    var isUiBlocked: Boolean
+        get() = interactionBlocker.isUiBlocked
+        set(value) {
+            interactionBlocker.isUiBlocked = value
+        }
 
     override fun onCleared() {
         super.onCleared()

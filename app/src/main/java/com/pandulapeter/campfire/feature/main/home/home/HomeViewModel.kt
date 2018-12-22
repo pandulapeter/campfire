@@ -21,6 +21,7 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderIt
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.UI
@@ -41,8 +42,9 @@ class HomeViewModel(
     private val collectionRepository: CollectionRepository,
     private val songRepository: SongRepository,
     private val songDetailRepository: SongDetailRepository,
-    private val playlistRepository: PlaylistRepository
-) : CampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
+    private val playlistRepository: PlaylistRepository,
+    interactionBlocker: InteractionBlocker
+) : CampfireViewModel(interactionBlocker), CollectionRepository.Subscriber, SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
 
     var isDetailScreenOpen = false
     val isSearchToggleVisible = mutableLiveDataOf(false)

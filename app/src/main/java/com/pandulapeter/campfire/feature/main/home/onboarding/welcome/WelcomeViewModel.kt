@@ -5,9 +5,13 @@ import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.util.mutableLiveDataOf
 
-class WelcomeViewModel(private val preferenceDatabase: PreferenceDatabase) : CampfireViewModel() {
+class WelcomeViewModel(
+    private val preferenceDatabase: PreferenceDatabase,
+    interactionBlocker: InteractionBlocker
+) : CampfireViewModel(interactionBlocker) {
 
     private val automaticLocaleCode = Resources.getSystem().configuration.locale.isO3Country.toUpperCase()
     val shouldShowThemeSelector = MutableLiveData<Boolean?>()

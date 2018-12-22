@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.UI
@@ -29,8 +30,9 @@ class CollectionsViewModel(
     context: Context,
     private val preferenceDatabase: PreferenceDatabase,
     private val collectionRepository: CollectionRepository,
-    private val analyticsManager: AnalyticsManager
-) : CampfireViewModel(), CollectionRepository.Subscriber {
+    private val analyticsManager: AnalyticsManager,
+    interactionBlocker: InteractionBlocker
+) : CampfireViewModel(interactionBlocker), CollectionRepository.Subscriber {
 
     var isDetailScreenOpen = false
     private var coroutine: CoroutineContext? = null

@@ -8,14 +8,16 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.CollectionRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.util.mutableLiveDataOf
 
 class ContentLanguageViewModel(
     private val preferenceDatabase: PreferenceDatabase,
     private val collectionRepository: CollectionRepository,
-    private val songRepository: SongRepository
-) : CampfireViewModel(), CollectionRepository.Subscriber, SongRepository.Subscriber {
+    private val songRepository: SongRepository,
+    interactionBlocker: InteractionBlocker
+) : CampfireViewModel(interactionBlocker), CollectionRepository.Subscriber, SongRepository.Subscriber {
 
     private var areCollectionsLoading = true
     private var areSongsLoading = true

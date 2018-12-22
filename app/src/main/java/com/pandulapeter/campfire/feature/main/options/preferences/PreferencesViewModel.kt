@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.generateNotationExample
@@ -14,8 +15,9 @@ class PreferencesViewModel(
     private val context: Context,
     private val preferenceDatabase: PreferenceDatabase,
     private val firstTimeUserExperienceManager: FirstTimeUserExperienceManager,
-    private val analyticsManager: AnalyticsManager
-) : CampfireViewModel() {
+    private val analyticsManager: AnalyticsManager,
+    interactionBlocker: InteractionBlocker
+) : CampfireViewModel(interactionBlocker) {
 
     val shouldShowChords = mutableLiveDataOf(preferenceDatabase.shouldShowChords) { onShouldShowChordsChanged(it) }
     val shouldUseGermanNotation = mutableLiveDataOf(preferenceDatabase.shouldUseGermanNotation) { onShouldUseGermanNotationChanged(it) }

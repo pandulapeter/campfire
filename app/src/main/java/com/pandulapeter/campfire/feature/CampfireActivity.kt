@@ -58,6 +58,7 @@ import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesVie
 import com.pandulapeter.campfire.feature.main.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.main.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
@@ -132,8 +133,12 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private var newPlaylistId = 0
     private var startTime = 0L
     private val isBackStackEmpty get() = supportFragmentManager.backStackEntryCount == 0
-    @Deprecated("Use flag in viewModel.")
-    var isUiBlocked = true
+    private val interactionBlocker by inject<InteractionBlocker>()
+    var isUiBlocked
+        get() = interactionBlocker.isUiBlocked
+        set(value) {
+            interactionBlocker.isUiBlocked = value
+        }
     var lastSongId: String = ""
     var lastCollectionId: String = ""
     val autoScrollControl: View get() = binding.autoScrollControl
@@ -398,7 +403,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     override fun onBackPressed() {
-        if ((currentFragment as? CampfireFragment<*, *>)?.isUiBlocked != true) {
+        if (!isUiBlocked) {
             if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
                 binding.drawerLayout.closeDrawer(GravityCompat.START)
             } else {

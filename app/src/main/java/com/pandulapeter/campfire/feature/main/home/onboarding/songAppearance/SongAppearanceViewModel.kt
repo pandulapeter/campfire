@@ -2,10 +2,14 @@ package com.pandulapeter.campfire.feature.main.home.onboarding.songAppearance
 
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.util.generateNotationExample
 import com.pandulapeter.campfire.util.mutableLiveDataOf
 
-class SongAppearanceViewModel(private val preferenceDatabase: PreferenceDatabase) : CampfireViewModel() {
+class SongAppearanceViewModel(
+    private val preferenceDatabase: PreferenceDatabase,
+    interactionBlocker: InteractionBlocker
+) : CampfireViewModel(interactionBlocker) {
 
     var isInitialized = false
     val englishNotationExample = generateNotationExample(false)

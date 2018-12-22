@@ -2,13 +2,15 @@ package com.pandulapeter.campfire.feature.main.home.onboarding.userData
 
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.mutableLiveDataOf
 
 class UserDataViewModel(
     private val preferenceDatabase: PreferenceDatabase,
-    private val analyticsManager: AnalyticsManager
-) : CampfireViewModel() {
+    private val analyticsManager: AnalyticsManager,
+    interactionBlocker: InteractionBlocker
+) : CampfireViewModel(interactionBlocker) {
 
     val isAnalyticsEnabled = mutableLiveDataOf(preferenceDatabase.shouldShareUsageData) { onAnalyticsEnabledChanged(it) }
     val isCrashReportingEnabled = mutableLiveDataOf(preferenceDatabase.shouldShareCrashReports) { onCrashReportingEnabledChanged(it) }

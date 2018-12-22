@@ -4,10 +4,14 @@ import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.toUrlIntent
 
-class AboutViewModel(private val analyticsManager: AnalyticsManager) : CampfireViewModel() {
+class AboutViewModel(
+    private val analyticsManager: AnalyticsManager,
+    interactionBlocker: InteractionBlocker
+) : CampfireViewModel(interactionBlocker) {
 
     val shouldShowErrorShowSnackbar = MutableLiveData<Boolean?>()
     val shouldAnimateLogo = MutableLiveData<Boolean?>()

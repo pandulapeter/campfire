@@ -2,8 +2,9 @@ package com.pandulapeter.campfire.feature.main.home.onboarding
 
 import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 
-class OnboardingViewModel : CampfireViewModel() {
+class OnboardingViewModel(interactionBlocker: InteractionBlocker) : CampfireViewModel(interactionBlocker) {
 
     val doneButtonOffset = MutableLiveData<Float>()
     val canSkip = MutableLiveData<Boolean>()
