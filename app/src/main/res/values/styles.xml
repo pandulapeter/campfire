@@ -23,6 +23,13 @@
         <item name="rippleColor">?android:attr/colorControlHighlight</item>
     </style>
 
+    <style name="DialogButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="rippleColor">?android:attr/colorControlHighlight</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
     <style name="Header">
         <item name="android:textColor">@color/accent</item>
         <item name="android:textStyle">bold</item>

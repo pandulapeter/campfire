@@ -28,7 +28,7 @@
     <style name="Dialog" parent="Theme.MaterialComponents.Light.Dialog.Alert">
         <item name="colorPrimary">@color/accent</item>
         <item name="colorSecondary">@color/accent</item>
-        <item name="buttonBarButtonStyle">@style/FlatButton</item>
+        <item name="buttonBarButtonStyle">@style/DialogButton</item>
     </style>
 
 </resources>

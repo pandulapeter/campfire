@@ -11,7 +11,7 @@
     <style name="Dialog" parent="Theme.MaterialComponents.Dialog.Alert">
         <item name="colorPrimary">@color/accent</item>
         <item name="colorSecondary">@color/accent</item>
-        <item name="buttonBarButtonStyle">@style/FlatButton</item>
+        <item name="buttonBarButtonStyle">@style/DialogButton</item>
         <item name="android:background">?android:attr/colorBackgroundFloating</item>
     </style>
 
