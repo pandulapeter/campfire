@@ -385,16 +385,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
         isUiBlocked = false
         (currentFragment as? DetailFragment)?.notifyTransitionEnd()
-
-        // Set the task description.
-        @Suppress("ConstantConditionIf")
-        setTaskDescription(
-            ActivityManager.TaskDescription(
-                getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")",
-                null,
-                (binding.toolbarButtonContainer.background as ColorDrawable).color
-            )
-        )
+        updateTaskDescription()
     }
 
     override fun onPause() {
@@ -746,6 +737,17 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
         )
     }
+
+    private fun updateTaskDescription() {
+        @Suppress("ConstantConditionIf")
+        val label = getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")"
+        val color = (binding.toolbarButtonContainer.background as ColorDrawable).color
+        setTaskDescription(
+            @Suppress("DEPRECATION")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) ActivityManager.TaskDescription(label, 0, color) else ActivityManager.TaskDescription(label, null, color)
+        )
+    }
+
 
     private fun openHomeScreen(): String {
         if (currentFragment !is HomeContainerFragment) {
