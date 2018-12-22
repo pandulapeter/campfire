@@ -50,7 +50,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected val analyticsManager by inject<AnalyticsManager>()
     private var snackbar: Snackbar? = null
     private var isResumingDelayed = false
-    private val snackbarBackgroundColor by lazy { requireContext().obtainColor(android.R.attr.textColorPrimary) }
+    private val snackbarBackground by lazy { requireContext().drawable(R.drawable.bg_snackbar) }
     private val snackbarTextColor by lazy { requireContext().obtainColor(android.R.attr.colorPrimary) }
     private val snackbarActionTextColor by lazy { requireContext().color(R.color.accent) }
     var hasStartedListening = false
@@ -203,8 +203,12 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     private fun View.makeSnackbar(message: String, duration: Int, dismissAction: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {
-        view.setBackgroundColor(snackbarBackgroundColor)
+        view.background = snackbarBackground
         view.findViewById<TextView>(com.google.android.material.R.id.snackbar_text).setTextColor(snackbarTextColor)
+        view.findViewById<TextView>(com.google.android.material.R.id.snackbar_action).apply {
+            isAllCaps = false
+            letterSpacing = 0f
+        }
         setActionTextColor(snackbarActionTextColor)
         activity?.currentFocus?.let { hideKeyboard(it) }
         dismissAction?.let {
