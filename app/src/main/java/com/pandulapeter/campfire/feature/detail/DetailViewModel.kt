@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.detail
 
 import androidx.databinding.ObservableField
+import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
@@ -8,10 +9,11 @@ import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.onPropertyChanged
 import org.koin.android.ext.android.inject
 
-class DetailViewModel(private val updatePlaylistIcon: (Boolean) -> Unit) : OldCampfireViewModel(), PlaylistRepository.Subscriber {
+class DetailViewModel : OldCampfireViewModel(), PlaylistRepository.Subscriber {
 
     private val playlistRepository by inject<PlaylistRepository>()
     private val analyticsManager by inject<AnalyticsManager>()
+    val shouldUpdatePlaylistIcon = MutableLiveData<Boolean?>()
     val songId = ObservableField("")
 
     init {
@@ -64,6 +66,6 @@ class DetailViewModel(private val updatePlaylistIcon: (Boolean) -> Unit) : OldCa
     fun isSongInAnyPlaylists() = songId.get()?.let { playlistRepository.isSongInAnyPlaylist(it) } ?: false
 
     private fun updatePlaylistIconState() {
-        songId.get()?.let { updatePlaylistIcon(playlistRepository.isSongInAnyPlaylist(it)) }
+        songId.get()?.let { shouldUpdatePlaylistIcon.value = playlistRepository.isSongInAnyPlaylist(it) }
     }
 }

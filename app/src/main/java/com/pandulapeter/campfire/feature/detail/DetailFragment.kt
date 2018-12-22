@@ -7,8 +7,18 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.transition.*
-import android.view.*
+import android.transition.ChangeBounds
+import android.transition.ChangeImageTransform
+import android.transition.ChangeTransform
+import android.transition.Transition
+import android.transition.TransitionSet
+import android.view.Gravity
+import android.view.MenuItem
+import android.view.ScaleGestureDetector
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewTreeObserver
+import android.view.WindowManager
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.app.SharedElementCallback
 import androidx.viewpager.widget.ViewPager
@@ -25,7 +35,16 @@ import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomShee
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.addPageScrollListener
+import com.pandulapeter.campfire.util.animatedDrawable
+import com.pandulapeter.campfire.util.animatedVisibilityEnd
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.visibleOrGone
+import com.pandulapeter.campfire.util.visibleOrInvisible
+import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject
 import java.net.URLEncoder
 
@@ -51,15 +70,7 @@ class DetailFragment : OldTopLevelFragment<FragmentDetailBinding, DetailViewMode
         }
     }
 
-    override val viewModel by lazy {
-        var isAddedToPlaylist: Boolean? = null
-        DetailViewModel {
-            if (isAddedToPlaylist != null && isAddedToPlaylist != it) {
-                playlistButton.setImageDrawable((if (it) addedToPlaylist else removedFromPlaylist)?.apply { start() })
-            }
-            isAddedToPlaylist = it
-        }
-    }
+    override val viewModel by lazy { DetailViewModel() }
     private val pagerAdapter by lazy { DetailPagerAdapter(childFragmentManager, songs) }
     private val historyRepository by inject<HistoryRepository>()
     private val songRepository by inject<SongRepository>()
@@ -118,6 +129,15 @@ class DetailFragment : OldTopLevelFragment<FragmentDetailBinding, DetailViewMode
         postponeEnterTransition()
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onSongDetailScreenOpened(songs.size)
+        var isAddedToPlaylist: Boolean? = null
+        viewModel.shouldUpdatePlaylistIcon.observe {
+            if (it != null) {
+                if (isAddedToPlaylist != null && isAddedToPlaylist != it) {
+                    playlistButton.setImageDrawable((if (it) addedToPlaylist else removedFromPlaylist)?.apply { start() })
+                }
+                isAddedToPlaylist = it
+            }
+        }
         getCampfireActivity().updateFloatingActionButtonDrawable(getCampfireActivity().drawable(R.drawable.ic_play_24dp))
         getCampfireActivity().autoScrollControl.visibleOrGone = false
         if (savedInstanceState != null) {
