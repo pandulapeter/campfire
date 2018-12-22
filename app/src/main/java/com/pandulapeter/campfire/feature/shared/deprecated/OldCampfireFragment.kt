@@ -28,7 +28,11 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.obtainColor
 import org.koin.android.ext.android.inject
 
 @Deprecated("Use CampfireFragment instead.")
@@ -180,6 +184,7 @@ abstract class OldCampfireFragment<B : ViewDataBinding, out VM : OldCampfireView
     private fun View.makeSnackbar(message: String, duration: Int, dismissAction: (() -> Unit)? = null) = Snackbar.make(this, message, duration).apply {
         view.setBackgroundColor(snackbarBackgroundColor)
         view.findViewById<TextView>(com.google.android.material.R.id.snackbar_text).setTextColor(snackbarTextColor)
+        view.findViewById<TextView>(com.google.android.material.R.id.snackbar_action).isAllCaps = false
         setActionTextColor(snackbarActionTextColor)
         getCampfireActivity().currentFocus?.let { hideKeyboard(it) }
         dismissAction?.let {
