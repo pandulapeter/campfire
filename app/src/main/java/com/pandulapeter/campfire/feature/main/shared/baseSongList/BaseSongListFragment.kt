@@ -11,11 +11,11 @@ import androidx.core.app.SharedElementCallback
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.databinding.FragmentBaseSongListOldBinding
-import com.pandulapeter.campfire.feature.main.collections.detail.CollectionDetailViewModel
-import com.pandulapeter.campfire.feature.main.playlist.PlaylistViewModel
+import com.pandulapeter.campfire.databinding.FragmentBaseSongListBinding
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
-import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.behavior.TopLevelBehavior
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
@@ -23,22 +23,24 @@ import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
 
-@Deprecated("Extend from BaseSongListFragment instead.")
-abstract class OldBaseSongListFragment<out VM : OldBaseSongListViewModel> : OldTopLevelFragment<FragmentBaseSongListOldBinding, VM>(R.layout.fragment_base_song_list_old) {
+abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFragment<FragmentBaseSongListBinding, VM>(R.layout.fragment_base_song_list), TopLevelFragment {
 
+    override val topLevelBehavior = TopLevelBehavior(getCampfireActivity = { getCampfireActivity() })
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     protected lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
+    abstract val shouldSendMultipleSongs: Boolean //TODO: True for Playlist and CollectionDetail
+    abstract val shouldShowManagePlaylist: Boolean //TODO: Only false for Playlist
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
-                val index = viewModel.adapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity().lastSongId }
+                val index = viewModel.adapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId }
                 if (index != RecyclerView.NO_POSITION) {
                     (binding.recyclerView.findViewHolderForAdapterPosition(index)
                         ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
                         sharedElements[names[0]] = it.itemView
-                        getCampfireActivity().lastSongId = ""
+                        getCampfireActivity()?.lastSongId = ""
                     }
                 }
             }
@@ -52,29 +54,29 @@ abstract class OldBaseSongListFragment<out VM : OldBaseSongListViewModel> : OldT
         if (savedInstanceState != null) {
             viewModel.buttonText.value = savedInstanceState.buttonText
         }
+        topLevelBehavior.onViewCreated(savedInstanceState)
         viewModel.adapter.run {
             songClickListener = { song, position, clickedView ->
-                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
+                if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
                     if (items.size > 1) {
                         linearLayoutManager.isScrollEnabled = false
                         viewModel.isDetailScreenOpen = true
                     }
-                    getCampfireActivity().isUiBlocked = true
+                    isUiBlocked = true
                     onDetailScreenOpened()
-                    val shouldSendMultipleSongs = viewModel is PlaylistViewModel || viewModel is CollectionDetailViewModel
-                    getCampfireActivity().openDetailScreen(
+                    getCampfireActivity()?.openDetailScreen(
                         clickedView,
                         if (shouldSendMultipleSongs) items.filterIsInstance<SongItemViewModel>().map { it.song } else listOf(song),
                         items.size > 1,
                         if (shouldSendMultipleSongs) position else 0,
-                        viewModel !is PlaylistViewModel
+                        shouldShowManagePlaylist
                     )
                 }
             }
             songPlaylistClickListener = { song ->
-                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
+                if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
                     if (viewModel.areThereMoreThanOnePlaylists()) {
-                        getCampfireActivity().isUiBlocked = true
+                        isUiBlocked = true
                         PlaylistChooserBottomSheetFragment.show(childFragmentManager, song.id, viewModel.screenName)
                     } else {
                         viewModel.toggleFavoritesState(song.id)
@@ -82,7 +84,7 @@ abstract class OldBaseSongListFragment<out VM : OldBaseSongListViewModel> : OldT
                 }
             }
             songDownloadClickListener = { song ->
-                if (linearLayoutManager.isScrollEnabled && !getCampfireActivity().isUiBlocked) {
+                if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
                     analyticsManager.onDownloadButtonPressed(song.id)
                     viewModel.downloadSong(song)
                 }
@@ -98,7 +100,7 @@ abstract class OldBaseSongListFragment<out VM : OldBaseSongListViewModel> : OldT
                 binding.root.post {
                     if (isAdded) {
                         showSnackbar(
-                            message = getCampfireActivity().getString(R.string.songs_song_download_error, song.title),
+                            message = getString(R.string.songs_song_download_error, song.title),
                             action = { viewModel.downloadSong(song) })
                     }
                 }
@@ -111,7 +113,7 @@ abstract class OldBaseSongListFragment<out VM : OldBaseSongListViewModel> : OldT
             }
             setColorSchemeColors(context.color(R.color.accent))
         }
-        linearLayoutManager = DisableScrollLinearLayoutManager(getCampfireActivity())
+        linearLayoutManager = DisableScrollLinearLayoutManager(requireActivity())
         binding.recyclerView.run {
             layoutManager = linearLayoutManager
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -126,7 +128,7 @@ abstract class OldBaseSongListFragment<out VM : OldBaseSongListViewModel> : OldT
                     override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
                         binding.recyclerView.removeOnLayoutChangeListener(this)
                         if (reenterTransition != null) {
-                            val index = viewModel.adapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity().lastSongId }
+                            val index = viewModel.adapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId }
                             if (index != RecyclerView.NO_POSITION) {
                                 val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                 if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
@@ -156,12 +158,12 @@ abstract class OldBaseSongListFragment<out VM : OldBaseSongListViewModel> : OldT
                         override fun onTransitionPause(transition: Transition?) = Unit
 
                         override fun onTransitionEnd(transition: Transition?) {
-                            getCampfireActivity().isUiBlocked = false
+                            isUiBlocked = false
                             transition?.removeListener(this)
                         }
 
                         override fun onTransitionCancel(transition: Transition?) {
-                            getCampfireActivity().isUiBlocked = false
+                            isUiBlocked = false
                             transition?.removeListener(this)
                         }
                     })
@@ -190,8 +192,9 @@ abstract class OldBaseSongListFragment<out VM : OldBaseSongListViewModel> : OldT
     protected fun shuffleSongs(source: String) {
         val tempList = viewModel.adapter.items.filterIsInstance<SongItemViewModel>().map { it.song }.toMutableList()
         tempList.shuffle()
+        isUiBlocked = true
         analyticsManager.onShuffleButtonPressed(source, tempList.size)
-        getCampfireActivity().openDetailScreen(null, tempList, false, 0, viewModel is CollectionDetailViewModel)
+        getCampfireActivity()?.openDetailScreen(null, tempList, false, 0, shouldShowManagePlaylist)
     }
 
     companion object {

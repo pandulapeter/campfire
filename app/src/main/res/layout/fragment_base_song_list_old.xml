@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel" />
+            type="com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListViewModel" />
 
     </data>
 
@@ -21,9 +21,9 @@
             android:id="@+id/collection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/collections_negative_card_corner"
-            android:layout_marginEnd="@dimen/collections_negative_card_corner"
             android:layout_marginBottom="@dimen/border"
+            android:layout_marginEnd="@dimen/collections_negative_card_corner"
+            android:layout_marginStart="@dimen/collections_negative_card_corner"
             android:transitionName="@{viewModel.cardTransitionName}"
             app:cardCornerRadius="@dimen/collections_card_corner"
             app:contentPadding="@dimen/content_padding"
@@ -32,8 +32,8 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="@dimen/collections_card_corner"
-                android:paddingEnd="@dimen/collections_card_corner">
+                android:paddingEnd="@dimen/collections_card_corner"
+                android:paddingStart="@dimen/collections_card_corner">
 
                 <ImageView
                     android:id="@+id/image"
@@ -53,8 +53,8 @@
                     android:id="@id/description"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/content_padding"
                     android:layout_marginEnd="@dimen/content_padding"
+                    android:layout_marginStart="@dimen/content_padding"
                     android:text="@{viewModel.collection.collection.description}"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -82,18 +82,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipChildren="false"
-                app:enabled="@{viewModel.isSwipeRefreshEnabled}"
-                app:refreshing="@{viewModel.isLoading}">
+                app:refreshing="@{viewModel.isLoading}"
+                app:enabled="@{viewModel.isSwipeRefreshEnabled}">
 
                 <com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
                     android:id="@+id/recycler_view"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:clipToPadding="false"
+                    android:paddingBottom="@dimen/list_bottom_margin"
+                    android:paddingEnd="0dp"
                     android:paddingStart="@dimen/content_padding"
                     android:paddingTop="@dimen/content_padding"
-                    android:paddingEnd="0dp"
-                    android:paddingBottom="@dimen/list_bottom_margin"
                     app:adapter="@{viewModel.adapter}"
                     app:fastScrollAutoHide="false"
                     app:fastScrollPopupBackgroundSize="72dp"
