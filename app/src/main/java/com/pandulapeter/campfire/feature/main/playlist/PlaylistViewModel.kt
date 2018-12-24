@@ -1,9 +1,7 @@
 package com.pandulapeter.campfire.feature.main.playlist
 
 import android.content.Context
-import androidx.databinding.ObservableBoolean
-import androidx.databinding.ObservableField
-import androidx.databinding.ObservableInt
+import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.model.remote.Song
@@ -11,34 +9,38 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListViewModel
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
-import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.mutableLiveDataOf
 import java.util.Collections
 
 class PlaylistViewModel(
-    context: Context,
     private val playlistId: String,
-    private val openSongs: () -> Unit, //TODO: Replace with LiveData
-    val toolbarTextInputView: ToolbarTextInputView?, //TODO: Should not be in viewModel constructor.
-    private val appShortcutManager: AppShortcutManager,
+    context: Context,
+    val appShortcutManager: AppShortcutManager,
     songRepository: SongRepository,
     songDetailRepository: SongDetailRepository,
     preferenceDatabase: PreferenceDatabase,
     playlistRepository: PlaylistRepository,
     analyticsManager: AnalyticsManager,
-    private val onDataLoaded: () -> Unit //TODO: Replace with LiveData
-) : OldBaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager) {
+    interactionBlocker: InteractionBlocker
+) : BaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager, interactionBlocker) {
 
     private var songToDeleteId: String? = null
-    val playlist = ObservableField<Playlist?>()
-    val songCount = ObservableInt(-1)
-    val isInEditMode = ObservableBoolean()
+    val playlist = MutableLiveData<Playlist?>()
+    val songCount = mutableLiveDataOf(-1)
+    val isInEditMode = mutableLiveDataOf(false) {
+        if (adapter.itemCount > 1) {
+            adapter.notifyItemRangeChanged(0, adapter.itemCount, RecyclerAdapter.Payload.EditModeChanged(it))
+            updateAdapterItems()
+        }
+    }
+    val shouldOpenSongs = MutableLiveData<Boolean?>()
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST
     override val placeholderText = R.string.playlist_placeholder
     override val buttonIcon = R.drawable.ic_songs_24dp
@@ -46,23 +48,14 @@ class PlaylistViewModel(
     init {
         buttonText.value = R.string.go_to_songs
         preferenceDatabase.lastScreen = playlistId
-        toolbarTextInputView?.onDoneButtonPressed = {
-            if (isInEditMode.get()) {
-                toggleEditMode()
-            }
-        }
-        isInEditMode.onPropertyChanged {
-            if (adapter.itemCount > 1) {
-                adapter.notifyItemRangeChanged(0, adapter.itemCount, RecyclerAdapter.Payload.EditModeChanged(it))
-                updateAdapterItems()
-            }
-        }
     }
 
-    override fun onActionButtonClicked() = openSongs()
+    override fun onActionButtonClicked() {
+        shouldOpenSongs.value = true
+    }
 
     override fun Sequence<Song>.createViewModels(): List<ItemViewModel> {
-        val list = (playlist.get()?.songIds ?: listOf<String>())
+        val list = (playlist.value?.songIds ?: listOf<String>())
             .mapNotNull { songId -> find { it.id == songId } }
             .filter { it.id != songToDeleteId }
             .toList()
@@ -73,7 +66,7 @@ class PlaylistViewModel(
                 playlistRepository = playlistRepository,
                 song = it,
                 shouldShowPlaylistButton = false,
-                shouldShowDragHandle = isInEditMode.get() && list.size > 1
+                shouldShowDragHandle = isInEditMode.value == true && list.size > 1
             )
         }
     }
@@ -81,47 +74,17 @@ class PlaylistViewModel(
     override fun onPlaylistsUpdated(playlists: List<Playlist>) {
         super.onPlaylistsUpdated(playlists)
         playlists.findLast { it.id == playlistId }.let {
-            playlist.set(it)
-            playlist.notifyChange()
-            onDataLoaded()
+            playlist.value = it
         }
     }
 
     override fun onListUpdated(items: List<ItemViewModel>) {
         super.onListUpdated(items)
-        songCount.set(items.size)
-    }
-
-    fun toggleEditMode() {
-        toolbarTextInputView?.run {
-            if (title.tag == null) {
-                animateTextInputVisibility(!isTextInputVisible)
-                if (isTextInputVisible) {
-                    (playlist.get()?.title ?: "").let {
-                        textInput.setText(it)
-                        textInput.setSelection(it.length)
-                    }
-                } else {
-                    playlist.get()?.let {
-                        val newTitle = textInput.text?.toString()
-                        if (it.title != newTitle && newTitle != null && newTitle.trim().isNotEmpty()) {
-                            playlistRepository.updatePlaylistTitle(it.id, newTitle)
-                            appShortcutManager.updateAppShortcuts()
-                        }
-                        analyticsManager.onPlaylistEdited(newTitle ?: "", adapter.itemCount)
-                    }
-                }
-                this@PlaylistViewModel.isInEditMode.set(toolbarTextInputView.isTextInputVisible)
-            }
-            return
-        }
-        isInEditMode.set(!isInEditMode.get())
+        songCount.value = items.size
     }
 
     fun restoreToolbarButtons() {
-        playlist.get()?.let {
-            onDataLoaded()
-        }
+        playlist.value = playlist.value
     }
 
     fun swapSongsInPlaylist(originalPosition: Int, targetPosition: Int) {
@@ -134,7 +97,7 @@ class PlaylistViewModel(
                 Collections.swap(adapter.items, i, i - 1)
             }
         }
-        playlist.get()?.let {
+        playlist.value?.let {
             adapter.notifyItemMoved(originalPosition, targetPosition)
             val newList = adapter.items.filterIsInstance<SongItemViewModel>().map { it.song.id }.toMutableList()
             it.songIds = newList
@@ -160,7 +123,7 @@ class PlaylistViewModel(
 
     fun deleteSongPermanently() {
         songToDeleteId?.let {
-            playlist.get()?.let {
+            playlist.value?.let {
                 val newList = adapter.items.filterIsInstance<SongItemViewModel>().map { it.song.id }.toMutableList()
                 it.songIds = newList
                 playlistRepository.updatePlaylistSongIds(it.id, newList)

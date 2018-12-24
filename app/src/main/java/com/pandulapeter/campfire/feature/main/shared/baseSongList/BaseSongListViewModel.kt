@@ -35,10 +35,10 @@ abstract class BaseSongListViewModel(
     protected val context: Context,
     protected val songRepository: SongRepository,
     protected val songDetailRepository: SongDetailRepository,
-    protected val preferenceDatabase: PreferenceDatabase,
-    protected val playlistRepository: PlaylistRepository,
+    val preferenceDatabase: PreferenceDatabase,
+    val playlistRepository: PlaylistRepository,
     protected val analyticsManager: AnalyticsManager,
-    interactionBlocker: InteractionBlocker
+    val interactionBlocker: InteractionBlocker
 ) : CampfireViewModel(interactionBlocker), SongRepository.Subscriber, SongDetailRepository.Subscriber, PlaylistRepository.Subscriber {
 
     val isSwipeRefreshEnabled = ObservableBoolean(true)

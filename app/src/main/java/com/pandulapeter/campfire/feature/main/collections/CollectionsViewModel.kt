@@ -28,10 +28,10 @@ import kotlin.coroutines.CoroutineContext
 
 class CollectionsViewModel(
     context: Context,
-    private val preferenceDatabase: PreferenceDatabase,
+    val preferenceDatabase: PreferenceDatabase,
     private val collectionRepository: CollectionRepository,
     private val analyticsManager: AnalyticsManager,
-    interactionBlocker: InteractionBlocker
+    val interactionBlocker: InteractionBlocker
 ) : CampfireViewModel(interactionBlocker), CollectionRepository.Subscriber {
 
     var isDetailScreenOpen = false

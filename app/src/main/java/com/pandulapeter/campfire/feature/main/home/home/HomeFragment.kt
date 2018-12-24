@@ -51,7 +51,6 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             toggleTextInputVisibility()
         }
     }
-    private var toolbarWidth = 0
     private val eraseButton: ToolbarButton by lazy {
         getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) { toolbarTextInputView.textInput.setText("") }.apply {
             scaleX = 0f
@@ -215,7 +214,6 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     }
                 }
             }
-            activity.updateToolbarTitleView(toolbarTextInputView, toolbarWidth)
             fun toggleSearchViewIfEmpty() {
                 if (toolbarTextInputView.isTextInputVisible && viewModel.query.trim().isEmpty()) {
                     toggleTextInputVisibility()
@@ -347,11 +345,6 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     override fun onResume() {
         super.onResume()
         viewModel.restoreToolbarButtons()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        toolbarWidth = toolbarTextInputView.width
     }
 
     override fun updateUI() {

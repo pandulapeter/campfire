@@ -22,9 +22,7 @@ class TopLevelBehavior(
             if (shouldChangeToolbarAutomatically) {
                 changeToolbar()
             }
-            //TODO   if (savedInstanceState == null || this !is SongsFragment) {
             updateAppBarView(appBarView, savedInstanceState != null)
-//            }
         }
     }
 

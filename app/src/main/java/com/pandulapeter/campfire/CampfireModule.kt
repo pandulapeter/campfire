@@ -35,6 +35,7 @@ import com.pandulapeter.campfire.feature.main.options.OptionsViewModel
 import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.main.options.changelog.ChangelogViewModel
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
+import com.pandulapeter.campfire.feature.main.playlist.PlaylistViewModel
 import com.pandulapeter.campfire.feature.main.songs.SongsViewModel
 import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -91,6 +92,7 @@ val featureModule = module {
     viewModel { (collection: Collection) -> CollectionDetailViewModel(collection, androidContext(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel<SongsViewModel>()
     viewModel<HistoryViewModel>()
+    viewModel { (playlistId: String) -> PlaylistViewModel(playlistId, androidContext(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel<OptionsViewModel>()
     viewModel<PreferencesViewModel>()
     viewModel<ChangelogViewModel>()

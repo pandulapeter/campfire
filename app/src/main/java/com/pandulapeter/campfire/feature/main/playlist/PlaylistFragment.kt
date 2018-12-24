@@ -1,93 +1,91 @@
 package com.pandulapeter.campfire.feature.main.playlist
 
-import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
-import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.data.repository.SongDetailRepository
-import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.main.shared.ElevationItemTouchHelperCallback
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListFragment
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
+import com.pandulapeter.campfire.feature.shared.behavior.TopLevelBehavior
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.animatedDrawable
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.drawable
-import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.visibleOrGone
 import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 
-class PlaylistFragment : OldBaseSongListFragment<PlaylistViewModel>() {
+class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
 
-    private val appShortcutManager by inject<AppShortcutManager>()
-    private val songRepository by inject<SongRepository>()
-    private val songDetailRepository by inject<SongDetailRepository>()
-    private val preferenceDatabase by inject<PreferenceDatabase>()
-    private val playlistRepository by inject<PlaylistRepository>()
-
-    override val viewModel by lazy {
-        PlaylistViewModel(
-            context = getCampfireActivity(),
-            playlistId = arguments.playlistId,
-            openSongs = { getCampfireActivity().openSongsScreen() },
-            toolbarTextInputView = if (arguments?.playlistId == Playlist.FAVORITES_ID) null else ToolbarTextInputView(
-                getCampfireActivity().toolbarContext,
-                R.string.playlist_title,
-                false
-            ),
-            songRepository = songRepository,
-            songDetailRepository = songDetailRepository,
-            appShortcutManager = appShortcutManager,
-            preferenceDatabase = preferenceDatabase,
-            playlistRepository = playlistRepository,
-            analyticsManager = analyticsManager,
-            onDataLoaded = { getCampfireActivity().updateToolbarButtons(listOf(editToggle, shuffleButton)) }
-        )
+    override val shouldSendMultipleSongs = true
+    override val shouldShowManagePlaylist = false
+    override val viewModel by viewModel<PlaylistViewModel> { parametersOf(arguments?.playlistId ?: throw IllegalArgumentException("No Playlist specified.")) }
+    override val topLevelBehavior: TopLevelBehavior by lazy {
+        TopLevelBehavior(
+            inflateToolbarTitle = { toolbarTextInputView ?: topLevelBehavior.defaultToolbar },
+            getCampfireActivity = { getCampfireActivity() })
     }
-    private var Bundle.isInEditMode by BundleArgumentDelegate.Boolean("isInEditMode")
     private val editToggle: ToolbarButton by lazy {
-        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_edit_24dp) { viewModel.toggleEditMode() }.apply {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_edit_24dp) { toggleEditMode() }.apply {
             visibleOrGone = false
         }
     }
     private val shuffleButton: ToolbarButton by lazy {
-        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST) }.apply {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST) }.apply {
             visibleOrGone = false
         }
     }
-    private val drawableEditToDone by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_edit_to_done_24dp) }
-    private val drawableDoneToEdit by lazy { getCampfireActivity().animatedDrawable(R.drawable.avd_done_to_edit_24dp) }
+    private val toolbarTextInputView by lazy {
+        if (arguments?.playlistId == Playlist.FAVORITES_ID) null else ToolbarTextInputView(
+            getCampfireActivity()!!.toolbarContext,
+            R.string.playlist_title,
+            false
+        ).apply {
+            if (viewModel.isInEditMode.value == true) {
+                showTextInput()
+            }
+            onDoneButtonPressed = {
+                if (viewModel.isInEditMode.value == true) {
+                    toggleEditMode()
+                }
+            }
+        }
+    }
+    private val drawableEditToDone by lazy { requireContext().animatedDrawable(R.drawable.avd_edit_to_done_24dp) }
+    private val drawableDoneToEdit by lazy { requireContext().animatedDrawable(R.drawable.avd_done_to_edit_24dp) }
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST)
         binding.swipeRefreshLayout.isEnabled = false
-        viewModel.songCount.onPropertyChanged(this) {
+        viewModel.shouldOpenSongs.observeAndReset { getCampfireActivity()?.openSongsScreen() }
+        viewModel.songCount.observe {
             updateToolbarTitle(it)
             val previousVisibility = shuffleButton.visibleOrGone
             editToggle.visibleOrGone = arguments?.playlistId != Playlist.FAVORITES_ID || it > 0
             shuffleButton.visibleOrGone = it > 1
-            if (shuffleButton.visibleOrGone != previousVisibility && viewModel.isInEditMode.get()) {
-                getCampfireActivity().invalidateAppBar()
+            if (shuffleButton.visibleOrGone != previousVisibility && viewModel.isInEditMode.value == true) {
+                getCampfireActivity()?.invalidateAppBar()
             }
         }
-        viewModel.state.onPropertyChanged(this) { updateToolbarTitle() }
-        viewModel.playlist.onPropertyChanged(this) { updateToolbarTitle() }
-        viewModel.isInEditMode.onPropertyChanged(this) {
+        viewModel.state.observe { updateToolbarTitle() }
+        viewModel.playlist.observe {
+            updateToolbarTitle()
+            getCampfireActivity()?.updateToolbarButtons(listOf(editToggle, shuffleButton))
+        }
+        viewModel.isInEditMode.observe {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
             if (it) {
                 showHintIfNeeded()
@@ -99,20 +97,20 @@ class PlaylistFragment : OldBaseSongListFragment<PlaylistViewModel>() {
         }
         savedInstanceState?.let {
             if (it.isInEditMode) {
-                viewModel.isInEditMode.set(true)
-                editToggle.setImageDrawable(getCampfireActivity().drawable(R.drawable.ic_done_24dp))
-                viewModel.toolbarTextInputView?.textInput?.run {
-                    setText(viewModel.playlist.get()?.title)
+                viewModel.isInEditMode.value = true
+                editToggle.setImageDrawable(requireContext().drawable(R.drawable.ic_done_24dp))
+                toolbarTextInputView?.textInput?.run {
+                    setText(viewModel.playlist.value?.title)
                     setSelection(text.length)
                 }
-                viewModel.toolbarTextInputView?.showTextInput()
+                toolbarTextInputView?.showTextInput()
             }
         }
-        viewModel.toolbarTextInputView?.textInput?.requestFocus()
+        toolbarTextInputView?.textInput?.requestFocus()
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
 
             override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) =
-                if (viewModel.isInEditMode.get())
+                if (viewModel.isInEditMode.value == true)
                     makeMovementFlags(
                         if (viewModel.adapter.itemCount > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
                         ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
@@ -165,7 +163,7 @@ class PlaylistFragment : OldBaseSongListFragment<PlaylistViewModel>() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.isInEditMode = viewModel.isInEditMode.get()
+        outState.isInEditMode = viewModel.isInEditMode.value == true
     }
 
     override fun onResume() {
@@ -174,39 +172,31 @@ class PlaylistFragment : OldBaseSongListFragment<PlaylistViewModel>() {
         viewModel.restoreToolbarButtons()
     }
 
-    override fun onPause() {
-        super.onPause()
-        viewModel.toolbarTextInputView?.let {
-            toolbarWidth = it.width
-        }
-    }
-
-    override fun onBackPressed() = if (viewModel.isInEditMode.get()) {
-        viewModel.toggleEditMode()
+    override fun onBackPressed() = if (viewModel.isInEditMode.value == true) {
+        toggleEditMode()
         true
     } else super.onBackPressed()
 
-    override fun inflateToolbarTitle(context: Context) = viewModel.toolbarTextInputView ?: defaultToolbar
-
-    private fun updateToolbarTitle(songCount: Int = viewModel.songCount.get()) = (viewModel.toolbarTextInputView?.title ?: defaultToolbar).updateToolbarTitle(
-        viewModel.playlist.get()?.title ?: getString(R.string.main_favorites),
-        if (songCount == -1) {
-            getString(if (viewModel.state.get() == StateLayout.State.LOADING) R.string.loading else R.string.manage_playlists_song_count_empty)
-        } else {
-            getCampfireActivity().resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
-        }
-    )
+    private fun updateToolbarTitle(songCount: Int = (viewModel.songCount.value ?: 0)) =
+        (toolbarTextInputView?.title ?: topLevelBehavior.defaultToolbar).updateToolbarTitle(
+            viewModel.playlist.value?.title ?: getString(R.string.main_favorites),
+            if (songCount == -1) {
+                getString(if (viewModel.state.value == StateLayout.State.LOADING) R.string.loading else R.string.manage_playlists_song_count_empty)
+            } else {
+                resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
+            }
+        )
 
     override fun onDetailScreenOpened() {
-        if (viewModel.isInEditMode.get()) {
-            viewModel.toggleEditMode()
+        if (viewModel.isInEditMode.value == true) {
+            toggleEditMode()
         }
     }
 
     private fun showHintIfNeeded() {
 
         fun showSwipeHintIfNeeded() {
-            if (!firstTimeUserExperienceManager.playlistSwipeCompleted && !isSnackbarVisible() && viewModel.adapter.items.isNotEmpty() && viewModel.isInEditMode.get()) {
+            if (!firstTimeUserExperienceManager.playlistSwipeCompleted && !isSnackbarVisible() && viewModel.adapter.items.isNotEmpty() && viewModel.isInEditMode.value == true) {
                 showHint(
                     message = R.string.playlist_hint_swipe,
                     action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
@@ -215,7 +205,7 @@ class PlaylistFragment : OldBaseSongListFragment<PlaylistViewModel>() {
         }
 
         fun showDragHintIfNeeded() {
-            if (!firstTimeUserExperienceManager.playlistDragCompleted && !isSnackbarVisible() && viewModel.adapter.itemCount > 1 && viewModel.isInEditMode.get()) {
+            if (!firstTimeUserExperienceManager.playlistDragCompleted && !isSnackbarVisible() && viewModel.adapter.itemCount > 1 && viewModel.isInEditMode.value == true) {
                 showHint(
                     message = R.string.playlist_hint_drag,
                     action = {
@@ -233,7 +223,34 @@ class PlaylistFragment : OldBaseSongListFragment<PlaylistViewModel>() {
         }
     }
 
+    private fun toggleEditMode() {
+        toolbarTextInputView?.run {
+            if (title.tag == null) {
+                animateTextInputVisibility(!isTextInputVisible)
+                if (isTextInputVisible) {
+                    (viewModel.playlist.value?.title ?: "").let {
+                        textInput.setText(it)
+                        textInput.setSelection(it.length)
+                    }
+                } else {
+                    viewModel.playlist.value?.let {
+                        val newTitle = textInput.text?.toString()
+                        if (it.title != newTitle && newTitle != null && newTitle.trim().isNotEmpty()) {
+                            viewModel.playlistRepository.updatePlaylistTitle(it.id, newTitle)
+                            viewModel.appShortcutManager.updateAppShortcuts()
+                        }
+                        analyticsManager.onPlaylistEdited(newTitle ?: "", viewModel.adapter.itemCount)
+                    }
+                }
+                viewModel.isInEditMode.value = isTextInputVisible
+            }
+            return
+        }
+        viewModel.isInEditMode.value = viewModel.isInEditMode.value != true
+    }
+
     companion object {
+        private var Bundle.isInEditMode by BundleArgumentDelegate.Boolean("isInEditMode")
         private var Bundle?.playlistId by BundleArgumentDelegate.String("playlistId")
 
         fun newInstance(playlistId: String) = PlaylistFragment().withArguments { it.playlistId = playlistId }

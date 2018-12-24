@@ -29,7 +29,6 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class SongsFragment : BaseSongListFragment<SongsViewModel>() {
     override val shouldSendMultipleSongs = false
     override val shouldShowManagePlaylist = true
-    private var toolbarWidth = 0
     override val viewModel by viewModel<SongsViewModel>()
     override val topLevelBehavior by lazy {
         TopLevelBehavior(
@@ -67,7 +66,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
     private val drawableSearchToClose by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) requireContext().animatedDrawable(R.drawable.avd_search_to_close_24dp) else requireContext().drawable(R.drawable.ic_close_24dp)
     }
-    private val searchControlsViewModel = SearchControlsViewModel(false)
+    private val searchControlsViewModel by lazy { SearchControlsViewModel(viewModel.preferenceDatabase, true, viewModel.interactionBlocker) }
     private val searchControlsBinding by lazy {
         DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity()!!.toolbarContext), R.layout.view_search_controls, null, false).apply {
             viewModel = searchControlsViewModel
@@ -155,11 +154,6 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
     override fun onResume() {
         super.onResume()
         viewModel.restoreToolbarButtons()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        toolbarWidth = toolbarTextInputView.width
     }
 
     override fun onSaveInstanceState(outState: Bundle) = outState.run {

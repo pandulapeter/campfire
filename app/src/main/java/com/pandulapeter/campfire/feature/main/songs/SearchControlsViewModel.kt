@@ -2,13 +2,16 @@ package com.pandulapeter.campfire.feature.main.songs
 
 import androidx.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.util.onPropertyChanged
-import org.koin.android.ext.android.inject
 
-class SearchControlsViewModel(val isForCollections: Boolean) : OldCampfireViewModel() {
+class SearchControlsViewModel(
+    private val preferenceDatabase: PreferenceDatabase,
+    val isForCollections: Boolean,
+    interactionBlocker: InteractionBlocker
+) : CampfireViewModel(interactionBlocker) {
 
-    private val preferenceDatabase by inject<PreferenceDatabase>()
     val isVisible = ObservableBoolean()
     val searchInArtists = ObservableBoolean(if (isForCollections) preferenceDatabase.shouldSearchInCollectionDescriptions else preferenceDatabase.shouldSearchInArtists)
     val searchInTitles = ObservableBoolean(if (isForCollections) preferenceDatabase.shouldSearchInCollectionTitles else preferenceDatabase.shouldSearchInTitles)
