@@ -10,26 +10,29 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.databinding.FragmentManagePlaylistsBinding
 import com.pandulapeter.campfire.feature.main.shared.ElevationItemTouchHelperCallback
-import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
+import com.pandulapeter.campfire.feature.shared.CampfireFragment
+import com.pandulapeter.campfire.feature.shared.TopLevelFragment
+import com.pandulapeter.campfire.feature.shared.behavior.TopLevelBehavior
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.visibleOrGone
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class ManagePlaylistsFragment : OldTopLevelFragment<FragmentManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists),
-    BaseDialogFragment.OnDialogItemSelectedListener {
+class ManagePlaylistsFragment : CampfireFragment<FragmentManagePlaylistsBinding, ManagePlaylistsViewModel>(R.layout.fragment_manage_playlists),
+    TopLevelFragment, BaseDialogFragment.OnDialogItemSelectedListener {
 
-    companion object {
-        private const val DIALOG_ID_DELETE_ALL_CONFIRMATION = 6
-    }
-
-    override val viewModel = ManagePlaylistsViewModel()
+    override val topLevelBehavior = TopLevelBehavior(getCampfireActivity = { getCampfireActivity() })
+    override val viewModel by viewModel<ManagePlaylistsViewModel>()
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
     private val deleteAllButton by lazy {
-        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
             AlertDialogFragment.show(
                 DIALOG_ID_DELETE_ALL_CONFIRMATION,
                 childFragmentManager,
@@ -46,26 +49,27 @@ class ManagePlaylistsFragment : OldTopLevelFragment<FragmentManagePlaylistsBindi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS)
-        defaultToolbar.updateToolbarTitle(R.string.main_manage_playlists, getString(R.string.loading))
-        getCampfireActivity().updateToolbarButtons(listOf(deleteAllButton))
-        getCampfireActivity().updateFloatingActionButtonDrawable(getCampfireActivity().drawable(R.drawable.ic_add_24dp))
+        topLevelBehavior.onViewCreated(savedInstanceState)
+        topLevelBehavior.defaultToolbar.updateToolbarTitle(R.string.main_manage_playlists, getString(R.string.loading))
+        getCampfireActivity()?.updateToolbarButtons(listOf(deleteAllButton))
+        getCampfireActivity()?.updateFloatingActionButtonDrawable(requireContext().drawable(R.drawable.ic_add_24dp))
         binding.recyclerView.layoutManager = LinearLayoutManager(getCampfireActivity())
         binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
             init {
                 supportsChangeAnimations = false
             }
         }
-        viewModel.state.onPropertyChanged(this) { updateToolbarTitle(viewModel.playlistCount.get()) }
-        viewModel.playlistCount.onPropertyChanged(this) {
+        viewModel.state.observe { viewModel.playlistCount.value?.let { playlistCount -> updateToolbarTitle(playlistCount) } }
+        viewModel.playlistCount.observe {
             updateToolbarTitle(it)
             showHintIfNeeded()
             if (it < Playlist.MAXIMUM_PLAYLIST_COUNT) {
-                getCampfireActivity().enableFloatingActionButton()
+                getCampfireActivity()?.enableFloatingActionButton()
             } else {
-                getCampfireActivity().disableFloatingActionButton()
+                getCampfireActivity()?.disableFloatingActionButton()
             }
         }
-        viewModel.shouldShowDeleteAllButton.onPropertyChanged(this) {
+        viewModel.shouldShowDeleteAllButton.observe {
             deleteAllButton.visibleOrGone = it
             showHintIfNeeded()
         }
@@ -144,15 +148,15 @@ class ManagePlaylistsFragment : OldTopLevelFragment<FragmentManagePlaylistsBindi
         }
     }
 
-    private fun updateToolbarTitle(playlistCount: Int) = defaultToolbar.updateToolbarTitle(
+    private fun updateToolbarTitle(playlistCount: Int) = topLevelBehavior.defaultToolbar.updateToolbarTitle(
         R.string.main_manage_playlists,
-        getCampfireActivity().resources.getQuantityString(R.plurals.manage_playlists_subtitle, playlistCount, playlistCount)
+        resources.getQuantityString(R.plurals.manage_playlists_subtitle, playlistCount, playlistCount)
     )
 
     private fun showHintIfNeeded() {
 
         fun showSwipeHintIfNeeded() {
-            if (!firstTimeUserExperienceManager.managePlaylistsSwipeCompleted && !isSnackbarVisible() && viewModel.shouldShowDeleteAllButton.get()) {
+            if (!firstTimeUserExperienceManager.managePlaylistsSwipeCompleted && !isSnackbarVisible() && viewModel.shouldShowDeleteAllButton.value == true) {
                 showHint(
                     message = R.string.manage_playlists_hint_swipe,
                     action = { firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true }
@@ -161,7 +165,7 @@ class ManagePlaylistsFragment : OldTopLevelFragment<FragmentManagePlaylistsBindi
         }
 
         fun showDragHintIfNeeded() {
-            if (!firstTimeUserExperienceManager.managePlaylistsDragCompleted && !isSnackbarVisible() && viewModel.playlistCount.get() > 2) {
+            if (!firstTimeUserExperienceManager.managePlaylistsDragCompleted && !isSnackbarVisible() && (viewModel.playlistCount.value ?: 0) > 2) {
                 showHint(
                     message = R.string.manage_playlists_hint_drag,
                     action = {
@@ -177,5 +181,9 @@ class ManagePlaylistsFragment : OldTopLevelFragment<FragmentManagePlaylistsBindi
         } else {
             showSwipeHintIfNeeded()
         }
+    }
+
+    companion object {
+        private const val DIALOG_ID_DELETE_ALL_CONFIRMATION = 6
     }
 }

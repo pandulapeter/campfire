@@ -1,32 +1,32 @@
 package com.pandulapeter.campfire.feature.main.managePlaylists
 
-import androidx.databinding.ObservableBoolean
-import androidx.databinding.ObservableField
-import androidx.databinding.ObservableInt
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AppShortcutManager
-import org.koin.android.ext.android.inject
-import java.util.*
+import com.pandulapeter.campfire.util.mutableLiveDataOf
+import java.util.Collections
 
-class ManagePlaylistsViewModel : OldCampfireViewModel(), PlaylistRepository.Subscriber {
+class ManagePlaylistsViewModel(
+    private val playlistRepository: PlaylistRepository,
+    private val appShortcutManager: AppShortcutManager,
+    interactionBlocker: InteractionBlocker,
+    preferenceDatabase: PreferenceDatabase
+) : CampfireViewModel(interactionBlocker), PlaylistRepository.Subscriber {
 
-    private val playlistRepository by inject<PlaylistRepository>()
-    private val appShortcutManager by inject<AppShortcutManager>()
-    private val preferenceDatabase by inject<PreferenceDatabase>()
     private var playlistToDeleteId: String? = null
         set(value) {
             field = value
             playlistRepository.hiddenPlaylistId = value
         }
     val adapter = ManagePlaylistListAdapter()
-    val shouldShowDeleteAllButton = ObservableBoolean()
-    val playlistCount = ObservableInt()
-    val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
+    val shouldShowDeleteAllButton = mutableLiveDataOf(false)
+    val playlistCount = mutableLiveDataOf(0)
+    val state = mutableLiveDataOf(StateLayout.State.LOADING)
 
     init {
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_MANAGE_PLAYLISTS
@@ -39,7 +39,7 @@ class ManagePlaylistsViewModel : OldCampfireViewModel(), PlaylistRepository.Subs
     override fun onPlaylistsUpdated(playlists: List<Playlist>) {
         if (playlistRepository.isCacheLoaded()) {
             updateAdapterItems(playlists.sortedBy { it.order })
-            state.set(StateLayout.State.NORMAL)
+            state.value = StateLayout.State.NORMAL
         }
     }
 
@@ -93,8 +93,8 @@ class ManagePlaylistsViewModel : OldCampfireViewModel(), PlaylistRepository.Subs
             .run {
                 forEach { it.shouldShowDragHandle = it.playlist.id != Playlist.FAVORITES_ID && size > 2 }
                 adapter.items = this
-                shouldShowDeleteAllButton.set(size > 1)
-                playlistCount.set(size)
+                shouldShowDeleteAllButton.value = size > 1
+                playlistCount.value = size
             }
     }
 }

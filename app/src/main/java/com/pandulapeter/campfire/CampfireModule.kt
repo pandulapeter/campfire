@@ -25,6 +25,7 @@ import com.pandulapeter.campfire.feature.main.home.onboarding.contentLanguage.Co
 import com.pandulapeter.campfire.feature.main.home.onboarding.songAppearance.SongAppearanceViewModel
 import com.pandulapeter.campfire.feature.main.home.onboarding.userData.UserDataViewModel
 import com.pandulapeter.campfire.feature.main.home.onboarding.welcome.WelcomeViewModel
+import com.pandulapeter.campfire.feature.main.managePlaylists.ManagePlaylistsViewModel
 import com.pandulapeter.campfire.feature.main.options.OptionsViewModel
 import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.main.options.changelog.ChangelogViewModel
@@ -90,6 +91,8 @@ val featureModule = module {
     viewModel<PreferencesViewModel>()
     viewModel<ChangelogViewModel>()
     viewModel<AboutViewModel>()
+
+    viewModel<ManagePlaylistsViewModel>()
 
     viewModel<DetailViewModel>()
     viewModel { (song: Song, songParser: SongParser) -> DetailPageViewModel(song, androidContext(), get(), get(), get(), get(), get(), songParser) }
