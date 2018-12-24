@@ -5,14 +5,26 @@ import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableInt
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Song
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.SongDetailRepository
+import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.removePrefixes
 
-class ManageDownloadsViewModel(context: Context, private val openSongs: () -> Unit) : BaseSongListViewModel(context) {
+class ManageDownloadsViewModel(
+    context: Context,
+    songRepository: SongRepository,
+    songDetailRepository: SongDetailRepository,
+    preferenceDatabase: PreferenceDatabase,
+    playlistRepository: PlaylistRepository,
+    analyticsManager: AnalyticsManager,
+    private val openSongs: () -> Unit //TODO: Replace with LiveData
+) : OldBaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager) {
 
     val shouldShowDeleteAll = ObservableBoolean()
     val songCount = ObservableInt()

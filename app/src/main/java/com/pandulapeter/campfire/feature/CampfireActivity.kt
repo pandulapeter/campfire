@@ -381,7 +381,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     override fun onResume() {
         super.onResume()
-        binding.fakeShadow.visibleOrGone = hasNavigationBar()
+        binding.fakeShadow.visibleOrGone = shouldDrawFakeShadowForNavigationBar()
         playlistRepository.subscribe(this)
         if (currentFocus is EditText) {
             binding.drawerLayout.run { post { closeDrawers() } }
@@ -439,8 +439,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
     }
 
-    //TODO: Not working properly in multi-window and desktop modes.
-    private fun hasNavigationBar() = getNavigationBarSize().y != 0
+    //TODO: Not working properly in landscape, multi-window and desktop modes.
+    private fun shouldDrawFakeShadowForNavigationBar() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) false else getNavigationBarSize().y != 0
 //    {
 //        val hasMenuKey = ViewConfiguration.get(this).hasPermanentMenuKey()
 //        val hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK)

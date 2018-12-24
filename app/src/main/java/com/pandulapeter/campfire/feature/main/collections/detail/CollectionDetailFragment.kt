@@ -1,22 +1,32 @@
 package com.pandulapeter.campfire.feature.main.collections.detail
 
 import android.os.Bundle
-import android.transition.*
+import android.transition.ChangeBounds
+import android.transition.ChangeClipBounds
+import android.transition.ChangeImageTransform
+import android.transition.ChangeTransform
+import android.transition.TransitionSet
 import android.view.View
 import androidx.core.app.SharedElementCallback
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Collection
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.repository.CollectionRepository
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.SongDetailRepository
+import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.detail.FadeInTransition
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.animatedDrawable
 import com.pandulapeter.campfire.util.visibleOrGone
 import com.pandulapeter.campfire.util.withArguments
+import org.koin.android.ext.android.inject
 
-class CollectionDetailFragment : BaseSongListFragment<CollectionDetailViewModel>() {
+class CollectionDetailFragment : OldBaseSongListFragment<CollectionDetailViewModel>() {
 
     companion object {
         private var Bundle.collection by BundleArgumentDelegate.Parcelable("collection")
@@ -26,10 +36,23 @@ class CollectionDetailFragment : BaseSongListFragment<CollectionDetailViewModel>
         }
     }
 
+    private val songRepository by inject<SongRepository>()
+    private val songDetailRepository by inject<SongDetailRepository>()
+    private val collectionRepository by inject<CollectionRepository>()
+    private val preferenceDatabase by inject<PreferenceDatabase>()
+    private val playlistRepository by inject<PlaylistRepository>()
+
+
     override val viewModel by lazy {
         CollectionDetailViewModel(
+            (arguments?.collection as? Collection) ?: throw IllegalStateException("No Collection specified."),
             getCampfireActivity(),
-            (arguments?.collection as? Collection) ?: throw IllegalStateException("No Collection specified.")
+            songRepository,
+            songDetailRepository,
+            collectionRepository,
+            preferenceDatabase,
+            playlistRepository,
+            analyticsManager
         ) { shuffleButton.visibleOrGone = true }
     }
     private val shuffleButton: ToolbarButton by lazy {

@@ -5,8 +5,12 @@ import android.view.View
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.SongDetailRepository
+import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.main.shared.ElevationItemTouchHelperCallback
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListFragment
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
@@ -19,14 +23,24 @@ import com.pandulapeter.campfire.util.visibleOrGone
 import com.pandulapeter.campfire.util.visibleOrInvisible
 import org.koin.android.ext.android.inject
 
-class ManageDownloadsFragment : BaseSongListFragment<ManageDownloadsViewModel>(), BaseDialogFragment.OnDialogItemSelectedListener {
+class ManageDownloadsFragment : OldBaseSongListFragment<ManageDownloadsViewModel>(), BaseDialogFragment.OnDialogItemSelectedListener {
 
-    companion object {
-        private const val DIALOG_ID_DELETE_ALL_CONFIRMATION = 4
-    }
-
+    private val songRepository by inject<SongRepository>()
+    private val songDetailRepository by inject<SongDetailRepository>()
+    private val preferenceDatabase by inject<PreferenceDatabase>()
+    private val playlistRepository by inject<PlaylistRepository>()
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
-    override val viewModel by lazy { ManageDownloadsViewModel(getCampfireActivity()) { getCampfireActivity().openSongsScreen() } }
+
+    override val viewModel by lazy {
+        ManageDownloadsViewModel(
+            getCampfireActivity(),
+            songRepository,
+            songDetailRepository,
+            preferenceDatabase,
+            playlistRepository,
+            analyticsManager
+        ) { getCampfireActivity().openSongsScreen() }
+    }
     private val deleteAllButton by lazy {
         getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
             AlertDialogFragment.show(
@@ -122,5 +136,9 @@ class ManageDownloadsFragment : BaseSongListFragment<ManageDownloadsViewModel>()
                 action = { firstTimeUserExperienceManager.manageDownloadsCompleted = true }
             )
         }
+    }
+
+    companion object {
+        private const val DIALOG_ID_DELETE_ALL_CONFIRMATION = 4
     }
 }

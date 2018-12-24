@@ -12,8 +12,12 @@ import androidx.annotation.IdRes
 import androidx.databinding.DataBindingUtil
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.SongDetailRepository
+import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -22,17 +26,24 @@ import com.pandulapeter.campfire.util.animatedDrawable
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.onPropertyChanged
+import org.koin.android.ext.android.inject
 
 
-class SongsFragment : BaseSongListFragment<SongsViewModel>() {
+class SongsFragment : OldBaseSongListFragment<SongsViewModel>() {
 
-    companion object {
-        const val COMPOUND_BUTTON_LONG_TRANSITION_DELAY = 300L
-    }
+    private val songRepository by inject<SongRepository>()
+    private val songDetailRepository by inject<SongDetailRepository>()
+    private val preferenceDatabase by inject<PreferenceDatabase>()
+    private val playlistRepository by inject<PlaylistRepository>()
 
     override val viewModel: SongsViewModel by lazy {
         SongsViewModel(
             context = getCampfireActivity(),
+            songRepository = songRepository,
+            songDetailRepository = songDetailRepository,
+            preferenceDatabase = preferenceDatabase,
+            playlistRepository = playlistRepository,
+            analyticsManager = analyticsManager,
             toolbarTextInputView = ToolbarTextInputView(getCampfireActivity().toolbarContext, R.string.songs_search, true).apply { title.updateToolbarTitle(R.string.main_songs) },
             updateSearchToggleDrawable = {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
@@ -217,4 +228,8 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
     }
 
     private operator fun Menu.get(@IdRes id: Int) = findItem(id)
+
+    companion object {
+        const val COMPOUND_BUTTON_LONG_TRANSITION_DELAY = 300L
+    }
 }

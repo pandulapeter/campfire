@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!--TODO: Add a divider above the navigation bar above Pie. -->
     <style name="Campfire" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">?android:attr/colorBackgroundFloating</item>
         <item name="colorSecondary">@color/accent</item>
@@ -9,6 +8,7 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">?android:attr/windowBackground</item>
         <item name="android:buttonTint">@color/compound_button</item>
+        <item name="android:navigationBarDividerColor" tools:ignore="NewApi">@color/navigation_bar_shadow</item>
     </style>
 
     <style name="Splash" parent="Theme.MaterialComponents.NoActionBar">

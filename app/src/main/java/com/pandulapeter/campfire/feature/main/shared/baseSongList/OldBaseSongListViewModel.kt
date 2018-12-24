@@ -28,17 +28,19 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 import kotlin.coroutines.CoroutineContext
 
-abstract class BaseSongListViewModel(protected val context: Context) : OldCampfireViewModel(), SongRepository.Subscriber, SongDetailRepository.Subscriber,
+@Deprecated("Extend from BaseSongListViewModel instead.")
+abstract class OldBaseSongListViewModel(
+    protected val context: Context,
+    protected val songRepository: SongRepository,
+    protected val songDetailRepository: SongDetailRepository,
+    protected val preferenceDatabase: PreferenceDatabase,
+    protected val playlistRepository: PlaylistRepository,
+    protected val analyticsManager: AnalyticsManager
+) : OldCampfireViewModel(), SongRepository.Subscriber, SongDetailRepository.Subscriber,
     PlaylistRepository.Subscriber {
 
-    protected val songRepository by inject<SongRepository>()
-    protected val songDetailRepository by inject<SongDetailRepository>()
-    protected val preferenceDatabase by inject<PreferenceDatabase>()
-    protected val playlistRepository by inject<PlaylistRepository>()
-    private val analyticsManager by inject<AnalyticsManager>()
     val isSwipeRefreshEnabled = ObservableBoolean(true)
     abstract val screenName: String
     private var coroutine: CoroutineContext? = null

@@ -23,8 +23,8 @@ import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.hideKeyboard
 import com.pandulapeter.campfire.util.onEventTriggered
 
-
-abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : OldTopLevelFragment<FragmentBaseSongListBinding, VM>(R.layout.fragment_base_song_list) {
+@Deprecated("Extend from BaseSongListFragment instead.")
+abstract class OldBaseSongListFragment<out VM : OldBaseSongListViewModel> : OldTopLevelFragment<FragmentBaseSongListBinding, VM>(R.layout.fragment_base_song_list) {
 
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     protected lateinit var linearLayoutManager: DisableScrollLinearLayoutManager

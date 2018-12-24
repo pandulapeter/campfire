@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel" />
+            type="com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListViewModel" />
 
     </data>
 

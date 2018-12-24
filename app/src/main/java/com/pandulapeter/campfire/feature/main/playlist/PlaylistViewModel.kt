@@ -7,7 +7,11 @@ import androidx.databinding.ObservableInt
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.model.remote.Song
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.SongDetailRepository
+import com.pandulapeter.campfire.data.repository.SongRepository
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
@@ -15,19 +19,22 @@ import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.onPropertyChanged
-import org.koin.android.ext.android.inject
-import java.util.*
+import java.util.Collections
 
 class PlaylistViewModel(
     context: Context,
     private val playlistId: String,
-    private val openSongs: () -> Unit,
-    val toolbarTextInputView: ToolbarTextInputView?,
-    private val onDataLoaded: () -> Unit
-) : BaseSongListViewModel(context) {
+    private val openSongs: () -> Unit, //TODO: Replace with LiveData
+    val toolbarTextInputView: ToolbarTextInputView?, //TODO: Should not be in viewModel constructor.
+    private val appShortcutManager: AppShortcutManager,
+    songRepository: SongRepository,
+    songDetailRepository: SongDetailRepository,
+    preferenceDatabase: PreferenceDatabase,
+    playlistRepository: PlaylistRepository,
+    analyticsManager: AnalyticsManager,
+    private val onDataLoaded: () -> Unit //TODO: Replace with LiveData
+) : OldBaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager) {
 
-    private val appShortcutManager by inject<AppShortcutManager>()
-    private val analyticsManager by inject<AnalyticsManager>()
     private var songToDeleteId: String? = null
     val playlist = ObservableField<Playlist?>()
     val songCount = ObservableInt(-1)

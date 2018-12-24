@@ -7,24 +7,36 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.SongDetailRepository
+import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.main.shared.ElevationItemTouchHelperCallback
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListFragment
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.animatedDrawable
+import com.pandulapeter.campfire.util.consume
+import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.visibleOrGone
+import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject
 
-class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
+class PlaylistFragment : OldBaseSongListFragment<PlaylistViewModel>() {
 
-    companion object {
-        private var Bundle?.playlistId by BundleArgumentDelegate.String("playlistId")
-
-        fun newInstance(playlistId: String) = PlaylistFragment().withArguments { it.playlistId = playlistId }
-    }
+    private val appShortcutManager by inject<AppShortcutManager>()
+    private val songRepository by inject<SongRepository>()
+    private val songDetailRepository by inject<SongDetailRepository>()
+    private val preferenceDatabase by inject<PreferenceDatabase>()
+    private val playlistRepository by inject<PlaylistRepository>()
 
     override val viewModel by lazy {
         PlaylistViewModel(
@@ -36,6 +48,12 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
                 R.string.playlist_title,
                 false
             ),
+            songRepository = songRepository,
+            songDetailRepository = songDetailRepository,
+            appShortcutManager = appShortcutManager,
+            preferenceDatabase = preferenceDatabase,
+            playlistRepository = playlistRepository,
+            analyticsManager = analyticsManager,
             onDataLoaded = { getCampfireActivity().updateToolbarButtons(listOf(editToggle, shuffleButton)) }
         )
     }
@@ -213,5 +231,11 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         } else {
             showSwipeHintIfNeeded()
         }
+    }
+
+    companion object {
+        private var Bundle?.playlistId by BundleArgumentDelegate.String("playlistId")
+
+        fun newInstance(playlistId: String) = PlaylistFragment().withArguments { it.playlistId = playlistId }
     }
 }

@@ -5,29 +5,40 @@ import androidx.databinding.ObservableBoolean
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.remote.Song
+import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
+import com.pandulapeter.campfire.data.repository.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.SongDetailRepository
+import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.util.*
-import org.koin.android.ext.android.inject
+import com.pandulapeter.campfire.util.normalize
+import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.onTextChanged
+import com.pandulapeter.campfire.util.removePrefixes
+import com.pandulapeter.campfire.util.swap
 
 class SongsViewModel(
     context: Context,
-    val toolbarTextInputView: ToolbarTextInputView,
-    private val updateSearchToggleDrawable: (Boolean) -> Unit,
-    private val onDataLoaded: (languages: List<Language>) -> Unit,
-    private val openSecondaryNavigationDrawer: () -> Unit,
-    private val setFastScrollEnabled: (Boolean) -> Unit
-) : BaseSongListViewModel(context) {
+    songRepository: SongRepository,
+    songDetailRepository: SongDetailRepository,
+    preferenceDatabase: PreferenceDatabase,
+    playlistRepository: PlaylistRepository,
+    analyticsManager: AnalyticsManager,
+    val toolbarTextInputView: ToolbarTextInputView, //TODO: Move to Fragment.
+    private val updateSearchToggleDrawable: (Boolean) -> Unit, //TODO: Replace with LiveData
+    private val onDataLoaded: (languages: List<Language>) -> Unit, //TODO: Replace with LiveData
+    private val openSecondaryNavigationDrawer: () -> Unit, //TODO: Replace with LiveData
+    private val setFastScrollEnabled: (Boolean) -> Unit //TODO: Replace with LiveData
+) : OldBaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager) {
 
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_SONGS
     override val buttonIcon = R.drawable.ic_filter_and_sort_24dp
-    private val analyticsManager by inject<AnalyticsManager>()
     private val popularString = context.getString(R.string.popular_tag)
     private val newString = context.getString(R.string.new_tag)
     override val placeholderText = R.string.songs_placeholder
