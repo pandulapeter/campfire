@@ -18,7 +18,6 @@ import com.pandulapeter.campfire.util.UI
 import com.pandulapeter.campfire.util.WORKER
 import com.pandulapeter.campfire.util.dimension
 import com.pandulapeter.campfire.util.mutableLiveDataOf
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class DetailPageViewModel(
@@ -103,8 +102,7 @@ class DetailPageViewModel(
 
     fun refreshText(onDone: () -> Unit = {}) {
         transposition.value?.let { transposition ->
-            //TODO
-            GlobalScope.launch(WORKER) {
+            launch(WORKER) {
                 val parsed = songParser.parseSong(rawText, preferenceDatabase.shouldShowChords, preferenceDatabase.shouldUseGermanNotation, transposition)
                 launch(UI) {
                     text.value = parsed

@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Point
 import android.graphics.drawable.ColorDrawable
@@ -85,6 +86,7 @@ import com.pandulapeter.campfire.util.visibleOrInvisible
 import io.fabric.sdk.android.Fabric
 import org.koin.android.ext.android.inject
 import java.util.Locale
+import kotlin.math.max
 
 class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSelectedListener, PlaylistRepository.Subscriber {
 
@@ -219,6 +221,12 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             Configuration.UI_MODE_NIGHT_NO -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
             else -> 0
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            val hsv = FloatArray(3)
+            Color.colorToHSV(obtainColor(android.R.attr.windowBackground), hsv)
+            hsv[2] = max(hsv[2] - 0.05f, 0f)
+            window.navigationBarColor = Color.HSVToColor(hsv)
         }
 
         // Make sure the "What's new" snackbar does not appear after a fresh start.
@@ -381,7 +389,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     override fun onResume() {
         super.onResume()
-        binding.fakeShadow.visibleOrGone = shouldDrawFakeShadowForNavigationBar()
         playlistRepository.subscribe(this)
         if (currentFocus is EditText) {
             binding.drawerLayout.run { post { closeDrawers() } }
@@ -438,16 +445,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             else -> Point()
         }
     }
-
-    //TODO: Not working properly in landscape, multi-window and desktop modes.
-    private fun shouldDrawFakeShadowForNavigationBar() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) false else getNavigationBarSize().y != 0
-//    {
-//        val hasMenuKey = ViewConfiguration.get(this).hasPermanentMenuKey()
-//        val hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK)
-//        return !hasMenuKey && !hasBackKey
-//        val id = resources.getIdentifier("config_showNavigationBar", "bool", "android")
-//        return id > 0 && resources.getBoolean(id)
-//    }
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
