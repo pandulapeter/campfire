@@ -1,8 +1,8 @@
 package com.pandulapeter.campfire.feature.detail.page
 
-import androidx.databinding.ObservableField
-import androidx.databinding.ObservableFloat
-import androidx.databinding.ObservableInt
+import android.content.Context
+import androidx.lifecycle.MediatorLiveData
+import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.SongDetailMetadata
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.model.remote.SongDetail
@@ -10,44 +10,47 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.feature.detail.DetailPageEventBus
 import com.pandulapeter.campfire.feature.detail.page.parsing.SongParser
-import com.pandulapeter.campfire.feature.shared.deprecated.OldCampfireViewModel
+import com.pandulapeter.campfire.feature.shared.CampfireViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.UI
 import com.pandulapeter.campfire.util.WORKER
-import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.util.mutableLiveDataOf
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 
 class DetailPageViewModel(
     val song: Song,
-    private val initialTextSize: Int,
-    private val songParser: SongParser,
-    private val onDataLoaded: () -> Unit
-) : OldCampfireViewModel(), SongDetailRepository.Subscriber {
+    context: Context,
+    interactionBlocker: InteractionBlocker,
+    private val songDetailRepository: SongDetailRepository,
+    private val preferenceDatabase: PreferenceDatabase,
+    private val detailPageEventBus: DetailPageEventBus,
+    private val analyticsManager: AnalyticsManager,
+    private val songParser: SongParser
+) : CampfireViewModel(interactionBlocker), SongDetailRepository.Subscriber {
 
-    private val songDetailRepository by inject<SongDetailRepository>()
-    private val preferenceDatabase by inject<PreferenceDatabase>()
-    private val detailPageEventBus by inject<DetailPageEventBus>()
-    private val analyticsManager by inject<AnalyticsManager>()
     private var rawText = ""
-    val text = ObservableField<CharSequence>("")
-    val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
-    val textSize = ObservableFloat(preferenceDatabase.fontSize * initialTextSize)
-    val transposition = ObservableInt(preferenceDatabase.getTransposition(song.id))
+    private val initialTextSize = context.dimension(R.dimen.text_normal)
+    val text = mutableLiveDataOf<CharSequence>("")
+    val state = mutableLiveDataOf(StateLayout.State.LOADING)
+    val textSize = mutableLiveDataOf(preferenceDatabase.fontSize * initialTextSize)
+    val transposition = mutableLiveDataOf(preferenceDatabase.getTransposition(song.id))
+    val onDataLoaded = MediatorLiveData<Boolean?>()
 
     init {
-        transposition.onPropertyChanged {
-            var modifiedValue = it
+        transposition.observeForever { newValue ->
+            var modifiedValue = newValue
             while (modifiedValue > 6) {
                 modifiedValue -= 12
             }
             while (modifiedValue < -6) {
                 modifiedValue += 12
             }
-            if (modifiedValue != it) {
-                transposition.set(modifiedValue)
+            if (modifiedValue != newValue) {
+                transposition.value = modifiedValue
             } else {
                 refreshText()
                 analyticsManager.onTranspositionChanged(song.id, modifiedValue)
@@ -59,7 +62,7 @@ class DetailPageViewModel(
 
     override fun subscribe() {
         songDetailRepository.subscribe(this)
-        if (text.get().isNullOrEmpty()) {
+        if (text.value.isNullOrEmpty()) {
             loadData()
         }
     }
@@ -72,36 +75,41 @@ class DetailPageViewModel(
         if (songDetail.id == song.id) {
             rawText = songDetail.text
             refreshText {
-                state.set(StateLayout.State.NORMAL)
-                onDataLoaded()
-                detailPageEventBus.notifyTranspositionChanged(song.id, transposition.get())
+                state.value = StateLayout.State.NORMAL
+                onDataLoaded.value = true
+                transposition.value?.let { detailPageEventBus.notifyTranspositionChanged(song.id, it) }
             }
         }
     }
 
     override fun onSongDetailRepositoryDownloadQueueChanged(songIds: List<String>) {
-        if (songIds.contains(song.id) && text.get().isNullOrEmpty()) {
-            state.set(StateLayout.State.LOADING)
+        if (songIds.contains(song.id) && text.value.isNullOrEmpty()) {
+            state.value = StateLayout.State.LOADING
         }
     }
 
     override fun onSongDetailRepositoryDownloadError(song: Song) {
-        if (song.id == this.song.id && text.get().isNullOrEmpty()) {
+        if (song.id == this.song.id && text.value.isNullOrEmpty()) {
             analyticsManager.onConnectionError(true, song.id)
-            state.set(StateLayout.State.ERROR)
+            state.value = StateLayout.State.ERROR
         }
     }
 
     fun loadData() = songDetailRepository.getSongDetail(song)
 
-    fun updateTextSize() = textSize.set(preferenceDatabase.fontSize * initialTextSize)
+    fun updateTextSize() {
+        textSize.value = preferenceDatabase.fontSize * initialTextSize
+    }
 
     fun refreshText(onDone: () -> Unit = {}) {
-        GlobalScope.launch(WORKER) {
-            val parsed = songParser.parseSong(rawText, preferenceDatabase.shouldShowChords, preferenceDatabase.shouldUseGermanNotation, transposition.get())
-            launch(UI) {
-                text.set(parsed)
-                onDone()
+        transposition.value?.let { transposition ->
+            //TODO
+            GlobalScope.launch(WORKER) {
+                val parsed = songParser.parseSong(rawText, preferenceDatabase.shouldShowChords, preferenceDatabase.shouldUseGermanNotation, transposition)
+                launch(UI) {
+                    text.value = parsed
+                    onDone()
+                }
             }
         }
     }

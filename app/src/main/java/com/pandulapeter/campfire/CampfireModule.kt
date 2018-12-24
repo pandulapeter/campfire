@@ -2,6 +2,7 @@ package com.pandulapeter.campfire
 
 import androidx.room.Room
 import com.google.gson.GsonBuilder
+import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.Database
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
@@ -14,6 +15,8 @@ import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.detail.DetailPageEventBus
 import com.pandulapeter.campfire.feature.detail.DetailViewModel
+import com.pandulapeter.campfire.feature.detail.page.DetailPageViewModel
+import com.pandulapeter.campfire.feature.detail.page.parsing.SongParser
 import com.pandulapeter.campfire.feature.main.collections.CollectionsViewModel
 import com.pandulapeter.campfire.feature.main.home.HomeContainerViewModel
 import com.pandulapeter.campfire.feature.main.home.home.HomeViewModel
@@ -33,6 +36,7 @@ import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.experimental.builder.viewModel
+import org.koin.androidx.viewmodel.ext.koin.viewModel
 import org.koin.dsl.module.module
 
 val integrationModule = module {
@@ -69,6 +73,7 @@ val detailModule = module {
 val featureModule = module {
 
     single { InteractionBlocker() }
+    factory { SongParser(androidContext()) }
 
     viewModel<HomeContainerViewModel>()
 
@@ -88,4 +93,5 @@ val featureModule = module {
     viewModel<AboutViewModel>()
 
     viewModel<DetailViewModel>()
+    viewModel { (song: Song) -> DetailPageViewModel(song, androidContext(), get(), get(), get(), get(), get(), get()) }
 }
