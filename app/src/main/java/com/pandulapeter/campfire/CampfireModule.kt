@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.repository.HistoryRepository
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
+import com.pandulapeter.campfire.feature.ActivityViewModel
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.detail.DetailPageEventBus
 import com.pandulapeter.campfire.feature.detail.DetailViewModel
@@ -76,30 +77,24 @@ val detailModule = module {
 }
 
 val featureModule = module {
-
     single { InteractionBlocker() }
-
+    viewModel<ActivityViewModel>()
     viewModel<HomeContainerViewModel>()
-
     viewModel<OnboardingViewModel>()
     viewModel<WelcomeViewModel>()
     viewModel<UserDataViewModel>()
     viewModel<SongAppearanceViewModel>()
     viewModel<ContentLanguageViewModel>()
-
     viewModel<HomeViewModel>()
     viewModel<CollectionsViewModel>()
     viewModel { (collection: Collection) -> CollectionDetailViewModel(collection, androidContext(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel<HistoryViewModel>()
-
     viewModel<OptionsViewModel>()
     viewModel<PreferencesViewModel>()
     viewModel<ChangelogViewModel>()
     viewModel<AboutViewModel>()
-
     viewModel<ManagePlaylistsViewModel>()
     viewModel<ManageDownloadsViewModel>()
-
     viewModel<DetailViewModel>()
     viewModel { (song: Song, songParser: SongParser) -> DetailPageViewModel(song, androidContext(), get(), get(), get(), get(), get(), songParser) }
 }

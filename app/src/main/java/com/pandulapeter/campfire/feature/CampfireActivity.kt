@@ -34,6 +34,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
+import androidx.lifecycle.Observer
 import com.crashlytics.android.Crashlytics
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.internal.NavigationMenuView
@@ -44,8 +45,6 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.model.remote.Song
-import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.databinding.ActivityCampfireBinding
 import com.pandulapeter.campfire.feature.detail.DetailFragment
 import com.pandulapeter.campfire.feature.main.collections.CollectionsFragment
@@ -60,14 +59,12 @@ import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesVie
 import com.pandulapeter.campfire.feature.main.playlist.PlaylistFragment
 import com.pandulapeter.campfire.feature.main.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
-import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.IntentExtraDelegate
 import com.pandulapeter.campfire.util.addDrawerListener
@@ -84,49 +81,17 @@ import com.pandulapeter.campfire.util.toUrlIntent
 import com.pandulapeter.campfire.util.visibleOrGone
 import com.pandulapeter.campfire.util.visibleOrInvisible
 import io.fabric.sdk.android.Fabric
-import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.Locale
 import kotlin.math.max
 
-class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSelectedListener, PlaylistRepository.Subscriber {
+class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSelectedListener {
 
-    companion object {
-        private const val DIALOG_ID_EXIT_CONFIRMATION = 1
-        private const val DIALOG_ID_PLAY_STORE_RATING = 2
-        const val SCREEN_HOME = "home"
-        const val SCREEN_COLLECTIONS = "collections"
-        const val SCREEN_SONGS = "songs"
-        const val SCREEN_HISTORY = "history"
-        const val SCREEN_OPTIONS = "options"
-        const val SCREEN_MANAGE_PLAYLISTS = "managePlaylists"
-        const val SCREEN_MANAGE_DOWNLOADS = "manageDownloads"
-
-        private var Intent.screenToOpen by IntentExtraDelegate.String("screenToOpen")
-
-        private fun getStartIntent(context: Context) = Intent(context, CampfireActivity::class.java)
-
-        fun getHomeIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_HOME }
-
-        fun getCollectionsIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_COLLECTIONS }
-
-        fun getSongsIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_SONGS }
-
-        fun getPlaylistIntent(context: Context, playlistId: String) = getStartIntent(context).apply { screenToOpen = playlistId }
-    }
-
-    private var Bundle.currentScreenId by BundleArgumentDelegate.Int("currentScreenId")
-    private var Bundle.currentPlaylistId by BundleArgumentDelegate.String("currentPlaylistId")
-    private var Bundle.currentCollectionId by BundleArgumentDelegate.String("currentCollectionId")
-    private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
-    private var Bundle.lastCollectionId by BundleArgumentDelegate.String("lastCollectionId")
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
+    private val viewModel by viewModel<ActivityViewModel>()
     private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container)//TODO as? CampfireFragment
     private val drawableMenuToBack by lazy { animatedDrawable(R.drawable.avd_menu_to_back_24dp) }
     private val drawableBackToMenu by lazy { animatedDrawable(R.drawable.avd_back_to_menu_24dp) }
-    private val analyticsManager by inject<AnalyticsManager>()
-    private val appShortcutManager by inject<AppShortcutManager>()
-    private val preferenceDatabase by inject<PreferenceDatabase>()
-    private val playlistRepository by inject<PlaylistRepository>()
     private var currentPlaylistId = ""
     private var currentCollectionId = ""
     private var currentScreenId = R.id.songs
@@ -136,11 +101,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private var newPlaylistId = 0
     private var startTime = 0L
     private val isBackStackEmpty get() = supportFragmentManager.backStackEntryCount == 0
-    private val interactionBlocker by inject<InteractionBlocker>()
     var isUiBlocked
-        get() = interactionBlocker.isUiBlocked
+        get() = viewModel.isUiBlocked
         set(value) {
-            interactionBlocker.isUiBlocked = value
+            viewModel.isUiBlocked = value
         }
     var lastSongId: String = ""
     var lastCollectionId: String = ""
@@ -190,13 +154,13 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
         // Enable crash reporting if the user opted in.
         @Suppress("ConstantConditionIf")
-        if (preferenceDatabase.isOnboardingDone && preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
+        if (viewModel.preferenceDatabase.isOnboardingDone && viewModel.preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
             Fabric.with(applicationContext, Crashlytics())
         }
 
         // Set the theme.
         AppCompatDelegate.setDefaultNightMode(
-            when (PreferencesViewModel.Theme.fromId(preferenceDatabase.theme)) {
+            when (PreferencesViewModel.Theme.fromId(viewModel.preferenceDatabase.theme)) {
                 PreferencesViewModel.Theme.AUTOMATIC -> AppCompatDelegate.MODE_NIGHT_AUTO
                 PreferencesViewModel.Theme.DARK -> AppCompatDelegate.MODE_NIGHT_YES
                 PreferencesViewModel.Theme.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
@@ -206,7 +170,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
         // Set the language
         @Suppress("DEPRECATION")
-        PreferencesViewModel.Language.fromId(preferenceDatabase.language).run {
+        PreferencesViewModel.Language.fromId(viewModel.preferenceDatabase.language).run {
             (if (this == PreferencesViewModel.Language.AUTOMATIC) Resources.getSystem().configuration.locale else Locale(id)).let {
                 Locale.setDefault(it)
                 resources.updateConfiguration(Configuration(resources.configuration).apply { locale = it }, resources.displayMetrics)
@@ -214,6 +178,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
         super.onCreate(savedInstanceState)
         startTime = System.currentTimeMillis()
+        viewModel.playlists.observe(this, Observer { updatePlaylists(it) })
 
         // Make sure the status bar color is properly set.
         window.decorView.systemUiVisibility = when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
@@ -230,8 +195,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
 
         // Make sure the "What's new" snackbar does not appear after a fresh start.
-        if (preferenceDatabase.ftuxLastSeenChangelog == 0) {
-            preferenceDatabase.ftuxLastSeenChangelog = BuildConfig.VERSION_CODE
+        if (viewModel.preferenceDatabase.ftuxLastSeenChangelog == 0) {
+            viewModel.preferenceDatabase.ftuxLastSeenChangelog = BuildConfig.VERSION_CODE
         }
 
         // Initialize the app bar.
@@ -285,18 +250,18 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 return@setNavigationItemSelectedListener when (menuItem.itemId) {
                     R.id.home -> consumeAndCloseDrawers {
                         supportFragmentManager.handleReplace {
-                            appShortcutManager.onHomeOpened()
+                            viewModel.appShortcutManager.onHomeOpened()
                             HomeContainerFragment.newInstance()
                         }
                     }
                     R.id.collections -> consumeAndCloseDrawers {
                         supportFragmentManager.handleReplace {
-                            appShortcutManager.onCollectionsOpened()
+                            viewModel.appShortcutManager.onCollectionsOpened()
                             CollectionsFragment.newInstance()
                         }
                     }
                     R.id.songs -> consumeAndCloseDrawers {
-                        appShortcutManager.onSongsOpened()
+                        viewModel.appShortcutManager.onSongsOpened()
                         supportFragmentManager.handleReplace { SongsFragment() }
                     }
                     R.id.history -> consumeAndCloseDrawers { supportFragmentManager.handleReplace { HistoryFragment() } }
@@ -350,11 +315,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
 
-            override fun onStopTrackingTouch(seekBar: SeekBar?) = analyticsManager.onAutoScrollSpeedChanged(binding.autoScrollSeekBar.progress)
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = viewModel.analyticsManager.onAutoScrollSpeedChanged(binding.autoScrollSeekBar.progress)
         })
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInMultiWindowMode) {
-            analyticsManager.trackSplitScreenEntered()
+            viewModel.analyticsManager.trackSplitScreenEntered()
         }
 
         // Restore instance state if possible.
@@ -381,26 +346,25 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration?) {
         if (isInMultiWindowMode) {
-            analyticsManager.trackSplitScreenEntered()
+            viewModel.analyticsManager.trackSplitScreenEntered()
         } else {
-            analyticsManager.trackSplitScreenClosed()
+            viewModel.analyticsManager.trackSplitScreenClosed()
         }
     }
 
     override fun onResume() {
         super.onResume()
-        playlistRepository.subscribe(this)
+        viewModel.subscribe()
         if (currentFocus is EditText) {
             binding.drawerLayout.run { post { closeDrawers() } }
         }
-        isUiBlocked = false
         (currentFragment as? DetailFragment)?.notifyTransitionEnd()
         updateTaskDescription()
     }
 
     override fun onPause() {
         super.onPause()
-        playlistRepository.unsubscribe(this)
+        viewModel.unsubscribe()
     }
 
     override fun onBackPressed() {
@@ -415,7 +379,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     //TODO: Simplify this
                     if (fragment == null || ((fragment as? CampfireFragment<*, *>)?.onBackPressed() != true && (fragment as? OldTopLevelFragment<*, *>)?.onBackPressed() != true)) {
                         if (isBackStackEmpty) {
-                            if (preferenceDatabase.shouldShowExitConfirmation && preferenceDatabase.isOnboardingDone) {
+                            if (viewModel.preferenceDatabase.shouldShowExitConfirmation && viewModel.preferenceDatabase.isOnboardingDone) {
                                 AlertDialogFragment.show(
                                     id = DIALOG_ID_EXIT_CONFIRMATION,
                                     fragmentManager = supportFragmentManager,
@@ -459,25 +423,17 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         when (id) {
             DIALOG_ID_EXIT_CONFIRMATION -> supportFinishAfterTransition()
             DIALOG_ID_PLAY_STORE_RATING -> {
-                analyticsManager.trackRateApp()
+                viewModel.analyticsManager.trackRateApp()
                 tryToOpenIntent(AboutViewModel.PLAY_STORE_URL.toUrlIntent())
             }
         }
     }
 
-    override fun onPlaylistsUpdated(playlists: List<Playlist>) = updatePlaylists(playlists)
-
-    override fun onPlaylistOrderChanged(playlists: List<Playlist>) = updatePlaylists(playlists)
-
-    override fun onSongAddedToPlaylistForTheFirstTime(songId: String) = Unit
-
-    override fun onSongRemovedFromAllPlaylists(songId: String) = Unit
-
     fun showPlayStoreRatingDialogIfNeeded() {
-        if (preferenceDatabase.songsOpened > 10 && !preferenceDatabase.ratingDialogShown) {
+        if (viewModel.preferenceDatabase.songsOpened > 10 && !viewModel.preferenceDatabase.ratingDialogShown) {
             binding.root.postDelayed({
-                if (!preferenceDatabase.ratingDialogShown) {
-                    analyticsManager.trackAskForRating()
+                if (!viewModel.preferenceDatabase.ratingDialogShown) {
+                    viewModel.analyticsManager.trackAskForRating()
                     AlertDialogFragment.show(
                         id = DIALOG_ID_PLAY_STORE_RATING,
                         fragmentManager = supportFragmentManager,
@@ -487,7 +443,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                         negativeButton = R.string.main_play_store_rating_negative,
                         cancellable = false
                     )
-                    preferenceDatabase.ratingDialogShown = true
+                    viewModel.preferenceDatabase.ratingDialogShown = true
                 }
             }, 600)
         }
@@ -567,7 +523,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                         is OldTopLevelFragment<*, *> -> fragment.showSnackbar(R.string.known_bug_1)
                     }
                 }
-                analyticsManager.trackNonFatalError(IllegalStateException("Interrupted transition caused the toolbar to disappear."))
+                viewModel.analyticsManager.trackNonFatalError(IllegalStateException("Interrupted transition caused the toolbar to disappear."))
             }
         }
         if (binding.toolbarTitleContainer.layoutTransition == null) {
@@ -689,23 +645,23 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         disableFloatingActionButton()
 
         // Show the changelog snackbar if needed
-        if (preferenceDatabase.ftuxLastSeenChangelog < BuildConfig.VERSION_CODE) {
-            preferenceDatabase.ftuxLastSeenChangelog = BuildConfig.VERSION_CODE
-            if (preferenceDatabase.isOnboardingDone) {
+        if (viewModel.preferenceDatabase.ftuxLastSeenChangelog < BuildConfig.VERSION_CODE) {
+            viewModel.preferenceDatabase.ftuxLastSeenChangelog = BuildConfig.VERSION_CODE
+            if (viewModel.preferenceDatabase.isOnboardingDone) {
                 currentFragment?.let { fragment ->
                     when (fragment) {
                         is TopLevelFragment -> (fragment as CampfireFragment<*, *>).showSnackbar(
                             message = R.string.options_changelog_app_updated,
                             actionText = R.string.options_changelog_what_is_new,
                             action = {
-                                analyticsManager.onWhatIsNewButtonPressed()
+                                viewModel.analyticsManager.onWhatIsNewButtonPressed()
                                 openOptionsScreen(true)
                             })
                         is OldTopLevelFragment<*, *> -> fragment.showSnackbar(
                             message = R.string.options_changelog_app_updated,
                             actionText = R.string.options_changelog_what_is_new,
                             action = {
-                                analyticsManager.onWhatIsNewButtonPressed()
+                                viewModel.analyticsManager.onWhatIsNewButtonPressed()
                                 openOptionsScreen(true)
                             })
                     }
@@ -725,7 +681,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         var isFromAppShortcut = true
         val screen = when (intent.screenToOpen) {
             "" -> {
-                preferenceDatabase.lastScreen.let {
+                viewModel.preferenceDatabase.lastScreen.let {
                     isFromAppShortcut = false
                     when (it) {
                         "", SCREEN_HOME -> openHomeScreen()
@@ -744,15 +700,15 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             SCREEN_SONGS -> openSongsScreen()
             else -> openPlaylistScreen(intent.screenToOpen)
         }
-        analyticsManager.onAppOpened(
+        viewModel.analyticsManager.onAppOpened(
             screen,
             isFromAppShortcut,
-            when (PreferencesViewModel.Theme.fromId(preferenceDatabase.theme)) {
+            when (PreferencesViewModel.Theme.fromId(viewModel.preferenceDatabase.theme)) {
                 PreferencesViewModel.Theme.AUTOMATIC -> AnalyticsManager.PARAM_VALUE_AUTOMATIC
                 PreferencesViewModel.Theme.LIGHT -> AnalyticsManager.PARAM_VALUE_LIGHT
                 PreferencesViewModel.Theme.DARK -> AnalyticsManager.PARAM_VALUE_DARK
             },
-            PreferencesViewModel.Language.fromId(preferenceDatabase.language).let {
+            PreferencesViewModel.Language.fromId(viewModel.preferenceDatabase.language).let {
                 if (it == PreferencesViewModel.Language.AUTOMATIC) AnalyticsManager.PARAM_VALUE_AUTOMATIC else it.id
             }
         )
@@ -775,7 +731,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             supportFragmentManager.handleReplace { HomeContainerFragment.newInstance() }
             currentScreenId = R.id.home
             binding.primaryNavigation.setCheckedItem(R.id.home)
-            appShortcutManager.onHomeOpened()
+            viewModel.appShortcutManager.onHomeOpened()
         }
         return AnalyticsManager.PARAM_VALUE_SCREEN_HOME
     }
@@ -786,7 +742,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             supportFragmentManager.handleReplace { CollectionsFragment.newInstance() }
             currentScreenId = R.id.collections
             binding.primaryNavigation.setCheckedItem(R.id.collections)
-            appShortcutManager.onCollectionsOpened()
+            viewModel.appShortcutManager.onCollectionsOpened()
         }
         return AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS
     }
@@ -797,7 +753,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             supportFragmentManager.handleReplace { SongsFragment() }
             currentScreenId = R.id.songs
             binding.primaryNavigation.setCheckedItem(R.id.songs)
-            appShortcutManager.onSongsOpened()
+            viewModel.appShortcutManager.onSongsOpened()
         }
         return AnalyticsManager.PARAM_VALUE_SCREEN_SONGS
     }
@@ -874,7 +830,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 }
             }
             currentPlaylistId = playlistId
-            appShortcutManager.onPlaylistOpened(playlistId)
+            viewModel.appShortcutManager.onPlaylistOpened(playlistId)
             supportFragmentManager.handleReplace("${PlaylistFragment::class.java.simpleName}-$playlistId") { PlaylistFragment.newInstance(playlistId) }
         }
         return AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST
@@ -964,7 +920,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             playlists
                 .asSequence()
                 .sortedBy { it.order }
-                .filter { it.id != playlistRepository.hiddenPlaylistId }
+                .filter { it.id != viewModel.playlistRepository.hiddenPlaylistId }
                 .forEachIndexed { index, playlist ->
                     val id = View.generateViewId()
                     playlistIdMap[id] = playlist.id
@@ -979,7 +935,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 addPlaylistItem(playlists.size, newPlaylistId, getString(R.string.main_new_playlist), true)
             }
             setGroupCheckable(R.id.playlist_container, true, true)
-            appShortcutManager.updateAppShortcuts()
+            viewModel.appShortcutManager.updateAppShortcuts()
         }
     }
 
@@ -1017,5 +973,36 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 }
             }
         }
+    }
+
+    companion object {
+
+        private var Bundle.currentScreenId by BundleArgumentDelegate.Int("currentScreenId")
+        private var Bundle.currentPlaylistId by BundleArgumentDelegate.String("currentPlaylistId")
+        private var Bundle.currentCollectionId by BundleArgumentDelegate.String("currentCollectionId")
+        private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
+        private var Bundle.lastCollectionId by BundleArgumentDelegate.String("lastCollectionId")
+
+        private const val DIALOG_ID_EXIT_CONFIRMATION = 1
+        private const val DIALOG_ID_PLAY_STORE_RATING = 2
+        const val SCREEN_HOME = "home"
+        const val SCREEN_COLLECTIONS = "collections"
+        const val SCREEN_SONGS = "songs"
+        const val SCREEN_HISTORY = "history"
+        const val SCREEN_OPTIONS = "options"
+        const val SCREEN_MANAGE_PLAYLISTS = "managePlaylists"
+        const val SCREEN_MANAGE_DOWNLOADS = "manageDownloads"
+
+        private var Intent.screenToOpen by IntentExtraDelegate.String("screenToOpen")
+
+        private fun getStartIntent(context: Context) = Intent(context, CampfireActivity::class.java)
+
+        fun getHomeIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_HOME }
+
+        fun getCollectionsIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_COLLECTIONS }
+
+        fun getSongsIntent(context: Context) = getStartIntent(context).apply { screenToOpen = SCREEN_SONGS }
+
+        fun getPlaylistIntent(context: Context, playlistId: String) = getStartIntent(context).apply { screenToOpen = playlistId }
     }
 }
