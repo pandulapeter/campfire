@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Paint
+import android.graphics.Point
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
@@ -211,7 +212,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
         super.onCreate(savedInstanceState)
         startTime = System.currentTimeMillis()
-        binding.fakeShadow.visibleOrGone = hasNavigationBar()
 
         // Make sure the status bar color is properly set.
         window.decorView.systemUiVisibility = when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
@@ -381,6 +381,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
     override fun onResume() {
         super.onResume()
+        binding.fakeShadow.visibleOrGone = hasNavigationBar()
         playlistRepository.subscribe(this)
         if (currentFocus is EditText) {
             binding.drawerLayout.run { post { closeDrawers() } }
@@ -428,8 +429,18 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
     }
 
-    //TODO: Not working.
-    private fun hasNavigationBar() = true
+    private fun getNavigationBarSize(): Point {
+        val appUsableSize = Point().apply { windowManager.defaultDisplay.getSize(this) }
+        val realScreenSize = Point().apply { windowManager.defaultDisplay.getRealSize(this) }
+        return when {
+            appUsableSize.x < realScreenSize.x -> Point(realScreenSize.x - appUsableSize.x, appUsableSize.y)
+            appUsableSize.y < realScreenSize.y -> Point(appUsableSize.x, realScreenSize.y - appUsableSize.y)
+            else -> Point()
+        }
+    }
+
+    //TODO: Not working properly in multi-window and desktop modes.
+    private fun hasNavigationBar() = getNavigationBarSize().y != 0
 //    {
 //        val hasMenuKey = ViewConfiguration.get(this).hasPermanentMenuKey()
 //        val hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK)
