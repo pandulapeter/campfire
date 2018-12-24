@@ -1,8 +1,7 @@
 package com.pandulapeter.campfire.feature.main.manageDownloads
 
 import android.content.Context
-import androidx.databinding.ObservableBoolean
-import androidx.databinding.ObservableInt
+import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
@@ -10,10 +9,12 @@ import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListViewModel
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.util.mutableLiveDataOf
 import com.pandulapeter.campfire.util.removePrefixes
 
 class ManageDownloadsViewModel(
@@ -23,11 +24,12 @@ class ManageDownloadsViewModel(
     preferenceDatabase: PreferenceDatabase,
     playlistRepository: PlaylistRepository,
     analyticsManager: AnalyticsManager,
-    private val openSongs: () -> Unit //TODO: Replace with LiveData
-) : OldBaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager) {
+    interfaceBlocker: InteractionBlocker
+) : BaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager, interfaceBlocker) {
 
-    val shouldShowDeleteAll = ObservableBoolean()
-    val songCount = ObservableInt()
+    val shouldShowDeleteAll = mutableLiveDataOf(false)
+    val songCount = mutableLiveDataOf(0)
+    val shouldOpenSongs = MutableLiveData<Boolean?>()
     private var songToDeleteId: String? = null
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS
     override val placeholderText = R.string.manage_downloads_placeholder
@@ -46,11 +48,13 @@ class ManageDownloadsViewModel(
 
     override fun onListUpdated(items: List<ItemViewModel>) {
         super.onListUpdated(items)
-        songCount.set(items.size)
-        shouldShowDeleteAll.set(items.isNotEmpty())
+        songCount.value = items.size
+        shouldShowDeleteAll.value = items.isNotEmpty()
     }
 
-    override fun onActionButtonClicked() = openSongs()
+    override fun onActionButtonClicked() {
+        shouldOpenSongs.value = true
+    }
 
     fun deleteAllSongs() = songDetailRepository.deleteAllSongs()
 

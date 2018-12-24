@@ -3,7 +3,6 @@ package com.pandulapeter.campfire.feature.main.shared.baseSongList
 import android.content.Context
 import androidx.annotation.CallSuper
 import androidx.databinding.ObservableBoolean
-import androidx.databinding.ObservableField
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
@@ -25,6 +24,7 @@ import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.UI
 import com.pandulapeter.campfire.util.WORKER
+import com.pandulapeter.campfire.util.mutableLiveDataOf
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
@@ -45,12 +45,12 @@ abstract class BaseSongListViewModel(
     abstract val screenName: String
     private var coroutine: CoroutineContext? = null
     protected var songs = sequenceOf<Song>()
-    val collection = ObservableField<CollectionItemViewModel?>()
+    val collection = MutableLiveData<CollectionItemViewModel?>()
     val adapter = RecyclerAdapter()
-    val shouldShowUpdateErrorSnackbar = ObservableBoolean()
-    val downloadSongError = ObservableField<Song?>()
-    val isLoading = ObservableBoolean()
-    val state = ObservableField<StateLayout.State>(StateLayout.State.LOADING)
+    val shouldShowUpdateErrorSnackbar = MutableLiveData<Boolean?>()
+    val downloadSongError = MutableLiveData<Song?>()
+    val isLoading = mutableLiveDataOf(false)
+    val state = mutableLiveDataOf(StateLayout.State.LOADING)
     open val placeholderText = R.string.campfire
     val buttonText = MutableLiveData<Int>()
     open val buttonIcon = 0
@@ -80,19 +80,19 @@ abstract class BaseSongListViewModel(
     }
 
     override fun onSongRepositoryLoadingStateChanged(isLoading: Boolean) {
-        this.isLoading.set(isLoading)
+        this.isLoading.value = isLoading
         if (songs.toList().isEmpty() && isLoading) {
-            state.set(StateLayout.State.LOADING)
+            state.value = StateLayout.State.LOADING
         }
     }
 
     override fun onSongRepositoryUpdateError() {
         if (songs.toList().isEmpty()) {
             analyticsManager.onConnectionError(true, screenName)
-            state.set(StateLayout.State.ERROR)
+            state.value = StateLayout.State.ERROR
         } else {
             analyticsManager.onConnectionError(false, screenName)
-            shouldShowUpdateErrorSnackbar.set(true)
+            shouldShowUpdateErrorSnackbar.value = true
         }
     }
 
@@ -128,7 +128,7 @@ abstract class BaseSongListViewModel(
 
     override fun onSongDetailRepositoryDownloadError(song: Song) {
         analyticsManager.onConnectionError(!songDetailRepository.isSongDownloaded(song.id), song.id)
-        downloadSongError.set(song)
+        downloadSongError.value = song
         adapter.items.indexOfLast { it is SongItemViewModel && it.song.id == song.id }.let { index ->
             if (index != RecyclerView.NO_POSITION) {
                 adapter.notifyItemChanged(
@@ -209,7 +209,7 @@ abstract class BaseSongListViewModel(
 
     @CallSuper
     protected open fun onListUpdated(items: List<ItemViewModel>) {
-        state.set(if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL)
+        state.value = if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL
     }
 
     protected fun updateAdapterItems(shouldScrollToTop: Boolean = false) {

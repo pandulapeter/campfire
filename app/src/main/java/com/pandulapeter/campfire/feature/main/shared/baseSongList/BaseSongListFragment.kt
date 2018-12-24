@@ -21,7 +21,6 @@ import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayout
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.hideKeyboard
-import com.pandulapeter.campfire.util.onEventTriggered
 
 abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFragment<FragmentBaseSongListBinding, VM>(R.layout.fragment_base_song_list), TopLevelFragment {
 
@@ -90,19 +89,17 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
                 }
             }
         }
-        viewModel.shouldShowUpdateErrorSnackbar.onEventTriggered(this) {
+        viewModel.shouldShowUpdateErrorSnackbar.observeAndReset {
             showSnackbar(
                 message = R.string.songs_update_error,
                 action = { viewModel.updateData() })
         }
-        viewModel.downloadSongError.onEventTriggered(this) { song ->
-            song?.let {
-                binding.root.post {
-                    if (isAdded) {
-                        showSnackbar(
-                            message = getString(R.string.songs_song_download_error, song.title),
-                            action = { viewModel.downloadSong(song) })
-                    }
+        viewModel.downloadSongError.observeAndReset { song ->
+            binding.root.post {
+                if (isAdded) {
+                    showSnackbar(
+                        message = getString(R.string.songs_song_download_error, song.title),
+                        action = { viewModel.downloadSong(song) })
                 }
             }
         }
