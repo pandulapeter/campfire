@@ -7,7 +7,7 @@
         <item name="colorSecondary">@color/accent</item>
         <item name="android:fontFamily">@font/regular</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">?android:attr/colorBackgroundFloating</item>
+        <item name="android:navigationBarColor">?android:attr/windowBackground</item>
         <item name="android:buttonTint">@color/compound_button</item>
     </style>
 
@@ -21,7 +21,7 @@
         <item name="android:windowIsFloating">false</item>
         <item name="bottomSheetStyle">@style/BottomSheet</item>
         <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:navigationBarColor">?attr/colorPrimaryDark</item>
+        <item name="android:navigationBarColor">?android:attr/colorBackgroundFloating</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 

@@ -211,6 +211,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
         super.onCreate(savedInstanceState)
         startTime = System.currentTimeMillis()
+        binding.fakeShadow.visibleOrGone = hasNavigationBar()
 
         // Make sure the status bar color is properly set.
         window.decorView.systemUiVisibility = when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
@@ -426,6 +427,16 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
         }
     }
+
+    //TODO: Not working.
+    private fun hasNavigationBar() = true
+//    {
+//        val hasMenuKey = ViewConfiguration.get(this).hasPermanentMenuKey()
+//        val hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK)
+//        return !hasMenuKey && !hasBackKey
+//        val id = resources.getIdentifier("config_showNavigationBar", "bool", "android")
+//        return id > 0 && resources.getBoolean(id)
+//    }
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)

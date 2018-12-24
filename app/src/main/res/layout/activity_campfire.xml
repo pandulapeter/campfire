@@ -3,180 +3,193 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <androidx.drawerlayout.widget.DrawerLayout
-        android:id="@+id/drawer_layout"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:layout_height="match_parent">
 
-        <!-- The nested CoordinatorLayouts are needed to avoid some animation glitches. -->
-
-        <com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout
-            android:id="@+id/root_coordinator_layout"
+        <androidx.drawerlayout.widget.DrawerLayout
+            android:id="@+id/drawer_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:fitsSystemWindows="true">
 
-            <androidx.coordinatorlayout.widget.CoordinatorLayout
-                android:id="@+id/coordinator_layout"
+            <!-- The nested CoordinatorLayouts are needed to avoid some animation glitches. -->
+
+            <com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout
+                android:id="@+id/root_coordinator_layout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false">
+                android:layout_height="match_parent">
 
-                <com.google.android.material.appbar.AppBarLayout
-                    android:id="@+id/app_bar_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/colorBackgroundFloating"
-                    android:visibility="invisible"
-                    app:elevation="@dimen/toolbar_elevation">
-
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/toolbar_container"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:animateLayoutChanges="true"
-                        android:clipChildren="false"
-                        android:clipToPadding="false">
-
-                        <androidx.legacy.widget.Space
-                            android:id="@+id/toolbar_bottom"
-                            android:layout_width="0dp"
-                            android:layout_height="@dimen/toolbar_height"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <androidx.legacy.widget.Space
-                            android:id="@+id/first_keyline_fix"
-                            android:layout_width="@dimen/toolbar_first_keyline_fix"
-                            android:layout_height="0dp"
-                            android:orientation="vertical"
-                            app:layout_constraintEnd_toStartOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
-                            android:id="@+id/toolbar_main_button"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/first_keyline"
-                            app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
-                            app:layout_constraintStart_toStartOf="@id/first_keyline_fix"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/ic_menu_24dp" />
-
-                        <FrameLayout
-                            android:id="@+id/toolbar_title_container"
-                            android:layout_width="0dp"
-                            android:layout_height="0dp"
-                            android:layout_marginStart="@dimen/second_keyline"
-                            android:clipChildren="false"
-                            android:clipToPadding="false"
-                            app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
-                            app:layout_constraintEnd_toStartOf="@id/toolbar_button_container"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent">
-
-                            <TextView
-                                android:id="@+id/default_toolbar"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center_vertical"
-                                android:text="@string/campfire"
-                                android:textAppearance="@style/Title"
-                                android:textColor="?android:attr/textColorPrimary" />
-
-                        </FrameLayout>
-
-                        <LinearLayout
-                            android:id="@+id/toolbar_button_container"
-                            android:layout_width="wrap_content"
-                            android:layout_height="0dp"
-                            android:animateLayoutChanges="true"
-                            android:background="?attr/colorBackgroundFloating"
-                            android:clipChildren="false"
-                            android:clipToPadding="false"
-                            android:gravity="center_vertical|end"
-                            android:orientation="horizontal"
-                            android:paddingStart="@dimen/small_content_padding"
-                            android:paddingEnd="@dimen/content_padding"
-                            app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                </com.google.android.material.appbar.AppBarLayout>
-
-                <FrameLayout
-                    android:id="@+id/fragment_container"
+                <androidx.coordinatorlayout.widget.CoordinatorLayout
+                    android:id="@+id/coordinator_layout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:clipChildren="false"
-                    app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+                    android:clipToPadding="false">
 
-            </androidx.coordinatorlayout.widget.CoordinatorLayout>
+                    <com.google.android.material.appbar.AppBarLayout
+                        android:id="@+id/app_bar_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/colorBackgroundFloating"
+                        android:visibility="invisible"
+                        app:elevation="@dimen/toolbar_elevation">
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/auto_scroll_control"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="48dp"
-                android:clipChildren="false"
-                android:visibility="invisible"
-                app:cardBackgroundColor="?android:attr/colorBackground"
-                app:cardCornerRadius="16dp"
-                app:contentPadding="@dimen/detail_auto_scroll_control_padding"
-                app:layout_anchor="@id/floating_action_button"
-                app:layout_anchorGravity="center_vertical|end">
+                        <androidx.constraintlayout.widget.ConstraintLayout
+                            android:id="@+id/toolbar_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:animateLayoutChanges="true"
+                            android:clipChildren="false"
+                            android:clipToPadding="false">
 
-                <SeekBar
-                    android:id="@+id/auto_scroll_seek_bar"
-                    android:layout_width="@dimen/detail_auto_scroll_control_width"
+                            <androidx.legacy.widget.Space
+                                android:id="@+id/toolbar_bottom"
+                                android:layout_width="0dp"
+                                android:layout_height="@dimen/toolbar_height"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <androidx.legacy.widget.Space
+                                android:id="@+id/first_keyline_fix"
+                                android:layout_width="@dimen/toolbar_first_keyline_fix"
+                                android:layout_height="0dp"
+                                android:orientation="vertical"
+                                app:layout_constraintEnd_toStartOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                            <com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
+                                android:id="@+id/toolbar_main_button"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/first_keyline"
+                                app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
+                                app:layout_constraintStart_toStartOf="@id/first_keyline_fix"
+                                app:layout_constraintTop_toTopOf="parent"
+                                app:srcCompat="@drawable/ic_menu_24dp" />
+
+                            <FrameLayout
+                                android:id="@+id/toolbar_title_container"
+                                android:layout_width="0dp"
+                                android:layout_height="0dp"
+                                android:layout_marginStart="@dimen/second_keyline"
+                                android:clipChildren="false"
+                                android:clipToPadding="false"
+                                app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
+                                app:layout_constraintEnd_toStartOf="@id/toolbar_button_container"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent">
+
+                                <TextView
+                                    android:id="@+id/default_toolbar"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:text="@string/campfire"
+                                    android:textAppearance="@style/Title"
+                                    android:textColor="?android:attr/textColorPrimary" />
+
+                            </FrameLayout>
+
+                            <LinearLayout
+                                android:id="@+id/toolbar_button_container"
+                                android:layout_width="wrap_content"
+                                android:layout_height="0dp"
+                                android:animateLayoutChanges="true"
+                                android:background="?attr/colorBackgroundFloating"
+                                android:clipChildren="false"
+                                android:clipToPadding="false"
+                                android:gravity="center_vertical|end"
+                                android:orientation="horizontal"
+                                android:paddingStart="@dimen/small_content_padding"
+                                android:paddingEnd="@dimen/content_padding"
+                                app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
+                                app:layout_constraintEnd_toEndOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+
+                        </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    </com.google.android.material.appbar.AppBarLayout>
+
+                    <FrameLayout
+                        android:id="@+id/fragment_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:clipChildren="false"
+                        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+                </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/auto_scroll_control"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/content_padding"
-                    android:layout_marginEnd="24dp"
-                    android:max="9"
-                    android:padding="@dimen/content_padding"
-                    android:progress="2" />
+                    android:layout_marginEnd="48dp"
+                    android:clipChildren="false"
+                    android:visibility="invisible"
+                    app:cardBackgroundColor="?android:attr/colorBackground"
+                    app:cardCornerRadius="16dp"
+                    app:contentPadding="@dimen/detail_auto_scroll_control_padding"
+                    app:layout_anchor="@id/floating_action_button"
+                    app:layout_anchorGravity="center_vertical|end">
 
-            </androidx.cardview.widget.CardView>
+                    <SeekBar
+                        android:id="@+id/auto_scroll_seek_bar"
+                        android:layout_width="@dimen/detail_auto_scroll_control_width"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/content_padding"
+                        android:layout_marginEnd="24dp"
+                        android:max="9"
+                        android:padding="@dimen/content_padding"
+                        android:progress="2" />
 
-            <com.pandulapeter.campfire.feature.shared.widget.FloatingActionButton
-                android:id="@+id/floating_action_button"
+                </androidx.cardview.widget.CardView>
+
+                <com.pandulapeter.campfire.feature.shared.widget.FloatingActionButton
+                    android:id="@+id/floating_action_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:layout_margin="@dimen/large_content_padding"
+                    android:alpha="0"
+                    android:scaleX="0"
+                    android:scaleY="0"
+                    android:visibility="gone"
+                    app:layout_behavior="com.pandulapeter.campfire.feature.shared.SnackbarSlideBehavior"
+                    tools:ignore="ContentDescription" />
+
+            </com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout>
+
+            <com.google.android.material.navigation.NavigationView
+                android:id="@+id/primary_navigation"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_margin="@dimen/large_content_padding"
-                android:alpha="0"
-                android:scaleX="0"
-                android:scaleY="0"
-                android:visibility="gone"
-                app:layout_behavior="com.pandulapeter.campfire.feature.shared.SnackbarSlideBehavior"
-                tools:ignore="ContentDescription" />
+                android:layout_height="match_parent"
+                android:layout_gravity="start"
+                android:background="?android:attr/colorBackgroundFloating"
+                app:headerLayout="@layout/view_menu_header"
+                app:insetForeground="?attr/colorPrimary"
+                app:itemBackground="?attr/selectableItemBackground"
+                app:itemIconTint="@color/menu_item_icon"
+                app:itemTextColor="@color/menu_item_text"
+                app:menu="@menu/campfire" />
 
-        </com.pandulapeter.campfire.feature.shared.widget.RootCoordinatorLayout>
+            <com.google.android.material.navigation.NavigationView
+                android:id="@+id/secondary_navigation"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:background="?android:attr/colorBackgroundFloating"
+                app:insetForeground="?attr/colorPrimary" />
 
-        <com.google.android.material.navigation.NavigationView
-            android:id="@+id/primary_navigation"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="start"
-            android:background="?android:attr/colorBackgroundFloating"
-            app:headerLayout="@layout/view_menu_header"
-            app:insetForeground="?attr/colorPrimary"
-            app:itemBackground="?attr/selectableItemBackground"
-            app:itemIconTint="@color/menu_item_icon"
-            app:itemTextColor="@color/menu_item_text"
-            app:menu="@menu/campfire" />
+        </androidx.drawerlayout.widget.DrawerLayout>
 
-        <com.google.android.material.navigation.NavigationView
-            android:id="@+id/secondary_navigation"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="end"
-            android:background="?android:attr/colorBackgroundFloating"
-            app:insetForeground="?attr/colorPrimary" />
+        <View
+            android:id="@+id/fake_shadow"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/toolbar_elevation"
+            android:layout_gravity="bottom"
+            android:background="@drawable/bg_fake_shadow" />
 
-    </androidx.drawerlayout.widget.DrawerLayout>
+    </FrameLayout>
 
 </layout>
