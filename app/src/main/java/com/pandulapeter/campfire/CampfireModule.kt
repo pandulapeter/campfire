@@ -73,7 +73,6 @@ val detailModule = module {
 val featureModule = module {
 
     single { InteractionBlocker() }
-    factory { SongParser(androidContext()) }
 
     viewModel<HomeContainerViewModel>()
 
@@ -93,5 +92,5 @@ val featureModule = module {
     viewModel<AboutViewModel>()
 
     viewModel<DetailViewModel>()
-    viewModel { (song: Song) -> DetailPageViewModel(song, androidContext(), get(), get(), get(), get(), get(), get()) }
+    viewModel { (song: Song, songParser: SongParser) -> DetailPageViewModel(song, androidContext(), get(), get(), get(), get(), get(), songParser) }
 }

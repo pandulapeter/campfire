@@ -7,6 +7,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.databinding.FragmentDetailPageBinding
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.detail.DetailFragment
+import com.pandulapeter.campfire.feature.detail.page.parsing.SongParser
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.withArguments
@@ -18,7 +19,7 @@ import kotlin.math.roundToInt
 class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPageViewModel>(R.layout.fragment_detail_page), DetailEventBus.Subscriber {
 
     private val song by lazy { arguments?.song as? Song? ?: throw IllegalArgumentException("No Song specified") }
-    override val viewModel by viewModel<DetailPageViewModel> { parametersOf(song) }
+    override val viewModel by viewModel<DetailPageViewModel> { parametersOf(song, SongParser(requireContext())) }
     private var isContentVisible = false
     private val detailEventBus by inject<DetailEventBus>()
     private var smoothScrollHolder = 0f
