@@ -212,7 +212,7 @@ abstract class BaseSongListViewModel(
         state.value = if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL
     }
 
-    protected fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
+    fun updateAdapterItems(shouldScrollToTop: Boolean = false) {
         if (canUpdateUI() && playlistRepository.isCacheLoaded() && songRepository.isCacheLoaded() && songDetailRepository.isCacheLoaded()) {
             coroutine?.cancel()
             coroutine = GlobalScope.launch(UI) {

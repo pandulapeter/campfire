@@ -10,7 +10,6 @@ import androidx.annotation.LayoutRes
 import androidx.annotation.StringRes
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.databinding.ViewDataBinding
-import com.pandulapeter.campfire.feature.main.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.setTitleSubtitle
 
 @Deprecated("Use TopLevelFragment instead.")
@@ -24,9 +23,7 @@ abstract class OldTopLevelFragment<B : ViewDataBinding, out VM : OldCampfireView
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         getCampfireActivity().onScreenChanged()
-        if (savedInstanceState == null || this !is SongsFragment) {
-            getCampfireActivity().updateAppBarView(appBarView, savedInstanceState != null)
-        }
+        getCampfireActivity().updateAppBarView(appBarView, savedInstanceState != null)
     }
 
     open fun onDrawerStateChanged(state: Int) = Unit

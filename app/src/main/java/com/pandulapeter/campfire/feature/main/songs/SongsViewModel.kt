@@ -10,16 +10,15 @@ import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListViewModel
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
-import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.mutableLiveDataOf
 import com.pandulapeter.campfire.util.normalize
-import com.pandulapeter.campfire.util.onTextChanged
 import com.pandulapeter.campfire.util.removePrefixes
 
 class SongsViewModel(
@@ -29,12 +28,13 @@ class SongsViewModel(
     preferenceDatabase: PreferenceDatabase,
     playlistRepository: PlaylistRepository,
     analyticsManager: AnalyticsManager,
-    val toolbarTextInputView: ToolbarTextInputView //TODO: Move to Fragment.
-) : OldBaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager) {
+    interactionBlocker: InteractionBlocker
+) : BaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager, interactionBlocker) {
 
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_SONGS
     override val buttonIcon = R.drawable.ic_filter_and_sort_24dp
     private val popularString = context.getString(R.string.popular_tag)
+    var isTextInputVisible = false
     private val newString = context.getString(R.string.new_tag)
     val shouldOpenSecondaryNavigationDrawer = MutableLiveData<Boolean?>()
     val shouldUpdateSearchToggleDrawable = MutableLiveData<Boolean?>()
@@ -98,9 +98,6 @@ class SongsViewModel(
         }
 
     init {
-        toolbarTextInputView.apply {
-            textInput.onTextChanged { if (isTextInputVisible) query = it }
-        }
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_SONGS
         adapter.itemTitleCallback = {
             when (it) {
@@ -126,7 +123,7 @@ class SongsViewModel(
     override fun onListUpdated(items: List<ItemViewModel>) {
         super.onListUpdated(items)
         if (songs.toList().isNotEmpty()) {
-            buttonText.value = if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters
+            buttonText.value = if (isTextInputVisible) 0 else R.string.filters
             isFastScrollEnabled.value = sortingMode != SortingMode.POPULARITY
         }
     }
@@ -179,25 +176,7 @@ class SongsViewModel(
         isFastScrollEnabled.value = sortingMode != SortingMode.POPULARITY
     }
 
-    fun toggleTextInputVisibility() {
-        toolbarTextInputView.run {
-            if (title.tag == null) {
-                val shouldScrollToTop = !query.isEmpty()
-                animateTextInputVisibility(!isTextInputVisible)
-                if (isTextInputVisible) {
-                    textInput.setText("")
-                }
-                shouldUpdateSearchToggleDrawable.value = toolbarTextInputView.isTextInputVisible
-                if (shouldScrollToTop) {
-                    updateAdapterItems(!isTextInputVisible)
-                }
-                buttonText.value = if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters
-            }
-            shouldShowEraseButton.value = isTextInputVisible
-        }
-    }
-
-    private fun Sequence<Song>.filterByQuery() = if (toolbarTextInputView.isTextInputVisible && query.isNotEmpty()) {
+    private fun Sequence<Song>.filterByQuery() = if (isTextInputVisible && query.isNotEmpty()) {
         query.trim().normalize().let { query ->
             filter {
                 (it.getNormalizedTitle().contains(query, true) && shouldSearchInTitles) || (it.getNormalizedArtist().contains(query, true) && shouldSearchInArtists)

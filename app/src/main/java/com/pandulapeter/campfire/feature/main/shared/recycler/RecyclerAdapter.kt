@@ -113,7 +113,7 @@ class RecyclerAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(), FastScr
         this.recyclerView = null
     }
 
-    override fun getItemViewType(position: Int) = when (items[position]) {
+    override fun getItemViewType(position: Int) = if (position == RecyclerView.NO_POSITION) VIEW_TYPE_HEADER else when (items[position]) {
         is HeaderItemViewModel -> VIEW_TYPE_HEADER
         is CollectionItemViewModel -> VIEW_TYPE_COLLECTION
         is SongItemViewModel -> VIEW_TYPE_SONG
