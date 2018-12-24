@@ -359,6 +359,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             binding.drawerLayout.run { post { closeDrawers() } }
         }
         (currentFragment as? DetailFragment)?.notifyTransitionEnd()
+        isUiBlocked = false //TODO: Won't be needed after refactoring
         updateTaskDescription()
     }
 

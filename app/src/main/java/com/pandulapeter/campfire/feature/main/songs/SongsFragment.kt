@@ -44,44 +44,7 @@ class SongsFragment : OldBaseSongListFragment<SongsViewModel>() {
             preferenceDatabase = preferenceDatabase,
             playlistRepository = playlistRepository,
             analyticsManager = analyticsManager,
-            toolbarTextInputView = ToolbarTextInputView(getCampfireActivity().toolbarContext, R.string.songs_search, true).apply { title.updateToolbarTitle(R.string.main_songs) },
-            updateSearchToggleDrawable = {
-                searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
-                getCampfireActivity().transitionMode = true
-                binding.root.post {
-                    if (isAdded) {
-                        searchControlsViewModel.isVisible.set(it)
-                    }
-                }
-            },
-            onDataLoaded = { languages ->
-                getCampfireActivity().updateAppBarView(searchControlsBinding.root)
-                getCampfireActivity().enableSecondaryNavigationDrawer(R.menu.songs)
-                initializeCompoundButton(R.id.downloaded_only) { viewModel.shouldShowDownloadedOnly }
-                initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
-                initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == SongsViewModel.SortingMode.TITLE }
-                initializeCompoundButton(R.id.sort_by_artist) { viewModel.sortingMode == SongsViewModel.SortingMode.ARTIST }
-                initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == SongsViewModel.SortingMode.POPULARITY }
-                getCampfireActivity().secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
-                    clear()
-                    languages.forEachIndexed { index, language ->
-                        add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
-                            setActionView(R.layout.widget_checkbox)
-                            initializeCompoundButton(language.nameResource) { !viewModel.disabledLanguageFilters.contains(language.id) }
-                        }
-                    }
-                }
-                getCampfireActivity().toolbarContext.let { context ->
-                    getCampfireActivity().updateToolbarButtons(
-                        listOf(
-                            eraseButton,
-                            searchToggle,
-                            context.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity().openSecondaryNavigationDrawer() }
-                        ))
-                }
-            },
-            openSecondaryNavigationDrawer = { getCampfireActivity().openSecondaryNavigationDrawer() },
-            setFastScrollEnabled = { binding.recyclerView.setFastScrollEnabled(it) }
+            toolbarTextInputView = ToolbarTextInputView(getCampfireActivity().toolbarContext, R.string.songs_search, true).apply { title.updateToolbarTitle(R.string.main_songs) }
         )
     }
     private var Bundle.isTextInputVisible by BundleArgumentDelegate.Boolean("isTextInputVisible")
@@ -120,8 +83,47 @@ class SongsFragment : OldBaseSongListFragment<SongsViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_SONGS)
-        viewModel.shouldShowEraseButton.onPropertyChanged { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
-        viewModel.shouldEnableEraseButton.onPropertyChanged {
+        viewModel.shouldUpdateSearchToggleDrawable.observeAndReset {
+            searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
+            getCampfireActivity().transitionMode = true
+            binding.root.post {
+                if (isAdded) {
+                    searchControlsViewModel.isVisible.set(it)
+                }
+            }
+        }
+        viewModel.languages.observe { languages ->
+            if (languages != null) {
+                getCampfireActivity().updateAppBarView(searchControlsBinding.root)
+                getCampfireActivity().enableSecondaryNavigationDrawer(R.menu.songs)
+                initializeCompoundButton(R.id.downloaded_only) { viewModel.shouldShowDownloadedOnly }
+                initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
+                initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == SongsViewModel.SortingMode.TITLE }
+                initializeCompoundButton(R.id.sort_by_artist) { viewModel.sortingMode == SongsViewModel.SortingMode.ARTIST }
+                initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == SongsViewModel.SortingMode.POPULARITY }
+                getCampfireActivity().secondaryNavigationMenu.findItem(R.id.filter_by_language).subMenu.run {
+                    clear()
+                    languages.forEachIndexed { index, language ->
+                        add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
+                            setActionView(R.layout.widget_checkbox)
+                            initializeCompoundButton(language.nameResource) { !viewModel.disabledLanguageFilters.contains(language.id) }
+                        }
+                    }
+                }
+                getCampfireActivity().toolbarContext.let { context ->
+                    getCampfireActivity().updateToolbarButtons(
+                        listOf(
+                            eraseButton,
+                            searchToggle,
+                            context.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity().openSecondaryNavigationDrawer() }
+                        ))
+                }
+            }
+        }
+        viewModel.isFastScrollEnabled.observe { binding.recyclerView.setFastScrollEnabled(it) }
+        viewModel.shouldOpenSecondaryNavigationDrawer.observeAndReset { getCampfireActivity().openSecondaryNavigationDrawer() }
+        viewModel.shouldShowEraseButton.observe { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
+        viewModel.shouldEnableEraseButton.observe {
             eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
             eraseButton.isEnabled = it
         }
@@ -136,8 +138,8 @@ class SongsFragment : OldBaseSongListFragment<SongsViewModel>() {
                 }
                 viewModel.toolbarTextInputView.showTextInput()
             }
-            viewModel.shouldShowEraseButton.set(savedInstanceState.isEraseButtonVisible)
-            viewModel.shouldEnableEraseButton.set(savedInstanceState.isEraseButtonEnabled)
+            viewModel.shouldShowEraseButton.value = savedInstanceState.isEraseButtonVisible
+            viewModel.shouldEnableEraseButton.value = savedInstanceState.isEraseButtonEnabled
         }
         viewModel.toolbarTextInputView.textInput.requestFocus()
         searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
@@ -169,8 +171,8 @@ class SongsFragment : OldBaseSongListFragment<SongsViewModel>() {
         super.onSaveInstanceState(this)
         isTextInputVisible = viewModel.toolbarTextInputView.isTextInputVisible
         searchQuery = viewModel.query
-        isEraseButtonVisible = viewModel.shouldShowEraseButton.get()
-        isEraseButtonEnabled = viewModel.shouldEnableEraseButton.get()
+        isEraseButtonVisible = viewModel.shouldShowEraseButton.value == true
+        isEraseButtonEnabled = viewModel.shouldEnableEraseButton.value == true
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
@@ -195,7 +197,7 @@ class SongsFragment : OldBaseSongListFragment<SongsViewModel>() {
                 analyticsManager.onSongsSortingModeUpdated(AnalyticsManager.PARAM_VALUE_BY_POPULARITY)
                 sortingMode = it
             }
-            else -> consumeAndUpdateLanguageFilter(menuItem, viewModel.languages.find { it.nameResource == menuItem.itemId }?.id ?: "")
+            else -> consumeAndUpdateLanguageFilter(menuItem, viewModel.languages.value.orEmpty().find { it.nameResource == menuItem.itemId }?.id ?: "")
         }
     }
 

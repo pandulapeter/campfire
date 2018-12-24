@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.feature.main.songs
 
 import android.content.Context
-import androidx.databinding.ObservableBoolean
+import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.data.model.remote.Song
@@ -17,11 +17,10 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemView
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.util.mutableLiveDataOf
 import com.pandulapeter.campfire.util.normalize
-import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.onTextChanged
 import com.pandulapeter.campfire.util.removePrefixes
-import com.pandulapeter.campfire.util.swap
 
 class SongsViewModel(
     context: Context,
@@ -30,31 +29,26 @@ class SongsViewModel(
     preferenceDatabase: PreferenceDatabase,
     playlistRepository: PlaylistRepository,
     analyticsManager: AnalyticsManager,
-    val toolbarTextInputView: ToolbarTextInputView, //TODO: Move to Fragment.
-    private val updateSearchToggleDrawable: (Boolean) -> Unit, //TODO: Replace with LiveData
-    private val onDataLoaded: (languages: List<Language>) -> Unit, //TODO: Replace with LiveData
-    private val openSecondaryNavigationDrawer: () -> Unit, //TODO: Replace with LiveData
-    private val setFastScrollEnabled: (Boolean) -> Unit //TODO: Replace with LiveData
+    val toolbarTextInputView: ToolbarTextInputView //TODO: Move to Fragment.
 ) : OldBaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager) {
 
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_SONGS
     override val buttonIcon = R.drawable.ic_filter_and_sort_24dp
     private val popularString = context.getString(R.string.popular_tag)
     private val newString = context.getString(R.string.new_tag)
+    val shouldOpenSecondaryNavigationDrawer = MutableLiveData<Boolean?>()
+    val shouldUpdateSearchToggleDrawable = MutableLiveData<Boolean?>()
+    val isFastScrollEnabled = mutableLiveDataOf(false)
     override val placeholderText = R.string.songs_placeholder
-    val shouldShowEraseButton = ObservableBoolean().apply {
-        onPropertyChanged {
-            isSwipeRefreshEnabled.set(!it)
-        }
-    }
-    val shouldEnableEraseButton = ObservableBoolean()
+    val shouldShowEraseButton = mutableLiveDataOf(false) { isSwipeRefreshEnabled.set(!it) }
+    val shouldEnableEraseButton = mutableLiveDataOf(false)
     var query = ""
         set(value) {
             if (field != value) {
                 field = value
                 updateAdapterItems(true)
                 trackSearchEvent()
-                shouldEnableEraseButton.set(query.isNotEmpty())
+                shouldEnableEraseButton.value = query.isNotEmpty()
             }
         }
     var shouldShowDownloadedOnly = preferenceDatabase.shouldShowDownloadedOnly
@@ -89,7 +83,7 @@ class SongsViewModel(
                 updateAdapterItems(true)
             }
         }
-    var languages = mutableListOf<Language>()
+    var languages = MutableLiveData<List<Language>?>()
     var shouldSearchInTitles = preferenceDatabase.shouldSearchInTitles
         set(value) {
             field = value
@@ -125,8 +119,7 @@ class SongsViewModel(
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
         super.onSongRepositoryDataUpdated(data)
         if (data.isNotEmpty()) {
-            languages.swap(songRepository.languages)
-            onDataLoaded(languages)
+            languages.value = songRepository.languages
         }
     }
 
@@ -134,11 +127,13 @@ class SongsViewModel(
         super.onListUpdated(items)
         if (songs.toList().isNotEmpty()) {
             buttonText.value = if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters
-            setFastScrollEnabled(sortingMode != SortingMode.POPULARITY)
+            isFastScrollEnabled.value = sortingMode != SortingMode.POPULARITY
         }
     }
 
-    override fun onActionButtonClicked() = openSecondaryNavigationDrawer()
+    override fun onActionButtonClicked() {
+        shouldOpenSecondaryNavigationDrawer.value = true
+    }
 
     override fun Sequence<Song>.createViewModels() = filterByQuery()
         .filterDownloaded()
@@ -178,10 +173,10 @@ class SongsViewModel(
         }
 
     fun restoreToolbarButtons() {
-        if (languages.isNotEmpty()) {
-            onDataLoaded(languages)
+        if (languages.value?.isNotEmpty() == true) {
+            languages.value = languages.value
         }
-        setFastScrollEnabled(sortingMode != SortingMode.POPULARITY)
+        isFastScrollEnabled.value = sortingMode != SortingMode.POPULARITY
     }
 
     fun toggleTextInputVisibility() {
@@ -192,13 +187,13 @@ class SongsViewModel(
                 if (isTextInputVisible) {
                     textInput.setText("")
                 }
-                updateSearchToggleDrawable(toolbarTextInputView.isTextInputVisible)
+                shouldUpdateSearchToggleDrawable.value = toolbarTextInputView.isTextInputVisible
                 if (shouldScrollToTop) {
                     updateAdapterItems(!isTextInputVisible)
                 }
                 buttonText.value = if (toolbarTextInputView.isTextInputVisible) 0 else R.string.filters
             }
-            shouldShowEraseButton.set(isTextInputVisible)
+            shouldShowEraseButton.value = isTextInputVisible
         }
     }
 
