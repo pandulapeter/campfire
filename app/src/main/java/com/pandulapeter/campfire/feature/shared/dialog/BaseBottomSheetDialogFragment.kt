@@ -37,7 +37,6 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
     override fun onConfigurationChanged(newConfig: Configuration?) {
         super.onConfigurationChanged(newConfig)
         dismiss()
-        show(fragmentManager, tag)
     }
 
     open fun updateSystemWindows() {
