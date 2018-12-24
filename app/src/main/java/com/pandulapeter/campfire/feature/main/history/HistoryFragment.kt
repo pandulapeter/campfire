@@ -5,48 +5,26 @@ import android.view.View
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.data.repository.HistoryRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.data.repository.SongDetailRepository
-import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.main.shared.ElevationItemTouchHelperCallback
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListFragment
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.dimension
-import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.visibleOrGone
 import com.pandulapeter.campfire.util.visibleOrInvisible
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class HistoryFragment : OldBaseSongListFragment<HistoryViewModel>(), BaseDialogFragment.OnDialogItemSelectedListener {
-
-
-    private val songRepository by inject<SongRepository>()
-    private val songDetailRepository by inject<SongDetailRepository>()
-    private val historyRepository by inject<HistoryRepository>()
-    private val preferenceDatabase by inject<PreferenceDatabase>()
-    private val playlistRepository by inject<PlaylistRepository>()
-
-
+class HistoryFragment : BaseSongListFragment<HistoryViewModel>(), BaseDialogFragment.OnDialogItemSelectedListener {
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
-    override val viewModel by lazy {
-        HistoryViewModel(
-            getCampfireActivity(),
-            songRepository,
-            songDetailRepository,
-            historyRepository,
-            preferenceDatabase,
-            playlistRepository,
-            analyticsManager
-        ) { getCampfireActivity().openSongsScreen() }
-    }
+    override val viewModel by viewModel<HistoryViewModel>()
+    override val shouldSendMultipleSongs = false
+    override val shouldShowManagePlaylist = true
     private val deleteAllButton by lazy {
-        getCampfireActivity().toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
             AlertDialogFragment.show(
                 DIALOG_ID_DELETE_ALL_CONFIRMATION,
                 childFragmentManager,
@@ -62,19 +40,16 @@ class HistoryFragment : OldBaseSongListFragment<HistoryViewModel>(), BaseDialogF
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_HISTORY)
         binding.swipeRefreshLayout.isEnabled = false
-        defaultToolbar.updateToolbarTitle(R.string.main_history)
-        getCampfireActivity().updateToolbarButtons(listOf(deleteAllButton))
-        viewModel.shouldShowDeleteAll.onPropertyChanged(this) {
+        topLevelBehavior.defaultToolbar.updateToolbarTitle(R.string.main_history)
+        getCampfireActivity()?.updateToolbarButtons(listOf(deleteAllButton))
+        viewModel.shouldShowDeleteAll.observe {
             deleteAllButton.visibleOrGone = it
             showHintIfNeeded()
         }
-        ItemTouchHelper(object : ElevationItemTouchHelperCallback((getCampfireActivity().dimension(R.dimen.content_padding)).toFloat(), 0, 0) {
+        viewModel.shouldOpenSongs.observeAndReset { getCampfireActivity()?.openSongsScreen() }
+        ItemTouchHelper(object : ElevationItemTouchHelperCallback((requireContext().dimension(R.dimen.content_padding)).toFloat(), 0, 0) {
 
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ) = false
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = false
 
             override fun getSwipeDirs(recyclerView: androidx.recyclerview.widget.RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
                 viewHolder.adapterPosition.let { position ->
@@ -122,7 +97,7 @@ class HistoryFragment : OldBaseSongListFragment<HistoryViewModel>(), BaseDialogF
     }
 
     private fun showHintIfNeeded() {
-        if (!firstTimeUserExperienceManager.historyCompleted && !isSnackbarVisible() && viewModel.shouldShowDeleteAll.get()) {
+        if (!firstTimeUserExperienceManager.historyCompleted && !isSnackbarVisible() && viewModel.shouldShowDeleteAll.value == true) {
             showHint(
                 message = R.string.history_hint,
                 action = { firstTimeUserExperienceManager.historyCompleted = true }

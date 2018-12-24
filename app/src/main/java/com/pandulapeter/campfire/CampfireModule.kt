@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.feature.detail.DetailViewModel
 import com.pandulapeter.campfire.feature.detail.page.DetailPageViewModel
 import com.pandulapeter.campfire.feature.detail.page.parsing.SongParser
 import com.pandulapeter.campfire.feature.main.collections.CollectionsViewModel
+import com.pandulapeter.campfire.feature.main.history.HistoryViewModel
 import com.pandulapeter.campfire.feature.main.home.HomeContainerViewModel
 import com.pandulapeter.campfire.feature.main.home.home.HomeViewModel
 import com.pandulapeter.campfire.feature.main.home.onboarding.OnboardingViewModel
@@ -84,8 +85,8 @@ val featureModule = module {
     viewModel<ContentLanguageViewModel>()
 
     viewModel<HomeViewModel>()
-
     viewModel<CollectionsViewModel>()
+    viewModel<HistoryViewModel>()
 
     viewModel<OptionsViewModel>()
     viewModel<PreferencesViewModel>()

@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.feature.main.history
 
 import android.content.Context
-import androidx.databinding.ObservableBoolean
+import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.local.HistoryItem
 import com.pandulapeter.campfire.data.model.remote.Song
@@ -11,11 +11,13 @@ import com.pandulapeter.campfire.data.repository.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
-import com.pandulapeter.campfire.feature.main.shared.baseSongList.OldBaseSongListViewModel
+import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.util.mutableLiveDataOf
 import java.util.Calendar
 
 class HistoryViewModel(
@@ -25,11 +27,12 @@ class HistoryViewModel(
     private val historyRepository: HistoryRepository,
     preferenceDatabase: PreferenceDatabase,
     playlistRepository: PlaylistRepository,
-    analyticsManager: AnalyticsManager,
-    private val openSongs: () -> Unit //TODO: Replace with LiveData
-) : OldBaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager), HistoryRepository.Subscriber {
+    interfaceBlocker: InteractionBlocker,
+    analyticsManager: AnalyticsManager
+) : BaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager, interfaceBlocker), HistoryRepository.Subscriber {
 
-    val shouldShowDeleteAll = ObservableBoolean()
+    val shouldShowDeleteAll = mutableLiveDataOf(false)
+    val shouldOpenSongs = MutableLiveData<Boolean?>()
     private var songToDeleteId: String? = null
     private var history = listOf<HistoryItem>()
     private val Calendar.year get() = get(Calendar.YEAR)
@@ -78,10 +81,12 @@ class HistoryViewModel(
 
     override fun onListUpdated(items: List<ItemViewModel>) {
         super.onListUpdated(items)
-        shouldShowDeleteAll.set(items.isNotEmpty())
+        shouldShowDeleteAll.value = items.isNotEmpty()
     }
 
-    override fun onActionButtonClicked() = openSongs()
+    override fun onActionButtonClicked() {
+        shouldOpenSongs.value = true
+    }
 
     override fun onHistoryUpdated(history: List<HistoryItem>) {
         val oldFirst = this.history.sortedByDescending { it.lastOpenedAt }.firstOrNull()?.lastOpenedAt
