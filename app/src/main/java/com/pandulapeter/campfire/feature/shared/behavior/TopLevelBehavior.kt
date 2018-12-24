@@ -14,7 +14,6 @@ class TopLevelBehavior(
     private val shouldChangeToolbarAutomatically: Boolean = true
 ) : Behavior() {
     val defaultToolbar by lazy { AppCompatTextView(getCampfireActivity()).apply { gravity = Gravity.CENTER_VERTICAL } }
-    var toolbarWidth = 0
 
     override fun onViewCreated(savedInstanceState: Bundle?) {
         getCampfireActivity()?.run {
@@ -27,6 +26,6 @@ class TopLevelBehavior(
     }
 
     fun changeToolbar() {
-        getCampfireActivity()?.run { updateToolbarTitleView(inflateToolbarTitle?.invoke(toolbarContext) ?: defaultToolbar, toolbarWidth) }
+        getCampfireActivity()?.run { updateToolbarTitleView(inflateToolbarTitle?.invoke(toolbarContext) ?: defaultToolbar) }
     }
 }

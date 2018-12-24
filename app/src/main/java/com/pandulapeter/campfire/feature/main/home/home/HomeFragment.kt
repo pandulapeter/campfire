@@ -327,6 +327,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                 requestLayout()
             }
             activity.showPlayStoreRatingDialogIfNeeded()
+            activity.updateToolbarTitleView(toolbarTextInputView)
         }
     }
 
