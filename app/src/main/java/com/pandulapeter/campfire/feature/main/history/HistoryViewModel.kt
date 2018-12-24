@@ -27,9 +27,10 @@ class HistoryViewModel(
     private val historyRepository: HistoryRepository,
     preferenceDatabase: PreferenceDatabase,
     playlistRepository: PlaylistRepository,
-    interfaceBlocker: InteractionBlocker,
+    interactionBlocker: InteractionBlocker,
     analyticsManager: AnalyticsManager
-) : BaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager, interfaceBlocker), HistoryRepository.Subscriber {
+) : BaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager, interactionBlocker),
+    HistoryRepository.Subscriber {
 
     val shouldShowDeleteAll = mutableLiveDataOf(false)
     val shouldOpenSongs = MutableLiveData<Boolean?>()

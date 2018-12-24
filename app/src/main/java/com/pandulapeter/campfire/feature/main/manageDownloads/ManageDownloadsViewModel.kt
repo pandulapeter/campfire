@@ -24,8 +24,8 @@ class ManageDownloadsViewModel(
     preferenceDatabase: PreferenceDatabase,
     playlistRepository: PlaylistRepository,
     analyticsManager: AnalyticsManager,
-    interfaceBlocker: InteractionBlocker
-) : BaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager, interfaceBlocker) {
+    interactionBlocker: InteractionBlocker
+) : BaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager, interactionBlocker) {
 
     val shouldShowDeleteAll = mutableLiveDataOf(false)
     val songCount = mutableLiveDataOf(0)

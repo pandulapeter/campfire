@@ -2,6 +2,7 @@ package com.pandulapeter.campfire
 
 import androidx.room.Room
 import com.google.gson.GsonBuilder
+import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.Database
@@ -18,6 +19,7 @@ import com.pandulapeter.campfire.feature.detail.DetailViewModel
 import com.pandulapeter.campfire.feature.detail.page.DetailPageViewModel
 import com.pandulapeter.campfire.feature.detail.page.parsing.SongParser
 import com.pandulapeter.campfire.feature.main.collections.CollectionsViewModel
+import com.pandulapeter.campfire.feature.main.collections.detail.CollectionDetailViewModel
 import com.pandulapeter.campfire.feature.main.history.HistoryViewModel
 import com.pandulapeter.campfire.feature.main.home.HomeContainerViewModel
 import com.pandulapeter.campfire.feature.main.home.home.HomeViewModel
@@ -87,6 +89,7 @@ val featureModule = module {
 
     viewModel<HomeViewModel>()
     viewModel<CollectionsViewModel>()
+    viewModel { (collection: Collection) -> CollectionDetailViewModel(collection, androidContext(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel<HistoryViewModel>()
 
     viewModel<OptionsViewModel>()

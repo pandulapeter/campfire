@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentBaseSongListOldBinding
-import com.pandulapeter.campfire.feature.main.collections.detail.CollectionDetailViewModel
 import com.pandulapeter.campfire.feature.main.playlist.PlaylistViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.deprecated.OldTopLevelFragment
@@ -61,7 +60,7 @@ abstract class OldBaseSongListFragment<out VM : OldBaseSongListViewModel> : OldT
                     }
                     getCampfireActivity().isUiBlocked = true
                     onDetailScreenOpened()
-                    val shouldSendMultipleSongs = viewModel is PlaylistViewModel || viewModel is CollectionDetailViewModel
+                    val shouldSendMultipleSongs = viewModel is PlaylistViewModel
                     getCampfireActivity().openDetailScreen(
                         clickedView,
                         if (shouldSendMultipleSongs) items.filterIsInstance<SongItemViewModel>().map { it.song } else listOf(song),
@@ -191,7 +190,7 @@ abstract class OldBaseSongListFragment<out VM : OldBaseSongListViewModel> : OldT
         val tempList = viewModel.adapter.items.filterIsInstance<SongItemViewModel>().map { it.song }.toMutableList()
         tempList.shuffle()
         analyticsManager.onShuffleButtonPressed(source, tempList.size)
-        getCampfireActivity().openDetailScreen(null, tempList, false, 0, viewModel is CollectionDetailViewModel)
+        getCampfireActivity().openDetailScreen(null, tempList, false, 0, false)
     }
 
     companion object {
