@@ -100,8 +100,7 @@
                     app:fastScrollPopupBgColor="@color/accent"
                     app:fastScrollPopupTextColor="@color/white"
                     app:fastScrollPopupTextSize="24sp"
-                    app:fastScrollThumbEnabled="false"
-                    app:hasFixedSize="@{true}" />
+                    app:fastScrollThumbEnabled="false" />
 
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

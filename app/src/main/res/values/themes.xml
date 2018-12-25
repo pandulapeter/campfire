@@ -3,6 +3,7 @@
 
     <style name="Campfire" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">?android:attr/colorBackgroundFloating</item>
+        <item name="colorPrimaryDark">?android:attr/colorBackgroundFloating</item>
         <item name="colorSecondary">@color/accent</item>
         <item name="android:fontFamily">@font/regular</item>
         <item name="android:statusBarColor">@android:color/transparent</item>

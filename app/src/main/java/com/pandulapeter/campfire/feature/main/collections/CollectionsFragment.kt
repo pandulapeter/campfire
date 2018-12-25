@@ -233,11 +233,11 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                                 if (index != RecyclerView.NO_POSITION) {
                                     val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                     if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
-                                        linearLayoutManager.isScrollEnabled = true
                                         post { if (isAdded) scrollToPosition(index) }
                                     }
                                 }
                             }
+                            linearLayoutManager.isScrollEnabled = true
                         }
                     })
             }

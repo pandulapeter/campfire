@@ -113,6 +113,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
         linearLayoutManager = DisableScrollLinearLayoutManager(requireActivity())
         binding.recyclerView.run {
             layoutManager = linearLayoutManager
+            setHasFixedSize(true)
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     if (dy > 0 && !recyclerView.isAnimating) {
@@ -129,11 +130,11 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
                             if (index != RecyclerView.NO_POSITION) {
                                 val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                 if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
-                                    linearLayoutManager.isScrollEnabled = true
                                     binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
                                 }
                             }
                         }
+                        linearLayoutManager.isScrollEnabled = true
                     }
                 })
             itemAnimator = object : DefaultItemAnimator() {

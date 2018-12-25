@@ -282,7 +282,6 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                             if (index != RecyclerView.NO_POSITION) {
                                 val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                 if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
-                                    linearLayoutManager.isScrollEnabled = true
                                     binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
                                 }
                             } else {
@@ -290,12 +289,12 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                                 if (index != RecyclerView.NO_POSITION) {
                                     val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                     if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
-                                        linearLayoutManager.isScrollEnabled = true
                                         binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
                                     }
                                 }
                             }
                         }
+                        linearLayoutManager.isScrollEnabled = true
                     }
                 })
             (view.parent as? ViewGroup)?.run {
