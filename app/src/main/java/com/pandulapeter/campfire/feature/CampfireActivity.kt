@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.feature
 
 import android.animation.Animator
 import android.animation.LayoutTransition
+import android.app.ActivityManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -9,6 +10,7 @@ import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
@@ -654,15 +656,14 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     private fun updateTaskDescription() {
-//        @Suppress("ConstantConditionIf")
-//        val label = getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")"
-//        val color = (binding.toolbarButtonContainer.background as ColorDrawable).color
-//        setTaskDescription(
-//            @Suppress("DEPRECATION")
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) ActivityManager.TaskDescription(label, 0, color) else ActivityManager.TaskDescription(label, null, color)
-//        )
+        @Suppress("ConstantConditionIf")
+        val label = getString(R.string.campfire) + if (BuildConfig.BUILD_TYPE == "release") "" else " (" + BuildConfig.BUILD_TYPE + ")"
+        val color = (binding.toolbarButtonContainer.background as ColorDrawable).color
+        setTaskDescription(
+            @Suppress("DEPRECATION")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) ActivityManager.TaskDescription(label, 0, color) else ActivityManager.TaskDescription(label, null, color)
+        )
     }
-
 
     private fun openHomeScreen(): String {
         if (currentFragment !is HomeContainerFragment) {

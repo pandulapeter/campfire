@@ -11,7 +11,8 @@
         <item name="android:navigationBarDividerColor" tools:ignore="NewApi">@color/navigation_bar_shadow</item>
     </style>
 
-    <style name="Splash" parent="Theme.MaterialComponents.NoActionBar">
+    <style name="Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">?android:attr/colorBackgroundFloating</item>
         <item name="android:windowBackground">@drawable/bg_splash</item>
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:windowTranslucentStatus">true</item>
