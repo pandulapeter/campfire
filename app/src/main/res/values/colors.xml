@@ -4,6 +4,5 @@
     <!-- General -->
     <color name="accent">#f57c00</color>
     <color name="white">#FFFFFF</color>
-    <color name="navigation_bar_shadow">#40000000</color>
 
 </resources>

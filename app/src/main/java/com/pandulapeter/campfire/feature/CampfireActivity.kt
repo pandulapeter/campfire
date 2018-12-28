@@ -185,12 +185,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
             else -> 0
         }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            val hsv = FloatArray(3)
-            Color.colorToHSV(obtainColor(android.R.attr.windowBackground), hsv)
-            hsv[2] = max(hsv[2] - 0.05f, 0f)
-            window.navigationBarColor = Color.HSVToColor(hsv)
-        }
+        val hsv = FloatArray(3)
+        Color.colorToHSV(obtainColor(android.R.attr.windowBackground), hsv)
+        hsv[2] = max(hsv[2] - 0.05f, 0f)
+        window.navigationBarColor = Color.HSVToColor(hsv)
 
         // Make sure the "What's new" snackbar does not appear after a fresh start.
         if (viewModel.preferenceDatabase.ftuxLastSeenChangelog == 0) {

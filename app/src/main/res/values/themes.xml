@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
 
     <style name="Campfire" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">?android:attr/colorBackgroundFloating</item>
@@ -8,7 +8,6 @@
         <item name="android:fontFamily">@font/regular</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:buttonTint">@color/compound_button</item>
-        <item name="android:navigationBarDividerColor" tools:ignore="NewApi">@color/navigation_bar_shadow</item>
     </style>
 
     <style name="Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
