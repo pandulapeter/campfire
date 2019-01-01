@@ -110,10 +110,10 @@ class CollectionRepository(
 
     private fun updateLanguages() {
         languages.clear()
-        data.forEach {
-            it.language?.forEach {
+        data.forEach { collection ->
+            collection.language?.forEach { language ->
                 languages.add(
-                    when (it) {
+                    when (language) {
                         Language.SupportedLanguages.ENGLISH.id -> Language.Known.English
                         Language.SupportedLanguages.SPANISH.id -> Language.Known.Spanish
                         Language.SupportedLanguages.HUNGARIAN.id -> Language.Known.Hungarian

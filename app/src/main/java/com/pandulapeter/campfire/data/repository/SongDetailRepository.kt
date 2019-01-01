@@ -11,9 +11,9 @@ import com.pandulapeter.campfire.util.WORKER
 import com.pandulapeter.campfire.util.enqueueCall
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SongDetailRepository(
     private val networkManager: NetworkManager,
@@ -98,7 +98,7 @@ class SongDetailRepository(
 
     private fun refreshDataSet() {
         GlobalScope.launch(UI) {
-            async(WORKER) { database.songDetailDao().getAllMetadata() }.await().let {
+            withContext(WORKER) { database.songDetailDao().getAllMetadata() }.let {
                 data.swap(it)
                 isCacheLoaded = true
                 notifyDataChanged()

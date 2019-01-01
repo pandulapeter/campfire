@@ -104,7 +104,7 @@
                     android:layout_gravity="center_horizontal"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     app:displayedChild="@{viewModel.downloadState instanceof DownloadState.Downloading ? 0 : 1}"
-                    app:visibility="@{viewModel.downloadState instanceof DownloadState.NotDownloaded || viewModel.downloadState instanceof DownloadState.Downloading ||viewModel.downloadState instanceof DownloadState.Downloaded.Deprecated}">
+                    app:visibility="@{viewModel.downloadState instanceof DownloadState.NotDownloaded || viewModel.downloadState instanceof DownloadState.Downloading ||viewModel.downloadState instanceof DownloadState.Downloaded.Outdated}">
 
                     <ProgressBar
                         android:id="@+id/loading_indicator"

@@ -219,7 +219,7 @@ class HomeViewModel(
                 if (index != RecyclerView.NO_POSITION) {
                     changeEvent.value = index to RecyclerAdapter.Payload.DownloadStateChanged(
                         when {
-                            songDetailRepository.isSongDownloaded(song.id) -> SongItemViewModel.DownloadState.Downloaded.Deprecated
+                            songDetailRepository.isSongDownloaded(song.id) -> SongItemViewModel.DownloadState.Downloaded.Outdated
                             song.isNew -> SongItemViewModel.DownloadState.NotDownloaded.New
                             else -> SongItemViewModel.DownloadState.NotDownloaded.Old
                         }
@@ -456,7 +456,7 @@ class HomeViewModel(
 
             // Add the Random Collections module.
             if (shouldShowRandomCollections) {
-                var totalRandomCollectionCount = 0
+                var totalRandomCollectionCount: Int
                 randomCollections
                     .filterNot { newCollections.contains(it) }
                     .apply { totalRandomCollectionCount = size }
@@ -478,7 +478,7 @@ class HomeViewModel(
             // Add the Random Songs module.
             firstRandomSongIndex = if (shouldShowRandomSongs) size - 1 else Int.MAX_VALUE
             if (shouldShowRandomSongs) {
-                var totalRandomSongCount = 0
+                var totalRandomSongCount: Int
                 displayedRandomSongs = randomSongs
                     .filterNot { it.id == songOfTheDay?.id }
                     .filterNot { newSongs.contains(it) }
@@ -527,10 +527,10 @@ class HomeViewModel(
                 .sortedByDescending { it.getNormalizedTitle().startsWith(query, true) }
         }
 
-    private fun Sequence<Collection>.filterCollectionsByLanguage() = filter {
+    private fun Sequence<Collection>.filterCollectionsByLanguage() = filter { collection ->
         var shouldFilter = false
-        it.language?.forEach {
-            if (!disabledLanguageFilters.contains(it)) {
+        collection.language?.forEach { language ->
+            if (!disabledLanguageFilters.contains(language)) {
                 shouldFilter = true
             }
         }

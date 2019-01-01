@@ -103,15 +103,15 @@ dependencies {
     implementation "com.google.firebase:firebase-core:16.0.6"
 
     // Crash reporting
-    implementation "com.crashlytics.sdk.android:crashlytics:2.9.7"
+    implementation "com.crashlytics.sdk.android:crashlytics:2.9.8"
 
     // UI components
     implementation "androidx.appcompat:appcompat:1.0.2"
     implementation "androidx.legacy:legacy-support-v4:1.0.0"
-    implementation "com.google.android.material:material:1.1.0-alpha01"
+    implementation "com.google.android.material:material:1.1.0-alpha02"
     implementation "androidx.cardview:cardview:1.0.0"
     implementation "androidx.browser:browser:1.0.0"
-    implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha2"
+    implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha3"
     implementation "com.simplecityapps:recyclerview-fastscroll:1.0.20"
 
     // In-app purchases

@@ -26,9 +26,9 @@ import com.pandulapeter.campfire.util.UI
 import com.pandulapeter.campfire.util.WORKER
 import com.pandulapeter.campfire.util.mutableLiveDataOf
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
 abstract class BaseSongListViewModel(
@@ -135,7 +135,7 @@ abstract class BaseSongListViewModel(
                     index,
                     RecyclerAdapter.Payload.DownloadStateChanged(
                         when {
-                            songDetailRepository.isSongDownloaded(song.id) -> SongItemViewModel.DownloadState.Downloaded.Deprecated
+                            songDetailRepository.isSongDownloaded(song.id) -> SongItemViewModel.DownloadState.Downloaded.Outdated
                             song.isNew -> SongItemViewModel.DownloadState.NotDownloaded.New
                             else -> SongItemViewModel.DownloadState.NotDownloaded.Old
                         }
@@ -216,7 +216,7 @@ abstract class BaseSongListViewModel(
         if (canUpdateUI() && playlistRepository.isCacheLoaded() && songRepository.isCacheLoaded() && songDetailRepository.isCacheLoaded()) {
             coroutine?.cancel()
             coroutine = GlobalScope.launch(UI) {
-                async(WORKER) { songs.createViewModels() }.await().let {
+                withContext(WORKER) { songs.createViewModels() }.let {
                     adapter.shouldScrollToTop = shouldScrollToTop
                     adapter.items = it
                     onListUpdated(it)

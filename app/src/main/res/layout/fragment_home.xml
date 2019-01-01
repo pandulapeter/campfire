@@ -20,7 +20,7 @@
         app:buttonText="@{viewModel.buttonText}"
         app:onButtonClicked="@{() -> viewModel.onActionButtonClicked()}"
         app:state="@{viewModel.state}"
-        app:text="@{R.string.home_placeholder}">
+        app:text="@string/home_placeholder">
 
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipe_refresh_layout"

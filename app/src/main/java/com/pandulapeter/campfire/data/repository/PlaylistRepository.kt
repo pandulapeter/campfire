@@ -7,9 +7,9 @@ import com.pandulapeter.campfire.util.UI
 import com.pandulapeter.campfire.util.WORKER
 import com.pandulapeter.campfire.util.swap
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import java.util.*
+import kotlinx.coroutines.withContext
+import java.util.UUID
 
 class PlaylistRepository(private val database: Database) : BaseRepository<PlaylistRepository.Subscriber>() {
     private val data = mutableListOf<Playlist>()
@@ -56,14 +56,14 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
     fun addSongToPlaylist(playlistId: String, songId: String) {
         GlobalScope.launch(UI) {
             var shouldNotify = false
-            async(WORKER) {
+            withContext(WORKER) {
                 shouldNotify = !isSongInAnyPlaylist(songId)
                 val playlist = data.find { it.id == playlistId }
                 if (playlist?.songIds?.contains(songId) == false) {
                     playlist.songIds.add(songId)
                 }
                 playlist
-            }.await()?.also { playlist ->
+            }?.also { playlist ->
                 if (shouldNotify) {
                     subscribers.forEach { it.onSongAddedToPlaylistForTheFirstTime(songId) }
                 }
@@ -75,14 +75,14 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
     fun removeSongFromPlaylist(playlistId: String, songId: String) {
         GlobalScope.launch(UI) {
             var shouldNotify = false
-            async(WORKER) {
+            withContext(WORKER) {
                 val playlist = data.find { it.id == playlistId }
                 if (playlist?.songIds?.contains(songId) == true) {
                     playlist.songIds.remove(songId)
                 }
                 shouldNotify = !isSongInAnyPlaylist(songId)
                 playlist
-            }.await()?.also { playlist ->
+            }?.also { playlist ->
                 if (shouldNotify) {
                     subscribers.forEach { it.onSongRemovedFromAllPlaylists(songId) }
                 }
@@ -131,7 +131,7 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
         val playlist = data.find { it.id == playlistId }
         playlist?.also {
             it.order = order
-            subscribers.forEach { it.onPlaylistOrderChanged(data) }
+            subscribers.forEach { subscriber -> subscriber.onPlaylistOrderChanged(data) }
             GlobalScope.launch(WORKER) { database.playlistDao().insert(it) }
         }
     }
@@ -145,7 +145,7 @@ class PlaylistRepository(private val database: Database) : BaseRepository<Playli
 
     private fun refreshDataSet() {
         GlobalScope.launch(UI) {
-            async(WORKER) { database.playlistDao().getAll() }.await().let { newData ->
+            withContext(WORKER) { database.playlistDao().getAll() }.let { newData ->
                 val finalNewData = newData.toMutableList()
                 val favorites = Playlist(
                     id = Playlist.FAVORITES_ID,

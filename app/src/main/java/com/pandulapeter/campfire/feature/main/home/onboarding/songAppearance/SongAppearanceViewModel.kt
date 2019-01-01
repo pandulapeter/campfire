@@ -11,7 +11,7 @@ class SongAppearanceViewModel(
     interactionBlocker: InteractionBlocker
 ) : CampfireViewModel(interactionBlocker) {
 
-    var isInitialized = false
+    private var isInitialized = false
     val englishNotationExample = generateNotationExample(false)
     val germanNotationExample = generateNotationExample(true)
     val isFirstOptionSelected = mutableLiveDataOf(false) { onFirstOptionChanged(it) }

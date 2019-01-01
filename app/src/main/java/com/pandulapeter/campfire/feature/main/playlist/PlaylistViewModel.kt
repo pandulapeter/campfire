@@ -99,7 +99,7 @@ class PlaylistViewModel(
         }
         playlist.value?.let {
             adapter.notifyItemMoved(originalPosition, targetPosition)
-            val newList = adapter.items.filterIsInstance<SongItemViewModel>().map { it.song.id }.toMutableList()
+            val newList = adapter.items.filterIsInstance<SongItemViewModel>().map { songItemViewModel -> songItemViewModel.song.id }.toMutableList()
             it.songIds = newList
             playlistRepository.updatePlaylistSongIds(it.id, newList)
         }
@@ -123,10 +123,10 @@ class PlaylistViewModel(
 
     fun deleteSongPermanently() {
         songToDeleteId?.let {
-            playlist.value?.let {
-                val newList = adapter.items.filterIsInstance<SongItemViewModel>().map { it.song.id }.toMutableList()
-                it.songIds = newList
-                playlistRepository.updatePlaylistSongIds(it.id, newList)
+            playlist.value?.let { playlist ->
+                val newList = adapter.items.filterIsInstance<SongItemViewModel>().map { songItemViewModel -> songItemViewModel.song.id }.toMutableList()
+                playlist.songIds = newList
+                playlistRepository.updatePlaylistSongIds(playlist.id, newList)
             }
             songToDeleteId = null
         }
