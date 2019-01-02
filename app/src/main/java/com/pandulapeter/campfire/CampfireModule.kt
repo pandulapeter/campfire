@@ -38,6 +38,7 @@ import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesVie
 import com.pandulapeter.campfire.feature.main.playlist.PlaylistViewModel
 import com.pandulapeter.campfire.feature.main.songs.SongsViewModel
 import com.pandulapeter.campfire.feature.shared.InteractionBlocker
+import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.DeepLinkManager
@@ -101,4 +102,5 @@ val featureModule = module {
     viewModel<ManageDownloadsViewModel>()
     viewModel<DetailViewModel>()
     viewModel { (song: Song, songParser: SongParser) -> DetailPageViewModel(song, androidContext(), get(), get(), get(), get(), get(), songParser) }
+    viewModel { (songId: String) -> PlaylistChooserBottomSheetViewModel(songId, androidContext(), get()) }
 }

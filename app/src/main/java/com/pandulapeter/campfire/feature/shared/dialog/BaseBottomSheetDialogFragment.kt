@@ -15,6 +15,8 @@ import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.pandulapeter.campfire.R
@@ -50,6 +52,7 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
         (parentFragment as? CampfireFragment<*, *>)?.onDialogOpened()
         CustomWidthBottomSheetDialog(context, R.style.BottomSheetDialog).apply {
             binding = DataBindingUtil.inflate(LayoutInflater.from(context), layoutResourceId, null, false)
+            binding.setLifecycleOwner(this@BaseBottomSheetDialogFragment)
             initializeDialog(context, savedInstanceState)
             setContentView(binding.root)
             onDialogCreated()
@@ -72,7 +75,15 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
         interactionBlocker.isUiBlocked = false
     }
 
+    protected inline fun <T> MutableLiveData<T?>.observeAndReset(crossinline callback: (T) -> Unit) = observe(this@BaseBottomSheetDialogFragment, Observer {
+        if (it != null) {
+            callback(it)
+            value = null
+        }
+    })
+
     private class CustomWidthBottomSheetDialog(context: Context, @StyleRes theme: Int) : BottomSheetDialog(context, theme) {
+
         private val width = context.dimension(R.dimen.bottom_sheet_width)
         val isFullWidth = width == 0
 

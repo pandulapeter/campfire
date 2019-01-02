@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.AppCompatCheckBox
 import androidx.core.widget.NestedScrollView
+import androidx.fragment.app.FragmentManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.pandulapeter.campfire.PlaylistChooserBottomSheetBinding
 import com.pandulapeter.campfire.R
@@ -18,29 +19,18 @@ import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.dimension
-import com.pandulapeter.campfire.util.onEventTriggered
 import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 
 
 class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<PlaylistChooserBottomSheetBinding>(R.layout.fragment_playlist_chooser_bottom_sheet) {
 
-    companion object {
-        private var Bundle?.songId by BundleArgumentDelegate.String("songId")
-        private var Bundle?.screenName by BundleArgumentDelegate.String("screenName")
-
-        fun show(fragmentManager: androidx.fragment.app.FragmentManager, songId: String, screenName: String) {
-            PlaylistChooserBottomSheetFragment().withArguments {
-                it.songId = songId
-                it.screenName = screenName
-            }.run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
-        }
-    }
-
     private val songInfoRepository by inject<SongRepository>()
     private val playlistRepository by inject<PlaylistRepository>()
     private val analyticsManager by inject<AnalyticsManager>()
-    private lateinit var viewModel: PlaylistChooserBottomSheetViewModel
+    private val viewModel by viewModel<PlaylistChooserBottomSheetViewModel> { parametersOf(arguments.songId) }
     private val checkBoxHeight by lazy { context?.dimension(R.dimen.touch_target) ?: 0 }
     private val contentPadding by lazy { context?.dimension(R.dimen.content_padding) ?: 0 }
     private val contentBottomMargin by lazy { context?.dimension(R.dimen.list_fab_content_bottom_margin) ?: 0 }
@@ -49,21 +39,15 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
     private var shouldScrollToBottom = false
 
     override fun initializeDialog(context: Context, savedInstanceState: Bundle?) {
-        viewModel = PlaylistChooserBottomSheetViewModel(
-            savedInstanceState?.let { savedInstanceState.songId } ?: arguments.songId,
-            context.dimension(R.dimen.content_padding),
-            context.dimension(R.dimen.bottom_sheet_toolbar_elevation),
-            context.dimension(R.dimen.bottom_sheet_toolbar_margin)
-        )
         binding.viewModel = viewModel
-        viewModel.shouldDismissDialog.onEventTriggered(this@PlaylistChooserBottomSheetFragment) { dismiss() }
-        viewModel.shouldShowNewPlaylistDialog.onEventTriggered(this@PlaylistChooserBottomSheetFragment) {
+        viewModel.shouldDismissDialog.observeAndReset { dismiss() }
+        viewModel.shouldShowNewPlaylistDialog.observeAndReset {
             NewPlaylistDialogFragment.show(
                 childFragmentManager,
                 AnalyticsManager.PARAM_VALUE_BOTTOM_SHEET
             )
         }
-        viewModel.shouldUpdatePlaylists.onEventTriggered(this@PlaylistChooserBottomSheetFragment) { refreshPlaylistCheckboxes() }
+        viewModel.shouldUpdatePlaylists.observeAndReset { refreshPlaylistCheckboxes() }
         binding.container.nestedScrollView.setOnScrollChangeListener { _: NestedScrollView?, _: Int, scrollY: Int, _: Int, _: Int ->
             scrollViewOffset = scrollY
         }
@@ -97,11 +81,6 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
         super.onStop()
         songInfoRepository.unsubscribe(viewModel)
         playlistRepository.unsubscribe(viewModel)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.songId = viewModel.songId
     }
 
     override fun updateSystemWindows() {
@@ -173,7 +152,7 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
 
     private fun updateBackgroundDim() {
         dialog.window?.let {
-            val newDimAmount = if (viewModel.containerAlpha.get() == 1f) 0f else 0.6f
+            val newDimAmount = if (viewModel.containerAlpha.value == 1f) 0f else 0.6f
             if (it.attributes.dimAmount != newDimAmount) {
                 it.attributes = it.attributes.apply { dimAmount = newDimAmount }
                 if (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_NO)
@@ -183,6 +162,18 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else 0
                     }
             }
+        }
+    }
+
+    companion object {
+        private var Bundle?.songId by BundleArgumentDelegate.String("songId")
+        private var Bundle?.screenName by BundleArgumentDelegate.String("screenName")
+
+        fun show(fragmentManager: FragmentManager, songId: String, screenName: String) {
+            PlaylistChooserBottomSheetFragment().withArguments {
+                it.songId = songId
+                it.screenName = screenName
+            }.run { show(fragmentManager, tag) }
         }
     }
 }
