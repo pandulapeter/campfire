@@ -20,7 +20,6 @@ import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
 import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
-import com.pandulapeter.campfire.feature.main.songs.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.main.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
@@ -55,10 +54,9 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
     private val drawableSearchToClose by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity()?.animatedDrawable(R.drawable.avd_search_to_close_24dp) else getCampfireActivity()?.drawable(R.drawable.ic_close_24dp)
     }
-    private val searchControlsViewModel by lazy { SearchControlsViewModel(viewModel.preferenceDatabase, true, viewModel.interactionBlocker) }
     private val searchControlsBinding by lazy {
         DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity()!!.toolbarContext), R.layout.view_search_controls, null, false).apply {
-            viewModel = searchControlsViewModel
+            viewModel = this@CollectionsFragment.viewModel.searchControlsViewModel
             executePendingBindings()
         }
     }
@@ -146,7 +144,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             }
             topLevelBehavior.defaultToolbar.updateToolbarTitle(R.string.main_collections)
             savedInstanceState?.let {
-                searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
+                viewModel.searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
                 viewModel.buttonText.value = it.buttonText
                 if (it.isTextInputVisible) {
                     searchToggle.setImageDrawable(activity.drawable(R.drawable.ic_close_24dp))
@@ -166,13 +164,13 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                     message = R.string.collections_update_error,
                     action = { viewModel.updateData() })
             }
-            searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
+            viewModel.searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
                 binding.root.postDelayed(
                     { if (isAdded) viewModel.shouldSearchInTitles = it },
                     SongsFragment.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
                 )
             }
-            searchControlsViewModel.searchInArtists.onPropertyChanged(this) {
+            viewModel.searchControlsViewModel.searchInArtists.onPropertyChanged(this) {
                 binding.root.postDelayed(
                     { if (isAdded) viewModel.shouldSearchInDescriptions = it },
                     SongsFragment.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
@@ -183,7 +181,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                 activity.transitionMode = true
                 binding.root.post {
                     if (isAdded) {
-                        searchControlsViewModel.isVisible.set(it)
+                        viewModel.searchControlsViewModel.isVisible.set(it)
                     }
                 }
             }

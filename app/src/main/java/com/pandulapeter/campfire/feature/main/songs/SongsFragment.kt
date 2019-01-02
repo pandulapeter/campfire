@@ -66,10 +66,9 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
     private val drawableSearchToClose by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) requireContext().animatedDrawable(R.drawable.avd_search_to_close_24dp) else requireContext().drawable(R.drawable.ic_close_24dp)
     }
-    private val searchControlsViewModel by lazy { SearchControlsViewModel(viewModel.preferenceDatabase, true, viewModel.interactionBlocker) }
     private val searchControlsBinding by lazy {
         DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity()!!.toolbarContext), R.layout.view_search_controls, null, false).apply {
-            viewModel = searchControlsViewModel
+            viewModel = this@SongsFragment.viewModel.searchControlsViewModel
             executePendingBindings()
         }
     }
@@ -82,7 +81,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
             getCampfireActivity()?.transitionMode = true
             binding.root.post {
                 if (isAdded) {
-                    searchControlsViewModel.isVisible.set(it)
+                    viewModel.searchControlsViewModel.isVisible.set(it)
                 }
             }
         }
@@ -122,7 +121,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
             eraseButton.isEnabled = it
         }
         savedInstanceState?.let {
-            searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
+            viewModel.searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
             if (it.isTextInputVisible) {
                 searchToggle.setImageDrawable(requireContext().drawable(R.drawable.ic_close_24dp))
                 toolbarTextInputView.textInput.run {
@@ -136,13 +135,13 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
             viewModel.shouldEnableEraseButton.value = savedInstanceState.isEraseButtonEnabled
         }
         toolbarTextInputView.textInput.requestFocus()
-        searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
+        viewModel.searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
             binding.root.postDelayed(
                 { if (isAdded) viewModel.shouldSearchInTitles = it },
                 COMPOUND_BUTTON_LONG_TRANSITION_DELAY
             )
         }
-        searchControlsViewModel.searchInArtists.onPropertyChanged(this) {
+        viewModel.searchControlsViewModel.searchInArtists.onPropertyChanged(this) {
             binding.root.postDelayed(
                 { if (isAdded) viewModel.shouldSearchInArtists = it },
                 COMPOUND_BUTTON_LONG_TRANSITION_DELAY
