@@ -197,7 +197,6 @@
     <string name="options_changelog_0_9_0_version_name" translatable="false">v0.9</string>
     <string name="options_changelog_0_9_0_description">
         <Data><![CDATA[
-        • Ability to <strong>share</strong> songs and playlists<br>
         • Significant <strong>design</strong> changes and <strong>performance</strong> improvements
         ]]></Data>
     </string>

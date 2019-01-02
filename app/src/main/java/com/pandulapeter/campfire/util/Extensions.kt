@@ -164,30 +164,6 @@ inline fun <T> ObservableField<T>.onPropertyChanged(fragment: androidx.fragment.
     })
 }
 
-@Deprecated("Use LiveData instead.")
-inline fun ObservableBoolean.onEventTriggered(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: () -> Unit) {
-    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            if (get() && fragment?.isAdded != false) {
-                callback()
-                set(false)
-            }
-        }
-    })
-}
-
-@Deprecated("Use LiveData instead.")
-inline fun <T> ObservableField<T>.onEventTriggered(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: (T) -> Unit) {
-    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            if (get() != null && fragment?.isAdded != false) {
-                get()?.let { callback(it) }
-                set(null)
-            }
-        }
-    })
-}
-
 inline fun DrawerLayout.addDrawerListener(
     crossinline onDrawerStateChanged: (newState: Int) -> Unit = {},
     crossinline onDrawerSlide: (view: View, offset: Float) -> Unit = { _, _ -> },
