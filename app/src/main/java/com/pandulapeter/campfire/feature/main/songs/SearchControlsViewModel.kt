@@ -1,10 +1,9 @@
 package com.pandulapeter.campfire.feature.main.songs
 
-import androidx.databinding.ObservableBoolean
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.InteractionBlocker
-import com.pandulapeter.campfire.util.onPropertyChanged
+import com.pandulapeter.campfire.util.mutableLiveDataOf
 
 class SearchControlsViewModel(
     private val preferenceDatabase: PreferenceDatabase,
@@ -12,14 +11,14 @@ class SearchControlsViewModel(
     interactionBlocker: InteractionBlocker
 ) : CampfireViewModel(interactionBlocker) {
 
-    val isVisible = ObservableBoolean()
-    val searchInArtists = ObservableBoolean(if (isForCollections) preferenceDatabase.shouldSearchInCollectionDescriptions else preferenceDatabase.shouldSearchInArtists)
-    val searchInTitles = ObservableBoolean(if (isForCollections) preferenceDatabase.shouldSearchInCollectionTitles else preferenceDatabase.shouldSearchInTitles)
+    val isVisible = mutableLiveDataOf(false)
+    val searchInArtists = mutableLiveDataOf(if (isForCollections) preferenceDatabase.shouldSearchInCollectionDescriptions else preferenceDatabase.shouldSearchInArtists)
+    val searchInTitles = mutableLiveDataOf(if (isForCollections) preferenceDatabase.shouldSearchInCollectionTitles else preferenceDatabase.shouldSearchInTitles)
 
     init {
-        searchInArtists.onPropertyChanged {
+        searchInArtists.observeForever {
             if (!it) {
-                searchInTitles.set(true)
+                searchInTitles.value = true
             }
             if (isForCollections) {
                 preferenceDatabase.shouldSearchInCollectionDescriptions = it
@@ -27,9 +26,9 @@ class SearchControlsViewModel(
                 preferenceDatabase.shouldSearchInArtists = it
             }
         }
-        searchInTitles.onPropertyChanged {
+        searchInTitles.observeForever {
             if (!it) {
-                searchInArtists.set(true)
+                searchInArtists.value = true
             }
             if (isForCollections) {
                 preferenceDatabase.shouldSearchInCollectionTitles = it

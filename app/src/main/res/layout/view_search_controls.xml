@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><!--suppress AndroidElementNotAllowed -->
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
@@ -16,10 +15,10 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingBottom="@dimen/content_padding"
-        android:paddingEnd="@dimen/first_keyline"
         android:paddingStart="@dimen/second_keyline"
-        app:visibility="@{viewModel.isVisible}">
+        android:paddingEnd="@dimen/first_keyline"
+        android:paddingBottom="@dimen/content_padding"
+        android:visibility="@{viewModel.isVisible}">
 
         <TextView
             android:layout_width="wrap_content"

@@ -21,7 +21,6 @@ import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.animatedDrawable
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
-import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.onTextChanged
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -69,6 +68,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
     private val searchControlsBinding by lazy {
         DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity()!!.toolbarContext), R.layout.view_search_controls, null, false).apply {
             viewModel = this@SongsFragment.viewModel.searchControlsViewModel
+            setLifecycleOwner(viewLifecycleOwner)
             executePendingBindings()
         }
     }
@@ -81,7 +81,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
             getCampfireActivity()?.transitionMode = true
             binding.root.post {
                 if (isAdded) {
-                    viewModel.searchControlsViewModel.isVisible.set(it)
+                    viewModel.searchControlsViewModel.isVisible.value = it
                 }
             }
         }
@@ -121,7 +121,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
             eraseButton.isEnabled = it
         }
         savedInstanceState?.let {
-            viewModel.searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
+            viewModel.searchControlsViewModel.isVisible.value = savedInstanceState.isTextInputVisible
             if (it.isTextInputVisible) {
                 searchToggle.setImageDrawable(requireContext().drawable(R.drawable.ic_close_24dp))
                 toolbarTextInputView.textInput.run {
@@ -135,13 +135,13 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
             viewModel.shouldEnableEraseButton.value = savedInstanceState.isEraseButtonEnabled
         }
         toolbarTextInputView.textInput.requestFocus()
-        viewModel.searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
+        viewModel.searchControlsViewModel.searchInTitles.observe {
             binding.root.postDelayed(
                 { if (isAdded) viewModel.shouldSearchInTitles = it },
                 COMPOUND_BUTTON_LONG_TRANSITION_DELAY
             )
         }
-        viewModel.searchControlsViewModel.searchInArtists.onPropertyChanged(this) {
+        viewModel.searchControlsViewModel.searchInArtists.observe {
             binding.root.postDelayed(
                 { if (isAdded) viewModel.shouldSearchInArtists = it },
                 COMPOUND_BUTTON_LONG_TRANSITION_DELAY

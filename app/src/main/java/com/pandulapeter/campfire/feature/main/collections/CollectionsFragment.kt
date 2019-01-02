@@ -33,7 +33,6 @@ import com.pandulapeter.campfire.util.animatedDrawable
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
-import com.pandulapeter.campfire.util.onPropertyChanged
 import com.pandulapeter.campfire.util.onTextChanged
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -57,6 +56,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
     private val searchControlsBinding by lazy {
         DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity()!!.toolbarContext), R.layout.view_search_controls, null, false).apply {
             viewModel = this@CollectionsFragment.viewModel.searchControlsViewModel
+            setLifecycleOwner(viewLifecycleOwner)
             executePendingBindings()
         }
     }
@@ -144,7 +144,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             }
             topLevelBehavior.defaultToolbar.updateToolbarTitle(R.string.main_collections)
             savedInstanceState?.let {
-                viewModel.searchControlsViewModel.isVisible.set(savedInstanceState.isTextInputVisible)
+                viewModel.searchControlsViewModel.isVisible.value = savedInstanceState.isTextInputVisible
                 viewModel.buttonText.value = it.buttonText
                 if (it.isTextInputVisible) {
                     searchToggle.setImageDrawable(activity.drawable(R.drawable.ic_close_24dp))
@@ -164,13 +164,13 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                     message = R.string.collections_update_error,
                     action = { viewModel.updateData() })
             }
-            viewModel.searchControlsViewModel.searchInTitles.onPropertyChanged(this) {
+            viewModel.searchControlsViewModel.searchInTitles.observe {
                 binding.root.postDelayed(
                     { if (isAdded) viewModel.shouldSearchInTitles = it },
                     SongsFragment.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
                 )
             }
-            viewModel.searchControlsViewModel.searchInArtists.onPropertyChanged(this) {
+            viewModel.searchControlsViewModel.searchInArtists.observe {
                 binding.root.postDelayed(
                     { if (isAdded) viewModel.shouldSearchInDescriptions = it },
                     SongsFragment.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
@@ -181,7 +181,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                 activity.transitionMode = true
                 binding.root.post {
                     if (isAdded) {
-                        viewModel.searchControlsViewModel.isVisible.set(it)
+                        viewModel.searchControlsViewModel.isVisible.value = it
                     }
                 }
             }

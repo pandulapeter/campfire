@@ -28,10 +28,6 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.BindingAdapter
-import androidx.databinding.Observable
-import androidx.databinding.ObservableBoolean
-import androidx.databinding.ObservableField
-import androidx.databinding.ObservableInt
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
@@ -78,7 +74,6 @@ var View.visibleOrGone
         visibility = if (value) View.VISIBLE else View.GONE
     }
 
-@set:BindingAdapter("invisibility")
 var View.visibleOrInvisible
     get() = visibility == View.VISIBLE
     set(value) {
@@ -129,39 +124,6 @@ inline fun View.useStyledAttributes(set: AttributeSet?, @StyleableRes attrs: Int
 
 fun <T> MutableLiveData<T>.triggerUpdate() {
     value = value
-}
-
-@Deprecated("Use LiveData instead.")
-inline fun ObservableBoolean.onPropertyChanged(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: (Boolean) -> Unit) {
-    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            if (fragment?.isAdded != false) {
-                callback(get())
-            }
-        }
-    })
-}
-
-@Deprecated("Use LiveData instead.")
-inline fun ObservableInt.onPropertyChanged(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: (Int) -> Unit) {
-    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            if (fragment?.isAdded != false) {
-                callback(get())
-            }
-        }
-    })
-}
-
-@Deprecated("Use LiveData instead.")
-inline fun <T> ObservableField<T>.onPropertyChanged(fragment: androidx.fragment.app.Fragment? = null, crossinline callback: (T) -> Unit) {
-    addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-            if (fragment?.isAdded != false) {
-                get()?.let { callback(it) }
-            }
-        }
-    })
 }
 
 inline fun DrawerLayout.addDrawerListener(
