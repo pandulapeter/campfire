@@ -18,7 +18,7 @@
         android:paddingStart="@dimen/second_keyline"
         android:paddingEnd="@dimen/first_keyline"
         android:paddingBottom="@dimen/content_padding"
-        android:visibility="@{viewModel.isVisible}">
+        android:visibility="@{safeUnbox(viewModel.isVisible)}">
 
         <TextView
             android:layout_width="wrap_content"

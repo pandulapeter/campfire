@@ -103,7 +103,7 @@
                 android:layout_marginStart="@dimen/content_padding"
                 android:text="@string/content_language_error"
                 android:textColor="@color/accent"
-                android:visibility="@{viewModel.shouldShowError}"
+                android:visibility="@{safeUnbox(viewModel.shouldShowError)}"
                 app:layout_constraintBottom_toTopOf="@id/show_explicit_switch"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

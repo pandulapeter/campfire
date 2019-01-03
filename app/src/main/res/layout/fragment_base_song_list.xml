@@ -72,7 +72,7 @@
             android:layout_height="match_parent"
             android:clipChildren="false"
             app:buttonIcon="@{viewModel.buttonIcon}"
-            app:buttonText="@{viewModel.buttonText}"
+            app:buttonText="@{safeUnbox(viewModel.buttonText)}"
             app:onButtonClicked="@{() -> viewModel.onActionButtonClicked()}"
             app:state="@{viewModel.state}"
             app:text="@{viewModel.placeholderText}">
@@ -83,7 +83,7 @@
                 android:layout_height="match_parent"
                 android:clipChildren="false"
                 app:enabled="@{viewModel.isSwipeRefreshEnabled}"
-                app:refreshing="@{viewModel.isLoading}">
+                app:refreshing="@{safeUnbox(viewModel.isLoading)}">
 
                 <com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
                     android:id="@+id/recycler_view"
