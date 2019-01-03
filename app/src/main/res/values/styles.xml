@@ -57,7 +57,7 @@
         <item name="android:textColor">@color/text_primary</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:minHeight">@dimen/touch_target</item>
-        <item name="android:drawableTint" tools:ignore="NewApi">?android:attr/textColorSecondary</item>
+        <item name="android:drawableTint" tools:ignore="NewApi">@color/text_secondary</item>
         <item name="android:paddingBottom">@dimen/content_padding</item>
         <item name="android:paddingEnd">@dimen/content_padding</item>
         <item name="android:paddingStart">@dimen/switch_content_padding</item>

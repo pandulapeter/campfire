@@ -32,7 +32,7 @@
             android:ellipsize="end"
             android:maxLines="3"
             android:onClick="@{() -> viewModel.onLegalDocumentsClicked()}"
-            android:textColor="?android:attr/textColorSecondary"
+            android:textColor="@color/text_secondary"
             android:textSize="11sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/next_button"

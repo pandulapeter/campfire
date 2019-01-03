@@ -59,7 +59,7 @@
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:padding="@dimen/content_padding"
-                android:tint="?android:attr/textColorSecondary"
+                android:tint="@color/text_secondary"
                 app:animation="@{safeUnbox(viewModel.collection.isBookmarked) ? R.drawable.avd_not_bookmarked_to_bookmarked_24dp : R.drawable.avd_bookmarked_to_not_bookmarked_24dp }"
                 app:lastFrame="@{safeUnbox(viewModel.collection.isBookmarked) ? @drawable/ic_bookmarked_24dp : @drawable/ic_not_bookmarked_24dp}"
                 app:layout_constraintBottom_toBottomOf="parent"

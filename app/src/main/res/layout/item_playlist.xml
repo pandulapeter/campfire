@@ -43,7 +43,7 @@
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/drag_to_rearrange"
                 android:padding="@dimen/content_padding"
-                android:tint="?android:attr/textColorSecondary"
+                android:tint="@color/text_secondary"
                 app:layout_constraintEnd_toEndOf="@id/space"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/ic_drag_handle_24dp"

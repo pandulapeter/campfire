@@ -10,8 +10,8 @@
         <item name="android:textColorSecondary">@color/text_secondary</item>
         <item name="android:textColorTertiary">@color/text_secondary</item>
         <item name="android:textColorHint">@color/text_tertiary</item>
-        <item name="colorPrimary">?attr/colorBackgroundFloating</item>
-        <item name="colorPrimaryDark">?attr/colorBackgroundFloating</item>
+        <item name="colorPrimary">@color/panel_primary</item>
+        <item name="colorPrimaryDark">@color/panel_primary</item>
         <item name="colorSecondary">@color/accent</item>
         <item name="android:fontFamily">@font/regular</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
@@ -19,7 +19,7 @@
     </style>
 
     <style name="Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">?attr/colorBackgroundFloating</item>
+        <item name="colorPrimary">@color/panel_primary</item>
         <item name="android:windowBackground">@drawable/bg_splash</item>
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:windowTranslucentStatus">true</item>

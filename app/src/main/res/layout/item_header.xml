@@ -39,7 +39,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:onClick="@{viewModel::onRefreshButtonPressed}"
             android:src="@drawable/ic_refresh_24dp"
-            android:tint="?android:attr/textColorSecondary"
+            android:tint="@color/text_secondary"
             android:visibility="@{viewModel.shouldShowRefreshButton}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

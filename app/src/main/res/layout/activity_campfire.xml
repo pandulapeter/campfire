@@ -83,7 +83,7 @@
                                 android:gravity="center_vertical"
                                 android:text="@string/campfire"
                                 android:textAppearance="@style/Title"
-                                android:textColor="?android:attr/textColorPrimary" />
+                                android:textColor="@color/text_primary" />
 
                         </FrameLayout>
 
@@ -92,7 +92,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="0dp"
                             android:animateLayoutChanges="true"
-                            android:background="?attr/colorBackgroundFloating"
+                            android:background="@color/panel_primary"
                             android:clipChildren="false"
                             android:clipToPadding="false"
                             android:gravity="center_vertical|end"
@@ -161,9 +161,9 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:background="?attr/colorBackgroundFloating"
+            android:background="@color/panel_primary"
             app:headerLayout="@layout/view_menu_header"
-            app:insetForeground="?attr/colorPrimary"
+            app:insetForeground="@color/panel_primary"
             app:itemBackground="?attr/selectableItemBackground"
             app:itemIconPadding="@dimen/navigation_drawer_icon_fix"
             app:itemIconTint="@color/menu_item_icon"
@@ -175,7 +175,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="end"
-            android:background="?attr/colorBackgroundFloating"
+            android:background="@color/panel_primary"
             app:itemHorizontalPadding="@dimen/navigation_drawer_positive_fix"
             app:itemIconTint="@color/menu_secondary_icon"
             app:itemTextColor="@color/menu_secondary_text" />
