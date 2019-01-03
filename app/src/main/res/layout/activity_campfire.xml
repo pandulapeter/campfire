@@ -165,6 +165,7 @@
             app:headerLayout="@layout/view_menu_header"
             app:insetForeground="?attr/colorPrimary"
             app:itemBackground="?attr/selectableItemBackground"
+            app:itemIconPadding="@dimen/navigation_drawer_icon_fix"
             app:itemIconTint="@color/menu_item_icon"
             app:itemTextColor="@color/menu_item_text"
             app:menu="@menu/campfire" />
@@ -175,7 +176,7 @@
             android:layout_height="match_parent"
             android:layout_gravity="end"
             android:background="?attr/colorBackgroundFloating"
-            app:insetForeground="?attr/colorPrimary"
+            app:itemHorizontalPadding="@dimen/navigation_drawer_positive_fix"
             app:itemIconTint="@color/menu_secondary_icon"
             app:itemTextColor="@color/menu_secondary_text" />
 
