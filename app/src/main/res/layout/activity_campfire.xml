@@ -176,8 +176,8 @@
             android:layout_gravity="end"
             android:background="?attr/colorBackgroundFloating"
             app:insetForeground="?attr/colorPrimary"
-            app:itemIconTint="@color/menu_secondary_item"
-            app:itemTextColor="@color/menu_secondary_item" />
+            app:itemIconTint="@color/menu_secondary_icon"
+            app:itemTextColor="@color/menu_secondary_text" />
 
     </androidx.drawerlayout.widget.DrawerLayout>
 

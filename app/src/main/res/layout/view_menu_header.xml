@@ -5,8 +5,8 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/content_padding"
     android:orientation="vertical"
-    android:paddingEnd="@dimen/first_keyline"
-    android:paddingStart="@dimen/first_keyline">
+    android:paddingStart="@dimen/first_keyline"
+    android:paddingEnd="@dimen/first_keyline">
 
     <TextView
         android:layout_width="wrap_content"
@@ -14,7 +14,7 @@
         android:layout_marginTop="@dimen/large_content_padding"
         android:text="@string/campfire"
         android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-        android:textColor="?android:attr/textColorSecondary"
+        android:textColor="@color/text_secondary"
         android:textStyle="bold" />
 
     <TextView
@@ -22,7 +22,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="@style/Caption"
-        android:textColor="?android:attr/textColorSecondary"
+        android:textColor="@color/text_secondary"
         tools:text="v1.0.0" />
 
 </LinearLayout>
