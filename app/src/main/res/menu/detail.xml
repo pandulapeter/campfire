@@ -15,12 +15,12 @@
 
             <item
                 android:id="@+id/transpose_higher"
-                android:icon="@drawable/ic_increment_24dp"
+                android:icon="@drawable/ic_increment"
                 android:title="@string/detail_transpose_higher" />
 
             <item
                 android:id="@+id/transpose_lower"
-                android:icon="@drawable/ic_decrement_24dp"
+                android:icon="@drawable/ic_decrement"
                 android:title="@string/detail_transpose_lower" />
 
         </menu>
@@ -35,12 +35,12 @@
 
             <item
                 android:id="@+id/font_size_increment"
-                android:icon="@drawable/ic_increment_24dp"
+                android:icon="@drawable/ic_increment"
                 android:title="@string/detail_font_size_larger" />
 
             <item
                 android:id="@+id/font_size_decrement"
-                android:icon="@drawable/ic_decrement_24dp"
+                android:icon="@drawable/ic_decrement"
                 android:title="@string/detail_font_size_smaller" />
 
         </menu>

@@ -16,7 +16,7 @@
         android:id="@+id/state_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:buttonIcon="@{R.drawable.ic_filter_and_sort_24dp}"
+        app:buttonIcon="@{R.drawable.ic_filter_and_sort}"
         app:buttonText="@{viewModel.buttonText}"
         app:onButtonClicked="@{() -> viewModel.onActionButtonClicked()}"
         app:state="@{viewModel.state}"

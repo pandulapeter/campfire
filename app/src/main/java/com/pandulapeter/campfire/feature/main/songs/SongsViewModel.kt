@@ -32,7 +32,7 @@ class SongsViewModel(
 ) : BaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager, interactionBlocker) {
 
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_SONGS
-    override val buttonIcon = R.drawable.ic_filter_and_sort_24dp
+    override val buttonIcon = R.drawable.ic_filter_and_sort
     private val popularString = context.getString(R.string.popular_tag)
     var isTextInputVisible = false
     private val newString = context.getString(R.string.new_tag)

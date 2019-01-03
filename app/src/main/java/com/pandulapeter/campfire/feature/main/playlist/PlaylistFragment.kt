@@ -37,12 +37,12 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
             getCampfireActivity = { getCampfireActivity() })
     }
     private val editToggle: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_edit_24dp) { toggleEditMode() }.apply {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_edit) { toggleEditMode() }.apply {
             visibleOrGone = false
         }
     }
     private val shuffleButton: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST) }.apply {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_shuffle) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST) }.apply {
             visibleOrGone = false
         }
     }
@@ -62,8 +62,8 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
             }
         }
     }
-    private val drawableEditToDone by lazy { requireContext().animatedDrawable(R.drawable.avd_edit_to_done_24dp) }
-    private val drawableDoneToEdit by lazy { requireContext().animatedDrawable(R.drawable.avd_done_to_edit_24dp) }
+    private val drawableEditToDone by lazy { requireContext().animatedDrawable(R.drawable.avd_edit_to_done) }
+    private val drawableDoneToEdit by lazy { requireContext().animatedDrawable(R.drawable.avd_done_to_edit) }
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -98,7 +98,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         savedInstanceState?.let {
             if (it.isInEditMode) {
                 viewModel.isInEditMode.value = true
-                editToggle.setImageDrawable(requireContext().drawable(R.drawable.ic_done_24dp))
+                editToggle.setImageDrawable(requireContext().drawable(R.drawable.ic_done))
                 toolbarTextInputView?.textInput?.run {
                     setText(viewModel.playlist.value?.title)
                     setSelection(text.length)

@@ -81,7 +81,7 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
                 createAppShortcut(
                     HOME_ID,
                     context.getString(R.string.main_home),
-                    R.drawable.ic_shortcut_home_48dp,
+                    R.drawable.ic_shortcut_home,
                     CampfireActivity.getHomeIntent(context)
                 )
             )
@@ -89,7 +89,7 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
                 createAppShortcut(
                     COLLECTIONS_ID,
                     context.getString(R.string.main_collections),
-                    R.drawable.ic_shortcut_collections_48dp,
+                    R.drawable.ic_shortcut_collections,
                     CampfireActivity.getCollectionsIntent(context)
                 )
             )
@@ -97,7 +97,7 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
                 createAppShortcut(
                     SONGS_ID,
                     context.getString(R.string.main_songs),
-                    R.drawable.ic_shortcut_songs_48dp,
+                    R.drawable.ic_shortcut_songs,
                     CampfireActivity.getSongsIntent(context)
                 )
             )
@@ -111,7 +111,7 @@ class AppShortcutManager(context: Context, preferenceDatabase: PreferenceDatabas
                         createAppShortcut(
                             PLAYLIST_ID + playlist.id,
                             title,
-                            R.drawable.ic_shortcut_playlist_48dp,
+                            R.drawable.ic_shortcut_playlist,
                             CampfireActivity.getPlaylistIntent(context, playlist.id)
                         )
                     )

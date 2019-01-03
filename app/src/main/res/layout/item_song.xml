@@ -56,7 +56,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/space_1"
                 app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/ic_drag_handle_24dp"
+                app:srcCompat="@drawable/ic_drag_handle"
                 app:visibility="@{viewModel.shouldShowDragHandle}" />
 
             <androidx.legacy.widget.Space
@@ -74,13 +74,13 @@
                 android:contentDescription="@string/manage_playlists"
                 android:padding="@dimen/content_padding"
                 android:tint="@color/text_secondary"
-                app:animation="@{viewModel.isOnAnyPlaylists ? R.drawable.avd_added_to_playlists_24dp : R.drawable.avd_removed_from_playlists_24dp}"
-                app:lastFrame="@{viewModel.isOnAnyPlaylists ? @drawable/ic_playlist_24dp : @drawable/ic_playlist_border_24dp}"
+                app:animation="@{viewModel.isOnAnyPlaylists ? R.drawable.avd_added_to_playlists : R.drawable.avd_removed_from_playlists}"
+                app:lastFrame="@{viewModel.isOnAnyPlaylists ? @drawable/ic_playlist : @drawable/ic_playlist_border}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/space_2"
                 app:layout_constraintTop_toTopOf="parent"
                 app:visibility="@{viewModel.shouldShowPlaylistButton}"
-                tools:src="@drawable/ic_playlist_24dp" />
+                tools:src="@drawable/ic_playlist" />
 
             <androidx.legacy.widget.Space
                 android:id="@+id/space_3"
@@ -125,7 +125,7 @@
                         android:foreground="@null"
                         android:padding="@dimen/content_padding"
                         android:tint="@color/text_secondary"
-                        app:srcCompat="@drawable/ic_download_24dp" />
+                        app:srcCompat="@drawable/ic_download" />
 
                 </ViewSwitcher>
 

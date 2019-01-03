@@ -49,10 +49,10 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         }
     }
     private val searchToggle: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) { toggleTextInputVisibility() }
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_search) { toggleTextInputVisibility() }
     }
     private val eraseButton: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) { toolbarTextInputView.textInput.setText("") }.apply {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_eraser) { toolbarTextInputView.textInput.setText("") }.apply {
             scaleX = 0f
             scaleY = 0f
             alpha = 0.5f
@@ -60,10 +60,10 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         }
     }
     private val drawableCloseToSearch by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) requireContext().animatedDrawable(R.drawable.avd_close_to_search_24dp) else requireContext().drawable(R.drawable.ic_search_24dp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) requireContext().animatedDrawable(R.drawable.avd_close_to_search) else requireContext().drawable(R.drawable.ic_search)
     }
     private val drawableSearchToClose by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) requireContext().animatedDrawable(R.drawable.avd_search_to_close_24dp) else requireContext().drawable(R.drawable.ic_close_24dp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) requireContext().animatedDrawable(R.drawable.avd_search_to_close) else requireContext().drawable(R.drawable.ic_close)
     }
     private val searchControlsBinding by lazy {
         DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity()!!.toolbarContext), R.layout.view_search_controls, null, false).apply {
@@ -108,7 +108,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
                         listOf(
                             eraseButton,
                             searchToggle,
-                            context.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { getCampfireActivity()?.openSecondaryNavigationDrawer() }
+                            context.createToolbarButton(R.drawable.ic_filter_and_sort) { getCampfireActivity()?.openSecondaryNavigationDrawer() }
                         ))
                 }
             }
@@ -123,7 +123,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         savedInstanceState?.let {
             viewModel.searchControlsViewModel.isVisible.value = savedInstanceState.isTextInputVisible
             if (it.isTextInputVisible) {
-                searchToggle.setImageDrawable(requireContext().drawable(R.drawable.ic_close_24dp))
+                searchToggle.setImageDrawable(requireContext().drawable(R.drawable.ic_close))
                 toolbarTextInputView.textInput.run {
                     setText(savedInstanceState.searchQuery)
                     setSelection(text.length)

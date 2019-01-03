@@ -60,13 +60,13 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:padding="@dimen/content_padding"
                 android:tint="@color/text_secondary"
-                app:animation="@{safeUnbox(viewModel.collection.isBookmarked) ? R.drawable.avd_not_bookmarked_to_bookmarked_24dp : R.drawable.avd_bookmarked_to_not_bookmarked_24dp }"
-                app:lastFrame="@{safeUnbox(viewModel.collection.isBookmarked) ? @drawable/ic_bookmarked_24dp : @drawable/ic_not_bookmarked_24dp}"
+                app:animation="@{safeUnbox(viewModel.collection.isBookmarked) ? R.drawable.avd_not_bookmarked_to_bookmarked : R.drawable.avd_bookmarked_to_not_bookmarked }"
+                app:lastFrame="@{safeUnbox(viewModel.collection.isBookmarked) ? @drawable/ic_bookmarked : @drawable/ic_not_bookmarked}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/space"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:ignore="ContentDescription"
-                tools:src="@drawable/ic_bookmarked_24dp" />
+                tools:src="@drawable/ic_bookmarked" />
 
             <TextView
                 android:id="@+id/text"

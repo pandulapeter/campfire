@@ -29,14 +29,14 @@ class CollectionDetailFragment : BaseSongListFragment<CollectionDetailViewModel>
     override val viewModel by viewModel<CollectionDetailViewModel> {
         parametersOf((arguments?.collection as? Collection) ?: throw IllegalStateException("No Collection specified."))
     }
-    private val drawableBookmarkedToNotBookmarked by lazy { requireContext().animatedDrawable(R.drawable.avd_bookmarked_to_not_bookmarked_24dp) }
-    private val drawableNotBookmarkedToBookmarked by lazy { requireContext().animatedDrawable(R.drawable.avd_not_bookmarked_to_bookmarked_24dp) }
+    private val drawableBookmarkedToNotBookmarked by lazy { requireContext().animatedDrawable(R.drawable.avd_bookmarked_to_not_bookmarked) }
+    private val drawableNotBookmarkedToBookmarked by lazy { requireContext().animatedDrawable(R.drawable.avd_not_bookmarked_to_bookmarked) }
     private val shuffleButton: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_shuffle_24dp) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL) }
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_shuffle) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL) }
             .apply { visibleOrGone = false }
     }
     private val bookmarkedButton: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(if (viewModel.collection.value?.collection?.isBookmarked == true) R.drawable.ic_bookmarked_24dp else R.drawable.ic_not_bookmarked_24dp) {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(if (viewModel.collection.value?.collection?.isBookmarked == true) R.drawable.ic_bookmarked else R.drawable.ic_not_bookmarked) {
             viewModel.collection.value?.collection?.let { collection ->
                 viewModel.collectionRepository.toggleBookmarkedState(collection.id)
                 analyticsManager.onCollectionBookmarkedStateChanged(collection.id, collection.isBookmarked == true, AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL)

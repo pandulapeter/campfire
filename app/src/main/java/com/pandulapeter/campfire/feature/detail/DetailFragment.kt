@@ -75,10 +75,10 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
     private val detailEventBus by inject<DetailEventBus>()
     private val detailPageEventBus by inject<DetailPageEventBus>()
     private val songs by lazy { arguments?.songs ?: listOf<Song>() }
-    private val drawablePlayToPause by lazy { requireContext().animatedDrawable(R.drawable.avd_play_to_pause_24dp) }
-    private val drawablePauseToPlay by lazy { requireContext().animatedDrawable(R.drawable.avd_pause_to_play_24dp) }
-    private val addedToPlaylist by lazy { requireContext().animatedDrawable(R.drawable.avd_added_to_playlists_24dp) }
-    private val removedFromPlaylist by lazy { requireContext().animatedDrawable(R.drawable.avd_removed_from_playlists_24dp) }
+    private val drawablePlayToPause by lazy { requireContext().animatedDrawable(R.drawable.avd_play_to_pause) }
+    private val drawablePauseToPlay by lazy { requireContext().animatedDrawable(R.drawable.avd_pause_to_play) }
+    private val addedToPlaylist by lazy { requireContext().animatedDrawable(R.drawable.avd_added_to_playlists) }
+    private val removedFromPlaylist by lazy { requireContext().animatedDrawable(R.drawable.avd_removed_from_playlists) }
     private val transposeHigher by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.transpose_higher) }
     private val transposeLower by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.transpose_lower) }
     private val fontSizeIncrement by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.font_size_increment) }
@@ -86,7 +86,7 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
     private var isPinchHintVisible = false
     private val transposeContainer by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.transpose_container) }
     private val playlistButton: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(if (viewModel.isSongInAnyPlaylists()) R.drawable.ic_playlist_24dp else R.drawable.ic_playlist_border_24dp) {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(if (viewModel.isSongInAnyPlaylists()) R.drawable.ic_playlist else R.drawable.ic_playlist_border) {
             if (viewModel.areThereMoreThanOnePlaylists()) {
                 if (!isUiBlocked) {
                     viewModel.songId.value?.let { songId -> PlaylistChooserBottomSheetFragment.show(childFragmentManager, songId, AnalyticsManager.PARAM_VALUE_SCREEN_SONG_DETAIL) }
@@ -152,7 +152,7 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
                 isAddedToPlaylist = it
             }
         }
-        getCampfireActivity()?.updateFloatingActionButtonDrawable(requireContext().drawable(R.drawable.ic_play_24dp))
+        getCampfireActivity()?.updateFloatingActionButtonDrawable(requireContext().drawable(R.drawable.ic_play))
         getCampfireActivity()?.autoScrollControl?.visibleOrGone = false
         if (savedInstanceState != null) {
             lastSongId = savedInstanceState.lastSongId
@@ -220,7 +220,7 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
         }
         getCampfireActivity()?.run {
             updateToolbarButtons(
-                mutableListOf(toolbarContext.createToolbarButton(R.drawable.ic_song_options_24dp) { openSecondaryNavigationDrawer() }).apply {
+                mutableListOf(toolbarContext.createToolbarButton(R.drawable.ic_song_options) { openSecondaryNavigationDrawer() }).apply {
                     if (arguments?.shouldShowManagePlaylist == true) {
                         add(0, playlistButton)
                     }
@@ -283,7 +283,7 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
                 autoScrollControl.tag = null
             }
             autoScrollControl.visibleOrInvisible = false
-            updateFloatingActionButtonDrawable(drawable(R.drawable.ic_play_24dp))
+            updateFloatingActionButtonDrawable(drawable(R.drawable.ic_play))
             showHintIfNeeded()
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }

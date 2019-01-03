@@ -26,7 +26,7 @@ class ManageDownloadsFragment : BaseSongListFragment<ManageDownloadsViewModel>()
     override val viewModel by viewModel<ManageDownloadsViewModel>()
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
     private val deleteAllButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_delete) {
             AlertDialogFragment.show(
                 DIALOG_ID_DELETE_ALL_CONFIRMATION,
                 childFragmentManager,

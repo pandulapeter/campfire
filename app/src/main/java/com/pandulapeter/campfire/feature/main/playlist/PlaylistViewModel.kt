@@ -43,7 +43,7 @@ class PlaylistViewModel(
     val shouldOpenSongs = MutableLiveData<Boolean?>()
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST
     override val placeholderText = R.string.playlist_placeholder
-    override val buttonIcon = R.drawable.ic_songs_24dp
+    override val buttonIcon = R.drawable.ic_songs
 
     init {
         buttonText.value = R.string.go_to_songs

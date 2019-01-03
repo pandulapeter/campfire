@@ -33,7 +33,7 @@ class ManageDownloadsViewModel(
     private var songToDeleteId: String? = null
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS
     override val placeholderText = R.string.manage_downloads_placeholder
-    override val buttonIcon = R.drawable.ic_songs_24dp
+    override val buttonIcon = R.drawable.ic_songs
 
     init {
         buttonText.value = R.string.go_to_songs

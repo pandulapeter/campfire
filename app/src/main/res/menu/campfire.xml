@@ -7,27 +7,27 @@
 
         <item
             android:id="@+id/home"
-            android:icon="@drawable/ic_home_24dp"
+            android:icon="@drawable/ic_home"
             android:title="@string/main_home" />
 
         <item
             android:id="@+id/collections"
-            android:icon="@drawable/ic_collections_24dp"
+            android:icon="@drawable/ic_collections"
             android:title="@string/main_collections" />
 
         <item
             android:id="@+id/songs"
-            android:icon="@drawable/ic_songs_24dp"
+            android:icon="@drawable/ic_songs"
             android:title="@string/main_songs" />
 
         <item
             android:id="@+id/history"
-            android:icon="@drawable/ic_history_24dp"
+            android:icon="@drawable/ic_history"
             android:title="@string/main_history" />
 
         <item
             android:id="@+id/options"
-            android:icon="@drawable/ic_options_24dp"
+            android:icon="@drawable/ic_options"
             android:title="@string/main_options" />
 
     </group>

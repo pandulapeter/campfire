@@ -41,18 +41,18 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     override val viewModel by viewModel<HomeViewModel>()
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     private val drawableCloseToSearch by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context?.animatedDrawable(R.drawable.avd_close_to_search_24dp) else context?.drawable(R.drawable.ic_search_24dp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context?.animatedDrawable(R.drawable.avd_close_to_search) else context?.drawable(R.drawable.ic_search)
     }
     private val drawableSearchToClose by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context?.animatedDrawable(R.drawable.avd_search_to_close_24dp) else context?.drawable(R.drawable.ic_close_24dp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context?.animatedDrawable(R.drawable.avd_search_to_close) else context?.drawable(R.drawable.ic_close)
     }
     private val searchToggle: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_search) {
             toggleTextInputVisibility()
         }
     }
     private val eraseButton: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) { toolbarTextInputView.textInput.setText("") }.apply {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_eraser) { toolbarTextInputView.textInput.setText("") }.apply {
             scaleX = 0f
             scaleY = 0f
             alpha = 0.5f
@@ -149,7 +149,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     listOf(
                         eraseButton,
                         searchToggle,
-                        activity.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { activity.openSecondaryNavigationDrawer() }
+                        activity.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort) { activity.openSecondaryNavigationDrawer() }
                     ))
             }
             viewModel.shouldShowEraseButton.observe { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
@@ -163,7 +163,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                 viewModel.randomCollections = it.randomCollections
                 viewModel.randomSongs = it.randomSongs
                 if (it.isTextInputVisible) {
-                    searchToggle.setImageDrawable(context?.drawable(R.drawable.ic_close_24dp))
+                    searchToggle.setImageDrawable(context?.drawable(R.drawable.ic_close))
                     toolbarTextInputView.textInput.run {
                         setText(savedInstanceState.searchQuery)
                         setSelection(text.length)

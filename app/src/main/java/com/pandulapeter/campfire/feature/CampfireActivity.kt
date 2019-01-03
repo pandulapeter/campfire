@@ -86,8 +86,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private val binding by lazy { DataBindingUtil.setContentView<ActivityCampfireBinding>(this, R.layout.activity_campfire) }
     private val viewModel by viewModel<ActivityViewModel>()
     private val currentFragment get() = supportFragmentManager.findFragmentById(R.id.fragment_container) as? CampfireFragment<*, *>?
-    private val drawableMenuToBack by lazy { animatedDrawable(R.drawable.avd_menu_to_back_24dp) }
-    private val drawableBackToMenu by lazy { animatedDrawable(R.drawable.avd_back_to_menu_24dp) }
+    private val drawableMenuToBack by lazy { animatedDrawable(R.drawable.avd_menu_to_back) }
+    private val drawableBackToMenu by lazy { animatedDrawable(R.drawable.avd_back_to_menu) }
     private var currentPlaylistId = ""
     private var currentCollectionId = ""
     private var currentScreenId = R.id.songs
@@ -448,7 +448,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             setImageDrawable(if (if (tag == null) false else tag != shouldShowBackButton) {
                 (if (shouldShowBackButton) drawableMenuToBack else drawableBackToMenu).apply { this?.start() }
             } else {
-                drawable(if (shouldShowBackButton) R.drawable.ic_back_24dp else R.drawable.ic_menu_24dp)
+                drawable(if (shouldShowBackButton) R.drawable.ic_back else R.drawable.ic_menu)
             })
             tag = shouldShowBackButton
         }
@@ -834,7 +834,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private fun updatePlaylists(playlists: List<Playlist>) {
         fun SubMenu.addPlaylistItem(index: Int, id: Int, title: String, shouldUseAddIcon: Boolean = false) =
             add(R.id.playlist_container, id, index, title).run {
-                setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist_24dp else R.drawable.ic_playlist_24dp)
+                setIcon(if (shouldUseAddIcon) R.drawable.ic_new_playlist else R.drawable.ic_playlist)
             }
 
         val isLookingForUpdatedId = currentFragment is PlaylistFragment || currentFragment is DetailFragment

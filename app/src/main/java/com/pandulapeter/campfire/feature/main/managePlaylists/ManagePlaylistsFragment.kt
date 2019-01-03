@@ -32,7 +32,7 @@ class ManagePlaylistsFragment : CampfireFragment<FragmentManagePlaylistsBinding,
     override val viewModel by viewModel<ManagePlaylistsViewModel>()
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
     private val deleteAllButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_delete) {
             AlertDialogFragment.show(
                 DIALOG_ID_DELETE_ALL_CONFIRMATION,
                 childFragmentManager,
@@ -52,7 +52,7 @@ class ManagePlaylistsFragment : CampfireFragment<FragmentManagePlaylistsBinding,
         topLevelBehavior.onViewCreated(savedInstanceState)
         topLevelBehavior.defaultToolbar.updateToolbarTitle(R.string.main_manage_playlists, getString(R.string.loading))
         getCampfireActivity()?.updateToolbarButtons(listOf(deleteAllButton))
-        getCampfireActivity()?.updateFloatingActionButtonDrawable(requireContext().drawable(R.drawable.ic_add_24dp))
+        getCampfireActivity()?.updateFloatingActionButtonDrawable(requireContext().drawable(R.drawable.ic_add))
         binding.recyclerView.layoutManager = LinearLayoutManager(getCampfireActivity())
         binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
             init {

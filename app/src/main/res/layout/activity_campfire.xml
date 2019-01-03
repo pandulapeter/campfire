@@ -62,7 +62,7 @@
                             app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
                             app:layout_constraintStart_toStartOf="@id/first_keyline_fix"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/ic_menu_24dp" />
+                            app:srcCompat="@drawable/ic_menu" />
 
                         <FrameLayout
                             android:id="@+id/toolbar_title_container"

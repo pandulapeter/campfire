@@ -48,10 +48,10 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
     }
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
     private val drawableCloseToSearch by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity()?.animatedDrawable(R.drawable.avd_close_to_search_24dp) else getCampfireActivity()?.drawable(R.drawable.ic_search_24dp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity()?.animatedDrawable(R.drawable.avd_close_to_search) else getCampfireActivity()?.drawable(R.drawable.ic_search)
     }
     private val drawableSearchToClose by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity()?.animatedDrawable(R.drawable.avd_search_to_close_24dp) else getCampfireActivity()?.drawable(R.drawable.ic_close_24dp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity()?.animatedDrawable(R.drawable.avd_search_to_close) else getCampfireActivity()?.drawable(R.drawable.ic_close)
     }
     private val searchControlsBinding by lazy {
         DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity()!!.toolbarContext), R.layout.view_search_controls, null, false).apply {
@@ -62,10 +62,10 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
     }
     private lateinit var toolbarTextInputView: ToolbarTextInputView
     private val searchToggle: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_search_24dp) { toggleTextInputVisibility() }
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_search) { toggleTextInputVisibility() }
     }
     private val eraseButton: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_eraser_24dp) { toolbarTextInputView.textInput.setText("") }.apply {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_eraser) { toolbarTextInputView.textInput.setText("") }.apply {
             scaleX = 0f
             scaleY = 0f
             alpha = 0.5f
@@ -129,7 +129,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                         listOf(
                             eraseButton,
                             searchToggle,
-                            activity.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort_24dp) { activity.openSecondaryNavigationDrawer() }
+                            activity.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort) { activity.openSecondaryNavigationDrawer() }
                         ))
                 }
             }
@@ -147,7 +147,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                 viewModel.searchControlsViewModel.isVisible.value = savedInstanceState.isTextInputVisible
                 viewModel.buttonText.value = it.buttonText
                 if (it.isTextInputVisible) {
-                    searchToggle.setImageDrawable(activity.drawable(R.drawable.ic_close_24dp))
+                    searchToggle.setImageDrawable(activity.drawable(R.drawable.ic_close))
                     toolbarTextInputView.textInput.run {
                         setText(savedInstanceState.searchQuery)
                         setSelection(text.length)

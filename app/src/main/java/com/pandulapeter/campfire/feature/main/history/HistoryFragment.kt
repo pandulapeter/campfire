@@ -24,7 +24,7 @@ class HistoryFragment : BaseSongListFragment<HistoryViewModel>(), BaseDialogFrag
     override val shouldSendMultipleSongs = false
     override val shouldShowManagePlaylist = true
     private val deleteAllButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_delete_24dp) {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_delete) {
             AlertDialogFragment.show(
                 DIALOG_ID_DELETE_ALL_CONFIRMATION,
                 childFragmentManager,

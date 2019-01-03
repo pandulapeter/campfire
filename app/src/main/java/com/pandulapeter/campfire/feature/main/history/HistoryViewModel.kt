@@ -42,7 +42,7 @@ class HistoryViewModel(
     private val Calendar.day get() = get(Calendar.DAY_OF_YEAR)
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_HISTORY
     override val placeholderText = R.string.history_placeholder
-    override val buttonIcon = R.drawable.ic_songs_24dp
+    override val buttonIcon = R.drawable.ic_songs
 
     init {
         buttonText.value = R.string.go_to_songs

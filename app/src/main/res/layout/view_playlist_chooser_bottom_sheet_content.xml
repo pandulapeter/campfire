@@ -70,7 +70,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="@id/space"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@drawable/ic_close_24dp" />
+                    app:srcCompat="@drawable/ic_close" />
 
                 <TextView
                     android:id="@+id/toolbar"
@@ -124,13 +124,13 @@
                     android:layout_height="@dimen/touch_target"
                     android:background="?attr/selectableItemBackground"
                     android:drawablePadding="12dp"
-                    android:drawableStart="@{R.drawable.ic_new_playlist_24dp}"
+                    android:drawableStart="@{R.drawable.ic_new_playlist}"
                     android:gravity="center_vertical"
                     android:onClick="@{() -> viewModel.onNewPlaylistButtonClicked()}"
                     android:paddingEnd="@dimen/first_keyline"
                     android:paddingStart="14dp"
                     android:text="@string/main_new_playlist"
-                    tools:drawableStart="@drawable/ic_new_playlist_24dp" />
+                    tools:drawableStart="@drawable/ic_new_playlist" />
 
             </LinearLayout>
 
