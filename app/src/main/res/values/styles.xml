@@ -13,6 +13,7 @@
         <item name="android:textColor">@color/white</item>
         <item name="cornerRadius">@dimen/card_corner</item>
         <item name="backgroundTint">@color/accent</item>
+        <item name="rippleColor">@color/white_ripple</item>
     </style>
 
     <style name="FlatButton" parent="Widget.MaterialComponents.Button.TextButton">

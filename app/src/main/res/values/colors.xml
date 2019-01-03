@@ -4,6 +4,7 @@
     <!-- General -->
     <color name="accent">#F57C00</color>
     <color name="white">#FFFFFF</color>
+    <color name="white_ripple">#42FFFFFF</color>
 
     <!-- Light theme -->
     <color name="background">#FAFAFA</color>
