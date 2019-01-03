@@ -52,25 +52,6 @@ import java.net.URLEncoder
 
 class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(R.layout.fragment_detail), DetailPageEventBus.Subscriber, TopLevelFragment {
 
-    companion object {
-        const val TRANSITION_DELAY = 20L
-        const val TRANSITION_DURATION = 150L
-        private const val FONT_SIZE_MAX = 1.8f
-        private const val FONT_SIZE_MIN = 0.8f
-        private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
-        private var Bundle.songs by BundleArgumentDelegate.ParcelableArrayList<Song>("songs")
-        private var Bundle.index by BundleArgumentDelegate.Int("index")
-        private var Bundle.shouldShowManagePlaylist by BundleArgumentDelegate.Boolean("shouldShowManagePlaylist")
-        private var Bundle.hasNoTransition by BundleArgumentDelegate.Boolean("hasNoTransition")
-
-        fun newInstance(songs: List<Song>, index: Int, shouldShowManagePlaylist: Boolean, hasNoTransition: Boolean) = DetailFragment().withArguments {
-            it.songs = ArrayList(songs)
-            it.index = index
-            it.shouldShowManagePlaylist = shouldShowManagePlaylist
-            it.hasNoTransition = hasNoTransition
-        }
-    }
-
     override val viewModel by viewModel<DetailViewModel>()
     override val topLevelBehavior by lazy {
         TopLevelBehavior(
@@ -100,6 +81,8 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
     private val removedFromPlaylist by lazy { requireContext().animatedDrawable(R.drawable.avd_removed_from_playlists_24dp) }
     private val transposeHigher by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.transpose_higher) }
     private val transposeLower by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.transpose_lower) }
+    private val fontSizeIncrement by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.font_size_increment) }
+    private val fontSizeDecrement by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.font_size_decrement) }
     private var isPinchHintVisible = false
     private val transposeContainer by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.transpose_container) }
     private val playlistButton: ToolbarButton by lazy {
@@ -118,6 +101,21 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
     private var lastSongId = ""
     private val isAutoScrollActive get() = getCampfireActivity()?.autoScrollControl?.visibleOrInvisible == true
     private val isSongLoaded get() = getCampfireActivity()?.isFloatingActionButtonEnabled() == true
+    private val detailEventBusSubscriber = object : DetailEventBus.Subscriber {
+
+        override fun onTransitionEnd() = Unit
+
+        override fun onTextSizeChanged() {
+            fontSizeDecrement.isEnabled = preferenceDatabase.fontSize > FONT_SIZE_MIN
+            fontSizeIncrement.isEnabled = preferenceDatabase.fontSize < FONT_SIZE_MAX
+        }
+
+        override fun onShouldShowChordsChanged() = Unit
+
+        override fun onTranspositionChanged(songId: String, value: Int) = Unit
+
+        override fun scroll(songId: String, speed: Int) = Unit
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -189,6 +187,7 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
             })
         }
         getCampfireActivity()?.enableSecondaryNavigationDrawer(R.menu.detail)
+        detailEventBusSubscriber.onTextSizeChanged()
         initializeCompoundButton(R.id.should_show_chords) { preferenceDatabase.shouldShowChords }
         updateTransposeControls()
         viewModel.songId.observe {
@@ -276,6 +275,7 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
 
     override fun onResume() {
         super.onResume()
+        detailEventBus.subscribe(detailEventBusSubscriber)
         detailPageEventBus.subscribe(this)
         getCampfireActivity()?.run {
             (autoScrollControl.tag as? Animator)?.let {
@@ -294,6 +294,7 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
             toggleAutoScroll()
         }
         super.onPause()
+        detailEventBus.unsubscribe(detailEventBusSubscriber)
         detailPageEventBus.unsubscribe(this)
         getCampfireActivity()?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
@@ -340,6 +341,14 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
                     }
                 }
             }
+        }
+        R.id.font_size_increment -> consume {
+            preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize + 0.1f))
+            detailEventBus.notifyTextSizeChanged()
+        }
+        R.id.font_size_decrement -> consume {
+            preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize - 0.1f))
+            detailEventBus.notifyTextSizeChanged()
         }
         R.id.report -> consumeAndCloseDrawer {
             if (!isUiBlocked) {
@@ -464,6 +473,25 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
                     showSwipeHint()
                 }
             }
+        }
+    }
+
+    companion object {
+        const val TRANSITION_DELAY = 20L
+        const val TRANSITION_DURATION = 150L
+        private const val FONT_SIZE_MAX = 1.8f
+        private const val FONT_SIZE_MIN = 0.8f
+        private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
+        private var Bundle.songs by BundleArgumentDelegate.ParcelableArrayList<Song>("songs")
+        private var Bundle.index by BundleArgumentDelegate.Int("index")
+        private var Bundle.shouldShowManagePlaylist by BundleArgumentDelegate.Boolean("shouldShowManagePlaylist")
+        private var Bundle.hasNoTransition by BundleArgumentDelegate.Boolean("hasNoTransition")
+
+        fun newInstance(songs: List<Song>, index: Int, shouldShowManagePlaylist: Boolean, hasNoTransition: Boolean) = DetailFragment().withArguments {
+            it.songs = ArrayList(songs)
+            it.index = index
+            it.shouldShowManagePlaylist = shouldShowManagePlaylist
+            it.hasNoTransition = hasNoTransition
         }
     }
 }

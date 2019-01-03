@@ -4,6 +4,6 @@
 
     <corners android:radius="@dimen/large_content_padding" />
 
-    <solid android:color="?android:attr/textColorPrimary" />
+    <solid android:color="@color/text_primary" />
 
 </shape>

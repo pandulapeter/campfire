@@ -317,6 +317,9 @@
     <string name="detail_transpose_value">Transzponálás (%s)</string>
     <string name="detail_transpose_higher">Fennebb</string>
     <string name="detail_transpose_lower">Lennebb</string>
+    <string name="detail_font_size">Szöveg mérete</string>
+    <string name="detail_font_size_larger">Nagyobb</string>
+    <string name="detail_font_size_smaller">Kisebb</string>
     <string name="detail_play_original">Eredeti lejátszása</string>
     <string name="detail_report">Hiba jelentése</string>
     <string name="detail_report_subject">Campfire: Probléma ezzel a dallal: %1$s - %2$s</string>

@@ -2,5 +2,5 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:color="@color/accent" android:state_checked="true" />
     <item android:color="@color/accent" android:state_selected="true" />
-    <item android:color="?android:attr/textColorPrimary" />
+    <item android:color="@color/text_secondary" />
 </selector>

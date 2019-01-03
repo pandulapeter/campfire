@@ -320,6 +320,9 @@
     <string name="detail_transpose_value">Transpunere (%s)</string>
     <string name="detail_transpose_higher">Mai sus</string>
     <string name="detail_transpose_lower">Mai jos</string>
+    <string name="detail_font_size">Mărimea fontului</string>
+    <string name="detail_font_size_larger">Mai mare</string>
+    <string name="detail_font_size_smaller">Mai mic</string>
     <string name="detail_play_original">Ascultă originalul</string>
     <string name="detail_report">Raportează o eroare</string>
     <string name="detail_report_subject">Campfire: Problemă cu piesa: %1$s - %2$s</string>

@@ -175,7 +175,9 @@
             android:layout_height="match_parent"
             android:layout_gravity="end"
             android:background="?attr/colorBackgroundFloating"
-            app:insetForeground="?attr/colorPrimary" />
+            app:insetForeground="?attr/colorPrimary"
+            app:itemIconTint="@color/menu_secondary_item"
+            app:itemTextColor="@color/menu_secondary_item" />
 
     </androidx.drawerlayout.widget.DrawerLayout>
 
