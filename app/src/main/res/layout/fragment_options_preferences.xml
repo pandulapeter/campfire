@@ -17,8 +17,8 @@
         android:layout_height="match_parent"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:paddingBottom="@dimen/list_bottom_margin"
         android:paddingTop="@dimen/content_padding"
+        android:paddingBottom="@dimen/list_bottom_margin"
         android:scrollbars="none">
 
         <LinearLayout
@@ -37,8 +37,8 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/content_padding"
                 android:layout_marginStart="@dimen/content_padding"
+                android:layout_marginEnd="@dimen/content_padding"
                 app:cardCornerRadius="@dimen/card_corner"
                 app:contentPaddingBottom="@dimen/small_content_padding"
                 app:contentPaddingLeft="@dimen/content_padding"
@@ -57,8 +57,9 @@
                         android:checked="@={viewModel.shouldShowChords}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
-                        android:paddingEnd="@dimen/content_padding"
                         android:paddingStart="@dimen/options_preferences_checkbox_padding"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:textColor="@color/text_primary"
                         app:description="@{viewModel.shouldShowChords ? @string/options_preferences_show_chords_checked : @string/options_preferences_show_chords_unchecked}"
                         app:title="@{@string/options_preferences_should_show_chords}"
                         tools:text="@string/options_preferences_should_show_chords" />
@@ -76,8 +77,9 @@
                         android:enabled="@{viewModel.shouldShowChords}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
-                        android:paddingEnd="@dimen/content_padding"
                         android:paddingStart="@dimen/options_preferences_checkbox_padding"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:textColor="@color/text_primary"
                         app:description="@{viewModel.englishNotationExample}"
                         app:title="@{@string/options_preferences_english_notation}"
                         tools:text="@string/options_preferences_english_notation" />
@@ -90,8 +92,9 @@
                         android:enabled="@{viewModel.shouldShowChords}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
-                        android:paddingEnd="@dimen/content_padding"
                         android:paddingStart="@dimen/options_preferences_checkbox_padding"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:textColor="@color/text_primary"
                         app:description="@{viewModel.germanNotationExample}"
                         app:title="@{@string/options_preferences_german_notation}"
                         tools:text="@string/options_preferences_german_notation" />
@@ -109,8 +112,8 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/content_padding"
                 android:layout_marginStart="@dimen/content_padding"
+                android:layout_marginEnd="@dimen/content_padding"
                 app:cardCornerRadius="@dimen/card_corner">
 
                 <LinearLayout
@@ -144,8 +147,9 @@
                         android:checked="@={viewModel.shouldShowExitConfirmation}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
-                        android:paddingEnd="@dimen/content_padding"
                         android:paddingStart="@dimen/content_padding"
+                        android:paddingEnd="@dimen/content_padding"
+                        android:textColor="@color/text_primary"
                         app:description="@{viewModel.shouldShowExitConfirmation ? @string/options_preferences_exit_confirmation_enabled : @string/options_preferences_exit_confirmation_disabled}"
                         app:switchPadding="@dimen/content_padding"
                         app:title="@{@string/options_preferences_exit_confirmation}"
@@ -164,8 +168,8 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/content_padding"
                 android:layout_marginStart="@dimen/content_padding"
+                android:layout_marginEnd="@dimen/content_padding"
                 app:cardCornerRadius="@dimen/card_corner">
 
                 <LinearLayout
@@ -186,13 +190,14 @@
                     <androidx.appcompat.widget.SwitchCompat
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/content_padding"
-                        android:layout_marginEnd="@dimen/content_padding"
                         android:layout_marginStart="@dimen/switch_content_padding"
+                        android:layout_marginEnd="@dimen/content_padding"
+                        android:layout_marginBottom="@dimen/content_padding"
                         android:checked="@={viewModel.shouldShareUsageData}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
                         android:paddingTop="@dimen/content_padding"
+                        android:textColor="@color/text_primary"
                         app:description="@{viewModel.shouldShareUsageData ? @string/options_preferences_share_usage_data_enabled : @string/options_preferences_share_usage_data_disabled}"
                         app:switchPadding="@dimen/content_padding"
                         app:title="@{@string/options_preferences_share_usage_data}"
@@ -201,13 +206,14 @@
                     <androidx.appcompat.widget.SwitchCompat
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/content_padding"
-                        android:layout_marginEnd="@dimen/content_padding"
                         android:layout_marginStart="@dimen/switch_content_padding"
+                        android:layout_marginEnd="@dimen/content_padding"
+                        android:layout_marginBottom="@dimen/content_padding"
                         android:checked="@={viewModel.shouldShareCrashReports}"
                         android:gravity="center_vertical"
                         android:minHeight="@dimen/touch_target"
                         android:paddingTop="@dimen/content_padding"
+                        android:textColor="@color/text_primary"
                         app:description="@{viewModel.shouldShareCrashReports ? @string/options_preferences_share_crash_reports_enabled : @string/options_preferences_share_crash_reports_disabled}"
                         app:switchPadding="@dimen/content_padding"
                         app:title="@{@string/options_preferences_share_crash_reports}"

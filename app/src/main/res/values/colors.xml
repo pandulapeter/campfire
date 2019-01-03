@@ -2,7 +2,15 @@
 <resources>
 
     <!-- General -->
-    <color name="accent">#f57c00</color>
+    <color name="accent">#F57C00</color>
     <color name="white">#FFFFFF</color>
+
+    <!-- Light theme -->
+    <color name="background">#FAFAFA</color>
+    <color name="navigation_bar">#F2F2F2</color>
+    <color name="panel_primary">#FFFFFF</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#737373</color>
+    <color name="text_tertiary">#9B9B9B</color>
 
 </resources>

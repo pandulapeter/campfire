@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -81,7 +80,6 @@ import com.pandulapeter.campfire.util.visibleOrInvisible
 import io.fabric.sdk.android.Fabric
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.Locale
-import kotlin.math.max
 
 class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSelectedListener {
 
@@ -185,10 +183,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
             else -> 0
         }
-        val hsv = FloatArray(3)
-        Color.colorToHSV(obtainColor(android.R.attr.windowBackground), hsv)
-        hsv[2] = max(hsv[2] - 0.05f, 0f)
-        window.navigationBarColor = Color.HSVToColor(hsv)
 
         // Make sure the "What's new" snackbar does not appear after a fresh start.
         if (viewModel.preferenceDatabase.ftuxLastSeenChangelog == 0) {

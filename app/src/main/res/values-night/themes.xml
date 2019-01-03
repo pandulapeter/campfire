@@ -3,16 +3,20 @@
 
     <style name="BottomSheetDialog" parent="Theme.Design.BottomSheetDialog">
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">?android:attr/colorBackgroundFloating</item>
         <item name="android:windowIsFloating">false</item>
         <item name="bottomSheetStyle">@style/BottomSheet</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:navigationBarColor">@color/panel_primary</item>
     </style>
 
     <style name="Dialog" parent="Theme.MaterialComponents.Dialog.Alert">
         <item name="colorPrimary">@color/accent</item>
         <item name="colorSecondary">@color/accent</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
         <item name="buttonBarButtonStyle">@style/DialogButton</item>
-        <item name="android:background">?android:attr/colorBackgroundFloating</item>
+        <item name="android:background">@color/panel_primary</item>
     </style>
 
 </resources>

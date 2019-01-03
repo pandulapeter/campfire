@@ -26,7 +26,7 @@
                     android:id="@+id/app_bar_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="?attr/colorBackgroundFloating"
+                    android:background="@color/panel_primary"
                     android:visibility="invisible"
                     app:elevation="@dimen/toolbar_elevation">
 
@@ -123,7 +123,7 @@
                 android:layout_marginEnd="48dp"
                 android:clipChildren="false"
                 android:visibility="invisible"
-                app:cardBackgroundColor="?android:attr/colorBackground"
+                app:cardBackgroundColor="@color/navigation_bar"
                 app:cardCornerRadius="16dp"
                 app:contentPadding="@dimen/detail_auto_scroll_control_padding"
                 app:layout_anchor="@id/floating_action_button"
@@ -161,7 +161,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:background="?android:attr/colorBackgroundFloating"
+            android:background="?attr/colorBackgroundFloating"
             app:headerLayout="@layout/view_menu_header"
             app:insetForeground="?attr/colorPrimary"
             app:itemBackground="?attr/selectableItemBackground"
@@ -174,7 +174,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="end"
-            android:background="?android:attr/colorBackgroundFloating"
+            android:background="?attr/colorBackgroundFloating"
             app:insetForeground="?attr/colorPrimary" />
 
     </androidx.drawerlayout.widget.DrawerLayout>
