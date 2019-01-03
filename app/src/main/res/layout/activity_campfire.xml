@@ -123,7 +123,7 @@
                 android:layout_marginEnd="48dp"
                 android:clipChildren="false"
                 android:visibility="invisible"
-                app:cardBackgroundColor="@color/navigation_bar"
+                app:cardBackgroundColor="@color/background"
                 app:cardCornerRadius="16dp"
                 app:contentPadding="@dimen/detail_auto_scroll_control_padding"
                 app:layout_anchor="@id/floating_action_button"
