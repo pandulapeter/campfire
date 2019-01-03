@@ -3,8 +3,7 @@
     android:opacity="opaque">
 
     <item>
-        <shape xmlns:android="http://schemas.android.com/apk/res/android"
-            android:shape="oval">
+        <shape android:shape="oval">
 
             <solid android:color="@color/accent" />
 
