@@ -461,6 +461,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
             if (childCount > 0) getChildAt(0) else null
         }
+        var shouldPost = true
         if (toolbar != oldView) {
             oldView?.visibleOrGone = false
             binding.toolbarTitleContainer.removeView(oldView)
@@ -471,15 +472,21 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                         gravity = Gravity.CENTER_VERTICAL
                     })
             } else {
-                //TODO: Properly handle this case.
-                currentFragment?.showSnackbar(R.string.known_bug_1)
-                viewModel.analyticsManager.trackNonFatalError(IllegalStateException("Interrupted transition caused the toolbar to disappear."))
+                shouldPost = false
+                binding.root.postOnAnimation { updateToolbarTitleView(toolbar, width) }
             }
         }
-        if (binding.toolbarTitleContainer.layoutTransition == null) {
-            binding.toolbarTitleContainer.layoutTransition = LayoutTransition()
+        if (System.currentTimeMillis() - startTime < 200) {
+            binding.toolbarTitleContainer.layoutTransition = null
+            toolbar.visibleOrGone = true
         } else {
-            toolbar.run { postOnAnimation { visibleOrGone = true } }
+            if (binding.toolbarTitleContainer.layoutTransition == null) {
+                binding.toolbarTitleContainer.layoutTransition = LayoutTransition()
+            } else {
+                if (shouldPost) {
+                    toolbar.run { postOnAnimation { visibleOrGone = true } }
+                }
+            }
         }
     }
 
