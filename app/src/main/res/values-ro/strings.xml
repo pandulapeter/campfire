@@ -195,7 +195,8 @@
     <string name="options_changelog_what_is_new">Ce e nou</string>
     <string name="options_changelog_0_9_0_description">
         <Data><![CDATA[
-        • Îmbunătățiri semnificative de <strong>design</strong> și <strong>performanță</strong>
+        • Îmbunătățiri semnificative de <strong>design</strong> și <strong>performanță</strong><br>
+        • Optimizări pentru <strong>ecrane mari</strong>
         ]]></Data>
     </string>
     <string name="options_changelog_0_8_0_description">

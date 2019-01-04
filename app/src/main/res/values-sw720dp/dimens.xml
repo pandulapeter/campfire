@@ -6,11 +6,20 @@
     <dimen name="second_keyline">80dp</dimen>
     <dimen name="toolbar_height">64dp</dimen>
 
-    <!-- Playlist chooser bottom sheet -->
-    <dimen name="bottom_sheet_width">460dp</dimen>
+    <!-- Toolbar -->
+    <dimen name="toolbar_end_margin">16dp</dimen>
 
-    <!-- Onboarding screens -->
+    <!-- Onboarding -->
     <dimen name="onboarding_bottom_margin">72dp</dimen>
     <dimen name="onboarding_button_margin">16dp</dimen>
+
+    <!-- Home -->
+    <dimen name="header_item_icon_margin">20dp</dimen>
+
+    <!-- Collections -->
+    <dimen name="collection_item_margin">8dp</dimen>
+
+    <!-- Playlist chooser bottom sheet -->
+    <dimen name="bottom_sheet_width">460dp</dimen>
 
 </resources>

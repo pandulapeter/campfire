@@ -29,6 +29,7 @@
     <dimen name="toolbar_first_keyline_fix">6dp</dimen>
     <dimen name="toolbar_action_button_padding">4dp</dimen>
     <dimen name="toolbar_action_button_extra_touch_area">16dp</dimen>
+    <dimen name="toolbar_end_margin">8dp</dimen>
 
     <!-- Fixes -->
     <dimen name="edit_text_fix">-4dp</dimen>
@@ -42,15 +43,19 @@
     <dimen name="list_item_minimum_height">40dp</dimen>
     <dimen name="list_item_loading_indicator_size">36dp</dimen>
 
-    <!-- Onboarding screens -->
+    <!-- Onboarding -->
     <dimen name="onboarding_bottom_margin">72dp</dimen>
     <dimen name="onboarding_button_margin">0dp</dimen>
     <dimen name="onboarding_logo_margin">24dp</dimen>
+
+    <!-- Home -->
+    <dimen name="header_item_icon_margin">12dp</dimen>
 
     <!-- Collections -->
     <dimen name="collections_image_size">48dp</dimen>
     <dimen name="collections_card_corner">32dp</dimen>
     <dimen name="collections_negative_card_corner">-32dp</dimen>
+    <dimen name="collection_item_margin">0dp</dimen>
 
     <!-- Options screen / Preferences -->
     <dimen name="options_preferences_checkbox_margin">8dp</dimen>

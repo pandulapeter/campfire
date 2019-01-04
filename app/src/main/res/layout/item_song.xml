@@ -18,8 +18,8 @@
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/border"
         android:layout_marginEnd="@dimen/negative_card_corner"
+        android:layout_marginBottom="@dimen/border"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:elevation="@dimen/card_elevation"
@@ -32,12 +32,13 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/content_padding"
             android:animateLayoutChanges="true"
             android:clipChildren="false"
             android:clipToPadding="false"
             android:minHeight="@dimen/list_item_minimum_height"
-            android:paddingEnd="@dimen/card_corner"
-            android:paddingStart="@dimen/nothing">
+            android:paddingStart="@dimen/nothing"
+            android:paddingEnd="@dimen/toolbar_end_margin">
 
             <androidx.legacy.widget.Space
                 android:id="@+id/space_1"
