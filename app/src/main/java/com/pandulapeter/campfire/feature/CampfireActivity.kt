@@ -104,6 +104,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
     var lastSongId: String = ""
     var lastCollectionId: String = ""
+    val isAfterFirstStart get() = System.currentTimeMillis() - startTime > APPROXIMATE_STARTUP_TIME
     val autoScrollControl: View get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
     val toolbarHeight get() = binding.toolbarTitleContainer.height
@@ -111,7 +112,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     val snackbarRoot: View get() = binding.rootCoordinatorLayout
     var transitionMode: Boolean? = null
         set(value) {
-            if (field != value) {
+            if (field != value && isAfterFirstStart) {
                 when (value) {
                     true -> {
                         binding.appBarLayout.layoutTransition = LayoutTransition().apply {
@@ -426,7 +427,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 }
             } else {
                 if (getChildAt(1) != view) {
-                    if (immediately || System.currentTimeMillis() - startTime < 800) {
+                    if (immediately || !isAfterFirstStart) {
                         layoutTransition = null
                         removeViews()
                         addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -476,7 +477,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 binding.root.postOnAnimation { updateToolbarTitleView(toolbar, width) }
             }
         }
-        if (System.currentTimeMillis() - startTime < 200) {
+        if (!isAfterFirstStart) {
             binding.toolbarTitleContainer.layoutTransition = null
             toolbar.visibleOrGone = true
         } else {
@@ -547,6 +548,9 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
         // Reset the app bar.
         transitionMode = false
+        if (isAfterFirstStart) {
+            binding.toolbarButtonContainer.layoutTransition = LayoutTransition()
+        }
         binding.toolbarButtonContainer.removeAllViews()
         updateMainToolbarButton(!isBackStackEmpty)
         val shouldShowAppBar = (currentFragment as? TopLevelFragment?)?.shouldShowAppBar ?: false
@@ -911,6 +915,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
         private const val DIALOG_ID_EXIT_CONFIRMATION = 1
         private const val DIALOG_ID_PLAY_STORE_RATING = 2
+        private const val APPROXIMATE_STARTUP_TIME = 400L
         const val SCREEN_HOME = "home"
         const val SCREEN_COLLECTIONS = "collections"
         const val SCREEN_SONGS = "songs"
