@@ -3,7 +3,6 @@
 
     <style name="Campfire" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/background</item>
-        <item name="android:navigationBarColor">@color/navigation_bar</item>
         <item name="android:colorBackgroundFloating">@color/panel_primary</item>
         <item name="colorBackgroundFloating">@color/panel_primary</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
@@ -29,7 +28,6 @@
         <item name="android:windowIsFloating">false</item>
         <item name="bottomSheetStyle">@style/BottomSheet</item>
         <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:navigationBarColor">@color/panel_primary</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>

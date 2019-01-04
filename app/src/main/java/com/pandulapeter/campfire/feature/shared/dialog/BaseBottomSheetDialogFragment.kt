@@ -22,6 +22,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.InteractionBlocker
+import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.dimension
 import org.koin.android.ext.android.inject
 
@@ -39,6 +40,9 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
     open fun updateSystemWindows() {
         if (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_NO) {
             dialog?.window?.decorView?.systemUiVisibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else 0
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context?.color(R.color.panel_primary)?.let { color -> dialog?.window?.navigationBarColor = color }
         }
     }
 
