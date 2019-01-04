@@ -302,6 +302,9 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             currentCollectionId = savedInstanceState.currentCollectionId
             lastSongId = savedInstanceState.lastSongId
             lastCollectionId = savedInstanceState.lastCollectionId
+            if (savedInstanceState.isFabVisible) {
+                binding.floatingActionButton.show(false)
+            }
         }
         binding.drawerLayout.setDrawerLockMode(
             if (currentFragment is DetailFragment || currentFragment is CollectionDetailFragment) DrawerLayout.LOCK_MODE_LOCKED_CLOSED else DrawerLayout.LOCK_MODE_UNLOCKED,
@@ -377,6 +380,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         outState?.currentCollectionId = currentCollectionId
         outState?.lastSongId = lastSongId
         outState?.lastCollectionId = lastCollectionId
+        outState?.isFabVisible = binding.floatingActionButton.isVisible()
     }
 
     override fun onPositiveButtonSelected(id: Int) {
@@ -901,6 +905,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         private var Bundle.currentCollectionId by BundleArgumentDelegate.String("currentCollectionId")
         private var Bundle.lastSongId by BundleArgumentDelegate.String("lastSongId")
         private var Bundle.lastCollectionId by BundleArgumentDelegate.String("lastCollectionId")
+        private var Bundle.isFabVisible by BundleArgumentDelegate.Boolean("isFabVisible")
 
         private const val DIALOG_ID_EXIT_CONFIRMATION = 1
         private const val DIALOG_ID_PLAY_STORE_RATING = 2

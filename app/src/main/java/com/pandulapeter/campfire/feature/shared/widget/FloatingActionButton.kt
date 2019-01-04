@@ -44,17 +44,23 @@ class FloatingActionButton @JvmOverloads constructor(context: Context, attrs: At
         context.dimension(R.dimen.floating_action_button_size).let { setMeasuredDimension(it, it) }
     }
 
-    fun show() {
+    fun show(animate: Boolean = true) {
         visibility = VISIBLE
         animate().cancel()
-        rotation = 0f
-        animate().scaleX(1f).scaleY(1f).alpha(1f).apply {
-            duration = ANIMATION_DURATION
-            if (!isVisible()) {
-                rotationBy(360f)
-            }
-            setListener(showListener)
-        }.start()
+        if (animate) {
+            rotation = 0f
+            animate().scaleX(1f).scaleY(1f).alpha(1f).apply {
+                duration = ANIMATION_DURATION
+                if (!isVisible()) {
+                    rotationBy(360f)
+                }
+                setListener(showListener)
+            }.start()
+        } else {
+            scaleX = 1f
+            scaleY = 1f
+            alpha = 1f
+        }
     }
 
     fun hide() {
