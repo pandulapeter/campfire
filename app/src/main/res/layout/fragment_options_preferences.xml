@@ -64,15 +64,18 @@
                         app:title="@{@string/options_preferences_should_show_chords}"
                         tools:text="@string/options_preferences_should_show_chords" />
 
-                    <com.pandulapeter.campfire.feature.shared.widget.DividerView
+                    <View
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/divider_height"
-                        android:layout_marginStart="@dimen/options_preferences_divider_margin" />
+                        android:layout_marginStart="@dimen/options_preferences_divider_margin"
+                        android:alpha="0.4"
+                        android:background="@color/text_secondary" />
 
                     <RadioButton
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/options_preferences_checkbox_margin"
+                        android:buttonTint="@color/radio_button"
                         android:checked="@={!viewModel.shouldUseGermanNotation}"
                         android:enabled="@{viewModel.shouldShowChords}"
                         android:gravity="center_vertical"
@@ -88,6 +91,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/options_preferences_checkbox_margin"
+                        android:buttonTint="@color/radio_button"
                         android:checked="@={viewModel.shouldUseGermanNotation}"
                         android:enabled="@{viewModel.shouldShowChords}"
                         android:gravity="center_vertical"
