@@ -83,8 +83,13 @@ class ContentLanguageViewModel(
 
     private fun updateLanguages() {
         if (!areCollectionsLoading && !areSongsLoading) {
-            languages.postValue(collectionRepository.languages.union(songRepository.languages).toList())
-            state.postValue(StateLayout.State.NORMAL)
+            val allLanguages = collectionRepository.languages.union(songRepository.languages).toList()
+            if (allLanguages.isEmpty()) {
+                state.postValue(StateLayout.State.ERROR)
+            } else {
+                state.postValue(StateLayout.State.NORMAL)
+                languages.postValue(allLanguages)
+            }
         }
     }
 }
