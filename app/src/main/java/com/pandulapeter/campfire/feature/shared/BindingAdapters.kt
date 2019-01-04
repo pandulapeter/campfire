@@ -19,7 +19,12 @@ import com.bumptech.glide.request.RequestOptions
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.shared.span.EllipsizeLineSpan
 import com.pandulapeter.campfire.feature.shared.span.FontFamilySpan
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.font
+import com.pandulapeter.campfire.util.obtainColor
+import com.pandulapeter.campfire.util.parseHtml
+import com.pandulapeter.campfire.util.visibleOrGone
 
 
 @BindingAdapter(value = ["android:drawableStart", "android:drawableTop", "android:drawableEnd", "android:drawableBottom"], requireAll = false)
@@ -146,6 +151,10 @@ fun setTitleDescription(view: TextView, title: String?, description: String?) {
         setSpan(FontFamilySpan(view.context.font(R.font.regular)), 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
 }
+
+@BindingAdapter(value = ["title", "description"], requireAll = false)
+fun setTitleDescription(view: TextView, title: String?, description: Int?) =
+    setTitleDescription(view, title, if (description == 0 || description == null) "" else view.context.getString(description))
 
 @BindingAdapter(value = ["primaryText", "secondaryText", "extraText"], requireAll = false)
 fun setListItemText(view: TextView, primaryText: String, secondaryText: String?, extraText: String?) {

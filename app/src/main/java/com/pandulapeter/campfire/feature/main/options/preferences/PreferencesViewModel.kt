@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.feature.main.options.preferences
 
-import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
@@ -12,7 +11,6 @@ import com.pandulapeter.campfire.util.generateNotationExample
 import com.pandulapeter.campfire.util.mutableLiveDataOf
 
 class PreferencesViewModel(
-    private val context: Context,
     private val preferenceDatabase: PreferenceDatabase,
     private val firstTimeUserExperienceManager: FirstTimeUserExperienceManager,
     private val analyticsManager: AnalyticsManager,
@@ -23,9 +21,9 @@ class PreferencesViewModel(
     val shouldUseGermanNotation = mutableLiveDataOf(preferenceDatabase.shouldUseGermanNotation) { onShouldUseGermanNotationChanged(it) }
     val englishNotationExample = generateNotationExample(false)
     val germanNotationExample = generateNotationExample(true)
-    val themeDescription = mutableLiveDataOf("")
+    val themeDescription = MutableLiveData<Int>()
     val theme = mutableLiveDataOf(Theme.fromId(preferenceDatabase.theme)) { onThemeChanged(it) }
-    val languageDescription = mutableLiveDataOf("")
+    val languageDescription = MutableLiveData<Int>()
     val language = mutableLiveDataOf(Language.fromId(preferenceDatabase.language)) { onLanguageChanged(it) }
     val shouldShowExitConfirmation = mutableLiveDataOf(preferenceDatabase.shouldShowExitConfirmation) { onShouldShowExitConfirmationChanged(it) }
     val shouldShareUsageData = mutableLiveDataOf(preferenceDatabase.shouldShareUsageData) { onShouldShareUsageDataChanged(it) }
@@ -84,13 +82,11 @@ class PreferencesViewModel(
     }
 
     private fun updateThemeDescription(theme: Theme) {
-        themeDescription.value = context.getString(
-            when (theme) {
-                PreferencesViewModel.Theme.AUTOMATIC -> R.string.options_preferences_app_theme_automatic_description
-                PreferencesViewModel.Theme.DARK -> R.string.options_preferences_app_theme_dark_description
-                PreferencesViewModel.Theme.LIGHT -> R.string.options_preferences_app_theme_light_description
-            }
-        )
+        themeDescription.value = when (theme) {
+            PreferencesViewModel.Theme.AUTOMATIC -> R.string.options_preferences_app_theme_automatic_description
+            PreferencesViewModel.Theme.DARK -> R.string.options_preferences_app_theme_dark_description
+            PreferencesViewModel.Theme.LIGHT -> R.string.options_preferences_app_theme_light_description
+        }
     }
 
     private fun onLanguageChanged(language: Language) {
@@ -100,15 +96,12 @@ class PreferencesViewModel(
     }
 
     private fun updateLanguageDescription(language: Language) {
-        languageDescription.value =
-                context.getString(
-                    when (language) {
-                        PreferencesViewModel.Language.AUTOMATIC -> R.string.options_preferences_language_automatic_description
-                        PreferencesViewModel.Language.ENGLISH -> R.string.options_preferences_language_english_description
-                        PreferencesViewModel.Language.HUNGARIAN -> R.string.options_preferences_language_hungarian_description
-                        PreferencesViewModel.Language.ROMANIAN -> R.string.options_preferences_language_romanian_description
-                    }
-                )
+        languageDescription.value = when (language) {
+            PreferencesViewModel.Language.AUTOMATIC -> R.string.options_preferences_language_automatic_description
+            PreferencesViewModel.Language.ENGLISH -> R.string.options_preferences_language_english_description
+            PreferencesViewModel.Language.HUNGARIAN -> R.string.options_preferences_language_hungarian_description
+            PreferencesViewModel.Language.ROMANIAN -> R.string.options_preferences_language_romanian_description
+        }
     }
 
     private fun onShouldShowExitConfirmationChanged(shouldShowExitConfirmation: Boolean) {
