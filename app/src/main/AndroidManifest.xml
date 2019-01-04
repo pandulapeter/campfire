@@ -18,7 +18,6 @@
 
         <activity
             android:name=".feature.CampfireActivity"
-            android:configChanges="orientation|screenSize|screenLayout"
             android:launchMode="singleTop"
             android:theme="@style/Splash"
             android:windowSoftInputMode="adjustNothing">
@@ -30,10 +29,10 @@
 
             <!--suppress AndroidElementNotAllowed -->
             <layout
-                android:defaultHeight="600dp"
                 android:defaultWidth="720dp"
-                android:minHeight="250dp"
-                android:minWidth="300dp" />
+                android:defaultHeight="600dp"
+                android:minWidth="300dp"
+                android:minHeight="250dp" />
 
         </activity>
 
