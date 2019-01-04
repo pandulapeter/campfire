@@ -29,7 +29,7 @@
     <dimen name="toolbar_first_keyline_fix">6dp</dimen>
     <dimen name="toolbar_action_button_padding">4dp</dimen>
     <dimen name="toolbar_action_button_extra_touch_area">16dp</dimen>
-    <dimen name="toolbar_end_margin">8dp</dimen>
+    <dimen name="keyline_margin">8dp</dimen>
 
     <!-- Fixes -->
     <dimen name="edit_text_fix">-4dp</dimen>

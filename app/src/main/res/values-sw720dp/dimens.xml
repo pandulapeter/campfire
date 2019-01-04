@@ -7,7 +7,7 @@
     <dimen name="toolbar_height">64dp</dimen>
 
     <!-- Toolbar -->
-    <dimen name="toolbar_end_margin">16dp</dimen>
+    <dimen name="keyline_margin">16dp</dimen>
 
     <!-- Onboarding -->
     <dimen name="onboarding_bottom_margin">72dp</dimen>

@@ -36,7 +36,7 @@
                 android:clipToPadding="false"
                 android:paddingBottom="@dimen/list_bottom_margin"
                 android:paddingEnd="0dp"
-                android:paddingStart="@dimen/content_padding"
+                android:paddingStart="@dimen/keyline_margin"
                 android:paddingTop="@dimen/content_padding" />
 
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

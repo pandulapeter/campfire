@@ -96,7 +96,7 @@
                             android:gravity="center_vertical|end"
                             android:orientation="horizontal"
                             android:paddingStart="@dimen/small_content_padding"
-                            android:paddingEnd="@dimen/toolbar_end_margin"
+                            android:paddingEnd="@dimen/keyline_margin"
                             app:layout_constraintBottom_toBottomOf="@id/toolbar_bottom"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />

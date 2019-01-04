@@ -38,7 +38,7 @@
             android:clipToPadding="false"
             android:minHeight="@dimen/list_item_minimum_height"
             android:paddingStart="@dimen/nothing"
-            android:paddingEnd="@dimen/toolbar_end_margin">
+            android:paddingEnd="@dimen/keyline_margin">
 
             <androidx.legacy.widget.Space
                 android:id="@+id/space_1"

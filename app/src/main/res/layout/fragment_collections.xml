@@ -34,7 +34,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingStart="@dimen/content_padding"
+                android:paddingStart="@dimen/keyline_margin"
                 android:paddingTop="@dimen/content_padding"
                 android:paddingEnd="0dp"
                 android:paddingBottom="@dimen/list_bottom_margin" />
