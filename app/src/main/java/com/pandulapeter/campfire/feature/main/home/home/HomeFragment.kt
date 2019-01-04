@@ -92,6 +92,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.stateLayout.animateFirstView = savedInstanceState == null
         getCampfireActivity()?.let { activity ->
             if (arguments?.shouldAnimate == true) {
                 arguments?.shouldAnimate = false

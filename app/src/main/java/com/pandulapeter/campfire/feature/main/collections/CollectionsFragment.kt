@@ -94,6 +94,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.stateLayout.animateFirstView = savedInstanceState == null
         getCampfireActivity()?.let { activity ->
             toolbarTextInputView = ToolbarTextInputView(activity.toolbarContext, R.string.collections_search, true).apply {
                 if (viewModel.isTextInputVisible) {

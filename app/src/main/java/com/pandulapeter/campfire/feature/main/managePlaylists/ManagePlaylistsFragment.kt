@@ -47,7 +47,7 @@ class ManagePlaylistsFragment : CampfireFragment<FragmentManagePlaylistsBinding,
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+        binding.stateLayout.animateFirstView = savedInstanceState == null
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS)
         topLevelBehavior.onViewCreated(savedInstanceState)
         topLevelBehavior.defaultToolbar.updateToolbarTitle(R.string.main_manage_playlists, getString(R.string.loading))

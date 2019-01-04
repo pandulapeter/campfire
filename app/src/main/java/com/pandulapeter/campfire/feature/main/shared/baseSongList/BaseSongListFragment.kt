@@ -48,8 +48,8 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
 
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.stateLayout.animateFirstView = savedInstanceState == null
         postponeEnterTransition()
-        super.onViewCreated(view, savedInstanceState)
         if (savedInstanceState != null) {
             viewModel.buttonText.value = savedInstanceState.buttonText
         }

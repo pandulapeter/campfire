@@ -10,7 +10,11 @@ import androidx.annotation.StringRes
 import androidx.databinding.DataBindingUtil
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewStateLayoutBinding
-import com.pandulapeter.campfire.util.*
+import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.dimension
+import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.useStyledAttributes
+import com.pandulapeter.campfire.util.visibleOrGone
 
 class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : ViewFlipper(context, attrs) {
 
@@ -51,6 +55,7 @@ class StateLayout @JvmOverloads constructor(context: Context, attrs: AttributeSe
 
     init {
         inAnimation = AnimationUtils.loadAnimation(context, android.R.anim.fade_in).apply { startOffset = 160 }
+        animateFirstView = false
         binding.button.setOnClickListener { onButtonClicked?.onClick(this) }
         useStyledAttributes(attrs, R.styleable.StateLayout) {
             buttonText = getString(R.styleable.StateLayout_buttonText)
