@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.feature.main.options.preferences
 
 import android.os.Bundle
+import androidx.fragment.app.FragmentManager
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentLanguageSelectorBottomSheetBinding
 import com.pandulapeter.campfire.feature.shared.dialog.BaseBottomSheetDialogFragment
@@ -39,10 +40,7 @@ class LanguageSelectorBottomSheetFragment : BaseBottomSheetDialogFragment<Fragme
 
         private var Bundle?.selectedLanguageId by BundleArgumentDelegate.String("selectedLanguageId")
 
-        fun show(fragmentManager: androidx.fragment.app.FragmentManager, selectedLanguageId: String) {
-            LanguageSelectorBottomSheetFragment().withArguments { it.selectedLanguageId = selectedLanguageId }
-                .run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
-        }
+        fun show(fragmentManager: FragmentManager, selectedLanguageId: String) =
+            LanguageSelectorBottomSheetFragment().withArguments { it.selectedLanguageId = selectedLanguageId }.run { show(fragmentManager, tag) }
     }
-
 }

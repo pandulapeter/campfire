@@ -3,9 +3,9 @@ package com.pandulapeter.campfire.feature.main.home.onboarding.welcome
 import android.net.Uri
 import android.widget.TextView
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.fragment.app.FragmentManager
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentLegalDocumentsBottomSheetBinding
-import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.shared.dialog.BaseBottomSheetDialogFragment
 import com.pandulapeter.campfire.util.color
@@ -20,21 +20,16 @@ class LegalDocumentsBottomSheetFragment : BaseBottomSheetDialogFragment<Fragment
     }
 
     private fun TextView.openLinkOnClick(url: String) = setOnClickListener {
-        (activity as? CampfireActivity?)?.run {
-            if (!isUiBlocked) {
-                CustomTabsIntent.Builder()
-                    .setToolbarColor(color(R.color.accent))
-                    .build()
-                    .launchUrl(this, Uri.parse(url))
-                isUiBlocked = true
-            }
+        context?.run {
+            CustomTabsIntent.Builder()
+                .setToolbarColor(color(R.color.accent))
+                .build()
+                .launchUrl(this, Uri.parse(url))
         }
     }
 
     companion object {
-        fun show(fragmentManager: androidx.fragment.app.FragmentManager) {
-            LegalDocumentsBottomSheetFragment()
-                .run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
-        }
+
+        fun show(fragmentManager: FragmentManager) = LegalDocumentsBottomSheetFragment().run { show(fragmentManager, tag) }
     }
 }

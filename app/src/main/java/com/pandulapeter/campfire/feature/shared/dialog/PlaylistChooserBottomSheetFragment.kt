@@ -169,11 +169,9 @@ class PlaylistChooserBottomSheetFragment : BaseBottomSheetDialogFragment<Playlis
         private var Bundle?.songId by BundleArgumentDelegate.String("songId")
         private var Bundle?.screenName by BundleArgumentDelegate.String("screenName")
 
-        fun show(fragmentManager: FragmentManager, songId: String, screenName: String) {
-            PlaylistChooserBottomSheetFragment().withArguments {
-                it.songId = songId
-                it.screenName = screenName
-            }.run { show(fragmentManager, tag) }
-        }
+        fun show(fragmentManager: FragmentManager, songId: String, screenName: String) = PlaylistChooserBottomSheetFragment().withArguments {
+            it.songId = songId
+            it.screenName = screenName
+        }.run { show(fragmentManager, tag) }
     }
 }

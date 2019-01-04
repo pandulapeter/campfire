@@ -37,6 +37,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/next_button"
             app:layout_constraintStart_toEndOf="@id/skip_button"
+            app:layout_constraintWidth_default="wrap"
             tools:ignore="SmallSp"
             tools:text="@string/welcome_conditions_part_1" />
 
