@@ -19,8 +19,8 @@
         android:layout_height="match_parent"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:paddingBottom="@dimen/list_bottom_margin"
         android:paddingTop="@dimen/content_padding"
+        android:paddingBottom="@dimen/list_bottom_margin"
         android:scrollbars="none">
 
         <LinearLayout
@@ -33,9 +33,9 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/content_padding"
-                android:layout_marginStart="@dimen/content_padding"
+                android:layout_marginStart="@dimen/keyline_margin"
                 android:layout_marginTop="@dimen/content_padding"
+                android:layout_marginEnd="@dimen/keyline_margin"
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 app:cardCornerRadius="@dimen/card_corner"
@@ -85,8 +85,8 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/content_padding"
-                android:layout_marginStart="@dimen/content_padding"
+                android:layout_marginStart="@dimen/keyline_margin"
+                android:layout_marginEnd="@dimen/keyline_margin"
                 app:cardCornerRadius="@dimen/card_corner">
 
                 <LinearLayout
@@ -100,6 +100,8 @@
                         android:layout_height="wrap_content"
                         android:drawableStart="@drawable/ic_google_play"
                         android:onClick="@{() -> viewModel.onGooglePlayClicked()}"
+                        android:paddingStart="@dimen/large_content_padding"
+                        android:paddingEnd="@dimen/large_content_padding"
                         android:text="@string/options_about_google_play" />
 
                     <TextView
@@ -108,6 +110,8 @@
                         android:layout_height="wrap_content"
                         android:drawableStart="@drawable/ic_github"
                         android:onClick="@{() -> viewModel.onGitHubClicked()}"
+                        android:paddingStart="@dimen/large_content_padding"
+                        android:paddingEnd="@dimen/large_content_padding"
                         android:text="@string/options_about_github" />
 
                     <TextView
@@ -116,6 +120,8 @@
                         android:layout_height="wrap_content"
                         android:drawableStart="@drawable/ic_share"
                         android:onClick="@{() -> viewModel.onShareClicked()}"
+                        android:paddingStart="@dimen/large_content_padding"
+                        android:paddingEnd="@dimen/large_content_padding"
                         android:text="@string/options_about_share" />
 
                     <TextView
@@ -124,6 +130,8 @@
                         android:layout_height="wrap_content"
                         android:drawableStart="@drawable/ic_contact"
                         android:onClick="@{() -> viewModel.onContactClicked()}"
+                        android:paddingStart="@dimen/large_content_padding"
+                        android:paddingEnd="@dimen/large_content_padding"
                         android:text="@string/options_about_contact" />
 
                     <TextView
@@ -132,6 +140,8 @@
                         android:layout_height="wrap_content"
                         android:drawableStart="@drawable/ic_beer"
                         android:onClick="@{() -> viewModel.onBuyMeABeerClicked()}"
+                        android:paddingStart="@dimen/large_content_padding"
+                        android:paddingEnd="@dimen/large_content_padding"
                         android:text="@string/options_about_buy_me_a_beer" />
 
                 </LinearLayout>
@@ -147,8 +157,8 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/content_padding"
-                android:layout_marginStart="@dimen/content_padding"
+                android:layout_marginStart="@dimen/keyline_margin"
+                android:layout_marginEnd="@dimen/keyline_margin"
                 app:cardCornerRadius="@dimen/card_corner">
 
                 <LinearLayout
