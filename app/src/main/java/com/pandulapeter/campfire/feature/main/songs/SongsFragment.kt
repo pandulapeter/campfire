@@ -94,7 +94,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
                     initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == SongsViewModel.SortingMode.TITLE }
                     initializeCompoundButton(R.id.sort_by_artist) { viewModel.sortingMode == SongsViewModel.SortingMode.ARTIST }
                     initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == SongsViewModel.SortingMode.POPULARITY }
-                    activity.secondaryNavigationMenu?.findItem(R.id.filter_by_language)?.subMenu?.run {
+                    activity.secondaryNavigationMenu.findItem(R.id.filter_by_language)?.subMenu?.run {
                         clear()
                         languages.forEachIndexed { index, language ->
                             add(R.id.language_container, language.nameResource, index, language.nameResource).apply {

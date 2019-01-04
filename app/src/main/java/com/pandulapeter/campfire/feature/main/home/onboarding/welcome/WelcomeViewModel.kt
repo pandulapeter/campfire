@@ -13,6 +13,7 @@ class WelcomeViewModel(
     interactionBlocker: InteractionBlocker
 ) : CampfireViewModel(interactionBlocker) {
 
+    @Suppress("DEPRECATION")
     private val automaticLocaleCode = Resources.getSystem().configuration.locale.isO3Country.toUpperCase()
     val shouldShowThemeSelector = MutableLiveData<Boolean?>()
     val shouldShowLanguageSelector = MutableLiveData<Boolean?>()
