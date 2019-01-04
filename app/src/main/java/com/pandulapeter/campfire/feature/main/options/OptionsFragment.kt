@@ -10,6 +10,7 @@ import com.pandulapeter.campfire.databinding.ViewOptionsTabsBinding
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.behavior.TopLevelBehavior
+import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.addPageScrollListener
@@ -32,6 +33,8 @@ class OptionsFragment : CampfireFragment<FragmentOptionsBinding, OptionsViewMode
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.stateLayout.animateFirstView = savedInstanceState == null
+        binding.stateLayout.state = StateLayout.State.NORMAL
         topLevelBehavior.defaultToolbar.updateToolbarTitle(R.string.main_options)
         topLevelBehavior.onViewCreated(savedInstanceState)
         setupViewPager()

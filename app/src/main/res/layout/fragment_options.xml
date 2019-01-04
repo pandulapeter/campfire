@@ -9,9 +9,16 @@
 
     </data>
 
-    <androidx.viewpager.widget.ViewPager
-        android:id="@+id/view_pager"
+    <com.pandulapeter.campfire.feature.shared.widget.StateLayout
+        android:id="@+id/state_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+
+        <androidx.viewpager.widget.ViewPager
+            android:id="@+id/view_pager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </com.pandulapeter.campfire.feature.shared.widget.StateLayout>
 
 </layout>
