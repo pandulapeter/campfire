@@ -9,6 +9,10 @@
     <!-- Toolbar -->
     <dimen name="keyline_margin">16dp</dimen>
 
+    <!-- Fixes -->
+    <dimen name="navigation_drawer_icon_fix">34dp</dimen>
+    <dimen name="navigation_drawer_positive_fix">24dp</dimen>
+
     <!-- Onboarding -->
     <dimen name="onboarding_bottom_margin">72dp</dimen>
     <dimen name="onboarding_button_margin">16dp</dimen>

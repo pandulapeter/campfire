@@ -39,7 +39,7 @@
                     android:id="@+id/image"
                     android:layout_width="@dimen/collections_image_size"
                     android:layout_height="@dimen/collections_image_size"
-                    android:layout_marginStart="@dimen/content_padding"
+                    android:layout_marginStart="@dimen/keyline_margin"
                     android:contentDescription="@{viewModel.collection.collection.title}"
                     android:scaleType="centerCrop"
                     android:src="@{viewModel.collection.collection.imageUrl}"
