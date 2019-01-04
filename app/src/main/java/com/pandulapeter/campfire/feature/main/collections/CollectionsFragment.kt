@@ -53,13 +53,6 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
     private val drawableSearchToClose by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getCampfireActivity()?.animatedDrawable(R.drawable.avd_search_to_close) else getCampfireActivity()?.drawable(R.drawable.ic_close)
     }
-    private val searchControlsBinding by lazy {
-        DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity()!!.toolbarContext), R.layout.view_search_controls, null, false).apply {
-            viewModel = this@CollectionsFragment.viewModel.searchControlsViewModel
-            setLifecycleOwner(viewLifecycleOwner)
-            executePendingBindings()
-        }
-    }
     private lateinit var toolbarTextInputView: ToolbarTextInputView
     private val searchToggle: ToolbarButton by lazy {
         getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_search) { toggleTextInputVisibility() }
@@ -110,7 +103,13 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             viewModel.shouldOpenSecondaryNavigationDrawer.observeAndReset { getCampfireActivity()?.openSecondaryNavigationDrawer() }
             viewModel.languages.observe { languages ->
                 if (languages != null) {
-                    activity.updateAppBarView(searchControlsBinding.root)
+                    activity.updateAppBarView(
+                        DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(activity.toolbarContext), R.layout.view_search_controls, null, false).apply {
+                            setLifecycleOwner(viewLifecycleOwner)
+                            viewModel = this@CollectionsFragment.viewModel.searchControlsViewModel
+                        }.root,
+                        savedInstanceState != null
+                    )
                     activity.enableSecondaryNavigationDrawer(R.menu.collections)
                     initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == CollectionsViewModel.SortingMode.TITLE }
                     initializeCompoundButton(R.id.sort_by_date) { viewModel.sortingMode == CollectionsViewModel.SortingMode.UPLOAD_DATE }
@@ -271,11 +270,6 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
         outState.isEraseButtonVisible = viewModel.shouldShowEraseButton.value == true
         outState.isEraseButtonEnabled = viewModel.shouldEnableEraseButton.value == true
         viewModel.buttonText.value?.let { outState.buttonText = it }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.restoreToolbarButtons()
     }
 
     override fun onBackPressed() = if (toolbarTextInputView.isTextInputVisible) consume { toggleTextInputVisibility() } else isUiBlocked

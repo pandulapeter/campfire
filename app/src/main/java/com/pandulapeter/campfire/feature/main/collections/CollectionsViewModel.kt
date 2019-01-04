@@ -21,7 +21,6 @@ import com.pandulapeter.campfire.util.WORKER
 import com.pandulapeter.campfire.util.mutableLiveDataOf
 import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.removePrefixes
-import com.pandulapeter.campfire.util.triggerUpdate
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -123,7 +122,7 @@ class CollectionsViewModel(
     override fun onCollectionsUpdated(data: List<Collection>) {
         collections = data.asSequence()
         updateAdapterItems()
-        if (data.isNotEmpty()) {
+        if (data.isNotEmpty() && languages.value != collectionRepository.languages) {
             languages.value = collectionRepository.languages
         }
     }
@@ -165,8 +164,6 @@ class CollectionsViewModel(
         .sort()
         .map { CollectionItemViewModel(it, newText) }
         .toList()
-
-    fun restoreToolbarButtons() = languages.triggerUpdate()
 
     private fun trackSearchEvent() {
         if (query.isNotEmpty()) {

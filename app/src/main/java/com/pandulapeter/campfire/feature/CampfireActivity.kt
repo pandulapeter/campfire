@@ -426,19 +426,17 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     }, 200)
                 }
             } else {
-                if (getChildAt(1) != view) {
-                    if (immediately || !isAfterFirstStart) {
-                        layoutTransition = null
+                if (immediately || !isAfterFirstStart) {
+                    layoutTransition = null
+                    removeViews()
+                    addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                    transitionMode = true
+                } else {
+                    postDelayed({
+                        transitionMode = true
                         removeViews()
                         addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                        transitionMode = true
-                    } else {
-                        postDelayed({
-                            transitionMode = true
-                            removeViews()
-                            addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                        }, 200)
-                    }
+                    }, 200)
                 }
             }
         }

@@ -116,7 +116,7 @@ class SongsViewModel(
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
         super.onSongRepositoryDataUpdated(data)
-        if (data.isNotEmpty()) {
+        if (data.isNotEmpty() && languages.value != songRepository.languages) {
             languages.value = songRepository.languages
         }
     }

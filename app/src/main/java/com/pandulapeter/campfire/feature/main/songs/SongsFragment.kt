@@ -65,101 +65,102 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
     private val drawableSearchToClose by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) requireContext().animatedDrawable(R.drawable.avd_search_to_close) else requireContext().drawable(R.drawable.ic_close)
     }
-    private val searchControlsBinding by lazy {
-        DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(getCampfireActivity()!!.toolbarContext), R.layout.view_search_controls, null, false).apply {
-            viewModel = this@SongsFragment.viewModel.searchControlsViewModel
-            setLifecycleOwner(viewLifecycleOwner)
-            executePendingBindings()
-        }
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_SONGS)
-        viewModel.shouldUpdateSearchToggleDrawable.observeAndReset {
-            searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
-            getCampfireActivity()?.transitionMode = true
-            binding.root.post {
-                if (isAdded) {
-                    viewModel.searchControlsViewModel.isVisible.value = it
-                }
-            }
-        }
-        viewModel.languages.observe { languages ->
-            if (languages != null) {
-                getCampfireActivity()?.updateAppBarView(searchControlsBinding.root)
-                getCampfireActivity()?.enableSecondaryNavigationDrawer(R.menu.songs)
-                initializeCompoundButton(R.id.downloaded_only) { viewModel.shouldShowDownloadedOnly }
-                initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
-                initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == SongsViewModel.SortingMode.TITLE }
-                initializeCompoundButton(R.id.sort_by_artist) { viewModel.sortingMode == SongsViewModel.SortingMode.ARTIST }
-                initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == SongsViewModel.SortingMode.POPULARITY }
-                getCampfireActivity()?.secondaryNavigationMenu?.findItem(R.id.filter_by_language)?.subMenu?.run {
-                    clear()
-                    languages.forEachIndexed { index, language ->
-                        add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
-                            setActionView(R.layout.widget_checkbox)
-                            initializeCompoundButton(language.nameResource) { !viewModel.disabledLanguageFilters.contains(language.id) }
-                        }
+        getCampfireActivity()?.let { activity ->
+            analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_SONGS)
+            viewModel.shouldUpdateSearchToggleDrawable.observeAndReset {
+                searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
+                activity.transitionMode = true
+                binding.root.post {
+                    if (isAdded) {
+                        viewModel.searchControlsViewModel.isVisible.value = it
                     }
                 }
-                getCampfireActivity()?.toolbarContext?.let { context ->
-                    getCampfireActivity()?.updateToolbarButtons(
-                        listOf(
-                            eraseButton,
-                            searchToggle,
-                            context.createToolbarButton(R.drawable.ic_filter_and_sort) { getCampfireActivity()?.openSecondaryNavigationDrawer() }
-                        ))
+            }
+            viewModel.languages.observe { languages ->
+                if (languages != null) {
+                    activity.updateAppBarView(
+                        DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(activity.toolbarContext), R.layout.view_search_controls, null, false).apply {
+                            setLifecycleOwner(viewLifecycleOwner)
+                            viewModel = this@SongsFragment.viewModel.searchControlsViewModel
+                        }.root,
+                        savedInstanceState != null
+                    )
+                    activity.enableSecondaryNavigationDrawer(R.menu.songs)
+                    initializeCompoundButton(R.id.downloaded_only) { viewModel.shouldShowDownloadedOnly }
+                    initializeCompoundButton(R.id.show_explicit) { viewModel.shouldShowExplicit }
+                    initializeCompoundButton(R.id.sort_by_title) { viewModel.sortingMode == SongsViewModel.SortingMode.TITLE }
+                    initializeCompoundButton(R.id.sort_by_artist) { viewModel.sortingMode == SongsViewModel.SortingMode.ARTIST }
+                    initializeCompoundButton(R.id.sort_by_popularity) { viewModel.sortingMode == SongsViewModel.SortingMode.POPULARITY }
+                    activity.secondaryNavigationMenu?.findItem(R.id.filter_by_language)?.subMenu?.run {
+                        clear()
+                        languages.forEachIndexed { index, language ->
+                            add(R.id.language_container, language.nameResource, index, language.nameResource).apply {
+                                setActionView(R.layout.widget_checkbox)
+                                initializeCompoundButton(language.nameResource) { !viewModel.disabledLanguageFilters.contains(language.id) }
+                            }
+                        }
+                    }
+                    activity.toolbarContext.let { context ->
+                        activity.updateToolbarButtons(
+                            listOf(
+                                eraseButton,
+                                searchToggle,
+                                context.createToolbarButton(R.drawable.ic_filter_and_sort) { activity.openSecondaryNavigationDrawer() }
+                            ))
+                    }
                 }
             }
-        }
-        viewModel.isFastScrollEnabled.observe { binding.recyclerView.setFastScrollEnabled(it) }
-        viewModel.shouldOpenSecondaryNavigationDrawer.observeAndReset { getCampfireActivity()?.openSecondaryNavigationDrawer() }
-        viewModel.shouldShowEraseButton.observe {
-            eraseButton.apply {
-                if (getCampfireActivity()?.isAfterFirstStart == true) {
-                    animate()
-                        .scaleX(if (it) 1f else 0f)
-                        .scaleY(if (it) 1f else 0f)
-                        .start()
-                } else {
-                    scaleX = if (it) 1f else 0f
-                    scaleY = if (it) 1f else 0f
+            viewModel.isFastScrollEnabled.observe { binding.recyclerView.setFastScrollEnabled(it) }
+            viewModel.shouldOpenSecondaryNavigationDrawer.observeAndReset { activity.openSecondaryNavigationDrawer() }
+            viewModel.shouldShowEraseButton.observe {
+                eraseButton.apply {
+                    if (getCampfireActivity()?.isAfterFirstStart == true) {
+                        animate()
+                            .scaleX(if (it) 1f else 0f)
+                            .scaleY(if (it) 1f else 0f)
+                            .start()
+                    } else {
+                        scaleX = if (it) 1f else 0f
+                        scaleY = if (it) 1f else 0f
+                    }
                 }
             }
-        }
-        viewModel.shouldEnableEraseButton.observe {
-            eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
-            eraseButton.isEnabled = it
-        }
-        savedInstanceState?.let {
-            viewModel.searchControlsViewModel.isVisible.value = savedInstanceState.isTextInputVisible
-            if (it.isTextInputVisible) {
-                searchToggle.setImageDrawable(requireContext().drawable(R.drawable.ic_close))
-                toolbarTextInputView.textInput.run {
-                    setText(savedInstanceState.searchQuery)
-                    setSelection(text.length)
-                    viewModel.query = text.toString()
-                }
-                toolbarTextInputView.showTextInput()
+            viewModel.shouldEnableEraseButton.observe {
+                eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
+                eraseButton.isEnabled = it
             }
-            viewModel.shouldShowEraseButton.value = savedInstanceState.isEraseButtonVisible
-            viewModel.shouldEnableEraseButton.value = savedInstanceState.isEraseButtonEnabled
+            savedInstanceState?.let {
+                viewModel.searchControlsViewModel.isVisible.value = savedInstanceState.isTextInputVisible
+                if (it.isTextInputVisible) {
+                    searchToggle.setImageDrawable(requireContext().drawable(R.drawable.ic_close))
+                    toolbarTextInputView.textInput.run {
+                        setText(savedInstanceState.searchQuery)
+                        setSelection(text.length)
+                        viewModel.query = text.toString()
+                    }
+                    toolbarTextInputView.showTextInput()
+                }
+                viewModel.shouldShowEraseButton.value = savedInstanceState.isEraseButtonVisible
+                viewModel.shouldEnableEraseButton.value = savedInstanceState.isEraseButtonEnabled
+            }
+            toolbarTextInputView.textInput.requestFocus()
+            viewModel.searchControlsViewModel.searchInTitles.observe {
+                binding.root.postDelayed(
+                    { if (isAdded) viewModel.shouldSearchInTitles = it },
+                    COMPOUND_BUTTON_LONG_TRANSITION_DELAY
+                )
+            }
+            viewModel.searchControlsViewModel.searchInArtists.observe {
+                binding.root.postDelayed(
+                    { if (isAdded) viewModel.shouldSearchInArtists = it },
+                    COMPOUND_BUTTON_LONG_TRANSITION_DELAY
+                )
+            }
+            activity.showPlayStoreRatingDialogIfNeeded()
         }
-        toolbarTextInputView.textInput.requestFocus()
-        viewModel.searchControlsViewModel.searchInTitles.observe {
-            binding.root.postDelayed(
-                { if (isAdded) viewModel.shouldSearchInTitles = it },
-                COMPOUND_BUTTON_LONG_TRANSITION_DELAY
-            )
-        }
-        viewModel.searchControlsViewModel.searchInArtists.observe {
-            binding.root.postDelayed(
-                { if (isAdded) viewModel.shouldSearchInArtists = it },
-                COMPOUND_BUTTON_LONG_TRANSITION_DELAY
-            )
-        }
-        getCampfireActivity()?.showPlayStoreRatingDialogIfNeeded()
     }
 
     override fun onResume() {
