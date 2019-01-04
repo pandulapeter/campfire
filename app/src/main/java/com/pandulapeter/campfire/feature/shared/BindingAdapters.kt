@@ -141,7 +141,7 @@ fun setTitleDescription(view: TextView, title: String?, description: String?) {
             )
             if (view.isEnabled) {
                 setSpan(
-                    ForegroundColorSpan(view.context.obtainColor(android.R.attr.textColorSecondary)),
+                    ForegroundColorSpan(view.context.color(R.color.text_secondary)),
                     (title?.length ?: 0) + 1,
                     length,
                     Spannable.SPAN_INCLUSIVE_INCLUSIVE

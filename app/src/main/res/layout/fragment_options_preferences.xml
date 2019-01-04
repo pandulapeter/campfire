@@ -79,7 +79,7 @@
                         android:minHeight="@dimen/touch_target"
                         android:paddingStart="@dimen/options_preferences_checkbox_padding"
                         android:paddingEnd="@dimen/content_padding"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@color/menu_secondary_text"
                         app:description="@{viewModel.englishNotationExample}"
                         app:title="@{@string/options_preferences_english_notation}"
                         tools:text="@string/options_preferences_english_notation" />
@@ -94,7 +94,7 @@
                         android:minHeight="@dimen/touch_target"
                         android:paddingStart="@dimen/options_preferences_checkbox_padding"
                         android:paddingEnd="@dimen/content_padding"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@color/menu_secondary_text"
                         app:description="@{viewModel.germanNotationExample}"
                         app:title="@{@string/options_preferences_german_notation}"
                         tools:text="@string/options_preferences_german_notation" />
