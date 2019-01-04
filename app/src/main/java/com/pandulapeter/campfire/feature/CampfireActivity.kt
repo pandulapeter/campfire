@@ -97,6 +97,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private var newPlaylistId = 0
     private var startTime = 0L
     private val isBackStackEmpty get() = supportFragmentManager.backStackEntryCount == 0
+    private val isAfterFirstStart get() = System.currentTimeMillis() - startTime > APPROXIMATE_STARTUP_TIME
     var isUiBlocked
         get() = viewModel.isUiBlocked
         set(value) {
@@ -104,7 +105,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
     var lastSongId: String = ""
     var lastCollectionId: String = ""
-    val isAfterFirstStart get() = System.currentTimeMillis() - startTime > APPROXIMATE_STARTUP_TIME
     val autoScrollControl: View get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
     val toolbarHeight get() = binding.toolbarTitleContainer.height
@@ -416,14 +416,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
             if (view == null) {
                 if (childCount > 1) {
-                    if (currentFragment is SongsFragment || currentFragment is DetailFragment) {
-                        post { removeViews() }
-                    } else {
-                        postDelayed({
-                            transitionMode = true
-                            removeViews()
-                        }, 200)
-                    }
+                    postDelayed({
+                        transitionMode = true
+                        removeViews()
+                    }, 200)
                 }
             } else {
                 if (getChildAt(1) != view) {
@@ -462,32 +458,21 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
             if (childCount > 0) getChildAt(0) else null
         }
-        var shouldPost = true
         if (toolbar != oldView) {
             oldView?.visibleOrGone = false
             binding.toolbarTitleContainer.removeView(oldView)
             if (toolbar.parent == null) {
                 binding.toolbarTitleContainer.addView(
-                    toolbar.apply { visibleOrGone = oldView?.id == R.id.default_toolbar },
+                    toolbar.apply { visibleOrGone = true },
                     FrameLayout.LayoutParams(if (width == 0) ViewGroup.LayoutParams.MATCH_PARENT else width, ViewGroup.LayoutParams.MATCH_PARENT).apply {
                         gravity = Gravity.CENTER_VERTICAL
                     })
             } else {
-                shouldPost = false
-                binding.root.postOnAnimation { updateToolbarTitleView(toolbar, width) }
+                binding.root.post { updateToolbarTitleView(toolbar, width) }
             }
         }
-        if (!isAfterFirstStart) {
-            binding.toolbarTitleContainer.layoutTransition = null
-            toolbar.visibleOrGone = true
-        } else {
-            if (binding.toolbarTitleContainer.layoutTransition == null) {
-                binding.toolbarTitleContainer.layoutTransition = LayoutTransition()
-            } else {
-                if (shouldPost) {
-                    toolbar.run { postOnAnimation { visibleOrGone = true } }
-                }
-            }
+        if (binding.toolbarTitleContainer.layoutTransition == null) {
+            binding.toolbarTitleContainer.layoutTransition = LayoutTransition()
         }
     }
 
@@ -548,7 +533,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
 
         // Reset the app bar.
         transitionMode = false
-        if (isAfterFirstStart) {
+        if (isAfterFirstStart && binding.toolbarButtonContainer.layoutTransition == null) {
             binding.toolbarButtonContainer.layoutTransition = LayoutTransition()
         }
         binding.toolbarButtonContainer.removeAllViews()
@@ -874,7 +859,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
     }
 
-    private fun FragmentManager.clearBackStack() = (0..backStackEntryCount).forEach { popBackStackImmediate() }
+    private fun FragmentManager.clearBackStack() = repeat(backStackEntryCount) { popBackStackImmediate() }
 
     private inline fun <reified T : Fragment> FragmentManager.handleReplace(
         tag: String = T::class.java.name,
