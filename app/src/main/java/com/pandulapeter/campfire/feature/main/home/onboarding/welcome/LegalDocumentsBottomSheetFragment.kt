@@ -12,23 +12,11 @@ import com.pandulapeter.campfire.util.color
 
 class LegalDocumentsBottomSheetFragment : BaseBottomSheetDialogFragment<FragmentLegalDocumentsBottomSheetBinding>(R.layout.fragment_legal_documents_bottom_sheet) {
 
-    companion object {
-        fun show(fragmentManager: androidx.fragment.app.FragmentManager) {
-            LegalDocumentsBottomSheetFragment()
-                .run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
-        }
-    }
-
     override fun onDialogCreated() {
         binding.termsAndConditions.openLinkOnClick(AboutViewModel.TERMS_AND_CONDITIONS_URL)
         binding.privacyPolicy.openLinkOnClick(AboutViewModel.PRIVACY_POLICY_URL)
         binding.openSourceLicenses.openLinkOnClick(AboutViewModel.OPEN_SOURCE_LICENSES_URL)
-        binding.root.apply {
-            post {
-                behavior.peekHeight = height
-                (activity as? CampfireActivity)?.isUiBlocked = false
-            }
-        }
+        binding.root.apply { post { behavior.peekHeight = height } }
     }
 
     private fun TextView.openLinkOnClick(url: String) = setOnClickListener {
@@ -40,6 +28,13 @@ class LegalDocumentsBottomSheetFragment : BaseBottomSheetDialogFragment<Fragment
                     .launchUrl(this, Uri.parse(url))
                 isUiBlocked = true
             }
+        }
+    }
+
+    companion object {
+        fun show(fragmentManager: androidx.fragment.app.FragmentManager) {
+            LegalDocumentsBottomSheetFragment()
+                .run { (this as androidx.fragment.app.DialogFragment).show(fragmentManager, tag) }
         }
     }
 }

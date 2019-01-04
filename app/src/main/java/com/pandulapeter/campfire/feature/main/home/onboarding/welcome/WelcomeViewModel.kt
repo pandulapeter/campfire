@@ -6,7 +6,7 @@ import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.InteractionBlocker
-import com.pandulapeter.campfire.util.mutableLiveDataOf
+import com.pandulapeter.campfire.util.slowMutableLiveDataOf
 
 class WelcomeViewModel(
     private val preferenceDatabase: PreferenceDatabase,
@@ -16,8 +16,8 @@ class WelcomeViewModel(
     private val automaticLocaleCode = Resources.getSystem().configuration.locale.isO3Country.toUpperCase()
     val shouldShowThemeSelector = MutableLiveData<Boolean?>()
     val shouldShowLanguageSelector = MutableLiveData<Boolean?>()
-    val language = mutableLiveDataOf(PreferencesViewModel.Language.fromId(preferenceDatabase.language)) { onLanguageChanged(it) }
-    val theme = mutableLiveDataOf(PreferencesViewModel.Theme.fromId(preferenceDatabase.theme)) { onThemeChanged(it) }
+    val language = slowMutableLiveDataOf(PreferencesViewModel.Language.fromId(preferenceDatabase.language)) { onLanguageChanged(it) }
+    val theme = slowMutableLiveDataOf(PreferencesViewModel.Theme.fromId(preferenceDatabase.theme)) { onThemeChanged(it) }
 
     fun onLanguageClicked() {
         if (!isUiBlocked) {

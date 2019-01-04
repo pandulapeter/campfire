@@ -9,7 +9,11 @@ import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.widget.FrameLayout
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.databinding.*
+import com.pandulapeter.campfire.databinding.FragmentOnboardingBinding
+import com.pandulapeter.campfire.databinding.FragmentOnboardingContentLanguageBinding
+import com.pandulapeter.campfire.databinding.FragmentOnboardingSongAppearanceBinding
+import com.pandulapeter.campfire.databinding.FragmentOnboardingUserDataBinding
+import com.pandulapeter.campfire.databinding.FragmentOnboardingWelcomeBinding
 import com.pandulapeter.campfire.feature.main.home.HomeContainerFragment
 import com.pandulapeter.campfire.feature.main.home.onboarding.welcome.LegalDocumentsBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment

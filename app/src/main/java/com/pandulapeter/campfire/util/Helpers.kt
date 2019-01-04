@@ -43,5 +43,15 @@ inline fun <T> mutableLiveDataOf(initialValue: T, crossinline observer: ((T) -> 
     observeForever { observer(it) }
 }
 
+inline fun <T> slowMutableLiveDataOf(initialValue: T, crossinline observer: ((T) -> Unit)) = mutableLiveDataOf(initialValue).apply {
+    var canTrigger = false
+    observeForever {
+        if (canTrigger) {
+            observer(it)
+        }
+        canTrigger = true
+    }
+}
+
 val UI = Dispatchers.Main
 val WORKER = Dispatchers.Default
