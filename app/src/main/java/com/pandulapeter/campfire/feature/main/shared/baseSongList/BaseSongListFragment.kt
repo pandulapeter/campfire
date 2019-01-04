@@ -56,9 +56,8 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
         topLevelBehavior.onViewCreated(savedInstanceState)
         viewModel.adapter.run {
             songClickListener = { song, position, clickedView ->
-                if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
+                if (!isUiBlocked) {
                     if (items.size > 1) {
-                        linearLayoutManager.isScrollEnabled = false
                         viewModel.isDetailScreenOpen = true
                     }
                     isUiBlocked = true
@@ -73,7 +72,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
                 }
             }
             songPlaylistClickListener = { song ->
-                if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
+                if (!isUiBlocked) {
                     if (viewModel.areThereMoreThanOnePlaylists()) {
                         isUiBlocked = true
                         PlaylistChooserBottomSheetFragment.show(childFragmentManager, song.id, viewModel.screenName)
@@ -83,7 +82,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
                 }
             }
             songDownloadClickListener = { song ->
-                if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
+                if (!isUiBlocked) {
                     analyticsManager.onDownloadButtonPressed(song.id)
                     viewModel.downloadSong(song)
                 }
@@ -110,7 +109,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
             }
             setColorSchemeColors(context.color(R.color.accent))
         }
-        linearLayoutManager = DisableScrollLinearLayoutManager(requireActivity())
+        linearLayoutManager = DisableScrollLinearLayoutManager(requireContext()).apply { interactionBlocker = viewModel.interactionBlocker }
         binding.recyclerView.run {
             layoutManager = linearLayoutManager
             setHasFixedSize(true)
@@ -134,7 +133,6 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
                                 }
                             }
                         }
-                        linearLayoutManager.isScrollEnabled = true
                     }
                 })
             itemAnimator = object : DefaultItemAnimator() {
@@ -173,16 +171,11 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
         }
     }
 
-    override fun onBackPressed() = !linearLayoutManager.isScrollEnabled
+    override fun onBackPressed() = isUiBlocked
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.buttonText = viewModel.buttonText.value ?: 0
-    }
-
-    override fun updateUI() {
-        super.updateUI()
-        linearLayoutManager.isScrollEnabled = true
     }
 
     protected open fun onDetailScreenOpened() = Unit

@@ -78,11 +78,6 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        isUiBlocked = false
-    }
-
     override fun onStop() {
         super.onStop()
         isResumingDelayed = false

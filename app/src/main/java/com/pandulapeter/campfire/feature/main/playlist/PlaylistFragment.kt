@@ -172,10 +172,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         viewModel.restoreToolbarButtons()
     }
 
-    override fun onBackPressed() = if (viewModel.isInEditMode.value == true) {
-        toggleEditMode()
-        true
-    } else super.onBackPressed()
+    override fun onBackPressed() = if (viewModel.isInEditMode.value == true) consume { toggleEditMode() } else super.onBackPressed()
 
     private fun updateToolbarTitle(songCount: Int = (viewModel.songCount.value ?: 0)) =
         (toolbarTextInputView?.title ?: topLevelBehavior.defaultToolbar).updateToolbarTitle(

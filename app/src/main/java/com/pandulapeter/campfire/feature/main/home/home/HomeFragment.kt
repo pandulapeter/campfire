@@ -210,7 +210,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                 setColorSchemeColors(context.color(R.color.accent))
             }
             binding.recyclerView.apply {
-                linearLayoutManager = DisableScrollLinearLayoutManager(activity)
+                linearLayoutManager = DisableScrollLinearLayoutManager(activity).apply { interactionBlocker = viewModel.interactionBlocker }
                 layoutManager = linearLayoutManager
                 setHasFixedSize(true)
                 adapter = recyclerAdapter
@@ -234,9 +234,8 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             }
             recyclerAdapter.apply {
                 collectionClickListener = { collection, clickedView, image ->
-                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
+                    if (!isUiBlocked) {
                         if (items.size > 1) {
-                            linearLayoutManager.isScrollEnabled = false
                             viewModel.isDetailScreenOpen = true
                         }
                         isUiBlocked = true
@@ -246,14 +245,13 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     }
                 }
                 collectionBookmarkClickListener = { collection, position ->
-                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
+                    if (!isUiBlocked) {
                         viewModel.onBookmarkClicked(position, collection)
                     }
                 }
                 songClickListener = { song, position, clickedView ->
-                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
+                    if (!isUiBlocked) {
                         if (items.size > 1) {
-                            linearLayoutManager.isScrollEnabled = false
                             viewModel.isDetailScreenOpen = true
                         }
                         isUiBlocked = true
@@ -270,7 +268,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     }
                 }
                 songPlaylistClickListener = { song ->
-                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
+                    if (!isUiBlocked) {
                         if (viewModel.areThereMoreThanOnePlaylists()) {
                             isUiBlocked = true
                             PlaylistChooserBottomSheetFragment.show(childFragmentManager, song.id, AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
@@ -280,7 +278,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     }
                 }
                 songDownloadClickListener = { song ->
-                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
+                    if (!isUiBlocked) {
                         analyticsManager.onDownloadButtonPressed(song.id)
                         viewModel.downloadSong(song)
                     }
@@ -307,7 +305,6 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                                 }
                             }
                         }
-                        linearLayoutManager.isScrollEnabled = true
                     }
                 })
             (view.parent as? ViewGroup)?.run {
@@ -360,12 +357,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         viewModel.restoreToolbarButtons()
     }
 
-    override fun updateUI() {
-        super.updateUI()
-        linearLayoutManager.isScrollEnabled = true
-    }
-
-    override fun onBackPressed() = if (toolbarTextInputView.isTextInputVisible) consume { toggleTextInputVisibility() } else super.onBackPressed()
+    override fun onBackPressed() = if (toolbarTextInputView.isTextInputVisible) consume { toggleTextInputVisibility() } else isUiBlocked
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
         when (menuItem.itemId) {

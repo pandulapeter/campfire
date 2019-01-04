@@ -135,6 +135,8 @@ class ManagePlaylistsFragment : CampfireFragment<FragmentManagePlaylistsBinding,
         showHintIfNeeded()
     }
 
+    override fun onBackPressed() = isUiBlocked
+
     override fun onFloatingActionButtonPressed() {
         hideSnackbar()
         NewPlaylistDialogFragment.show(childFragmentManager, AnalyticsManager.PARAM_VALUE_FLOATING_ACTION_BUTTON)

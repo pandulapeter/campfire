@@ -201,10 +201,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         }
     }
 
-    override fun onBackPressed() = if (toolbarTextInputView.isTextInputVisible) {
-        toggleTextInputVisibility()
-        true
-    } else super.onBackPressed()
+    override fun onBackPressed() = if (toolbarTextInputView.isTextInputVisible) consume { toggleTextInputVisibility() } else super.onBackPressed()
 
     override fun onDetailScreenOpened() {
         if (toolbarTextInputView.isTextInputVisible && viewModel.query.trim().isEmpty()) {

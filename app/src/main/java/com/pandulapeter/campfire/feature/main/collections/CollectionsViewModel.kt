@@ -32,7 +32,7 @@ class CollectionsViewModel(
     val preferenceDatabase: PreferenceDatabase,
     private val collectionRepository: CollectionRepository,
     private val analyticsManager: AnalyticsManager,
-    val interactionBlocker: InteractionBlocker
+    interactionBlocker: InteractionBlocker
 ) : CampfireViewModel(interactionBlocker), CollectionRepository.Subscriber {
 
     var isDetailScreenOpen = false

@@ -26,13 +26,13 @@ class LegalDocumentsBottomSheetFragment : BaseBottomSheetDialogFragment<Fragment
         binding.root.apply {
             post {
                 behavior.peekHeight = height
-                (activity as CampfireActivity).isUiBlocked = false
+                (activity as? CampfireActivity)?.isUiBlocked = false
             }
         }
     }
 
     private fun TextView.openLinkOnClick(url: String) = setOnClickListener {
-        (activity as CampfireActivity).run {
+        (activity as? CampfireActivity?)?.run {
             if (!isUiBlocked) {
                 CustomTabsIntent.Builder()
                     .setToolbarColor(color(R.color.accent))

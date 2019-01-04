@@ -323,6 +323,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     override fun onResume() {
         super.onResume()
         viewModel.subscribe()
+        isUiBlocked = false
         if (currentFocus is EditText) {
             binding.drawerLayout.run { post { closeDrawers() } }
         }

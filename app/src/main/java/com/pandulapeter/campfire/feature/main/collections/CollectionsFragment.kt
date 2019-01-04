@@ -200,9 +200,8 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             }
             recyclerAdapter.apply {
                 collectionClickListener = { collection, clickedView, image ->
-                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
+                    if (!isUiBlocked) {
                         if (items.size > 1) {
-                            linearLayoutManager.isScrollEnabled = false
                             viewModel.isDetailScreenOpen = true
                         }
                         isUiBlocked = true
@@ -213,7 +212,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                     }
                 }
                 collectionBookmarkClickListener = { collection, position ->
-                    if (linearLayoutManager.isScrollEnabled && !isUiBlocked) {
+                    if (!isUiBlocked) {
                         viewModel.onBookmarkClicked(position, collection)
                     }
                 }
@@ -225,7 +224,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                 }
                 setColorSchemeColors(context.color(R.color.accent))
             }
-            linearLayoutManager = DisableScrollLinearLayoutManager(activity)
+            linearLayoutManager = DisableScrollLinearLayoutManager(activity).apply { interactionBlocker = viewModel.interactionBlocker }
             binding.recyclerView.apply {
                 layoutManager = linearLayoutManager
                 setHasFixedSize(true)
@@ -248,7 +247,6 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                                     }
                                 }
                             }
-                            linearLayoutManager.isScrollEnabled = true
                         }
                     })
             }
@@ -280,12 +278,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
         viewModel.restoreToolbarButtons()
     }
 
-    override fun onBackPressed() = if (toolbarTextInputView.isTextInputVisible) consume { toggleTextInputVisibility() } else super.onBackPressed()
-
-    override fun updateUI() {
-        super.updateUI()
-        linearLayoutManager.isScrollEnabled = true
-    }
+    override fun onBackPressed() = if (toolbarTextInputView.isTextInputVisible) consume { toggleTextInputVisibility() } else isUiBlocked
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {
         when (menuItem.itemId) {

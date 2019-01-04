@@ -1,25 +1,12 @@
 package com.pandulapeter.campfire.feature.shared.widget
 
 import android.content.Context
-import android.os.Parcelable
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.parcel.Parcelize
+import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 
 class DisableScrollLinearLayoutManager(context: Context) : LinearLayoutManager(context) {
 
-    var isScrollEnabled = false
+    var interactionBlocker: InteractionBlocker? = null
 
-    override fun canScrollVertically() = isScrollEnabled && super.canScrollVertically()
-
-    override fun onSaveInstanceState(): Parcelable {
-        return State(isScrollEnabled, super.onSaveInstanceState())
-    }
-
-    override fun onRestoreInstanceState(state: Parcelable?) {
-        super.onRestoreInstanceState((state as? State)?.superState ?: state)
-        (state as? State)?.let { isScrollEnabled = it.isScrollEnabled }
-    }
-
-    @Parcelize
-    data class State(val isScrollEnabled: Boolean, val superState: Parcelable?) : Parcelable
+    override fun canScrollVertically() = interactionBlocker?.isUiBlocked == false && super.canScrollVertically()
 }
