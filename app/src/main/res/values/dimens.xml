@@ -44,6 +44,7 @@
 
     <!-- Onboarding screens -->
     <dimen name="onboarding_bottom_margin">72dp</dimen>
+    <dimen name="onboarding_button_margin">0dp</dimen>
     <dimen name="onboarding_logo_margin">24dp</dimen>
 
     <!-- Collections -->

@@ -9,4 +9,8 @@
     <!-- Playlist chooser bottom sheet -->
     <dimen name="bottom_sheet_width">460dp</dimen>
 
+    <!-- Onboarding screens -->
+    <dimen name="onboarding_bottom_margin">72dp</dimen>
+    <dimen name="onboarding_button_margin">16dp</dimen>
+
 </resources>
