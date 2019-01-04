@@ -29,43 +29,50 @@ class RecyclerAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(), FastScr
     var shouldScrollToTop = false
     var items = listOf<ItemViewModel>()
         set(newItems) {
-            coroutineContext?.cancel()
-            coroutineContext = GlobalScope.launch(UI) {
-                withContext(WORKER) {
-                    DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-                        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                            val old = field[oldItemPosition]
-                            val new = newItems[newItemPosition]
-                            return when (old) {
-                                is HeaderItemViewModel -> when (new) {
-                                    is HeaderItemViewModel -> old.title == new.title
-                                    else -> false
+            if (field != newItems) {
+                if (field.isEmpty() && newItems.isNotEmpty()) {
+                    field = newItems
+                    notifyDataSetChanged()
+                } else {
+                    coroutineContext?.cancel()
+                    coroutineContext = GlobalScope.launch(UI) {
+                        withContext(WORKER) {
+                            DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+                                override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                                    val old = field[oldItemPosition]
+                                    val new = newItems[newItemPosition]
+                                    return when (old) {
+                                        is HeaderItemViewModel -> when (new) {
+                                            is HeaderItemViewModel -> old.title == new.title
+                                            else -> false
+                                        }
+                                        is CollectionItemViewModel -> when (new) {
+                                            is CollectionItemViewModel -> old.collection.id == new.collection.id
+                                            else -> false
+                                        }
+                                        is SongItemViewModel -> when (new) {
+                                            is SongItemViewModel -> old.song.id == new.song.id
+                                            else -> false
+                                        }
+                                        else -> false
+                                    }
                                 }
-                                is CollectionItemViewModel -> when (new) {
-                                    is CollectionItemViewModel -> old.collection.id == new.collection.id
-                                    else -> false
-                                }
-                                is SongItemViewModel -> when (new) {
-                                    is SongItemViewModel -> old.song.id == new.song.id
-                                    else -> false
-                                }
-                                else -> false
-                            }
+
+                                override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = field[oldItemPosition] == newItems[newItemPosition]
+
+                                override fun getOldListSize() = field.size
+
+                                override fun getNewListSize() = newItems.size
+
+                            })
+                        }.dispatchUpdatesTo(this@RecyclerAdapter)
+                        if (shouldScrollToTop) {
+                            recyclerView?.scrollToPosition(0)
+                            shouldScrollToTop = false
                         }
-
-                        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = field[oldItemPosition] == newItems[newItemPosition]
-
-                        override fun getOldListSize() = field.size
-
-                        override fun getNewListSize() = newItems.size
-
-                    })
-                }.dispatchUpdatesTo(this@RecyclerAdapter)
-                if (shouldScrollToTop) {
-                    recyclerView?.scrollToPosition(0)
-                    shouldScrollToTop = false
+                        field = newItems
+                    }
                 }
-                field = newItems
             }
         }
     var collectionClickListener: (collection: Collection, clickedView: View, image: View) -> Unit = { _, _, _ -> }

@@ -33,7 +33,7 @@ class HomeContainerFragment : CampfireFragment<FragmentHomeContainerBinding, Hom
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_HOME)
         topLevelBehavior.defaultToolbar.updateToolbarTitle(R.string.main_home)
-        if (savedInstanceState == null) {
+        if (savedInstanceState == null && currentFragment == null) {
             if (viewModel.preferenceDatabase.isOnboardingDone) {
                 childFragmentManager.handleReplace { HomeFragment.newInstance(false) }
             } else {
