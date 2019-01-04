@@ -37,7 +37,8 @@
         <item name="android:textSize">@dimen/text_header</item>
         <item name="android:paddingStart">@dimen/first_keyline</item>
         <item name="android:paddingEnd">@dimen/first_keyline</item>
-        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingTop">@dimen/content_padding</item>
+        <item name="android:layout_marginTop">@dimen/border</item>
         <item name="android:paddingBottom">@dimen/content_padding</item>
     </style>
 
