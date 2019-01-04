@@ -153,7 +153,19 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                         activity.toolbarContext.createToolbarButton(R.drawable.ic_filter_and_sort) { activity.openSecondaryNavigationDrawer() }
                     ))
             }
-            viewModel.shouldShowEraseButton.observe { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
+            viewModel.shouldShowEraseButton.observe {
+                eraseButton.apply {
+                    if (getCampfireActivity()?.isAfterFirstStart == true) {
+                        animate()
+                            .scaleX(if (it) 1f else 0f)
+                            .scaleY(if (it) 1f else 0f)
+                            .start()
+                    } else {
+                        scaleX = if (it) 1f else 0f
+                        scaleY = if (it) 1f else 0f
+                    }
+                }
+            }
             viewModel.shouldEnableEraseButton.observe {
                 eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
                 eraseButton.isEnabled = it

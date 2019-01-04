@@ -97,7 +97,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private var newPlaylistId = 0
     private var startTime = 0L
     private val isBackStackEmpty get() = supportFragmentManager.backStackEntryCount == 0
-    private val isAfterFirstStart get() = System.currentTimeMillis() - startTime > APPROXIMATE_STARTUP_TIME
+    val isAfterFirstStart get() = System.currentTimeMillis() - startTime > APPROXIMATE_STARTUP_TIME
     var isUiBlocked
         get() = viewModel.isUiBlocked
         set(value) {
@@ -471,8 +471,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 binding.root.post { updateToolbarTitleView(toolbar, width) }
             }
         }
-        if (binding.toolbarTitleContainer.layoutTransition == null) {
-            binding.toolbarTitleContainer.layoutTransition = LayoutTransition()
+        binding.toolbarTitleContainer.apply {
+            if (layoutTransition == null) {
+                post { layoutTransition = LayoutTransition() }
+            }
         }
     }
 

@@ -115,7 +115,19 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         }
         viewModel.isFastScrollEnabled.observe { binding.recyclerView.setFastScrollEnabled(it) }
         viewModel.shouldOpenSecondaryNavigationDrawer.observeAndReset { getCampfireActivity()?.openSecondaryNavigationDrawer() }
-        viewModel.shouldShowEraseButton.observe { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
+        viewModel.shouldShowEraseButton.observe {
+            eraseButton.apply {
+                if (getCampfireActivity()?.isAfterFirstStart == true) {
+                    animate()
+                        .scaleX(if (it) 1f else 0f)
+                        .scaleY(if (it) 1f else 0f)
+                        .start()
+                } else {
+                    scaleX = if (it) 1f else 0f
+                    scaleY = if (it) 1f else 0f
+                }
+            }
+        }
         viewModel.shouldEnableEraseButton.observe {
             eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
             eraseButton.isEnabled = it

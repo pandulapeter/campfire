@@ -138,7 +138,19 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             viewModel.shouldScrollToTop.observeAndReset { recyclerAdapter.shouldScrollToTop = it }
             viewModel.items.observeNotNull { recyclerAdapter.items = it }
             viewModel.changeEvent.observeAndReset { recyclerAdapter.notifyItemChanged(it.first, it.second) }
-            viewModel.shouldShowEraseButton.observe { eraseButton.animate().scaleX(if (it) 1f else 0f).scaleY(if (it) 1f else 0f).start() }
+            viewModel.shouldShowEraseButton.observe {
+                eraseButton.apply {
+                    if (getCampfireActivity()?.isAfterFirstStart == true) {
+                        animate()
+                            .scaleX(if (it) 1f else 0f)
+                            .scaleY(if (it) 1f else 0f)
+                            .start()
+                    } else {
+                        scaleX = if (it) 1f else 0f
+                        scaleY = if (it) 1f else 0f
+                    }
+                }
+            }
             viewModel.shouldEnableEraseButton.observe {
                 eraseButton.animate().alpha(if (it) 1f else 0.5f).start()
                 eraseButton.isEnabled = it
