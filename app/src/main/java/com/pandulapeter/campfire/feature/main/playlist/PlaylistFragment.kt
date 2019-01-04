@@ -85,7 +85,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
             updateToolbarTitle()
             getCampfireActivity()?.updateToolbarButtons(listOf(editToggle, shuffleButton))
         }
-        viewModel.isInEditMode.observe {
+        viewModel.isInEditMode.observeAfterDelay {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
             if (it) {
                 showHintIfNeeded()
