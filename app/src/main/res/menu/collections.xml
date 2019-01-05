@@ -7,13 +7,13 @@
         <menu>
 
             <item
-                android:id="@+id/sort_by_title"
-                android:title="@string/collections_sort_by_title"
+                android:id="@+id/sort_by_date"
+                android:title="@string/collections_sort_by_date"
                 app:actionLayout="@layout/widget_radio_button" />
 
             <item
-                android:id="@+id/sort_by_date"
-                android:title="@string/collections_sort_by_date"
+                android:id="@+id/sort_by_title"
+                android:title="@string/collections_sort_by_title"
                 app:actionLayout="@layout/widget_radio_button" />
 
             <item

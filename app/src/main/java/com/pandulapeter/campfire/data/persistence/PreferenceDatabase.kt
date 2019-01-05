@@ -5,7 +5,7 @@ import com.pandulapeter.campfire.data.model.local.Language
 import com.pandulapeter.campfire.feature.main.collections.CollectionsViewModel
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.main.songs.SongsViewModel
-import java.util.*
+import java.util.Locale
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -50,7 +50,7 @@ class PreferenceDatabase(context: Context) {
 
     // Collections
     var lastCollectionsUpdateTimestamp by PreferenceFieldDelegate.Long("lastCollectionsUpdateTimestamp")
-    var collectionsSortingMode by PreferenceFieldDelegate.Int("collectionsSortingMode", CollectionsViewModel.SortingMode.TITLE.intValue)
+    var collectionsSortingMode by PreferenceFieldDelegate.Int("collectionsSortingMode", CollectionsViewModel.SortingMode.UPLOAD_DATE.intValue)
     var shouldShowSavedOnly by PreferenceFieldDelegate.Boolean("shouldShowSavedOnly")
     var shouldSearchInCollectionTitles by PreferenceFieldDelegate.Boolean("shouldSearchInCollectionTitles", true)
     var shouldSearchInCollectionDescriptions by PreferenceFieldDelegate.Boolean("shouldSearchInCollectionDescriptions", true)
