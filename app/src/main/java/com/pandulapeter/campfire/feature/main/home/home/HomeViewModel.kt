@@ -28,7 +28,6 @@ import com.pandulapeter.campfire.util.UI
 import com.pandulapeter.campfire.util.WORKER
 import com.pandulapeter.campfire.util.mutableLiveDataOf
 import com.pandulapeter.campfire.util.normalize
-import com.pandulapeter.campfire.util.triggerUpdate
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -292,8 +291,6 @@ class HomeViewModel(
         collectionRepository.updateData()
         songRepository.updateData()
     }
-
-    fun restoreToolbarButtons() = languages.triggerUpdate()
 
     fun areThereMoreThanOnePlaylists() = playlistRepository.cache.size > 1
 

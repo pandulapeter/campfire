@@ -352,11 +352,6 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         outState.isEraseButtonEnabled = viewModel.shouldEnableEraseButton.value == true
     }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.restoreToolbarButtons()
-    }
-
     override fun onBackPressed() = if (toolbarTextInputView.isTextInputVisible) consume { toggleTextInputVisibility() } else isUiBlocked
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = viewModel.run {

@@ -163,11 +163,6 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.restoreToolbarButtons()
-    }
-
     override fun onSaveInstanceState(outState: Bundle) = outState.run {
         super.onSaveInstanceState(this)
         isTextInputVisible = toolbarTextInputView.isTextInputVisible

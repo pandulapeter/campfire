@@ -178,7 +178,6 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
     override fun onResume() {
         super.onResume()
         showHintIfNeeded()
-        viewModel.restoreToolbarButtons()
     }
 
     override fun onBackPressed() = if (viewModel.isInEditMode.value == true) consume { toggleEditMode() } else super.onBackPressed()

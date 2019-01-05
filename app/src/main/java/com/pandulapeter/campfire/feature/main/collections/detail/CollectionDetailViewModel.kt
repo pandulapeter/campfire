@@ -57,10 +57,4 @@ class CollectionDetailViewModel(
                 song = it
             )
         }
-
-    fun restoreToolbarButtons() {
-        if (adapter.items.isNotEmpty()) {
-            onDataLoaded.value = true
-        }
-    }
 }

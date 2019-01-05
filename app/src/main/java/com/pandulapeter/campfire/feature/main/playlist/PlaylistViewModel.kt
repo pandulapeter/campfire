@@ -83,10 +83,6 @@ class PlaylistViewModel(
         songCount.value = items.size
     }
 
-    fun restoreToolbarButtons() {
-        playlist.value = playlist.value
-    }
-
     fun swapSongsInPlaylist(originalPosition: Int, targetPosition: Int) {
         if (originalPosition < targetPosition) {
             for (i in originalPosition until targetPosition) {

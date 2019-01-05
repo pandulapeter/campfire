@@ -98,11 +98,6 @@ class CollectionDetailFragment : BaseSongListFragment<CollectionDetailViewModel>
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.restoreToolbarButtons()
-    }
-
     companion object {
         private var Bundle.collection by BundleArgumentDelegate.Parcelable("collection")
 

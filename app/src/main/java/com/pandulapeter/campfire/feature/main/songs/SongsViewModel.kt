@@ -170,13 +170,6 @@ class SongsViewModel(
             }
         }
 
-    fun restoreToolbarButtons() {
-        if (languages.value?.isNotEmpty() == true) {
-            languages.value = languages.value
-        }
-        isFastScrollEnabled.value = sortingMode != SortingMode.POPULARITY
-    }
-
     private fun Sequence<Song>.filterByQuery() = if (isTextInputVisible && query.isNotEmpty()) {
         query.trim().normalize().let { query ->
             filter {
