@@ -48,8 +48,8 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_FONT_SIZE_CHANGED = "font_size_changed"
         private const val EVENT_PLAY_ORIGINAL_SELECTED = "play_original_selected"
         private const val EVENT_REPORT_A_PROBLEM_SELECTED = "report_a_problem_selected"
-        private const val EVENT_PREVIOUS_BUTTON_PRESSED = "previous_button_pressed"
         private const val EVENT_NEXT_BUTTON_PRESSED = "next_button_pressed"
+        private const val EVENT_PREVIOUS_BUTTON_PRESSED = "previous_button_pressed"
         private const val EVENT_DOWNLOAD_BUTTON_PRESSED = "download_button_pressed"
         private const val EVENT_DELETE_ALL_BUTTON_PRESSED = "delete_all_button_pressed"
         private const val EVENT_SWIPE_TO_REFRESH_USED = "swipe_to_refresh_used"
@@ -362,12 +362,12 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_SONG_ID to songId
     )
 
-    fun onPreviousButtonPressed() = trackAnalyticsEvent(
-        EVENT_PREVIOUS_BUTTON_PRESSED
-    )
-
     fun onNextButtonPressed() = trackAnalyticsEvent(
         EVENT_NEXT_BUTTON_PRESSED
+    )
+
+    fun onPreviousButtonPressed() = trackAnalyticsEvent(
+        EVENT_PREVIOUS_BUTTON_PRESSED
     )
 
     fun onDownloadButtonPressed(songId: String) = trackAnalyticsEvent(

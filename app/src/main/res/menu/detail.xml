@@ -59,14 +59,14 @@
         <menu>
 
             <item
-                android:id="@+id/previous"
-                android:icon="@drawable/ic_previous"
-                android:title="@string/detail_previous" />
-
-            <item
                 android:id="@+id/next"
                 android:icon="@drawable/ic_next"
                 android:title="@string/detail_next" />
+
+            <item
+                android:id="@+id/previous"
+                android:icon="@drawable/ic_previous"
+                android:title="@string/detail_previous" />
 
             <item
                 android:id="@+id/share_song_list"

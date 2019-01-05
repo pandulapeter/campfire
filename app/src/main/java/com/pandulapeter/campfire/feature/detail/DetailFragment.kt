@@ -189,6 +189,13 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
             })
         }
         getCampfireActivity()?.enableSecondaryNavigationDrawer(R.menu.detail)
+        getCampfireActivity()?.secondaryNavigationMenu?.apply {
+            if (songs.size <= 1) {
+                findItem(R.id.song_list_options_container).isVisible = false
+            } else {
+                findItem(R.id.share_song_list)?.title = getString(R.string.detail_share_song_list, songs.size)
+            }
+        }
         detailEventBusSubscriber.onTextSizeChanged()
         initializeCompoundButton(R.id.should_show_chords) { preferenceDatabase.shouldShowChords }
         updateTransposeControls()
@@ -197,6 +204,9 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
             topLevelBehavior.changeToolbar()
             detailEventBus.notifyTransitionEnd()
             onTranspositionChanged(it, preferenceDatabase.getTransposition(it))
+            val index = songs.indexOfFirst { song -> song.id == it }
+            nextButton.isEnabled = index < songs.lastIndex
+            previousButton.isEnabled = index > 0
         }
         binding.viewPager.adapter = pagerAdapter
         binding.viewPager.addPageScrollListener(
@@ -368,13 +378,13 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
                 }
             }
         }
-        R.id.previous -> consume {
-            analyticsManager.onPreviousButtonPressed()
-            //TODO: Previous
-        }
         R.id.next -> consume {
             analyticsManager.onNextButtonPressed()
-            //TODO: Next
+            binding.viewPager.currentItem++
+        }
+        R.id.previous -> consume {
+            analyticsManager.onPreviousButtonPressed()
+            binding.viewPager.currentItem--
         }
         R.id.share_song_list -> consumeAndCloseDrawer {
             analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST, songs.size)
