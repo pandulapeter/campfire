@@ -33,6 +33,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_SONGS_SORTING_MODE_UPDATED = "songs_sorting_mode_updated"
         private const val EVENT_SONGS_FILTER_TOGGLED = "songs_filter_toggled"
         private const val EVENT_SONGS_SEARCH_QUERY_CHANGED = "songs_search_query_changed"
+        private const val EVENT_SHARE_BUTTON_PRESSED = "share_button_pressed"
         private const val EVENT_SHUFFLE_BUTTON_PRESSED = "shuffle_button_pressed"
         private const val EVENT_SONG_PLAYLIST_STATE_CHANGED = "song_playlist_state_changed"
         private const val EVENT_AUTO_SCROLL_TOGGLED = "auto_scroll_toggled"
@@ -276,6 +277,12 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_QUERY to query,
         PARAM_KEY_SEARCH_IN_ARTISTS to if (shouldSearchInArtists) PARAM_VALUE_ON else PARAM_VALUE_OFF,
         PARAM_KEY_SEARCH_IN_TITLES to if (shouldSearchInTitles) PARAM_VALUE_ON else PARAM_VALUE_OFF
+    )
+
+    fun onShareButtonPressed(source: String, songCount: Int) = trackAnalyticsEvent(
+        EVENT_SHARE_BUTTON_PRESSED,
+        PARAM_KEY_SOURCE to source,
+        PARAM_KEY_SONG_COUNT to songCount.toString()
     )
 
     fun onShuffleButtonPressed(source: String, songCount: Int) = trackAnalyticsEvent(

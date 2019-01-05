@@ -31,6 +31,11 @@ class CollectionDetailFragment : BaseSongListFragment<CollectionDetailViewModel>
     }
     private val drawableBookmarkedToNotBookmarked by lazy { requireContext().animatedDrawable(R.drawable.avd_bookmarked_to_not_bookmarked) }
     private val drawableNotBookmarkedToBookmarked by lazy { requireContext().animatedDrawable(R.drawable.avd_not_bookmarked_to_bookmarked) }
+    private val shareButton: ToolbarButton by lazy {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_share) {
+            analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL, viewModel.collection.value?.collection?.songs?.size ?: 0)
+        }.apply { visibleOrGone = false }
+    }
     private val shuffleButton: ToolbarButton by lazy {
         getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_shuffle) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL) }
             .apply { visibleOrGone = false }
@@ -71,8 +76,11 @@ class CollectionDetailFragment : BaseSongListFragment<CollectionDetailViewModel>
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.swipeRefreshLayout.isEnabled = false
-        viewModel.onDataLoaded.observeAndReset { shuffleButton.visibleOrGone = true }
-        getCampfireActivity()?.updateToolbarButtons(listOf(bookmarkedButton, shuffleButton))
+        viewModel.onDataLoaded.observeAndReset {
+            shareButton.visibleOrGone = true
+            shuffleButton.visibleOrGone = true
+        }
+        getCampfireActivity()?.updateToolbarButtons(listOf(bookmarkedButton, shuffleButton, shareButton))
         viewModel.collection.value?.collection?.let {
             analyticsManager.onCollectionDetailScreenOpened(it.id)
             val songCount = it.songs?.size ?: 0

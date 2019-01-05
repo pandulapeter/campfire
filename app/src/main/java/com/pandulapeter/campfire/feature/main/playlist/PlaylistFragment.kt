@@ -41,6 +41,11 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
             visibleOrGone = false
         }
     }
+    private val shareButton: ToolbarButton by lazy {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_share) {
+            analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST, viewModel.songCount.value ?: 0)
+        }.apply { visibleOrGone = false }
+    }
     private val shuffleButton: ToolbarButton by lazy {
         getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_shuffle) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST) }.apply {
             visibleOrGone = false
@@ -75,6 +80,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
             updateToolbarTitle(it)
             val previousVisibility = shuffleButton.visibleOrGone
             editToggle.visibleOrGone = arguments?.playlistId != Playlist.FAVORITES_ID || it > 0
+            shareButton.visibleOrGone = it > 1
             shuffleButton.visibleOrGone = it > 1
             if (shuffleButton.visibleOrGone != previousVisibility && viewModel.isInEditMode.value == true) {
                 getCampfireActivity()?.invalidateAppBar()
@@ -83,7 +89,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         viewModel.state.observe { updateToolbarTitle() }
         viewModel.playlist.observe {
             updateToolbarTitle()
-            getCampfireActivity()?.updateToolbarButtons(listOf(editToggle, shuffleButton))
+            getCampfireActivity()?.updateToolbarButtons(listOf(editToggle, shuffleButton, shareButton))
         }
         viewModel.isInEditMode.observeAfterDelay {
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
