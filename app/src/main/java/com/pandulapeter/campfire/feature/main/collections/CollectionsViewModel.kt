@@ -96,15 +96,19 @@ class CollectionsViewModel(
         }
     var shouldSearchInTitles = preferenceDatabase.shouldSearchInCollectionTitles
         set(value) {
-            field = value
-            updateAdapterItems(true)
-            trackSearchEvent()
+            if (field != value) {
+                field = value
+                updateAdapterItems(true)
+                trackSearchEvent()
+            }
         }
     var shouldSearchInDescriptions = preferenceDatabase.shouldSearchInCollectionDescriptions
         set(value) {
-            field = value
-            updateAdapterItems(true)
-            trackSearchEvent()
+            if (field != value) {
+                field = value
+                updateAdapterItems(true)
+                trackSearchEvent()
+            }
         }
     var languages = MutableLiveData<List<Language>?>()
 

@@ -87,15 +87,19 @@ class SongsViewModel(
     var languages = MutableLiveData<List<Language>?>()
     var shouldSearchInTitles = preferenceDatabase.shouldSearchInTitles
         set(value) {
-            field = value
-            updateAdapterItems(true)
-            trackSearchEvent()
+            if (field != value) {
+                field = value
+                updateAdapterItems(true)
+                trackSearchEvent()
+            }
         }
     var shouldSearchInArtists = preferenceDatabase.shouldSearchInArtists
         set(value) {
-            field = value
-            updateAdapterItems(true)
-            trackSearchEvent()
+            if (field != value) {
+                field = value
+                updateAdapterItems(true)
+                trackSearchEvent()
+            }
         }
 
     init {
