@@ -10,8 +10,6 @@ class DetailEventBus : BaseRepository<DetailEventBus.Subscriber>() {
 
     fun notifyScroll(songId: String, speed: Int) = subscribers.forEach { it.scroll(songId, speed) }
 
-    fun notifyShouldShowChordsChanged() = subscribers.forEach { it.onShouldShowChordsChanged() }
-
     fun notifyTranspositionChanged(songId: String, value: Int) = subscribers.forEach { it.onTranspositionChanged(songId, value) }
 
     interface Subscriber {
@@ -19,8 +17,6 @@ class DetailEventBus : BaseRepository<DetailEventBus.Subscriber>() {
         fun onTransitionEnd()
 
         fun onTextSizeChanged()
-
-        fun onShouldShowChordsChanged()
 
         fun onTranspositionChanged(songId: String, value: Int)
 

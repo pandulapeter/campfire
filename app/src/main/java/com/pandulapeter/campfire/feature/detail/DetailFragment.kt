@@ -101,14 +101,14 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
     private val isSongLoaded get() = getCampfireActivity()?.isFloatingActionButtonEnabled() == true
     private val detailEventBusSubscriber = object : DetailEventBus.Subscriber {
 
-        override fun onTransitionEnd() = Unit
+        override fun onTransitionEnd() {
+            isUiBlocked = false
+        }
 
         override fun onTextSizeChanged() {
             fontSizeDecrement.isEnabled = preferenceDatabase.fontSize > FONT_SIZE_MIN
             fontSizeIncrement.isEnabled = preferenceDatabase.fontSize < FONT_SIZE_MAX
         }
-
-        override fun onShouldShowChordsChanged() = Unit
 
         override fun onTranspositionChanged(songId: String, value: Int) = Unit
 

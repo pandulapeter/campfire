@@ -59,8 +59,6 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
 
     override fun onTextSizeChanged() = viewModel.updateTextSize()
 
-    override fun onShouldShowChordsChanged() = viewModel.refreshText()
-
     override fun onTranspositionChanged(songId: String, value: Int) {
         if (songId == this.song.id) {
             viewModel.transposition.value = (viewModel.transposition.value ?: 0) + value
