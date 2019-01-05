@@ -9,6 +9,7 @@ import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import com.pandulapeter.campfire.util.generateNotationExample
 import com.pandulapeter.campfire.util.mutableLiveDataOf
+import com.pandulapeter.campfire.util.slowMutableLiveDataOf
 
 class PreferencesViewModel(
     private val preferenceDatabase: PreferenceDatabase,
@@ -22,9 +23,9 @@ class PreferencesViewModel(
     val englishNotationExample = generateNotationExample(false)
     val germanNotationExample = generateNotationExample(true)
     val themeDescription = MutableLiveData<Int>()
-    val theme = mutableLiveDataOf(Theme.fromId(preferenceDatabase.theme)) { onThemeChanged(it) }
+    val theme = slowMutableLiveDataOf(Theme.fromId(preferenceDatabase.theme)) { onThemeChanged(it) }
     val languageDescription = MutableLiveData<Int>()
-    val language = mutableLiveDataOf(Language.fromId(preferenceDatabase.language)) { onLanguageChanged(it) }
+    val language = slowMutableLiveDataOf(Language.fromId(preferenceDatabase.language)) { onLanguageChanged(it) }
     val shouldShowExitConfirmation = mutableLiveDataOf(preferenceDatabase.shouldShowExitConfirmation) { onShouldShowExitConfirmationChanged(it) }
     val shouldShareUsageData = mutableLiveDataOf(preferenceDatabase.shouldShareUsageData) { onShouldShareUsageDataChanged(it) }
     val shouldShareCrashReports = mutableLiveDataOf(preferenceDatabase.shouldShareCrashReports) { onShouldShareCrashReportsChanged(it) }
@@ -32,6 +33,11 @@ class PreferencesViewModel(
     val shouldShowHintsResetSnackbar = MutableLiveData<Boolean?>()
     val shouldShowThemeSelector = MutableLiveData<Boolean?>()
     val shouldShowLanguageSelector = MutableLiveData<Boolean?>()
+
+    init {
+        theme.value?.let { updateThemeDescription(it) }
+        language.value?.let { updateLanguageDescription(it) }
+    }
 
     fun onThemeClicked() {
         if (!isUiBlocked) {

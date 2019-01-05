@@ -100,7 +100,10 @@
                     app:fastScrollPopupBgColor="@color/accent"
                     app:fastScrollPopupTextColor="@color/white"
                     app:fastScrollPopupTextSize="24sp"
-                    app:fastScrollThumbEnabled="false" />
+                    app:fastScrollThumbColor="@color/text_primary"
+                    app:fastScrollThumbEnabled="false"
+                    app:fastScrollThumbInactiveColor="@color/text_secondary"
+                    app:fastScrollTrackColor="@android:color/transparent" />
 
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
