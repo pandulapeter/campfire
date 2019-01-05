@@ -3,14 +3,14 @@ package com.pandulapeter.campfire.integration
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import com.crashlytics.android.Crashlytics
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.util.enqueueCall
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class AnalyticsManager(context: Context, private val preferenceDatabase: PreferenceDatabase, private val networkManager: NetworkManager) {
 
@@ -44,6 +44,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val EVENT_PREFERENCES_EXIT_CONFIRMATION_TOGGLED = "preferences_exit_confirmation_toggled"
         private const val EVENT_PREFERENCES_HINTS_RESET = "preferences_hints_reset"
         private const val EVENT_TRANSPOSITION_CHANGED = "transposition_changed"
+        private const val EVENT_FONT_SIZE_CHANGED = "font_size_changed"
         private const val EVENT_PLAY_ORIGINAL_SELECTED = "play_original_selected"
         private const val EVENT_REPORT_A_PROBLEM_SELECTED = "report_a_problem_selected"
         private const val EVENT_DOWNLOAD_BUTTON_PRESSED = "download_button_pressed"
@@ -337,6 +338,11 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_TRANSPOSITION to transposition.toString()
     )
 
+    fun onFontSizeChanged(textSize: Float) = trackAnalyticsEvent(
+        EVENT_FONT_SIZE_CHANGED,
+        PARAM_KEY_FONT_SIZE to textSize.toString()
+    )
+
     fun onPlayOriginalSelected(songId: String) = trackAnalyticsEvent(
         EVENT_PLAY_ORIGINAL_SELECTED,
         PARAM_KEY_SONG_ID to songId
@@ -417,12 +423,6 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
     fun trackRateApp() = trackAnalyticsEvent(
         EVENT_RATE_APP
     )
-
-    fun trackNonFatalError(throwable: Throwable) {
-        if (preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
-            Crashlytics.logException(throwable)
-        }
-    }
 
     private fun trackAnalyticsEvent(event: String, vararg arguments: Pair<String, String>) {
         if (preferenceDatabase.shouldShareUsageData) {

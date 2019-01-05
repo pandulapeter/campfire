@@ -345,10 +345,12 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
         R.id.font_size_increment -> consume {
             preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize + 0.1f))
             detailEventBus.notifyTextSizeChanged()
+            analyticsManager.onFontSizeChanged(Math.round(preferenceDatabase.fontSize * 10) / 10f)
         }
         R.id.font_size_decrement -> consume {
             preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize - 0.1f))
             detailEventBus.notifyTextSizeChanged()
+            analyticsManager.onFontSizeChanged(Math.round(preferenceDatabase.fontSize * 10) / 10f)
         }
         R.id.report -> consumeAndCloseDrawer {
             if (!isUiBlocked) {
