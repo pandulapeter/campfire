@@ -23,7 +23,7 @@ class ManagePlaylistListAdapter : ListAdapter<PlaylistViewModel, ManagePlaylistL
             submitList(newItems)
         }
 
-    private var itemClickListener: (position: Int) -> Unit = { }
+    var itemClickListener: (position: Int) -> Unit = { }
     var dragHandleTouchListener: ((position: Int) -> Unit)? = null
 
     init {
