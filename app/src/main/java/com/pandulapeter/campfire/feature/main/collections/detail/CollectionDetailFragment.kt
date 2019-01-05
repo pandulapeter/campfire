@@ -34,11 +34,13 @@ class CollectionDetailFragment : BaseSongListFragment<CollectionDetailViewModel>
     private val shareButton: ToolbarButton by lazy {
         getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_share) {
             analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL, viewModel.collection.value?.collection?.songs?.size ?: 0)
+            //TODO: Share
         }.apply { visibleOrGone = false }
     }
     private val shuffleButton: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_shuffle) { shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL) }
-            .apply { visibleOrGone = false }
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_shuffle) {
+            shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL)
+        }.apply { visibleOrGone = false }
     }
     private val bookmarkedButton: ToolbarButton by lazy {
         getCampfireActivity()!!.toolbarContext.createToolbarButton(if (viewModel.collection.value?.collection?.isBookmarked == true) R.drawable.ic_bookmarked else R.drawable.ic_not_bookmarked) {

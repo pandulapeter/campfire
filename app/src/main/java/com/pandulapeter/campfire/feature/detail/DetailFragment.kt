@@ -81,6 +81,8 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
     private val removedFromPlaylist by lazy { requireContext().animatedDrawable(R.drawable.avd_removed_from_playlists) }
     private val transposeHigher by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.transpose_higher) }
     private val transposeLower by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.transpose_lower) }
+    private val previousButton by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.previous) }
+    private val nextButton by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.next) }
     private val fontSizeIncrement by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.font_size_increment) }
     private val fontSizeDecrement by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.font_size_decrement) }
     private var isPinchHintVisible = false
@@ -342,15 +344,9 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
                 }
             }
         }
-        R.id.font_size_increment -> consume {
-            preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize + 0.1f))
-            detailEventBus.notifyTextSizeChanged()
-            analyticsManager.onFontSizeChanged(Math.round(preferenceDatabase.fontSize * 10) / 10f)
-        }
-        R.id.font_size_decrement -> consume {
-            preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize - 0.1f))
-            detailEventBus.notifyTextSizeChanged()
-            analyticsManager.onFontSizeChanged(Math.round(preferenceDatabase.fontSize * 10) / 10f)
+        R.id.share_song -> consumeAndCloseDrawer {
+            analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST, 1)
+            //TODO: Share
         }
         R.id.report -> consumeAndCloseDrawer {
             if (!isUiBlocked) {
@@ -371,6 +367,28 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
                     showSnackbar(R.string.options_about_error)
                 }
             }
+        }
+        R.id.previous -> consume {
+            analyticsManager.onPreviousButtonPressed()
+            //TODO: Previous
+        }
+        R.id.next -> consume {
+            analyticsManager.onNextButtonPressed()
+            //TODO: Next
+        }
+        R.id.share_song_list -> consumeAndCloseDrawer {
+            analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST, songs.size)
+            //TODO: Share
+        }
+        R.id.font_size_increment -> consume {
+            preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize + 0.1f))
+            detailEventBus.notifyTextSizeChanged()
+            analyticsManager.onFontSizeChanged(Math.round(preferenceDatabase.fontSize * 10) / 10f)
+        }
+        R.id.font_size_decrement -> consume {
+            preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize - 0.1f))
+            detailEventBus.notifyTextSizeChanged()
+            analyticsManager.onFontSizeChanged(Math.round(preferenceDatabase.fontSize * 10) / 10f)
         }
         else -> super.onNavigationItemSelected(menuItem)
     }
