@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- General -->
     <string name="got_it">Értem</string>
@@ -14,7 +14,6 @@
     <string name="filter_by_type">Szűrés típus szerint</string>
     <string name="show_explicit">Explicit szövegek</string>
     <string name="filter_by_language">Szűrés nyelv szerint</string>
-    <string name="known_bug_1">Hová tűnt a cím…? Úgy tűnik, találtál egy hibát!</string>
 
     <!-- Supported languages -->
     <string name="language_english">Angol</string>
@@ -314,7 +313,7 @@
     <string name="manage_downloads_placeholder">Nincsenek letöltött dalok</string>
 
     <!-- Detail screen -->
-    <string name="detail_song_options">Opciók</string>
+    <string name="detail_song_options">Dal opciók</string>
     <string name="detail_transpose">Transzponálás (eredeti)</string>
     <string name="detail_transpose_value">Transzponálás (%s)</string>
     <string name="detail_transpose_higher">Fennebb</string>
@@ -323,8 +322,13 @@
     <string name="detail_font_size_larger">Nagyobb</string>
     <string name="detail_font_size_smaller">Kisebb</string>
     <string name="detail_play_original">Eredeti lejátszása</string>
+    <string name="detail_share_song">Dal megosztása</string>
     <string name="detail_report">Hiba jelentése</string>
     <string name="detail_report_subject">Campfire: Probléma ezzel a dallal: %1$s - %2$s</string>
+    <string name="detail_song_list_options">Dallista opciók</string>
+    <string name="detail_next">Következő</string>
+    <string name="detail_previous">Előző</string>
+    <string name="detail_share_song_list" tools:ignore="PluralsCandidate">%d dal megosztása</string>
     <string name="detail_swipe_hint">Lapozz vízszintesen a listában lévő többi dal megtekintéséhez</string>
     <string name="detail_pinch_hint">Két ujjal csípve állíthatod a szöveg méretét</string>
     <string name="detail_placeholder_error">Hiba történt a dal letöltése közben</string>

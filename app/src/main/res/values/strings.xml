@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- General -->
     <string name="campfire" translatable="false">Campfire</string>
@@ -15,7 +15,6 @@
     <string name="filter_by_type">Filter by type</string>
     <string name="show_explicit">Explicit lyrics</string>
     <string name="filter_by_language">Filter by language</string>
-    <string name="known_bug_1">Where did the title go…? Looks like you found a bug!</string>
 
     <!-- Supported languages -->
     <string name="language_english">English</string>
@@ -339,7 +338,7 @@
     <string name="detail_song_list_options">Song list options</string>
     <string name="detail_next">Next</string>
     <string name="detail_previous">Previous</string>
-    <string name="detail_share_song_list">Share %d songs</string>
+    <string name="detail_share_song_list" tools:ignore="PluralsCandidate">Share %d songs</string>
     <string name="detail_swipe_hint">Swipe horizontally to cycle through the songs from the list</string>
     <string name="detail_pinch_hint">Pinch with two fingers to adjust the font size</string>
     <string name="detail_placeholder_error">Something went wrong while\ntrying to download the song</string>
