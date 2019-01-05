@@ -57,7 +57,6 @@ class DetailPageFragment : CampfireFragment<FragmentDetailPageBinding, DetailPag
         }
     }
 
-    //TODO: Changing the text size should also affect the scroll position for a smoother experience.
     override fun onTextSizeChanged() = viewModel.updateTextSize()
 
     override fun onShouldShowChordsChanged() = viewModel.refreshText()

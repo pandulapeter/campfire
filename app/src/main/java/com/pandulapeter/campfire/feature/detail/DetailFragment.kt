@@ -355,8 +355,10 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
             }
         }
         R.id.share_song -> consumeAndCloseDrawer {
-            analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST, 1)
-            //TODO: Share
+            viewModel.songId.value?.let { songId ->
+                analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST, 1)
+                shareSongs(listOf(songId))
+            }
         }
         R.id.report -> consumeAndCloseDrawer {
             if (!isUiBlocked) {
@@ -388,7 +390,7 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
         }
         R.id.share_song_list -> consumeAndCloseDrawer {
             analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST, songs.size)
-            //TODO: Share
+            shareSongs(songs.map { it.id })
         }
         R.id.font_size_increment -> consume {
             preferenceDatabase.fontSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, preferenceDatabase.fontSize + 0.1f))

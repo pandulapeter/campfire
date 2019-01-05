@@ -240,6 +240,11 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         isUiBlocked = true
     }
 
+    protected fun shareSongs(songIds: List<String>) {
+        //TODO: Implement share feature
+        showSnackbar("Sharing ${songIds.size} songs - Work in progress")
+    }
+
     protected inline fun <T> LiveData<T>.observe(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {
         callback(it)
     })

@@ -43,8 +43,10 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
     }
     private val shareButton: ToolbarButton by lazy {
         getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_share) {
-            analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST, viewModel.songCount.value ?: 0)
-            //TODO: Share
+            viewModel.playlist.value?.songIds?.let { songIds ->
+                analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST, songIds.size)
+                shareSongs(songIds)
+            }
         }.apply { visibleOrGone = false }
     }
     private val shuffleButton: ToolbarButton by lazy {

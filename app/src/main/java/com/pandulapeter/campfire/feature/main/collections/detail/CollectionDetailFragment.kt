@@ -33,8 +33,10 @@ class CollectionDetailFragment : BaseSongListFragment<CollectionDetailViewModel>
     private val drawableNotBookmarkedToBookmarked by lazy { requireContext().animatedDrawable(R.drawable.avd_not_bookmarked_to_bookmarked) }
     private val shareButton: ToolbarButton by lazy {
         getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_share) {
-            analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL, viewModel.collection.value?.collection?.songs?.size ?: 0)
-            //TODO: Share
+            viewModel.collection.value?.collection?.songs?.let { songIds ->
+                analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTION_DETAIL, songIds.size)
+                shareSongs(songIds)
+            }
         }.apply { visibleOrGone = false }
     }
     private val shuffleButton: ToolbarButton by lazy {

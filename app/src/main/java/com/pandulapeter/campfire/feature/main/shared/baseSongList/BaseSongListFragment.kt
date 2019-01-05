@@ -27,8 +27,8 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
     override val topLevelBehavior = TopLevelBehavior(getCampfireActivity = { getCampfireActivity() })
     override val shouldDelaySubscribing get() = viewModel.isDetailScreenOpen
     protected lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
-    abstract val shouldSendMultipleSongs: Boolean //TODO: True for Playlist and CollectionDetail
-    abstract val shouldShowManagePlaylist: Boolean //TODO: Only false for Playlist
+    abstract val shouldSendMultipleSongs: Boolean
+    abstract val shouldShowManagePlaylist: Boolean
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
