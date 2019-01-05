@@ -66,7 +66,7 @@ class PreferencesViewModel(
     }
 
     private fun onShouldShowChordsChanged(shouldShowChords: Boolean) {
-        analyticsManager.onShouldShowChordsToggled(shouldShowChords, AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS_PREFERENCES)
+        analyticsManager.onShouldShowChordsToggled(shouldShowChords)
         preferenceDatabase.shouldShowChords = shouldShowChords
     }
 

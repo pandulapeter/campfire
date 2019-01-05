@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-
-    <item
-        android:id="@+id/should_show_chords"
-        android:title="@string/options_preferences_should_show_chords"
-        app:actionLayout="@layout/widget_checkbox" />
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
         android:id="@+id/transpose_container"
@@ -28,6 +22,26 @@
     </item>
 
     <item
+        android:id="@+id/font_size_container"
+        android:title="@string/detail_font_size">
+
+        <menu>
+
+            <item
+                android:id="@+id/font_size_increment"
+                android:icon="@drawable/ic_increment"
+                android:title="@string/detail_font_size_larger" />
+
+            <item
+                android:id="@+id/font_size_decrement"
+                android:icon="@drawable/ic_decrement"
+                android:title="@string/detail_font_size_smaller" />
+
+        </menu>
+
+    </item>
+
+    <item
         android:id="@+id/song_options_container"
         android:title="@string/detail_song_options">
 
@@ -44,54 +58,14 @@
                 android:title="@string/detail_share_song" />
 
             <item
-                android:id="@+id/report"
-                android:icon="@drawable/ic_report"
-                android:title="@string/detail_report" />
-
-        </menu>
-
-    </item>
-
-    <item
-        android:id="@+id/song_list_options_container"
-        android:title="@string/detail_song_list_options">
-
-        <menu>
-
-            <item
-                android:id="@+id/next"
-                android:icon="@drawable/ic_next"
-                android:title="@string/detail_next" />
-
-            <item
-                android:id="@+id/previous"
-                android:icon="@drawable/ic_previous"
-                android:title="@string/detail_previous" />
-
-            <item
                 android:id="@+id/share_song_list"
                 android:icon="@drawable/ic_share"
                 android:title="@string/detail_share_song_list" />
 
-        </menu>
-
-    </item>
-
-    <item
-        android:id="@+id/font_size_container"
-        android:title="@string/detail_font_size">
-
-        <menu>
-
             <item
-                android:id="@+id/font_size_increment"
-                android:icon="@drawable/ic_increment"
-                android:title="@string/detail_font_size_larger" />
-
-            <item
-                android:id="@+id/font_size_decrement"
-                android:icon="@drawable/ic_decrement"
-                android:title="@string/detail_font_size_smaller" />
+                android:id="@+id/report"
+                android:icon="@drawable/ic_report"
+                android:title="@string/detail_report" />
 
         </menu>
 

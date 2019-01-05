@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
 
     <!-- General -->
     <string name="campfire" translatable="false">Campfire</string>
@@ -323,7 +323,7 @@
     <string name="manage_downloads_placeholder">You don\'t have any\ndownloaded songs</string>
 
     <!-- Detail screen -->
-    <string name="detail_song_options">Song options</string>
+    <string name="detail_song_options">Options</string>
     <string name="detail_transpose">Transpose (original)</string>
     <string name="detail_transpose_value">Transpose (%s)</string>
     <string name="detail_transpose_higher">Higher</string>
@@ -333,12 +333,9 @@
     <string name="detail_font_size_smaller">Smaller</string>
     <string name="detail_play_original">Listen to the original</string>
     <string name="detail_share_song">Share song</string>
+    <string name="detail_share_song_list">Share song list</string>
     <string name="detail_report">Report a problem</string>
     <string name="detail_report_subject">Campfire: Problem with %1$s - %2$s</string>
-    <string name="detail_song_list_options">Song list options</string>
-    <string name="detail_next">Next</string>
-    <string name="detail_previous">Previous</string>
-    <string name="detail_share_song_list" tools:ignore="PluralsCandidate">Share %d songs</string>
     <string name="detail_swipe_hint">Swipe horizontally to cycle through the songs from the list</string>
     <string name="detail_pinch_hint">Pinch with two fingers to adjust the font size</string>
     <string name="detail_placeholder_error">Something went wrong while\ntrying to download the song</string>

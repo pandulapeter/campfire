@@ -79,10 +79,6 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
     private val drawablePauseToPlay by lazy { requireContext().animatedDrawable(R.drawable.avd_pause_to_play) }
     private val addedToPlaylist by lazy { requireContext().animatedDrawable(R.drawable.avd_added_to_playlists) }
     private val removedFromPlaylist by lazy { requireContext().animatedDrawable(R.drawable.avd_removed_from_playlists) }
-    private val transposeHigher by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.transpose_higher) }
-    private val transposeLower by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.transpose_lower) }
-    private val previousButton by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.previous) }
-    private val nextButton by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.next) }
     private val fontSizeIncrement by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.font_size_increment) }
     private val fontSizeDecrement by lazy { getCampfireActivity()!!.secondaryNavigationMenu.findItem(R.id.font_size_decrement) }
     private var isPinchHintVisible = false
@@ -189,24 +185,21 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
             })
         }
         getCampfireActivity()?.enableSecondaryNavigationDrawer(R.menu.detail)
-        getCampfireActivity()?.secondaryNavigationMenu?.apply {
-            if (songs.size <= 1) {
-                findItem(R.id.song_list_options_container).isVisible = false
-            } else {
-                findItem(R.id.share_song_list)?.title = getString(R.string.detail_share_song_list, songs.size)
-            }
+        if (songs.size <= 1) {
+            getCampfireActivity()?.secondaryNavigationMenu?.findItem(R.id.share_song_list)?.isVisible = false
         }
         detailEventBusSubscriber.onTextSizeChanged()
-        initializeCompoundButton(R.id.should_show_chords) { preferenceDatabase.shouldShowChords }
-        updateTransposeControls()
+        if (!preferenceDatabase.shouldShowChords) {
+            transposeContainer.isVisible = false
+        }
         viewModel.songId.observe {
             getCampfireActivity()?.lastSongId = it
             topLevelBehavior.changeToolbar()
             detailEventBus.notifyTransitionEnd()
             onTranspositionChanged(it, preferenceDatabase.getTransposition(it))
-            val index = songs.indexOfFirst { song -> song.id == it }
-            nextButton.isEnabled = index < songs.lastIndex
-            previousButton.isEnabled = index > 0
+//            val index = songs.indexOfFirst { song -> song.id == it }
+//            nextButton.isEnabled = index < songs.lastIndex
+//            previousButton.isEnabled = index > 0
         }
         binding.viewPager.adapter = pagerAdapter
         binding.viewPager.addPageScrollListener(
@@ -328,12 +321,6 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem) = when (menuItem.itemId) {
-        R.id.should_show_chords -> consumeAndUpdateBoolean(menuItem, {
-            analyticsManager.onShouldShowChordsToggled(it, AnalyticsManager.PARAM_VALUE_SCREEN_SONG_DETAIL)
-            preferenceDatabase.shouldShowChords = it
-            updateTransposeControls()
-            detailEventBus.notifyShouldShowChordsChanged()
-        }, { preferenceDatabase.shouldShowChords })
         R.id.transpose_higher -> consume { viewModel.songId.value?.let { detailEventBus.notifyTranspositionChanged(it, 1) } }
         R.id.transpose_lower -> consume { viewModel.songId.value?.let { detailEventBus.notifyTranspositionChanged(it, -1) } }
         R.id.play_in_youtube -> consumeAndCloseDrawer {
@@ -380,14 +367,14 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
                 }
             }
         }
-        R.id.next -> consume {
-            analyticsManager.onNextButtonPressed()
-            binding.viewPager.currentItem++
-        }
-        R.id.previous -> consume {
-            analyticsManager.onPreviousButtonPressed()
-            binding.viewPager.currentItem--
-        }
+//        R.id.next -> consume {
+//            analyticsManager.onNextButtonPressed()
+//            binding.viewPager.currentItem++
+//        }
+//        R.id.previous -> consume {
+//            analyticsManager.onPreviousButtonPressed()
+//            binding.viewPager.currentItem--
+//        }
         R.id.share_song_list -> consumeAndCloseDrawer {
             analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST, songs.size)
             shareSongs(songs.map { it.id })
@@ -451,13 +438,6 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
                 animatedVisibilityEnd = !animatedVisibilityEnd
                 drawable?.start()
             }
-        }
-    }
-
-    private fun updateTransposeControls() {
-        preferenceDatabase.shouldShowChords.let {
-            transposeHigher.isEnabled = it
-            transposeLower.isEnabled = it
         }
     }
 

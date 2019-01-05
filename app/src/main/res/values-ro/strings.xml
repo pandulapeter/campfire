@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
 
     <!-- General -->
     <string name="got_it">Am înțeles</string>
@@ -316,7 +316,7 @@
     <string name="manage_downloads_placeholder">Nicio piesă descărcată</string>
 
     <!-- Detail screen -->
-    <string name="detail_song_options">Opțiuni piesă</string>
+    <string name="detail_song_options">Opțiuni</string>
     <string name="detail_transpose">Transpunere (original)</string>
     <string name="detail_transpose_value">Transpunere (%s)</string>
     <string name="detail_transpose_higher">Mai sus</string>
@@ -326,12 +326,9 @@
     <string name="detail_font_size_smaller">Mai mic</string>
     <string name="detail_play_original">Ascultă originalul</string>
     <string name="detail_share_song">Distribuie piesa</string>
+    <string name="detail_share_song_list">Distribuie lista</string>
     <string name="detail_report">Raportează o eroare</string>
     <string name="detail_report_subject">Campfire: Problemă cu piesa: %1$s - %2$s</string>
-    <string name="detail_song_list_options">Opțiuni listă de piese</string>
-    <string name="detail_next">Următorul</string>
-    <string name="detail_previous">Anteriorul</string>
-    <string name="detail_share_song_list" tools:ignore="PluralsCandidate">Distribuie cele %d piese</string>
     <string name="detail_swipe_hint">Trage orizontal cu degetul pentru a afișa celelalte piese din listă</string>
     <string name="detail_pinch_hint">Ciupește ("pinch") pentru a regla mărimea fontului</string>
     <string name="detail_placeholder_error">A intervenit o eroare la descărcarea piesei</string>

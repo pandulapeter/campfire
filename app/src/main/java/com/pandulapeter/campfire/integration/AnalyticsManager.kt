@@ -311,10 +311,9 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_SPEED to speed.toString()
     )
 
-    fun onShouldShowChordsToggled(shouldShowChords: Boolean, source: String) = trackAnalyticsEvent(
+    fun onShouldShowChordsToggled(shouldShowChords: Boolean) = trackAnalyticsEvent(
         EVENT_PREFERENCES_SHOULD_SHOW_CHORDS_TOGGLED,
-        PARAM_KEY_STATE to if (shouldShowChords) PARAM_VALUE_ON else PARAM_VALUE_OFF,
-        PARAM_KEY_SOURCE to source
+        PARAM_KEY_STATE to if (shouldShowChords) PARAM_VALUE_ON else PARAM_VALUE_OFF
     )
 
     fun onNotationModeChanged(shouldUseGermanNotation: Boolean) = trackAnalyticsEvent(
