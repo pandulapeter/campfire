@@ -297,6 +297,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         if (savedInstanceState == null) {
             handleNewIntent()
         } else {
+            binding.toolbarButtonContainer.apply { post { layoutTransition = LayoutTransition() } }
             currentScreenId = savedInstanceState.currentScreenId
             currentPlaylistId = savedInstanceState.currentPlaylistId
             currentCollectionId = savedInstanceState.currentCollectionId

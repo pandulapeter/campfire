@@ -43,7 +43,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
     }
     private val shareButton: ToolbarButton by lazy {
         getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_share) {
-            viewModel.playlist.value?.songIds?.let { songIds ->
+            viewModel.playlist.value?.songIds?.filter { id -> id != viewModel.songToDeleteId }?.let { songIds ->
                 analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST, songIds.size)
                 shareSongs(songIds)
             }
@@ -81,14 +81,8 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         viewModel.shouldOpenSongs.observeAndReset { getCampfireActivity()?.openSongsScreen() }
         viewModel.songCount.observe {
             updateToolbarTitle(it)
-            val previousShareVisibility = shareButton.visibleOrGone
-            val previousShuffleVisibility = shuffleButton.visibleOrGone
             editToggle.visibleOrGone = arguments?.playlistId != Playlist.FAVORITES_ID || it > 0
-            shareButton.visibleOrGone = it > 0
-            shuffleButton.visibleOrGone = it > 1
-            if ((shareButton.visibleOrGone != previousShareVisibility || shuffleButton.visibleOrGone != previousShuffleVisibility) && viewModel.isInEditMode.value == true) {
-                getCampfireActivity()?.invalidateAppBar()
-            }
+            updateToolbarButtons()
         }
         viewModel.state.observe { updateToolbarTitle() }
         viewModel.playlist.observe {
@@ -96,6 +90,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
             getCampfireActivity()?.updateToolbarButtons(listOf(editToggle, shuffleButton, shareButton))
         }
         viewModel.isInEditMode.observeAfterDelay {
+            updateToolbarButtons()
             editToggle.setImageDrawable((if (it) drawableEditToDone else drawableDoneToEdit)?.apply { start() })
             if (it) {
                 showHintIfNeeded()
@@ -192,6 +187,13 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
                 resources.getQuantityString(R.plurals.playlist_song_count, songCount, songCount)
             }
         )
+
+    private fun updateToolbarButtons() {
+        (viewModel.songCount.value ?: 0).let {
+            shareButton.visibleOrGone = it > 0 && viewModel.isInEditMode.value == false
+            shuffleButton.visibleOrGone = it > 1 && viewModel.isInEditMode.value == false
+        }
+    }
 
     override fun onDetailScreenOpened() {
         if (viewModel.isInEditMode.value == true) {

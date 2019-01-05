@@ -31,7 +31,8 @@ class PlaylistViewModel(
     interactionBlocker: InteractionBlocker
 ) : BaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager, interactionBlocker) {
 
-    private var songToDeleteId: String? = null
+    var songToDeleteId: String? = null
+        private set
     val playlist = MutableLiveData<Playlist?>()
     val songCount = mutableLiveDataOf(-1)
     val isInEditMode = mutableLiveDataOf(false) {
