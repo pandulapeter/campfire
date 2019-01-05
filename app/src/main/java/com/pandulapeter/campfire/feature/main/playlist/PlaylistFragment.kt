@@ -81,11 +81,12 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         viewModel.shouldOpenSongs.observeAndReset { getCampfireActivity()?.openSongsScreen() }
         viewModel.songCount.observe {
             updateToolbarTitle(it)
-            val previousVisibility = shuffleButton.visibleOrGone
+            val previousShareVisibility = shareButton.visibleOrGone
+            val previousShuffleVisibility = shuffleButton.visibleOrGone
             editToggle.visibleOrGone = arguments?.playlistId != Playlist.FAVORITES_ID || it > 0
-            shareButton.visibleOrGone = it > 1
+            shareButton.visibleOrGone = it > 0
             shuffleButton.visibleOrGone = it > 1
-            if (shuffleButton.visibleOrGone != previousVisibility && viewModel.isInEditMode.value == true) {
+            if ((shareButton.visibleOrGone != previousShareVisibility || shuffleButton.visibleOrGone != previousShuffleVisibility) && viewModel.isInEditMode.value == true) {
                 getCampfireActivity()?.invalidateAppBar()
             }
         }
