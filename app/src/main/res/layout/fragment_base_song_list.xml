@@ -87,6 +87,7 @@
 
                 <com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
                     android:id="@+id/recycler_view"
+                    style="@style/FastScroll"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:clipToPadding="false"
@@ -94,16 +95,7 @@
                     android:paddingTop="@dimen/content_padding"
                     android:paddingEnd="0dp"
                     android:paddingBottom="@dimen/list_bottom_margin"
-                    app:adapter="@{viewModel.adapter}"
-                    app:fastScrollAutoHide="false"
-                    app:fastScrollPopupBackgroundSize="72dp"
-                    app:fastScrollPopupBgColor="@color/accent"
-                    app:fastScrollPopupTextColor="@color/white"
-                    app:fastScrollPopupTextSize="24sp"
-                    app:fastScrollThumbColor="@color/text_primary"
-                    app:fastScrollThumbEnabled="false"
-                    app:fastScrollThumbInactiveColor="@color/text_secondary"
-                    app:fastScrollTrackColor="@android:color/transparent" />
+                    app:adapter="@{viewModel.adapter}" />
 
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

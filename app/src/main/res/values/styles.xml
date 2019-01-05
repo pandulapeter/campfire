@@ -64,4 +64,16 @@
         <item name="android:paddingTop">@dimen/content_padding</item>
     </style>
 
+    <style name="FastScroll">
+        <item name="fastScrollAutoHide">true</item>
+        <item name="fastScrollPopupBackgroundSize">72dp</item>
+        <item name="fastScrollPopupBgColor">@color/accent</item>
+        <item name="fastScrollPopupTextColor">@color/white</item>
+        <item name="fastScrollPopupTextSize">24sp</item>
+        <item name="fastScrollThumbColor">@color/text_primary</item>
+        <item name="fastScrollThumbEnabled">false</item>
+        <item name="fastScrollThumbInactiveColor">@color/text_tertiary</item>
+        <item name="fastScrollTrackColor">@android:color/transparent</item>
+    </style>
+
 </resources>
