@@ -1,20 +1,24 @@
 package com.pandulapeter.campfire.feature.main.sharedWithYou
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.integration.fromDeepLinkUri
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.withArguments
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.koin.core.parameter.parametersOf
 
 class SharedWithYouFragment : BaseSongListFragment<SharedWithYouViewModel>() {
 
     override val shouldSendMultipleSongs = true
-    override val viewModel by viewModel<SharedWithYouViewModel> { parametersOf(arguments?.songIds.orEmpty()) }
+    override val viewModel by viewModel<SharedWithYouViewModel>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -25,6 +29,26 @@ class SharedWithYouFragment : BaseSongListFragment<SharedWithYouViewModel>() {
         viewModel.shouldOpenSongs.observeAndReset { getCampfireActivity()?.openSongsScreen() }
         viewModel.state.observe { updateToolbarTitle(viewModel.songCount.value ?: 0) }
         viewModel.songCount.observe { updateToolbarTitle(it) }
+        FirebaseDynamicLinks.getInstance()
+            .getDynamicLink(arguments?.intent as Intent)
+            .addOnSuccessListener(requireActivity()) { pendingDynamicLinkData ->
+                var deepLink: Uri? = null
+                if (pendingDynamicLinkData != null) {
+                    deepLink = pendingDynamicLinkData.link
+                }
+                if (deepLink != null) {
+                    val songIds = deepLink.toString().fromDeepLinkUri()
+                    if (songIds.isNotEmpty()) {
+                        viewModel.songIds = songIds
+                        return@addOnSuccessListener
+                    }
+                }
+                //TODO: Error
+            }
+            .addOnFailureListener {
+                Log.d("DEEPLINK", "Parsing error: ${it.localizedMessage}")
+                //TODO: Error
+            }
     }
 
     private fun updateToolbarTitle(songCount: Int) = topLevelBehavior.defaultToolbar.updateToolbarTitle(
@@ -37,10 +61,10 @@ class SharedWithYouFragment : BaseSongListFragment<SharedWithYouViewModel>() {
     )
 
     companion object {
-        private var Bundle.songIds by BundleArgumentDelegate.StringArrayList("songIds")
+        private var Bundle.intent by BundleArgumentDelegate.Parcelable("intent")
 
-        fun newInstance(songIds: List<String>) = SharedWithYouFragment().withArguments {
-            it.songIds = ArrayList(songIds)
+        fun newInstance(intent: Intent) = SharedWithYouFragment().withArguments {
+            it.intent = intent
         }
     }
 }

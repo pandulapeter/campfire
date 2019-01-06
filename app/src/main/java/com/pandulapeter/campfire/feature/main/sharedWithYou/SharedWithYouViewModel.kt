@@ -17,7 +17,6 @@ import com.pandulapeter.campfire.util.mutableLiveDataOf
 import com.pandulapeter.campfire.util.removePrefixes
 
 class SharedWithYouViewModel(
-    private val songIds: List<String>,
     context: Context,
     songRepository: SongRepository,
     songDetailRepository: SongDetailRepository,
@@ -27,6 +26,11 @@ class SharedWithYouViewModel(
     interactionBlocker: InteractionBlocker
 ) : BaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager, interactionBlocker) {
 
+    var songIds = listOf<String>()
+        set(value) {
+            field = value
+            updateAdapterItems(true)
+        }
     val songCount = mutableLiveDataOf(0)
     val shouldOpenSongs = MutableLiveData<Boolean?>()
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_SHARED_WITH_YOU

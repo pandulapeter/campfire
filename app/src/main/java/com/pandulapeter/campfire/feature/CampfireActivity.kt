@@ -11,11 +11,9 @@ import android.content.res.Resources
 import android.graphics.Paint
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.transition.Explode
-import android.util.Log
 import android.view.Gravity
 import android.view.SubMenu
 import android.view.View
@@ -39,7 +37,6 @@ import com.crashlytics.android.Crashlytics
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.internal.NavigationMenuView
 import com.google.android.material.navigation.NavigationView
-import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.jakewharton.processphoenix.ProcessPhoenix
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
@@ -66,7 +63,6 @@ import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import com.pandulapeter.campfire.integration.fromDeepLinkUri
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.IntentExtraDelegate
 import com.pandulapeter.campfire.util.addDrawerListener
@@ -612,28 +608,8 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     private fun handleNewIntent() {
-        if (viewModel.preferenceDatabase.isOnboardingDone && intent?.extras?.isEmpty != true && intent?.screenToOpen?.isEmpty() == true) {
-            FirebaseDynamicLinks.getInstance()
-                .getDynamicLink(intent)
-                .addOnSuccessListener(this) { pendingDynamicLinkData ->
-                    // Get deep link from result (may be null if no link is found)
-                    var deepLink: Uri? = null
-                    if (pendingDynamicLinkData != null) {
-                        deepLink = pendingDynamicLinkData.link
-                    }
-                    if (deepLink != null) {
-                        val songIds = deepLink.toString().fromDeepLinkUri()
-                        if (songIds.isNotEmpty()) {
-                            openSharedWithYouScreen(songIds)
-                            return@addOnSuccessListener
-                        }
-                    }
-                    startScreenFromIntent()
-                }
-                .addOnFailureListener {
-                    Log.d("DEEPLINK", "Parsing error: ${it.localizedMessage}")
-                    startScreenFromIntent()
-                }
+        if (viewModel.preferenceDatabase.isOnboardingDone && intent?.action == Intent.ACTION_VIEW && intent?.screenToOpen?.isEmpty() == true) {
+            openSharedWithYouScreen()
         } else {
             startScreenFromIntent()
         }
@@ -860,10 +836,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             .commit()
     }
 
-    private fun openSharedWithYouScreen(songIds: List<String>): String {
+    private fun openSharedWithYouScreen(): String {
         if (currentFragment !is HomeContainerFragment) {
             supportFragmentManager.clearBackStack()
-            supportFragmentManager.handleReplace { SharedWithYouFragment.newInstance(songIds) }
+            supportFragmentManager.handleReplace { SharedWithYouFragment.newInstance(intent) }
             currentScreenId = 0
             binding.primaryNavigation.checkedItem?.isChecked = false
         }

@@ -102,5 +102,5 @@ val featureModule = module {
     viewModel<DetailViewModel>()
     viewModel { (song: Song, songParser: SongParser) -> DetailPageViewModel(song, androidContext(), get(), get(), get(), get(), get(), songParser) }
     viewModel { (songId: String) -> PlaylistChooserBottomSheetViewModel(songId, androidContext(), get()) }
-    viewModel { (songIds: List<String>) -> SharedWithYouViewModel(songIds, get(), get(), get(), get(), get(), get(), get()) }
+    viewModel<SharedWithYouViewModel>()
 }
