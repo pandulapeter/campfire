@@ -317,6 +317,10 @@
     <string name="manage_downloads_hint">Glisează orizontal piesele pentru a le șterge din lista pieselor descărcate</string>
     <string name="manage_downloads_placeholder">Nicio piesă descărcată</string>
 
+    <!-- Shared with you screen -->
+    <string name="shared_with_you">Distribuit cu tine</string>
+    <string name="shared_with_you_empty_list">Listă goală</string>
+
     <!-- Detail screen -->
     <string name="detail_song_options">Opțiuni</string>
     <string name="detail_transpose">Transpunere (original)</string>

@@ -36,6 +36,7 @@ import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.main.options.changelog.ChangelogViewModel
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.main.playlist.PlaylistViewModel
+import com.pandulapeter.campfire.feature.main.sharedWithYou.SharedWithYouViewModel
 import com.pandulapeter.campfire.feature.main.songs.SongsViewModel
 import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetViewModel
@@ -101,4 +102,5 @@ val featureModule = module {
     viewModel<DetailViewModel>()
     viewModel { (song: Song, songParser: SongParser) -> DetailPageViewModel(song, androidContext(), get(), get(), get(), get(), get(), songParser) }
     viewModel { (songId: String) -> PlaylistChooserBottomSheetViewModel(songId, androidContext(), get()) }
+    viewModel { (songIds: List<String>) -> SharedWithYouViewModel(songIds, get(), get(), get(), get(), get(), get(), get()) }
 }

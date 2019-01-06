@@ -28,6 +28,13 @@ sealed class BundleArgumentDelegate<T>(protected val key: kotlin.String, protect
         override fun setValue(thisRef: Bundle?, property: KProperty<*>, value: kotlin.String) = thisRef?.putString(key, value) ?: Unit
     }
 
+    class StringArrayList(key: kotlin.String) : BundleArgumentDelegate<ArrayList<kotlin.String>>(key, arrayListOf()) {
+
+        override fun getValue(thisRef: Bundle?, property: KProperty<*>) = thisRef?.getStringArrayList(key) ?: defaultValue
+
+        override fun setValue(thisRef: Bundle?, property: KProperty<*>, value: ArrayList<kotlin.String>) = thisRef?.putStringArrayList(key, value) ?: Unit
+    }
+
     class Parcelable(key: kotlin.String) : BundleArgumentDelegate<android.os.Parcelable?>(key, null) {
 
         override fun getValue(thisRef: Bundle?, property: KProperty<*>) = thisRef?.getParcelable(key) ?: defaultValue

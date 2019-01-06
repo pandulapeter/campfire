@@ -8,5 +8,4 @@ fun List<String>.toDeepLinkUri(): Uri = Uri.parse("$DEEP_LINK_DOMAIN&songIds=[${
 
 fun String.fromDeepLinkUri() = URLDecoder.decode(this, "UTF-8").substringAfter('[').substringBeforeLast(']').split(',').distinct()
 
-//TODO: Use your own domain and redirect to the Play Store.
 private const val DEEP_LINK_DOMAIN = "https://play.google.com/store/apps/details?id=${AboutViewModel.APP_ID}"

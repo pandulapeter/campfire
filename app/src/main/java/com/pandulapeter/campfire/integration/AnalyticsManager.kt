@@ -113,6 +113,7 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         const val PARAM_VALUE_SCREEN_PLAYLIST = "playlist"
         const val PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS = "manage_playlists"
         const val PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS = "manage_downloads"
+        const val PARAM_VALUE_SCREEN_SHARED_WITH_YOU = "shared_with_you"
         const val PARAM_VALUE_SCREEN_COLLECTION_DETAIL = "collection_detail"
         const val PARAM_VALUE_SCREEN_SONG_DETAIL = "song_detail"
         const val PARAM_VALUE_AUTOMATIC = "automatic"

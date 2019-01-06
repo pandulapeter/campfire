@@ -15,7 +15,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.transition.Explode
-import android.util.Log
 import android.view.Gravity
 import android.view.SubMenu
 import android.view.View
@@ -58,6 +57,7 @@ import com.pandulapeter.campfire.feature.main.options.OptionsFragment
 import com.pandulapeter.campfire.feature.main.options.about.AboutViewModel
 import com.pandulapeter.campfire.feature.main.options.preferences.PreferencesViewModel
 import com.pandulapeter.campfire.feature.main.playlist.PlaylistFragment
+import com.pandulapeter.campfire.feature.main.sharedWithYou.SharedWithYouFragment
 import com.pandulapeter.campfire.feature.main.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
@@ -418,8 +418,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
     }
 
-    fun invalidateAppBar() = binding.toolbarContainer.requestLayout()
-
     fun updateAppBarView(view: View?, immediately: Boolean = false) {
         binding.appBarLayout.apply {
             fun removeViews() {
@@ -623,11 +621,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     deepLink = pendingDynamicLinkData.link
                 }
                 if (deepLink != null) {
-                    Log.d("DEEPLINK", "New link with data:")
-                    deepLink.toString().fromDeepLinkUri().forEach {
-                        Log.d("DEEPLINK", "  - Song: $it")
+                    val songIds = deepLink.toString().fromDeepLinkUri()
+                    if (songIds.isNotEmpty()) {
+                        openSharedWithYouScreen(songIds)
                     }
-                    //TODO
                 }
             }
     }
@@ -851,6 +848,16 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             }
             .addToBackStack(null)
             .commit()
+    }
+
+    private fun openSharedWithYouScreen(songIds: List<String>): String {
+        if (currentFragment !is HomeContainerFragment) {
+            supportFragmentManager.clearBackStack()
+            supportFragmentManager.handleReplace { SharedWithYouFragment.newInstance(songIds) }
+            currentScreenId = 0
+            binding.primaryNavigation.checkedItem?.isChecked = false
+        }
+        return AnalyticsManager.PARAM_VALUE_SCREEN_SHARED_WITH_YOU
     }
 
     fun restartProcess() {

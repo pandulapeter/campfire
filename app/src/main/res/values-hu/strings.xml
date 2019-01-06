@@ -314,6 +314,10 @@
     <string name="manage_downloads_hint">Vonszold vízszintesen a dalokat, hogy kitöröld őket a letöltések közül</string>
     <string name="manage_downloads_placeholder">Nincsenek letöltött dalok</string>
 
+    <!-- Shared with you screen -->
+    <string name="shared_with_you">Megosztották veled</string>
+    <string name="shared_with_you_empty_list">Üres lista</string>
+
     <!-- Detail screen -->
     <string name="detail_song_options">Opciók</string>
     <string name="detail_transpose">Transzponálás (eredeti)</string>
