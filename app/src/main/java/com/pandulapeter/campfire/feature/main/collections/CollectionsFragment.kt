@@ -20,11 +20,11 @@ import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
 import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
-import com.pandulapeter.campfire.feature.main.songs.SongsFragment
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.behavior.TopLevelBehavior
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
+import com.pandulapeter.campfire.feature.shared.widget.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -176,16 +176,16 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                     message = R.string.collections_update_error,
                     action = { viewModel.updateData() })
             }
-            viewModel.searchControlsViewModel.secondCheckbox.observe {
-                binding.root.postDelayed(
-                    { if (isAdded) viewModel.shouldSearchInTitles = it },
-                    SongsFragment.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
-                )
-            }
             viewModel.searchControlsViewModel.firstCheckbox.observe {
                 binding.root.postDelayed(
+                    { if (isAdded) viewModel.shouldSearchInTitles = it },
+                    SearchControlsViewModel.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
+                )
+            }
+            viewModel.searchControlsViewModel.secondCheckbox.observe {
+                binding.root.postDelayed(
                     { if (isAdded) viewModel.shouldSearchInDescriptions = it },
-                    SongsFragment.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
+                    SearchControlsViewModel.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
                 )
             }
             viewModel.isSearchToggleVisible.observeAfterDelay {

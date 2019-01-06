@@ -86,6 +86,8 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         private const val PARAM_KEY_SORTING_MODE = "sorting_mode"
         private const val PARAM_KEY_FILTER = "filter"
         private const val PARAM_KEY_QUERY = "query"
+        private const val PARAM_KEY_SEARCH_IN_SONGS = "search_in_songs"
+        private const val PARAM_KEY_SEARCH_IN_COLLECTIONS = "search_in_collections"
         private const val PARAM_KEY_SEARCH_IN_ARTISTS = "search_in_artists"
         private const val PARAM_KEY_SEARCH_IN_TITLES = "search_in_titles"
         private const val PARAM_KEY_SEARCH_IN_DESCRIPTIONS = "search_in_descriptions"
@@ -227,9 +229,11 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
         PARAM_KEY_SONG_COUNT to songCount.toString()
     )
 
-    fun onHomeSearchQueryChanged(query: String) = trackAnalyticsEvent(
+    fun onHomeSearchQueryChanged(query: String, shouldSearchInSongs: Boolean, shouldSearchInCollections: Boolean) = trackAnalyticsEvent(
         EVENT_HOME_SEARCH_QUERY_CHANGED,
-        PARAM_KEY_QUERY to query
+        PARAM_KEY_QUERY to query,
+        PARAM_KEY_SEARCH_IN_SONGS to if (shouldSearchInSongs) PARAM_VALUE_ON else PARAM_VALUE_OFF,
+        PARAM_KEY_SEARCH_IN_COLLECTIONS to if (shouldSearchInCollections) PARAM_VALUE_ON else PARAM_VALUE_OFF
     )
 
     fun onCollectionsSearchQueryChanged(query: String, shouldSearchInTitles: Boolean, shouldSearchInDescriptions: Boolean) = trackAnalyticsEvent(

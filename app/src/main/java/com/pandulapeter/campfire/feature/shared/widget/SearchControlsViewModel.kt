@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.feature.main.songs
+package com.pandulapeter.campfire.feature.shared.widget
 
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
@@ -63,5 +63,9 @@ class SearchControlsViewModel(
 
     enum class Type {
         HOME, COLLECTIONS, SONGS
+    }
+
+    companion object {
+        const val COMPOUND_BUTTON_LONG_TRANSITION_DELAY = 300L
     }
 }

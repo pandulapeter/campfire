@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemView
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.InteractionBlocker
+import com.pandulapeter.campfire.feature.shared.widget.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.UI
@@ -56,6 +57,11 @@ class HomeViewModel(
     var randomSongs = listOf<Song>()
     var displayedRandomSongs = listOf<Song>()
     var firstRandomSongIndex = 0
+    val searchControlsViewModel = SearchControlsViewModel(
+        preferenceDatabase,
+        SearchControlsViewModel.Type.HOME,
+        interactionBlocker
+    )
     val shouldOpenSecondaryNavigationDrawer = MutableLiveData<Boolean?>()
     val state = mutableLiveDataOf(StateLayout.State.LOADING)
     val isLoading = mutableLiveDataOf(true)
@@ -67,6 +73,22 @@ class HomeViewModel(
     val changeEvent = MutableLiveData<Pair<Int, RecyclerAdapter.Payload>?>()
     private var lastErrorTimestamp = 0L
     private var isFirstLoadingDone = false
+    var shouldSearchInSongs = preferenceDatabase.isSearchInSongsEnabled
+        set(value) {
+            if (field != value) {
+                field = value
+                updateAdapterItems(false, true)
+                trackSearchEvent()
+            }
+        }
+    var shouldSearchInCollections = preferenceDatabase.isSearchInCollectionsEnabled
+        set(value) {
+            if (field != value) {
+                field = value
+                updateAdapterItems(false, true)
+                trackSearchEvent()
+            }
+        }
     var shouldShowSongOfTheDay = preferenceDatabase.shouldShowSongOfTheDay
         set(value) {
             if (field != value) {
@@ -132,9 +154,7 @@ class HomeViewModel(
             if (field != value) {
                 field = value
                 updateAdapterItems(false, true)
-                if (value.isNotEmpty()) {
-                    analyticsManager.onHomeSearchQueryChanged(query)
-                }
+                trackSearchEvent()
                 shouldEnableEraseButton.value = query.isNotEmpty()
             }
         }
@@ -388,11 +408,15 @@ class HomeViewModel(
 
             // Add results.
             if (matchingSongs.isNotEmpty()) {
-                add(HeaderItemViewModel(context.getString(R.string.main_songs)))
+                if (shouldSearchInCollections) {
+                    add(HeaderItemViewModel(context.getString(R.string.main_songs)))
+                }
                 addAll(matchingSongs)
             }
             if (matchingCollections.isNotEmpty()) {
-                add(HeaderItemViewModel(context.getString(R.string.main_collections)))
+                if (shouldSearchInSongs) {
+                    add(HeaderItemViewModel(context.getString(R.string.main_collections)))
+                }
                 addAll(matchingCollections)
             }
         } else {
@@ -493,6 +517,12 @@ class HomeViewModel(
         }
     }
 
+    private fun trackSearchEvent() {
+        if (query.isNotEmpty()) {
+            analyticsManager.onHomeSearchQueryChanged(query, shouldSearchInSongs, shouldSearchInCollections)
+        }
+    }
+
     private fun refreshRandomCollections() {
         randomCollections = listOf()
         updateAdapterItems(false, false)
@@ -504,7 +534,7 @@ class HomeViewModel(
         updateAdapterItems(false, false)
     }
 
-    private fun Sequence<Song>.filterSongsByQuery() =
+    private fun Sequence<Song>.filterSongsByQuery() = if (shouldSearchInSongs) {
         query.trim().normalize().let { query ->
             filter {
                 it.getNormalizedTitle().contains(query, true) || it.getNormalizedArtist().contains(query, true)
@@ -513,8 +543,9 @@ class HomeViewModel(
                 .sortedByDescending { it.getNormalizedArtist().startsWith(query, true) }
                 .sortedByDescending { it.getNormalizedTitle().startsWith(query, true) }
         }
+    } else sequenceOf()
 
-    private fun Sequence<Collection>.filterCollectionsByQuery() =
+    private fun Sequence<Collection>.filterCollectionsByQuery() = if (shouldSearchInCollections) {
         query.trim().normalize().let { query ->
             filter {
                 it.getNormalizedTitle().contains(query, true) || it.getNormalizedDescription().contains(query, true)
@@ -523,6 +554,7 @@ class HomeViewModel(
                 .sortedByDescending { it.getNormalizedDescription().startsWith(query, true) }
                 .sortedByDescending { it.getNormalizedTitle().startsWith(query, true) }
         }
+    } else sequenceOf()
 
     private fun Sequence<Collection>.filterCollectionsByLanguage() = filter { collection ->
         var shouldFilter = false

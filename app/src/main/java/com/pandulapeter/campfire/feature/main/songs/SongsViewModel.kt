@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderIt
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.InteractionBlocker
+import com.pandulapeter.campfire.feature.shared.widget.SearchControlsViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.mutableLiveDataOf
 import com.pandulapeter.campfire.util.normalize
@@ -36,7 +37,11 @@ class SongsViewModel(
     private val popularString = context.getString(R.string.popular_tag)
     var isTextInputVisible = false
     private val newString = context.getString(R.string.new_tag)
-    val searchControlsViewModel = SearchControlsViewModel(preferenceDatabase, SearchControlsViewModel.Type.SONGS, interactionBlocker)
+    val searchControlsViewModel = SearchControlsViewModel(
+        preferenceDatabase,
+        SearchControlsViewModel.Type.SONGS,
+        interactionBlocker
+    )
     val shouldOpenSecondaryNavigationDrawer = MutableLiveData<Boolean?>()
     val shouldUpdateSearchToggleDrawable = MutableLiveData<Boolean?>()
     val isFastScrollEnabled = mutableLiveDataOf(false)

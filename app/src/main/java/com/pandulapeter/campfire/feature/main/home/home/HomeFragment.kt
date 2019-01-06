@@ -3,12 +3,14 @@ package com.pandulapeter.campfire.feature.main.home.home
 import android.os.Build
 import android.os.Bundle
 import android.transition.Transition
+import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.CompoundButton
 import androidx.core.app.SharedElementCallback
+import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
@@ -16,12 +18,14 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.data.model.remote.Collection
 import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.databinding.FragmentHomeBinding
+import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
 import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetFragment
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
+import com.pandulapeter.campfire.feature.shared.widget.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -127,9 +131,33 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             viewModel.isSearchToggleVisible.observeAfterDelay {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
                 activity.transitionMode = true
+                binding.root.post {
+                    if (isAdded) {
+                        viewModel.searchControlsViewModel.isVisible.value = it
+                    }
+                }
+            }
+            viewModel.searchControlsViewModel.firstCheckbox.observe {
+                binding.root.postDelayed(
+                    { if (isAdded) viewModel.shouldSearchInSongs = it },
+                    SearchControlsViewModel.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
+                )
+            }
+            viewModel.searchControlsViewModel.secondCheckbox.observe {
+                binding.root.postDelayed(
+                    { if (isAdded) viewModel.shouldSearchInCollections = it },
+                    SearchControlsViewModel.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
+                )
             }
             viewModel.shouldOpenSecondaryNavigationDrawer.observeAndReset { getCampfireActivity()?.openSecondaryNavigationDrawer() }
             viewModel.languages.observeNotNull { languages ->
+                activity.updateAppBarView(
+                    DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(activity.toolbarContext), R.layout.view_search_controls, null, false).apply {
+                        viewModel = this@HomeFragment.viewModel.searchControlsViewModel
+                        setLifecycleOwner(viewLifecycleOwner)
+                    }.root,
+                    savedInstanceState != null
+                )
                 activity.enableSecondaryNavigationDrawer(R.menu.home)
                 initializeCompoundButton(R.id.song_of_the_day) { viewModel.shouldShowSongOfTheDay }
                 initializeCompoundButton(R.id.new_collections) { viewModel.shouldShowNewCollections }
@@ -171,6 +199,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                 eraseButton.isEnabled = it
             }
             savedInstanceState?.also {
+                viewModel.searchControlsViewModel.isVisible.value = savedInstanceState.isTextInputVisible
                 viewModel.buttonText.value = it.buttonText
                 wasLastTransitionForACollection = it.wasLastTransitionForACollection
                 viewModel.randomCollections = it.randomCollections

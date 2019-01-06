@@ -11,9 +11,9 @@ import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
-import com.pandulapeter.campfire.feature.main.songs.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.InteractionBlocker
+import com.pandulapeter.campfire.feature.shared.widget.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.UI
@@ -38,7 +38,11 @@ class CollectionsViewModel(
     private var coroutine: CoroutineContext? = null
     private var collections = sequenceOf<Collection>()
     private val newText = context.getString(R.string.new_tag)
-    val searchControlsViewModel = SearchControlsViewModel(preferenceDatabase, SearchControlsViewModel.Type.COLLECTIONS, interactionBlocker)
+    val searchControlsViewModel = SearchControlsViewModel(
+        preferenceDatabase,
+        SearchControlsViewModel.Type.COLLECTIONS,
+        interactionBlocker
+    )
     var isTextInputVisible = false
     val state = mutableLiveDataOf(StateLayout.State.LOADING)
     val isLoading = mutableLiveDataOf(false)

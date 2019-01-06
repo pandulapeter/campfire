@@ -14,6 +14,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
 import com.pandulapeter.campfire.feature.shared.behavior.TopLevelBehavior
+import com.pandulapeter.campfire.feature.shared.widget.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarTextInputView
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -146,16 +147,16 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
                 viewModel.shouldEnableEraseButton.value = savedInstanceState.isEraseButtonEnabled
             }
             toolbarTextInputView.textInput.requestFocus()
-            viewModel.searchControlsViewModel.secondCheckbox.observe {
-                binding.root.postDelayed(
-                    { if (isAdded) viewModel.shouldSearchInTitles = it },
-                    COMPOUND_BUTTON_LONG_TRANSITION_DELAY
-                )
-            }
             viewModel.searchControlsViewModel.firstCheckbox.observe {
                 binding.root.postDelayed(
+                    { if (isAdded) viewModel.shouldSearchInTitles = it },
+                    SearchControlsViewModel.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
+                )
+            }
+            viewModel.searchControlsViewModel.secondCheckbox.observe {
+                binding.root.postDelayed(
                     { if (isAdded) viewModel.shouldSearchInArtists = it },
-                    COMPOUND_BUTTON_LONG_TRANSITION_DELAY
+                    SearchControlsViewModel.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
                 )
             }
             activity.showPlayStoreRatingDialogIfNeeded()
@@ -246,6 +247,5 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         private var Bundle.searchQuery by BundleArgumentDelegate.String("searchQuery")
         private var Bundle.isEraseButtonVisible by BundleArgumentDelegate.Boolean("isEraseButtonVisible")
         private var Bundle.isEraseButtonEnabled by BundleArgumentDelegate.Boolean("isEraseButtonEnabled")
-        const val COMPOUND_BUTTON_LONG_TRANSITION_DELAY = 300L
     }
 }
