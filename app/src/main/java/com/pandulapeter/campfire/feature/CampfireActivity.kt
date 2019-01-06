@@ -92,6 +92,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     private var currentPlaylistId = ""
     private var currentCollectionId = ""
     private var currentScreenId = R.id.songs
+        set(value) {
+            field = value
+            binding.primaryNavigation.checkedItem?.isChecked = value != 0
+        }
     private val colorWhite by lazy { color(R.color.white) }
     private val playlistsContainerItem by lazy { binding.primaryNavigation.menu.findItem(R.id.playlists).subMenu }
     private val playlistIdMap = mutableMapOf<Int, String>()
@@ -842,7 +846,6 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         supportFragmentManager.clearBackStack()
         supportFragmentManager.handleReplace("${SharedWithYouFragment::class.java.simpleName}-${System.currentTimeMillis()}") { SharedWithYouFragment.newInstance(intent) }
         currentScreenId = 0
-        binding.primaryNavigation.checkedItem?.isChecked = false
         return AnalyticsManager.PARAM_VALUE_SCREEN_SHARED_WITH_YOU
     }
 

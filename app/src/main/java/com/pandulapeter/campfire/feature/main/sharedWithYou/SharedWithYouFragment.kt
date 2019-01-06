@@ -57,6 +57,7 @@ class SharedWithYouFragment : BaseSongListFragment<SharedWithYouViewModel>() {
         .getDynamicLink(arguments?.intent as Intent)
         .addOnSuccessListener(requireActivity()) { pendingDynamicLinkData ->
             var deepLink: Uri? = null
+            //TODO: Find a way to distinguish between parsing errors and invalid links.
             if (pendingDynamicLinkData != null) {
                 deepLink = pendingDynamicLinkData.link
             }
