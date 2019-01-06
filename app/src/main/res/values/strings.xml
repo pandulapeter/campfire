@@ -322,7 +322,6 @@
 
     <!-- Shared with you screen -->
     <string name="shared_with_you">Shared with you</string>
-    <string name="shared_with_you_empty_list">Empty list</string>
 
     <!-- Detail screen -->
     <string name="detail_song_options">Options</string>

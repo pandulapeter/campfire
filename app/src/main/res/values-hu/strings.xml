@@ -312,7 +312,6 @@
 
     <!-- Shared with you screen -->
     <string name="shared_with_you">Megosztották veled</string>
-    <string name="shared_with_you_empty_list">Üres lista</string>
 
     <!-- Detail screen -->
     <string name="detail_song_options">Opciók</string>

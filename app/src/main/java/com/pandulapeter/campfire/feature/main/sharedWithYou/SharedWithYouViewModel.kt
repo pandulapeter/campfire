@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListVi
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.InteractionBlocker
+import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.mutableLiveDataOf
 import com.pandulapeter.campfire.util.removePrefixes
@@ -32,13 +33,12 @@ class SharedWithYouViewModel(
             updateAdapterItems(true)
         }
     val songCount = mutableLiveDataOf(0)
-    val shouldOpenSongs = MutableLiveData<Boolean?>()
+    val shouldTryAgain = MutableLiveData<Boolean?>()
     override val screenName = AnalyticsManager.PARAM_VALUE_SCREEN_SHARED_WITH_YOU
-    override val placeholderText = R.string.shared_with_you_empty_list
-    override val buttonIcon = R.drawable.ic_songs
+    override val placeholderText = R.string.something_went_wrong
 
     init {
-        buttonText.value = R.string.go_to_songs
+        buttonText.value = R.string.try_again
     }
 
     override fun Sequence<Song>.createViewModels() = songIds
@@ -48,11 +48,13 @@ class SharedWithYouViewModel(
         .toList()
 
     override fun onListUpdated(items: List<ItemViewModel>) {
-        super.onListUpdated(items)
+        if (songIds.isNotEmpty()) {
+            state.value = if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL
+        }
         songCount.value = items.size
     }
 
     override fun onActionButtonClicked() {
-        shouldOpenSongs.value = true
+        shouldTryAgain.value = true
     }
 }

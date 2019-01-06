@@ -207,7 +207,6 @@ abstract class BaseSongListViewModel(
 
     protected abstract fun Sequence<Song>.createViewModels(): List<ItemViewModel>
 
-    @CallSuper
     protected open fun onListUpdated(items: List<ItemViewModel>) {
         state.value = if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL
     }
