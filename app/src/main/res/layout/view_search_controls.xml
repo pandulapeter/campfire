@@ -31,19 +31,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/content_padding"
-            android:checked="@={viewModel.searchInTitles}"
+            android:checked="@={viewModel.firstCheckbox}"
             android:ellipsize="end"
             android:lines="1"
-            android:text="@string/songs_search_in_titles" />
+            android:text="@{viewModel.firstCheckboxName}" />
 
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/content_padding"
-            android:checked="@={viewModel.searchInArtists}"
+            android:checked="@={viewModel.secondCheckbox}"
             android:ellipsize="end"
             android:lines="1"
-            android:text="@{viewModel.isForCollections ? @string/collections_search_in_descriptions :  @string/songs_search_in_artists}"
+            android:text="@{viewModel.secondCheckboxName}"
             tools:text="@string/songs_search_in_artists" />
 
     </LinearLayout>

@@ -105,8 +105,8 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                 if (languages != null) {
                     activity.updateAppBarView(
                         DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(activity.toolbarContext), R.layout.view_search_controls, null, false).apply {
-                            setLifecycleOwner(viewLifecycleOwner)
                             viewModel = this@CollectionsFragment.viewModel.searchControlsViewModel
+                            setLifecycleOwner(viewLifecycleOwner)
                         }.root,
                         savedInstanceState != null
                     )
@@ -176,13 +176,13 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                     message = R.string.collections_update_error,
                     action = { viewModel.updateData() })
             }
-            viewModel.searchControlsViewModel.searchInTitles.observe {
+            viewModel.searchControlsViewModel.secondCheckbox.observe {
                 binding.root.postDelayed(
                     { if (isAdded) viewModel.shouldSearchInTitles = it },
                     SongsFragment.COMPOUND_BUTTON_LONG_TRANSITION_DELAY
                 )
             }
-            viewModel.searchControlsViewModel.searchInArtists.observe {
+            viewModel.searchControlsViewModel.firstCheckbox.observe {
                 binding.root.postDelayed(
                     { if (isAdded) viewModel.shouldSearchInDescriptions = it },
                     SongsFragment.COMPOUND_BUTTON_LONG_TRANSITION_DELAY

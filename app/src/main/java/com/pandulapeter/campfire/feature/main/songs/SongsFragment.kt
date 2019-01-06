@@ -82,8 +82,8 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
                 if (languages != null) {
                     activity.updateAppBarView(
                         DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(activity.toolbarContext), R.layout.view_search_controls, null, false).apply {
-                            setLifecycleOwner(viewLifecycleOwner)
                             viewModel = this@SongsFragment.viewModel.searchControlsViewModel
+                            setLifecycleOwner(viewLifecycleOwner)
                         }.root,
                         savedInstanceState != null
                     )
@@ -146,13 +146,13 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
                 viewModel.shouldEnableEraseButton.value = savedInstanceState.isEraseButtonEnabled
             }
             toolbarTextInputView.textInput.requestFocus()
-            viewModel.searchControlsViewModel.searchInTitles.observe {
+            viewModel.searchControlsViewModel.secondCheckbox.observe {
                 binding.root.postDelayed(
                     { if (isAdded) viewModel.shouldSearchInTitles = it },
                     COMPOUND_BUTTON_LONG_TRANSITION_DELAY
                 )
             }
-            viewModel.searchControlsViewModel.searchInArtists.observe {
+            viewModel.searchControlsViewModel.firstCheckbox.observe {
                 binding.root.postDelayed(
                     { if (isAdded) viewModel.shouldSearchInArtists = it },
                     COMPOUND_BUTTON_LONG_TRANSITION_DELAY

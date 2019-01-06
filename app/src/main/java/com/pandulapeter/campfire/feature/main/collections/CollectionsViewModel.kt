@@ -38,7 +38,7 @@ class CollectionsViewModel(
     private var coroutine: CoroutineContext? = null
     private var collections = sequenceOf<Collection>()
     private val newText = context.getString(R.string.new_tag)
-    val searchControlsViewModel = SearchControlsViewModel(preferenceDatabase, true, interactionBlocker)
+    val searchControlsViewModel = SearchControlsViewModel(preferenceDatabase, SearchControlsViewModel.Type.COLLECTIONS, interactionBlocker)
     var isTextInputVisible = false
     val state = mutableLiveDataOf(StateLayout.State.LOADING)
     val isLoading = mutableLiveDataOf(false)

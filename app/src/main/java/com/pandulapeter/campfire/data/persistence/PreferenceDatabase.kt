@@ -47,6 +47,8 @@ class PreferenceDatabase(context: Context) {
     var shouldShowNewSongs by PreferenceFieldDelegate.Boolean("shouldShowNewSongs", true)
     var shouldShowRandomCollections by PreferenceFieldDelegate.Boolean("shouldShowRandomCollections", true)
     var shouldShowRandomSongs by PreferenceFieldDelegate.Boolean("shouldShowRandomSongs", true)
+    var isSearchInSongsEnabled by PreferenceFieldDelegate.Boolean("isSearchInSongsEnabled", true)
+    var isSearchInCollectionsEnabled by PreferenceFieldDelegate.Boolean("isSearchInCollectionsEnabled", true)
 
     // Collections
     var lastCollectionsUpdateTimestamp by PreferenceFieldDelegate.Long("lastCollectionsUpdateTimestamp")
