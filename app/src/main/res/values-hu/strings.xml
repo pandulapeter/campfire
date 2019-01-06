@@ -14,7 +14,7 @@
     <string name="filter_by_type">Szűrés típus szerint</string>
     <string name="show_explicit">Explicit szövegek</string>
     <string name="filter_by_language">Szűrés nyelv szerint</string>
-    <string name="something_went_wrong">Valami elromlott</string>
+    <string name="something_went_wrong">Hiba történt. Ellenőrízd az internetkapcsolatot</string>
     <string name="generating_link">Hivatkozás készítése…</string>
 
     <!-- Supported languages -->
@@ -70,7 +70,6 @@
     <string name="content_language_explicit_switch">Explicit szövegű dalok megjelenítése</string>
     <string name="content_language_explicit_switch_enabled">Az explicit szövegű dalok megjelenhetnek</string>
     <string name="content_language_explicit_switch_disabled">Az explicit szövegű dalok kiszűrve</string>
-    <string name="content_language_initializing_error">Hiba történt a nyelvek betöltése közben</string>
 
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>
@@ -93,7 +92,6 @@
 
     <!-- Home screen -->
     <string name="home_placeholder">Nincs megjeleníthető tartalom. Ellenőrizd a beállított szűrőket</string>
-    <string name="home_update_error">Hiba történt a kezdőképernyő frissítése közben</string>
     <string name="home_search">Keresés</string>
     <string name="home_modules">Modulok</string>
     <string name="home_song_of_the_day">A nap dala</string>
@@ -104,7 +102,6 @@
 
     <!-- Collections screen -->
     <string name="collections_placeholder">Nem található megfelelő gyűjtemény. Ellenőrizd a beállított szűrőket</string>
-    <string name="collections_update_error">Hiba történt a gyűjtemények frissítése közben</string>
     <string name="collections_search">Gyújtemény keresése</string>
     <string name="collections_sort_by">Rendezés</string>
     <string name="collections_sort_by_title">Cím</string>
@@ -115,7 +112,6 @@
 
     <!-- Songs screen -->
     <string name="songs_placeholder">Nem található megfelelő dal. Ellenőrizd a beállított szűrőket</string>
-    <string name="songs_update_error">Hiba történt a dalok frissítése közben</string>
     <string name="songs_song_download_error">Hiba történt a dal letöltése közben: \"%s\"</string>
     <string name="songs_search">Dal keresése</string>
     <string name="songs_close">Bezárás</string>

@@ -15,7 +15,7 @@
     <string name="filter_by_type">Filter by type</string>
     <string name="show_explicit">Explicit lyrics</string>
     <string name="filter_by_language">Filter by language</string>
-    <string name="something_went_wrong">Something went wrong</string>
+    <string name="something_went_wrong">Something went wrong. Check your internet connection</string>
     <string name="generating_link">Generating link…</string>
 
     <!-- Supported languages -->
@@ -71,7 +71,6 @@
     <string name="content_language_explicit_switch">Show songs with explicit lyrics</string>
     <string name="content_language_explicit_switch_enabled">Explicit songs can appear</string>
     <string name="content_language_explicit_switch_disabled">Explicit songs are hidden</string>
-    <string name="content_language_initializing_error">Something went wrong while trying to load the list of languages</string>
 
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>
@@ -94,7 +93,6 @@
 
     <!-- Home screen -->
     <string name="home_placeholder">No content to display. Double-check the filters you set up</string>
-    <string name="home_update_error">Something went wrong while updating the home screen</string>
     <string name="home_search">Search</string>
     <string name="home_modules">Modules</string>
     <string name="home_song_of_the_day">Song of the day</string>
@@ -105,7 +103,6 @@
 
     <!-- Collections screen -->
     <string name="collections_placeholder">No matching collections found. Double-check the filters you set up</string>
-    <string name="collections_update_error">Something went wrong while updating collections</string>
     <string name="collections_search">Collection search</string>
     <string name="collections_sort_by">Sort by</string>
     <string name="collections_sort_by_title">Title</string>
@@ -116,7 +113,6 @@
 
     <!-- Songs screen -->
     <string name="songs_placeholder">No matching songs found. Double-check the filters you set up</string>
-    <string name="songs_update_error">Something went wrong while updating the songs</string>
     <string name="songs_song_download_error">Error downloading \"%s\"</string>
     <string name="songs_search">Song search</string>
     <string name="songs_close">Close</string>

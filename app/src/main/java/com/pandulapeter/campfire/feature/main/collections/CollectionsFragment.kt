@@ -185,7 +185,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             toolbarTextInputView.textInput.requestFocus()
             viewModel.shouldShowUpdateErrorSnackbar.observeAndReset {
                 showSnackbar(
-                    message = R.string.collections_update_error,
+                    message = R.string.something_went_wrong,
                     action = { viewModel.updateData() })
             }
             viewModel.searchControlsViewModel.firstCheckbox.observe {

@@ -219,7 +219,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             toolbarTextInputView.textInput.requestFocus()
             viewModel.shouldShowUpdateErrorSnackbar.observeAndReset {
                 showSnackbar(
-                    message = R.string.home_update_error,
+                    message = R.string.something_went_wrong,
                     action = { viewModel.updateData() })
             }
             viewModel.downloadSongError.observeAndReset { song ->

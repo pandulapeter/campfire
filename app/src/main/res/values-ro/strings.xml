@@ -14,7 +14,7 @@
     <string name="filter_by_type">Filtrează după tip</string>
     <string name="show_explicit">Versuri explicite</string>
     <string name="filter_by_language">Filtrare după limbă</string>
-    <string name="something_went_wrong">Ceva s-a stricat</string>
+    <string name="something_went_wrong">A intervenit o eroare. Verifică conexiunea la internet</string>
     <string name="generating_link">Generarea linkului…</string>
 
     <!-- Supported languages -->
@@ -70,7 +70,6 @@
     <string name="content_language_explicit_switch">Afișarea pieselor cu limbaj explicit</string>
     <string name="content_language_explicit_switch_enabled">Pot apărea cântece cu limbaj explicit</string>
     <string name="content_language_explicit_switch_disabled">Cântecele cu limbaj explicit nu apar</string>
-    <string name="content_language_initializing_error">A intervenit o eroare la descărcarea limbilor</string>
 
     <!-- Main screen -->
     <string name="main_version_pattern">v%s</string>
@@ -93,7 +92,6 @@
 
     <!-- Home screen -->
     <string name="home_placeholder">Conținutul nu este disponibil. Te rog să verifici filtrele</string>
-    <string name="home_update_error">A intervenit o eroare la actualizarea paginei de start</string>
     <string name="home_search">Căutare</string>
     <string name="home_modules">Module</string>
     <string name="home_song_of_the_day">Piesa zilei</string>
@@ -104,7 +102,6 @@
 
     <!-- Collections screen -->
     <string name="collections_placeholder">Nu s-au găsit colecții pentru criteriile de căutare. Te rog să verifici filtrele</string>
-    <string name="collections_update_error">A intervenit o eroare la actualizarea colecțiilor</string>
     <string name="collections_search">Căutare în colecții</string>
     <string name="collections_sort_by">Sortează după</string>
     <string name="collections_sort_by_title">Titlu</string>
@@ -115,7 +112,6 @@
 
     <!-- Songs screen -->
     <string name="songs_placeholder">Nu s-au găsit piese pentru criteriile de căutare. Te rog să verifici filtrele</string>
-    <string name="songs_update_error">A intervenit o eroare la actualizarea pieselor</string>
     <string name="songs_song_download_error">A intervenit o eroare la descărcarea piesei \"%s\"</string>
     <string name="songs_search">Căutare în piese</string>
     <string name="songs_close">Închidere</string>

@@ -63,7 +63,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/content_language_initializing_error" />
+                    android:text="@string/something_went_wrong" />
 
             </ViewSwitcher>
 

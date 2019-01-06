@@ -91,7 +91,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
         }
         viewModel.shouldShowUpdateErrorSnackbar.observeAndReset {
             showSnackbar(
-                message = R.string.songs_update_error,
+                message = R.string.something_went_wrong,
                 action = { viewModel.updateData() })
         }
         viewModel.downloadSongError.observeAndReset { song ->
