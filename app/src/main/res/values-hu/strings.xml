@@ -15,6 +15,7 @@
     <string name="show_explicit">Explicit szövegek</string>
     <string name="filter_by_language">Szűrés nyelv szerint</string>
     <string name="something_went_wrong">Valami elromlott</string>
+    <string name="generating_link">Hivatkozás készítése…</string>
 
     <!-- Supported languages -->
     <string name="language_english">Angol</string>

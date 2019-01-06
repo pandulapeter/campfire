@@ -4,7 +4,6 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
-import android.net.Uri
 import android.os.Bundle
 import android.transition.Transition
 import android.view.LayoutInflater
@@ -35,6 +34,7 @@ import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.integration.toDeepLinkUri
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
@@ -247,9 +247,16 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     protected fun shareSongs(songIds: List<String>) {
+        showSnackbar(R.string.generating_link)
         FirebaseDynamicLinks.getInstance().createDynamicLink()
-            .setLink(Uri.parse("https://play.google.com/store/apps/details?id=com.pandulapeter.campfire"))
+            .setLink(songIds.toDeepLinkUri())
             .setDomainUriPrefix("https://campfire.page.link")
+            .setSocialMetaTagParameters(
+                DynamicLink.SocialMetaTagParameters.Builder()
+                    .setTitle(getString(R.string.campfire))
+                    .setDescription(resources.getQuantityString(R.plurals.playlist_song_count, songIds.size, songIds.size))
+                    .build()
+            )
             .setAndroidParameters(
                 DynamicLink.AndroidParameters.Builder()
                     .setMinimumVersion(23)
@@ -259,6 +266,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
             .addOnSuccessListener { result ->
                 val shortLink = result.shortLink
                 try {
+                    snackbar?.dismiss()
                     startActivity(
                         Intent.createChooser(
                             Intent().apply {

@@ -101,7 +101,8 @@ class AboutViewModel(
 
     companion object {
         private const val GIT_HUB_URL = "https://github.com/pandulapeter/campfire-android"
-        const val PLAY_STORE_URL = "market://details?id=com.pandulapeter.campfire"
+        const val APP_ID = "com.pandulapeter.campfire"
+        const val PLAY_STORE_URL = "market://details?id=$APP_ID"
         const val TERMS_AND_CONDITIONS_URL = "https://campfire-test1.herokuapp.com/v1/terms-and-conditions"
         const val PRIVACY_POLICY_URL = "https://campfire-test1.herokuapp.com/v1/privacy-policy"
         const val OPEN_SOURCE_LICENSES_URL = "https://campfire-test1.herokuapp.com/v1/open-source-licenses"

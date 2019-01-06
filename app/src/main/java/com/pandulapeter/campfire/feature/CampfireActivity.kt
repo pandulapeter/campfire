@@ -65,6 +65,7 @@ import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.NewPlaylistDialogFragment
 import com.pandulapeter.campfire.integration.AnalyticsManager
+import com.pandulapeter.campfire.integration.fromDeepLinkUri
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.IntentExtraDelegate
 import com.pandulapeter.campfire.util.addDrawerListener
@@ -612,6 +613,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     private fun handleNewIntent() {
+        startScreenFromIntent()
         FirebaseDynamicLinks.getInstance()
             .getDynamicLink(intent)
             .addOnSuccessListener(this) { pendingDynamicLinkData ->
@@ -620,16 +622,13 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 if (pendingDynamicLinkData != null) {
                     deepLink = pendingDynamicLinkData.link
                 }
-                if (deepLink == null) {
-                    startScreenFromIntent()
-                } else {
-                    Log.d("DEEPLINK", "New link with data: $deepLink")
+                if (deepLink != null) {
+                    Log.d("DEEPLINK", "New link with data:")
+                    deepLink.toString().fromDeepLinkUri().forEach {
+                        Log.d("DEEPLINK", "  - Song: $it")
+                    }
                     //TODO
                 }
-            }
-            .addOnFailureListener(this) { e ->
-                Log.e("DEEPLINK", "getDynamicLink:onFailure: ${e.localizedMessage}")
-                startScreenFromIntent()
             }
     }
 
