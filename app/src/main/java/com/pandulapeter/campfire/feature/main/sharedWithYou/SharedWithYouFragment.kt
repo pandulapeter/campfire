@@ -9,9 +9,11 @@ import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
+import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.fromDeepLinkUri
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
+import com.pandulapeter.campfire.util.visibleOrGone
 import com.pandulapeter.campfire.util.withArguments
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -19,16 +21,33 @@ class SharedWithYouFragment : BaseSongListFragment<SharedWithYouViewModel>() {
 
     override val shouldSendMultipleSongs = true
     override val viewModel by viewModel<SharedWithYouViewModel>()
+    private val shareButton: ToolbarButton by lazy {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_share) {
+            viewModel.songIds.let { songIds ->
+                analyticsManager.onShareButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_SHARED_WITH_YOU, songIds.size)
+                shareSongs(songIds)
+            }
+        }.apply { visibleOrGone = false }
+    }
+    private val shuffleButton: ToolbarButton by lazy {
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_shuffle) {
+            shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_SHARED_WITH_YOU)
+        }.apply { visibleOrGone = false }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS)
         binding.swipeRefreshLayout.isEnabled = false
         updateToolbarTitle(viewModel.songCount.value ?: 0)
-        getCampfireActivity()?.updateToolbarButtons(listOf())
+        getCampfireActivity()?.updateToolbarButtons(listOf(shuffleButton, shareButton))
         viewModel.shouldOpenSongs.observeAndReset { getCampfireActivity()?.openSongsScreen() }
         viewModel.state.observe { updateToolbarTitle(viewModel.songCount.value ?: 0) }
-        viewModel.songCount.observe { updateToolbarTitle(it) }
+        viewModel.songCount.observe {
+            updateToolbarTitle(it)
+            shuffleButton.visibleOrGone = it > 1
+            shareButton.visibleOrGone = it > 0
+        }
         FirebaseDynamicLinks.getInstance()
             .getDynamicLink(arguments?.intent as Intent)
             .addOnSuccessListener(requireActivity()) { pendingDynamicLinkData ->
