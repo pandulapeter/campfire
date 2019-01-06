@@ -15,6 +15,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.transition.Explode
+import android.util.Log
 import android.view.Gravity
 import android.view.SubMenu
 import android.view.View
@@ -611,22 +612,31 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     private fun handleNewIntent() {
-        startScreenFromIntent()
-        FirebaseDynamicLinks.getInstance()
-            .getDynamicLink(intent)
-            .addOnSuccessListener(this) { pendingDynamicLinkData ->
-                // Get deep link from result (may be null if no link is found)
-                var deepLink: Uri? = null
-                if (pendingDynamicLinkData != null) {
-                    deepLink = pendingDynamicLinkData.link
-                }
-                if (deepLink != null) {
-                    val songIds = deepLink.toString().fromDeepLinkUri()
-                    if (songIds.isNotEmpty()) {
-                        openSharedWithYouScreen(songIds)
+        if (viewModel.preferenceDatabase.isOnboardingDone && intent?.extras?.isEmpty != true && intent?.screenToOpen?.isEmpty() == true) {
+            FirebaseDynamicLinks.getInstance()
+                .getDynamicLink(intent)
+                .addOnSuccessListener(this) { pendingDynamicLinkData ->
+                    // Get deep link from result (may be null if no link is found)
+                    var deepLink: Uri? = null
+                    if (pendingDynamicLinkData != null) {
+                        deepLink = pendingDynamicLinkData.link
                     }
+                    if (deepLink != null) {
+                        val songIds = deepLink.toString().fromDeepLinkUri()
+                        if (songIds.isNotEmpty()) {
+                            openSharedWithYouScreen(songIds)
+                            return@addOnSuccessListener
+                        }
+                    }
+                    startScreenFromIntent()
                 }
-            }
+                .addOnFailureListener {
+                    Log.d("DEEPLINK", "Parsing error: ${it.localizedMessage}")
+                    startScreenFromIntent()
+                }
+        } else {
+            startScreenFromIntent()
+        }
     }
 
     private fun startScreenFromIntent() {
@@ -634,7 +644,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             if (intent.screenToOpen.isEmpty()) {
                 return
             } else {
-                supportFragmentManager.popBackStackImmediate()
+                supportFragmentManager.clearBackStack()
             }
         }
         var isFromAppShortcut = true
