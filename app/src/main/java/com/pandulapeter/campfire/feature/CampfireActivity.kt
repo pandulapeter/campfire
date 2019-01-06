@@ -757,7 +757,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         return AnalyticsManager.PARAM_VALUE_SCREEN_OPTIONS
     }
 
-    fun openPlaylistScreen(playlistId: String): String {
+    private fun openPlaylistScreen(playlistId: String): String {
         if (currentFragment !is PlaylistFragment || currentPlaylistId != playlistId) {
             supportFragmentManager.clearBackStack()
             playlistIdMap.forEach {

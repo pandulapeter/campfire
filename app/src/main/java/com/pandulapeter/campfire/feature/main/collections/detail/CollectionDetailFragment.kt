@@ -25,7 +25,6 @@ import org.koin.core.parameter.parametersOf
 class CollectionDetailFragment : BaseSongListFragment<CollectionDetailViewModel>() {
 
     override val shouldSendMultipleSongs = true
-    override val shouldShowManagePlaylist = true
     override val viewModel by viewModel<CollectionDetailViewModel> {
         parametersOf((arguments?.collection as? Collection) ?: throw IllegalStateException("No Collection specified."))
     }

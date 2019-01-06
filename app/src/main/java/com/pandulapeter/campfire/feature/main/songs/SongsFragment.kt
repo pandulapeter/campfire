@@ -26,8 +26,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
 class SongsFragment : BaseSongListFragment<SongsViewModel>() {
-    override val shouldSendMultipleSongs = false
-    override val shouldShowManagePlaylist = true
+
     override val viewModel by viewModel<SongsViewModel>()
     override val topLevelBehavior by lazy {
         TopLevelBehavior(

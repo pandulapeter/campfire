@@ -19,10 +19,9 @@ import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class HistoryFragment : BaseSongListFragment<HistoryViewModel>(), BaseDialogFragment.OnDialogItemSelectedListener {
+
     private val firstTimeUserExperienceManager by inject<FirstTimeUserExperienceManager>()
     override val viewModel by viewModel<HistoryViewModel>()
-    override val shouldSendMultipleSongs = false
-    override val shouldShowManagePlaylist = true
     private val deleteAllButton by lazy {
         getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_delete) {
             AlertDialogFragment.show(

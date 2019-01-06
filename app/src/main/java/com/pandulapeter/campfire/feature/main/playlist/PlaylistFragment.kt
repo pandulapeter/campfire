@@ -54,6 +54,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
             shuffleSongs(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST)
         }.apply { visibleOrGone = false }
     }
+    override val canOpenDetailScreen get() = viewModel.isInEditMode.value != true
     private val toolbarTextInputView by lazy {
         if (arguments?.playlistId == Playlist.FAVORITES_ID) null else ToolbarTextInputView(
             getCampfireActivity()!!.toolbarContext,
