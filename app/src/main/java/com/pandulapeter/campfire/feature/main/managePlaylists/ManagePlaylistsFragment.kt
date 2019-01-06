@@ -78,7 +78,7 @@ class ManagePlaylistsFragment : CampfireFragment<FragmentManagePlaylistsBinding,
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
 
             override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) =
-                if (viewHolder.adapterPosition > 0)
+                if (viewHolder.adapterPosition > 0 && !binding.recyclerView.isAnimating)
                     makeMovementFlags(
                         if (viewModel.adapter.itemCount > 2) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
                         ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT

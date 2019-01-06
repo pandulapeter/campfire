@@ -14,15 +14,7 @@ abstract class ElevationItemTouchHelperCallback(
     private var isElevated = false
     private var originalElevation = 0f
 
-    override fun onChildDraw(
-        canvas: Canvas,
-        recyclerView: RecyclerView,
-        viewHolder: RecyclerView.ViewHolder,
-        dX: Float,
-        dY: Float,
-        actionState: Int,
-        isCurrentlyActive: Boolean
-    ) {
+    override fun onChildDraw(canvas: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
         super.onChildDraw(canvas, recyclerView, viewHolder, dX, dY, actionState, false)
         if (isCurrentlyActive && !isElevated) {
             updateElevation(recyclerView, viewHolder, true)

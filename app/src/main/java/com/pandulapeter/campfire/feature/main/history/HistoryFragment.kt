@@ -52,7 +52,7 @@ class HistoryFragment : BaseSongListFragment<HistoryViewModel>(), BaseDialogFrag
 
             override fun getSwipeDirs(recyclerView: androidx.recyclerview.widget.RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
                 viewHolder.adapterPosition.let { position ->
-                    if (position != RecyclerView.NO_POSITION && viewModel.adapter.items[position] is SongItemViewModel) {
+                    if (position != RecyclerView.NO_POSITION && viewModel.adapter.items[position] is SongItemViewModel && !binding.recyclerView.isAnimating) {
                         return ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     }
                 }

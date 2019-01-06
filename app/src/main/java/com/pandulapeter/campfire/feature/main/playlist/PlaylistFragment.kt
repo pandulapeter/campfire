@@ -116,30 +116,25 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
 
             override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) =
-                if (viewModel.isInEditMode.value == true)
+                if (viewModel.isInEditMode.value == true && !binding.recyclerView.isAnimating)
                     makeMovementFlags(
                         if (viewModel.adapter.itemCount > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
                         ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     ) else 0
 
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ) =
-                consume {
-                    viewHolder.adapterPosition.let { originalPosition ->
-                        target.adapterPosition.let { targetPosition ->
-                            if (viewModel.hasSongToDelete() || !firstTimeUserExperienceManager.playlistDragCompleted) {
-                                hideSnackbar()
-                            }
-                            firstTimeUserExperienceManager.playlistDragCompleted = true
-                            viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
-                            binding.root.postDelayed({ if (isAdded) showHintIfNeeded() }, 300)
-                            analyticsManager.onDragToRearrangeUsed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST)
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = consume {
+                viewHolder.adapterPosition.let { originalPosition ->
+                    target.adapterPosition.let { targetPosition ->
+                        if (viewModel.hasSongToDelete() || !firstTimeUserExperienceManager.playlistDragCompleted) {
+                            hideSnackbar()
                         }
+                        firstTimeUserExperienceManager.playlistDragCompleted = true
+                        viewModel.swapSongsInPlaylist(originalPosition, targetPosition)
+                        binding.root.postDelayed({ if (isAdded) showHintIfNeeded() }, 300)
+                        analyticsManager.onDragToRearrangeUsed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST)
                     }
                 }
+            }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 viewHolder.adapterPosition.let { position ->
