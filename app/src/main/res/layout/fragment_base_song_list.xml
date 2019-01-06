@@ -94,8 +94,7 @@
                     android:paddingStart="@dimen/keyline_margin"
                     android:paddingTop="@dimen/content_padding"
                     android:paddingEnd="0dp"
-                    android:paddingBottom="@dimen/list_bottom_margin"
-                    app:adapter="@{viewModel.adapter}" />
+                    android:paddingBottom="@dimen/list_bottom_margin" />
 
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

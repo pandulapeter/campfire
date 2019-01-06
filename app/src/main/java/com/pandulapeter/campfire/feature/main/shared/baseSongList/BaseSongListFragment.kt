@@ -113,6 +113,7 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
         linearLayoutManager = DisableScrollLinearLayoutManager(requireContext()).apply { interactionBlocker = viewModel.interactionBlocker }
         binding.recyclerView.run {
             layoutManager = linearLayoutManager
+            adapter = viewModel.adapter
             setHasFixedSize(true)
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {

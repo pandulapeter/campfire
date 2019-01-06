@@ -20,6 +20,8 @@ import com.pandulapeter.campfire.databinding.FragmentCollectionsBinding
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
 import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.behavior.TopLevelBehavior
@@ -33,7 +35,9 @@ import com.pandulapeter.campfire.util.animatedDrawable
 import com.pandulapeter.campfire.util.color
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.onTextChanged
+import com.pandulapeter.campfire.util.removePrefixes
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
@@ -100,6 +104,14 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             }
             topLevelBehavior.onViewCreated(savedInstanceState)
             postponeEnterTransition()
+            recyclerAdapter.itemTitleCallback = {
+                when (it) {
+                    is HeaderItemViewModel -> it.title.normalize().removePrefixes()[0].toString()
+                    is CollectionItemViewModel -> it.collection.getNormalizedTitle().removePrefixes()[0].toString()
+                    is SongItemViewModel -> ""
+                    else -> ""
+                }
+            }
             viewModel.shouldOpenSecondaryNavigationDrawer.observeAndReset { getCampfireActivity()?.openSecondaryNavigationDrawer() }
             viewModel.languages.observe { languages ->
                 if (languages != null) {
@@ -197,6 +209,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                     }
                 }
             }
+            viewModel.isFastScrollEnabled.observe { binding.recyclerView.setFastScrollEnabled(it) }
             recyclerAdapter.apply {
                 collectionClickListener = { collection, clickedView, image ->
                     if (!isUiBlocked) {

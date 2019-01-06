@@ -55,6 +55,7 @@ class CollectionsViewModel(
     val isSwipeRefreshEnabled = mutableLiveDataOf(true)
     val shouldShowEraseButton = mutableLiveDataOf(false) { isSwipeRefreshEnabled.value = !it }
     val shouldEnableEraseButton = mutableLiveDataOf(false)
+    val isFastScrollEnabled = mutableLiveDataOf(false)
     val changeEvent = MutableLiveData<Pair<Int, RecyclerAdapter.Payload>?>()
     var query = ""
         set(value) {
@@ -156,6 +157,7 @@ class CollectionsViewModel(
         state.value = if (items.isEmpty()) StateLayout.State.ERROR else StateLayout.State.NORMAL
         if (collections.toList().isNotEmpty()) {
             buttonText.value = if (isTextInputVisible) 0 else R.string.filters
+            isFastScrollEnabled.value = sortingMode == SortingMode.TITLE
         }
     }
 
