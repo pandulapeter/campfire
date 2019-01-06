@@ -102,6 +102,9 @@ dependencies {
     // Analytics
     implementation "com.google.firebase:firebase-core:16.0.6"
 
+    // Deep linking
+    implementation "com.google.firebase:firebase-dynamic-links:16.1.5"
+
     // Crash reporting
     implementation "com.crashlytics.sdk.android:crashlytics:2.9.8"
 

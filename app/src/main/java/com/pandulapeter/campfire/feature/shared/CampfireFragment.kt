@@ -1,7 +1,10 @@
 package com.pandulapeter.campfire.feature.shared
 
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.content.res.Resources
+import android.net.Uri
 import android.os.Bundle
 import android.transition.Transition
 import android.view.LayoutInflater
@@ -24,6 +27,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.dynamiclinks.DynamicLink
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
+import com.google.firebase.dynamiclinks.ShortDynamicLink
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.feature.CampfireActivity
@@ -241,8 +247,30 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     }
 
     protected fun shareSongs(songIds: List<String>) {
-        //TODO: Implement share feature
-        showSnackbar("Sharing ${songIds.size} songs - Work in progress")
+        FirebaseDynamicLinks.getInstance().createDynamicLink()
+            .setLink(Uri.parse("https://play.google.com/store/apps/details?id=com.pandulapeter.campfire"))
+            .setDomainUriPrefix("https://campfire.page.link")
+            .setAndroidParameters(
+                DynamicLink.AndroidParameters.Builder()
+                    .setMinimumVersion(23)
+                    .build()
+            )
+            .buildShortDynamicLink(ShortDynamicLink.Suffix.SHORT)
+            .addOnSuccessListener { result ->
+                val shortLink = result.shortLink
+                try {
+                    startActivity(
+                        Intent.createChooser(
+                            Intent().apply {
+                                action = Intent.ACTION_SEND
+                                type = "text/plain"
+                            }.putExtra(Intent.EXTRA_TEXT, shortLink.toString()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), null
+                        )
+                    )
+                } catch (exception: ActivityNotFoundException) {
+                    showSnackbar(R.string.options_about_error)
+                }
+            }.addOnFailureListener { showSnackbar(R.string.something_went_wrong) }
     }
 
     protected inline fun <T> LiveData<T>.observe(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {

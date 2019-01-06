@@ -14,6 +14,7 @@
     <string name="filter_by_type">Szűrés típus szerint</string>
     <string name="show_explicit">Explicit szövegek</string>
     <string name="filter_by_language">Szűrés nyelv szerint</string>
+    <string name="something_went_wrong">Valami elromlott</string>
 
     <!-- Supported languages -->
     <string name="language_english">Angol</string>

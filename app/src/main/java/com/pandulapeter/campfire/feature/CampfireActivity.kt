@@ -11,9 +11,11 @@ import android.content.res.Resources
 import android.graphics.Paint
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.transition.Explode
+import android.util.Log
 import android.view.Gravity
 import android.view.SubMenu
 import android.view.View
@@ -37,6 +39,7 @@ import com.crashlytics.android.Crashlytics
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.internal.NavigationMenuView
 import com.google.android.material.navigation.NavigationView
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.jakewharton.processphoenix.ProcessPhoenix
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
@@ -609,6 +612,28 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     }
 
     private fun handleNewIntent() {
+        FirebaseDynamicLinks.getInstance()
+            .getDynamicLink(intent)
+            .addOnSuccessListener(this) { pendingDynamicLinkData ->
+                // Get deep link from result (may be null if no link is found)
+                var deepLink: Uri? = null
+                if (pendingDynamicLinkData != null) {
+                    deepLink = pendingDynamicLinkData.link
+                }
+                if (deepLink == null) {
+                    startScreenFromIntent()
+                } else {
+                    Log.d("DEEPLINK", "New link with data: $deepLink")
+                    //TODO
+                }
+            }
+            .addOnFailureListener(this) { e ->
+                Log.e("DEEPLINK", "getDynamicLink:onFailure: ${e.localizedMessage}")
+                startScreenFromIntent()
+            }
+    }
+
+    private fun startScreenFromIntent() {
         if (currentFragment is DetailFragment) {
             if (intent.screenToOpen.isEmpty()) {
                 return

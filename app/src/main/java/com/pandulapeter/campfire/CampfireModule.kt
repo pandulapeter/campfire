@@ -41,7 +41,6 @@ import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomSheetViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
-import com.pandulapeter.campfire.integration.DeepLinkManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.experimental.builder.viewModel
@@ -50,7 +49,6 @@ import org.koin.dsl.module.module
 
 val integrationModule = module {
     factory { AppShortcutManager(androidContext(), get(), get()) }
-    factory { DeepLinkManager() }
     factory { FirstTimeUserExperienceManager(get()) }
 }
 

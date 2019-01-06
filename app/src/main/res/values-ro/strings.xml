@@ -14,6 +14,7 @@
     <string name="filter_by_type">Filtrează după tip</string>
     <string name="show_explicit">Versuri explicite</string>
     <string name="filter_by_language">Filtrare după limbă</string>
+    <string name="something_went_wrong">Ceva s-a stricat</string>
 
     <!-- Supported languages -->
     <string name="language_english">Engleză</string>

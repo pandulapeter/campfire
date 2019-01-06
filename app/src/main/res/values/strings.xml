@@ -15,6 +15,7 @@
     <string name="filter_by_type">Filter by type</string>
     <string name="show_explicit">Explicit lyrics</string>
     <string name="filter_by_language">Filter by language</string>
+    <string name="something_went_wrong">Something went wrong</string>
 
     <!-- Supported languages -->
     <string name="language_english">English</string>
