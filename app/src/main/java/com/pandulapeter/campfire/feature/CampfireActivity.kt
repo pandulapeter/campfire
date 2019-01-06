@@ -607,8 +607,10 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
     }
 
+    fun wasStartedFromDeepLink() = intent?.action == Intent.ACTION_VIEW && intent?.screenToOpen?.isEmpty() == true
+
     private fun handleNewIntent() {
-        if (viewModel.preferenceDatabase.isOnboardingDone && intent?.action == Intent.ACTION_VIEW && intent?.screenToOpen?.isEmpty() == true) {
+        if (viewModel.preferenceDatabase.isOnboardingDone && wasStartedFromDeepLink()) {
             openSharedWithYouScreen()
         } else {
             startScreenFromIntent()
@@ -836,13 +838,11 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             .commit()
     }
 
-    private fun openSharedWithYouScreen(): String {
-        if (currentFragment !is HomeContainerFragment) {
-            supportFragmentManager.clearBackStack()
-            supportFragmentManager.handleReplace { SharedWithYouFragment.newInstance(intent) }
-            currentScreenId = 0
-            binding.primaryNavigation.checkedItem?.isChecked = false
-        }
+    fun openSharedWithYouScreen(): String {
+        supportFragmentManager.clearBackStack()
+        supportFragmentManager.handleReplace("${SharedWithYouFragment::class.java.simpleName}-${System.currentTimeMillis()}") { SharedWithYouFragment.newInstance(intent) }
+        currentScreenId = 0
+        binding.primaryNavigation.checkedItem?.isChecked = false
         return AnalyticsManager.PARAM_VALUE_SCREEN_SHARED_WITH_YOU
     }
 

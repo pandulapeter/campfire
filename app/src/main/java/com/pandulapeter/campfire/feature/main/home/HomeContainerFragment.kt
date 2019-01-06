@@ -53,17 +53,16 @@ class HomeContainerFragment : CampfireFragment<FragmentHomeContainerBinding, Hom
         (currentFragment as? HomeFragment)?.onNavigationItemSelected(menuItem) ?: super.onNavigationItemSelected(menuItem)
 
     fun navigateToHome() {
-        // Save the fact that the user is done with the onboarding flow.
         viewModel.preferenceDatabase.isOnboardingDone = true
-
-        // Set up crash reporting.
         @Suppress("ConstantConditionIf")
         if (viewModel.preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
             Fabric.with(requireContext().applicationContext, Crashlytics())
         }
-
-        // Inflate the Home Fragment.
-        childFragmentManager.handleReplace { HomeFragment.newInstance(true) }
+        if (getCampfireActivity()?.wasStartedFromDeepLink() == true) {
+            getCampfireActivity()?.openSharedWithYouScreen()
+        } else {
+            childFragmentManager.handleReplace { HomeFragment.newInstance(true) }
+        }
     }
 
     private inline fun <reified T : Fragment> FragmentManager.handleReplace(
