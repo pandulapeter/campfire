@@ -278,7 +278,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
                 } catch (exception: ActivityNotFoundException) {
                     showSnackbar(R.string.options_about_error)
                 }
-            }.addOnFailureListener { showSnackbar(R.string.something_went_wrong) }
+            }.addOnFailureListener { showSnackbar(message = R.string.something_went_wrong, action = { shareSongs(songIds) }) }
     }
 
     protected inline fun <T> LiveData<T>.observe(crossinline callback: (T) -> Unit) = observe(viewLifecycleOwner, Observer {
