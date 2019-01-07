@@ -18,7 +18,7 @@
 
         <activity
             android:name=".feature.CampfireActivity"
-            android:launchMode="singleTop"
+            android:launchMode="singleInstance"
             android:theme="@style/Splash"
             android:windowSoftInputMode="adjustNothing">
 
