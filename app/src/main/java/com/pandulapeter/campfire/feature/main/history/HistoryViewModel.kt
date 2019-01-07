@@ -76,7 +76,7 @@ class HistoryViewModel(
             }
             (headerIndices.size - 1 downTo 0).forEach { position ->
                 val index = headerIndices[position]
-                add(index, HeaderItemViewModel(context.getString(getHeaderTitle(index, songsOnly))))
+                add(index, HeaderItemViewModel(getHeaderTitle(index, songsOnly)))
             }
         }
 

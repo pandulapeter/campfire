@@ -111,7 +111,7 @@ class SongsViewModel(
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_SONGS
         adapter.itemTitleCallback = {
             when (it) {
-                is HeaderItemViewModel -> it.title.normalize().removePrefixes()[0].toString()
+                is HeaderItemViewModel -> (it.title as String).normalize().removePrefixes()[0].toString()
                 is CollectionItemViewModel -> ""
                 is SongItemViewModel -> when (sortingMode) {
                     SongsViewModel.SortingMode.TITLE -> it.song.getNormalizedTitle().removePrefixes()[0].toString()

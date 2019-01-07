@@ -409,13 +409,13 @@ class HomeViewModel(
             // Add results.
             if (matchingSongs.isNotEmpty()) {
                 if (shouldSearchInCollections) {
-                    add(HeaderItemViewModel(context.getString(R.string.main_songs)))
+                    add(HeaderItemViewModel(R.string.main_songs))
                 }
                 addAll(matchingSongs)
             }
             if (matchingCollections.isNotEmpty()) {
                 if (shouldSearchInSongs) {
-                    add(HeaderItemViewModel(context.getString(R.string.main_collections)))
+                    add(HeaderItemViewModel(R.string.main_collections))
                 }
                 addAll(matchingCollections)
             }
@@ -438,7 +438,7 @@ class HomeViewModel(
                 }
             else null
             songOfTheDay?.also {
-                add(HeaderItemViewModel(context.getString(R.string.home_song_of_the_day)))
+                add(HeaderItemViewModel(R.string.home_song_of_the_day))
                 add(SongItemViewModel(context, songDetailRepository, playlistRepository, it))
             }
 
@@ -453,7 +453,7 @@ class HomeViewModel(
                 .map { CollectionItemViewModel(it, newText) }
                 .let {
                     if (it.isNotEmpty()) {
-                        add(HeaderItemViewModel(context.getString(R.string.home_new_collections)))
+                        add(HeaderItemViewModel(R.string.home_new_collections))
                         addAll(it)
                     }
                 }
@@ -470,7 +470,7 @@ class HomeViewModel(
                 .map { SongItemViewModel(context, songDetailRepository, playlistRepository, it) }
                 .let {
                     if (it.isNotEmpty()) {
-                        add(HeaderItemViewModel(context.getString(R.string.home_new_songs)))
+                        add(HeaderItemViewModel(R.string.home_new_songs))
                         addAll(it)
                     }
                 }
@@ -487,7 +487,7 @@ class HomeViewModel(
                         if (it.isNotEmpty()) {
                             add(
                                 HeaderItemViewModel(
-                                    context.getString(R.string.home_random_collections),
+                                    R.string.home_random_collections,
                                     if (totalRandomCollectionCount > RANDOM_COLLECTION_COUNT) ::refreshRandomCollections else null
                                 )
                             )
@@ -509,7 +509,7 @@ class HomeViewModel(
                     .map { SongItemViewModel(context, songDetailRepository, playlistRepository, it) }
                     .let {
                         if (it.isNotEmpty()) {
-                            add(HeaderItemViewModel(context.getString(R.string.home_random_songs), if (totalRandomSongCount > RANDOM_SONG_COUNT) ::refreshRandomSongs else null))
+                            add(HeaderItemViewModel(R.string.home_random_songs, if (totalRandomSongCount > RANDOM_SONG_COUNT) ::refreshRandomSongs else null))
                             addAll(it)
                         }
                     }

@@ -106,7 +106,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             postponeEnterTransition()
             recyclerAdapter.itemTitleCallback = {
                 when (it) {
-                    is HeaderItemViewModel -> it.title.normalize().removePrefixes()[0].toString()
+                    is HeaderItemViewModel -> (it.title as String).normalize().removePrefixes()[0].toString()
                     is CollectionItemViewModel -> it.collection.getNormalizedTitle().removePrefixes()[0].toString()
                     is SongItemViewModel -> ""
                     else -> ""

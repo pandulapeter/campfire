@@ -2,7 +2,7 @@ package com.pandulapeter.campfire.feature.main.shared.recycler.viewModel
 
 import android.view.View
 
-data class HeaderItemViewModel(val title: String, val refreshAction: (() -> Unit)? = null) : ItemViewModel {
+data class HeaderItemViewModel(val title: Any, val refreshAction: (() -> Unit)? = null) : ItemViewModel {
 
     override fun getItemId() = title.hashCode().toLong()
     val shouldShowRefreshButton = refreshAction != null

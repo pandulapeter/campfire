@@ -78,6 +78,15 @@ fun setImage(view: ImageView, url: String?) = Glide
     .into(view)
 
 @BindingAdapter("android:text")
+fun setText(view: TextView, text: Any?) {
+    when (text) {
+        null, 0 -> view.text = ""
+        is String -> view.text = text
+        is Int -> view.setText(text)
+    }
+}
+
+@BindingAdapter("android:text")
 fun setText(view: EditText, text: String?) {
     if (!TextUtils.equals(view.text, text)) {
         view.setText(text)
