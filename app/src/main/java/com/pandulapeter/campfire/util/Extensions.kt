@@ -30,7 +30,6 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.BindingAdapter
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.MutableLiveData
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import androidx.viewpager.widget.ViewPager
 import retrofit2.Call
@@ -121,10 +120,6 @@ inline fun View.useStyledAttributes(set: AttributeSet?, @StyleableRes attrs: Int
             typedArray.recycle()
         }
     }
-
-fun <T> MutableLiveData<T>.triggerUpdate() {
-    value = value
-}
 
 inline fun DrawerLayout.addDrawerListener(
     crossinline onDrawerStateChanged: (newState: Int) -> Unit = {},

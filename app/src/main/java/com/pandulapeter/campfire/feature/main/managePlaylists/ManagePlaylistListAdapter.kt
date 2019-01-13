@@ -46,13 +46,13 @@ class ManagePlaylistListAdapter : ListAdapter<PlaylistViewModel, ManagePlaylistL
 
     class PlaylistViewHolder(val binding: PlaylistItemBinding) : RecyclerView.ViewHolder(binding.root) {
 
-        fun setItemClickListener(itemClickListener: (position: Int) -> Unit) {
-            binding.root.setOnClickListener {
-                if (adapterPosition != RecyclerView.NO_POSITION) {
-                    itemClickListener(adapterPosition)
-                }
-            }
-        }
+//        fun setItemClickListener(itemClickListener: (position: Int) -> Unit) {
+//            binding.root.setOnClickListener {
+//                if (adapterPosition != RecyclerView.NO_POSITION) {
+//                    itemClickListener(adapterPosition)
+//                }
+//            }
+//        }
 
         @SuppressLint("ClickableViewAccessibility")
         fun setDragHandleTouchListener(itemTouchListener: ((position: Int) -> Unit)?) {
