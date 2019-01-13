@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.feature.main.options.about
 import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.MutableLiveData
+import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.feature.shared.CampfireViewModel
 import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -103,9 +104,9 @@ class AboutViewModel(
         private const val GIT_HUB_URL = "https://github.com/pandulapeter/campfire-android"
         const val APP_ID = "com.pandulapeter.campfire"
         const val PLAY_STORE_URL = "market://details?id=$APP_ID"
-        const val TERMS_AND_CONDITIONS_URL = "https://campfire-test1.herokuapp.com/v1/terms-and-conditions"
-        const val PRIVACY_POLICY_URL = "https://campfire-test1.herokuapp.com/v1/privacy-policy"
-        const val OPEN_SOURCE_LICENSES_URL = "https://campfire-test1.herokuapp.com/v1/open-source-licenses"
+        const val TERMS_AND_CONDITIONS_URL = "${NetworkManager.BASE_URL}${NetworkManager.API_VERSION}terms-and-conditions"
+        const val PRIVACY_POLICY_URL = "${NetworkManager.BASE_URL}${NetworkManager.API_VERSION}privacy-policy"
+        const val OPEN_SOURCE_LICENSES_URL = "${NetworkManager.BASE_URL}${NetworkManager.API_VERSION}open-source-licenses"
         const val EMAIL_ADDRESS = "pandulapeter@gmail.com"
     }
 }

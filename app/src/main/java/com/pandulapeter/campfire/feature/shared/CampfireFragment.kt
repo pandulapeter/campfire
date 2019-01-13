@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
+import android.net.Uri
 import android.os.Bundle
 import android.transition.Transition
 import android.view.LayoutInflater
@@ -31,6 +32,7 @@ import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.dynamiclinks.ShortDynamicLink
 import com.pandulapeter.campfire.BR
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
 import com.pandulapeter.campfire.integration.AnalyticsManager
@@ -43,12 +45,6 @@ import com.pandulapeter.campfire.util.obtainColor
 import org.koin.android.ext.android.inject
 
 abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : Fragment(), Transition.TransitionListener {
-
-    companion object {
-        private const val SNACKBAR_SHORT_DURATION = 4000
-        private const val SNACKBAR_LONG_DURATION = 7000
-        private const val COMPOUND_BUTTON_TRANSITION_DELAY = 10L
-    }
 
     protected lateinit var binding: B
     abstract val viewModel: VM
@@ -255,6 +251,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
                 DynamicLink.SocialMetaTagParameters.Builder()
                     .setTitle(getString(R.string.campfire))
                     .setDescription(resources.getQuantityString(R.plurals.playlist_song_count, songIds.size, songIds.size))
+                    .setImageUrl(Uri.parse(SHARE_LOGO_URL))
                     .build()
             )
             .setAndroidParameters(
@@ -307,4 +304,11 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
     protected fun TextView.updateToolbarTitle(@StringRes titleRes: Int, subtitle: String? = null) = updateToolbarTitle(context.getString(titleRes), subtitle)
 
     protected fun TextView.updateToolbarTitle(title: String, subtitle: String? = null) = setTitleSubtitle(this, title, subtitle)
+
+    companion object {
+        private const val SNACKBAR_SHORT_DURATION = 4000
+        private const val SNACKBAR_LONG_DURATION = 7000
+        private const val COMPOUND_BUTTON_TRANSITION_DELAY = 10L
+        private const val SHARE_LOGO_URL = "${NetworkManager.BASE_URL}${NetworkManager.API_VERSION}image?id=campfire-logo"
+    }
 }

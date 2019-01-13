@@ -27,7 +27,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/text_bottom"
             style="@style/FlatButton"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/onboarding_button_margin"
             android:ellipsize="end"
@@ -35,10 +35,10 @@
             android:onClick="@{() -> viewModel.onLegalDocumentsClicked()}"
             android:textColor="@color/text_secondary"
             android:textSize="11sp"
+            app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/next_button"
             app:layout_constraintStart_toEndOf="@id/skip_button"
-            app:layout_constraintWidth_default="wrap"
             tools:ignore="SmallSp"
             tools:text="@string/welcome_conditions_part_1" />
 

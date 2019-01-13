@@ -10,18 +10,18 @@ import retrofit2.http.Query
 
 interface CampfireService {
 
-    @GET("/v1/library")
+    @GET("${NetworkManager.API_VERSION}library")
     fun getSongs(): Call<List<Song>>
 
-    @GET("/v1/collections")
+    @GET("${NetworkManager.API_VERSION}collections")
     fun getCollections(): Call<List<Collection>>
 
-    @GET("/v1/song")
+    @GET("${NetworkManager.API_VERSION}song")
     fun getSong(@Query("id") songId: String): Call<SongDetail>
 
-    @PUT("/v1/songOpened")
+    @PUT("${NetworkManager.API_VERSION}songOpened")
     fun openSong(@Query("id") songId: String): Call<Unit>
 
-    @PUT("/v1/collectionOpened")
+    @PUT("${NetworkManager.API_VERSION}collectionOpened")
     fun openCollection(@Query("id") collectionId: String): Call<Unit>
 }
