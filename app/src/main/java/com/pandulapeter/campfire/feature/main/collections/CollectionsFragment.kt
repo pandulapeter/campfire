@@ -7,7 +7,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.widget.CompoundButton
 import androidx.annotation.IdRes
 import androidx.core.app.SharedElementCallback
@@ -38,6 +37,7 @@ import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.onTextChanged
 import com.pandulapeter.campfire.util.removePrefixes
+import com.pandulapeter.campfire.util.waitForPreDraw
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
@@ -92,7 +92,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.stateLayout.animateFirstView = savedInstanceState == null
-        getCampfireActivity()?.let { activity ->
+        getCampfireActivity()?.also { activity ->
             toolbarTextInputView = ToolbarTextInputView(activity.toolbarContext, R.string.collections_search, true).apply {
                 if (viewModel.isTextInputVisible) {
                     showTextInput()
@@ -262,16 +262,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                         }
                     })
             }
-            (view.parent as? ViewGroup)?.run {
-                viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
-                    override fun onPreDraw(): Boolean {
-                        viewTreeObserver?.removeOnPreDrawListener(this)
-                        startPostponedEnterTransition()
-                        return true
-                    }
-                })
-                requestLayout()
-            }
+            (view.parent as? ViewGroup)?.waitForPreDraw { consume { startPostponedEnterTransition() } }
             activity.showPlayStoreRatingDialogIfNeeded()
         }
     }

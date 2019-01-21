@@ -16,7 +16,6 @@ import android.view.MenuItem
 import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.view.WindowManager
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.app.SharedElementCallback
@@ -44,6 +43,7 @@ import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.visibleOrGone
 import com.pandulapeter.campfire.util.visibleOrInvisible
+import com.pandulapeter.campfire.util.waitForPreDraw
 import com.pandulapeter.campfire.util.withArguments
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -155,34 +155,30 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
         if (savedInstanceState != null) {
             lastSongId = savedInstanceState.lastSongId
         }
-        (view.parent as? ViewGroup)?.run {
-            viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
-                override fun onPreDraw(): Boolean {
-                    viewTreeObserver?.removeOnPreDrawListener(this)
-                    (sharedElementEnterTransition as? Transition)?.addListener(object : Transition.TransitionListener {
+        (view.parent as? ViewGroup)?.waitForPreDraw {
+            consume {
+                (sharedElementEnterTransition as? Transition)?.addListener(object : Transition.TransitionListener {
 
-                        override fun onTransitionStart(transition: Transition?) = Unit
+                    override fun onTransitionStart(transition: Transition?) = Unit
 
-                        override fun onTransitionResume(transition: Transition?) = Unit
+                    override fun onTransitionResume(transition: Transition?) = Unit
 
-                        override fun onTransitionPause(transition: Transition?) = Unit
+                    override fun onTransitionPause(transition: Transition?) = Unit
 
-                        override fun onTransitionEnd(transition: Transition?) {
-                            isUiBlocked = false
-                            detailEventBus.notifyTransitionEnd()
-                            transition?.removeListener(this)
-                        }
+                    override fun onTransitionEnd(transition: Transition?) {
+                        isUiBlocked = false
+                        detailEventBus.notifyTransitionEnd()
+                        transition?.removeListener(this)
+                    }
 
-                        override fun onTransitionCancel(transition: Transition?) {
-                            isUiBlocked = false
-                            detailEventBus.notifyTransitionEnd()
-                            transition?.removeListener(this)
-                        }
-                    })
-                    startPostponedEnterTransition()
-                    return true
-                }
-            })
+                    override fun onTransitionCancel(transition: Transition?) {
+                        isUiBlocked = false
+                        detailEventBus.notifyTransitionEnd()
+                        transition?.removeListener(this)
+                    }
+                })
+                startPostponedEnterTransition()
+            }
         }
         getCampfireActivity()?.enableSecondaryNavigationDrawer(R.menu.detail)
         if (songs.size <= 1) {

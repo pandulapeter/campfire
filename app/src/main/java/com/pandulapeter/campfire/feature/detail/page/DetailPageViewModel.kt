@@ -100,7 +100,7 @@ class DetailPageViewModel(
         textSize.value = preferenceDatabase.fontSize * initialTextSize
     }
 
-    fun refreshText(onDone: () -> Unit = {}) {
+    private fun refreshText(onDone: () -> Unit = {}) {
         transposition.value?.let { transposition ->
             launch(WORKER) {
                 val parsed = songParser.parseSong(rawText, preferenceDatabase.shouldShowChords, preferenceDatabase.shouldUseGermanNotation, transposition)

@@ -5,7 +5,6 @@ import android.transition.Transition
 import android.view.View
 import android.view.View.OnLayoutChangeListener
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import androidx.annotation.CallSuper
 import androidx.core.app.SharedElementCallback
 import androidx.recyclerview.widget.DefaultItemAnimator
@@ -20,7 +19,9 @@ import com.pandulapeter.campfire.feature.shared.dialog.PlaylistChooserBottomShee
 import com.pandulapeter.campfire.feature.shared.widget.DisableScrollLinearLayoutManager
 import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.color
+import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.hideKeyboard
+import com.pandulapeter.campfire.util.waitForPreDraw
 
 abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFragment<FragmentBaseSongListBinding, VM>(R.layout.fragment_base_song_list), TopLevelFragment {
 
@@ -143,33 +144,28 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
                 }
             }
         }
-        (view.parent as? ViewGroup)?.run {
-            viewTreeObserver?.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
-                override fun onPreDraw(): Boolean {
-                    viewTreeObserver?.removeOnPreDrawListener(this)
-                    (sharedElementEnterTransition as? Transition)?.addListener(object : Transition.TransitionListener {
+        (view.parent as? ViewGroup)?.waitForPreDraw {
+            consume {
+                (sharedElementEnterTransition as? Transition)?.addListener(object : Transition.TransitionListener {
 
-                        override fun onTransitionStart(transition: Transition?) = Unit
+                    override fun onTransitionStart(transition: Transition?) = Unit
 
-                        override fun onTransitionResume(transition: Transition?) = Unit
+                    override fun onTransitionResume(transition: Transition?) = Unit
 
-                        override fun onTransitionPause(transition: Transition?) = Unit
+                    override fun onTransitionPause(transition: Transition?) = Unit
 
-                        override fun onTransitionEnd(transition: Transition?) {
-                            isUiBlocked = false
-                            transition?.removeListener(this)
-                        }
+                    override fun onTransitionEnd(transition: Transition?) {
+                        isUiBlocked = false
+                        transition?.removeListener(this)
+                    }
 
-                        override fun onTransitionCancel(transition: Transition?) {
-                            isUiBlocked = false
-                            transition?.removeListener(this)
-                        }
-                    })
-                    startPostponedEnterTransition()
-                    return true
-                }
-            })
-            requestLayout()
+                    override fun onTransitionCancel(transition: Transition?) {
+                        isUiBlocked = false
+                        transition?.removeListener(this)
+                    }
+                })
+                startPostponedEnterTransition()
+            }
         }
     }
 

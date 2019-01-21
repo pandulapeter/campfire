@@ -76,7 +76,7 @@ dependencies {
 
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.kotlinVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.0.1"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.1.0"
 
     // Service locator
     implementation "org.koin:koin-androidx-viewmodel:1.0.2"
