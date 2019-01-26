@@ -2,26 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/transpose_container"
-        android:title="@string/detail_transpose">
-
-        <menu>
-
-            <item
-                android:id="@+id/transpose_higher"
-                android:icon="@drawable/ic_increment"
-                android:title="@string/detail_transpose_higher" />
-
-            <item
-                android:id="@+id/transpose_lower"
-                android:icon="@drawable/ic_decrement"
-                android:title="@string/detail_transpose_lower" />
-
-        </menu>
-
-    </item>
-
-    <item
         android:id="@+id/font_size_container"
         android:title="@string/detail_font_size">
 
@@ -36,6 +16,26 @@
                 android:id="@+id/font_size_decrement"
                 android:icon="@drawable/ic_decrement"
                 android:title="@string/detail_font_size_smaller" />
+
+        </menu>
+
+    </item>
+
+    <item
+        android:id="@+id/transpose_container"
+        android:title="@string/detail_transpose">
+
+        <menu>
+
+            <item
+                android:id="@+id/transpose_higher"
+                android:icon="@drawable/ic_increment"
+                android:title="@string/detail_transpose_higher" />
+
+            <item
+                android:id="@+id/transpose_lower"
+                android:icon="@drawable/ic_decrement"
+                android:title="@string/detail_transpose_lower" />
 
         </menu>
 
