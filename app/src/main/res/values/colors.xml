@@ -10,6 +10,7 @@
     <color name="background">#FAFAFA</color>
     <color name="navigation_bar">#F2F2F2</color>
     <color name="panel_primary">#FFFFFF</color>
+    <color name="panel_primary_inset">#B3FFFFFF</color>
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#737373</color>
     <color name="text_tertiary">#9B9B9B</color>
