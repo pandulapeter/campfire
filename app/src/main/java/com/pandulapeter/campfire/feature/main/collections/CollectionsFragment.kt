@@ -36,7 +36,6 @@ import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
 import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.onTextChanged
-import com.pandulapeter.campfire.util.removePrefixes
 import com.pandulapeter.campfire.util.waitForPreDraw
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -106,8 +105,8 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             postponeEnterTransition()
             recyclerAdapter.itemTitleCallback = {
                 when (it) {
-                    is HeaderItemViewModel -> (it.title as String).normalize().removePrefixes()[0].toString()
-                    is CollectionItemViewModel -> it.collection.getNormalizedTitle().removePrefixes()[0].toString()
+                    is HeaderItemViewModel -> (it.title as String).normalize()[0].toString()
+                    is CollectionItemViewModel -> it.collection.getNormalizedTitle()[0].toString()
                     is SongItemViewModel -> ""
                     else -> ""
                 }
@@ -118,7 +117,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                     activity.updateAppBarView(
                         DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(activity.toolbarContext), R.layout.view_search_controls, null, false).apply {
                             viewModel = this@CollectionsFragment.viewModel.searchControlsViewModel
-                            setLifecycleOwner(viewLifecycleOwner)
+                            lifecycleOwner = viewLifecycleOwner
                         }.root,
                         savedInstanceState != null
                     )

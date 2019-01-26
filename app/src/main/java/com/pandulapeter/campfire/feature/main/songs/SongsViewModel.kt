@@ -20,7 +20,7 @@ import com.pandulapeter.campfire.feature.shared.widget.SearchControlsViewModel
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.mutableLiveDataOf
 import com.pandulapeter.campfire.util.normalize
-import com.pandulapeter.campfire.util.removePrefixes
+import java.text.Collator
 
 class SongsViewModel(
     context: Context,
@@ -111,11 +111,11 @@ class SongsViewModel(
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_SONGS
         adapter.itemTitleCallback = {
             when (it) {
-                is HeaderItemViewModel -> (it.title as String).normalize().removePrefixes()[0].toString()
+                is HeaderItemViewModel -> (it.title as String).normalize()[0].toString()
                 is CollectionItemViewModel -> ""
                 is SongItemViewModel -> when (sortingMode) {
-                    SongsViewModel.SortingMode.TITLE -> it.song.getNormalizedTitle().removePrefixes()[0].toString()
-                    SongsViewModel.SortingMode.ARTIST -> it.song.getNormalizedArtist().removePrefixes()[0].toString()
+                    SongsViewModel.SortingMode.TITLE -> it.song.getNormalizedTitle()[0].toString()
+                    SongsViewModel.SortingMode.ARTIST -> it.song.getNormalizedArtist()[0].toString()
                     SongsViewModel.SortingMode.POPULARITY -> ""
                 }
                 else -> ""
@@ -155,8 +155,8 @@ class SongsViewModel(
             songsOnly.forEachIndexed { index, song ->
                 if (when (sortingMode) {
                         SortingMode.TITLE -> {
-                            val thisTitleFirstCharacter = song.getNormalizedTitle().removePrefixes()[0]
-                            index == 0 || (thisTitleFirstCharacter != songsOnly[index - 1].getNormalizedTitle().removePrefixes()[0] && !thisTitleFirstCharacter.isDigit())
+                            val thisTitleFirstCharacter = song.getNormalizedTitle()[0]
+                            index == 0 || (thisTitleFirstCharacter != songsOnly[index - 1].getNormalizedTitle()[0] && !thisTitleFirstCharacter.isDigit())
                         }
                         SortingMode.ARTIST -> index == 0 || song.artist != songsOnly[index - 1].artist
                         SortingMode.POPULARITY -> songsOnly[0].isNew && (index == 0 || songsOnly[index].isNew != songsOnly[index - 1].isNew)
@@ -170,7 +170,7 @@ class SongsViewModel(
                 add(
                     index, HeaderItemViewModel(
                         when (sortingMode) {
-                            SortingMode.TITLE -> songsOnly[index].getNormalizedTitle().removePrefixes()[0].let { if (it.isDigit()) "0 - 9" else it.toString() }
+                            SortingMode.TITLE -> songsOnly[index].getNormalizedTitle()[0].let { if (it.isDigit()) "0 - 9" else it.toString() }
                             SortingMode.ARTIST -> songsOnly[index].artist
                             SortingMode.POPULARITY -> if (!songsOnly[0].isNew) "" else if (songsOnly[index].isNew) newString else popularString
                         }
@@ -193,12 +193,17 @@ class SongsViewModel(
 
     private fun Sequence<Song>.filterExplicit() = if (!shouldShowExplicit) filter { it.isExplicit != true } else this
 
-    private fun Sequence<Song>.sort() = when (sortingMode) {
-        SortingMode.TITLE -> sortedBy { it.getNormalizedArtist().removePrefixes().toString() }.sortedBy { it.getNormalizedTitle().removePrefixes().toString() }
-        SortingMode.ARTIST -> sortedBy { it.getNormalizedTitle().removePrefixes() }.sortedBy { it.getNormalizedArtist().removePrefixes() }
-        SortingMode.POPULARITY -> sortedBy { it.getNormalizedArtist().removePrefixes() }
-            .sortedBy { it.getNormalizedTitle().removePrefixes() }
-            .sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
+    private fun Sequence<Song>.sort() = Collator.getInstance().let { collator ->
+        when (sortingMode) {
+            SortingMode.TITLE -> sortedWith(Comparator { s1, s2 -> collator.compare(s1.artist, s2.artist) })
+                .sortedWith(Comparator { s1, s2 -> collator.compare(s1.title, s2.title) })
+            SortingMode.ARTIST -> sortedWith(Comparator { s1, s2 -> collator.compare(s1.title, s2.title) })
+                .sortedWith(Comparator { s1, s2 -> collator.compare(s1.artist, s2.artist) })
+            SortingMode.POPULARITY -> sortedWith(Comparator { s1, s2 -> collator.compare(s1.artist, s2.artist) })
+                .sortedWith(Comparator { s1, s2 -> collator.compare(s1.title, s2.title) })
+                .sortedByDescending { it.popularity }
+                .sortedByDescending { it.isNew }
+        }
     }
 
     private fun trackSearchEvent() {

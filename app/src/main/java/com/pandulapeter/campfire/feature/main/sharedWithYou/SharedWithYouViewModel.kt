@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.feature.shared.widget.StateLayout
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.mutableLiveDataOf
-import com.pandulapeter.campfire.util.removePrefixes
 
 class SharedWithYouViewModel(
     context: Context,
@@ -43,7 +42,6 @@ class SharedWithYouViewModel(
 
     override fun Sequence<Song>.createViewModels() = songIds
         .mapNotNull { songId -> find { it.id == songId } }
-        .sortedBy { it.getNormalizedTitle().removePrefixes() }
         .map { SongItemViewModel(context, songDetailRepository, playlistRepository, it) }
         .toList()
 

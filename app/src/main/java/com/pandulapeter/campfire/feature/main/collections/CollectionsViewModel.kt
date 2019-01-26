@@ -20,10 +20,10 @@ import com.pandulapeter.campfire.util.UI
 import com.pandulapeter.campfire.util.WORKER
 import com.pandulapeter.campfire.util.mutableLiveDataOf
 import com.pandulapeter.campfire.util.normalize
-import com.pandulapeter.campfire.util.removePrefixes
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.Collator
 import kotlin.coroutines.CoroutineContext
 
 class CollectionsViewModel(
@@ -228,12 +228,17 @@ class CollectionsViewModel(
         shouldFilter
     }
 
-    private fun Sequence<Collection>.sort() = when (sortingMode) {
-        SortingMode.TITLE -> sortedByDescending { it.date }.sortedBy { it.getNormalizedTitle().removePrefixes() }
-        SortingMode.UPLOAD_DATE -> sortedBy { it.getNormalizedTitle().removePrefixes() }.sortedByDescending { it.date }
-        SortingMode.POPULARITY -> sortedByDescending { it.date }.sortedBy {
-            it.getNormalizedTitle().removePrefixes()
-        }.sortedByDescending { it.popularity }.sortedByDescending { it.isNew }
+    private fun Sequence<Collection>.sort() = Collator.getInstance().let { collator ->
+        when (sortingMode) {
+            SortingMode.TITLE -> sortedByDescending { it.date }
+                .sortedWith(Comparator { c1, c2 -> collator.compare(c1.title, c2.title) })
+            SortingMode.UPLOAD_DATE -> sortedWith(Comparator { c1, c2 -> collator.compare(c1.title, c2.title) })
+                .sortedByDescending { it.date }
+            SortingMode.POPULARITY -> sortedByDescending { it.date }
+                .sortedWith(Comparator { c1, c2 -> collator.compare(c1.title, c2.title) })
+                .sortedByDescending { it.popularity }
+                .sortedByDescending { it.isNew }
+        }
     }
 
     enum class SortingMode(val intValue: Int) {

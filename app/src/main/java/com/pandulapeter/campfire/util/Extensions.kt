@@ -206,11 +206,6 @@ fun String.normalize() = toUpperCase()
     .replace("-", "")
     .replace(" ", "")
 
-fun String.removePrefixes() = this
-    .removePrefix("A ")
-    .removePrefix("AZ ")
-    .removePrefix("THE ")
-
 fun ViewPager.addPageScrollListener(
     onPageSelected: (Int) -> Unit = {},
     onPageScrollStateChanged: (Int) -> Unit = {},

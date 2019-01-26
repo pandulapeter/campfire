@@ -65,7 +65,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
 
     final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)
-        binding.setLifecycleOwner(viewLifecycleOwner)
+        binding.lifecycleOwner = viewLifecycleOwner
         binding.setVariable(BR.viewModel, viewModel)
         binding.executePendingBindings()
         return binding.root

@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItem
 import com.pandulapeter.campfire.feature.shared.InteractionBlocker
 import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.util.mutableLiveDataOf
-import com.pandulapeter.campfire.util.removePrefixes
+import java.text.Collator
 
 class ManageDownloadsViewModel(
     context: Context,
@@ -40,11 +40,14 @@ class ManageDownloadsViewModel(
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_MANAGE_DOWNLOADS
     }
 
-    override fun Sequence<Song>.createViewModels() = filter { songDetailRepository.isSongDownloaded(it.id) }
-        .filter { it.id != songToDeleteId }
-        .sortedBy { it.getNormalizedTitle().removePrefixes() }
-        .map { SongItemViewModel(context, songDetailRepository, playlistRepository, it) }
-        .toList()
+    override fun Sequence<Song>.createViewModels() = Collator.getInstance().let { collator ->
+        filter { songDetailRepository.isSongDownloaded(it.id) }
+            .filter { it.id != songToDeleteId }
+            .sortedWith(Comparator { s1, s2 -> collator.compare(s1.artist, s2.artist) })
+            .sortedWith(Comparator { s1, s2 -> collator.compare(s1.title, s2.title) })
+            .map { SongItemViewModel(context, songDetailRepository, playlistRepository, it) }
+            .toList()
+    }
 
     override fun onListUpdated(items: List<ItemViewModel>) {
         super.onListUpdated(items)
