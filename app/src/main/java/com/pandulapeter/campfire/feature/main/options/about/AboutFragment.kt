@@ -14,7 +14,6 @@ import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.pandulapeter.campfire.R
-import com.pandulapeter.campfire.databinding.FragmentOptionsAboutBinding
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.util.color
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -78,20 +77,25 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
     private fun startPurchaseFlow() {
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(@BillingClient.BillingResponse billingResponseCode: Int) {
-                if (billingResponseCode == BillingClient.BillingResponse.OK) {
-                    billingClient.launchBillingFlow(
-                        activity, BillingFlowParams.newBuilder()
-                            .setSku("buy_me_a_beer")
-                            .setType(BillingClient.SkuType.INAPP)
-                            .build()
-                    )
-                } else {
-                    isUiBlocked = false
+                if (isAdded && context != null) {
+
+                    if (billingResponseCode == BillingClient.BillingResponse.OK) {
+                        billingClient.launchBillingFlow(
+                            activity, BillingFlowParams.newBuilder()
+                                .setSku("buy_me_a_beer")
+                                .setType(BillingClient.SkuType.INAPP)
+                                .build()
+                        )
+                    } else {
+                        isUiBlocked = false
+                    }
                 }
             }
 
             override fun onBillingServiceDisconnected() {
-                isUiBlocked = false
+                if (isAdded && context != null) {
+                    isUiBlocked = false
+                }
             }
         })
     }
