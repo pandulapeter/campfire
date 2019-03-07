@@ -379,14 +379,14 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
+    override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState?.currentScreenId = currentScreenId
-        outState?.currentPlaylistId = playlistIdMap[currentScreenId] ?: ""
-        outState?.currentCollectionId = currentCollectionId
-        outState?.lastSongId = lastSongId
-        outState?.lastCollectionId = lastCollectionId
-        outState?.isFabVisible = binding.floatingActionButton.isVisible()
+        outState.currentScreenId = currentScreenId
+        outState.currentPlaylistId = playlistIdMap[currentScreenId] ?: ""
+        outState.currentCollectionId = currentCollectionId
+        outState.lastSongId = lastSongId
+        outState.lastCollectionId = lastCollectionId
+        outState.isFabVisible = binding.floatingActionButton.isVisible()
     }
 
     override fun onPositiveButtonSelected(id: Int) {

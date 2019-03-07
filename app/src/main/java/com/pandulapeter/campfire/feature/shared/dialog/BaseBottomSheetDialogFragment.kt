@@ -63,12 +63,12 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
         updateSystemWindows()
     }
 
-    override fun onCancel(dialog: DialogInterface?) {
+    override fun onCancel(dialog: DialogInterface) {
         (parentFragment as? CampfireFragment<*, *>)?.onDialogDismissed()
         interactionBlocker.isUiBlocked = false
     }
 
-    override fun onDismiss(dialog: DialogInterface?) {
+    override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
         (parentFragment as? CampfireFragment<*, *>)?.onDialogDismissed()
         interactionBlocker.isUiBlocked = false

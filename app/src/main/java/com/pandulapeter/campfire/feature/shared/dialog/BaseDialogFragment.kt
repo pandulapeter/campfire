@@ -21,12 +21,12 @@ abstract class BaseDialogFragment : AppCompatDialogFragment() {
 
     abstract fun AlertDialog.Builder.createDialog(arguments: Bundle?): AlertDialog
 
-    override fun onCancel(dialog: DialogInterface?) {
+    override fun onCancel(dialog: DialogInterface) {
         (parentFragment as? CampfireFragment<*, *>)?.onDialogDismissed()
         (activity as? CampfireActivity)?.isUiBlocked = false
     }
 
-    override fun onDismiss(dialog: DialogInterface?) {
+    override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
         (parentFragment as? CampfireFragment<*, *>)?.onDialogDismissed()
         (activity as? CampfireActivity)?.isUiBlocked = false
