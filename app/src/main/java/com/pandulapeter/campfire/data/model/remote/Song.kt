@@ -13,7 +13,7 @@ import kotlinx.android.parcel.Parcelize
 @Parcelize
 @Entity(tableName = Song.TABLE_NAME)
 data class Song(
-    @PrimaryKey() @ColumnInfo(name = ID) @SerializedName(ID) val id: String,
+    @PrimaryKey @ColumnInfo(name = ID) @SerializedName(ID) val id: String,
     @ColumnInfo(name = TITLE) @SerializedName(TITLE) val title: String = "",
     @ColumnInfo(name = ARTIST) @SerializedName(ARTIST) val artist: String = "",
     @ColumnInfo(name = LANGUAGE) @SerializedName(LANGUAGE) val language: String? = null,

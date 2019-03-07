@@ -153,7 +153,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                 activity.updateAppBarView(
                     DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(activity.toolbarContext), R.layout.view_search_controls, null, false).apply {
                         viewModel = this@HomeFragment.viewModel.searchControlsViewModel
-                        setLifecycleOwner(viewLifecycleOwner)
+                        lifecycleOwner = viewLifecycleOwner
                     }.root,
                     savedInstanceState != null
                 )

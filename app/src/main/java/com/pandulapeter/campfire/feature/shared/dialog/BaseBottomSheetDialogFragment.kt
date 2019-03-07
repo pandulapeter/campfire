@@ -51,7 +51,7 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
         (parentFragment as? CampfireFragment<*, *>)?.onDialogOpened()
         CustomWidthBottomSheetDialog(context, R.style.BottomSheetDialog).apply {
             binding = DataBindingUtil.inflate(LayoutInflater.from(context), layoutResourceId, null, false)
-            binding.setLifecycleOwner(this@BaseBottomSheetDialogFragment)
+            binding.lifecycleOwner = this@BaseBottomSheetDialogFragment
             initializeDialog(context, savedInstanceState)
             setContentView(binding.root)
             onDialogCreated()

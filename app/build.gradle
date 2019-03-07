@@ -115,7 +115,7 @@ dependencies {
     implementation "androidx.cardview:cardview:1.0.0"
     implementation "androidx.browser:browser:1.0.0"
     implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha3"
-    implementation "com.simplecityapps:recyclerview-fastscroll:1.0.20"
+    implementation "com.simplecityapps:recyclerview-fastscroll:2.0.0"
 
     // In-app purchases
     implementation "com.android.billingclient:billing:1.1"

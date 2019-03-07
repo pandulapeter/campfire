@@ -8,6 +8,6 @@ import com.pandulapeter.campfire.data.model.remote.SongDetail
 
 @Entity
 data class SongDetailMetadata(
-    @PrimaryKey() @ColumnInfo(name = Song.ID) val id: String,
+    @PrimaryKey @ColumnInfo(name = Song.ID) val id: String,
     @ColumnInfo(name = SongDetail.VERSION) val version: Int = 0
 )

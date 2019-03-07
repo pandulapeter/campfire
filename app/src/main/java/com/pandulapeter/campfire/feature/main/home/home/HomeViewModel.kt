@@ -77,7 +77,7 @@ class HomeViewModel(
         set(value) {
             if (field != value) {
                 field = value
-                updateAdapterItems(false, true)
+                updateAdapterItems(shouldRefreshRandom = false, shouldScrollToTop = true)
                 trackSearchEvent()
             }
         }
@@ -85,7 +85,7 @@ class HomeViewModel(
         set(value) {
             if (field != value) {
                 field = value
-                updateAdapterItems(false, true)
+                updateAdapterItems(shouldRefreshRandom = false, shouldScrollToTop = true)
                 trackSearchEvent()
             }
         }
@@ -94,7 +94,7 @@ class HomeViewModel(
             if (field != value) {
                 field = value
                 preferenceDatabase.shouldShowSongOfTheDay = value
-                updateAdapterItems(true, true)
+                updateAdapterItems(shouldRefreshRandom = true, shouldScrollToTop = true)
             }
         }
     var shouldShowNewCollections = preferenceDatabase.shouldShowNewCollections
@@ -102,7 +102,7 @@ class HomeViewModel(
             if (field != value) {
                 field = value
                 preferenceDatabase.shouldShowNewCollections = value
-                updateAdapterItems(true, true)
+                updateAdapterItems(shouldRefreshRandom = true, shouldScrollToTop = true)
             }
         }
     var shouldShowNewSongs = preferenceDatabase.shouldShowNewSongs
@@ -110,7 +110,7 @@ class HomeViewModel(
             if (field != value) {
                 field = value
                 preferenceDatabase.shouldShowNewSongs = value
-                updateAdapterItems(true, true)
+                updateAdapterItems(shouldRefreshRandom = true, shouldScrollToTop = true)
             }
         }
     var shouldShowRandomCollections = preferenceDatabase.shouldShowRandomCollections
@@ -118,7 +118,7 @@ class HomeViewModel(
             if (field != value) {
                 field = value
                 preferenceDatabase.shouldShowRandomCollections = value
-                updateAdapterItems(true, true)
+                updateAdapterItems(shouldRefreshRandom = true, shouldScrollToTop = true)
             }
         }
     var shouldShowRandomSongs = preferenceDatabase.shouldShowRandomSongs
@@ -126,7 +126,7 @@ class HomeViewModel(
             if (field != value) {
                 field = value
                 preferenceDatabase.shouldShowRandomSongs = value
-                updateAdapterItems(true, true)
+                updateAdapterItems(shouldRefreshRandom = true, shouldScrollToTop = true)
             }
         }
     var shouldShowExplicit = preferenceDatabase.shouldShowExplicit
@@ -142,7 +142,7 @@ class HomeViewModel(
             if (field != value) {
                 field = value
                 preferenceDatabase.disabledLanguageFilters = value
-                updateAdapterItems(true, true)
+                updateAdapterItems(shouldRefreshRandom = true, shouldScrollToTop = true)
             }
         }
     var languages = MutableLiveData<List<Language>?>()
@@ -153,7 +153,7 @@ class HomeViewModel(
         set(value) {
             if (field != value) {
                 field = value
-                updateAdapterItems(false, true)
+                updateAdapterItems(shouldRefreshRandom = false, shouldScrollToTop = true)
                 trackSearchEvent()
                 shouldEnableEraseButton.value = query.isNotEmpty()
             }
@@ -525,13 +525,13 @@ class HomeViewModel(
 
     private fun refreshRandomCollections() {
         randomCollections = listOf()
-        updateAdapterItems(false, false)
+        updateAdapterItems(shouldRefreshRandom = false, shouldScrollToTop = false)
     }
 
 
     private fun refreshRandomSongs() {
         randomSongs = listOf()
-        updateAdapterItems(false, false)
+        updateAdapterItems(shouldRefreshRandom = false, shouldScrollToTop = false)
     }
 
     private fun Sequence<Song>.filterSongsByQuery() = if (shouldSearchInSongs) {

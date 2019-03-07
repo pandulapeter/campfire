@@ -84,7 +84,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
                     activity.updateAppBarView(
                         DataBindingUtil.inflate<ViewSearchControlsBinding>(LayoutInflater.from(activity.toolbarContext), R.layout.view_search_controls, null, false).apply {
                             viewModel = this@SongsFragment.viewModel.searchControlsViewModel
-                            setLifecycleOwner(viewLifecycleOwner)
+                            lifecycleOwner = viewLifecycleOwner
                         }.root,
                         savedInstanceState != null
                     )

@@ -13,7 +13,7 @@ import kotlinx.android.parcel.Parcelize
 @Parcelize
 @Entity(tableName = Collection.TABLE_NAME)
 data class Collection(
-    @PrimaryKey() @ColumnInfo(name = ID) @SerializedName(ID) val id: String,
+    @PrimaryKey @ColumnInfo(name = ID) @SerializedName(ID) val id: String,
     @ColumnInfo(name = TITLE) @SerializedName(TITLE) val title: String = "",
     @ColumnInfo(name = DESCRIPTION) @SerializedName(DESCRIPTION) val description: String = "",
     @ColumnInfo(name = IMAGE_URL) @SerializedName(IMAGE_URL) val imageUrl: String = "",
