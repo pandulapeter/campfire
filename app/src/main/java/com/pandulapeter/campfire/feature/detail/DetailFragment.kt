@@ -258,20 +258,22 @@ class DetailFragment : CampfireFragment<FragmentDetailBinding, DetailViewModel>(
 
             override fun onScaleEnd(detector: ScaleGestureDetector?) = analyticsManager.onPinchToZoomUsed(Math.round(preferenceDatabase.fontSize * 10) / 10f)
         })
-        binding.root.post(object : Runnable {
-            override fun run() {
-                if (isAdded) {
-                    viewModel.songId.value?.let { songId ->
-                        getCampfireActivity()?.autoScrollSpeed?.let {
-                            if (it >= 0) {
-                                detailEventBus.notifyScroll(songId, it)
+        binding.root.let { rootView ->
+            rootView.post(object : Runnable {
+                override fun run() {
+                    if (isAdded) {
+                        viewModel.songId.value?.let { songId ->
+                            getCampfireActivity()?.autoScrollSpeed?.let {
+                                if (it >= 0) {
+                                    detailEventBus.notifyScroll(songId, it)
+                                }
                             }
                         }
                     }
+                    rootView.postOnAnimation(this)
                 }
-                binding.root.postOnAnimation(this)
-            }
-        })
+            })
+        }
     }
 
     override fun onResume() {

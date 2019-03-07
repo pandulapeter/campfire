@@ -46,7 +46,8 @@ import org.koin.android.ext.android.inject
 
 abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>(@LayoutRes private var layoutResourceId: Int) : Fragment(), Transition.TransitionListener {
 
-    protected lateinit var binding: B
+    private var realBinding: B? = null
+    protected val binding: B get() = realBinding ?: throw IllegalStateException("The binding is null.")
     abstract val viewModel: VM
     protected open val shouldDelaySubscribing = false
     protected val analyticsManager by inject<AnalyticsManager>()
@@ -63,13 +64,13 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
             viewModel.isUiBlocked = value
         }
 
-    final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        binding = DataBindingUtil.inflate(inflater, layoutResourceId, container, false)
-        binding.lifecycleOwner = viewLifecycleOwner
-        binding.setVariable(BR.viewModel, viewModel)
-        binding.executePendingBindings()
-        return binding.root
-    }
+    final override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) =
+        DataBindingUtil.inflate<B>(inflater, layoutResourceId, container, false).apply {
+            realBinding = this
+            lifecycleOwner = viewLifecycleOwner
+            setVariable(BR.viewModel, viewModel)
+            executePendingBindings()
+        }.root
 
     override fun onStart() {
         super.onStart()
@@ -85,6 +86,11 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
         isResumingDelayed = false
         snackbar?.dismiss()
         viewModel.unsubscribe()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        realBinding = null
     }
 
     fun onDialogOpened() {

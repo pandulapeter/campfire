@@ -10,10 +10,10 @@
         android:layout_height="wrap_content"
         android:hint="@string/playlist_enter_title"
         android:minWidth="280dp"
+        android:theme="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
         android:paddingStart="@dimen/new_playlist_input_padding_start"
         android:paddingTop="@dimen/large_content_padding"
         android:paddingEnd="@dimen/new_playlist_input_padding_end"
-        android:theme="@style/Dialog"
         app:errorEnabled="true">
 
         <com.google.android.material.textfield.TextInputEditText

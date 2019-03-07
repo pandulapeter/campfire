@@ -28,7 +28,8 @@ import org.koin.android.ext.android.inject
 
 abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes private val layoutResourceId: Int) : AppCompatDialogFragment() {
 
-    protected lateinit var binding: B
+    private var realBinding: B? = null
+    protected val binding: B get() = realBinding ?: throw IllegalStateException("The binding is null.")
     protected val behavior: BottomSheetBehavior<*> by lazy { ((binding.root.parent as View).layoutParams as CoordinatorLayout.LayoutParams).behavior as BottomSheetBehavior<*> }
     protected val isFullWidth get() = (dialog as CustomWidthBottomSheetDialog).isFullWidth
     private val interactionBlocker by inject<InteractionBlocker>()
@@ -50,8 +51,9 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
         interactionBlocker.isUiBlocked = true
         (parentFragment as? CampfireFragment<*, *>)?.onDialogOpened()
         CustomWidthBottomSheetDialog(context, R.style.BottomSheetDialog).apply {
-            binding = DataBindingUtil.inflate(LayoutInflater.from(context), layoutResourceId, null, false)
-            binding.lifecycleOwner = this@BaseBottomSheetDialogFragment
+            realBinding = DataBindingUtil.inflate<B>(LayoutInflater.from(context), layoutResourceId, null, false).apply {
+                lifecycleOwner = this@BaseBottomSheetDialogFragment
+            }
             initializeDialog(context, savedInstanceState)
             setContentView(binding.root)
             onDialogCreated()
@@ -72,6 +74,11 @@ abstract class BaseBottomSheetDialogFragment<B : ViewDataBinding>(@LayoutRes pri
         super.onDismiss(dialog)
         (parentFragment as? CampfireFragment<*, *>)?.onDialogDismissed()
         interactionBlocker.isUiBlocked = false
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        realBinding = null
     }
 
     protected inline fun <T> MutableLiveData<T?>.observeAndReset(crossinline callback: (T) -> Unit) = observe(this@BaseBottomSheetDialogFragment, Observer {
