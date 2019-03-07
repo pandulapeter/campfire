@@ -66,8 +66,8 @@
     <dimen name="options_about_drawable_padding">22dp</dimen>
 
     <!-- New playlist dialog -->
-    <dimen name="new_playlist_input_padding_start">20dp</dimen> <!-- large_content_padding + edit_text_fix -->
-    <dimen name="new_playlist_input_padding_end">12dp</dimen> <!-- large_content_padding - edit_text_fix -->
+    <dimen name="new_playlist_input_padding_start">20dp</dimen>
+    <dimen name="new_playlist_input_padding_end">8dp</dimen>
 
     <!-- Playlist chooser bottom sheet -->
     <dimen name="bottom_sheet_width">0dp</dimen>
