@@ -220,6 +220,7 @@ abstract class CampfireFragment<B : ViewDataBinding, out VM : CampfireViewModel>
                     if (event != DISMISS_EVENT_ACTION && event != DISMISS_EVENT_CONSECUTIVE) {
                         it()
                     }
+                    removeCallback(this)
                 }
             })
         }

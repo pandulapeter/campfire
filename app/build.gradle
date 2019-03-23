@@ -87,7 +87,7 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
 
     // Persistence
-    def roomVersion = "2.1.0-alpha04"
+    def roomVersion = "2.1.0-alpha05"
     implementation "androidx.room:room-runtime:$roomVersion"
     kapt "androidx.room:room-compiler:$roomVersion"
 
@@ -100,10 +100,10 @@ dependencies {
     implementation "com.jakewharton:process-phoenix:2.0.0"
 
     // Analytics
-    implementation "com.google.firebase:firebase-core:16.0.7"
+    implementation "com.google.firebase:firebase-core:16.0.8"
 
     // Deep linking
-    implementation "com.google.firebase:firebase-dynamic-links:16.1.7"
+    implementation "com.google.firebase:firebase-dynamic-links:16.1.8"
 
     // Crash reporting
     implementation "com.crashlytics.sdk.android:crashlytics:2.9.9"
