@@ -20,8 +20,8 @@
     <style name="Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/panel_primary</item>
         <item name="android:windowBackground">@drawable/bg_splash</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:statusBarColor">@color/accent</item>
+        <item name="android:navigationBarColor">@color/accent</item>
     </style>
 
     <style name="BottomSheetDialog" parent="Theme.Design.Light.BottomSheetDialog">
