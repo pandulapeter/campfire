@@ -33,7 +33,7 @@
         <aapt:attr name="android:animation">
             <set>
                 <objectAnimator
-                    android:duration="200"
+                    android:duration="300"
                     android:interpolator="@android:interpolator/fast_out_slow_in"
                     android:propertyName="trimPathStart"
                     android:startOffset="100"
@@ -41,7 +41,7 @@
                     android:valueTo="0"
                     android:valueType="floatType" />
                 <objectAnimator
-                    android:duration="200"
+                    android:duration="300"
                     android:interpolator="@android:interpolator/fast_out_slow_in"
                     android:propertyName="trimPathEnd"
                     android:startOffset="100"
@@ -54,7 +54,7 @@
     <target android:name="ne_stem">
         <aapt:attr name="android:animation">
             <objectAnimator
-                android:duration="150"
+                android:duration="200"
                 android:interpolator="@android:interpolator/fast_out_slow_in"
                 android:propertyName="trimPathStart"
                 android:startOffset="150"
@@ -66,7 +66,7 @@
     <target android:name="oval">
         <aapt:attr name="android:animation">
             <objectAnimator
-                android:duration="200"
+                android:duration="300"
                 android:interpolator="@android:anim/accelerate_decelerate_interpolator"
                 android:propertyName="trimPathStart"
                 android:valueFrom="0"
@@ -78,7 +78,7 @@
         <aapt:attr name="android:animation">
             <set>
                 <objectAnimator
-                    android:duration="200"
+                    android:duration="300"
                     android:interpolator="@android:interpolator/fast_out_slow_in"
                     android:propertyName="translateX"
                     android:startOffset="100"
@@ -86,7 +86,7 @@
                     android:valueTo="-6.7"
                     android:valueType="floatType" />
                 <objectAnimator
-                    android:duration="200"
+                    android:duration="300"
                     android:interpolator="@android:interpolator/fast_out_slow_in"
                     android:propertyName="translateY"
                     android:startOffset="100"

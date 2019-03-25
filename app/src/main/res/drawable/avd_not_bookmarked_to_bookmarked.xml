@@ -6,8 +6,8 @@
             android:name="vector"
             android:width="24dp"
             android:height="24dp"
-            android:viewportHeight="24"
-            android:viewportWidth="24">
+            android:viewportWidth="24"
+            android:viewportHeight="24">
             <group
                 android:name="group"
                 android:pivotX="12"
@@ -42,21 +42,21 @@
         <aapt:attr name="android:animation">
             <set>
                 <objectAnimator
-                    android:duration="100"
+                    android:duration="150"
                     android:interpolator="@android:interpolator/fast_out_slow_in"
                     android:propertyName="scaleX"
                     android:valueFrom="1"
                     android:valueTo="0.7"
                     android:valueType="floatType" />
                 <objectAnimator
-                    android:duration="100"
+                    android:duration="150"
                     android:interpolator="@android:interpolator/fast_out_slow_in"
                     android:propertyName="scaleY"
                     android:valueFrom="1"
                     android:valueTo="0.7"
                     android:valueType="floatType" />
                 <objectAnimator
-                    android:duration="200"
+                    android:duration="300"
                     android:interpolator="@android:anim/anticipate_overshoot_interpolator"
                     android:propertyName="scaleX"
                     android:startOffset="100"
@@ -64,7 +64,7 @@
                     android:valueTo="1"
                     android:valueType="floatType" />
                 <objectAnimator
-                    android:duration="200"
+                    android:duration="300"
                     android:interpolator="@android:anim/anticipate_overshoot_interpolator"
                     android:propertyName="scaleY"
                     android:startOffset="100"
