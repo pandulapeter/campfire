@@ -68,13 +68,14 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             isEnabled = false
         }
     }
-    val recyclerAdapter = RecyclerAdapter()
+    private var recyclerAdapter: RecyclerAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
-                val index = recyclerAdapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
+                val index = recyclerAdapter?.items?.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
+                    ?: RecyclerView.NO_POSITION
                 if (index != RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
@@ -90,6 +91,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        recyclerAdapter = RecyclerAdapter()
         binding.stateLayout.animateFirstView = savedInstanceState == null
         getCampfireActivity()?.also { activity ->
             toolbarTextInputView = ToolbarTextInputView(activity.toolbarContext, R.string.collections_search, true).apply {
@@ -103,7 +105,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             }
             topLevelBehavior.onViewCreated(savedInstanceState)
             postponeEnterTransition()
-            recyclerAdapter.itemTitleCallback = {
+            recyclerAdapter?.itemTitleCallback = {
                 when (it) {
                     is HeaderItemViewModel -> (it.title as String).normalize()[0].toString()
                     is CollectionItemViewModel -> it.collection.getNormalizedTitle()[0].toString()
@@ -145,9 +147,9 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                 }
             }
             analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_COLLECTIONS)
-            viewModel.shouldScrollToTop.observeAndReset { recyclerAdapter.shouldScrollToTop = it }
-            viewModel.items.observeNotNull { recyclerAdapter.items = it }
-            viewModel.changeEvent.observeAndReset { recyclerAdapter.notifyItemChanged(it.first, it.second) }
+            viewModel.shouldScrollToTop.observeAndReset { recyclerAdapter?.shouldScrollToTop = it }
+            viewModel.items.observeNotNull { recyclerAdapter?.items = it }
+            viewModel.changeEvent.observeAndReset { recyclerAdapter?.notifyItemChanged(it.first, it.second) }
             viewModel.shouldShowEraseButton.observe {
                 eraseButton.apply {
                     if (getCampfireActivity()?.isAfterFirstStart == true) {
@@ -209,7 +211,7 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                 }
             }
             viewModel.isFastScrollEnabled.observe { binding.recyclerView.setFastScrollEnabled(it) }
-            recyclerAdapter.apply {
+            recyclerAdapter?.apply {
                 collectionClickListener = { collection, clickedView, image ->
                     if (!isUiBlocked) {
                         if (items.size > 1) {
@@ -250,7 +252,8 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
                         override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
                             removeOnLayoutChangeListener(this)
                             if (reenterTransition != null) {
-                                val index = recyclerAdapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
+                                val index = recyclerAdapter?.items?.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
+                                    ?: RecyclerView.NO_POSITION
                                 if (index != RecyclerView.NO_POSITION) {
                                     val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                     if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
@@ -301,6 +304,11 @@ class CollectionsFragment : CampfireFragment<FragmentCollectionsBinding, Collect
             }, { shouldShowExplicit })
             else -> consumeAndUpdateLanguageFilter(menuItem, viewModel.languages.value.orEmpty().find { it.nameResource == menuItem.itemId }?.id ?: "")
         }
+    }
+
+    override fun onDestroyView() {
+        recyclerAdapter = null
+        super.onDestroyView()
     }
 
     private fun toggleTextInputVisibility() {

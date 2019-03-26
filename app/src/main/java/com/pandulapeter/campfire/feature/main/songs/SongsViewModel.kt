@@ -43,7 +43,7 @@ class SongsViewModel(
         interactionBlocker
     )
     val shouldOpenSecondaryNavigationDrawer = MutableLiveData<Boolean?>()
-    val shouldUpdateSearchToggleDrawable = MutableLiveData<Boolean?>()
+    val isSearchToggleVisible = MutableLiveData<Boolean?>()
     val isFastScrollEnabled = mutableLiveDataOf(false)
     override val placeholderText = R.string.songs_placeholder
     val shouldShowEraseButton = mutableLiveDataOf(false) { isSwipeRefreshEnabled.set(!it) }

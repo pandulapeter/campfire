@@ -39,7 +39,7 @@ class ContentLanguageFragment : OnboardingPageFragment<FragmentOnboardingContent
                     }
                     setOnCheckedChangeListener { _, isChecked ->
                         preferenceDatabase.disabledLanguageFilters =
-                                preferenceDatabase.disabledLanguageFilters.toMutableSet().apply { if (contains(it.id)) remove(it.id) else add(it.id) }
+                            preferenceDatabase.disabledLanguageFilters.toMutableSet().apply { if (contains(it.id)) remove(it.id) else add(it.id) }
                         if (isChecked) {
                             viewModel.selectedLanguageCount++
                         } else {

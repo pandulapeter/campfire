@@ -26,6 +26,11 @@ class ChangelogFragment : CampfireFragment<FragmentOptionsChangelogBinding, Chan
         }
     }
 
+    override fun onDestroyView() {
+        binding.recyclerView.adapter = null
+        super.onDestroyView()
+    }
+
     companion object {
 
         fun newInstance() = ChangelogFragment()

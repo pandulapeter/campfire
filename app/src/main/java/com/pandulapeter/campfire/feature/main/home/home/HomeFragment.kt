@@ -50,9 +50,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context?.animatedDrawable(R.drawable.avd_search_to_close) else context?.drawable(R.drawable.ic_close)
     }
     private val searchToggle: ToolbarButton by lazy {
-        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_search) {
-            toggleTextInputVisibility()
-        }
+        getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_search) { toggleTextInputVisibility() }
     }
     private val eraseButton: ToolbarButton by lazy {
         getCampfireActivity()!!.toolbarContext.createToolbarButton(R.drawable.ic_eraser) { toolbarTextInputView.textInput.setText("") }.apply {
@@ -64,14 +62,31 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     }
     private lateinit var linearLayoutManager: DisableScrollLinearLayoutManager
     private var wasLastTransitionForACollection = false
-    private lateinit var toolbarTextInputView: ToolbarTextInputView
-    val recyclerAdapter = RecyclerAdapter()
+    private val toolbarTextInputView by lazy {
+        ToolbarTextInputView(getCampfireActivity()!!.toolbarContext, R.string.home_search, true).apply {
+            if (viewModel.isTextInputVisible) {
+                showTextInput()
+            }
+            title.updateToolbarTitle(R.string.main_home)
+            textInput.onTextChanged { if (isTextInputVisible) viewModel.query = it }
+            visibilityChangeListener = { viewModel.isTextInputVisible = it }
+        }
+    }
+    private var recyclerAdapter: RecyclerAdapter? = null
+    private val onScrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            if (dy > 0 && !recyclerView.isAnimating) {
+                hideKeyboard(activity?.currentFocus)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         parentFragment?.setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
-                var index = recyclerAdapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
+                var index = recyclerAdapter?.items?.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
+                    ?: RecyclerView.NO_POSITION
                 if (wasLastTransitionForACollection && index != RecyclerView.NO_POSITION) {
                     binding.recyclerView.findViewHolderForAdapterPosition(index)?.let {
                         val view = it.itemView
@@ -82,7 +97,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                         sharedElements[names[1]] = image
                     }
                 } else {
-                    index = recyclerAdapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId }
+                    index = recyclerAdapter?.items?.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId } ?: RecyclerView.NO_POSITION
                     if (index != RecyclerView.NO_POSITION) {
                         (binding.recyclerView.findViewHolderForAdapterPosition(index)
                             ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
@@ -95,6 +110,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        recyclerAdapter = RecyclerAdapter()
         binding.stateLayout.animateFirstView = savedInstanceState == null
         getCampfireActivity()?.let { activity ->
             if (arguments?.shouldAnimate == true) {
@@ -115,18 +131,9 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     false
                 }
             }
-            toolbarTextInputView = ToolbarTextInputView(activity.toolbarContext, R.string.home_search, true).apply {
-                if (viewModel.isTextInputVisible) {
-                    showTextInput()
-                }
-                textInput.setText(viewModel.query)
-                visibilityChangeListener = { viewModel.isTextInputVisible = it }
-                title.updateToolbarTitle(R.string.main_home)
-                textInput.onTextChanged { if (isTextInputVisible) viewModel.query = it }
-            }
-            viewModel.shouldScrollToTop.observeAndReset { recyclerAdapter.shouldScrollToTop = it }
-            viewModel.items.observeNotNull { recyclerAdapter.items = it }
-            viewModel.changeEvent.observeAndReset { recyclerAdapter.notifyItemChanged(it.first, it.second) }
+            viewModel.shouldScrollToTop.observeAndReset { recyclerAdapter?.shouldScrollToTop = it }
+            viewModel.items.observeNotNull { recyclerAdapter?.items = it }
+            viewModel.changeEvent.observeAndReset { recyclerAdapter?.notifyItemChanged(it.first, it.second) }
             viewModel.isSearchToggleVisible.observeAfterDelay {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
                 activity.transitionMode = true
@@ -242,13 +249,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                 layoutManager = linearLayoutManager
                 setHasFixedSize(true)
                 adapter = recyclerAdapter
-                addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                        if (dy > 0 && !recyclerView.isAnimating) {
-                            hideKeyboard(activity.currentFocus)
-                        }
-                    }
-                })
+                addOnScrollListener(onScrollListener)
                 itemAnimator = object : DefaultItemAnimator() {
                     init {
                         supportsChangeAnimations = false
@@ -260,7 +261,7 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     toggleTextInputVisibility()
                 }
             }
-            recyclerAdapter.apply {
+            recyclerAdapter?.apply {
                 collectionClickListener = { collection, clickedView, image ->
                     if (!isUiBlocked) {
                         if (items.size > 1) {
@@ -317,14 +318,16 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
                     override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
                         binding.recyclerView.removeOnLayoutChangeListener(this)
                         if (reenterTransition != null) {
-                            var index = recyclerAdapter.items.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
+                            var index = recyclerAdapter?.items?.indexOfFirst { it is CollectionItemViewModel && it.collection.id == getCampfireActivity()?.lastCollectionId }
+                                ?: RecyclerView.NO_POSITION
                             if (index != RecyclerView.NO_POSITION) {
                                 val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                 if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
                                     binding.recyclerView.run { post { if (isAdded) scrollToPosition(index) } }
                                 }
                             } else {
-                                index = recyclerAdapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId }
+                                index =
+                                    recyclerAdapter?.items?.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId } ?: RecyclerView.NO_POSITION
                                 if (index != RecyclerView.NO_POSITION) {
                                     val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                     if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
@@ -405,6 +408,12 @@ class HomeFragment : CampfireFragment<FragmentHomeBinding, HomeViewModel>(R.layo
             }, { shouldShowExplicit })
             else -> consumeAndUpdateLanguageFilter(menuItem, viewModel.languages.value.orEmpty().find { it.nameResource == menuItem.itemId }?.id ?: "")
         }
+    }
+
+    override fun onDestroyView() {
+        binding.recyclerView.removeOnScrollListener(onScrollListener)
+        recyclerAdapter = null
+        super.onDestroyView()
     }
 
     private fun toggleTextInputVisibility() {

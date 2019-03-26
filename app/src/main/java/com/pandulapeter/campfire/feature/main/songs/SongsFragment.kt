@@ -35,11 +35,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
             getCampfireActivity = { getCampfireActivity() })
     }
     private val toolbarTextInputView by lazy {
-        ToolbarTextInputView(
-            getCampfireActivity()!!.toolbarContext,
-            R.string.songs_search,
-            true
-        ).apply {
+        ToolbarTextInputView(getCampfireActivity()!!.toolbarContext, R.string.songs_search, true).apply {
             if (viewModel.isTextInputVisible) {
                 showTextInput()
             }
@@ -70,7 +66,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         super.onViewCreated(view, savedInstanceState)
         getCampfireActivity()?.let { activity ->
             analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_SONGS)
-            viewModel.shouldUpdateSearchToggleDrawable.observeAndReset {
+            viewModel.isSearchToggleVisible.observeAndReset {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
                 activity.transitionMode = true
                 binding.root.post {
@@ -213,7 +209,7 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
                 if (isTextInputVisible) {
                     textInput.setText("")
                 }
-                viewModel.shouldUpdateSearchToggleDrawable.value = toolbarTextInputView.isTextInputVisible
+                viewModel.isSearchToggleVisible.value = toolbarTextInputView.isTextInputVisible
                 if (shouldScrollToTop) {
                     viewModel.updateAdapterItems(!isTextInputVisible)
                 }
