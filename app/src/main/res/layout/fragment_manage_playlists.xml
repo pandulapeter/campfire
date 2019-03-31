@@ -21,10 +21,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingBottom="@dimen/list_fab_content_bottom_margin"
             android:paddingTop="@dimen/content_padding"
-            app:adapter="@{viewModel.adapter}"
-            app:hasFixedSize="@{true}" />
+            android:paddingBottom="@dimen/list_fab_content_bottom_margin" />
 
     </com.pandulapeter.campfire.feature.shared.widget.StateLayout>
 

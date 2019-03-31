@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.main.managePlaylists
 
+import androidx.lifecycle.MutableLiveData
 import com.pandulapeter.campfire.data.model.local.Playlist
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
 import com.pandulapeter.campfire.data.repository.PlaylistRepository
@@ -23,10 +24,11 @@ class ManagePlaylistsViewModel(
             field = value
             playlistRepository.hiddenPlaylistId = value
         }
-    val adapter = ManagePlaylistListAdapter()
     val shouldShowDeleteAllButton = mutableLiveDataOf(false)
     val playlistCount = mutableLiveDataOf(0)
     val state = mutableLiveDataOf(StateLayout.State.LOADING)
+    val items = mutableLiveDataOf(emptyList<PlaylistViewModel>())
+    val moveEvent = MutableLiveData<Pair<Int, Int>?>()
 
     init {
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_MANAGE_PLAYLISTS
@@ -72,17 +74,19 @@ class ManagePlaylistsViewModel(
     }
 
     fun swapSongsInPlaylist(originalPosition: Int, targetPosition: Int) {
-        if (originalPosition < targetPosition) {
-            for (i in originalPosition until targetPosition) {
-                Collections.swap(adapter.items, i, i + 1)
+        items.value.orEmpty().let { items ->
+            if (originalPosition < targetPosition) {
+                for (i in originalPosition until targetPosition) {
+                    Collections.swap(items, i, i + 1)
+                }
+            } else {
+                for (i in originalPosition downTo targetPosition + 1) {
+                    Collections.swap(items, i, i - 1)
+                }
             }
-        } else {
-            for (i in originalPosition downTo targetPosition + 1) {
-                Collections.swap(adapter.items, i, i - 1)
-            }
+            moveEvent.value = originalPosition to targetPosition
+            items.map { it.playlist }.forEachIndexed { index, playlist -> playlistRepository.updatePlaylistOrder(playlist.id, index) }
         }
-        adapter.notifyItemMoved(originalPosition, targetPosition)
-        adapter.items.map { it.playlist }.forEachIndexed { index, playlist -> playlistRepository.updatePlaylistOrder(playlist.id, index) }
     }
 
     private fun updateAdapterItems(playlists: List<Playlist>) {
@@ -92,7 +96,7 @@ class ManagePlaylistsViewModel(
             .map { PlaylistViewModel(it) }
             .run {
                 forEach { it.shouldShowDragHandle = it.playlist.id != Playlist.FAVORITES_ID && size > 2 }
-                adapter.items = this
+                items.value = this
                 shouldShowDeleteAllButton.value = size > 1
                 playlistCount.value = size
             }

@@ -45,19 +45,21 @@ class ManagePlaylistsFragment : CampfireFragment<FragmentManagePlaylistsBinding,
             visibleOrGone = false
         }
     }
+    var managePlaylistAdapter: ManagePlaylistListAdapter? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.stateLayout.animateFirstView = savedInstanceState == null
+        managePlaylistAdapter = ManagePlaylistListAdapter()
         analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS)
         topLevelBehavior.onViewCreated(savedInstanceState)
         topLevelBehavior.defaultToolbar.updateToolbarTitle(R.string.main_manage_playlists, getString(R.string.loading))
         getCampfireActivity()?.updateToolbarButtons(listOf(deleteAllButton))
         getCampfireActivity()?.updateFloatingActionButtonDrawable(requireContext().drawable(R.drawable.ic_add))
-        binding.recyclerView.layoutManager = LinearLayoutManager(getCampfireActivity())
-        binding.recyclerView.itemAnimator = object : DefaultItemAnimator() {
-            init {
-                supportsChangeAnimations = false
-            }
+        binding.recyclerView.apply {
+            setHasFixedSize(true)
+            adapter = managePlaylistAdapter
+            layoutManager = LinearLayoutManager(getCampfireActivity())
+            (itemAnimator as DefaultItemAnimator).supportsChangeAnimations = false
         }
         viewModel.state.observe { viewModel.playlistCount.value?.let { playlistCount -> updateToolbarTitle(playlistCount) } }
         viewModel.playlistCount.observe {
@@ -73,14 +75,12 @@ class ManagePlaylistsFragment : CampfireFragment<FragmentManagePlaylistsBinding,
             deleteAllButton.visibleOrGone = it
             showHintIfNeeded()
         }
-//        Disabled due to the navigation stack inconsistency it causes.
-//        viewModel.adapter.run { itemClickListener = { getCampfireActivity()?.openPlaylistScreen(items[it].playlist.id) } }
         val itemTouchHelper = ItemTouchHelper(object : ElevationItemTouchHelperCallback((context?.dimension(R.dimen.content_padding) ?: 0).toFloat()) {
 
             override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) =
                 if (viewHolder.adapterPosition > 0 && !binding.recyclerView.isAnimating)
                     makeMovementFlags(
-                        if (viewModel.adapter.itemCount > 2) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
+                        if (managePlaylistAdapter?.itemCount ?: 0 > 2) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
                         ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     ) else 0
 
@@ -107,32 +107,40 @@ class ManagePlaylistsFragment : CampfireFragment<FragmentManagePlaylistsBinding,
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 viewHolder.adapterPosition.let { position ->
-                    if (position != RecyclerView.NO_POSITION) {
-                        analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS)
-                        viewModel.deletePlaylistPermanently()
-                        firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true
-                        val playlist = viewModel.adapter.items[position].playlist
-                        showSnackbar(
-                            message = getString(R.string.manage_playlists_playlist_deleted_message, playlist.title),
-                            actionText = R.string.undo,
-                            action = {
-                                analyticsManager.onUndoButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS)
-                                viewModel.cancelDeletePlaylist()
-                            },
-                            dismissAction = { viewModel.deletePlaylistPermanently() }
-                        )
-                        viewModel.deletePlaylistTemporarily(playlist.id)
+                    managePlaylistAdapter?.items?.get(position)?.playlist?.let { playlist ->
+                        if (position != RecyclerView.NO_POSITION) {
+                            analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS)
+                            viewModel.deletePlaylistPermanently()
+                            firstTimeUserExperienceManager.managePlaylistsSwipeCompleted = true
+                            showSnackbar(
+                                message = getString(R.string.manage_playlists_playlist_deleted_message, playlist.title),
+                                actionText = R.string.undo,
+                                action = {
+                                    analyticsManager.onUndoButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS)
+                                    viewModel.cancelDeletePlaylist()
+                                },
+                                dismissAction = { viewModel.deletePlaylistPermanently() }
+                            )
+                            viewModel.deletePlaylistTemporarily(playlist.id)
+                        }
                     }
                 }
             }
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
-        viewModel.adapter.dragHandleTouchListener = { position -> binding.recyclerView.findViewHolderForAdapterPosition(position)?.let { itemTouchHelper.startDrag(it) } }
+        managePlaylistAdapter?.dragHandleTouchListener = { position -> binding.recyclerView.findViewHolderForAdapterPosition(position)?.let { itemTouchHelper.startDrag(it) } }
+        viewModel.items.observe { managePlaylistAdapter?.items = it }
+        viewModel.moveEvent.observeAndReset { managePlaylistAdapter?.notifyItemMoved(it.first, it.second) }
     }
 
     override fun onResume() {
         super.onResume()
         showHintIfNeeded()
+    }
+
+    override fun onDestroyView() {
+        managePlaylistAdapter = null
+        super.onDestroyView()
     }
 
     override fun onBackPressed() = isUiBlocked
@@ -144,7 +152,7 @@ class ManagePlaylistsFragment : CampfireFragment<FragmentManagePlaylistsBinding,
 
     override fun onPositiveButtonSelected(id: Int) {
         if (id == DIALOG_ID_DELETE_ALL_CONFIRMATION) {
-            analyticsManager.onDeleteAllButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS, viewModel.adapter.itemCount)
+            analyticsManager.onDeleteAllButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_PLAYLISTS, managePlaylistAdapter?.itemCount ?: 0)
             viewModel.deleteAllPlaylists()
             showSnackbar(R.string.manage_playlists_all_playlists_deleted)
         }

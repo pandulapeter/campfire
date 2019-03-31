@@ -23,7 +23,6 @@ class ManagePlaylistListAdapter : ListAdapter<PlaylistViewModel, ManagePlaylistL
             submitList(newItems)
         }
 
-    //    private var itemClickListener: (position: Int) -> Unit = { }
     var dragHandleTouchListener: ((position: Int) -> Unit)? = null
 
     init {
@@ -31,7 +30,6 @@ class ManagePlaylistListAdapter : ListAdapter<PlaylistViewModel, ManagePlaylistL
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, @LayoutRes viewType: Int) = PlaylistViewHolder.create(parent).apply {
-        //        setItemClickListener(itemClickListener)
         setDragHandleTouchListener(dragHandleTouchListener)
     }
 
@@ -45,14 +43,6 @@ class ManagePlaylistListAdapter : ListAdapter<PlaylistViewModel, ManagePlaylistL
     override fun getItemId(position: Int) = getItem(position).playlist.id.hashCode().toLong()
 
     class PlaylistViewHolder(val binding: PlaylistItemBinding) : RecyclerView.ViewHolder(binding.root) {
-
-//        fun setItemClickListener(itemClickListener: (position: Int) -> Unit) {
-//            binding.root.setOnClickListener {
-//                if (adapterPosition != RecyclerView.NO_POSITION) {
-//                    itemClickListener(adapterPosition)
-//                }
-//            }
-//        }
 
         @SuppressLint("ClickableViewAccessibility")
         fun setDragHandleTouchListener(itemTouchListener: ((position: Int) -> Unit)?) {
