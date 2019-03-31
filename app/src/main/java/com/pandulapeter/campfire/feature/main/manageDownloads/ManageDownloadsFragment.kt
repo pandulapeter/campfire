@@ -60,7 +60,7 @@ class ManageDownloadsFragment : BaseSongListFragment<ManageDownloadsViewModel>()
 
             override fun getSwipeDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
                 viewHolder.adapterPosition.let { position ->
-                    if (position != RecyclerView.NO_POSITION && viewModel.adapter.items[position] is SongItemViewModel && !binding.recyclerView.isAnimating) {
+                    if (position != RecyclerView.NO_POSITION && recyclerAdapter?.items?.get(position) is SongItemViewModel && !binding.recyclerView.isAnimating) {
                         return ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     }
                 }
@@ -73,7 +73,7 @@ class ManageDownloadsFragment : BaseSongListFragment<ManageDownloadsViewModel>()
                         analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS)
                         viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.manageDownloadsCompleted = true
-                        val song = (viewModel.adapter.items[position] as SongItemViewModel).song
+                        val song = (recyclerAdapter?.items?.get(position) as SongItemViewModel).song
                         showSnackbar(
                             message = getString(R.string.manage_downloads_song_deleted_message, song.title),
                             actionText = R.string.undo,
@@ -97,7 +97,7 @@ class ManageDownloadsFragment : BaseSongListFragment<ManageDownloadsViewModel>()
 
     override fun onPositiveButtonSelected(id: Int) {
         if (id == DIALOG_ID_DELETE_ALL_CONFIRMATION) {
-            analyticsManager.onDeleteAllButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS, viewModel.adapter.itemCount)
+            analyticsManager.onDeleteAllButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_MANAGE_DOWNLOADS, recyclerAdapter?.itemCount ?: 0)
             viewModel.deleteAllSongs()
             showSnackbar(R.string.manage_downloads_delete_all_message)
         }

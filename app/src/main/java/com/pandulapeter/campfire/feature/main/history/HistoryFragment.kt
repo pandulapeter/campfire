@@ -52,7 +52,7 @@ class HistoryFragment : BaseSongListFragment<HistoryViewModel>(), BaseDialogFrag
 
             override fun getSwipeDirs(recyclerView: androidx.recyclerview.widget.RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
                 viewHolder.adapterPosition.let { position ->
-                    if (position != RecyclerView.NO_POSITION && viewModel.adapter.items[position] is SongItemViewModel && !binding.recyclerView.isAnimating) {
+                    if (position != RecyclerView.NO_POSITION && recyclerAdapter?.items?.get(position) is SongItemViewModel && !binding.recyclerView.isAnimating) {
                         return ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     }
                 }
@@ -65,7 +65,7 @@ class HistoryFragment : BaseSongListFragment<HistoryViewModel>(), BaseDialogFrag
                         analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_HISTORY)
                         viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.historyCompleted = true
-                        val song = (viewModel.adapter.items[position] as SongItemViewModel).song
+                        val song = (recyclerAdapter?.items?.get(position) as SongItemViewModel).song
                         showSnackbar(
                             message = getString(R.string.history_song_removed_message, song.title),
                             actionText = R.string.undo,
@@ -89,7 +89,7 @@ class HistoryFragment : BaseSongListFragment<HistoryViewModel>(), BaseDialogFrag
 
     override fun onPositiveButtonSelected(id: Int) {
         if (id == DIALOG_ID_DELETE_ALL_CONFIRMATION) {
-            analyticsManager.onDeleteAllButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_HISTORY, viewModel.adapter.itemCount)
+            analyticsManager.onDeleteAllButtonPressed(AnalyticsManager.PARAM_VALUE_SCREEN_HISTORY, recyclerAdapter?.itemCount ?: 0)
             viewModel.deleteAllSongs()
             showSnackbar(R.string.history_all_songs_removed_message)
         }

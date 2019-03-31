@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentBaseSongListBinding
+import com.pandulapeter.campfire.feature.main.shared.recycler.RecyclerAdapter
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
@@ -31,12 +32,20 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
     protected open val canOpenDetailScreen = true
     protected open val shouldSendMultipleSongs = false
     protected open val shouldShowManagePlaylist = true
+    protected var recyclerAdapter: RecyclerAdapter? = null
+    private val onScrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            if (dy > 0 && !recyclerView.isAnimating) {
+                hideKeyboard(activity?.currentFocus)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setExitSharedElementCallback(object : SharedElementCallback() {
             override fun onMapSharedElements(names: MutableList<String>, sharedElements: MutableMap<String, View>) {
-                val index = viewModel.adapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId }
+                val index = recyclerAdapter?.items?.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId } ?: RecyclerView.NO_POSITION
                 if (index != RecyclerView.NO_POSITION) {
                     (binding.recyclerView.findViewHolderForAdapterPosition(index)
                         ?: binding.recyclerView.findViewHolderForAdapterPosition(linearLayoutManager.findLastVisibleItemPosition()))?.let {
@@ -50,13 +59,14 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
 
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        recyclerAdapter = RecyclerAdapter()
         binding.stateLayout.animateFirstView = savedInstanceState == null
         postponeEnterTransition()
         if (savedInstanceState != null) {
             viewModel.buttonText.value = savedInstanceState.buttonText
         }
         topLevelBehavior.onViewCreated(savedInstanceState)
-        viewModel.adapter.run {
+        recyclerAdapter?.run {
             songClickListener = { song, position, clickedView ->
                 if (!isUiBlocked && canOpenDetailScreen) {
                     if (items.size > 1) {
@@ -104,6 +114,9 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
                 }
             }
         }
+        viewModel.shouldScrollToTop.observeAndReset { recyclerAdapter?.shouldScrollToTop = it }
+        viewModel.items.observeNotNull { recyclerAdapter?.items = it }
+        viewModel.changeEvent.observeAndReset { recyclerAdapter?.notifyItemChanged(it.first, it.second) }
         binding.swipeRefreshLayout.run {
             setOnRefreshListener {
                 analyticsManager.onSwipeToRefreshUsed(viewModel.screenName)
@@ -114,21 +127,16 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
         linearLayoutManager = DisableScrollLinearLayoutManager(requireContext()).apply { interactionBlocker = viewModel.interactionBlocker }
         binding.recyclerView.run {
             layoutManager = linearLayoutManager
-            adapter = viewModel.adapter
+            adapter = recyclerAdapter
             setHasFixedSize(true)
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    if (dy > 0 && !recyclerView.isAnimating) {
-                        hideKeyboard(activity?.currentFocus)
-                    }
-                }
-            })
+            addOnScrollListener(onScrollListener)
             addOnLayoutChangeListener(
                 object : OnLayoutChangeListener {
                     override fun onLayoutChange(view: View, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
                         binding.recyclerView.removeOnLayoutChangeListener(this)
                         if (reenterTransition != null) {
-                            val index = viewModel.adapter.items.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId }
+                            val index =
+                                recyclerAdapter?.items?.indexOfFirst { it is SongItemViewModel && it.song.id == getCampfireActivity()?.lastSongId } ?: RecyclerView.NO_POSITION
                             if (index != RecyclerView.NO_POSITION) {
                                 val viewAtPosition = linearLayoutManager.findViewByPosition(index)
                                 if (viewAtPosition == null || linearLayoutManager.isViewPartiallyVisible(viewAtPosition, false, true)) {
@@ -176,10 +184,16 @@ abstract class BaseSongListFragment<out VM : BaseSongListViewModel> : CampfireFr
         outState.buttonText = viewModel.buttonText.value ?: 0
     }
 
+    override fun onDestroyView() {
+        binding.recyclerView.removeOnScrollListener(onScrollListener)
+        recyclerAdapter = null
+        super.onDestroyView()
+    }
+
     protected open fun onDetailScreenOpened() = Unit
 
     protected fun shuffleSongs(source: String) {
-        val tempList = viewModel.adapter.items.filterIsInstance<SongItemViewModel>().map { it.song }.toMutableList()
+        val tempList = (recyclerAdapter?.items?.filterIsInstance<SongItemViewModel>()?.map { it.song } ?: emptyList()).toMutableList()
         tempList.shuffle()
         isUiBlocked = true
         analyticsManager.onShuffleButtonPressed(source, tempList.size)

@@ -11,7 +11,6 @@ import com.pandulapeter.campfire.data.repository.SongDetailRepository
 import com.pandulapeter.campfire.data.repository.SongRepository
 import com.pandulapeter.campfire.feature.CampfireActivity
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListViewModel
-import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.ItemViewModel
 import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
@@ -109,18 +108,6 @@ class SongsViewModel(
 
     init {
         preferenceDatabase.lastScreen = CampfireActivity.SCREEN_SONGS
-        adapter.itemTitleCallback = {
-            when (it) {
-                is HeaderItemViewModel -> (it.title as String).normalize()[0].toString()
-                is CollectionItemViewModel -> ""
-                is SongItemViewModel -> when (sortingMode) {
-                    SongsViewModel.SortingMode.TITLE -> it.song.getNormalizedTitle()[0].toString()
-                    SongsViewModel.SortingMode.ARTIST -> it.song.getNormalizedArtist()[0].toString()
-                    SongsViewModel.SortingMode.POPULARITY -> ""
-                }
-                else -> ""
-            }
-        }
     }
 
     override fun onSongRepositoryDataUpdated(data: List<Song>) {

@@ -118,7 +118,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
             override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) =
                 if (viewModel.isInEditMode.value == true && !binding.recyclerView.isAnimating)
                     makeMovementFlags(
-                        if (viewModel.adapter.itemCount > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
+                        if ((recyclerAdapter?.itemCount ?: 0) > 1) ItemTouchHelper.UP or ItemTouchHelper.DOWN else 0,
                         ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     ) else 0
 
@@ -142,7 +142,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
                         analyticsManager.onSwipeToDismissUsed(AnalyticsManager.PARAM_VALUE_SCREEN_PLAYLIST)
                         viewModel.deleteSongPermanently()
                         firstTimeUserExperienceManager.playlistSwipeCompleted = true
-                        (viewModel.adapter.items[position] as? SongItemViewModel)?.song?.let { song ->
+                        (recyclerAdapter?.items?.get(position) as? SongItemViewModel)?.song?.let { song ->
                             showSnackbar(
                                 message = getString(R.string.playlist_song_removed_message, song.title),
                                 actionText = R.string.undo,
@@ -159,7 +159,9 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
             }
         })
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
-        viewModel.adapter.songDragTouchListener = { position -> binding.recyclerView.findViewHolderForAdapterPosition(position)?.let { itemTouchHelper.startDrag(it) } }
+        recyclerAdapter?.songDragTouchListener = { position -> binding.recyclerView.findViewHolderForAdapterPosition(position)?.let { itemTouchHelper.startDrag(it) } }
+        viewModel.changeEventRange.observeAndReset { recyclerAdapter?.notifyItemRangeChanged(it.first.first, it.first.second, it.second) }
+        viewModel.moveEvent.observeAndReset { recyclerAdapter?.notifyItemMoved(it.first, it.second) }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -200,7 +202,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
     private fun showHintIfNeeded() {
 
         fun showSwipeHintIfNeeded() {
-            if (!firstTimeUserExperienceManager.playlistSwipeCompleted && !isSnackbarVisible() && viewModel.adapter.items.isNotEmpty() && viewModel.isInEditMode.value == true) {
+            if (!firstTimeUserExperienceManager.playlistSwipeCompleted && !isSnackbarVisible() && !recyclerAdapter?.items.isNullOrEmpty() && viewModel.isInEditMode.value == true) {
                 showHint(
                     message = R.string.playlist_hint_swipe,
                     action = { firstTimeUserExperienceManager.playlistSwipeCompleted = true }
@@ -209,7 +211,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
         }
 
         fun showDragHintIfNeeded() {
-            if (!firstTimeUserExperienceManager.playlistDragCompleted && !isSnackbarVisible() && viewModel.adapter.itemCount > 1 && viewModel.isInEditMode.value == true) {
+            if (!firstTimeUserExperienceManager.playlistDragCompleted && !isSnackbarVisible() && recyclerAdapter?.itemCount ?: 0 > 1 && viewModel.isInEditMode.value == true) {
                 showHint(
                     message = R.string.playlist_hint_drag,
                     action = {
@@ -243,7 +245,7 @@ class PlaylistFragment : BaseSongListFragment<PlaylistViewModel>() {
                             viewModel.playlistRepository.updatePlaylistTitle(it.id, newTitle)
                             viewModel.appShortcutManager.updateAppShortcuts()
                         }
-                        analyticsManager.onPlaylistEdited(newTitle ?: "", viewModel.adapter.itemCount)
+                        analyticsManager.onPlaylistEdited(newTitle ?: "", recyclerAdapter?.itemCount ?: 0)
                     }
                 }
                 viewModel.isInEditMode.value = isTextInputVisible

@@ -13,6 +13,9 @@ import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.ViewSearchControlsBinding
 import com.pandulapeter.campfire.feature.main.shared.baseSongList.BaseSongListFragment
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.CollectionItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.HeaderItemViewModel
+import com.pandulapeter.campfire.feature.main.shared.recycler.viewModel.SongItemViewModel
 import com.pandulapeter.campfire.feature.shared.behavior.TopLevelBehavior
 import com.pandulapeter.campfire.feature.shared.widget.SearchControlsViewModel
 import com.pandulapeter.campfire.feature.shared.widget.ToolbarButton
@@ -22,6 +25,7 @@ import com.pandulapeter.campfire.util.BundleArgumentDelegate
 import com.pandulapeter.campfire.util.animatedDrawable
 import com.pandulapeter.campfire.util.consume
 import com.pandulapeter.campfire.util.drawable
+import com.pandulapeter.campfire.util.normalize
 import com.pandulapeter.campfire.util.onTextChanged
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -66,6 +70,18 @@ class SongsFragment : BaseSongListFragment<SongsViewModel>() {
         super.onViewCreated(view, savedInstanceState)
         getCampfireActivity()?.let { activity ->
             analyticsManager.onTopLevelScreenOpened(AnalyticsManager.PARAM_VALUE_SCREEN_SONGS)
+            recyclerAdapter?.itemTitleCallback = {
+                when (it) {
+                    is HeaderItemViewModel -> (it.title as String).normalize()[0].toString()
+                    is CollectionItemViewModel -> ""
+                    is SongItemViewModel -> when (viewModel.sortingMode) {
+                        SongsViewModel.SortingMode.TITLE -> it.song.getNormalizedTitle()[0].toString()
+                        SongsViewModel.SortingMode.ARTIST -> it.song.getNormalizedArtist()[0].toString()
+                        SongsViewModel.SortingMode.POPULARITY -> ""
+                    }
+                    else -> ""
+                }
+            }
             viewModel.isSearchToggleVisible.observeAndReset {
                 searchToggle.setImageDrawable((if (it) drawableSearchToClose else drawableCloseToSearch).apply { (this as? AnimatedVectorDrawableCompat)?.start() })
                 activity.transitionMode = true

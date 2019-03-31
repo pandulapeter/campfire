@@ -31,13 +31,15 @@ class PlaylistViewModel(
     interactionBlocker: InteractionBlocker
 ) : BaseSongListViewModel(context, songRepository, songDetailRepository, preferenceDatabase, playlistRepository, analyticsManager, interactionBlocker) {
 
+    val changeEventRange = MutableLiveData<Pair<Pair<Int, Int>, RecyclerAdapter.Payload>?>()
+    val moveEvent = MutableLiveData<Pair<Int, Int>?>()
     var songToDeleteId: String? = null
         private set
     val playlist = MutableLiveData<Playlist?>()
     val songCount = mutableLiveDataOf(-1)
     val isInEditMode = mutableLiveDataOf(false) {
-        if (adapter.itemCount > 1) {
-            adapter.notifyItemRangeChanged(0, adapter.itemCount, RecyclerAdapter.Payload.EditModeChanged(it))
+        if (items.value.orEmpty().size > 1) {
+            changeEventRange.value = (0 to items.value.orEmpty().size) to RecyclerAdapter.Payload.EditModeChanged(it)
             updateAdapterItems()
         }
     }
@@ -85,20 +87,22 @@ class PlaylistViewModel(
     }
 
     fun swapSongsInPlaylist(originalPosition: Int, targetPosition: Int) {
-        if (originalPosition < targetPosition) {
-            for (i in originalPosition until targetPosition) {
-                Collections.swap(adapter.items, i, i + 1)
+        items.value.orEmpty().let { items ->
+            if (originalPosition < targetPosition) {
+                for (i in originalPosition until targetPosition) {
+                    Collections.swap(items, i, i + 1)
+                }
+            } else {
+                for (i in originalPosition downTo targetPosition + 1) {
+                    Collections.swap(items, i, i - 1)
+                }
             }
-        } else {
-            for (i in originalPosition downTo targetPosition + 1) {
-                Collections.swap(adapter.items, i, i - 1)
+            playlist.value?.let {
+                moveEvent.value = originalPosition to targetPosition
+                val newList = items.filterIsInstance<SongItemViewModel>().map { songItemViewModel -> songItemViewModel.song.id }.toMutableList()
+                it.songIds = newList
+                playlistRepository.updatePlaylistSongIds(it.id, newList)
             }
-        }
-        playlist.value?.let {
-            adapter.notifyItemMoved(originalPosition, targetPosition)
-            val newList = adapter.items.filterIsInstance<SongItemViewModel>().map { songItemViewModel -> songItemViewModel.song.id }.toMutableList()
-            it.songIds = newList
-            playlistRepository.updatePlaylistSongIds(it.id, newList)
         }
     }
 
@@ -121,7 +125,7 @@ class PlaylistViewModel(
     fun deleteSongPermanently() {
         songToDeleteId?.let {
             playlist.value?.let { playlist ->
-                val newList = adapter.items.filterIsInstance<SongItemViewModel>().map { songItemViewModel -> songItemViewModel.song.id }.toMutableList()
+                val newList = items.value.orEmpty().filterIsInstance<SongItemViewModel>().map { songItemViewModel -> songItemViewModel.song.id }.toMutableList()
                 playlist.songIds = newList
                 playlistRepository.updatePlaylistSongIds(playlist.id, newList)
             }
