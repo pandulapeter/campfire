@@ -128,6 +128,11 @@ class CollectionsViewModel(
 
     override fun unsubscribe() = collectionRepository.unsubscribe(this)
 
+    override fun onCleared() {
+        super.onCleared()
+        coroutine?.cancel()
+    }
+
     override fun onCollectionsUpdated(data: List<Collection>) {
         collections = data.asSequence()
         updateAdapterItems()

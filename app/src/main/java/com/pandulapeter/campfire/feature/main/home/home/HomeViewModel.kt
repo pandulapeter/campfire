@@ -174,6 +174,11 @@ class HomeViewModel(
         playlistRepository.unsubscribe(this)
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        coroutine?.cancel()
+    }
+
     override fun onCollectionsUpdated(data: List<Collection>) {
         collections = data.asSequence()
         updateAdapterItems(false)
@@ -275,11 +280,6 @@ class HomeViewModel(
     }
 
     override fun onPlaylistOrderChanged(playlists: List<Playlist>) = Unit
-
-    override fun onCleared() {
-        super.onCleared()
-        coroutine?.cancel()
-    }
 
     private fun onError() {
         if (System.currentTimeMillis() - lastErrorTimestamp > 200) {

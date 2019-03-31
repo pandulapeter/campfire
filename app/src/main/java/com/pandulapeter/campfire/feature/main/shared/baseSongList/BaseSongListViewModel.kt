@@ -74,6 +74,12 @@ abstract class BaseSongListViewModel(
     }
 
     @CallSuper
+    override fun onCleared() {
+        super.onCleared()
+        coroutine?.cancel()
+    }
+
+    @CallSuper
     override fun onSongRepositoryDataUpdated(data: List<Song>) {
         songs = data.asSequence()
         updateAdapterItems(true)

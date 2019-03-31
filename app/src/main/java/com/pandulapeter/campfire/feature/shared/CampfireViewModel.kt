@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.feature.shared
 
+import androidx.annotation.CallSuper
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,8 +16,8 @@ abstract class CampfireViewModel(val interactionBlocker: InteractionBlocker) : V
             interactionBlocker.isUiBlocked = value
         }
 
+    @CallSuper
     override fun onCleared() {
-        super.onCleared()
         job.cancel()
     }
 
