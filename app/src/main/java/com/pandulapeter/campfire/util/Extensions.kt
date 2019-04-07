@@ -3,7 +3,9 @@ package com.pandulapeter.campfire.util
 import android.animation.Animator
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.content.res.TypedArray
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -42,7 +44,18 @@ fun Context.dimension(@DimenRes dimensionId: Int) = resources.getDimensionPixelS
 
 fun Context.drawable(@DrawableRes drawableId: Int) = AppCompatResources.getDrawable(this, drawableId)
 
-fun Context.font(@FontRes fontId: Int) = ResourcesCompat.getFont(this, fontId) ?: throw(Throwable("Font doesn't exist"))
+fun Context.font(@FontRes fontId: Int): Typeface {
+    val typeface = try {
+        ResourcesCompat.getFont(this, fontId)
+    } catch (_: Resources.NotFoundException) {
+        val nullTypeface: Typeface? = null
+        Typeface.create(nullTypeface, Typeface.NORMAL)!!
+    }
+    return typeface ?: run {
+        val nullTypeface: Typeface? = null
+        Typeface.create(nullTypeface, Typeface.NORMAL)!!
+    }
+}
 
 fun Context.animatedDrawable(@DrawableRes drawableId: Int) = AnimatedVectorDrawableCompat.create(this, drawableId)
 
