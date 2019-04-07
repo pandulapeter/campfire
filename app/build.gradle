@@ -87,7 +87,7 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
 
     // Persistence
-    def roomVersion = "2.1.0-alpha05"
+    def roomVersion = "2.1.0-alpha06"
     implementation "androidx.room:room-runtime:$roomVersion"
     kapt "androidx.room:room-compiler:$roomVersion"
 
@@ -111,10 +111,10 @@ dependencies {
     // UI components
     implementation "androidx.appcompat:appcompat:1.0.2"
     implementation "androidx.legacy:legacy-support-v4:1.0.0"
-    implementation "com.google.android.material:material:1.1.0-alpha04"
+    implementation "com.google.android.material:material:1.1.0-alpha05"
     implementation "androidx.cardview:cardview:1.0.0"
     implementation "androidx.browser:browser:1.0.0"
-    implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha3"
+    implementation "androidx.constraintlayout:constraintlayout:2.0.0-alpha4"
     implementation "com.simplecityapps:recyclerview-fastscroll:2.0.0"
 
     // In-app purchases
