@@ -734,9 +734,9 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     } else {
                         setReorderingAllowed(true)
                         clickedView.transitionName = "card-$lastCollectionId"
-                        addSharedElement(clickedView, clickedView.transitionName)
+                        addSharedElement(clickedView, clickedView.transitionName ?: "")
                         image.transitionName = "image-$lastCollectionId"
-                        addSharedElement(image, image.transitionName)
+                        addSharedElement(image, image.transitionName ?: "")
                     }
                 }
                 .addToBackStack(null)
@@ -835,7 +835,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                     setTransition(androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                 } else {
                     setReorderingAllowed(true)
-                    addSharedElement(clickedView, clickedView.transitionName)
+                    addSharedElement(clickedView, clickedView.transitionName ?: "")
                 }
             }
             .addToBackStack(null)
