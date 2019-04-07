@@ -191,6 +191,13 @@
     <!-- Options screen / Changelog -->
     <string name="options_changelog_app_updated">The app has been updated</string>
     <string name="options_changelog_what_is_new">What\'s new</string>
+    <string name="options_changelog_1_0_0_version_name" translatable="false">v1.0</string>
+    <string name="options_changelog_1_0_0_description">
+        <Data><![CDATA[
+        • Improve <strong>animations</strong> and <strong>transitions</strong><br>
+        • Minor <strong>bug fixes</strong> and <strong>stability improvements</strong>
+        ]]></Data>
+    </string>
     <string name="options_changelog_0_9_0_version_name" translatable="false">v0.9</string>
     <string name="options_changelog_0_9_0_description">
         <Data><![CDATA[

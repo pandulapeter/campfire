@@ -190,6 +190,12 @@
     <!-- Options screen / Changelog -->
     <string name="options_changelog_app_updated">Az alkalmazás frissítve lett</string>
     <string name="options_changelog_what_is_new">Újdonságok</string>
+    <string name="options_changelog_1_0_0_description">
+        <Data><![CDATA[
+        • Szépített <strong>animációk</strong> és <strong>átmenetek</strong><br>
+        • Apróbb <strong>hibajavítások</strong> és <strong>stabilításbeli javítások</strong>
+        ]]></Data>
+    </string>
     <string name="options_changelog_0_9_0_description">
         <Data><![CDATA[
         • Lehetőség dalok és dallisták <strong>megosztására</strong><br>

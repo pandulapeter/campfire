@@ -190,6 +190,12 @@
     <!-- Options screen / Changelog -->
     <string name="options_changelog_app_updated">Aplicația a fost actualizată</string>
     <string name="options_changelog_what_is_new">Ce e nou</string>
+    <string name="options_changelog_1_0_0_description">
+        <Data><![CDATA[
+        • Îmbunătățiri de <strong>animații</strong> și <strong>tranziții</strong><br>
+        • <strong>Corecții de erori</strong> și <strong>îmbunătățiri de stabilitate</strong>
+        ]]></Data>
+    </string>
     <string name="options_changelog_0_9_0_description">
         <Data><![CDATA[
         • Opțiune pentru <strong>distribuirea</strong> pieselor și a listelor de piese<br>
