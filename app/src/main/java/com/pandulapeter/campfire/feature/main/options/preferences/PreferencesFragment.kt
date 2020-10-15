@@ -2,14 +2,13 @@ package com.pandulapeter.campfire.feature.main.options.preferences
 
 import android.os.Bundle
 import android.view.View
-import com.crashlytics.android.Crashlytics
+import com.google.firebase.FirebaseApp
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsPreferencesBinding
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.dialog.AlertDialogFragment
 import com.pandulapeter.campfire.feature.shared.dialog.BaseDialogFragment
-import io.fabric.sdk.android.Fabric
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, PreferencesViewModel>(R.layout.fragment_options_preferences),
@@ -76,7 +75,7 @@ class PreferencesFragment : CampfireFragment<FragmentOptionsPreferencesBinding, 
             if (shouldShareCrashReports) {
                 @Suppress("ConstantConditionIf")
                 if (BuildConfig.BUILD_TYPE != "debug") {
-                    Fabric.with(context.applicationContext, Crashlytics())
+                    FirebaseApp.initializeApp(context.applicationContext)
                 }
             } else {
                 context.restartProcess()

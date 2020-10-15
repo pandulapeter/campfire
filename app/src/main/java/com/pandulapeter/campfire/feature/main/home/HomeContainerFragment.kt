@@ -5,7 +5,7 @@ import android.view.MenuItem
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import com.crashlytics.android.Crashlytics
+import com.google.firebase.FirebaseApp
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentHomeContainerBinding
@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.feature.shared.CampfireFragment
 import com.pandulapeter.campfire.feature.shared.TopLevelFragment
 import com.pandulapeter.campfire.feature.shared.behavior.TopLevelBehavior
 import com.pandulapeter.campfire.integration.AnalyticsManager
-import io.fabric.sdk.android.Fabric
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class HomeContainerFragment : CampfireFragment<FragmentHomeContainerBinding, HomeContainerViewModel>(R.layout.fragment_home_container), TopLevelFragment {
@@ -56,7 +55,7 @@ class HomeContainerFragment : CampfireFragment<FragmentHomeContainerBinding, Hom
         viewModel.preferenceDatabase.isOnboardingDone = true
         @Suppress("ConstantConditionIf")
         if (viewModel.preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
-            Fabric.with(requireContext().applicationContext, Crashlytics())
+            FirebaseApp.initializeApp(requireContext().applicationContext)
         }
         if (getCampfireActivity()?.wasStartedFromDeepLink() == true) {
             getCampfireActivity()?.openSharedWithYouScreen()

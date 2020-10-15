@@ -39,6 +39,7 @@ class CampfireApplication : Application() {
                 )
             )
         }
+        setupDebugMenu()
     }
 
     private fun setupDebugMenu() {

@@ -32,11 +32,10 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
-import androidx.lifecycle.Observer
-import com.crashlytics.android.Crashlytics
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.internal.NavigationMenuView
 import com.google.android.material.navigation.NavigationView
+import com.google.firebase.FirebaseApp
 import com.jakewharton.processphoenix.ProcessPhoenix
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.R
@@ -78,7 +77,6 @@ import com.pandulapeter.campfire.util.obtainColor
 import com.pandulapeter.campfire.util.toUrlIntent
 import com.pandulapeter.campfire.util.visibleOrGone
 import com.pandulapeter.campfire.util.visibleOrInvisible
-import io.fabric.sdk.android.Fabric
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.Locale
 
@@ -157,7 +155,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         // Enable crash reporting if the user opted in.
         @Suppress("ConstantConditionIf")
         if (viewModel.preferenceDatabase.isOnboardingDone && viewModel.preferenceDatabase.shouldShareCrashReports && BuildConfig.BUILD_TYPE != "debug") {
-            Fabric.with(applicationContext, Crashlytics())
+            FirebaseApp.initializeApp(applicationContext)
         }
 
         // Set the theme.
@@ -180,7 +178,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         }
         super.onCreate(savedInstanceState)
         startTime = System.currentTimeMillis()
-        viewModel.playlists.observe(this, Observer { updatePlaylists(it) })
+        viewModel.playlists.observe(this, { updatePlaylists(it) })
 
         // Make sure the status bar color is properly set.
         window.decorView.systemUiVisibility = when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
