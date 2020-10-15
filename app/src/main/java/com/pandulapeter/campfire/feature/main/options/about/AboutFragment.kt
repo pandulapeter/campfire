@@ -11,8 +11,11 @@ import androidx.browser.customtabs.CustomTabsIntent
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
+import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.ConsumeParams
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
+import com.android.billingclient.api.SkuDetailsParams
 import com.pandulapeter.campfire.R
 import com.pandulapeter.campfire.databinding.FragmentOptionsAboutBinding
 import com.pandulapeter.campfire.feature.shared.CampfireFragment
@@ -45,11 +48,11 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
         }
     }
 
-    override fun onPurchasesUpdated(@BillingClient.BillingResponse responseCode: Int, purchases: List<Purchase>?) {
-        if (responseCode == BillingClient.BillingResponse.OK && purchases != null && purchases.isNotEmpty()) {
+    override fun onPurchasesUpdated(result: BillingResult, purchases: MutableList<Purchase>?) {
+        if (result.responseCode == BillingClient.BillingResponseCode.OK && !purchases.isNullOrEmpty()) {
             purchases[0].let { purchase ->
-                billingClient.consumeAsync(purchase.purchaseToken) { responseCode, _ ->
-                    if (responseCode == BillingClient.BillingResponse.OK) {
+                billingClient.consumeAsync(ConsumeParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()) { result, _ ->
+                    if (result.responseCode == BillingClient.BillingResponseCode.OK) {
                         showSnackbar(R.string.options_about_in_app_purchase_success)
                     }
                     isUiBlocked = false
@@ -77,16 +80,30 @@ class AboutFragment : CampfireFragment<FragmentOptionsAboutBinding, AboutViewMod
 
     private fun startPurchaseFlow() {
         billingClient.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(@BillingClient.BillingResponse billingResponseCode: Int) {
+            override fun onBillingSetupFinished(result: BillingResult) {
                 if (isAdded && context != null) {
+                    if (result.responseCode == BillingClient.BillingResponseCode.OK) {
 
-                    if (billingResponseCode == BillingClient.BillingResponse.OK) {
-                        billingClient.launchBillingFlow(
-                            activity, BillingFlowParams.newBuilder()
-                                .setSku("buy_me_a_beer")
+                        billingClient.querySkuDetailsAsync(
+                            SkuDetailsParams
+                                .newBuilder()
+                                .setSkusList(listOf("buy_me_a_beer"))
                                 .setType(BillingClient.SkuType.INAPP)
                                 .build()
-                        )
+                        ) { _, skuDetails ->
+                            if (skuDetails.isNullOrEmpty()) {
+                                showSnackbar(R.string.something_went_wrong)
+                                isUiBlocked = false
+                            } else {
+                                activity?.let { activity ->
+                                    billingClient.launchBillingFlow(
+                                        activity, BillingFlowParams.newBuilder()
+                                            .setSkuDetails(skuDetails.first())
+                                            .build()
+                                    )
+                                }
+                            }
+                        }
                     } else {
                         isUiBlocked = false
                     }

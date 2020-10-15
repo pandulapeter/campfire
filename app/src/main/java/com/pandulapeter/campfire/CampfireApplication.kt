@@ -39,33 +39,38 @@ class CampfireApplication : Application() {
                 )
             )
         }
-        Beagle.initialize(
-            application = this,
-            behavior = Behavior(
-                networkLoggers = listOf(BeagleOkHttpLogger)
+    }
+
+    private fun setupDebugMenu() {
+        if (BuildConfig.BUILD_TYPE != "release") {
+            Beagle.initialize(
+                application = this,
+                behavior = Behavior(
+                    networkLoggers = listOf(BeagleOkHttpLogger)
+                )
             )
-        )
-        Beagle.set(
-            HeaderModule(
-                title = getString(R.string.campfire),
-                subtitle = BuildConfig.APPLICATION_ID,
-                text = "${BuildConfig.BUILD_TYPE} v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
-            ),
-            AppInfoButtonModule(type = TextModule.Type.NORMAL),
-            DeveloperOptionsButtonModule(type = TextModule.Type.NORMAL),
-            PaddingModule(),
-            TextModule("General", TextModule.Type.SECTION_HEADER),
-            KeylineOverlaySwitchModule(),
-            AnimationDurationSwitchModule(),
-            ScreenCaptureToolboxModule(),
-            DividerModule(),
-            TextModule("Logs", TextModule.Type.SECTION_HEADER),
-            NetworkLogListModule(baseUrl = NetworkManager.BASE_URL),
-            LogListModule(),
-            LifecycleLogListModule(),
-            DividerModule(),
-            TextModule("Other", TextModule.Type.SECTION_HEADER),
-            DeviceInfoModule()
-        )
+            Beagle.set(
+                HeaderModule(
+                    title = getString(R.string.campfire),
+                    subtitle = BuildConfig.APPLICATION_ID,
+                    text = "${BuildConfig.BUILD_TYPE} v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+                ),
+                AppInfoButtonModule(type = TextModule.Type.NORMAL),
+                DeveloperOptionsButtonModule(type = TextModule.Type.NORMAL),
+                PaddingModule(),
+                TextModule("General", TextModule.Type.SECTION_HEADER),
+                KeylineOverlaySwitchModule(),
+                AnimationDurationSwitchModule(),
+                ScreenCaptureToolboxModule(),
+                DividerModule(),
+                TextModule("Logs", TextModule.Type.SECTION_HEADER),
+                NetworkLogListModule(baseUrl = NetworkManager.BASE_URL),
+                LogListModule(),
+                LifecycleLogListModule(),
+                DividerModule(),
+                TextModule("Other", TextModule.Type.SECTION_HEADER),
+                DeviceInfoModule()
+            )
+        }
     }
 }

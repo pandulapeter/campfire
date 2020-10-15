@@ -113,7 +113,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
     val autoScrollControl: View get() = binding.autoScrollControl
     val toolbarContext get() = binding.appBarLayout.context!!
     val toolbarHeight get() = binding.toolbarTitleContainer.height
-    val secondaryNavigationMenu get() = binding.secondaryNavigation.menu ?: throw IllegalStateException("The secondary navigation drawer has no menu inflated.")
+    val secondaryNavigationMenu get() = binding.secondaryNavigation.menu
     val snackbarRoot: View get() = binding.rootCoordinatorLayout
     var transitionMode: Boolean? = null
         set(value) {
@@ -163,7 +163,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
         // Set the theme.
         AppCompatDelegate.setDefaultNightMode(
             when (PreferencesViewModel.Theme.fromId(viewModel.preferenceDatabase.theme)) {
-                PreferencesViewModel.Theme.AUTOMATIC -> AppCompatDelegate.MODE_NIGHT_AUTO
+                PreferencesViewModel.Theme.AUTOMATIC -> AppCompatDelegate.MODE_NIGHT_UNSPECIFIED
                 PreferencesViewModel.Theme.DARK -> AppCompatDelegate.MODE_NIGHT_YES
                 PreferencesViewModel.Theme.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
             }
@@ -294,7 +294,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             override fun onStopTrackingTouch(seekBar: SeekBar?) = viewModel.analyticsManager.onAutoScrollSpeedChanged(binding.autoScrollSeekBar.progress)
         })
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInMultiWindowMode) {
+        if (isInMultiWindowMode) {
             viewModel.analyticsManager.trackSplitScreenEntered()
         }
 
@@ -730,7 +730,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
                 .replace(R.id.fragment_container, CollectionDetailFragment.newInstance(collection))
                 .apply {
                     if (clickedView == null || image == null) {
-                        setTransition(androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                        setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                     } else {
                         setReorderingAllowed(true)
                         clickedView.transitionName = "card-$lastCollectionId"
@@ -832,7 +832,7 @@ class CampfireActivity : AppCompatActivity(), BaseDialogFragment.OnDialogItemSel
             .replace(R.id.fragment_container, DetailFragment.newInstance(songs, index, shouldShowManagePlaylist, clickedView == null))
             .apply {
                 if (clickedView == null) {
-                    setTransition(androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                    setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                 } else {
                     setReorderingAllowed(true)
                     addSharedElement(clickedView, clickedView.transitionName ?: "")

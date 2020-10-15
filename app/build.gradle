@@ -125,11 +125,11 @@ dependencies {
     implementation "com.simplecityapps:recyclerview-fastscroll:2.0.0"
 
     // In-app purchases
-    implementation "com.android.billingclient:billing:1.1"
+    implementation "com.android.billingclient:billing:3.0.1"
 
     // Debug menu
     def beagleVersion = "2.1.2"
-    def beagleUi = "bottom-sheet"
+    def beagleUi = "drawer"
     debugImplementation "com.github.pandulapeter.beagle:ui-$beagleUi:$beagleVersion"
     debugImplementation "com.github.pandulapeter.beagle:log-okhttp:$beagleVersion"
     internalImplementation "com.github.pandulapeter.beagle:ui-$beagleUi:$beagleVersion"
