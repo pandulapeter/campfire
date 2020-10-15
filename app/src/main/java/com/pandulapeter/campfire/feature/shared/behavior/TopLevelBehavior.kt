@@ -13,7 +13,7 @@ class TopLevelBehavior(
     private val inflateToolbarTitle: ((Context) -> View)? = null,
     private val shouldChangeToolbarAutomatically: Boolean = true
 ) : Behavior() {
-    val defaultToolbar by lazy { AppCompatTextView(getCampfireActivity()).apply { gravity = Gravity.CENTER_VERTICAL } }
+    val defaultToolbar by lazy { AppCompatTextView(getCampfireActivity()!!).apply { gravity = Gravity.CENTER_VERTICAL } }
 
     override fun onViewCreated(savedInstanceState: Bundle?) {
         getCampfireActivity()?.run {

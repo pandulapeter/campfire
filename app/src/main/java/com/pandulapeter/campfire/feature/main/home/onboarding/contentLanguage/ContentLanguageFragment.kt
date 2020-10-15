@@ -30,7 +30,7 @@ class ContentLanguageFragment : OnboardingPageFragment<FragmentOnboardingContent
             removeAllViews()
             val contentPadding = context.dimension(R.dimen.content_padding)
             languages.forEach {
-                addView(AppCompatCheckBox(getCampfireActivity()).apply {
+                addView(AppCompatCheckBox(getCampfireActivity()!!).apply {
                     setText(it.nameResource)
                     setPadding(contentPadding, 0, 0, 0)
                     isChecked = !preferenceDatabase.disabledLanguageFilters.contains(it.id)

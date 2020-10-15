@@ -7,12 +7,7 @@ import com.pandulapeter.campfire.data.model.remote.Song
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.Database
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
-import com.pandulapeter.campfire.data.repository.ChangelogRepository
-import com.pandulapeter.campfire.data.repository.CollectionRepository
-import com.pandulapeter.campfire.data.repository.HistoryRepository
-import com.pandulapeter.campfire.data.repository.PlaylistRepository
-import com.pandulapeter.campfire.data.repository.SongDetailRepository
-import com.pandulapeter.campfire.data.repository.SongRepository
+import com.pandulapeter.campfire.data.repository.*
 import com.pandulapeter.campfire.feature.ActivityViewModel
 import com.pandulapeter.campfire.feature.detail.DetailEventBus
 import com.pandulapeter.campfire.feature.detail.DetailPageEventBus
@@ -44,9 +39,8 @@ import com.pandulapeter.campfire.integration.AnalyticsManager
 import com.pandulapeter.campfire.integration.AppShortcutManager
 import com.pandulapeter.campfire.integration.FirstTimeUserExperienceManager
 import org.koin.android.ext.koin.androidContext
-import org.koin.androidx.viewmodel.experimental.builder.viewModel
-import org.koin.androidx.viewmodel.ext.koin.viewModel
-import org.koin.dsl.module.module
+import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.dsl.module
 
 val integrationModule = module {
     factory { AppShortcutManager(androidContext(), get(), get()) }
@@ -80,27 +74,27 @@ val detailModule = module {
 
 val featureModule = module {
     single { InteractionBlocker() }
-    viewModel<ActivityViewModel>()
-    viewModel<HomeContainerViewModel>()
-    viewModel<OnboardingViewModel>()
-    viewModel<WelcomeViewModel>()
-    viewModel<UserDataViewModel>()
-    viewModel<SongAppearanceViewModel>()
-    viewModel<ContentLanguageViewModel>()
-    viewModel<HomeViewModel>()
-    viewModel<CollectionsViewModel>()
+    viewModel { ActivityViewModel(get(), get(), get(), get(), get()) }
+    viewModel { HomeContainerViewModel(get(), get(), get(), get()) }
+    viewModel { OnboardingViewModel(get()) }
+    viewModel { WelcomeViewModel(get(), get()) }
+    viewModel { UserDataViewModel(get(), get(), get()) }
+    viewModel { SongAppearanceViewModel(get(), get()) }
+    viewModel { ContentLanguageViewModel(get(), get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { CollectionsViewModel(get(), get(), get(), get(), get()) }
     viewModel { (collection: Collection) -> CollectionDetailViewModel(collection, androidContext(), get(), get(), get(), get(), get(), get(), get()) }
-    viewModel<SongsViewModel>()
-    viewModel<HistoryViewModel>()
+    viewModel { SongsViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { HistoryViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { (playlistId: String) -> PlaylistViewModel(playlistId, androidContext(), get(), get(), get(), get(), get(), get(), get()) }
-    viewModel<OptionsViewModel>()
-    viewModel<PreferencesViewModel>()
-    viewModel<ChangelogViewModel>()
-    viewModel<AboutViewModel>()
-    viewModel<ManagePlaylistsViewModel>()
-    viewModel<ManageDownloadsViewModel>()
-    viewModel<DetailViewModel>()
+    viewModel { OptionsViewModel(get(), get()) }
+    viewModel { PreferencesViewModel(get(), get(), get(), get()) }
+    viewModel { ChangelogViewModel(get(), get()) }
+    viewModel { AboutViewModel(get(), get()) }
+    viewModel { ManagePlaylistsViewModel(get(), get(), get(), get()) }
+    viewModel { ManageDownloadsViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { DetailViewModel(get(), get(), get()) }
     viewModel { (song: Song, songParser: SongParser) -> DetailPageViewModel(song, androidContext(), get(), get(), get(), get(), get(), songParser) }
     viewModel { (songId: String) -> PlaylistChooserBottomSheetViewModel(songId, androidContext(), get()) }
-    viewModel<SharedWithYouViewModel>()
+    viewModel { SharedWithYouViewModel(get(), get(), get(), get(), get(), get(), get()) }
 }
