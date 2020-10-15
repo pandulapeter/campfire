@@ -11,8 +11,8 @@ android {
         applicationId "com.pandulapeter.campfire"
         minSdkVersion 26
         targetSdkVersion 30
-        versionCode 21
-        versionName "1.0.1"
+        versionCode 22
+        versionName "1.0.2"
         vectorDrawables.useSupportLibrary = true
     }
     buildFeatures.dataBinding = true
