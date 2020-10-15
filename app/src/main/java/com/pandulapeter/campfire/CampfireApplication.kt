@@ -49,7 +49,7 @@ class CampfireApplication : Application() {
             Beagle.initialize(
                 application = this,
                 appearance = Appearance(
-                    themeResourceId = R.style.Campfire
+                    themeResourceId = R.style.Beagle
                 ),
                 behavior = Behavior(
                     networkLoggers = listOf(BeagleOkHttpLogger)
@@ -61,8 +61,8 @@ class CampfireApplication : Application() {
                     subtitle = BuildConfig.APPLICATION_ID,
                     text = "${BuildConfig.BUILD_TYPE} v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
                 ),
-                AppInfoButtonModule(type = TextModule.Type.NORMAL),
-                DeveloperOptionsButtonModule(type = TextModule.Type.NORMAL),
+                AppInfoButtonModule(),
+                DeveloperOptionsButtonModule(),
                 PaddingModule(),
                 TextModule("General", TextModule.Type.SECTION_HEADER),
                 KeylineOverlaySwitchModule(),

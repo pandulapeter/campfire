@@ -17,6 +17,11 @@
         <item name="android:buttonTint">@color/compound_button</item>
     </style>
 
+    <style name="Beagle" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorAccent">@color/accent</item>
+    </style>
+
     <style name="Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/panel_primary</item>
         <item name="android:windowBackground">@drawable/bg_splash</item>
