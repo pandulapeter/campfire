@@ -2,7 +2,9 @@ package com.pandulapeter.campfire
 
 import android.app.Application
 import com.pandulapeter.beagle.Beagle
+import com.pandulapeter.beagle.common.configuration.Appearance
 import com.pandulapeter.beagle.common.configuration.Behavior
+import com.pandulapeter.beagle.common.configuration.Text
 import com.pandulapeter.beagle.logOkHttp.BeagleOkHttpLogger
 import com.pandulapeter.beagle.modules.AnimationDurationSwitchModule
 import com.pandulapeter.beagle.modules.AppInfoButtonModule
@@ -46,6 +48,9 @@ class CampfireApplication : Application() {
         if (BuildConfig.BUILD_TYPE != "release") {
             Beagle.initialize(
                 application = this,
+                appearance = Appearance(
+                    themeResourceId = R.style.Campfire
+                ),
                 behavior = Behavior(
                     networkLoggers = listOf(BeagleOkHttpLogger)
                 )
@@ -62,11 +67,11 @@ class CampfireApplication : Application() {
                 TextModule("General", TextModule.Type.SECTION_HEADER),
                 KeylineOverlaySwitchModule(),
                 AnimationDurationSwitchModule(),
-                ScreenCaptureToolboxModule(),
+                ScreenCaptureToolboxModule(isExpandedInitially = true),
                 DividerModule(),
                 TextModule("Logs", TextModule.Type.SECTION_HEADER),
                 NetworkLogListModule(baseUrl = NetworkManager.BASE_URL),
-                LogListModule(),
+                LogListModule(title = Text.CharSequence("Analytics")),
                 LifecycleLogListModule(),
                 DividerModule(),
                 TextModule("Other", TextModule.Type.SECTION_HEADER),

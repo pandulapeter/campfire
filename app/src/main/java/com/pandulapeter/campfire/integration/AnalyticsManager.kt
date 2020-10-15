@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.pandulapeter.beagle.Beagle
 import com.pandulapeter.campfire.BuildConfig
 import com.pandulapeter.campfire.data.networking.NetworkManager
 import com.pandulapeter.campfire.data.persistence.PreferenceDatabase
@@ -438,12 +439,13 @@ class AnalyticsManager(context: Context, private val preferenceDatabase: Prefere
     private fun trackAnalyticsEvent(event: String, vararg arguments: Pair<String, String>) {
         if (preferenceDatabase.shouldShareUsageData) {
             @Suppress("ConstantConditionIf")
-            if (BuildConfig.BUILD_TYPE == "debug") {
+            if (BuildConfig.BUILD_TYPE != "release") {
                 var text = event
                 if (arguments.isNotEmpty()) {
                     text += "(" + arguments.joinToString("; ") { it.first + ": " + it.second } + ")"
                 }
                 Log.d("ANALYTICS_EVENT", text)
+                Beagle.log(text)
             } else {
                 firebaseAnalytics.logEvent(event, Bundle().apply { arguments.forEach { putString(it.first, it.second) } })
             }
