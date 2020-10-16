@@ -5,9 +5,11 @@ import com.pandulapeter.beagle.Beagle
 import com.pandulapeter.beagle.common.configuration.Appearance
 import com.pandulapeter.beagle.common.configuration.Behavior
 import com.pandulapeter.beagle.common.configuration.Text
+import com.pandulapeter.beagle.common.configuration.toText
 import com.pandulapeter.beagle.logOkHttp.BeagleOkHttpLogger
 import com.pandulapeter.beagle.modules.AnimationDurationSwitchModule
 import com.pandulapeter.beagle.modules.AppInfoButtonModule
+import com.pandulapeter.beagle.modules.BugReportButtonModule
 import com.pandulapeter.beagle.modules.DeveloperOptionsButtonModule
 import com.pandulapeter.beagle.modules.DeviceInfoModule
 import com.pandulapeter.beagle.modules.DividerModule
@@ -75,7 +77,16 @@ class CampfireApplication : Application() {
                 LifecycleLogListModule(),
                 DividerModule(),
                 TextModule("Other", TextModule.Type.SECTION_HEADER),
-                DeviceInfoModule()
+                DeviceInfoModule(),
+                BugReportButtonModule(
+                    buildInformation = {
+                        listOf(
+                            "Version name".toText() to BuildConfig.VERSION_NAME,
+                            "Version code".toText() to BuildConfig.VERSION_CODE.toString(),
+                            "Application ID".toText() to BuildConfig.APPLICATION_ID
+                        )
+                    }
+                )
             )
         }
     }

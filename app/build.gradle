@@ -95,7 +95,7 @@ dependencies {
     implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
 
     // Persistence
-    def roomVersion = "2.3.0-alpha02"
+    def roomVersion = "2.3.0-alpha03"
     implementation "androidx.room:room-runtime:$roomVersion"
     kapt "androidx.room:room-compiler:$roomVersion"
 
@@ -129,7 +129,7 @@ dependencies {
     implementation "com.android.billingclient:billing:3.0.1"
 
     // Debug menu
-    def beagleVersion = "2.1.2"
+    def beagleVersion = "2.2.2"
     def beagleUi = "drawer"
     debugImplementation "com.github.pandulapeter.beagle:ui-$beagleUi:$beagleVersion"
     debugImplementation "com.github.pandulapeter.beagle:log-okhttp:$beagleVersion"
