@@ -17,9 +17,11 @@
         <item name="android:buttonTint">@color/compound_button</item>
     </style>
 
-    <style name="Beagle" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="DebugMenu" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="colorPrimary">@color/accent</item>
         <item name="colorAccent">@color/accent</item>
+        <item name="android:statusBarColor">?android:attr/windowBackground</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
     <style name="Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">

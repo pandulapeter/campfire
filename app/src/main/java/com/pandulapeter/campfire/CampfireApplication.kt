@@ -13,6 +13,7 @@ import com.pandulapeter.beagle.modules.BugReportButtonModule
 import com.pandulapeter.beagle.modules.DeveloperOptionsButtonModule
 import com.pandulapeter.beagle.modules.DeviceInfoModule
 import com.pandulapeter.beagle.modules.DividerModule
+import com.pandulapeter.beagle.modules.ForceCrashButtonModule
 import com.pandulapeter.beagle.modules.HeaderModule
 import com.pandulapeter.beagle.modules.KeylineOverlaySwitchModule
 import com.pandulapeter.beagle.modules.LifecycleLogListModule
@@ -51,10 +52,23 @@ class CampfireApplication : Application() {
             Beagle.initialize(
                 application = this,
                 appearance = Appearance(
-                    themeResourceId = R.style.Beagle
+                    themeResourceId = R.style.DebugMenu
                 ),
                 behavior = Behavior(
-                    networkLoggers = listOf(BeagleOkHttpLogger)
+                    networkLogBehavior = Behavior.NetworkLogBehavior(
+                        networkLoggers = listOf(BeagleOkHttpLogger),
+                        baseUrl = NetworkManager.BASE_URL
+                    ),
+                    bugReportingBehavior = Behavior.BugReportingBehavior(
+                        shouldCatchExceptions = BuildConfig.DEBUG,
+                        buildInformation = {
+                            listOf(
+                                "Version name".toText() to BuildConfig.VERSION_NAME,
+                                "Version code".toText() to BuildConfig.VERSION_CODE.toString(),
+                                "Application ID".toText() to BuildConfig.APPLICATION_ID
+                            )
+                        }
+                    )
                 )
             )
             Beagle.set(
@@ -65,6 +79,7 @@ class CampfireApplication : Application() {
                 ),
                 AppInfoButtonModule(),
                 DeveloperOptionsButtonModule(),
+                ForceCrashButtonModule(type = TextModule.Type.BUTTON),
                 PaddingModule(),
                 TextModule("General", TextModule.Type.SECTION_HEADER),
                 KeylineOverlaySwitchModule(),
@@ -72,21 +87,13 @@ class CampfireApplication : Application() {
                 ScreenCaptureToolboxModule(isExpandedInitially = true),
                 DividerModule(),
                 TextModule("Logs", TextModule.Type.SECTION_HEADER),
-                NetworkLogListModule(baseUrl = NetworkManager.BASE_URL),
+                NetworkLogListModule(),
                 LogListModule(title = Text.CharSequence("Analytics")),
                 LifecycleLogListModule(),
                 DividerModule(),
                 TextModule("Other", TextModule.Type.SECTION_HEADER),
                 DeviceInfoModule(),
-                BugReportButtonModule(
-                    buildInformation = {
-                        listOf(
-                            "Version name".toText() to BuildConfig.VERSION_NAME,
-                            "Version code".toText() to BuildConfig.VERSION_CODE.toString(),
-                            "Application ID".toText() to BuildConfig.APPLICATION_ID
-                        )
-                    }
-                )
+                BugReportButtonModule()
             )
         }
     }

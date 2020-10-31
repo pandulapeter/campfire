@@ -82,7 +82,7 @@ dependencies {
 
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.kotlinVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.0"
 
     // Service locator
     implementation "org.koin:koin-androidx-viewmodel:2.1.6"
@@ -91,7 +91,7 @@ dependencies {
     def retrofitVersion = "2.9.0"
     implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
     implementation("com.squareup.retrofit2:retrofit:$retrofitVersion") { exclude module: "okhttp" }
-    def okHttpVersion = "4.8.1"
+    def okHttpVersion = "4.9.0"
     implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
 
     // Persistence
@@ -108,13 +108,14 @@ dependencies {
     implementation "com.jakewharton:process-phoenix:2.0.0"
 
     // Analytics
-    implementation "com.google.firebase:firebase-core:17.5.1"
+    implementation "com.google.firebase:firebase-core:18.0.0"
 
     // Deep linking
     implementation "com.google.firebase:firebase-dynamic-links:19.1.1"
 
     // Crash reporting
     implementation "com.google.firebase:firebase-crashlytics:17.2.2"
+    implementation "com.google.firebase:firebase-analytics:18.0.0"
 
     // UI components
     implementation "androidx.appcompat:appcompat:1.2.0"
@@ -122,14 +123,14 @@ dependencies {
     implementation "com.google.android.material:material:1.3.0-alpha03"
     implementation "androidx.cardview:cardview:1.0.0"
     implementation "androidx.browser:browser:1.2.0"
-    implementation "androidx.constraintlayout:constraintlayout:2.0.2"
+    implementation "androidx.constraintlayout:constraintlayout:2.0.4"
     implementation "com.simplecityapps:recyclerview-fastscroll:2.0.0"
 
     // In-app purchases
     implementation "com.android.billingclient:billing:3.0.1"
 
     // Debug menu
-    def beagleVersion = "2.2.2"
+    def beagleVersion = "2.3.6"
     def beagleUi = "drawer"
     debugImplementation "com.github.pandulapeter.beagle:ui-$beagleUi:$beagleVersion"
     debugImplementation "com.github.pandulapeter.beagle:log-okhttp:$beagleVersion"
