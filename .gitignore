@@ -1,40 +1,8 @@
-# Built application files
-*.apk
-*.ap_
-
-# Files for the ART/Dalvik VM
-*.dex
-
-# Java class files
-*.class
-
-# Generated files
-bin/
-gen/
-out/
-
-# Gradle files
-.gradle/
-build/
-
-# Local configuration file (sdk path, etc)
-local.properties
-
-# Log Files
-*.log
-
-# Android Studio captures folder
-captures/
-
-# Intellij
 *.iml
-.idea/
-
-# OS-specific files
+.gradle
+/local.properties
+/.idea/
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+build
+/captures
+.externalNativeBuild

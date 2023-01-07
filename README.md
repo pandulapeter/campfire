@@ -9,10 +9,10 @@ Campfire is completely free, without any ads.
 
 [<img src="https://play.google.com/intl/en_us/badges/images/badge_new.png" />](https://play.google.com/store/apps/details?id=com.pandulapeter.campfire)
 
-You can find the source code of the backend project [here](https://github.com/pandulapeter/campfire-backend).
-
-### How to build
-The **master** branch should always be buildable.
+### Work in progress
+The app is being rewritten from scratch.
+The new version will use GitHub + [Google Sheets](https://docs.google.com/spreadsheets/d/1fMJzjAYOqFi_DTiacPnf6XNWqhx5MqlGNIRRqJk_aCY/) as the source of data (since Heroku is no longer free). It will also feature updated UI and better architecture.
+The old version can be found on the **master_legacy_v1** branch.
 
 ### Screenshots
 <img src="screenshots/01.png" width="20%" /> <img src="screenshots/02.png" width="20%" />

@@ -2,6 +2,6 @@
 <resources>
 
     <!-- General -->
-    <string name="campfire" translatable="false">Campfire</string>
+    <string name="campfire" translatable="false">Campfire (debug)</string>
 
 </resources>

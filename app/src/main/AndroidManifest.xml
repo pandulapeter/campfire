@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.pandulapeter.campfire">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="com.android.vending.BILLING" />
 
     <application
         android:name=".CampfireApplication"
@@ -14,53 +12,19 @@
         android:resizeableActivity="true"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="false"
+        android:theme="@style/Campfire"
         tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
 
         <activity
-            android:name=".feature.CampfireActivity"
-            android:launchMode="singleInstance"
-            android:theme="@style/Splash"
-            android:windowSoftInputMode="adjustNothing">
+            android:name=".CampfireActivity"
+            android:exported="true">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:host="campfire.page.link"
-                    android:scheme="https" />
-                <data
-                    android:host="campfire.page.link"
-                    android:scheme="http" />
-            </intent-filter>
-
-            <!--suppress AndroidElementNotAllowed -->
-            <layout
-                android:defaultWidth="720dp"
-                android:defaultHeight="600dp"
-                android:minWidth="300dp"
-                android:minHeight="250dp" />
-
         </activity>
-
-        <meta-data
-            android:name="firebase_crashlytics_collection_enabled"
-            android:value="false" />
-
-        <meta-data
-            android:name="firebase_analytics_collection_enabled"
-            android:value="false" />
-
-        <meta-data
-            android:name="preloaded_fonts"
-            android:resource="@array/preloaded_fonts" />
 
     </application>
 

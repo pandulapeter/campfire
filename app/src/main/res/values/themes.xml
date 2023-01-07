@@ -1,52 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Campfire" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="android:windowBackground">@color/background</item>
-        <item name="android:colorBackgroundFloating">@color/panel_primary</item>
-        <item name="colorBackgroundFloating">@color/panel_primary</item>
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-        <item name="android:textColorTertiary">@color/text_secondary</item>
-        <item name="android:textColorHint">@color/text_tertiary</item>
-        <item name="colorPrimary">@color/panel_primary</item>
-        <item name="colorPrimaryDark">@color/panel_primary</item>
-        <item name="colorSecondary">@color/accent</item>
-        <item name="android:fontFamily">@font/regular</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:buttonTint">@color/compound_button</item>
-    </style>
-
-    <style name="DebugMenu" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <item name="colorPrimary">@color/accent</item>
-        <item name="colorAccent">@color/accent</item>
-        <item name="android:statusBarColor">?android:attr/windowBackground</item>
-        <item name="android:windowLightStatusBar">true</item>
-    </style>
-
-    <style name="Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/panel_primary</item>
-        <item name="android:windowBackground">@drawable/bg_splash</item>
-        <item name="android:statusBarColor">@color/accent</item>
-        <item name="android:navigationBarColor">@color/accent</item>
-    </style>
-
-    <style name="BottomSheetDialog" parent="Theme.Design.Light.BottomSheetDialog">
-        <item name="android:windowIsFloating">false</item>
-        <item name="bottomSheetStyle">@style/BottomSheet</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-    </style>
-
-    <style name="Dialog" parent="Theme.MaterialComponents.Light.Dialog.Alert">
-        <item name="colorPrimary">@color/accent</item>
-        <item name="colorSecondary">@color/accent</item>
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-        <item name="buttonBarButtonStyle">@style/DialogButton</item>
-        <item name="android:background">@color/panel_primary</item>
+    <style name="Campfire" parent="Theme.Material3.DayNight">
+        <item name="colorPrimary">@color/brand_orange</item>
     </style>
 
 </resources>
