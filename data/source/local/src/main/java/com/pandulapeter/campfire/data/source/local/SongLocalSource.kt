@@ -2,7 +2,7 @@ package com.pandulapeter.campfire.data.source.local
 
 import com.pandulapeter.campfire.data.model.domain.Song
 
-interface SongsLocalSource {
+interface SongLocalSource {
 
     suspend fun getSongs(): List<Song>
 

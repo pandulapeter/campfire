@@ -8,7 +8,7 @@ internal fun SongResponse.toModel() = try {
     Song(
         id = id.toSongId(),
         url = url.toSongUrl(),
-        languageId = languageId.toLanguageId(),
+        languageId = languageId.toSongLanguageId(),
         title = title.toSongTitle(),
         artist = artist.toSongArtist(),
         key = key.toSongKey(),
@@ -25,7 +25,7 @@ private fun String?.toSongId() = toId("Missing song ID.")
 
 private fun String?.toSongUrl() = toUrl("Missing song URL.")
 
-private fun String?.toLanguageId() = toId("Missing song language ID.")
+private fun String?.toSongLanguageId() = toId("Missing song language ID.")
 
 private fun String?.toSongTitle() = toText("Missing song title.")
 

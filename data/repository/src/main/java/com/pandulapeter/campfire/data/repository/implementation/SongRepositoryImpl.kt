@@ -2,11 +2,11 @@ package com.pandulapeter.campfire.data.repository.implementation
 
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.repository.api.SongRepository
-import com.pandulapeter.campfire.data.source.local.SongsLocalSource
+import com.pandulapeter.campfire.data.source.local.SongLocalSource
 import com.pandulapeter.campfire.data.source.remote.api.SongRemoteSource
 
 internal class SongRepositoryImpl(
-    songLocalSource: SongsLocalSource,
+    songLocalSource: SongLocalSource,
     songRemoteSource: SongRemoteSource
 ) : BaseRepository<List<Song>>(
     getDataFromLocalSource = songLocalSource::getSongs,
