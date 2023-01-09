@@ -7,13 +7,15 @@
     <application
         android:name=".CampfireApplication"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/campfire"
         android:resizeableActivity="true"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="false"
         android:theme="@style/Campfire"
-        tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
+        tools:targetApi="s">
 
         <activity
             android:name=".CampfireActivity"

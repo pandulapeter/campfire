@@ -5,6 +5,15 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":data:repository"))
+    implementation(project(":data:source:local"))
+    implementation(project(":data:source:localImpl"))
+    implementation(project(":data:source:remote"))
+    implementation(project(":domain"))
+    implementation(project(":presentation:debugMenu"))
+    implementation(project(":presentation:utilities"))
+    implementation(project(":presentation:shared"))
+    implementation(project(":presentation:collections"))
     implementation(libs.androidx.appcompat)
     implementation(libs.google.android.material)
     implementation(libs.koin.android)
