@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Campfire" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="CampfireBase" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/brand_orange</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="Campfire" parent="CampfireBase">
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
 </resources>

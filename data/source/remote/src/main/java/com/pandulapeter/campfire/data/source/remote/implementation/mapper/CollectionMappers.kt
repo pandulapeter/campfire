@@ -10,22 +10,22 @@ internal fun CollectionResponse.toModel() = try {
         title = title.toCollectionTitle(),
         description = description.toCollectionDescription(),
         thumbnailUrl = thumbnailUrl.toCollectionThumbnailUrl(),
-        songIds = songIds.toSongIds(),
-        isPublic = isPublic.toSongIsPublic()
+        songIds = songIds.toCollectionSongIds(),
+        isPublic = isPublic.toCollectionIsPublic()
     )
 } catch (exception: DataValidationException) {
     println(exception.message)
     null
 }
 
-internal fun String?.toCollectionId() = if (isNullOrBlank()) throw DataValidationException("Missing collection ID.") else replace(" ", "")
+private fun String?.toCollectionId() = toId("Missing collection ID.")
 
-private fun String?.toCollectionTitle() = if (isNullOrBlank()) throw DataValidationException("Missing collection title.") else this
+private fun String?.toCollectionTitle() = toText("Missing collection title.")
 
-private fun String?.toCollectionDescription() = if (isNullOrBlank()) throw DataValidationException("Missing collection description.") else this
+private fun String?.toCollectionDescription() = toText("Missing collection description.")
 
-private fun String?.toCollectionThumbnailUrl() = this ?: throw DataValidationException("Missing collection thumbnail URL.")
+private fun String?.toCollectionThumbnailUrl() = toUrl("Missing collection thumbnail URL.")
 
-private fun String?.toSongIds() = orEmpty().replace(" ", "").split(",").ifEmpty { throw DataValidationException("Empty collection.") }
+private fun String?.toCollectionSongIds() = orEmpty().replace(" ", "").split(",").ifEmpty { throw DataValidationException("Empty collection.") }
 
-private fun Boolean?.toSongIsPublic() = this == true
+private fun Boolean?.toCollectionIsPublic() = toBoolean()
