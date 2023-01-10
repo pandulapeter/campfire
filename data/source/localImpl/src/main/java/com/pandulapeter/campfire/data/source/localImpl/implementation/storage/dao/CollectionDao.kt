@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.data.source.localImpl.implementation.database.dao
+package com.pandulapeter.campfire.data.source.localImpl.implementation.storage.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
