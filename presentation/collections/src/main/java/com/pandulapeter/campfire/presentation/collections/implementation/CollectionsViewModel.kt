@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.data.model.Result
 import com.pandulapeter.campfire.domain.useCases.GetCollectionsUseCase
+import com.pandulapeter.campfire.domain.useCases.GetDatabasesUseCase
 import com.pandulapeter.campfire.domain.useCases.GetSongsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,6 +12,7 @@ import kotlinx.coroutines.launch
 
 internal class CollectionsViewModel(
     private val getCollections: GetCollectionsUseCase,
+    private val getDatabases: GetDatabasesUseCase,
     private val getSongs: GetSongsUseCase
 ) : ViewModel() {
 
@@ -19,11 +21,12 @@ internal class CollectionsViewModel(
 
     init {
         viewModelScope.launch {
-            _text.value = "Loading collections..."
+            val initialText = "Using ${getDatabases().size} databases."
+            _text.value = "$initialText\nLoading collections..."
             val collectionsResult = loadCollections()
-            _text.value = "$collectionsResult\nLoading songs..."
+            _text.value = "$initialText\n$collectionsResult\nLoading songs..."
             val songsResult = loadSongs()
-            _text.value = "$collectionsResult\n$songsResult"
+            _text.value = "$initialText\n$collectionsResult\n$songsResult"
         }
     }
 
