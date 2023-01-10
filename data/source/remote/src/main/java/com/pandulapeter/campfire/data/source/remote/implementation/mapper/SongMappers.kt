@@ -8,7 +8,6 @@ internal fun SongResponse.toModel() = try {
     Song(
         id = id.toSongId(),
         url = url.toSongUrl(),
-        languageId = languageId.toSongLanguageId(),
         title = title.toSongTitle(),
         artist = artist.toSongArtist(),
         key = key.toSongKey(),

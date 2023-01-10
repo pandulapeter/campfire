@@ -4,5 +4,5 @@ import com.pandulapeter.campfire.data.model.domain.Song
 
 interface SongRemoteSource {
 
-    suspend fun getSongs(): List<Song>
+    suspend fun getSongs(sheetUrl: String): List<Song>
 }

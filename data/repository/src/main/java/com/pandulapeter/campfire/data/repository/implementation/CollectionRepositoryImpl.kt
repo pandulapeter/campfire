@@ -8,7 +8,7 @@ import com.pandulapeter.campfire.data.source.remote.api.CollectionRemoteSource
 internal class CollectionRepositoryImpl(
     collectionLocalSource: CollectionLocalSource,
     collectionRemoteSource: CollectionRemoteSource
-) : BaseRepository<List<Collection>>(
+) : BaseCachingRepository<List<Collection>>(
     getDataFromLocalSource = collectionLocalSource::getCollections,
     getDataFromRemoteSource = collectionRemoteSource::getCollections,
     saveDataToLocalSource = collectionLocalSource::saveCollections,
@@ -16,13 +16,8 @@ internal class CollectionRepositoryImpl(
 
     override fun isDataValid(data: List<Collection>) = data.isNotEmpty()
 
-    override fun areCollectionsAvailable() = isDataAvailable()
-
-    override suspend fun getCollections(isForceRefresh: Boolean) = getData(
+    override suspend fun getCollections(sheetUrl: String, isForceRefresh: Boolean) = getData(
+        sheetUrl = sheetUrl,
         isForceRefresh = isForceRefresh
     )
-
-    override suspend fun getCollectionById(isForceRefresh: Boolean, collectionId: String) = getCollections(
-        isForceRefresh = isForceRefresh
-    ).first { it.id == collectionId }
 }

@@ -8,7 +8,6 @@ import com.squareup.moshi.JsonClass
 internal data class SongResponse(
     @Json(name = KEY_ID) val id: String? = null,
     @Json(name = KEY_URL) val url: String? = null,
-    @Json(name = KEY_LANGUAGE_ID) val languageId: String? = null,
     @Json(name = KEY_TITLE) val title: String? = null,
     @Json(name = KEY_ARTIST) val artist: String? = null,
     @Json(name = KEY_KEY) val key: String? = null,
@@ -20,7 +19,6 @@ internal data class SongResponse(
         const val SHEET_NAME = "songs"
         private const val KEY_ID = "id"
         private const val KEY_URL = "url"
-        private const val KEY_LANGUAGE_ID = "language_id"
         private const val KEY_TITLE = "title"
         private const val KEY_ARTIST = "artist"
         private const val KEY_KEY = "key"
@@ -32,7 +30,6 @@ internal data class SongResponse(
             SHEET_NAME,
             KEY_ID,
             KEY_URL,
-            KEY_LANGUAGE_ID,
             KEY_TITLE,
             KEY_ARTIST,
             KEY_KEY,

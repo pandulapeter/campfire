@@ -11,10 +11,12 @@ internal data class CollectionEntity(
     @ColumnInfo(name = "description") val description: String,
     @ColumnInfo(name = "thumbnailUrl") val thumbnailUrl: String,
     @ColumnInfo(name = "songIds") val songIds: String,
-    @ColumnInfo(name = "isPublic") val isPublic: Boolean
+    @ColumnInfo(name = "isPublic") val isPublic: Boolean,
+    @ColumnInfo(name = SHEET_URL) val sheetUrl: String
 ) {
 
     companion object {
         const val TABLE_NAME = "collections"
+        const val SHEET_URL = "sheetUrl"
     }
 }

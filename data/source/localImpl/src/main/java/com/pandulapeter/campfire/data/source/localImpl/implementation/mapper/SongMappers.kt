@@ -6,7 +6,6 @@ import com.pandulapeter.campfire.data.source.localImpl.implementation.model.Song
 internal fun SongEntity.toModel() = Song(
     id = id,
     url = url,
-    languageId = languageId,
     title = title,
     artist = artist,
     key = key,
@@ -15,14 +14,14 @@ internal fun SongEntity.toModel() = Song(
     isPublic = isPublic
 )
 
-internal fun Song.toEntity() = SongEntity(
+internal fun Song.toEntity(sheetUrl: String) = SongEntity(
     id = id,
     url = url,
-    languageId = languageId,
     title = title,
     artist = artist,
     key = key,
     isExplicit = isExplicit,
     hasChords = hasChords,
-    isPublic = isPublic
+    isPublic = isPublic,
+    sheetUrl = sheetUrl
 )

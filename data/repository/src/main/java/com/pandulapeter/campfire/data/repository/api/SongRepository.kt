@@ -4,7 +4,5 @@ import com.pandulapeter.campfire.data.model.domain.Song
 
 interface SongRepository {
 
-    fun areSongsAvailable(): Boolean
-
-    suspend fun getSongs(isForceRefresh: Boolean): List<Song>
+    suspend fun getSongs(sheetUrl: String, isForceRefresh: Boolean): List<Song>
 }

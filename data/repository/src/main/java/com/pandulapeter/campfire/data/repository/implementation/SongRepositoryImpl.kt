@@ -8,7 +8,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SongRemoteSource
 internal class SongRepositoryImpl(
     songLocalSource: SongLocalSource,
     songRemoteSource: SongRemoteSource
-) : BaseRepository<List<Song>>(
+) : BaseCachingRepository<List<Song>>(
     getDataFromLocalSource = songLocalSource::getSongs,
     getDataFromRemoteSource = songRemoteSource::getSongs,
     saveDataToLocalSource = songLocalSource::saveSongs,
@@ -16,9 +16,8 @@ internal class SongRepositoryImpl(
 
     override fun isDataValid(data: List<Song>) = data.isNotEmpty()
 
-    override fun areSongsAvailable() = isDataAvailable()
-
-    override suspend fun getSongs(isForceRefresh: Boolean) = getData(
+    override suspend fun getSongs(sheetUrl: String, isForceRefresh: Boolean) = getData(
+        sheetUrl = sheetUrl,
         isForceRefresh = isForceRefresh
     )
 }

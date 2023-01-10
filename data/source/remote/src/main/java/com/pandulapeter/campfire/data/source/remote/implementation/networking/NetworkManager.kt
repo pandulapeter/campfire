@@ -5,17 +5,19 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 internal class NetworkManager(
-    okHttpClient: OkHttpClient,
-    moshiConverterFactory: MoshiConverterFactory
+    private val okHttpClient: OkHttpClient,
+    private val moshiConverterFactory: MoshiConverterFactory
 ) {
-    val networkingService: NetworkingService = Retrofit.Builder()
-        .baseUrl(BASE_URL)
+    private val networkingServices = mutableMapOf<String, NetworkingService>()
+
+    fun getNetworkingService(sheetUrl: String) = networkingServices[sheetUrl] ?: createNetworkingService(sheetUrl).also {
+        networkingServices[sheetUrl] = it
+    }
+
+    private fun createNetworkingService(sheetUrl: String): NetworkingService = Retrofit.Builder()
+        .baseUrl(sheetUrl)
         .client(okHttpClient)
         .addConverterFactory(moshiConverterFactory)
         .build()
         .create(NetworkingService::class.java)
-
-    companion object {
-        private const val BASE_URL = "https://docs.google.com/spreadsheets/d/1fMJzjAYOqFi_DTiacPnf6XNWqhx5MqlGNIRRqJk_aCY/"
-    }
 }
