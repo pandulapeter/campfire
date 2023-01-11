@@ -7,6 +7,7 @@ plugins {
 dependencies {
     implementation(project(":domain:api"))
     implementation(project(":presentation:android-debug-menu"))
+    implementation(project(":presentation:shared"))
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.fragment)

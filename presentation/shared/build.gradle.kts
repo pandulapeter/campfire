@@ -5,8 +5,5 @@ plugins {
 
 dependencies {
     implementation(project(":domain:api"))
-    implementation(project(":presentation:shared"))
     implementation(compose.desktop.currentOs)
-    implementation(libs.koin.core)
-    implementation(libs.kotlin.coroutines)
 }

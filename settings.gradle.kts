@@ -13,7 +13,8 @@ include(
     ":domain:implementation",
     ":presentation:android",
     ":presentation:android-debug-menu",
-    ":presentation:desktop"
+    ":presentation:desktop",
+    ":presentation:shared"
 )
 rootProject.name = "Campfire"
 enableFeaturePreview("VERSION_CATALOGS")
