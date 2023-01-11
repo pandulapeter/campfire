@@ -1,15 +1,16 @@
 include(
-    ":app",
+    ":app:android",
     ":data:model",
-    ":data:repository",
-    ":data:source:local",
-    ":data:source:localImpl",
-    ":data:source:remote",
-    ":domain",
-    ":presentation:debugMenu",
-    ":presentation:utilities",
-    ":presentation:shared",
-    ":presentation:collections",
+    ":data:repository:api",
+    ":data:repository:implementation",
+    ":data:source:local:api",
+    ":data:source:local:implementation-android",
+    ":data:source:remote:api",
+    ":data:source:remote:implementation-jvm",
+    ":domain:api",
+    ":domain:implementation",
+    ":presentation:android",
+    ":presentation:android-debug-menu",
 )
 rootProject.name = "Campfire"
 enableFeaturePreview("VERSION_CATALOGS")
