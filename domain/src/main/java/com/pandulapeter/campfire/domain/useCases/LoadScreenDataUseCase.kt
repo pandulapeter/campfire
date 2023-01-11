@@ -4,6 +4,9 @@ import com.pandulapeter.campfire.data.repository.api.CollectionRepository
 import com.pandulapeter.campfire.data.repository.api.DatabaseRepository
 import com.pandulapeter.campfire.data.repository.api.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 class LoadScreenDataUseCase internal constructor(
     private val collectionRepository: CollectionRepository,
@@ -13,13 +16,20 @@ class LoadScreenDataUseCase internal constructor(
 ) {
     suspend operator fun invoke(
         isForceRefresh: Boolean
-    ) {
-        // TODO: Run these calls in parallel instead of sequentially
-        val databases = databaseRepository.loadDatabasesIfNeeded()
-        playlistRepository.loadPlaylistsIfNeeded()
-        databases.forEach { database ->
-            collectionRepository.loadCollections(database.url, isForceRefresh)
-            songRepository.loadSongs(database.url, isForceRefresh)
-        }
+    ) = coroutineScope {
+        listOf(
+            async {
+                playlistRepository.loadPlaylistsIfNeeded()
+            },
+            async {
+                databaseRepository.loadDatabasesIfNeeded().let { databases ->
+                    databases.map { database ->
+                        async { collectionRepository.loadCollections(database.url, isForceRefresh) }
+                    } + databases.map { database ->
+                        async { songRepository.loadSongs(database.url, isForceRefresh) }
+                    }
+                }.awaitAll()
+            }
+        ).awaitAll()
     }
 }

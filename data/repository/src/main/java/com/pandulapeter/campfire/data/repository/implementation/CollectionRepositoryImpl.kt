@@ -17,8 +17,6 @@ internal class CollectionRepositoryImpl(
 
     override val collections = dataState
 
-    override fun isDataValid(data: List<Collection>) = data.isNotEmpty()
-
     override suspend fun loadCollections(sheetUrl: String, isForceRefresh: Boolean) = loadData(
         sheetUrl = sheetUrl,
         isForceRefresh = isForceRefresh

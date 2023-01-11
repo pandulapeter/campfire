@@ -17,8 +17,6 @@ internal class SongRepositoryImpl(
 
     override val songs = dataState
 
-    override fun isDataValid(data: List<Song>) = data.isNotEmpty()
-
     override suspend fun loadSongs(sheetUrl: String, isForceRefresh: Boolean) = loadData(
         sheetUrl = sheetUrl,
         isForceRefresh = isForceRefresh

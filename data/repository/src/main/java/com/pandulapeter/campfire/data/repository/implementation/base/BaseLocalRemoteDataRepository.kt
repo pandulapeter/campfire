@@ -12,8 +12,6 @@ internal abstract class BaseLocalRemoteDataRepository<T>(
     private val _dataState = MutableStateFlow<DataState<T>>(DataState.Failure(null))
     protected val dataState: Flow<DataState<T>> = _dataState
 
-    protected abstract fun isDataValid(data: T): Boolean
-
     protected suspend fun loadData(sheetUrl: String, isForceRefresh: Boolean) = _dataState.run {
         if (value !is DataState.Loading) {
             var currentCache = value.data
@@ -22,10 +20,18 @@ internal abstract class BaseLocalRemoteDataRepository<T>(
             } else {
                 value = DataState.Loading(currentCache)
                 if (currentCache == null) {
-                    currentCache = loadLocalData(sheetUrl)
+                    currentCache = loadDataFromLocalSource(sheetUrl)
                     value = DataState.Loading(currentCache)
                 }
-                val remoteData = loadRemoteData(sheetUrl)
+                val remoteData = try {
+                    loadDataFromRemoteSource(sheetUrl).also {
+                        value = DataState.Loading(it)
+                        saveDataToLocalSource(sheetUrl, it)
+                    }
+                } catch (exception: Exception) {
+                    println(exception.message)
+                    null
+                }
                 value = if (remoteData == null) {
                     if (currentCache == null || isForceRefresh) {
                         DataState.Failure(currentCache)
@@ -37,18 +43,5 @@ internal abstract class BaseLocalRemoteDataRepository<T>(
                 }
             }
         }
-    }
-
-    private suspend fun loadRemoteData(sheetUrl: String) = try {
-        loadDataFromRemoteSource(sheetUrl).let {
-            if (isDataValid(it)) it.also { saveDataToLocalSource(sheetUrl, it) } else null
-        }
-    } catch (exception: Exception) {
-        println(exception.message)
-        null
-    }
-
-    private suspend fun loadLocalData(sheetUrl: String) = loadDataFromLocalSource(sheetUrl).let {
-        if (isDataValid(it)) it else null
     }
 }

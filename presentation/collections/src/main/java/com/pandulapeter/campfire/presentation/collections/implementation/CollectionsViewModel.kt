@@ -18,9 +18,9 @@ internal class CollectionsViewModel(
 
     val text = getScreenData().map {
         when (it) {
-            is DataState.Failure -> "Error - ${it.data.describe()}"
-            is DataState.Idle -> "Idle - ${it.data.describe()}"
-            is DataState.Loading -> "Loading - ${it.data.describe()}"
+            is DataState.Failure -> "Error\n${it.data.describe()}"
+            is DataState.Idle -> "Idle\n${it.data.describe()}"
+            is DataState.Loading -> "Loading\n${it.data.describe()}"
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, "Uninitialized")
 
