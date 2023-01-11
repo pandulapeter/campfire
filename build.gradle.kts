@@ -17,5 +17,6 @@ buildscript {
     dependencies {
         classpath(libs.gradle)
         classpath(libs.kotlin)
+        classpath(libs.realm.gradle)
     }
 }

@@ -10,12 +10,14 @@ import com.pandulapeter.campfire.data.source.local.implementationDesktop.source.
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.source.PlaylistLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.source.SongLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.source.UserPreferencesLocalSourceImpl
+import com.pandulapeter.campfire.data.source.local.implementationDesktop.storage.StorageManager
 import org.koin.dsl.module
 
 val dataLocalSourceDesktopModule = module {
-    factory<CollectionLocalSource> { CollectionLocalSourceImpl() }
-    factory<DatabaseLocalSource> { DatabaseLocalSourceImpl() }
-    factory<PlaylistLocalSource> { PlaylistLocalSourceImpl() }
-    factory<SongLocalSource> { SongLocalSourceImpl() }
-    factory<UserPreferencesLocalSource> { UserPreferencesLocalSourceImpl() }
+    single { StorageManager() }
+    factory<CollectionLocalSource> { CollectionLocalSourceImpl(get()) }
+    factory<DatabaseLocalSource> { DatabaseLocalSourceImpl(get()) }
+    factory<PlaylistLocalSource> { PlaylistLocalSourceImpl(get()) }
+    factory<SongLocalSource> { SongLocalSourceImpl(get()) }
+    factory<UserPreferencesLocalSource> { UserPreferencesLocalSourceImpl(get()) }
 }
