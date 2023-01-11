@@ -6,13 +6,13 @@ import com.pandulapeter.campfire.data.source.localImpl.implementation.model.Play
 internal fun PlaylistEntity.toModel() = Playlist(
     id = id,
     title = title,
-    songIds = songIds.split(","),
+    songIds = songIds.mapToList(),
     priority = priority
 )
 
 internal fun Playlist.toEntity() = PlaylistEntity(
     id = id,
     title = title,
-    songIds = songIds.joinToString(","),
+    songIds = songIds.mapToString(),
     priority = priority
 )

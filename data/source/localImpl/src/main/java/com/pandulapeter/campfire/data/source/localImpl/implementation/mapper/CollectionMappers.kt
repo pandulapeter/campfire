@@ -8,7 +8,7 @@ internal fun CollectionEntity.toModel() = Collection(
     title = title,
     description = description,
     thumbnailUrl = thumbnailUrl,
-    songIds = songIds.split(","),
+    songIds = songIds.mapToList(),
     isPublic = isPublic
 )
 
@@ -17,7 +17,7 @@ internal fun Collection.toEntity(sheetUrl: String) = CollectionEntity(
     title = title,
     description = description,
     thumbnailUrl = thumbnailUrl,
-    songIds = songIds.joinToString(","),
+    songIds = songIds.mapToString(),
     isPublic = isPublic,
     sheetUrl = sheetUrl
 )

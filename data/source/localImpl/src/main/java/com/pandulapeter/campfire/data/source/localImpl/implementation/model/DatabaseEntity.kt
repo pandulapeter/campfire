@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey
 internal data class DatabaseEntity(
     @PrimaryKey @ColumnInfo(name = "url") val url: String,
     @ColumnInfo(name = "name") val name: String,
-    @ColumnInfo(name = "isActive") val isActive: Boolean,
+    @ColumnInfo(name = "isEnabled") val isEnabled: Boolean,
     @ColumnInfo(name = "priority") val priority: Int,
     @ColumnInfo(name = "isAddedByUser") val isAddedByUser: Boolean
 ) {

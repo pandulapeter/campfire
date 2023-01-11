@@ -6,7 +6,7 @@ import com.pandulapeter.campfire.data.source.localImpl.implementation.model.Data
 internal fun DatabaseEntity.toModel() = Database(
     url = url,
     name = name,
-    isActive = isActive,
+    isEnabled = isEnabled,
     priority = priority,
     isAddedByUser = isAddedByUser
 )
@@ -14,7 +14,7 @@ internal fun DatabaseEntity.toModel() = Database(
 internal fun Database.toEntity() = DatabaseEntity(
     url = url,
     name = name,
-    isActive = isActive,
+    isEnabled = isEnabled,
     priority = priority,
     isAddedByUser = isAddedByUser
 )
