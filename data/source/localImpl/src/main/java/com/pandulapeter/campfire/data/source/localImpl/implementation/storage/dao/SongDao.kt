@@ -10,18 +10,18 @@ import com.pandulapeter.campfire.data.source.localImpl.implementation.model.Song
 @Dao
 internal interface SongDao {
 
-    @Query("SELECT * FROM ${SongEntity.TABLE_NAME}")
-    suspend fun getAll(): List<SongEntity>
+    @Query("SELECT * FROM ${SongEntity.TABLE_NAME} WHERE ${SongEntity.DATABASE_URL} = :databaseUrl")
+    suspend fun getAll(databaseUrl: String): List<SongEntity>
 
-    @Query("DELETE FROM ${SongEntity.TABLE_NAME} WHERE ${SongEntity.SHEET_URL} = :sheetUrl")
-    suspend fun deleteAll(sheetUrl: String)
+    @Query("DELETE FROM ${SongEntity.TABLE_NAME} WHERE ${SongEntity.DATABASE_URL} = :databaseUrl")
+    suspend fun deleteAll(databaseUrl: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(songs: List<SongEntity>)
 
     @Transaction
-    suspend fun updateAll(sheetUrl: String, songs: List<SongEntity>) {
-        deleteAll(sheetUrl)
+    suspend fun updateAll(databaseUrl: String, songs: List<SongEntity>) {
+        deleteAll(databaseUrl)
         insertAll(songs)
     }
 }

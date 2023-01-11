@@ -9,7 +9,7 @@ import com.pandulapeter.campfire.data.source.remote.api.CollectionRemoteSource
 internal class CollectionRepositoryImpl(
     collectionLocalSource: CollectionLocalSource,
     collectionRemoteSource: CollectionRemoteSource
-) : BaseLocalRemoteDataRepository<List<Collection>>(
+) : BaseLocalRemoteDataRepository<Collection>(
     loadDataFromLocalSource = collectionLocalSource::loadCollections,
     loadDataFromRemoteSource = collectionRemoteSource::loadCollections,
     saveDataToLocalSource = collectionLocalSource::saveCollections,
@@ -17,8 +17,8 @@ internal class CollectionRepositoryImpl(
 
     override val collections = dataState
 
-    override suspend fun loadCollections(sheetUrl: String, isForceRefresh: Boolean) = loadData(
-        sheetUrl = sheetUrl,
+    override suspend fun loadCollections(databaseUrls: List<String>, isForceRefresh: Boolean) = loadData(
+        databaseUrls = databaseUrls,
         isForceRefresh = isForceRefresh
     )
 }

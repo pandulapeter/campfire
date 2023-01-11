@@ -9,7 +9,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SongRemoteSource
 internal class SongRepositoryImpl(
     songLocalSource: SongLocalSource,
     songRemoteSource: SongRemoteSource
-) : BaseLocalRemoteDataRepository<List<Song>>(
+) : BaseLocalRemoteDataRepository<Song>(
     loadDataFromLocalSource = songLocalSource::loadSongs,
     loadDataFromRemoteSource = songRemoteSource::loadSongs,
     saveDataToLocalSource = songLocalSource::saveSongs,
@@ -17,8 +17,8 @@ internal class SongRepositoryImpl(
 
     override val songs = dataState
 
-    override suspend fun loadSongs(sheetUrl: String, isForceRefresh: Boolean) = loadData(
-        sheetUrl = sheetUrl,
+    override suspend fun loadSongs(databaseUrls: List<String>, isForceRefresh: Boolean) = loadData(
+        databaseUrls = databaseUrls,
         isForceRefresh = isForceRefresh
     )
 }

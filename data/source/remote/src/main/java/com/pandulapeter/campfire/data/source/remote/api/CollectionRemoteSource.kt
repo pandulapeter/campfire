@@ -4,5 +4,5 @@ import com.pandulapeter.campfire.data.model.domain.Collection
 
 interface CollectionRemoteSource {
 
-    suspend fun loadCollections(sheetUrl: String): List<Collection>
+    suspend fun loadCollections(databaseUrl: String): List<Collection>
 }

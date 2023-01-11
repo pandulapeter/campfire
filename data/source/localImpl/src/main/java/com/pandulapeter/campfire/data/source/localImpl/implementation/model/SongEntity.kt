@@ -14,11 +14,11 @@ internal data class SongEntity(
     @ColumnInfo(name = "isExplicit") val isExplicit: Boolean,
     @ColumnInfo(name = "hasChords") val hasChords: Boolean,
     @ColumnInfo(name = "isPublic") val isPublic: Boolean,
-    @ColumnInfo(name = SHEET_URL) val sheetUrl: String
+    @ColumnInfo(name = DATABASE_URL) val databaseUrl: String
 ) {
 
     companion object {
         const val TABLE_NAME = "songs"
-        const val SHEET_URL = "sheetUrl"
+        const val DATABASE_URL = "databaseUrl"
     }
 }

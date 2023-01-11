@@ -14,7 +14,7 @@ internal fun SongEntity.toModel() = Song(
     isPublic = isPublic
 )
 
-internal fun Song.toEntity(sheetUrl: String) = SongEntity(
+internal fun Song.toEntity(databaseUrl: String) = SongEntity(
     id = id,
     url = url,
     title = title,
@@ -23,5 +23,5 @@ internal fun Song.toEntity(sheetUrl: String) = SongEntity(
     isExplicit = isExplicit,
     hasChords = hasChords,
     isPublic = isPublic,
-    sheetUrl = sheetUrl
+    databaseUrl = databaseUrl
 )

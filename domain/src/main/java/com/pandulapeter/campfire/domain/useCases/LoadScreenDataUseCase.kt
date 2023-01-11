@@ -23,17 +23,15 @@ class LoadScreenDataUseCase internal constructor(
             async { playlistRepository.loadPlaylistsIfNeeded() },
             async {
                 val userPreferences = userPreferencesRepository.loadUserPreferencesIfNeeded()
-                val databases = databaseRepository.loadDatabasesIfNeeded()
+                val databaseUrls = databaseRepository.loadDatabasesIfNeeded()
                     .filter { it.isEnabled }
                     .filterNot { it.url in userPreferences.unselectedDatabaseUrls }
                     .sortedBy { it.priority }
-                val collectionDownloadTasks = databases.map { database ->
-                    async { collectionRepository.loadCollections(database.url, isForceRefresh) }
-                }
-                val songsDownloadTasks = databases.map { database ->
-                    async { songRepository.loadSongs(database.url, isForceRefresh) }
-                }
-                (collectionDownloadTasks + songsDownloadTasks).awaitAll()
+                    .map { it.url }
+                listOf(
+                    async { collectionRepository.loadCollections(databaseUrls, isForceRefresh) },
+                    async { songRepository.loadSongs(databaseUrls, isForceRefresh) }
+                ).awaitAll()
             }
         ).awaitAll()
     }

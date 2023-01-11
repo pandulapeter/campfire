@@ -10,7 +10,7 @@ internal class CollectionLocalSourceImpl(
     private val collectionDao: CollectionDao
 ) : CollectionLocalSource {
 
-    override suspend fun loadCollections(sheetUrl: String) = collectionDao.getAll().map { it.toModel() }
+    override suspend fun loadCollections(databaseUrl: String) = collectionDao.getAll(databaseUrl).map { it.toModel() }
 
-    override suspend fun saveCollections(sheetUrl: String, collections: List<Collection>) = collectionDao.updateAll(sheetUrl, collections.map { it.toEntity(sheetUrl) })
+    override suspend fun saveCollections(databaseUrl: String, collections: List<Collection>) = collectionDao.updateAll(databaseUrl, collections.map { it.toEntity(databaseUrl) })
 }

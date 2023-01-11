@@ -12,12 +12,12 @@ internal fun CollectionEntity.toModel() = Collection(
     isPublic = isPublic
 )
 
-internal fun Collection.toEntity(sheetUrl: String) = CollectionEntity(
+internal fun Collection.toEntity(databaseUrl: String) = CollectionEntity(
     id = id,
     title = title,
     description = description,
     thumbnailUrl = thumbnailUrl,
     songIds = songIds.mapToString(),
     isPublic = isPublic,
-    sheetUrl = sheetUrl
+    databaseUrl = databaseUrl
 )

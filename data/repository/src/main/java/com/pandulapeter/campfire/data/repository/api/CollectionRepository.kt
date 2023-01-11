@@ -8,5 +8,5 @@ interface CollectionRepository {
 
     val collections: Flow<DataState<List<Collection>>>
 
-    suspend fun loadCollections(sheetUrl: String, isForceRefresh: Boolean)
+    suspend fun loadCollections(databaseUrls: List<String>, isForceRefresh: Boolean)
 }

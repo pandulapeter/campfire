@@ -4,7 +4,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 
 interface SongLocalSource {
 
-    suspend fun loadSongs(sheetUrl: String): List<Song>
+    suspend fun loadSongs(databaseUrl: String): List<Song>
 
-    suspend fun saveSongs(sheetUrl: String, songs: List<Song>)
+    suspend fun saveSongs(databaseUrl: String, songs: List<Song>)
 }

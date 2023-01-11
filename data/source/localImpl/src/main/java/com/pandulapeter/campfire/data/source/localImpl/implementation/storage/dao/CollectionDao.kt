@@ -10,18 +10,18 @@ import com.pandulapeter.campfire.data.source.localImpl.implementation.model.Coll
 @Dao
 internal interface CollectionDao {
 
-    @Query("SELECT * FROM ${CollectionEntity.TABLE_NAME}")
-    suspend fun getAll(): List<CollectionEntity>
+    @Query("SELECT * FROM ${CollectionEntity.TABLE_NAME} WHERE ${CollectionEntity.DATABASE_URL} = :databaseUrl")
+    suspend fun getAll(databaseUrl: String): List<CollectionEntity>
 
-    @Query("DELETE FROM ${CollectionEntity.TABLE_NAME} WHERE ${CollectionEntity.SHEET_URL} = :sheetUrl")
-    suspend fun deleteAll(sheetUrl: String,)
+    @Query("DELETE FROM ${CollectionEntity.TABLE_NAME} WHERE ${CollectionEntity.DATABASE_URL} = :databaseUrl")
+    suspend fun deleteAll(databaseUrl: String,)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(collections: List<CollectionEntity>)
 
     @Transaction
-    suspend fun updateAll(sheetUrl: String, collections: List<CollectionEntity>) {
-        deleteAll(sheetUrl)
+    suspend fun updateAll(databaseUrl: String, collections: List<CollectionEntity>) {
+        deleteAll(databaseUrl)
         insertAll(collections)
     }
 }

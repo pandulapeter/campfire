@@ -8,5 +8,5 @@ interface SongRepository {
 
     val songs: Flow<DataState<List<Song>>>
 
-    suspend fun loadSongs(sheetUrl: String, isForceRefresh: Boolean)
+    suspend fun loadSongs(databaseUrls: List<String>, isForceRefresh: Boolean)
 }

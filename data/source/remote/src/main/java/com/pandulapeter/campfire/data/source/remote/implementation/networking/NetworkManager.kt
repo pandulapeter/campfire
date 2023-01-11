@@ -10,12 +10,12 @@ internal class NetworkManager(
 ) {
     private val networkingServices = mutableMapOf<String, NetworkingService>()
 
-    fun getNetworkingService(sheetUrl: String) = networkingServices[sheetUrl] ?: createNetworkingService(sheetUrl).also {
-        networkingServices[sheetUrl] = it
+    fun getNetworkingService(databaseUrl: String) = networkingServices[databaseUrl] ?: createNetworkingService(databaseUrl).also {
+        networkingServices[databaseUrl] = it
     }
 
-    private fun createNetworkingService(sheetUrl: String): NetworkingService = Retrofit.Builder()
-        .baseUrl(sheetUrl)
+    private fun createNetworkingService(databaseUrl: String): NetworkingService = Retrofit.Builder()
+        .baseUrl(databaseUrl)
         .client(okHttpClient)
         .addConverterFactory(moshiConverterFactory)
         .build()

@@ -38,10 +38,10 @@ class GetScreenDataUseCase internal constructor(
                     songsDataState.data?.let { songs ->
                         userPreferencesState.data?.let { userPreferences ->
                             ScreenData(
-                                collections = collections.filter { it.isPublic },
+                                collections = collections.distinctBy { it.id }.filter { it.isPublic },
                                 databases = databases.sortedBy { it.priority },
                                 playlists = playlists.sortedBy { it.priority },
-                                songs = songs.filter { it.isPublic },
+                                songs = songs.distinctBy { it.id }.filter { it.isPublic },
                                 userPreferences = userPreferences
                             ).also {
                                 cache = it
