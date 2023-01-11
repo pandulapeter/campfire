@@ -1,8 +1,12 @@
 package com.pandulapeter.campfire.data.repository.api
 
+import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Song
+import kotlinx.coroutines.flow.Flow
 
 interface SongRepository {
 
-    suspend fun getSongs(sheetUrl: String, isForceRefresh: Boolean): List<Song>
+    val songs: Flow<DataState<List<Song>>>
+
+    suspend fun loadSongs(sheetUrl: String, isForceRefresh: Boolean)
 }

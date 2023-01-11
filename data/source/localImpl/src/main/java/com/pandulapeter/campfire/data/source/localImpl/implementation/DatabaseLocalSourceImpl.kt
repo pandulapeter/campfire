@@ -10,7 +10,7 @@ internal class DatabaseLocalSourceImpl(
     private val databaseDao: DatabaseDao
 ) : DatabaseLocalSource {
 
-    override suspend fun getDatabases() = databaseDao.getAll().map { it.toModel() }
+    override suspend fun loadDatabases() = databaseDao.getAll().map { it.toModel() }
 
     override suspend fun saveDatabases(databases: List<Database>) = databaseDao.updateAll(databases.map { it.toEntity() })
 }

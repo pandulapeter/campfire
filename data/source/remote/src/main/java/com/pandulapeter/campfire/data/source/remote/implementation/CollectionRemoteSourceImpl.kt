@@ -8,7 +8,7 @@ internal class CollectionRemoteSourceImpl(
     private val networkManager: NetworkManager
 ) : CollectionRemoteSource {
 
-    override suspend fun getCollections(sheetUrl: String) = networkManager.getNetworkingService(sheetUrl)
+    override suspend fun loadCollections(sheetUrl: String) = networkManager.getNetworkingService(sheetUrl)
         .getCollections()
         .mapNotNull { it.toModel() }
         .distinctBy { it.id }

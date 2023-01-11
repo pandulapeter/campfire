@@ -1,12 +1,14 @@
 package com.pandulapeter.campfire.domain
 
-import com.pandulapeter.campfire.domain.useCases.GetCollectionsUseCase
-import com.pandulapeter.campfire.domain.useCases.GetDatabasesUseCase
-import com.pandulapeter.campfire.domain.useCases.GetSongsUseCase
+import com.pandulapeter.campfire.domain.useCases.GetScreenDataUseCase
+import com.pandulapeter.campfire.domain.useCases.LoadScreenDataUseCase
+import com.pandulapeter.campfire.domain.useCases.SaveDatabasesUseCase
+import com.pandulapeter.campfire.domain.useCases.SavePlaylistsUseCase
 import org.koin.dsl.module
 
 val domainModule = module {
-    factory { GetCollectionsUseCase(get(), get()) }
-    factory { GetDatabasesUseCase(get()) }
-    factory { GetSongsUseCase(get(), get()) }
+    factory { GetScreenDataUseCase(get(), get(), get(), get()) }
+    factory { LoadScreenDataUseCase(get(), get(), get(), get()) }
+    factory { SaveDatabasesUseCase(get()) }
+    factory { SavePlaylistsUseCase(get()) }
 }

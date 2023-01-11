@@ -8,7 +8,7 @@ internal class SongRemoteSourceImpl(
     private val networkManager: NetworkManager
 ) : SongRemoteSource {
 
-    override suspend fun getSongs(sheetUrl: String) = networkManager.getNetworkingService(sheetUrl)
+    override suspend fun loadSongs(sheetUrl: String) = networkManager.getNetworkingService(sheetUrl)
         .getSongs()
         .mapNotNull { it.toModel() }
         .distinctBy { it.id }

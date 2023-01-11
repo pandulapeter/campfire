@@ -10,7 +10,7 @@ internal class SongLocalSourceImpl(
     private val songDao: SongDao
 ) : SongLocalSource {
 
-    override suspend fun getSongs(sheetUrl: String) = songDao.getAll().map { it.toModel() }
+    override suspend fun loadSongs(sheetUrl: String) = songDao.getAll().map { it.toModel() }
 
     override suspend fun saveSongs(sheetUrl: String, songs: List<Song>) = songDao.updateAll(sheetUrl, songs.map { it.toEntity(sheetUrl) })
 }

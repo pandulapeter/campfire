@@ -1,10 +1,14 @@
 package com.pandulapeter.campfire.data.repository.api
 
+import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Database
+import kotlinx.coroutines.flow.Flow
 
 interface DatabaseRepository {
 
-    suspend fun getDatabases(): List<Database>
+    val databases: Flow<DataState<List<Database>>>
 
-    suspend fun updateDatabases(databases: List<Database>)
+    suspend fun loadDatabasesIfNeeded(): List<Database>
+
+    suspend fun saveDatabases(databases: List<Database>)
 }

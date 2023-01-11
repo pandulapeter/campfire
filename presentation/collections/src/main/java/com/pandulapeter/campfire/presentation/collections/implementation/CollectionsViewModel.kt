@@ -2,41 +2,33 @@ package com.pandulapeter.campfire.presentation.collections.implementation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pandulapeter.campfire.data.model.Result
-import com.pandulapeter.campfire.domain.useCases.GetCollectionsUseCase
-import com.pandulapeter.campfire.domain.useCases.GetDatabasesUseCase
-import com.pandulapeter.campfire.domain.useCases.GetSongsUseCase
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.domain.models.ScreenData
+import com.pandulapeter.campfire.domain.useCases.GetScreenDataUseCase
+import com.pandulapeter.campfire.domain.useCases.LoadScreenDataUseCase
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 internal class CollectionsViewModel(
-    private val getCollections: GetCollectionsUseCase,
-    private val getDatabases: GetDatabasesUseCase,
-    private val getSongs: GetSongsUseCase
+    getScreenData: GetScreenDataUseCase,
+    private val loadScreenData: LoadScreenDataUseCase
 ) : ViewModel() {
 
-    private val _text = MutableStateFlow("Uninitialized")
-    val text: StateFlow<String> = _text
+    val text = getScreenData().map {
+        when (it) {
+            is DataState.Failure -> "Error - ${it.data.describe()}"
+            is DataState.Idle -> "Idle - ${it.data.describe()}"
+            is DataState.Loading -> "Loading - ${it.data.describe()}"
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, "Uninitialized")
 
     init {
-        viewModelScope.launch {
-            val initialText = "Using ${getDatabases().size} databases."
-            _text.value = "$initialText\nLoading collections..."
-            val collectionsResult = loadCollections()
-            _text.value = "$initialText\n$collectionsResult\nLoading songs..."
-            val songsResult = loadSongs()
-            _text.value = "$initialText\n$collectionsResult\n$songsResult"
-        }
+        viewModelScope.launch { loadScreenData(false) }
     }
 
-    private suspend fun loadCollections(): String = when (val result = getCollections(true)) {
-        is Result.Success -> "${result.data.size} collections loaded."
-        is Result.Failure -> "Loading collections failed: ${result.exception.message}"
-    }
-
-    private suspend fun loadSongs(): String = when (val result = getSongs(true)) {
-        is Result.Success -> "${result.data.size} songs loaded."
-        is Result.Failure -> "Loading songs failed: ${result.exception.message}"
-    }
+    private fun ScreenData?.describe() = this?.let {
+        "${collections.size} collections, ${databases.size} databases, ${playlists.size} playlists, ${songs.size} songs"
+    } ?: "no data"
 }

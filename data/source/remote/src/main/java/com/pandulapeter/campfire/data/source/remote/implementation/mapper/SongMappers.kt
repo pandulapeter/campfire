@@ -24,8 +24,6 @@ private fun String?.toSongId() = toId("Missing song ID.")
 
 private fun String?.toSongUrl() = toUrl("Missing song URL.")
 
-private fun String?.toSongLanguageId() = toId("Missing song language ID.")
-
 private fun String?.toSongTitle() = toText("Missing song title.")
 
 private fun String?.toSongArtist() = toText("Missing song artist.")
