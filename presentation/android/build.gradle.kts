@@ -9,10 +9,8 @@ dependencies {
     implementation(project(":presentation:android-debug-menu"))
     implementation(project(":presentation:shared"))
     implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.fragment)
     implementation(libs.androidx.lifecycle.viewmodel)
-    implementation(libs.androidx.viewpager)
     implementation(libs.google.android.material)
     implementation(libs.koin.android)
     implementation(libs.kotlin.coroutines)
@@ -21,14 +19,12 @@ dependencies {
 android {
     val targetSdkVersion = System.getProperty("TARGET_SDK_VERSION").toInt()
     compileSdk = targetSdkVersion
-    defaultConfig {
-        minSdk = System.getProperty("MIN_SDK_VERSION").toInt()
-        targetSdk = targetSdkVersion
-    }
+    defaultConfig.minSdk = System.getProperty("MIN_SDK_VERSION").toInt()
     kotlinOptions.jvmTarget = libs.versions.jvm.target.get()
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    buildFeatures.dataBinding = true
+    namespace = "com.pandulapeter.campfire.presentation.android"
+    buildFeatures.dataBinding = true // TODO: To be removed
 }

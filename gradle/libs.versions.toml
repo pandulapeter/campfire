@@ -1,22 +1,18 @@
 [versions]
-androidx-appcompat = "1.5.1" # https://developer.android.com/jetpack/androidx/releases/appcompat
+androidx-appcompat = "1.6.0" # https://developer.android.com/jetpack/androidx/releases/appcompat
 androidx-browser = "1.4.0" # https://developer.android.com/jetpack/androidx/releases/browser
-androidx-constraintlayout = "2.1.4" # https://developer.android.com/jetpack/androidx/releases/constraintlayout
 androidx-core = "1.9.0" # https://developer.android.com/jetpack/androidx/releases/core
 androidx-core-splashscreen = "1.0.0" # https://developer.android.com/jetpack/androidx/releases/core
-androidx-fragment = "1.6.0-alpha04" # https://developer.android.com/jetpack/androidx/releases/fragment
-androidx-lifecycle = "2.5.1" # https://developer.android.com/jetpack/androidx/releases/lifecycle
-androidx-recyclerview = "1.2.1" # https://developer.android.com/jetpack/androidx/releases/recyclerview
-androidx-room = "2.4.3" # https://developer.android.com/jetpack/androidx/releases/room
-androidx-swiperefreshlayout = "1.2.0-alpha01" # https://developer.android.com/jetpack/androidx/releases/swiperefreshlayout
-androidx-viewpager = "1.1.0-beta01" # https://developer.android.com/jetpack/androidx/releases/viewpager2
+androidx-fragment = "1.5.5" # https://developer.android.com/jetpack/androidx/releases/fragment // TODO: To be removed
+androidx-lifecycle = "2.5.1" # https://developer.android.com/jetpack/androidx/releases/lifecycle // TODO: To be removed
+androidx-room = "2.5.0" # https://developer.android.com/jetpack/androidx/releases/room
 beagle = "2.9.0" # https://github.com/pandulapeter/beagle/releases
 coil = "2.2.2" # https://github.com/coil-kt/coil/releases
 google-android-material = "1.7.0" # https://github.com/material-components/material-components-android/releases
-gradle = "7.3.1" # https://developer.android.com/studio/releases/gradle-plugin
+gradle = "7.4.0" # https://developer.android.com/studio/releases/gradle-plugin
 jetbrains-compose = "1.2.2" # https://github.com/JetBrains/compose-jb/releases
 jvm-target = "1.8" # https://kotlinlang.org/docs/gradle.html#check-for-jvm-target-compatibility-of-related-compile-tasks
-koin = "3.2.2" # https://github.com/InsertKoinIO/koin/tags
+koin = "3.3.2" # https://github.com/InsertKoinIO/koin/tags
 kotlin = "1.7.20" # https://kotlinlang.org/docs/releases.html#release-details
 kotlin-coroutines = "1.6.4" # https://github.com/Kotlin/kotlinx.coroutines/releases
 kotlin-ksp = "1.7.20-1.0.8" # https://github.com/google/ksp/releases
@@ -29,16 +25,12 @@ theapache64-retrosheet = "2.0.1" # https://github.com/theapache64/retrosheet/rel
 [libraries]
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
-androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintlayout" }
 androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "androidx-core-splashscreen" }
 androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "androidx-fragment" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
-androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "androidx-recyclerview" }
 androidx-room = { module = "androidx.room:room-ktx", version.ref = "androidx-room" }
 androidx-room-codegen = { module = "androidx.room:room-compiler", version.ref = "androidx-room" }
-androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "androidx-swiperefreshlayout" }
-androidx-viewpager = { module = "androidx.viewpager2:viewpager2", version.ref = "androidx-viewpager" }
 beagle = { module = "io.github.pandulapeter.beagle:ui-drawer", version.ref = "beagle" }
 beagle-crashLogger = { module = "io.github.pandulapeter.beagle:log-crash", version.ref = "beagle" }
 coil = { module = "io.coil-kt:coil", version.ref = "coil" }

@@ -28,7 +28,7 @@ android {
         versionName = System.getProperty("VERSION_NAME")
     }
     kotlinOptions.jvmTarget = libs.versions.jvm.target.get()
-    buildFeatures.dataBinding = true
+    buildFeatures.dataBinding = true // TODO: To be removed
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8

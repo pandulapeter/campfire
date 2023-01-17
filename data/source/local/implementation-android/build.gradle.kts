@@ -15,13 +15,11 @@ dependencies {
 android {
     val targetSdkVersion = System.getProperty("TARGET_SDK_VERSION").toInt()
     compileSdk = targetSdkVersion
-    defaultConfig {
-        minSdk = System.getProperty("MIN_SDK_VERSION").toInt()
-        targetSdk = targetSdkVersion
-    }
+    defaultConfig.minSdk = System.getProperty("MIN_SDK_VERSION").toInt()
     kotlinOptions.jvmTarget = libs.versions.jvm.target.get()
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+    namespace = "com.pandulapeter.campfire.data.source.local.implementationAndroid"
 }
