@@ -7,6 +7,7 @@ internal class UserPreferencesEntity : RealmObject {
 
     @PrimaryKey var id: String = TABLE_NAME
     var unselectedDatabaseUrls: String = ""
+    var shouldShowExplicitSongs: Boolean = false
 
     companion object {
         const val TABLE_NAME = "userPreferences"

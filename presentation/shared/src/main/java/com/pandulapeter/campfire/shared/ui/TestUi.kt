@@ -44,11 +44,15 @@ private fun MainTestUi(
         collections = collections.value.sortedBy { it.title },
         songs = songs.value.sortedBy { it.artist },
         unselectedDatabaseUrls = userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
+        shouldShowExplicitSongs = userPreferences.value?.shouldShowExplicitSongs == true,
         onDatabaseEnabledChanged = { database, isEnabled ->
             coroutineScope.launch { stateHolder.onDatabaseEnabledChanged(databases.value, database, isEnabled) }
         },
         onDatabaseSelectedChanged = { database, isSelected ->
             coroutineScope.launch { userPreferences.value?.let { stateHolder.onDatabaseSelectedChanged(it, database, isSelected) } }
+        },
+        onShouldShowExplicitSongsChanged = { shouldShowExplicitSongs ->
+            coroutineScope.launch { userPreferences.value?.let { stateHolder.onShouldShowExplicitSongsChanged(it, shouldShowExplicitSongs) } }
         },
         onForceRefreshPressed = { coroutineScope.launch { stateHolder.onForceRefreshPressed() } },
         onDeleteLocalDataPressed = { coroutineScope.launch { stateHolder.onDeleteLocalDataPressed() } }
@@ -63,8 +67,10 @@ private fun Screen(
     collections: List<Collection>,
     songs: List<Song>,
     unselectedDatabaseUrls: List<String>,
+    shouldShowExplicitSongs: Boolean,
     onDatabaseEnabledChanged: (Database, Boolean) -> Unit,
     onDatabaseSelectedChanged: (Database, Boolean) -> Unit,
+    onShouldShowExplicitSongsChanged: (Boolean) -> Unit,
     onForceRefreshPressed: () -> Unit,
     onDeleteLocalDataPressed: () -> Unit
 ) = Row(
@@ -79,8 +85,10 @@ private fun Screen(
         FilterList(
             databases = databases,
             unselectedDatabaseUrls = unselectedDatabaseUrls,
+            shouldShowExplicitSongs = shouldShowExplicitSongs,
             onDatabaseEnabledChanged = onDatabaseEnabledChanged,
-            onDatabaseSelectedChanged = onDatabaseSelectedChanged
+            onDatabaseSelectedChanged = onDatabaseSelectedChanged,
+            onShouldShowExplicitSongsChanged = onShouldShowExplicitSongsChanged
         )
         Controls(
             modifier = Modifier.align(Alignment.BottomEnd),

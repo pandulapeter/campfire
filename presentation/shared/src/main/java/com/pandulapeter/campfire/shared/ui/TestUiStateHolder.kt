@@ -45,6 +45,10 @@ internal class TestUiStateHolder(
         }.distinct())
     )
 
+    suspend fun onShouldShowExplicitSongsChanged(userPreferences: UserPreferences, shouldShowExplicitSongs: Boolean) = saveUserPreferences(
+        userPreferences.copy(shouldShowExplicitSongs = shouldShowExplicitSongs)
+    )
+
     suspend fun onForceRefreshPressed() = loadScreenData(true)
 
     suspend fun onDeleteLocalDataPressed() = deleteLocalData()

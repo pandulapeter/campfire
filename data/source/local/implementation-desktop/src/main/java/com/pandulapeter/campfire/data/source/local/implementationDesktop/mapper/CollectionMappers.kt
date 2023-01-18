@@ -12,24 +12,6 @@ internal fun CollectionEntity.toModel() = Collection(
     isPublic = isPublic
 )
 
-internal fun CollectionEntity.update(
-    id: String,
-    title: String,
-    description: String,
-    thumbnailUrl: String,
-    songIds: String,
-    isPublic: Boolean,
-    databaseUrl: String
-) = apply {
-    this.id = id
-    this.title = title
-    this.description = description
-    this.thumbnailUrl = thumbnailUrl
-    this.songIds = songIds
-    this.isPublic = isPublic
-    this.databaseUrl = databaseUrl
-}
-
 internal fun Collection.toEntity(databaseUrl: String) = CollectionEntity().also {
     it.id = id
     it.title = title

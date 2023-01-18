@@ -44,7 +44,9 @@ class GetScreenDataUseCaseImpl internal constructor(
                                 collections = filteredDatabases.flatMap { collections[it.url].orEmpty() }.distinctBy { it.id }.filter { it.isPublic },
                                 databases = databases,
                                 playlists = playlists,
-                                songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }.distinctBy { it.id }.filter { it.isPublic },
+                                songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }.distinctBy { it.id }.filter { it.isPublic }.let { songs ->
+                                    if (userPreferences.shouldShowExplicitSongs) songs else songs.filterNot { it.isExplicit }
+                                },
                                 userPreferences = userPreferences
                             ).also {
                                 cache = it

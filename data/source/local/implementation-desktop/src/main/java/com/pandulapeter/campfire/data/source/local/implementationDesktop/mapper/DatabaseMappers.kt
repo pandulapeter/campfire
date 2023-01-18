@@ -11,20 +11,6 @@ internal fun DatabaseEntity.toModel() = Database(
     isAddedByUser = isAddedByUser
 )
 
-internal fun DatabaseEntity.update(
-    url: String,
-    name: String,
-    isEnabled: Boolean,
-    priority: Int,
-    isAddedByUser: Boolean
-) = apply {
-    this.url = url
-    this.name = name
-    this.isEnabled = isEnabled
-    this.priority = priority
-    this.isAddedByUser = isAddedByUser
-}
-
 internal fun Database.toEntity() = DatabaseEntity().also {
     it.url = url
     it.name = name

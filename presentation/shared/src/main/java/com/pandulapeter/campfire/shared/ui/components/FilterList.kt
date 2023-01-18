@@ -22,8 +22,10 @@ internal fun FilterList(
     modifier: Modifier = Modifier,
     databases: List<Database>,
     unselectedDatabaseUrls: List<String>,
+    shouldShowExplicitSongs: Boolean,
     onDatabaseEnabledChanged: (Database, Boolean) -> Unit,
-    onDatabaseSelectedChanged: (Database, Boolean) -> Unit
+    onDatabaseSelectedChanged: (Database, Boolean) -> Unit,
+    onShouldShowExplicitSongsChanged: (Boolean) -> Unit
 ) = LazyColumn(
     modifier = modifier.fillMaxHeight()
 ) {
@@ -31,16 +33,16 @@ internal fun FilterList(
         item(key = "header_databases") {
             Header(
                 modifier = Modifier.animateItemPlacement(),
-                text = "Databases"
+                text = "All databases"
             )
         }
         itemsIndexed(
             items = databases,
             key = { _, database -> "database_${database.url}" }
         ) { _, database ->
-            DatabaseItem(
+            CheckboxItem(
                 modifier = Modifier.animateItemPlacement(),
-                database = database,
+                text = database.name,
                 isChecked = database.isEnabled,
                 onCheckedChanged = { onDatabaseEnabledChanged(database, it) }
             )
@@ -53,37 +55,25 @@ internal fun FilterList(
                     text = "Filters"
                 )
             }
+            item(key = "filter_explicit") {
+                CheckboxItem(
+                    modifier = Modifier.animateItemPlacement(),
+                    text = "Show explicit songs",
+                    isChecked = shouldShowExplicitSongs,
+                    onCheckedChanged = onShouldShowExplicitSongsChanged
+                )
+            }
             itemsIndexed(
                 items = enabledDatabases,
-                key = { _, database -> "database_filter_${database.url}" }
+                key = { _, database -> "filter_database_${database.url}" }
             ) { _, database ->
-                DatabaseItem(
+                CheckboxItem(
                     modifier = Modifier.animateItemPlacement(),
-                    database = database,
+                    text = database.name,
                     isChecked = !unselectedDatabaseUrls.contains(database.url),
                     onCheckedChanged = { onDatabaseSelectedChanged(database, it) }
                 )
             }
         }
     }
-}
-
-@Composable
-private fun DatabaseItem(
-    modifier: Modifier = Modifier,
-    database: Database,
-    isChecked: Boolean,
-    onCheckedChanged: (Boolean) -> Unit
-) = Row(
-    modifier = modifier.padding(horizontal = 8.dp).clickable { onCheckedChanged(!isChecked) },
-) {
-    Checkbox(
-        modifier = Modifier.align(Alignment.CenterVertically),
-        checked = isChecked,
-        onCheckedChange = onCheckedChanged
-    )
-    Text(
-        modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically),
-        text = database.name
-    )
 }
