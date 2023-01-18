@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.presentation
+package com.pandulapeter.campfire.presentation.android
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,24 +12,19 @@ import com.pandulapeter.campfire.domain.api.useCases.SaveDatabasesUseCase
 import com.pandulapeter.campfire.shared.TestUi
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import org.koin.java.KoinJavaComponent.get
+import org.koin.java.KoinJavaComponent
 
 @Composable
 fun CampfireApp(
-    getScreenData: GetScreenDataUseCase = get(GetScreenDataUseCase::class.java),
-    loadScreenData: LoadScreenDataUseCase = get(LoadScreenDataUseCase::class.java),
-    saveDatabases: SaveDatabasesUseCase = get(SaveDatabasesUseCase::class.java), // TODO: Use UserPreferences instead
-    deleteLocalData: DeleteLocalDataUseCase = get(DeleteLocalDataUseCase::class.java) // TODO: Use UserPreferences instead
+    getScreenData: GetScreenDataUseCase = KoinJavaComponent.get(GetScreenDataUseCase::class.java),
+    loadScreenData: LoadScreenDataUseCase = KoinJavaComponent.get(LoadScreenDataUseCase::class.java),
+    saveDatabases: SaveDatabasesUseCase = KoinJavaComponent.get(SaveDatabasesUseCase::class.java), // TODO: Use UserPreferences instead
+    deleteLocalData: DeleteLocalDataUseCase = KoinJavaComponent.get(DeleteLocalDataUseCase::class.java) // TODO: Use UserPreferences instead
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val songs = getScreenData()
-        .map { it.data?.songs.orEmpty() }
-        .collectAsState(emptyList())
-    val databases = getScreenData()
-        .map { it.data?.databases.orEmpty() }
-        .collectAsState(emptyList())
-    val stateIndicator = getScreenData()
-        .map {
+    val songs = getScreenData().map { it.data?.songs.orEmpty() }.collectAsState(emptyList())
+    val databases = getScreenData().map { it.data?.databases.orEmpty() }.collectAsState(emptyList())
+    val stateIndicator = getScreenData().map {
             when (it) {
                 is DataState.Failure -> "Error"
                 is DataState.Idle -> "Idle"

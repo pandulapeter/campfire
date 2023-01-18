@@ -13,7 +13,7 @@ internal class SongLocalSourceImpl(
 ) : SongLocalSource {
 
     override suspend fun loadSongs(databaseUrl: String) =
-        storageManager.database.query<SongEntity>().find().toList().map { it.toModel() }
+        storageManager.database.query<SongEntity>("databaseUrl == $0", databaseUrl).find().toList().map { it.toModel() }
 
     override suspend fun saveSongs(databaseUrl: String, songs: List<Song>) = with(storageManager.database) {
         write { delete(query<SongEntity>("databaseUrl == $0", databaseUrl).find()) }

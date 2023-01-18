@@ -11,6 +11,7 @@ dependencies {
     implementation(project(":domain:implementation"))
     implementation(project(":presentation:android"))
     implementation(project(":presentation:android-debug-menu"))
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appcompat)
     implementation(libs.google.android.material)
     implementation(libs.koin.android)
@@ -28,7 +29,8 @@ android {
         versionName = System.getProperty("VERSION_NAME")
     }
     kotlinOptions.jvmTarget = libs.versions.jvm.target.get()
-    buildFeatures.dataBinding = true // TODO: To be removed
+    buildFeatures.compose = true
+    composeOptions.kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8

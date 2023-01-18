@@ -8,9 +8,8 @@ dependencies {
     implementation(project(":domain:api"))
     implementation(project(":presentation:android-debug-menu"))
     implementation(project(":presentation:shared"))
-    implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.fragment)
-    implementation(libs.androidx.lifecycle.viewmodel)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.ui)
     implementation(libs.google.android.material)
     implementation(libs.koin.android)
     implementation(libs.kotlin.coroutines)
@@ -21,10 +20,11 @@ android {
     compileSdk = targetSdkVersion
     defaultConfig.minSdk = System.getProperty("MIN_SDK_VERSION").toInt()
     kotlinOptions.jvmTarget = libs.versions.jvm.target.get()
+    buildFeatures.compose = true
+    composeOptions.kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
     namespace = "com.pandulapeter.campfire.presentation.android"
-    buildFeatures.dataBinding = true // TODO: To be removed
 }

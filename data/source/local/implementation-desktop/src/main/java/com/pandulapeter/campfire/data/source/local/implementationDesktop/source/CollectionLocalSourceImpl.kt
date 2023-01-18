@@ -13,7 +13,7 @@ internal class CollectionLocalSourceImpl(
 ) : CollectionLocalSource {
 
     override suspend fun loadCollections(databaseUrl: String) =
-        storageManager.database.query<CollectionEntity>().find().toList().map { it.toModel() }
+        storageManager.database.query<CollectionEntity>("databaseUrl == $0", databaseUrl).find().toList().map { it.toModel() }
 
     override suspend fun saveCollections(databaseUrl: String, collections: List<Collection>) = with(storageManager.database) {
         write { delete(query<CollectionEntity>("databaseUrl == $0", databaseUrl).find()) }
