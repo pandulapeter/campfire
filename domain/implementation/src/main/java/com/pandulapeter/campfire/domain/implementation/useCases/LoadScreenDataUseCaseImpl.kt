@@ -6,9 +6,11 @@ import com.pandulapeter.campfire.data.repository.api.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 
 class LoadScreenDataUseCaseImpl internal constructor(
     private val collectionRepository: CollectionRepository,
@@ -18,8 +20,12 @@ class LoadScreenDataUseCaseImpl internal constructor(
     private val userPreferencesRepository: UserPreferencesRepository
 ) : LoadScreenDataUseCase {
 
+    private val scope = object : CoroutineScope {
+        override val coroutineContext = SupervisorJob() + Dispatchers.Default
+    }
+
     override suspend operator fun invoke(isForceRefresh: Boolean) {
-        coroutineScope {
+        with(scope) {
             listOf(
                 async { playlistRepository.loadPlaylistsIfNeeded() },
                 async {

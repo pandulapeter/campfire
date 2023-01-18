@@ -14,7 +14,10 @@ internal interface CollectionDao {
     suspend fun getAll(databaseUrl: String): List<CollectionEntity>
 
     @Query("DELETE FROM ${CollectionEntity.TABLE_NAME} WHERE ${CollectionEntity.DATABASE_URL} = :databaseUrl")
-    suspend fun deleteAll(databaseUrl: String,)
+    suspend fun deleteAll(databaseUrl: String)
+
+    @Query("DELETE FROM ${CollectionEntity.TABLE_NAME}")
+    suspend fun deleteAll()
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(collections: List<CollectionEntity>)

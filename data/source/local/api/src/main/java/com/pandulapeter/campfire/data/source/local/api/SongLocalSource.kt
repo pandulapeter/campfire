@@ -7,4 +7,6 @@ interface SongLocalSource {
     suspend fun loadSongs(databaseUrl: String): List<Song>
 
     suspend fun saveSongs(databaseUrl: String, songs: List<Song>)
+
+    suspend fun deleteAllSongs()
 }

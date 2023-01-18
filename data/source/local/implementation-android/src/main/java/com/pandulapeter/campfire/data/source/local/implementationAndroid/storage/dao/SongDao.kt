@@ -16,6 +16,9 @@ internal interface SongDao {
     @Query("DELETE FROM ${SongEntity.TABLE_NAME} WHERE ${SongEntity.DATABASE_URL} = :databaseUrl")
     suspend fun deleteAll(databaseUrl: String)
 
+    @Query("DELETE FROM ${SongEntity.TABLE_NAME}")
+    suspend fun deleteAll()
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(songs: List<SongEntity>)
 

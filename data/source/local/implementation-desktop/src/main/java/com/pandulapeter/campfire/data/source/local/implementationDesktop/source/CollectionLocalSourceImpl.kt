@@ -16,7 +16,11 @@ internal class CollectionLocalSourceImpl(
         storageManager.database.query<CollectionEntity>().find().toList().map { it.toModel() }
 
     override suspend fun saveCollections(databaseUrl: String, collections: List<Collection>) = with(storageManager.database) {
-        write { delete(query<CollectionEntity>().find()) }
+        write { delete(query<CollectionEntity>("databaseUrl == $0", databaseUrl).find()) }
         writeBlocking { collections.forEach { copyToRealm(it.toEntity(databaseUrl)) } }
+    }
+
+    override suspend fun deleteAllCollections() = with(storageManager.database) {
+        write { delete(query<CollectionEntity>().find()) }
     }
 }

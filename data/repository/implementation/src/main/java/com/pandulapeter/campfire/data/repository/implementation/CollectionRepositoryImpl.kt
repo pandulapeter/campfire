@@ -13,6 +13,7 @@ internal class CollectionRepositoryImpl(
     loadDataFromLocalSource = collectionLocalSource::loadCollections,
     loadDataFromRemoteSource = collectionRemoteSource::loadCollections,
     saveDataToLocalSource = collectionLocalSource::saveCollections,
+    deleteDataFromLocalSource = collectionLocalSource::deleteAllCollections
 ), CollectionRepository {
 
     override val collections = dataState
@@ -21,4 +22,8 @@ internal class CollectionRepositoryImpl(
         databaseUrls = databaseUrls,
         isForceRefresh = isForceRefresh
     )
+
+    override suspend fun deleteLocalCollections() = deleteLocalData()
+
+    override fun List<Collection>?.isValid() = true
 }

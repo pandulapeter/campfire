@@ -13,4 +13,6 @@ internal class CollectionLocalSourceImpl(
     override suspend fun loadCollections(databaseUrl: String) = collectionDao.getAll(databaseUrl).map { it.toModel() }
 
     override suspend fun saveCollections(databaseUrl: String, collections: List<Collection>) = collectionDao.updateAll(databaseUrl, collections.map { it.toEntity(databaseUrl) })
+
+    override suspend fun deleteAllCollections() = collectionDao.deleteAll()
 }

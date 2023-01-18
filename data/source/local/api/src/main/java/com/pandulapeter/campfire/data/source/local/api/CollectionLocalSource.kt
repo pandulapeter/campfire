@@ -7,4 +7,6 @@ interface CollectionLocalSource {
     suspend fun loadCollections(databaseUrl: String): List<Collection>
 
     suspend fun saveCollections(databaseUrl: String, collections: List<Collection>)
+
+    suspend fun deleteAllCollections()
 }

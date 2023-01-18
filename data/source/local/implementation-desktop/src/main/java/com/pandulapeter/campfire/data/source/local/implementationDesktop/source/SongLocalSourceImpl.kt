@@ -16,7 +16,11 @@ internal class SongLocalSourceImpl(
         storageManager.database.query<SongEntity>().find().toList().map { it.toModel() }
 
     override suspend fun saveSongs(databaseUrl: String, songs: List<Song>) = with(storageManager.database) {
-        write { delete(query<SongEntity>().find()) }
+        write { delete(query<SongEntity>("databaseUrl == $0", databaseUrl).find()) }
         writeBlocking { songs.forEach { copyToRealm(it.toEntity(databaseUrl)) } }
+    }
+
+    override suspend fun deleteAllSongs() = with(storageManager.database) {
+        write { delete(query<SongEntity>().find()) }
     }
 }

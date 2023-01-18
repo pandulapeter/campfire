@@ -6,7 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface SongRepository {
 
-    val songs: Flow<DataState<List<Song>>>
+    val songs: Flow<DataState<Map<String, List<Song>>>>
 
     suspend fun loadSongs(databaseUrls: List<String>, isForceRefresh: Boolean)
+
+    suspend fun deleteLocalSongs()
 }

@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.presentation
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Checkbox
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -21,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.domain.api.useCases.DeleteLocalDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveDatabasesUseCase
@@ -32,10 +35,10 @@ import org.koin.java.KoinJavaComponent.get
 fun CampfireApp(
     getScreenData: GetScreenDataUseCase = get(GetScreenDataUseCase::class.java),
     loadScreenData: LoadScreenDataUseCase = get(LoadScreenDataUseCase::class.java),
-    saveDatabases: SaveDatabasesUseCase = get(SaveDatabasesUseCase::class.java)
+    saveDatabases: SaveDatabasesUseCase = get(SaveDatabasesUseCase::class.java), // TODO: Use UserPreferences instead
+    deleteLocalData: DeleteLocalDataUseCase = get(DeleteLocalDataUseCase::class.java) // TODO: Use UserPreferences instead
 ) {
     val coroutineScope = rememberCoroutineScope()
-
     val songs = getScreenData()
         .map { it.data?.songs.orEmpty() }
         .collectAsState(emptyList())
@@ -52,17 +55,17 @@ fun CampfireApp(
         }
         .collectAsState("Uninitialized")
 
-    coroutineScope.launch { loadScreenData(false) }
+    LaunchedEffect(Unit) {
+        loadScreenData(false)
+    }
 
     Screen(
         stateIndicator = stateIndicator.value,
         databases = databases.value,
         songs = songs.value.sortedBy { it.artist },
-        onDatabaseEnabledChanged = { database, isEnabled ->
-            coroutineScope.launch {
-                saveDatabases(databases.value.map { if (it.url == database.url) database.copy(isEnabled = isEnabled) else it })
-            }
-        }
+        onDatabaseEnabledChanged = { database, isEnabled -> coroutineScope.launch { saveDatabases(databases.value.map { if (it.url == database.url) database.copy(isEnabled = isEnabled) else it }) } },
+        onForceRefreshPressed = { coroutineScope.launch { loadScreenData(true) } },
+        onDeleteLocalDataPressed = { coroutineScope.launch { deleteLocalData() } }
     )
 }
 
@@ -72,7 +75,9 @@ private fun Screen(
     stateIndicator: String,
     databases: List<Database>,
     songs: List<Song>,
-    onDatabaseEnabledChanged: (Database, Boolean) -> Unit
+    onDatabaseEnabledChanged: (Database, Boolean) -> Unit,
+    onForceRefreshPressed: () -> Unit,
+    onDeleteLocalDataPressed: () -> Unit
 ) = Row(
     modifier = modifier.fillMaxSize().padding(8.dp)
 ) {
@@ -103,21 +108,37 @@ private fun Screen(
                 }
             }
         }
-        StateIndicator(
+        Controller(
             modifier = Modifier.align(Alignment.BottomEnd),
-            state = stateIndicator
+            stateIndicator = stateIndicator,
+            onForceRefreshPressed = onForceRefreshPressed,
+            onDeleteLocalDataPressed = onDeleteLocalDataPressed
         )
     }
 }
 
 @Composable
-private fun StateIndicator(
+private fun Controller(
     modifier: Modifier = Modifier,
-    state: String
-) = Text(
-    modifier = modifier.padding(8.dp),
-    text = state
-)
+    stateIndicator: String,
+    onForceRefreshPressed: () -> Unit,
+    onDeleteLocalDataPressed: () -> Unit
+) = Column(modifier = modifier) {
+    Text(
+        modifier = modifier.padding(8.dp),
+        style = TextStyle.Default.copy(fontWeight = FontWeight.Bold),
+        text = stateIndicator
+    )
+    Text(
+        modifier = modifier.clickable { onForceRefreshPressed() }.padding(8.dp),
+        text = "Force refresh"
+    )
+    Text(
+        modifier = modifier.clickable { onDeleteLocalDataPressed() }.padding(8.dp),
+        text = "Delete local data"
+    )
+}
+
 @Composable
 private fun Header(
     modifier: Modifier = Modifier,

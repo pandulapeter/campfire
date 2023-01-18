@@ -13,4 +13,6 @@ internal class SongLocalSourceImpl(
     override suspend fun loadSongs(databaseUrl: String) = songDao.getAll(databaseUrl).map { it.toModel() }
 
     override suspend fun saveSongs(databaseUrl: String, songs: List<Song>) = songDao.updateAll(databaseUrl, songs.map { it.toEntity(databaseUrl) })
+
+    override suspend fun deleteAllSongs() = songDao.deleteAll()
 }

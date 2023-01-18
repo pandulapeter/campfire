@@ -6,7 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface CollectionRepository {
 
-    val collections: Flow<DataState<List<Collection>>>
+    val collections: Flow<DataState<Map<String, List<Collection>>>>
 
     suspend fun loadCollections(databaseUrls: List<String>, isForceRefresh: Boolean)
+
+    suspend fun deleteLocalCollections()
 }

@@ -35,15 +35,16 @@ class GetScreenDataUseCaseImpl internal constructor(
         userPreferencesDataState ->
 
         fun createScreenData() = collectionsDataState.data?.let { collections ->
-            databasesDataState.data?.let { databases ->
-                playlistsDataState.data?.let { playlists ->
+            databasesDataState.data?.sortedBy { it.priority }?.let { databases ->
+                playlistsDataState.data?.sortedBy { it.priority }?.let { playlists ->
                     songsDataState.data?.let { songs ->
                         userPreferencesDataState.data?.let { userPreferences ->
+                            val filteredDatabases = databases.filter { it.isEnabled }.filter { !userPreferences.unselectedDatabaseUrls.contains(it.url) }
                             ScreenData(
-                                collections = collections.distinctBy { it.id }.filter { it.isPublic },
-                                databases = databases.sortedBy { it.priority },
-                                playlists = playlists.sortedBy { it.priority },
-                                songs = songs.distinctBy { it.id }.filter { it.isPublic },
+                                collections = filteredDatabases.flatMap { collections[it.url].orEmpty() }.distinctBy { it.id }.filter { it.isPublic },
+                                databases = databases,
+                                playlists = playlists,
+                                songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }.distinctBy { it.id }.filter { it.isPublic },
                                 userPreferences = userPreferences
                             ).also {
                                 cache = it
