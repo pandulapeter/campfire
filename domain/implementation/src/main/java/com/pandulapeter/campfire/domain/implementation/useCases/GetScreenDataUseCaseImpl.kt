@@ -32,13 +32,13 @@ class GetScreenDataUseCaseImpl internal constructor(
         databasesDataState,
         playlistsDataState,
         songsDataState,
-        userPreferencesState ->
+        userPreferencesDataState ->
 
         fun createScreenData() = collectionsDataState.data?.let { collections ->
             databasesDataState.data?.let { databases ->
                 playlistsDataState.data?.let { playlists ->
                     songsDataState.data?.let { songs ->
-                        userPreferencesState.data?.let { userPreferences ->
+                        userPreferencesDataState.data?.let { userPreferences ->
                             ScreenData(
                                 collections = collections.distinctBy { it.id }.filter { it.isPublic },
                                 databases = databases.sortedBy { it.priority },
@@ -54,24 +54,19 @@ class GetScreenDataUseCaseImpl internal constructor(
             }
         }
 
-        if (
-            collectionsDataState is DataState.Failure ||
-            databasesDataState is DataState.Failure ||
-            playlistsDataState is DataState.Failure ||
-            songsDataState is DataState.Failure ||
-            userPreferencesState is DataState.Failure
-        ) {
+        val dataStates = arrayOf(
+            collectionsDataState,
+            databasesDataState,
+            playlistsDataState,
+            songsDataState,
+            userPreferencesDataState
+        )
+        if (dataStates.any { it is DataState.Failure }) {
             DataState.Failure(createScreenData() ?: cache)
-        } else if (
-            collectionsDataState is DataState.Loading ||
-            databasesDataState is DataState.Loading ||
-            playlistsDataState is DataState.Loading ||
-            songsDataState is DataState.Loading ||
-            userPreferencesState is DataState.Loading
-        ) {
+        } else if (dataStates.any { it is DataState.Loading }) {
             DataState.Loading(createScreenData() ?: cache)
         } else {
-            DataState.Idle(createScreenData()!!)
+            DataState.Idle(createScreenData() ?: cache ?: throw IllegalStateException("No data available while all data states are idle."))
         }
     }.distinctUntilChanged()
 }

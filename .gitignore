@@ -1,4 +1,6 @@
 *.iml
+default.realm
+default.realm.lock
 .gradle
 /local.properties
 /.idea/
