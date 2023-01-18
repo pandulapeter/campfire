@@ -6,6 +6,7 @@ import com.pandulapeter.campfire.data.source.local.implementationAndroid.dataLoc
 import com.pandulapeter.campfire.data.source.remote.implementationJvm.dataRemoteSourceJvmModule
 import com.pandulapeter.campfire.domain.implementation.domainModule
 import com.pandulapeter.campfire.presentation.androidDebugMenu.DebugMenu
+import com.pandulapeter.campfire.shared.presentationModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -18,7 +19,7 @@ class CampfireApplication : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@CampfireApplication)
-            modules(dataModules + domainModule)
+            modules(dataModules + domainModule + presentationModule)
         }
         DebugMenu.initialize(
             application = this,

@@ -20,5 +20,5 @@ val domainModule = module {
     factory<LoadScreenDataUseCase> { LoadScreenDataUseCaseImpl(get(), get(), get(), get(), get()) }
     factory<SaveDatabasesUseCase> { SaveDatabasesUseCaseImpl(get(), get()) }
     factory<SavePlaylistsUseCase> { SavePlaylistsUseCaseImpl(get()) }
-    factory<SaveUserPreferencesUseCase> { SaveUserPreferencesUseCaseImpl(get()) }
+    factory<SaveUserPreferencesUseCase> { SaveUserPreferencesUseCaseImpl(get(), get()) }
 }
