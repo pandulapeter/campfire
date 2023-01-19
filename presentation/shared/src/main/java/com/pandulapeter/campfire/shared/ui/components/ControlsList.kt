@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.Checkbox
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +23,7 @@ import com.pandulapeter.campfire.data.model.domain.Database
 internal fun ControlsList(
     modifier: Modifier = Modifier,
     state: String,
+    query: String,
     databases: List<Database>,
     unselectedDatabaseUrls: List<String>,
     shouldShowExplicitSongs: Boolean,
@@ -29,7 +31,8 @@ internal fun ControlsList(
     onDatabaseSelectedChanged: (Database, Boolean) -> Unit,
     onShouldShowExplicitSongsChanged: (Boolean) -> Unit,
     onForceRefreshPressed: () -> Unit,
-    onDeleteLocalDataPressed: () -> Unit
+    onDeleteLocalDataPressed: () -> Unit,
+    onQueryChanged: (String) -> Unit
 ) = LazyColumn(
     modifier = modifier.fillMaxHeight()
 ) {
@@ -57,6 +60,12 @@ internal fun ControlsList(
                 Header(
                     modifier = Modifier.animateItemPlacement(),
                     text = "Filters"
+                )
+            }
+            item(key = "filter_search") {
+                SearchItem(
+                    query = query,
+                    onQueryChanged = onQueryChanged
                 )
             }
             item(key = "filter_explicit") {
@@ -124,6 +133,22 @@ private fun CheckboxItem(
             text = text
         )
     }
+}
+
+@Composable
+private fun SearchItem(
+    modifier: Modifier = Modifier,
+    query: String,
+    onQueryChanged: (String) -> Unit
+) = RoundedCard(
+    modifier = modifier
+) {
+    TextField(
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text("Search") },
+        value = query,
+        onValueChange = onQueryChanged
+    )
 }
 
 @Composable

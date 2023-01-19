@@ -35,6 +35,7 @@ private fun MainTestUi(
     lazyColumnWrapper: @Composable BoxScope.(LazyListScope.() -> Unit) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val query = stateHolder.query.collectAsState("")
     val state = stateHolder.state.collectAsState("Uninitialized")
     val databases = stateHolder.databases.collectAsState(emptyList())
     val collections = stateHolder.collections.collectAsState(emptyList())
@@ -45,6 +46,7 @@ private fun MainTestUi(
 
     Screen(
         state = state.value,
+        query = query.value,
         databases = databases.value,
         collections = collections.value.sortedBy { it.title },
         songs = songs.value.sortedBy { it.artist },
@@ -61,6 +63,7 @@ private fun MainTestUi(
         },
         onForceRefreshPressed = { coroutineScope.launch { stateHolder.onForceRefreshPressed() } },
         onDeleteLocalDataPressed = { coroutineScope.launch { stateHolder.onDeleteLocalDataPressed() } },
+        onQueryChanged = stateHolder::onQueryChanged,
         lazyColumnWrapper = lazyColumnWrapper
     )
 }
@@ -69,6 +72,7 @@ private fun MainTestUi(
 private fun Screen(
     modifier: Modifier = Modifier,
     state: String,
+    query: String,
     databases: List<Database>,
     collections: List<Collection>,
     songs: List<Song>,
@@ -79,6 +83,7 @@ private fun Screen(
     onShouldShowExplicitSongsChanged: (Boolean) -> Unit,
     onForceRefreshPressed: () -> Unit,
     onDeleteLocalDataPressed: () -> Unit,
+    onQueryChanged: (String) -> Unit,
     lazyColumnWrapper: @Composable BoxScope.(LazyListScope.() -> Unit) -> Unit
 ) = Row(
     modifier = modifier.fillMaxSize().padding(8.dp)
@@ -95,6 +100,7 @@ private fun Screen(
     ControlsList(
         modifier = Modifier.fillMaxSize(),
         state = state,
+        query = query,
         databases = databases,
         unselectedDatabaseUrls = unselectedDatabaseUrls,
         shouldShowExplicitSongs = shouldShowExplicitSongs,
@@ -102,6 +108,7 @@ private fun Screen(
         onDatabaseSelectedChanged = onDatabaseSelectedChanged,
         onShouldShowExplicitSongsChanged = onShouldShowExplicitSongsChanged,
         onForceRefreshPressed = onForceRefreshPressed,
-        onDeleteLocalDataPressed = onDeleteLocalDataPressed
+        onDeleteLocalDataPressed = onDeleteLocalDataPressed,
+        onQueryChanged = onQueryChanged
     )
 }
