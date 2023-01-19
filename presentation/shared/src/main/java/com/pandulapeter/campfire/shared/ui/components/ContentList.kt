@@ -1,20 +1,17 @@
 package com.pandulapeter.campfire.shared.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Collection
@@ -26,14 +23,11 @@ internal fun ContentList(
     modifier: Modifier = Modifier,
     collections: List<Collection>,
     songs: List<Song>,
+    lazyColumnWrapper: @Composable BoxScope.(LazyListScope.() -> Unit) -> Unit
 ) = Box(
     modifier = modifier.fillMaxHeight()
 ) {
-    val state = rememberLazyListState()
-    LazyColumn(
-        modifier = Modifier.fillMaxHeight().padding(end = 8.dp),
-        state = state
-    ) {
+    lazyColumnWrapper {
         if (collections.isEmpty() && songs.isEmpty()) {
             item(key = "header_no_data") {
                 Header(
@@ -78,12 +72,6 @@ internal fun ContentList(
             }
         }
     }
-    VerticalScrollbar(
-        modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-        adapter = rememberScrollbarAdapter(
-            scrollState = state
-        )
-    )
 }
 
 @Composable

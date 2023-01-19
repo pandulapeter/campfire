@@ -1,11 +1,13 @@
 package com.pandulapeter.campfire.shared.ui
 
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -22,11 +24,15 @@ import org.koin.java.KoinJavaComponent.get
 
 @Composable
 fun TestUi(
-) = MainTestUi()
+    lazyColumnWrapper: @Composable BoxScope.(LazyListScope.() -> Unit) -> Unit
+) = MainTestUi(
+    lazyColumnWrapper = lazyColumnWrapper
+)
 
 @Composable
 private fun MainTestUi(
-    stateHolder: TestUiStateHolder = get(TestUiStateHolder::class.java)
+    stateHolder: TestUiStateHolder = get(TestUiStateHolder::class.java),
+    lazyColumnWrapper: @Composable BoxScope.(LazyListScope.() -> Unit) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val state = stateHolder.state.collectAsState("Uninitialized")
@@ -54,7 +60,8 @@ private fun MainTestUi(
             coroutineScope.launch { userPreferences.value?.let { stateHolder.onShouldShowExplicitSongsChanged(it, shouldShowExplicitSongs) } }
         },
         onForceRefreshPressed = { coroutineScope.launch { stateHolder.onForceRefreshPressed() } },
-        onDeleteLocalDataPressed = { coroutineScope.launch { stateHolder.onDeleteLocalDataPressed() } }
+        onDeleteLocalDataPressed = { coroutineScope.launch { stateHolder.onDeleteLocalDataPressed() } },
+        lazyColumnWrapper = lazyColumnWrapper
     )
 }
 
@@ -71,14 +78,16 @@ private fun Screen(
     onDatabaseSelectedChanged: (Database, Boolean) -> Unit,
     onShouldShowExplicitSongsChanged: (Boolean) -> Unit,
     onForceRefreshPressed: () -> Unit,
-    onDeleteLocalDataPressed: () -> Unit
+    onDeleteLocalDataPressed: () -> Unit,
+    lazyColumnWrapper: @Composable BoxScope.(LazyListScope.() -> Unit) -> Unit
 ) = Row(
     modifier = modifier.fillMaxSize().padding(8.dp)
 ) {
     ContentList(
         modifier = Modifier.fillMaxWidth(0.55f),
         collections = collections,
-        songs = songs
+        songs = songs,
+        lazyColumnWrapper = lazyColumnWrapper
     )
     Spacer(
         modifier = Modifier.width(8.dp)

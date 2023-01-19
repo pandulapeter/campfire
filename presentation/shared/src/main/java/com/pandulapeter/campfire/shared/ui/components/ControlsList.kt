@@ -120,7 +120,7 @@ private fun CheckboxItem(
             onCheckedChange = onCheckedChanged
         )
         Text(
-            modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically).padding(vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically).padding(vertical = 8.dp).padding(end = 8.dp),
             text = text
         )
     }

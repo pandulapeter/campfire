@@ -8,9 +8,11 @@ import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveDatabasesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.map
 
-internal class TestUiStateHolder(
+@OptIn(FlowPreview::class) class TestUiStateHolder(
     getScreenData: GetScreenDataUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
     private val saveDatabases: SaveDatabasesUseCase,
@@ -28,6 +30,7 @@ internal class TestUiStateHolder(
             is DataState.Loading -> "Loading"
         }
     }
+    val shouldShowLoadingIndicator = getScreenData().map { it is DataState.Loading }.debounce(300L)
 
     suspend fun onInitialize() = loadScreenData(false)
 
