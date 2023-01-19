@@ -8,29 +8,28 @@ import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveDatabasesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
-@OptIn(FlowPreview::class) class TestUiStateHolder(
+class TestUiStateHolder(
     getScreenData: GetScreenDataUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
     private val saveDatabases: SaveDatabasesUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
     private val deleteLocalData: DeleteLocalDataUseCase
 ) {
-    val songs = getScreenData().map { it.data?.songs.orEmpty() }
-    val collections = getScreenData().map { it.data?.collections.orEmpty() }
-    val databases = getScreenData().map { it.data?.databases.orEmpty() }
-    val userPreferences = getScreenData().map { it.data?.userPreferences }
+    val songs = getScreenData().map { it.data?.songs.orEmpty() }.distinctUntilChanged()
+    val collections = getScreenData().map { it.data?.collections.orEmpty() }.distinctUntilChanged()
+    val databases = getScreenData().map { it.data?.databases.orEmpty() }.distinctUntilChanged()
+    val userPreferences = getScreenData().map { it.data?.userPreferences }.distinctUntilChanged()
     val state = getScreenData().map {
         when (it) {
             is DataState.Failure -> "Error"
             is DataState.Idle -> "Idle"
             is DataState.Loading -> "Loading"
         }
-    }
-    val shouldShowLoadingIndicator = getScreenData().map { it is DataState.Loading }.debounce(300L)
+    }.distinctUntilChanged()
+    val shouldShowLoadingIndicator = getScreenData().map { it is DataState.Loading }.distinctUntilChanged()
 
     suspend fun onInitialize() = loadScreenData(false)
 
