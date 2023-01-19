@@ -1,23 +1,22 @@
 package com.pandulapeter.campfire.shared.ui
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Collection
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.ui.components.ContentList
-import com.pandulapeter.campfire.shared.ui.components.Controls
-import com.pandulapeter.campfire.shared.ui.components.FilterList
+import com.pandulapeter.campfire.shared.ui.components.ControlsList
 import kotlinx.coroutines.launch
 import org.koin.java.KoinJavaComponent.get
 
@@ -77,24 +76,23 @@ private fun Screen(
     modifier = modifier.fillMaxSize().padding(8.dp)
 ) {
     ContentList(
-        modifier = modifier.fillMaxWidth(0.65f),
+        modifier = Modifier.fillMaxWidth(0.55f),
         collections = collections,
         songs = songs
     )
-    Box(modifier = modifier.fillMaxSize()) {
-        FilterList(
-            databases = databases,
-            unselectedDatabaseUrls = unselectedDatabaseUrls,
-            shouldShowExplicitSongs = shouldShowExplicitSongs,
-            onDatabaseEnabledChanged = onDatabaseEnabledChanged,
-            onDatabaseSelectedChanged = onDatabaseSelectedChanged,
-            onShouldShowExplicitSongsChanged = onShouldShowExplicitSongsChanged
-        )
-        Controls(
-            modifier = Modifier.align(Alignment.BottomEnd),
-            state = state,
-            onForceRefreshPressed = onForceRefreshPressed,
-            onDeleteLocalDataPressed = onDeleteLocalDataPressed
-        )
-    }
+    Spacer(
+        modifier = Modifier.width(8.dp)
+    )
+    ControlsList(
+        modifier = Modifier.fillMaxSize(),
+        state = state,
+        databases = databases,
+        unselectedDatabaseUrls = unselectedDatabaseUrls,
+        shouldShowExplicitSongs = shouldShowExplicitSongs,
+        onDatabaseEnabledChanged = onDatabaseEnabledChanged,
+        onDatabaseSelectedChanged = onDatabaseSelectedChanged,
+        onShouldShowExplicitSongsChanged = onShouldShowExplicitSongsChanged,
+        onForceRefreshPressed = onForceRefreshPressed,
+        onDeleteLocalDataPressed = onDeleteLocalDataPressed
+    )
 }
