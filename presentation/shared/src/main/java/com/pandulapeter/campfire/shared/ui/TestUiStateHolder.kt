@@ -70,6 +70,10 @@ class TestUiStateHolder(
         userPreferences.copy(shouldShowExplicitSongs = shouldShowExplicitSongs)
     )
 
+    suspend fun onShouldShowSongsWithoutChordsChanged(userPreferences: UserPreferences, shouldShowSongsWithoutChords: Boolean) = saveUserPreferences(
+        userPreferences.copy(shouldShowSongsWithoutChords = shouldShowSongsWithoutChords)
+    )
+
     suspend fun onForceRefreshPressed() = loadScreenData(true)
 
     suspend fun onDeleteLocalDataPressed() = deleteLocalData()

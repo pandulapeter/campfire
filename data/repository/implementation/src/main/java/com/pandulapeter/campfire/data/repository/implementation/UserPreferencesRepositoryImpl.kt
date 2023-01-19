@@ -20,8 +20,9 @@ internal class UserPreferencesRepositoryImpl(
 
     companion object {
         private val defaultUserPreferences = UserPreferences(
-            unselectedDatabaseUrls = emptyList(),
-            shouldShowExplicitSongs = false
+            shouldShowExplicitSongs = false,
+            shouldShowSongsWithoutChords = false,
+            unselectedDatabaseUrls = emptyList()
         )
     }
 }

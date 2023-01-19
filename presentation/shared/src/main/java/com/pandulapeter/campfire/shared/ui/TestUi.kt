@@ -52,6 +52,7 @@ private fun MainTestUi(
         songs = songs.value.sortedBy { it.artist },
         unselectedDatabaseUrls = userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
         shouldShowExplicitSongs = userPreferences.value?.shouldShowExplicitSongs == true,
+        shouldShowSongsWithoutChords = userPreferences.value?.shouldShowSongsWithoutChords == true,
         onDatabaseEnabledChanged = { database, isEnabled ->
             coroutineScope.launch { stateHolder.onDatabaseEnabledChanged(databases.value, database, isEnabled) }
         },
@@ -60,6 +61,9 @@ private fun MainTestUi(
         },
         onShouldShowExplicitSongsChanged = { shouldShowExplicitSongs ->
             coroutineScope.launch { userPreferences.value?.let { stateHolder.onShouldShowExplicitSongsChanged(it, shouldShowExplicitSongs) } }
+        },
+        onShouldShowSongsWithoutChordsChanged = { shouldShowSongsWithoutChords ->
+            coroutineScope.launch { userPreferences.value?.let { stateHolder.onShouldShowSongsWithoutChordsChanged(it, shouldShowSongsWithoutChords) } }
         },
         onForceRefreshPressed = { coroutineScope.launch { stateHolder.onForceRefreshPressed() } },
         onDeleteLocalDataPressed = { coroutineScope.launch { stateHolder.onDeleteLocalDataPressed() } },
@@ -78,9 +82,11 @@ private fun Screen(
     songs: List<Song>,
     unselectedDatabaseUrls: List<String>,
     shouldShowExplicitSongs: Boolean,
+    shouldShowSongsWithoutChords: Boolean,
     onDatabaseEnabledChanged: (Database, Boolean) -> Unit,
     onDatabaseSelectedChanged: (Database, Boolean) -> Unit,
     onShouldShowExplicitSongsChanged: (Boolean) -> Unit,
+    onShouldShowSongsWithoutChordsChanged: (Boolean) -> Unit,
     onForceRefreshPressed: () -> Unit,
     onDeleteLocalDataPressed: () -> Unit,
     onQueryChanged: (String) -> Unit,
@@ -104,9 +110,11 @@ private fun Screen(
         databases = databases,
         unselectedDatabaseUrls = unselectedDatabaseUrls,
         shouldShowExplicitSongs = shouldShowExplicitSongs,
+        shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
         onDatabaseEnabledChanged = onDatabaseEnabledChanged,
         onDatabaseSelectedChanged = onDatabaseSelectedChanged,
         onShouldShowExplicitSongsChanged = onShouldShowExplicitSongsChanged,
+        onShouldShowSongsWithoutChordsChanged = onShouldShowSongsWithoutChordsChanged,
         onForceRefreshPressed = onForceRefreshPressed,
         onDeleteLocalDataPressed = onDeleteLocalDataPressed,
         onQueryChanged = onQueryChanged

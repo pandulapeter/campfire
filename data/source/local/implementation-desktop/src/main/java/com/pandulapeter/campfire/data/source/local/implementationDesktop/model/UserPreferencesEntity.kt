@@ -6,8 +6,9 @@ import io.realm.kotlin.types.annotations.PrimaryKey
 internal class UserPreferencesEntity : RealmObject {
 
     @PrimaryKey var id: String = TABLE_NAME
-    var unselectedDatabaseUrls: String = ""
     var shouldShowExplicitSongs: Boolean = false
+    var shouldShowSongsWithoutChords: Boolean = false
+    var unselectedDatabaseUrls: String = ""
 
     companion object {
         const val TABLE_NAME = "userPreferences"

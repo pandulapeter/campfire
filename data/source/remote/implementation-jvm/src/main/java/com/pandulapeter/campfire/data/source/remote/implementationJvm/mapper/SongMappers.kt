@@ -12,7 +12,7 @@ internal fun SongResponse.toModel() = try {
         artist = artist.toSongArtist(),
         key = key.toSongKey(),
         isExplicit = isExplicit.toSongIsExplicit(),
-        hasChords = isExplicit.toSongHasChords(),
+        hasChords = hasChords.toSongHasChords(),
         isPublic = isPublic.toSongIsPublic()
     )
 } catch (exception: DataValidationException) {

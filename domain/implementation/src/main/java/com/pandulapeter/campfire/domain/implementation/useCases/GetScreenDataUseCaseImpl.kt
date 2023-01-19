@@ -1,6 +1,8 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.CollectionRepository
 import com.pandulapeter.campfire.data.repository.api.DatabaseRepository
 import com.pandulapeter.campfire.data.repository.api.PlaylistRepository
@@ -41,12 +43,16 @@ class GetScreenDataUseCaseImpl internal constructor(
                         userPreferencesDataState.data?.let { userPreferences ->
                             val filteredDatabases = databases.filter { it.isEnabled }.filter { !userPreferences.unselectedDatabaseUrls.contains(it.url) }
                             ScreenData(
-                                collections = filteredDatabases.flatMap { collections[it.url].orEmpty() }.distinctBy { it.id }.filter { it.isPublic },
+                                collections = filteredDatabases.flatMap { collections[it.url].orEmpty() }
+                                    .distinctBy { it.id }
+                                    .filter { it.isPublic },
                                 databases = databases,
                                 playlists = playlists,
-                                songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }.distinctBy { it.id }.filter { it.isPublic }.let { songs ->
-                                    if (userPreferences.shouldShowExplicitSongs) songs else songs.filterNot { it.isExplicit }
-                                },
+                                songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }
+                                    .distinctBy { it.id }
+                                    .filter { it.isPublic }
+                                    .filterExplicit(userPreferences)
+                                    .filterHasChords(userPreferences),
                                 userPreferences = userPreferences
                             ).also {
                                 cache = it
@@ -72,4 +78,8 @@ class GetScreenDataUseCaseImpl internal constructor(
             DataState.Idle(createScreenData() ?: cache ?: throw IllegalStateException("No data available while all data states are idle."))
         }
     }.distinctUntilChanged()
+
+    private fun List<Song>.filterExplicit(userPreferences: UserPreferences) = if (userPreferences.shouldShowExplicitSongs) this else filterNot { it.isExplicit }
+
+    private fun List<Song>.filterHasChords(userPreferences: UserPreferences) = if (userPreferences.shouldShowSongsWithoutChords) this else filterNot { !it.hasChords }
 }

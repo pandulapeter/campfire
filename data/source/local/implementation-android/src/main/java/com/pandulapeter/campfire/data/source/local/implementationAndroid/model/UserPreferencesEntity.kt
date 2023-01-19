@@ -7,8 +7,9 @@ import androidx.room.PrimaryKey
 @Entity(tableName = UserPreferencesEntity.TABLE_NAME)
 internal data class UserPreferencesEntity(
     @PrimaryKey @ColumnInfo(name = "id") val id: String = TABLE_NAME,
-    @ColumnInfo(name = "unselectedDatabaseUrls") val unselectedDatabaseUrls: String,
-    @ColumnInfo(name = "shouldShowExplicitSongs") val shouldShowExplicitSongs: Boolean
+    @ColumnInfo(name = "shouldShowExplicitSongs") val shouldShowExplicitSongs: Boolean,
+    @ColumnInfo(name = "shouldShowSongsWithoutChords") val shouldShowSongsWithoutChords: Boolean,
+    @ColumnInfo(name = "unselectedDatabaseUrls") val unselectedDatabaseUrls: String
 ) {
 
     companion object {

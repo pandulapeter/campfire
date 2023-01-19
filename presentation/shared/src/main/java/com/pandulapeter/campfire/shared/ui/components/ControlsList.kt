@@ -27,9 +27,11 @@ internal fun ControlsList(
     databases: List<Database>,
     unselectedDatabaseUrls: List<String>,
     shouldShowExplicitSongs: Boolean,
+    shouldShowSongsWithoutChords: Boolean,
     onDatabaseEnabledChanged: (Database, Boolean) -> Unit,
     onDatabaseSelectedChanged: (Database, Boolean) -> Unit,
     onShouldShowExplicitSongsChanged: (Boolean) -> Unit,
+    onShouldShowSongsWithoutChordsChanged: (Boolean) -> Unit,
     onForceRefreshPressed: () -> Unit,
     onDeleteLocalDataPressed: () -> Unit,
     onQueryChanged: (String) -> Unit
@@ -74,6 +76,14 @@ internal fun ControlsList(
                     text = "Show explicit songs",
                     isChecked = shouldShowExplicitSongs,
                     onCheckedChanged = onShouldShowExplicitSongsChanged
+                )
+            }
+            item(key = "filter_songs_without_chords") {
+                CheckboxItem(
+                    modifier = Modifier.animateItemPlacement(),
+                    text = "Show songs without chords",
+                    isChecked = shouldShowSongsWithoutChords,
+                    onCheckedChanged = onShouldShowSongsWithoutChordsChanged
                 )
             }
             itemsIndexed(

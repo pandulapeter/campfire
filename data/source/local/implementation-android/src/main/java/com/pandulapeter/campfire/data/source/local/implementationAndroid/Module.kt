@@ -15,7 +15,11 @@ import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage
 import org.koin.dsl.module
 
 val dataLocalSourceAndroidModule = module {
-    single { Room.databaseBuilder(get(), StorageManager::class.java, "campfireDatabase.db").build() }
+    single {
+        Room.databaseBuilder(get(), StorageManager::class.java, "campfireDatabase.db")
+            .fallbackToDestructiveMigration()
+            .build()
+    }
     factory { get<StorageManager>().getCollectionDao() }
     factory { get<StorageManager>().getDatabaseDao() }
     factory { get<StorageManager>().getPlaylistDao() }
