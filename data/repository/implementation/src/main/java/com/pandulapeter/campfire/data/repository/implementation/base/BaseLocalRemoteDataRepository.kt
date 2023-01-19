@@ -16,6 +16,7 @@ internal abstract class BaseLocalRemoteDataRepository<T>(
     private val saveDataToLocalSource: suspend (databaseUrl: String, data: List<T>) -> Unit,
     private val deleteDataFromLocalSource: suspend () -> Unit
 ) {
+    private var isFirstLoading = true
     private val _dataState = MutableStateFlow<DataState<MutableMap<String, List<T>>>>(DataState.Failure(null))
     protected val dataState: Flow<DataState<Map<String, List<T>>>> = _dataState.map {
         when (it) {
@@ -34,7 +35,10 @@ internal abstract class BaseLocalRemoteDataRepository<T>(
         _dataState.run {
             if (value !is DataState.Loading) {
                 val currentCache = databaseUrls.associateWith { value.data?.get(it).orEmpty() }.toMutableMap()
-                if (currentCache.values.all { it.isValid() } && !isForceRefresh) {
+
+                fun isLoadingDone() = !isFirstLoading && !isForceRefresh && currentCache.values.all { it.isValid() }
+
+                if (isLoadingDone()) {
                     value = DataState.Idle(currentCache)
                 } else {
                     value = DataState.Loading(currentCache)
@@ -54,36 +58,40 @@ internal abstract class BaseLocalRemoteDataRepository<T>(
                             }
                         }
                     }.awaitAll()
-                    value = DataState.Loading(currentCache)
-                    var hasErrorHappened = false
-                    databaseUrls.map { databaseUrl ->
-                        async {
-                            try {
-                                loadDataFromRemoteSource(databaseUrl).also { data ->
-                                    if (data.isValid()) {
-                                        currentCache[databaseUrl] = data
-                                        value.data.let {
-                                            if (it == null) {
-                                                value = DataState.Loading(mutableMapOf(databaseUrl to data))
-                                            } else {
-                                                it[databaseUrl] = data
-                                            }
-                                        }
-                                        saveDataToLocalSource(databaseUrl, data)
-                                    }
-                                }
-                            } catch (exception: Exception) {
-                                hasErrorHappened = true
-                                println(exception.message)
-                                emptyList()
-                            }
-                        }
-                    }.awaitAll()
-                    value = if (currentCache.values.any { !it.isValid() } || (hasErrorHappened && isForceRefresh)) {
-                        println("Failure! ${this@BaseLocalRemoteDataRepository::class.java}")
-                        DataState.Failure(currentCache)
+                    if (isLoadingDone()) {
+                        value = DataState.Idle(currentCache)
                     } else {
-                        DataState.Idle(currentCache)
+                        isFirstLoading = false
+                        value = DataState.Loading(currentCache)
+                        var hasErrorHappened = false
+                        databaseUrls.map { databaseUrl ->
+                            async {
+                                try {
+                                    loadDataFromRemoteSource(databaseUrl).also { data ->
+                                        if (data.isValid()) {
+                                            currentCache[databaseUrl] = data
+                                            value.data.let {
+                                                if (it == null) {
+                                                    value = DataState.Loading(mutableMapOf(databaseUrl to data))
+                                                } else {
+                                                    it[databaseUrl] = data
+                                                }
+                                            }
+                                            saveDataToLocalSource(databaseUrl, data)
+                                        }
+                                    }
+                                } catch (exception: Exception) {
+                                    hasErrorHappened = true
+                                    println(exception.message)
+                                    emptyList()
+                                }
+                            }
+                        }.awaitAll()
+                        value = if (currentCache.values.any { !it.isValid() } || (hasErrorHappened && isForceRefresh)) {
+                            DataState.Failure(currentCache)
+                        } else {
+                            DataState.Idle(currentCache)
+                        }
                     }
                 }
             }
@@ -94,7 +102,7 @@ internal abstract class BaseLocalRemoteDataRepository<T>(
         if (value !is DataState.Loading) {
             value = DataState.Loading(value.data)
             deleteDataFromLocalSource()
-            value = DataState.Failure(null)
+            value = DataState.Failure(mutableMapOf())
         }
     }
 }
