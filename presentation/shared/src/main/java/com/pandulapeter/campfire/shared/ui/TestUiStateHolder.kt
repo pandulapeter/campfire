@@ -1,13 +1,21 @@
 package com.pandulapeter.campfire.shared.ui
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.Collection
 import com.pandulapeter.campfire.data.model.domain.Database
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.DeleteLocalDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveDatabasesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
+import com.pandulapeter.campfire.shared.ui.resources.CampfireIcons
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -45,6 +53,15 @@ class TestUiStateHolder(
         }
     }.distinctUntilChanged()
     val shouldShowLoadingIndicator = getScreenData().map { it is DataState.Loading }.distinctUntilChanged()
+    private val selectedNavigationDestination = MutableStateFlow(NavigationDestination.HOME)
+    val navigationDestinations = selectedNavigationDestination.map { selectedNavigationDestination ->
+        NavigationDestination.values().map { navigationDestination ->
+            NavigationDestinationWrapper(
+                destination = navigationDestination,
+                isSelected = navigationDestination == selectedNavigationDestination
+            )
+        }
+    }
 
     suspend fun onInitialize() = loadScreenData(false)
 
@@ -66,6 +83,14 @@ class TestUiStateHolder(
         _query.value = newQuery
     }
 
+    fun onCollectionClicked(collection: Collection) {
+        // TODO
+    }
+
+    fun onSongClicked(song: Song) {
+        // TODO
+    }
+
     suspend fun onShouldShowExplicitSongsChanged(userPreferences: UserPreferences, shouldShowExplicitSongs: Boolean) = saveUserPreferences(
         userPreferences.copy(shouldShowExplicitSongs = shouldShowExplicitSongs)
     )
@@ -77,4 +102,24 @@ class TestUiStateHolder(
     suspend fun onForceRefreshPressed() = loadScreenData(true)
 
     suspend fun onDeleteLocalDataPressed() = deleteLocalData()
+
+    fun onNavigationDestinationSelected(navigationDestination: NavigationDestination) {
+        selectedNavigationDestination.value = navigationDestination
+    }
+
+    data class NavigationDestinationWrapper(
+        val destination: NavigationDestination,
+        val isSelected: Boolean
+    )
+
+    enum class NavigationDestination(
+        val displayName: String,
+        val icon: ImageVector
+    ) {
+        HOME(displayName = "Home", icon = Icons.Rounded.Home),
+        COLLECTIONS(displayName = "Collections", icon = CampfireIcons.Collections),
+        SONGS(displayName = "Songs", icon = CampfireIcons.Songs),
+        PLAYLISTS(displayName = "Playlists", icon = Icons.Rounded.Star),
+        SETTINGS(displayName = "Settings", icon = Icons.Rounded.Settings)
+    }
 }

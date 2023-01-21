@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.shared.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,7 +20,7 @@ internal fun Header(
     modifier: Modifier = Modifier,
     text: String
 ) = Text(
-    modifier = modifier.padding(8.dp).fillMaxWidth(),
+    modifier = modifier.padding(horizontal = 8.dp, vertical = 16.dp).fillMaxWidth(),
     text = text,
     style = TextStyle.Default.copy(fontWeight = FontWeight.Bold),
     color = MaterialTheme.colors.primary

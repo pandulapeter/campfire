@@ -6,9 +6,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -127,6 +130,11 @@ internal fun ControlsList(
                 onClick = { onDeleteLocalDataPressed() }
             )
         }
+        item(key = "spacer") {
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+        }
     }
 }
 
@@ -147,8 +155,11 @@ private fun CheckboxItem(
             checked = isChecked,
             onCheckedChange = onCheckedChanged
         )
+        Spacer(
+            modifier = Modifier.width(4.dp)
+        )
         Text(
-            modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically).padding(vertical = 8.dp).padding(end = 8.dp),
+            modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically).padding(vertical = 16.dp).padding(end = 8.dp),
             text = text
         )
     }
@@ -192,7 +203,7 @@ private fun ClickableControl(
     modifier = modifier
 ) {
     Text(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(8.dp),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(16.dp),
         text = text
     )
 }

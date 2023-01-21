@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.presentation.android
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -19,11 +20,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.lightColors
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -32,9 +28,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
 import com.pandulapeter.campfire.shared.ui.TestUi
 import com.pandulapeter.campfire.shared.ui.TestUiStateHolder
+import com.pandulapeter.campfire.shared.ui.catalogue.CampfireTheme
 import kotlinx.coroutines.launch
 import org.koin.java.KoinJavaComponent.get
 
@@ -42,64 +38,26 @@ import org.koin.java.KoinJavaComponent.get
 @Composable
 fun CampfireApp(
     stateHolder: TestUiStateHolder = get(TestUiStateHolder::class.java)
-) = MaterialTheme(
-    colors = lightColors(
-        primary = colorResource(id = R.color.brand_orange),
-        secondary = colorResource(id = R.color.brand_orange)
-    )
-) {
+) = CampfireTheme {
+    val navigationDestinations = stateHolder.navigationDestinations.collectAsState(initial = emptyList())
+
     Scaffold(
         modifier = Modifier
             .imePadding()
             .statusBarsPadding(),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        modifier = Modifier.statusBarsPadding(),
-                        color = MaterialTheme.colors.onPrimary,
-                        text = "Campfire"
-                    )
-                }
+            CampfireAppBar(
+                selectedNavigationDestination = navigationDestinations.value.firstOrNull { it.isSelected }?.destination
             )
         },
         bottomBar = {
-            BottomNavigation(
+            CampfireBottomNavigation(
                 modifier = Modifier
                     .imePadding()
-                    .navigationBarsPadding()
-            ) {
-                BottomNavigationItem(
-                    selected = true,
-                    onClick = {},
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "Home",
-                        )
-                    }
-                )
-                BottomNavigationItem(
-                    selected = false,
-                    onClick = {},
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Playlists",
-                        )
-                    }
-                )
-                BottomNavigationItem(
-                    selected = false,
-                    onClick = {},
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                        )
-                    }
-                )
-            }
+                    .navigationBarsPadding(),
+                navigationDestinations = navigationDestinations.value,
+                onNavigationDestinationSelected = stateHolder::onNavigationDestinationSelected
+            )
         }
     ) { scaffoldPadding ->
         TestUi(
@@ -130,6 +88,44 @@ fun CampfireApp(
                         state = pullRefreshState
                     )
                 }
+            }
+        )
+    }
+}
+
+@Composable
+private fun CampfireAppBar(
+    modifier: Modifier = Modifier,
+    selectedNavigationDestination: TestUiStateHolder.NavigationDestination?
+) = TopAppBar(
+    modifier = modifier,
+    backgroundColor = MaterialTheme.colors.surface,
+    title = {
+        Text(
+            modifier = Modifier.statusBarsPadding(),
+            text = selectedNavigationDestination?.displayName ?: "Campfire"
+        )
+    }
+)
+
+@Composable
+private fun CampfireBottomNavigation(
+    modifier: Modifier = Modifier,
+    navigationDestinations: List<TestUiStateHolder.NavigationDestinationWrapper>,
+    onNavigationDestinationSelected: (TestUiStateHolder.NavigationDestination) -> Unit
+) = BottomNavigation(
+    modifier = modifier,
+    backgroundColor = MaterialTheme.colors.surface
+) {
+    navigationDestinations.forEach { navigationDestination ->
+        BottomNavigationItem(
+            selected = navigationDestination.isSelected,
+            onClick = { onNavigationDestinationSelected(navigationDestination.destination) },
+            icon = {
+                Icon(
+                    imageVector = navigationDestination.destination.icon,
+                    contentDescription = navigationDestination.destination.displayName,
+                )
             }
         )
     }

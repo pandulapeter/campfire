@@ -2,18 +2,11 @@ package com.pandulapeter.campfire.shared.ui
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.material.Icon
-import androidx.compose.material.NavigationRail
-import androidx.compose.material.NavigationRailItem
-import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -24,6 +17,7 @@ import com.pandulapeter.campfire.data.model.domain.Collection
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.ui.components.ContentList
+import com.pandulapeter.campfire.shared.ui.components.ControlsList
 import kotlinx.coroutines.launch
 import org.koin.java.KoinJavaComponent.get
 
@@ -77,6 +71,8 @@ private fun MainTestUi(
         onForceRefreshPressed = { coroutineScope.launch { stateHolder.onForceRefreshPressed() } },
         onDeleteLocalDataPressed = { coroutineScope.launch { stateHolder.onDeleteLocalDataPressed() } },
         onQueryChanged = stateHolder::onQueryChanged,
+        onCollectionClicked = stateHolder::onCollectionClicked,
+        onSongClicked = stateHolder::onSongClicked,
         lazyColumnWrapper = lazyColumnWrapper
     )
 }
@@ -99,52 +95,24 @@ private fun Screen(
     onForceRefreshPressed: () -> Unit,
     onDeleteLocalDataPressed: () -> Unit,
     onQueryChanged: (String) -> Unit,
+    onCollectionClicked: (Collection) -> Unit,
+    onSongClicked: (Song) -> Unit,
     lazyColumnWrapper: @Composable BoxScope.(LazyListScope.() -> Unit) -> Unit
 ) = Row(
     modifier = modifier.fillMaxSize()
 ) {
-    NavigationRail {
-        NavigationRailItem(
-            selected = true,
-            onClick = {},
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Home",
-                )
-            }
-        )
-        NavigationRailItem(
-            selected = false,
-            onClick = {},
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = "Playlists",
-                )
-            }
-        )
-        NavigationRailItem(
-            selected = false,
-            onClick = {},
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
-                )
-            }
-        )
-    }
     ContentList(
         modifier = Modifier.fillMaxWidth(0.55f),
         collections = collections,
         songs = songs,
-        lazyColumnWrapper = lazyColumnWrapper
+        lazyColumnWrapper = lazyColumnWrapper,
+        onCollectionClicked = onCollectionClicked,
+        onSongClicked = onSongClicked
     )
-    androidx.compose.foundation.layout.Spacer(
+    Spacer(
         modifier = Modifier.width(8.dp)
     )
-    com.pandulapeter.campfire.shared.ui.components.ControlsList(
+    ControlsList(
         modifier = Modifier.fillMaxSize(),
         state = state,
         query = query,

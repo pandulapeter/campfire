@@ -2,10 +2,13 @@ package com.pandulapeter.campfire.shared.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -23,6 +26,8 @@ internal fun ContentList(
     modifier: Modifier = Modifier,
     collections: List<Collection>,
     songs: List<Song>,
+    onCollectionClicked: (Collection) -> Unit,
+    onSongClicked: (Song) -> Unit,
     lazyColumnWrapper: @Composable BoxScope.(LazyListScope.() -> Unit) -> Unit
 ) = Box(
     modifier = modifier.fillMaxHeight()
@@ -49,7 +54,8 @@ internal fun ContentList(
                 ) { _, collection ->
                     CollectionItem(
                         modifier = Modifier.animateItemPlacement(),
-                        collection = collection
+                        collection = collection,
+                        onCollectionClicked = onCollectionClicked
                     )
                 }
             }
@@ -66,9 +72,15 @@ internal fun ContentList(
                 ) { _, song ->
                     SongItem(
                         modifier = Modifier.animateItemPlacement(),
-                        song = song
+                        song = song,
+                        onSongClicked = onSongClicked
                     )
                 }
+            }
+            item(key = "spacer") {
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
             }
         }
     }
@@ -77,12 +89,16 @@ internal fun ContentList(
 @Composable
 private fun CollectionItem(
     modifier: Modifier = Modifier,
-    collection: Collection
+    collection: Collection,
+    onCollectionClicked: (Collection) -> Unit
 ) = RoundedCard(
     modifier = modifier
 ) {
     Text(
-        modifier = Modifier.background(MaterialTheme.colors.surface).padding(8.dp).fillMaxWidth(),
+        modifier = Modifier
+            .clickable { onCollectionClicked(collection) }
+            .padding(8.dp)
+            .fillMaxWidth(),
         text = collection.title
     )
 }
@@ -90,12 +106,16 @@ private fun CollectionItem(
 @Composable
 private fun SongItem(
     modifier: Modifier = Modifier,
-    song: Song
+    song: Song,
+    onSongClicked: (Song) -> Unit
 ) = RoundedCard(
     modifier = modifier
 ) {
     Text(
-        modifier = Modifier.background(MaterialTheme.colors.surface).padding(8.dp).fillMaxWidth(),
+        modifier = Modifier
+            .clickable { onSongClicked(song) }
+            .padding(8.dp)
+            .fillMaxWidth(),
         text = "${song.artist} - ${song.title}"
     )
 }
