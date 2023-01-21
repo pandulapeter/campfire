@@ -166,7 +166,6 @@ private fun SearchItem(
         modifier = Modifier.fillMaxWidth(),
         trailingIcon = {
             AnimatedVisibility(
-                modifier = Modifier.fillMaxHeight(),
                 visible = query.isNotEmpty(),
                 enter = fadeIn(),
                 exit = fadeOut()

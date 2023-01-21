@@ -2,12 +2,18 @@ package com.pandulapeter.campfire.shared.ui
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material.Icon
+import androidx.compose.material.NavigationRail
+import androidx.compose.material.NavigationRailItem
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -18,19 +24,21 @@ import com.pandulapeter.campfire.data.model.domain.Collection
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.ui.components.ContentList
-import com.pandulapeter.campfire.shared.ui.components.ControlsList
 import kotlinx.coroutines.launch
 import org.koin.java.KoinJavaComponent.get
 
 @Composable
 fun TestUi(
+    modifier: Modifier = Modifier,
     lazyColumnWrapper: @Composable BoxScope.(LazyListScope.() -> Unit) -> Unit
 ) = MainTestUi(
+    modifier = modifier,
     lazyColumnWrapper = lazyColumnWrapper
 )
 
 @Composable
 private fun MainTestUi(
+    modifier: Modifier = Modifier,
     stateHolder: TestUiStateHolder = get(TestUiStateHolder::class.java),
     lazyColumnWrapper: @Composable BoxScope.(LazyListScope.() -> Unit) -> Unit
 ) {
@@ -45,6 +53,7 @@ private fun MainTestUi(
     LaunchedEffect(Unit) { stateHolder.onInitialize() }
 
     Screen(
+        modifier = modifier,
         state = state.value,
         query = query.value,
         databases = databases.value,
@@ -92,18 +101,50 @@ private fun Screen(
     onQueryChanged: (String) -> Unit,
     lazyColumnWrapper: @Composable BoxScope.(LazyListScope.() -> Unit) -> Unit
 ) = Row(
-    modifier = modifier.fillMaxSize().padding(8.dp)
+    modifier = modifier.fillMaxSize()
 ) {
+    NavigationRail {
+        NavigationRailItem(
+            selected = true,
+            onClick = {},
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Home,
+                    contentDescription = "Home",
+                )
+            }
+        )
+        NavigationRailItem(
+            selected = false,
+            onClick = {},
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "Playlists",
+                )
+            }
+        )
+        NavigationRailItem(
+            selected = false,
+            onClick = {},
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                )
+            }
+        )
+    }
     ContentList(
         modifier = Modifier.fillMaxWidth(0.55f),
         collections = collections,
         songs = songs,
         lazyColumnWrapper = lazyColumnWrapper
     )
-    Spacer(
+    androidx.compose.foundation.layout.Spacer(
         modifier = Modifier.width(8.dp)
     )
-    ControlsList(
+    com.pandulapeter.campfire.shared.ui.components.ControlsList(
         modifier = Modifier.fillMaxSize(),
         state = state,
         query = query,

@@ -21,9 +21,10 @@ internal fun Header(
     modifier: Modifier = Modifier,
     text: String
 ) = Text(
-    modifier = modifier.background(MaterialTheme.colors.surface).padding(8.dp).fillMaxWidth(),
+    modifier = modifier.padding(8.dp).fillMaxWidth(),
     text = text,
-    style = TextStyle.Default.copy(fontWeight = FontWeight.Bold)
+    style = TextStyle.Default.copy(fontWeight = FontWeight.Bold),
+    color = MaterialTheme.colors.primary
 )
 
 @Composable
