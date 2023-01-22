@@ -7,11 +7,12 @@ import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.S
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.UserPreferencesEntity
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
+import io.realm.kotlin.migration.AutomaticSchemaMigration
 
 internal class StorageManager {
 
     val database = Realm.open(
-        RealmConfiguration.create(
+        RealmConfiguration.Builder(
             schema = setOf(
                 CollectionEntity::class,
                 DatabaseEntity::class,
@@ -20,5 +21,10 @@ internal class StorageManager {
                 UserPreferencesEntity::class
             )
         )
+            .name("campfireDatabase.db")
+            .migration(object : AutomaticSchemaMigration {
+                override fun migrate(migrationContext: AutomaticSchemaMigration.MigrationContext) = Unit
+            })
+            .build()
     )
 }

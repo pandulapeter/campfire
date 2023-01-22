@@ -45,6 +45,7 @@ class TestUiStateHolder(
     }.distinctUntilChanged()
     val databases = getScreenData().map { it.data?.databases.orEmpty() }.distinctUntilChanged()
     val userPreferences = getScreenData().map { it.data?.userPreferences }.distinctUntilChanged()
+    val uiMode = userPreferences.map { it?.uiMode }
     val state = getScreenData().map {
         when (it) {
             is DataState.Failure -> "Error"

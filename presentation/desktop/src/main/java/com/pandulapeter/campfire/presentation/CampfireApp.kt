@@ -26,33 +26,39 @@ import org.koin.java.KoinJavaComponent
 @Composable
 fun CampfireApp(
     stateHolder: TestUiStateHolder = KoinJavaComponent.get(TestUiStateHolder::class.java)
-) = CampfireTheme {
-    val navigationDestinations = stateHolder.navigationDestinations.collectAsState(initial = emptyList())
+) {
+    val uiMode = stateHolder.uiMode.collectAsState(null)
 
-    Row(
-        modifier = Modifier.background(MaterialTheme.colors.background)
+    CampfireTheme(
+        uiMode = uiMode.value
     ) {
-        CampfireNavigationRail(
-            navigationDestinations = navigationDestinations.value,
-            onNavigationDestinationSelected = stateHolder::onNavigationDestinationSelected
-        )
-        TestUi(
-            lazyColumnWrapper = {
-                val state = rememberLazyListState()
+        val navigationDestinations = stateHolder.navigationDestinations.collectAsState(initial = emptyList())
 
-                LazyColumn(
-                    modifier = Modifier.fillMaxHeight().padding(end = 8.dp),
-                    state = state,
-                    content = it
-                )
-                VerticalScrollbar(
-                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-                    adapter = rememberScrollbarAdapter(
-                        scrollState = state
+        Row(
+            modifier = Modifier.background(MaterialTheme.colors.background)
+        ) {
+            CampfireNavigationRail(
+                navigationDestinations = navigationDestinations.value,
+                onNavigationDestinationSelected = stateHolder::onNavigationDestinationSelected
+            )
+            TestUi(
+                lazyColumnWrapper = {
+                    val state = rememberLazyListState()
+
+                    LazyColumn(
+                        modifier = Modifier.fillMaxHeight().padding(end = 8.dp),
+                        state = state,
+                        content = it
                     )
-                )
-            }
-        )
+                    VerticalScrollbar(
+                        modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                        adapter = rememberScrollbarAdapter(
+                            scrollState = state
+                        )
+                    )
+                }
+            )
+        }
     }
 }
 

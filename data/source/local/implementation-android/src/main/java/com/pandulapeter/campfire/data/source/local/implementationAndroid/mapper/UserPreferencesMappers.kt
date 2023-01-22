@@ -6,11 +6,13 @@ import com.pandulapeter.campfire.data.source.local.implementationAndroid.model.U
 internal fun UserPreferencesEntity.toModel() = UserPreferences(
     shouldShowExplicitSongs = shouldShowExplicitSongs,
     shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
-    unselectedDatabaseUrls = unselectedDatabaseUrls.mapToList()
+    unselectedDatabaseUrls = unselectedDatabaseUrls.mapToList(),
+    uiMode = UserPreferences.UiMode.values().firstOrNull { it.id == uiMode } ?: UserPreferences.UiMode.SYSTEM_DEFAULT
 )
 
 internal fun UserPreferences.toEntity() = UserPreferencesEntity(
     shouldShowExplicitSongs = shouldShowExplicitSongs,
     shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
-    unselectedDatabaseUrls = unselectedDatabaseUrls.mapToString()
+    unselectedDatabaseUrls = unselectedDatabaseUrls.mapToString(),
+    uiMode = uiMode.id
 )

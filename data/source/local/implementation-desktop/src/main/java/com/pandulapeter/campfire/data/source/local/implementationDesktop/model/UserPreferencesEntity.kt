@@ -9,6 +9,7 @@ internal class UserPreferencesEntity : RealmObject {
     var shouldShowExplicitSongs: Boolean = false
     var shouldShowSongsWithoutChords: Boolean = false
     var unselectedDatabaseUrls: String = ""
+    var uiMode: String = ""
 
     companion object {
         const val TABLE_NAME = "userPreferences"

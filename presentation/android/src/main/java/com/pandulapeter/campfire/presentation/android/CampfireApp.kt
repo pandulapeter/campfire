@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.presentation.android
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -38,58 +37,63 @@ import org.koin.java.KoinJavaComponent.get
 @Composable
 fun CampfireApp(
     stateHolder: TestUiStateHolder = get(TestUiStateHolder::class.java)
-) = CampfireTheme {
-    val navigationDestinations = stateHolder.navigationDestinations.collectAsState(initial = emptyList())
+) {
+    val uiMode = stateHolder.uiMode.collectAsState(null)
+    
+    CampfireTheme(
+        uiMode = uiMode.value
+    ) {
+        val navigationDestinations = stateHolder.navigationDestinations.collectAsState(initial = emptyList())
 
-    Scaffold(
-        modifier = Modifier
-            .imePadding()
-            .statusBarsPadding(),
-        topBar = {
-            CampfireAppBar(
-                selectedNavigationDestination = navigationDestinations.value.firstOrNull { it.isSelected }?.destination
-            )
-        },
-        bottomBar = {
-            CampfireBottomNavigation(
+        Scaffold(
+            modifier = Modifier
+                .imePadding()
+                .statusBarsPadding(),
+            topBar = {
+                CampfireAppBar(
+                    selectedNavigationDestination = navigationDestinations.value.firstOrNull { it.isSelected }?.destination
+                )
+            },
+            bottomBar = {
+                CampfireBottomNavigation(
+                    modifier = Modifier
+                        .imePadding()
+                        .navigationBarsPadding(),
+                    navigationDestinations = navigationDestinations.value,
+                    onNavigationDestinationSelected = stateHolder::onNavigationDestinationSelected
+                )
+            }
+        ) { scaffoldPadding ->
+            TestUi(
                 modifier = Modifier
-                    .imePadding()
-                    .navigationBarsPadding(),
-                navigationDestinations = navigationDestinations.value,
-                onNavigationDestinationSelected = stateHolder::onNavigationDestinationSelected
+                    .fillMaxSize()
+                    .padding(scaffoldPadding)
+                    .consumeWindowInsets(scaffoldPadding)
+                    .systemBarsPadding(),
+                lazyColumnWrapper = {
+                    val isRefreshing = stateHolder.shouldShowLoadingIndicator.collectAsState(false)
+                    val coroutineScope = rememberCoroutineScope()
+                    val pullRefreshState = rememberPullRefreshState(
+                        refreshing = isRefreshing.value,
+                        onRefresh = { coroutineScope.launch { stateHolder.onForceRefreshPressed() } }
+                    )
+
+                    Box(
+                        modifier = Modifier.pullRefresh(pullRefreshState)
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxHeight(),
+                            content = it
+                        )
+                        PullRefreshIndicator(
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            refreshing = isRefreshing.value,
+                            state = pullRefreshState
+                        )
+                    }
+                }
             )
         }
-    ) { scaffoldPadding ->
-        TestUi(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(scaffoldPadding)
-                .consumeWindowInsets(scaffoldPadding)
-                .systemBarsPadding(),
-            lazyColumnWrapper = {
-                val isRefreshing = stateHolder.shouldShowLoadingIndicator.collectAsState(false)
-                val coroutineScope = rememberCoroutineScope()
-                val pullRefreshState = rememberPullRefreshState(
-                    refreshing = isRefreshing.value,
-                    onRefresh = { coroutineScope.launch { stateHolder.onForceRefreshPressed() } }
-                )
-
-                Box(
-                    modifier = Modifier.pullRefresh(pullRefreshState)
-                ) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxHeight(),
-                        //  contentPadding = LocalWindowInsets.current.systemBars.toPaddingValues(),
-                        content = it
-                    )
-                    PullRefreshIndicator(
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        refreshing = isRefreshing.value,
-                        state = pullRefreshState
-                    )
-                }
-            }
-        )
     }
 }
 
