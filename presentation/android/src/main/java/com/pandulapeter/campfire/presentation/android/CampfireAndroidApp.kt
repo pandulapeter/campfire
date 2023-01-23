@@ -27,21 +27,22 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.pandulapeter.campfire.presentation.android.catalogue.CampfireAndroidTheme
 import com.pandulapeter.campfire.shared.ui.TestUi
 import com.pandulapeter.campfire.shared.ui.TestUiStateHolder
-import com.pandulapeter.campfire.shared.ui.catalogue.CampfireTheme
 import kotlinx.coroutines.launch
 import org.koin.java.KoinJavaComponent.get
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalLayoutApi::class)
 @Composable
-fun CampfireApp(
+fun CampfireAndroidApp(
     stateHolder: TestUiStateHolder = get(TestUiStateHolder::class.java)
 ) {
     val uiMode = stateHolder.uiMode.collectAsState(null)
-    
-    CampfireTheme(
-        uiMode = uiMode.value
+
+    CampfireAndroidTheme(
+        uiMode = uiMode.value,
+        shouldUseDynamicColors = true // TODO
     ) {
         val navigationDestinations = stateHolder.navigationDestinations.collectAsState(initial = emptyList())
 

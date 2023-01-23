@@ -2,7 +2,7 @@
 <resources>
 
     <style name="CampfireBase" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/brand_orange</item>
+        <item name="colorPrimary">@color/campfire_orange</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 

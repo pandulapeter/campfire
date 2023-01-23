@@ -1,27 +1,29 @@
-package com.pandulapeter.campfire.shared.ui.catalogue
+package com.pandulapeter.campfire.presentation.catalogue
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.shared.ui.catalogue.CampfireColors
 
-private val colorBrand = Color(245, 124, 0)
+private val campfireLightColors by lazy {
+    lightColors(
+        primary = CampfireColors.colorCampfireOrange,
+        secondary = CampfireColors.colorCampfireOrange
+    )
+}
 
-private val campfireDarkColors = darkColors(
-    primary = colorBrand,
-    secondary = colorBrand
-)
-
-private val campfireLightColors = lightColors(
-    primary = colorBrand,
-    secondary = colorBrand
-)
+private val campfireDarkColors by lazy {
+    darkColors(
+        primary = CampfireColors.colorCampfireOrange,
+        secondary = CampfireColors.colorCampfireOrange
+    )
+}
 
 @Composable
-fun CampfireTheme(
+internal fun CampfireDesktopTheme(
     uiMode: UserPreferences.UiMode?,
     content: @Composable () -> Unit
 ) = MaterialTheme(

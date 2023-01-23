@@ -2,7 +2,7 @@
 <resources>
 
     <!-- General -->
-    <color name="brand_orange">#F57C00</color>
+    <color name="campfire_orange">#F57C00</color>
     <color name="white">#FFFFFF</color>
 
 </resources>

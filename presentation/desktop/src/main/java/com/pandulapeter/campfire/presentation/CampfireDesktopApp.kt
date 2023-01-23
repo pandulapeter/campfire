@@ -18,18 +18,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.catalogue.CampfireDesktopTheme
 import com.pandulapeter.campfire.shared.ui.TestUi
 import com.pandulapeter.campfire.shared.ui.TestUiStateHolder
-import com.pandulapeter.campfire.shared.ui.catalogue.CampfireTheme
 import org.koin.java.KoinJavaComponent
 
 @Composable
-fun CampfireApp(
+fun CampfireDesktopApp(
     stateHolder: TestUiStateHolder = KoinJavaComponent.get(TestUiStateHolder::class.java)
 ) {
     val uiMode = stateHolder.uiMode.collectAsState(null)
 
-    CampfireTheme(
+    CampfireDesktopTheme(
         uiMode = uiMode.value
     ) {
         val navigationDestinations = stateHolder.navigationDestinations.collectAsState(initial = emptyList())
