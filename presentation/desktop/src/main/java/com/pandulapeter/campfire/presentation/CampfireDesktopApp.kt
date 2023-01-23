@@ -4,12 +4,9 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.NavigationRail
-import androidx.compose.material.NavigationRailItem
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.presentation.catalogue.CampfireDesktopTheme
@@ -19,6 +16,7 @@ import com.pandulapeter.campfire.presentation.screens.PlaylistsScreensDesktop
 import com.pandulapeter.campfire.presentation.screens.SettingsScreensDesktop
 import com.pandulapeter.campfire.presentation.screens.SongsScreensDesktop
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
+import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireNavigationRail
 import org.koin.java.KoinJavaComponent
 
 @Composable
@@ -26,6 +24,8 @@ fun CampfireDesktopApp(
     viewModel: CampfireViewModel = KoinJavaComponent.get(CampfireViewModel::class.java)
 ) {
     val uiMode = viewModel.uiMode.collectAsState(null)
+
+    LaunchedEffect(Unit) { viewModel.onInitialize() }
 
     CampfireDesktopTheme(
         uiMode = uiMode.value
@@ -54,30 +54,5 @@ fun CampfireDesktopApp(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun CampfireNavigationRail(
-    modifier: Modifier = Modifier,
-    navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
-    onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit
-) = NavigationRail(
-    modifier = modifier
-) {
-    navigationDestinations.forEach { navigationDestination ->
-        NavigationRailItem(
-            selected = navigationDestination.isSelected,
-            onClick = { onNavigationDestinationSelected(navigationDestination.destination) },
-            label = {
-                Text(navigationDestination.destination.displayName)
-            },
-            icon = {
-                Icon(
-                    imageVector = navigationDestination.destination.icon,
-                    contentDescription = navigationDestination.destination.displayName,
-                )
-            }
-        )
     }
 }

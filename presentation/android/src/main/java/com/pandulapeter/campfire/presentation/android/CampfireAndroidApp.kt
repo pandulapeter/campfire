@@ -12,24 +12,13 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.PermanentDrawerSheet
-import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.presentation.android.catalogue.CampfireAndroidTheme
@@ -40,6 +29,9 @@ import com.pandulapeter.campfire.presentation.android.screens.SettingsScreenAndr
 import com.pandulapeter.campfire.presentation.android.screens.SongsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.utilities.keyboardState
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
+import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireAppBar
+import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireBottomNavigationBar
+import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireNavigationRail
 import com.pandulapeter.campfire.shared.ui.utilities.UiSize
 import org.koin.java.KoinJavaComponent.get
 
@@ -51,16 +43,16 @@ fun CampfireAndroidApp(
     windowSizeClass: WindowSizeClass = calculateWindowSizeClass(activity)
 ) {
     val uiMode = viewModel.uiMode.collectAsState(null)
-    val uiSize = when {
-        windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact -> UiSize.COMPACT
-        windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded && windowSizeClass.heightSizeClass == WindowHeightSizeClass.Expanded -> UiSize.EXPANDED
-        else -> UiSize.MEDIUM
+    val uiSize = when (windowSizeClass.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> UiSize.COMPACT
+        else -> UiSize.EXPANDED
     }
     val isKeyboardVisible = keyboardState()
 
+    LaunchedEffect(Unit) { viewModel.onInitialize() }
+
     CampfireAndroidTheme(
-        uiMode = uiMode.value,
-        shouldUseDynamicColors = true // TODO: Read from UserPreferences
+        uiMode = uiMode.value
     ) {
         val selectedNavigationDestination = viewModel.selectedNavigationDestination.collectAsState(initial = null)
         val navigationDestinations = viewModel.navigationDestinations.collectAsState(initial = emptyList())
@@ -70,15 +62,14 @@ fun CampfireAndroidApp(
                 .imePadding()
                 .statusBarsPadding(),
             topBar = {
-                if (uiSize == UiSize.COMPACT) {
-                    CampfireAppBar(
-                        selectedNavigationDestination = navigationDestinations.value.firstOrNull { it.isSelected }?.destination
-                    )
-                }
+                CampfireAppBar(
+                    statusBarModifier = Modifier.statusBarsPadding(),
+                    selectedNavigationDestination = navigationDestinations.value.firstOrNull { it.isSelected }?.destination
+                )
             },
             bottomBar = {
                 if (uiSize == UiSize.COMPACT) {
-                    CampfireBottomNavigation(
+                    BottomNavigationBarWrapper(
                         modifier = Modifier
                             .imePadding()
                             .navigationBarsPadding(),
@@ -101,8 +92,8 @@ fun CampfireAndroidApp(
                         shouldUseExpandedUi = false
                     )
                 }
-                UiSize.MEDIUM -> {
-                    CampfireNavigationRail(
+                UiSize.EXPANDED -> {
+                    NavigationRailWrapper(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(scaffoldPadding)
@@ -111,23 +102,6 @@ fun CampfireAndroidApp(
                         navigationDestinations = navigationDestinations.value,
                         onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
                         isKeyboardVisible = isKeyboardVisible.value,
-                        content = {
-                            Content(
-                                selectedNavigationDestination = selectedNavigationDestination.value,
-                                shouldUseExpandedUi = true
-                            )
-                        }
-                    )
-                }
-                UiSize.EXPANDED -> {
-                    CampfirePermanentNavigationDrawer(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(scaffoldPadding)
-                            .consumeWindowInsets(scaffoldPadding)
-                            .systemBarsPadding(),
-                        navigationDestinations = navigationDestinations.value,
-                        onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
                         content = {
                             Content(
                                 selectedNavigationDestination = selectedNavigationDestination.value,
@@ -161,50 +135,23 @@ private fun Content(
 }
 
 @Composable
-private fun CampfireAppBar(
-    modifier: Modifier = Modifier,
-    selectedNavigationDestination: CampfireViewModel.NavigationDestination?
-) = TopAppBar(
-    modifier = modifier,
-    backgroundColor = MaterialTheme.colors.surface,
-    title = {
-        Text(
-            modifier = Modifier.statusBarsPadding(),
-            text = selectedNavigationDestination?.displayName ?: "Campfire"
-        )
-    }
-)
-
-@Composable
-private fun CampfireBottomNavigation(
+private fun BottomNavigationBarWrapper(
     modifier: Modifier = Modifier,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit,
     isKeyboardVisible: Boolean
 ) = AnimatedVisibility(
+    modifier = modifier,
     visible = !isKeyboardVisible
 ) {
-    BottomNavigation(
-        modifier = modifier,
-        backgroundColor = MaterialTheme.colors.surface
-    ) {
-        navigationDestinations.forEach { navigationDestination ->
-            BottomNavigationItem(
-                selected = navigationDestination.isSelected,
-                onClick = { onNavigationDestinationSelected(navigationDestination.destination) },
-                icon = {
-                    Icon(
-                        imageVector = navigationDestination.destination.icon,
-                        contentDescription = navigationDestination.destination.displayName,
-                    )
-                }
-            )
-        }
-    }
+    CampfireBottomNavigationBar(
+        navigationDestinations = navigationDestinations,
+        onNavigationDestinationSelected = onNavigationDestinationSelected
+    )
 }
 
 @Composable
-private fun CampfireNavigationRail(
+private fun NavigationRailWrapper(
     modifier: Modifier = Modifier,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit,
@@ -214,49 +161,10 @@ private fun CampfireNavigationRail(
     modifier = modifier
 ) {
     AnimatedVisibility(visible = !isKeyboardVisible) {
-        NavigationRail {
-            navigationDestinations.forEach { navigationDestination ->
-                NavigationRailItem(
-                    selected = navigationDestination.isSelected,
-                    onClick = { onNavigationDestinationSelected(navigationDestination.destination) },
-                    icon = {
-                        Icon(
-                            imageVector = navigationDestination.destination.icon,
-                            contentDescription = navigationDestination.destination.displayName,
-                        )
-                    },
-                    label = { Text(navigationDestination.destination.displayName) }
-                )
-            }
-        }
+        CampfireNavigationRail(
+            navigationDestinations = navigationDestinations,
+            onNavigationDestinationSelected = onNavigationDestinationSelected
+        )
     }
     content()
 }
-
-@Composable
-private fun CampfirePermanentNavigationDrawer(
-    modifier: Modifier = Modifier,
-    navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
-    onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit,
-    content: @Composable () -> Unit
-) = PermanentNavigationDrawer(
-    modifier = modifier,
-    drawerContent = {
-        PermanentDrawerSheet {
-            navigationDestinations.forEach { navigationDestination ->
-                NavigationDrawerItem(
-                    selected = navigationDestination.isSelected,
-                    onClick = { onNavigationDestinationSelected(navigationDestination.destination) },
-                    icon = {
-                        Icon(
-                            imageVector = navigationDestination.destination.icon,
-                            contentDescription = navigationDestination.destination.displayName,
-                        )
-                    },
-                    label = { Text(navigationDestination.destination.displayName) }
-                )
-            }
-        }
-    },
-    content = content
-)

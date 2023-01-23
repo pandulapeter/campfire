@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -36,8 +35,6 @@ internal fun HomeScreenDesktop(
     val songs = viewModel.songs.collectAsState(emptyList())
     val dataState = viewModel.dataState.collectAsState("Uninitialized")
     val userPreferences = viewModel.userPreferences.collectAsState(null)
-
-    LaunchedEffect(Unit) { viewModel.onInitialize() }
 
     Row(
         modifier = modifier.fillMaxSize()

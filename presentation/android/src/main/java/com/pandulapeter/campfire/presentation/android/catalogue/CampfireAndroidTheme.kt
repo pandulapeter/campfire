@@ -16,6 +16,20 @@ import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
 @Composable
 internal fun CampfireAndroidTheme(
     uiMode: UserPreferences.UiMode?,
+    content: @Composable () -> Unit
+) = androidx.compose.material.MaterialTheme(
+    colors = when (uiMode) {
+        UserPreferences.UiMode.LIGHT -> CampfireColors.campfireLightColors
+        UserPreferences.UiMode.DARK -> CampfireColors.campfireDarkColors
+        UserPreferences.UiMode.SYSTEM_DEFAULT, null -> if (isSystemInDarkTheme()) CampfireColors.campfireDarkColors else CampfireColors.campfireLightColors
+    },
+    content = content
+)
+
+// TODO: Custom colors don't work
+@Composable
+internal fun CampfireAndroidMaterial3Theme(
+    uiMode: UserPreferences.UiMode?,
     shouldUseDynamicColors: Boolean,
     content: @Composable () -> Unit
 ) {
@@ -42,7 +56,6 @@ internal fun CampfireAndroidTheme(
     }
 
     MaterialTheme(
-        // TODO: Doesn't work.
         colorScheme = when (uiMode) {
             UserPreferences.UiMode.LIGHT -> createLightColorScheme()
             UserPreferences.UiMode.DARK -> createDarkColorScheme()

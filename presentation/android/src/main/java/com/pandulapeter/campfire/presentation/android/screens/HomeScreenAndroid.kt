@@ -16,7 +16,6 @@ import androidx.compose.material.pullrefresh.PullRefreshState
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -51,8 +50,6 @@ internal fun HomeScreenAndroid(
     val dataState = viewModel.dataState.collectAsState("Uninitialized")
     val userPreferences = viewModel.userPreferences.collectAsState(null)
 
-    LaunchedEffect(Unit) { viewModel.onInitialize() }
-
     if (shouldUseExpandedUi) {
         Row(
             modifier = modifier
@@ -71,7 +68,9 @@ internal fun HomeScreenAndroid(
                 modifier = Modifier.width(8.dp)
             )
             HomeControlsList(
-                modifier = Modifier.fillMaxSize().padding(end = 8.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(end = 8.dp),
                 state = dataState.value,
                 query = query.value,
                 databases = databases.value,
