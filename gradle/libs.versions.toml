@@ -2,18 +2,16 @@
 androidx-activity = "1.6.1" # https://developer.android.com/jetpack/androidx/releases/activity
 androidx-appcompat = "1.6.0" # https://developer.android.com/jetpack/androidx/releases/appcompat
 androidx-browser = "1.4.0" # https://developer.android.com/jetpack/androidx/releases/browser
-androidx-compose = "1.2.1" # https://developer.android.com/jetpack/androidx/releases/compose
-androidx-compose-compiler = "1.3.2" # https://developer.android.com/jetpack/androidx/releases/compose
+androidx-compose = "1.3.3" # https://developer.android.com/jetpack/androidx/releases/compose
+androidx-compose-compiler = "1.4.0-alpha01" # https://developer.android.com/jetpack/androidx/releases/compose
 androidx-compose-material = "1.4.0-alpha04" # https://developer.android.com/jetpack/androidx/releases/compose-material
-androidx-compose-material3 = "1.0.1" # https://developer.android.com/jetpack/androidx/releases/compose
+androidx-compose-material3 = "1.1.0-alpha04" # https://developer.android.com/jetpack/androidx/releases/compose
 androidx-core = "1.9.0" # https://developer.android.com/jetpack/androidx/releases/core
 androidx-core-splashscreen = "1.0.0" # https://developer.android.com/jetpack/androidx/releases/core
-androidx-fragment = "1.5.5" # https://developer.android.com/jetpack/androidx/releases/fragment // TODO: To be removed
-androidx-lifecycle = "2.5.1" # https://developer.android.com/jetpack/androidx/releases/lifecycle // TODO: To be removed
 androidx-room = "2.5.0" # https://developer.android.com/jetpack/androidx/releases/room
 beagle = "2.9.0" # https://github.com/pandulapeter/beagle/releases
 coil = "2.2.2" # https://github.com/coil-kt/coil/releases
-google-android-material = "1.7.0" # https://github.com/material-components/material-components-android/releases
+google-android-material = "1.8.0-rc01" # https://github.com/material-components/material-components-android/releases
 gradle = "7.4.0" # https://developer.android.com/studio/releases/gradle-plugin
 jetbrains-compose = "1.2.2" # https://github.com/JetBrains/compose-jb/releases
 jvm-target = "1.8" # https://kotlinlang.org/docs/gradle.html#check-for-jvm-target-compatibility-of-related-compile-tasks
@@ -36,8 +34,6 @@ androidx-compose-material3 = { module = "androidx.compose.material3:material3", 
 androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "androidx-compose" }
 androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "androidx-core-splashscreen" }
-androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "androidx-fragment" }
-androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
 androidx-room = { module = "androidx.room:room-ktx", version.ref = "androidx-room" }
 androidx-room-codegen = { module = "androidx.room:room-compiler", version.ref = "androidx-room" }
 beagle = { module = "io.github.pandulapeter.beagle:ui-drawer", version.ref = "beagle" }
