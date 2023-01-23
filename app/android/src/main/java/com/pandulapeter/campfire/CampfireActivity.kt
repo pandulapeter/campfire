@@ -11,6 +11,6 @@ class CampfireActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        setContent { CampfireAndroidApp() }
+        setContent { CampfireAndroidApp(this) }
     }
 }

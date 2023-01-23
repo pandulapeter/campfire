@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun RoundedCard(
+internal fun RoundedCard(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) = Column(

@@ -10,6 +10,7 @@ dependencies {
     api(project(":presentation:shared")) // TODO: Should be an implementation detail
     implementation(libs.androidx.compose.material)
     implementation(libs.androidx.compose.material3)
+    api(libs.androidx.compose.material3.window)
     implementation(libs.androidx.compose.ui)
     implementation(libs.google.android.material)
     implementation(libs.koin.android)
