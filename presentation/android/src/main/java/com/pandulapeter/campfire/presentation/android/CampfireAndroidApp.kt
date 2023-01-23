@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material.Scaffold
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -29,9 +28,9 @@ import com.pandulapeter.campfire.presentation.android.screens.SettingsScreenAndr
 import com.pandulapeter.campfire.presentation.android.screens.SongsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.utilities.keyboardState
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
-import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireAppBar
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireBottomNavigationBar
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireNavigationRail
+import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireScaffold
 import com.pandulapeter.campfire.shared.ui.utilities.UiSize
 import org.koin.java.KoinJavaComponent.get
 
@@ -57,17 +56,14 @@ fun CampfireAndroidApp(
         val selectedNavigationDestination = viewModel.selectedNavigationDestination.collectAsState(initial = null)
         val navigationDestinations = viewModel.navigationDestinations.collectAsState(initial = emptyList())
 
-        Scaffold(
+        CampfireScaffold(
             modifier = Modifier
                 .imePadding()
                 .statusBarsPadding(),
-            topBar = {
-                CampfireAppBar(
-                    statusBarModifier = Modifier.statusBarsPadding(),
-                    selectedNavigationDestination = navigationDestinations.value.firstOrNull { it.isSelected }?.destination
-                )
-            },
-            bottomBar = {
+            statusBarModifier = Modifier.statusBarsPadding(),
+            navigationDestinations = navigationDestinations.value,
+            uiSize = uiSize,
+            bottomNavigationBar = {
                 if (uiSize == UiSize.COMPACT) {
                     BottomNavigationBarWrapper(
                         modifier = Modifier
@@ -78,40 +74,34 @@ fun CampfireAndroidApp(
                         isKeyboardVisible = isKeyboardVisible.value
                     )
                 }
-            }
-        ) { scaffoldPadding ->
-            when (uiSize) {
-                UiSize.COMPACT -> {
-                    Content(
-                        modifier = Modifier
+            },
+            navigationRail = { scaffoldPadding, content ->
+                NavigationRailWrapper(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(scaffoldPadding)
+                        .consumeWindowInsets(scaffoldPadding)
+                        .systemBarsPadding(),
+                    navigationDestinations = navigationDestinations.value,
+                    onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
+                    isKeyboardVisible = isKeyboardVisible.value,
+                    content = content
+                )
+            },
+            content = { scaffoldPadding ->
+                Content(
+                    modifier = scaffoldPadding?.let {
+                        Modifier
                             .fillMaxSize()
                             .padding(scaffoldPadding)
                             .consumeWindowInsets(scaffoldPadding)
-                            .systemBarsPadding(),
-                        selectedNavigationDestination = selectedNavigationDestination.value,
-                        shouldUseExpandedUi = false
-                    )
-                }
-                UiSize.EXPANDED -> {
-                    NavigationRailWrapper(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(scaffoldPadding)
-                            .consumeWindowInsets(scaffoldPadding)
-                            .systemBarsPadding(),
-                        navigationDestinations = navigationDestinations.value,
-                        onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
-                        isKeyboardVisible = isKeyboardVisible.value,
-                        content = {
-                            Content(
-                                selectedNavigationDestination = selectedNavigationDestination.value,
-                                shouldUseExpandedUi = true
-                            )
-                        }
-                    )
-                }
+                            .systemBarsPadding()
+                    } ?: Modifier,
+                    selectedNavigationDestination = selectedNavigationDestination.value,
+                    shouldUseExpandedUi = scaffoldPadding == null
+                )
             }
-        }
+        )
     }
 }
 
@@ -121,7 +111,7 @@ private fun Content(
     selectedNavigationDestination: CampfireViewModel.NavigationDestination?,
     shouldUseExpandedUi: Boolean
 ) = Crossfade(
-    modifier = modifier,
+    modifier = modifier.fillMaxSize(),
     targetState = selectedNavigationDestination
 ) { destination ->
     when (destination) {

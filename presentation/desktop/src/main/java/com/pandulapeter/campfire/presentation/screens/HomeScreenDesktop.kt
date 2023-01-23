@@ -26,7 +26,8 @@ import org.koin.java.KoinJavaComponent
 @Composable
 internal fun HomeScreenDesktop(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel = KoinJavaComponent.get(CampfireViewModel::class.java)
+    viewModel: CampfireViewModel = KoinJavaComponent.get(CampfireViewModel::class.java),
+    shouldUseExpandedUi: Boolean
 ) {
     val coroutineScope = rememberCoroutineScope()
     val query = viewModel.query.collectAsState("")
