@@ -6,7 +6,7 @@ import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.shared.ui.catalogue.CampfireColors
+import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
 
 private val campfireLightColors by lazy {
     lightColors(

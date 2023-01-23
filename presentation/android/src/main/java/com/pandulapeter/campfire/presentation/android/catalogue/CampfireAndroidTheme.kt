@@ -10,7 +10,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.shared.ui.catalogue.CampfireColors
+import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
 
 
 @Composable
@@ -42,6 +42,7 @@ internal fun CampfireAndroidTheme(
     }
 
     MaterialTheme(
+        // TODO: Doesn't work.
         colorScheme = when (uiMode) {
             UserPreferences.UiMode.LIGHT -> createLightColorScheme()
             UserPreferences.UiMode.DARK -> createDarkColorScheme()

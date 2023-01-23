@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.shared.ui.catalogue
+package com.pandulapeter.campfire.shared.ui.catalogue.theme
 
 import androidx.compose.ui.graphics.Color
 

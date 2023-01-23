@@ -15,14 +15,15 @@ import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveDatabasesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
-import com.pandulapeter.campfire.shared.ui.resources.CampfireIcons
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
-class TestUiStateHolder(
+class CampfireViewModel(
     getScreenData: GetScreenDataUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
     private val saveDatabases: SaveDatabasesUseCase,
@@ -46,7 +47,7 @@ class TestUiStateHolder(
     val databases = getScreenData().map { it.data?.databases.orEmpty() }.distinctUntilChanged()
     val userPreferences = getScreenData().map { it.data?.userPreferences }.distinctUntilChanged()
     val uiMode = userPreferences.map { it?.uiMode }
-    val state = getScreenData().map {
+    val dataState = getScreenData().map {
         when (it) {
             is DataState.Failure -> "Error"
             is DataState.Idle -> "Idle"
@@ -54,7 +55,8 @@ class TestUiStateHolder(
         }
     }.distinctUntilChanged()
     val shouldShowLoadingIndicator = getScreenData().map { it is DataState.Loading }.distinctUntilChanged()
-    private val selectedNavigationDestination = MutableStateFlow(NavigationDestination.HOME)
+    private val _selectedNavigationDestination = MutableStateFlow(NavigationDestination.HOME)
+    val selectedNavigationDestination: Flow<NavigationDestination> = _selectedNavigationDestination
     val navigationDestinations = selectedNavigationDestination.map { selectedNavigationDestination ->
         NavigationDestination.values().map { navigationDestination ->
             NavigationDestinationWrapper(
@@ -105,7 +107,7 @@ class TestUiStateHolder(
     suspend fun onDeleteLocalDataPressed() = deleteLocalData()
 
     fun onNavigationDestinationSelected(navigationDestination: NavigationDestination) {
-        selectedNavigationDestination.value = navigationDestination
+        _selectedNavigationDestination.value = navigationDestination
     }
 
     data class NavigationDestinationWrapper(

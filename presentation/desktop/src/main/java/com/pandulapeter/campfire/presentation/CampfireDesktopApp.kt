@@ -1,13 +1,9 @@
 package com.pandulapeter.campfire.presentation
 
-import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.NavigationRail
@@ -15,49 +11,48 @@ import androidx.compose.material.NavigationRailItem
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.catalogue.CampfireDesktopTheme
-import com.pandulapeter.campfire.shared.ui.TestUi
-import com.pandulapeter.campfire.shared.ui.TestUiStateHolder
+import com.pandulapeter.campfire.presentation.screens.CollectionsScreensDesktop
+import com.pandulapeter.campfire.presentation.screens.HomeScreenDesktop
+import com.pandulapeter.campfire.presentation.screens.PlaylistsScreensDesktop
+import com.pandulapeter.campfire.presentation.screens.SettingsScreensDesktop
+import com.pandulapeter.campfire.presentation.screens.SongsScreensDesktop
+import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import org.koin.java.KoinJavaComponent
 
 @Composable
 fun CampfireDesktopApp(
-    stateHolder: TestUiStateHolder = KoinJavaComponent.get(TestUiStateHolder::class.java)
+    viewModel: CampfireViewModel = KoinJavaComponent.get(CampfireViewModel::class.java)
 ) {
-    val uiMode = stateHolder.uiMode.collectAsState(null)
+    val uiMode = viewModel.uiMode.collectAsState(null)
 
     CampfireDesktopTheme(
         uiMode = uiMode.value
     ) {
-        val navigationDestinations = stateHolder.navigationDestinations.collectAsState(initial = emptyList())
+        val selectedNavigationDestination = viewModel.selectedNavigationDestination.collectAsState(initial = null)
+        val navigationDestinations = viewModel.navigationDestinations.collectAsState(initial = emptyList())
 
         Row(
             modifier = Modifier.background(MaterialTheme.colors.background)
         ) {
             CampfireNavigationRail(
                 navigationDestinations = navigationDestinations.value,
-                onNavigationDestinationSelected = stateHolder::onNavigationDestinationSelected
+                onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected
             )
-            TestUi(
-                lazyColumnWrapper = {
-                    val state = rememberLazyListState()
-
-                    LazyColumn(
-                        modifier = Modifier.fillMaxHeight().padding(end = 8.dp),
-                        state = state,
-                        content = it
-                    )
-                    VerticalScrollbar(
-                        modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-                        adapter = rememberScrollbarAdapter(
-                            scrollState = state
-                        )
-                    )
+            Crossfade(
+                modifier = Modifier.fillMaxSize(),
+                targetState = selectedNavigationDestination.value
+            ) { selectedNavigationDestination ->
+                when (selectedNavigationDestination) {
+                    CampfireViewModel.NavigationDestination.HOME -> HomeScreenDesktop()
+                    CampfireViewModel.NavigationDestination.COLLECTIONS -> CollectionsScreensDesktop()
+                    CampfireViewModel.NavigationDestination.SONGS -> SongsScreensDesktop()
+                    CampfireViewModel.NavigationDestination.PLAYLISTS -> PlaylistsScreensDesktop()
+                    CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreensDesktop()
+                    null -> Unit
                 }
-            )
+            }
         }
     }
 }
@@ -65,8 +60,8 @@ fun CampfireDesktopApp(
 @Composable
 private fun CampfireNavigationRail(
     modifier: Modifier = Modifier,
-    navigationDestinations: List<TestUiStateHolder.NavigationDestinationWrapper>,
-    onNavigationDestinationSelected: (TestUiStateHolder.NavigationDestination) -> Unit
+    navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
+    onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit
 ) = NavigationRail(
     modifier = modifier
 ) {

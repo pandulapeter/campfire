@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.shared.ui.resources
+package com.pandulapeter.campfire.shared.ui.catalogue.resources
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
