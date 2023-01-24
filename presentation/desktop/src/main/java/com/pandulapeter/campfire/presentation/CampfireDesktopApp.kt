@@ -9,7 +9,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.catalogue.CampfireDesktopTheme
 import com.pandulapeter.campfire.presentation.screens.CollectionsScreensDesktop
 import com.pandulapeter.campfire.presentation.screens.HomeScreenDesktop
@@ -20,7 +19,6 @@ import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireBottomNavigationBar
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireNavigationRail
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireScaffold
-import com.pandulapeter.campfire.shared.ui.utilities.UiSize
 import org.koin.java.KoinJavaComponent
 
 @Composable
@@ -37,18 +35,15 @@ fun CampfireDesktopApp(
     ) {
         val selectedNavigationDestination = viewModel.selectedNavigationDestination.collectAsState(initial = null)
         val navigationDestinations = viewModel.navigationDestinations.collectAsState(initial = emptyList())
-        val uiSize = if (windowSize.width <= 600.dp) UiSize.COMPACT else UiSize.EXPANDED
 
         CampfireScaffold(
             navigationDestinations = navigationDestinations.value,
-            uiSize = uiSize,
+            isInLandscape = windowSize.width > windowSize.height,
             bottomNavigationBar = {
-                if (uiSize == UiSize.COMPACT) {
-                    CampfireBottomNavigationBar(
-                        navigationDestinations = navigationDestinations.value,
-                        onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected
-                    )
-                }
+                CampfireBottomNavigationBar(
+                    navigationDestinations = navigationDestinations.value,
+                    onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected
+                )
             },
             navigationRail = { scaffoldPadding, content ->
                 NavigationRailWrapper(

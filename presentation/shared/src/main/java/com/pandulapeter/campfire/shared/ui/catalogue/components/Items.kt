@@ -124,6 +124,7 @@ internal fun SearchItem(
             }
         },
         label = { Text("Search") },
+        singleLine = true,
         value = query,
         onValueChange = onQueryChanged
     )

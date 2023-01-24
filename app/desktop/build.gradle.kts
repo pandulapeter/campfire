@@ -22,7 +22,7 @@ version = versionName
 compose.desktop {
     application {
         // TODO: https://github.com/JetBrains/compose-jb/tree/master/tutorials/Native_distributions_and_local_execution#app-icon
-        mainClass = "com.pandulapeter.campfire.CampfireApplicationKt"
+        mainClass = "com.pandulapeter.campfire.CampfireDesktopApplicationKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Campfire"

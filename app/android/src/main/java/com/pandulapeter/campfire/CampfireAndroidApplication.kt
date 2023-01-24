@@ -10,7 +10,7 @@ import com.pandulapeter.campfire.shared.presentationModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
-class CampfireApplication : Application() {
+class CampfireAndroidApplication : Application() {
 
     private val dataModules
         get() = dataLocalSourceAndroidModule + dataRemoteSourceJvmModule + dataRepositoryModule
@@ -18,7 +18,7 @@ class CampfireApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         startKoin {
-            androidContext(this@CampfireApplication)
+            androidContext(this@CampfireAndroidApplication)
             modules(dataModules + domainModule + presentationModule)
         }
         DebugMenu.initialize(

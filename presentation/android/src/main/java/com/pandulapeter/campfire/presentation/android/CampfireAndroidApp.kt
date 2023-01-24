@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.presentation.android
 
 import android.app.Activity
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -12,14 +13,11 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import com.pandulapeter.campfire.presentation.android.catalogue.CampfireAndroidTheme
 import com.pandulapeter.campfire.presentation.android.screens.CollectionsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.screens.HomeScreenAndroid
@@ -31,21 +29,14 @@ import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireBottomNavigationBar
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireNavigationRail
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireScaffold
-import com.pandulapeter.campfire.shared.ui.utilities.UiSize
 import org.koin.java.KoinJavaComponent.get
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CampfireAndroidApp(
-    activity: Activity,
-    viewModel: CampfireViewModel = get(CampfireViewModel::class.java),
-    windowSizeClass: WindowSizeClass = calculateWindowSizeClass(activity)
+    viewModel: CampfireViewModel = get(CampfireViewModel::class.java)
 ) {
     val uiMode = viewModel.uiMode.collectAsState(null)
-    val uiSize = when (windowSizeClass.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> UiSize.COMPACT
-        else -> UiSize.EXPANDED
-    }
     val isKeyboardVisible = keyboardState()
 
     LaunchedEffect(Unit) { viewModel.onInitialize() }
@@ -62,18 +53,16 @@ fun CampfireAndroidApp(
                 .statusBarsPadding(),
             statusBarModifier = Modifier.statusBarsPadding(),
             navigationDestinations = navigationDestinations.value,
-            uiSize = uiSize,
+            isInLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
             bottomNavigationBar = {
-                if (uiSize == UiSize.COMPACT) {
-                    BottomNavigationBarWrapper(
-                        modifier = Modifier
-                            .imePadding()
-                            .navigationBarsPadding(),
-                        navigationDestinations = navigationDestinations.value,
-                        onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
-                        isKeyboardVisible = isKeyboardVisible.value
-                    )
-                }
+                BottomNavigationBarWrapper(
+                    modifier = Modifier
+                        .imePadding()
+                        .navigationBarsPadding(),
+                    navigationDestinations = navigationDestinations.value,
+                    onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
+                    isKeyboardVisible = isKeyboardVisible.value
+                )
             },
             navigationRail = { scaffoldPadding, content ->
                 NavigationRailWrapper(

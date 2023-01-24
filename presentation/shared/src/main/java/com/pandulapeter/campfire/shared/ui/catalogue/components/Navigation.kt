@@ -14,14 +14,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
-import com.pandulapeter.campfire.shared.ui.utilities.UiSize
 
 @Composable
 fun CampfireScaffold(
     modifier: Modifier = Modifier,
     statusBarModifier: Modifier = Modifier,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
-    uiSize: UiSize,
+    isInLandscape: Boolean,
     bottomNavigationBar: @Composable () -> Unit,
     navigationRail: @Composable (scaffoldPadding: PaddingValues, content: @Composable () -> Unit) -> Unit,
     content: @Composable (scaffoldPadding: PaddingValues?) -> Unit
@@ -33,13 +32,16 @@ fun CampfireScaffold(
             selectedNavigationDestination = navigationDestinations.firstOrNull { it.isSelected }?.destination
         )
     },
-    bottomBar = bottomNavigationBar
-) { scaffoldPadding ->
-    when (uiSize) {
-        UiSize.COMPACT -> content(scaffoldPadding)
-        UiSize.EXPANDED -> navigationRail(scaffoldPadding) { content(null) }
+    bottomBar = {
+        if (!isInLandscape) {
+            bottomNavigationBar()
+        }
+    },
+    content =
+    { scaffoldPadding ->
+        if (isInLandscape) navigationRail(scaffoldPadding) { content(null) } else content(scaffoldPadding)
     }
-}
+)
 
 @Composable
 fun CampfireAppBar(
