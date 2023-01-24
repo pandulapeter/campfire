@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.presentation.android
 
-import android.app.Activity
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -19,7 +18,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import com.pandulapeter.campfire.presentation.android.catalogue.CampfireAndroidTheme
-import com.pandulapeter.campfire.presentation.android.screens.CollectionsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.screens.HomeScreenAndroid
 import com.pandulapeter.campfire.presentation.android.screens.PlaylistsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.screens.SettingsScreenAndroid
@@ -87,7 +85,7 @@ fun CampfireAndroidApp(
                             .systemBarsPadding()
                     } ?: Modifier,
                     selectedNavigationDestination = selectedNavigationDestination.value,
-                    shouldUseExpandedUi = scaffoldPadding == null
+                    shouldUseExpandedUi = scaffoldPadding == null // TODO: Should be based on screen width
                 )
             }
         )
@@ -105,7 +103,6 @@ private fun Content(
 ) { destination ->
     when (destination) {
         CampfireViewModel.NavigationDestination.HOME -> HomeScreenAndroid(shouldUseExpandedUi = shouldUseExpandedUi)
-        CampfireViewModel.NavigationDestination.COLLECTIONS -> CollectionsScreenAndroid()
         CampfireViewModel.NavigationDestination.SONGS -> SongsScreenAndroid()
         CampfireViewModel.NavigationDestination.PLAYLISTS -> PlaylistsScreenAndroid()
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreenAndroid()

@@ -21,7 +21,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.data.model.domain.Collection
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.screenComponents.home.HomeContentList
@@ -45,7 +44,6 @@ internal fun HomeScreenAndroid(
     )
     val query = viewModel.query.collectAsState("")
     val databases = viewModel.databases.collectAsState(emptyList())
-    val collections = viewModel.collections.collectAsState(emptyList())
     val songs = viewModel.songs.collectAsState(emptyList())
     val dataState = viewModel.dataState.collectAsState("Uninitialized")
     val userPreferences = viewModel.userPreferences.collectAsState(null)
@@ -58,9 +56,7 @@ internal fun HomeScreenAndroid(
                 modifier = Modifier.fillMaxWidth(0.65f),
                 pullRefreshState = pullRefreshState,
                 isRefreshing = isRefreshing.value,
-                collections = collections.value,
                 songs = songs.value,
-                onCollectionClicked = viewModel::onCollectionClicked,
                 onSongClicked = viewModel::onSongClicked,
                 lazyListState = lazyListState
             )
@@ -107,9 +103,7 @@ internal fun HomeScreenAndroid(
             modifier = modifier,
             pullRefreshState = pullRefreshState,
             isRefreshing = isRefreshing.value,
-            collections = collections.value,
             songs = songs.value,
-            onCollectionClicked = viewModel::onCollectionClicked,
             onSongClicked = viewModel::onSongClicked,
             lazyListState = lazyListState
         )
@@ -123,9 +117,7 @@ private fun HomeContentListWithPullRefresh(
     modifier: Modifier,
     pullRefreshState: PullRefreshState,
     isRefreshing: Boolean,
-    collections: List<Collection>,
     songs: List<Song>,
-    onCollectionClicked: (Collection) -> Unit,
     onSongClicked: (Song) -> Unit,
     lazyListState: LazyListState
 ) = Box(
@@ -133,9 +125,7 @@ private fun HomeContentListWithPullRefresh(
 ) {
     HomeContentList(
         modifier = Modifier.fillMaxHeight(),
-        collections = collections,
         songs = songs,
-        onCollectionClicked = onCollectionClicked,
         onSongClicked = onSongClicked,
         state = lazyListState
     )

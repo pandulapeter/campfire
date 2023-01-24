@@ -2,12 +2,10 @@ package com.pandulapeter.campfire.data.source.local.implementationAndroid.storag
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.pandulapeter.campfire.data.source.local.implementationAndroid.model.CollectionEntity
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.model.DatabaseEntity
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.model.PlaylistEntity
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.model.SongEntity
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.model.UserPreferencesEntity
-import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage.dao.CollectionDao
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage.dao.DatabaseDao
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage.dao.PlaylistDao
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage.dao.SongDao
@@ -15,7 +13,6 @@ import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage
 
 @Database(
     entities = [
-        CollectionEntity::class,
         DatabaseEntity::class,
         PlaylistEntity::class,
         SongEntity::class,
@@ -25,8 +22,6 @@ import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage
     exportSchema = false
 )
 internal abstract class StorageManager : RoomDatabase() {
-
-    abstract fun getCollectionDao(): CollectionDao
 
     abstract fun getDatabaseDao(): DatabaseDao
 

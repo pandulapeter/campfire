@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
-import com.pandulapeter.campfire.data.repository.api.CollectionRepository
 import com.pandulapeter.campfire.data.repository.api.DatabaseRepository
 import com.pandulapeter.campfire.data.repository.api.PlaylistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
@@ -13,7 +12,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 
 class LoadScreenDataUseCaseImpl internal constructor(
-    private val collectionRepository: CollectionRepository,
     private val databaseRepository: DatabaseRepository,
     private val playlistRepository: PlaylistRepository,
     private val songRepository: SongRepository,
@@ -35,10 +33,7 @@ class LoadScreenDataUseCaseImpl internal constructor(
                         .filterNot { it.url in userPreferences.unselectedDatabaseUrls }
                         .sortedBy { it.priority }
                         .map { it.url }
-                    listOf(
-                        async { collectionRepository.loadCollections(databaseUrls, isForceRefresh) },
-                        async { songRepository.loadSongs(databaseUrls, isForceRefresh) }
-                    ).awaitAll()
+                    songRepository.loadSongs(databaseUrls, isForceRefresh)
                 }
             ).awaitAll()
         }

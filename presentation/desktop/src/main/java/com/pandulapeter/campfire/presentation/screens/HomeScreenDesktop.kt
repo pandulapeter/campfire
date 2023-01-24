@@ -32,7 +32,6 @@ internal fun HomeScreenDesktop(
     val coroutineScope = rememberCoroutineScope()
     val query = viewModel.query.collectAsState("")
     val databases = viewModel.databases.collectAsState(emptyList())
-    val collections = viewModel.collections.collectAsState(emptyList())
     val songs = viewModel.songs.collectAsState(emptyList())
     val dataState = viewModel.dataState.collectAsState("Uninitialized")
     val userPreferences = viewModel.userPreferences.collectAsState(null)
@@ -49,9 +48,7 @@ internal fun HomeScreenDesktop(
             HomeContentList(
                 modifier = Modifier.fillMaxSize().padding(end = 8.dp),
                 state = lazyListState,
-                collections = collections.value,
                 songs = songs.value,
-                onCollectionClicked = viewModel::onCollectionClicked,
                 onSongClicked = viewModel::onSongClicked
             )
             VerticalScrollbar(

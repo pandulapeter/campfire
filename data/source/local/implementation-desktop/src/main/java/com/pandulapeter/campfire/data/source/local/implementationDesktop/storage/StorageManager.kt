@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.data.source.local.implementationDesktop.storage
 
-import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.CollectionEntity
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.DatabaseEntity
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.PlaylistEntity
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.SongEntity
@@ -14,7 +13,6 @@ internal class StorageManager {
     val database = Realm.open(
         RealmConfiguration.Builder(
             schema = setOf(
-                CollectionEntity::class,
                 DatabaseEntity::class,
                 PlaylistEntity::class,
                 SongEntity::class,

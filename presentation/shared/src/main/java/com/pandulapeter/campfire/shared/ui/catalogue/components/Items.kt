@@ -25,7 +25,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.data.model.domain.Collection
 import com.pandulapeter.campfire.data.model.domain.Song
 
 @Composable
@@ -38,23 +37,6 @@ internal fun HeaderItem(
     style = TextStyle.Default.copy(fontWeight = FontWeight.Bold),
     color = MaterialTheme.colors.primary
 )
-
-@Composable
-internal fun CollectionItem(
-    modifier: Modifier = Modifier,
-    collection: Collection,
-    onCollectionClicked: (Collection) -> Unit
-) = RoundedCard(
-    modifier = modifier
-) {
-    Text(
-        modifier = Modifier
-            .clickable { onCollectionClicked(collection) }
-            .padding(8.dp)
-            .fillMaxWidth(),
-        text = collection.title
-    )
-}
 
 @Composable
 internal fun SongItem(

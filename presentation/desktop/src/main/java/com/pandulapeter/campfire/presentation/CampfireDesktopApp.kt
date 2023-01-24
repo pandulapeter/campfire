@@ -10,7 +10,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
 import com.pandulapeter.campfire.presentation.catalogue.CampfireDesktopTheme
-import com.pandulapeter.campfire.presentation.screens.CollectionsScreensDesktop
 import com.pandulapeter.campfire.presentation.screens.HomeScreenDesktop
 import com.pandulapeter.campfire.presentation.screens.PlaylistsScreensDesktop
 import com.pandulapeter.campfire.presentation.screens.SettingsScreensDesktop
@@ -63,7 +62,7 @@ fun CampfireDesktopApp(
                             .padding(scaffoldPadding)
                     } ?: Modifier,
                     selectedNavigationDestination = selectedNavigationDestination.value,
-                    shouldUseExpandedUi = scaffoldPadding == null
+                    shouldUseExpandedUi = scaffoldPadding == null // TODO: Should be based on screen width
                 )
             }
         )
@@ -81,7 +80,6 @@ private fun Content(
 ) { destination ->
     when (destination) {
         CampfireViewModel.NavigationDestination.HOME -> HomeScreenDesktop(shouldUseExpandedUi = shouldUseExpandedUi)
-        CampfireViewModel.NavigationDestination.COLLECTIONS -> CollectionsScreensDesktop()
         CampfireViewModel.NavigationDestination.SONGS -> SongsScreensDesktop()
         CampfireViewModel.NavigationDestination.PLAYLISTS -> PlaylistsScreensDesktop()
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreensDesktop()

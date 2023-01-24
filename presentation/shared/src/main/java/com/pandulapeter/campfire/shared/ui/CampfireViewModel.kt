@@ -6,7 +6,6 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.Collection
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -37,12 +36,6 @@ class CampfireViewModel(
         query
     ) { songs, query ->
         songs.filter { it.title.contains(query, true) || it.artist.contains(query, true) }
-    }.distinctUntilChanged()
-    val collections = combine(
-        getScreenData().map { it.data?.collections.orEmpty() },
-        query
-    ) { collections, query ->
-        collections.filter { it.title.contains(query, true) }
     }.distinctUntilChanged()
     val databases = getScreenData().map { it.data?.databases.orEmpty() }.distinctUntilChanged()
     val userPreferences = getScreenData().map { it.data?.userPreferences }.distinctUntilChanged()
@@ -86,10 +79,6 @@ class CampfireViewModel(
         _query.value = newQuery
     }
 
-    fun onCollectionClicked(collection: Collection) {
-        // TODO
-    }
-
     fun onSongClicked(song: Song) {
         // TODO
     }
@@ -120,7 +109,6 @@ class CampfireViewModel(
         val icon: ImageVector
     ) {
         HOME(displayName = "Home", icon = Icons.Rounded.Home),
-        COLLECTIONS(displayName = "Collections", icon = CampfireIcons.Collections),
         SONGS(displayName = "Songs", icon = CampfireIcons.Songs),
         PLAYLISTS(displayName = "Playlists", icon = Icons.Rounded.Star),
         SETTINGS(displayName = "Settings", icon = Icons.Rounded.Settings)
