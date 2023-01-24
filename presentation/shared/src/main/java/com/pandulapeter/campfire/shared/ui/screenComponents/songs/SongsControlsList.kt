@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.shared.ui.screenComponents.home
+package com.pandulapeter.campfire.shared.ui.screenComponents.songs
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.SearchItem
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HomeControlsList(
+fun SongsControlsList(
     modifier: Modifier = Modifier,
     state: String,
     query: String,

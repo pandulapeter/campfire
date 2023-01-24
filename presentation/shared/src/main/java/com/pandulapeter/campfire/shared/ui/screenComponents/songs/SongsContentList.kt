@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.shared.ui.screenComponents.home
+package com.pandulapeter.campfire.shared.ui.screenComponents.songs
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Spacer
@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.SongItem
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HomeContentList(
+fun SongsContentList(
     modifier: Modifier = Modifier,
     state: LazyListState,
     songs: List<Song>,

@@ -11,6 +11,7 @@ internal data class UserPreferencesEntity(
     @ColumnInfo(name = "shouldShowSongsWithoutChords") val shouldShowSongsWithoutChords: Boolean,
     @ColumnInfo(name = "unselectedDatabaseUrls") val unselectedDatabaseUrls: String,
     @ColumnInfo(name = "uiMode") val uiMode: String,
+    @ColumnInfo(name = "language") val language: String
 ) {
 
     companion object {

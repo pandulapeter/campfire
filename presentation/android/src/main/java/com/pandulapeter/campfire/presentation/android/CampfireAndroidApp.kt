@@ -17,11 +17,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.android.catalogue.CampfireAndroidTheme
-import com.pandulapeter.campfire.presentation.android.screens.HomeScreenAndroid
+import com.pandulapeter.campfire.presentation.android.screens.SongsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.screens.PlaylistsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.screens.SettingsScreenAndroid
-import com.pandulapeter.campfire.presentation.android.screens.SongsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.utilities.keyboardState
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireBottomNavigationBar
@@ -35,6 +35,7 @@ fun CampfireAndroidApp(
     viewModel: CampfireViewModel = get(CampfireViewModel::class.java)
 ) {
     val uiMode = viewModel.uiMode.collectAsState(null)
+    val userPreferences = viewModel.userPreferences.collectAsState(null)
     val isKeyboardVisible = keyboardState()
 
     LaunchedEffect(Unit) { viewModel.onInitialize() }
@@ -52,6 +53,7 @@ fun CampfireAndroidApp(
             statusBarModifier = Modifier.statusBarsPadding(),
             navigationDestinations = navigationDestinations.value,
             isInLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
+            userPreferences = userPreferences.value,
             bottomNavigationBar = {
                 BottomNavigationBarWrapper(
                     modifier = Modifier
@@ -59,7 +61,8 @@ fun CampfireAndroidApp(
                         .navigationBarsPadding(),
                     navigationDestinations = navigationDestinations.value,
                     onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
-                    isKeyboardVisible = isKeyboardVisible.value
+                    isKeyboardVisible = isKeyboardVisible.value,
+                    userPreferences = userPreferences.value
                 )
             },
             navigationRail = { scaffoldPadding, content ->
@@ -72,6 +75,7 @@ fun CampfireAndroidApp(
                     navigationDestinations = navigationDestinations.value,
                     onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
                     isKeyboardVisible = isKeyboardVisible.value,
+                    userPreferences = userPreferences.value,
                     content = content
                 )
             },
@@ -102,8 +106,7 @@ private fun Content(
     targetState = selectedNavigationDestination
 ) { destination ->
     when (destination) {
-        CampfireViewModel.NavigationDestination.HOME -> HomeScreenAndroid(shouldUseExpandedUi = shouldUseExpandedUi)
-        CampfireViewModel.NavigationDestination.SONGS -> SongsScreenAndroid()
+        CampfireViewModel.NavigationDestination.SONGS -> SongsScreenAndroid(shouldUseExpandedUi = shouldUseExpandedUi)
         CampfireViewModel.NavigationDestination.PLAYLISTS -> PlaylistsScreenAndroid()
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreenAndroid()
         null -> Unit
@@ -115,14 +118,16 @@ private fun BottomNavigationBarWrapper(
     modifier: Modifier = Modifier,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit,
-    isKeyboardVisible: Boolean
+    isKeyboardVisible: Boolean,
+    userPreferences: UserPreferences?
 ) = AnimatedVisibility(
     modifier = modifier,
     visible = !isKeyboardVisible
 ) {
     CampfireBottomNavigationBar(
         navigationDestinations = navigationDestinations,
-        onNavigationDestinationSelected = onNavigationDestinationSelected
+        onNavigationDestinationSelected = onNavigationDestinationSelected,
+        userPreferences = userPreferences
     )
 }
 
@@ -131,6 +136,7 @@ private fun NavigationRailWrapper(
     modifier: Modifier = Modifier,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit,
+    userPreferences: UserPreferences?,
     isKeyboardVisible: Boolean,
     content: @Composable () -> Unit
 ) = Row(
@@ -139,7 +145,8 @@ private fun NavigationRailWrapper(
     AnimatedVisibility(visible = !isKeyboardVisible) {
         CampfireNavigationRail(
             navigationDestinations = navigationDestinations,
-            onNavigationDestinationSelected = onNavigationDestinationSelected
+            onNavigationDestinationSelected = onNavigationDestinationSelected,
+            userPreferences = userPreferences
         )
     }
     content()

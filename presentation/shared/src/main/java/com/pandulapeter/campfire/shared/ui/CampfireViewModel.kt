@@ -1,9 +1,5 @@
 package com.pandulapeter.campfire.shared.ui
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.Star
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Database
@@ -48,7 +44,7 @@ class CampfireViewModel(
         }
     }.distinctUntilChanged()
     val shouldShowLoadingIndicator = getScreenData().map { it is DataState.Loading }.distinctUntilChanged()
-    private val _selectedNavigationDestination = MutableStateFlow(NavigationDestination.HOME)
+    private val _selectedNavigationDestination = MutableStateFlow(NavigationDestination.SONGS)
     val selectedNavigationDestination: Flow<NavigationDestination> = _selectedNavigationDestination
     val navigationDestinations = selectedNavigationDestination.map { selectedNavigationDestination ->
         NavigationDestination.values().map { navigationDestination ->
@@ -105,12 +101,10 @@ class CampfireViewModel(
     )
 
     enum class NavigationDestination(
-        val displayName: String,
         val icon: ImageVector
     ) {
-        HOME(displayName = "Home", icon = Icons.Rounded.Home),
-        SONGS(displayName = "Songs", icon = CampfireIcons.Songs),
-        PLAYLISTS(displayName = "Playlists", icon = Icons.Rounded.Star),
-        SETTINGS(displayName = "Settings", icon = Icons.Rounded.Settings)
+        SONGS(CampfireIcons.songs),
+        PLAYLISTS(CampfireIcons.playlists),
+        SETTINGS(CampfireIcons.settings)
     }
 }

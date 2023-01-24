@@ -23,7 +23,8 @@ internal class UserPreferencesRepositoryImpl(
             shouldShowExplicitSongs = false,
             shouldShowSongsWithoutChords = false,
             unselectedDatabaseUrls = emptyList(),
-            uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT
+            uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,
+            language = UserPreferences.Language.SYSTEM_DEFAULT
         )
     }
 }

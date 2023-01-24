@@ -9,11 +9,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.catalogue.CampfireDesktopTheme
-import com.pandulapeter.campfire.presentation.screens.HomeScreenDesktop
 import com.pandulapeter.campfire.presentation.screens.PlaylistsScreensDesktop
 import com.pandulapeter.campfire.presentation.screens.SettingsScreensDesktop
-import com.pandulapeter.campfire.presentation.screens.SongsScreensDesktop
+import com.pandulapeter.campfire.presentation.screens.SongsScreenDesktop
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireBottomNavigationBar
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireNavigationRail
@@ -26,6 +26,7 @@ fun CampfireDesktopApp(
     windowSize: DpSize
 ) {
     val uiMode = viewModel.uiMode.collectAsState(null)
+    val userPreferences = viewModel.userPreferences.collectAsState(null)
 
     LaunchedEffect(Unit) { viewModel.onInitialize() }
 
@@ -38,10 +39,12 @@ fun CampfireDesktopApp(
         CampfireScaffold(
             navigationDestinations = navigationDestinations.value,
             isInLandscape = windowSize.width > windowSize.height,
+            userPreferences = userPreferences.value,
             bottomNavigationBar = {
                 CampfireBottomNavigationBar(
                     navigationDestinations = navigationDestinations.value,
-                    onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected
+                    onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
+                    userPreferences = userPreferences.value
                 )
             },
             navigationRail = { scaffoldPadding, content ->
@@ -51,6 +54,7 @@ fun CampfireDesktopApp(
                         .padding(scaffoldPadding),
                     navigationDestinations = navigationDestinations.value,
                     onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
+                    userPreferences = userPreferences.value,
                     content = content
                 )
             },
@@ -79,8 +83,7 @@ private fun Content(
     targetState = selectedNavigationDestination
 ) { destination ->
     when (destination) {
-        CampfireViewModel.NavigationDestination.HOME -> HomeScreenDesktop(shouldUseExpandedUi = shouldUseExpandedUi)
-        CampfireViewModel.NavigationDestination.SONGS -> SongsScreensDesktop()
+        CampfireViewModel.NavigationDestination.SONGS -> SongsScreenDesktop(shouldUseExpandedUi = shouldUseExpandedUi)
         CampfireViewModel.NavigationDestination.PLAYLISTS -> PlaylistsScreensDesktop()
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreensDesktop()
         null -> Unit
@@ -92,13 +95,15 @@ private fun NavigationRailWrapper(
     modifier: Modifier = Modifier,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit,
+    userPreferences: UserPreferences?,
     content: @Composable () -> Unit
 ) = Row(
     modifier = modifier
 ) {
     CampfireNavigationRail(
         navigationDestinations = navigationDestinations,
-        onNavigationDestinationSelected = onNavigationDestinationSelected
+        onNavigationDestinationSelected = onNavigationDestinationSelected,
+        userPreferences = userPreferences
     )
     content()
 }
