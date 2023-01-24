@@ -9,7 +9,10 @@ import com.pandulapeter.campfire.data.source.remote.implementationJvm.dataRemote
 import com.pandulapeter.campfire.domain.implementation.domainModule
 import com.pandulapeter.campfire.presentation.CampfireDesktopApp
 import com.pandulapeter.campfire.shared.presentationModule
+import com.pandulapeter.campfire.shared.ui.CampfireViewModel
+import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import org.koin.core.context.startKoin
+import org.koin.java.KoinJavaComponent
 import java.awt.Dimension
 
 private val dataModules
@@ -18,16 +21,18 @@ private val dataModules
 fun main() = application {
     startKoin { modules(dataModules + domainModule + presentationModule) }
 
-    val state = rememberWindowState()
+    val windowState = rememberWindowState()
+    val stateHolder = CampfireViewModelStateHolder.fromViewModel(KoinJavaComponent.get(CampfireViewModel::class.java))
 
     Window(
         title = "Campfire",
         onCloseRequest = ::exitApplication,
-        state = state
+        state = windowState
     ) {
         window.minimumSize = Dimension(400, 400)
         CampfireDesktopApp(
-            windowSize = state.size
+            stateHolder = stateHolder,
+            windowSize = windowState.size
         )
     }
 }

@@ -36,13 +36,6 @@ class CampfireViewModel(
     val databases = getScreenData().map { it.data?.databases.orEmpty() }.distinctUntilChanged()
     val userPreferences = getScreenData().map { it.data?.userPreferences }.distinctUntilChanged()
     val uiMode = userPreferences.map { it?.uiMode }
-    val dataState = getScreenData().map {
-        when (it) {
-            is DataState.Failure -> "Error"
-            is DataState.Idle -> "Idle"
-            is DataState.Loading -> "Loading"
-        }
-    }.distinctUntilChanged()
     val shouldShowLoadingIndicator = getScreenData().map { it is DataState.Loading }.distinctUntilChanged()
     private val _selectedNavigationDestination = MutableStateFlow(NavigationDestination.SONGS)
     val selectedNavigationDestination: Flow<NavigationDestination> = _selectedNavigationDestination
@@ -87,7 +80,7 @@ class CampfireViewModel(
         userPreferences.copy(shouldShowSongsWithoutChords = shouldShowSongsWithoutChords)
     )
 
-    suspend fun onForceRefreshPressed() = loadScreenData(true)
+    suspend fun onForceRefreshTriggered() = loadScreenData(true)
 
     suspend fun onDeleteLocalDataPressed() = deleteLocalData()
 

@@ -4,9 +4,10 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -15,6 +16,7 @@ import com.pandulapeter.campfire.presentation.screens.PlaylistsScreensDesktop
 import com.pandulapeter.campfire.presentation.screens.SettingsScreensDesktop
 import com.pandulapeter.campfire.presentation.screens.SongsScreenDesktop
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
+import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireBottomNavigationBar
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireNavigationRail
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireScaffold
@@ -23,28 +25,25 @@ import org.koin.java.KoinJavaComponent
 @Composable
 fun CampfireDesktopApp(
     viewModel: CampfireViewModel = KoinJavaComponent.get(CampfireViewModel::class.java),
+    stateHolder: CampfireViewModelStateHolder,
     windowSize: DpSize
 ) {
-    val uiMode = viewModel.uiMode.collectAsState(null)
-    val userPreferences = viewModel.userPreferences.collectAsState(null)
-
     LaunchedEffect(Unit) { viewModel.onInitialize() }
 
-    CampfireDesktopTheme(
-        uiMode = uiMode.value
-    ) {
-        val selectedNavigationDestination = viewModel.selectedNavigationDestination.collectAsState(initial = null)
-        val navigationDestinations = viewModel.navigationDestinations.collectAsState(initial = emptyList())
+    val songsScreenScrollState = rememberLazyListState()
 
+    CampfireDesktopTheme(
+        uiMode = stateHolder.uiMode.value
+    ) {
         CampfireScaffold(
-            navigationDestinations = navigationDestinations.value,
+            navigationDestinations = stateHolder.navigationDestinations.value,
             isInLandscape = windowSize.width > windowSize.height,
-            userPreferences = userPreferences.value,
+            userPreferences = stateHolder.userPreferences.value,
             bottomNavigationBar = {
                 CampfireBottomNavigationBar(
-                    navigationDestinations = navigationDestinations.value,
+                    navigationDestinations = stateHolder.navigationDestinations.value,
                     onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
-                    userPreferences = userPreferences.value
+                    userPreferences = stateHolder.userPreferences.value
                 )
             },
             navigationRail = { scaffoldPadding, content ->
@@ -52,9 +51,9 @@ fun CampfireDesktopApp(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(scaffoldPadding),
-                    navigationDestinations = navigationDestinations.value,
+                    navigationDestinations = stateHolder.navigationDestinations.value,
                     onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
-                    userPreferences = userPreferences.value,
+                    userPreferences = stateHolder.userPreferences.value,
                     content = content
                 )
             },
@@ -65,8 +64,10 @@ fun CampfireDesktopApp(
                             .fillMaxSize()
                             .padding(scaffoldPadding)
                     } ?: Modifier,
-                    selectedNavigationDestination = selectedNavigationDestination.value,
-                    shouldUseExpandedUi = scaffoldPadding == null // TODO: Should be based on screen width
+                    stateHolder = stateHolder,
+                    selectedNavigationDestination = stateHolder.selectedNavigationDestination.value,
+                    shouldUseExpandedUi = scaffoldPadding == null, // TODO: Should be based on screen width
+                    songsScreenScrollState = songsScreenScrollState
                 )
             }
         )
@@ -77,13 +78,19 @@ fun CampfireDesktopApp(
 private fun Content(
     modifier: Modifier = Modifier,
     selectedNavigationDestination: CampfireViewModel.NavigationDestination?,
-    shouldUseExpandedUi: Boolean
+    stateHolder: CampfireViewModelStateHolder,
+    shouldUseExpandedUi: Boolean,
+    songsScreenScrollState: LazyListState
 ) = Crossfade(
     modifier = modifier.fillMaxSize(),
     targetState = selectedNavigationDestination
 ) { destination ->
     when (destination) {
-        CampfireViewModel.NavigationDestination.SONGS -> SongsScreenDesktop(shouldUseExpandedUi = shouldUseExpandedUi)
+        CampfireViewModel.NavigationDestination.SONGS -> SongsScreenDesktop(
+            stateHolder = stateHolder,
+            shouldUseExpandedUi = shouldUseExpandedUi,
+            lazyListState = songsScreenScrollState
+        )
         CampfireViewModel.NavigationDestination.PLAYLISTS -> PlaylistsScreensDesktop()
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreensDesktop()
         null -> Unit

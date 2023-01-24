@@ -12,57 +12,63 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshState
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.android.catalogue.CampfireAndroidTheme
-import com.pandulapeter.campfire.presentation.android.screens.SongsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.screens.PlaylistsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.screens.SettingsScreenAndroid
+import com.pandulapeter.campfire.presentation.android.screens.SongsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.utilities.keyboardState
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
+import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireBottomNavigationBar
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireNavigationRail
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireScaffold
 import org.koin.java.KoinJavaComponent.get
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun CampfireAndroidApp(
-    viewModel: CampfireViewModel = get(CampfireViewModel::class.java)
+    viewModel: CampfireViewModel = get(CampfireViewModel::class.java),
+    stateHolder: CampfireViewModelStateHolder,
 ) {
-    val uiMode = viewModel.uiMode.collectAsState(null)
-    val userPreferences = viewModel.userPreferences.collectAsState(null)
-    val isKeyboardVisible = keyboardState()
-
     LaunchedEffect(Unit) { viewModel.onInitialize() }
 
-    CampfireAndroidTheme(
-        uiMode = uiMode.value
-    ) {
-        val selectedNavigationDestination = viewModel.selectedNavigationDestination.collectAsState(initial = null)
-        val navigationDestinations = viewModel.navigationDestinations.collectAsState(initial = emptyList())
+    val isKeyboardVisible = keyboardState()
+    val songsScreenScrollState = rememberLazyListState()
+    val songsScreenPullRefreshState = rememberPullRefreshState(
+        refreshing = stateHolder.isRefreshing.value,
+        onRefresh = stateHolder::onForceRefreshTriggered
+    )
 
+    CampfireAndroidTheme(
+        uiMode = stateHolder.uiMode.value
+    ) {
         CampfireScaffold(
             modifier = Modifier
                 .imePadding()
                 .statusBarsPadding(),
             statusBarModifier = Modifier.statusBarsPadding(),
-            navigationDestinations = navigationDestinations.value,
+            navigationDestinations = stateHolder.navigationDestinations.value,
             isInLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
-            userPreferences = userPreferences.value,
+            userPreferences = stateHolder.userPreferences.value,
             bottomNavigationBar = {
                 BottomNavigationBarWrapper(
                     modifier = Modifier
                         .imePadding()
                         .navigationBarsPadding(),
-                    navigationDestinations = navigationDestinations.value,
+                    navigationDestinations = stateHolder.navigationDestinations.value,
                     onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
                     isKeyboardVisible = isKeyboardVisible.value,
-                    userPreferences = userPreferences.value
+                    userPreferences = stateHolder.userPreferences.value
                 )
             },
             navigationRail = { scaffoldPadding, content ->
@@ -72,10 +78,10 @@ fun CampfireAndroidApp(
                         .padding(scaffoldPadding)
                         .consumeWindowInsets(scaffoldPadding)
                         .systemBarsPadding(),
-                    navigationDestinations = navigationDestinations.value,
+                    navigationDestinations = stateHolder.navigationDestinations.value,
                     onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
                     isKeyboardVisible = isKeyboardVisible.value,
-                    userPreferences = userPreferences.value,
+                    userPreferences = stateHolder.userPreferences.value,
                     content = content
                 )
             },
@@ -88,25 +94,37 @@ fun CampfireAndroidApp(
                             .consumeWindowInsets(scaffoldPadding)
                             .systemBarsPadding()
                     } ?: Modifier,
-                    selectedNavigationDestination = selectedNavigationDestination.value,
-                    shouldUseExpandedUi = scaffoldPadding == null // TODO: Should be based on screen width
+                    stateHolder = stateHolder,
+                    selectedNavigationDestination = stateHolder.selectedNavigationDestination.value,
+                    shouldUseExpandedUi = scaffoldPadding == null, // TODO: Should be based on screen width
+                    songsScreenScrollState = songsScreenScrollState,
+                    songsScreenPullRefreshState = songsScreenPullRefreshState
                 )
             }
         )
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun Content(
     modifier: Modifier = Modifier,
     selectedNavigationDestination: CampfireViewModel.NavigationDestination?,
-    shouldUseExpandedUi: Boolean
+    stateHolder: CampfireViewModelStateHolder,
+    shouldUseExpandedUi: Boolean,
+    songsScreenPullRefreshState: PullRefreshState,
+    songsScreenScrollState: LazyListState
 ) = Crossfade(
     modifier = modifier.fillMaxSize(),
     targetState = selectedNavigationDestination
 ) { destination ->
     when (destination) {
-        CampfireViewModel.NavigationDestination.SONGS -> SongsScreenAndroid(shouldUseExpandedUi = shouldUseExpandedUi)
+        CampfireViewModel.NavigationDestination.SONGS -> SongsScreenAndroid(
+            stateHolder = stateHolder,
+            shouldUseExpandedUi = shouldUseExpandedUi,
+            pullRefreshState = songsScreenPullRefreshState,
+            lazyListState = songsScreenScrollState
+        )
         CampfireViewModel.NavigationDestination.PLAYLISTS -> PlaylistsScreenAndroid()
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreenAndroid()
         null -> Unit

@@ -19,7 +19,6 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.SearchItem
 @Composable
 fun SongsControlsList(
     modifier: Modifier = Modifier,
-    state: String,
     query: String,
     databases: List<Database>,
     unselectedDatabaseUrls: List<String>,
@@ -94,12 +93,6 @@ fun SongsControlsList(
                     onCheckedChanged = { onDatabaseSelectedChanged(database, it) }
                 )
             }
-        }
-        item(key = "header_state") {
-            HeaderItem(
-                modifier = Modifier.animateItemPlacement(),
-                text = "State: $state"
-            )
         }
         item(key = "force_refresh") {
             ClickableControlItem(
