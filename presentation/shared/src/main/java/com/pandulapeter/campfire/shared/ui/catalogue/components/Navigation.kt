@@ -12,11 +12,9 @@ import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
-import com.pandulapeter.campfire.shared.ui.catalogue.utilities.getUiStrings
 
 @Composable
 fun CampfireScaffold(
@@ -24,7 +22,7 @@ fun CampfireScaffold(
     statusBarModifier: Modifier = Modifier,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     isInLandscape: Boolean,
-    userPreferences: UserPreferences?,
+    uiStrings: CampfireStrings,
     bottomNavigationBar: @Composable () -> Unit,
     navigationRail: @Composable (scaffoldPadding: PaddingValues, content: @Composable () -> Unit) -> Unit,
     content: @Composable (scaffoldPadding: PaddingValues?) -> Unit
@@ -34,7 +32,7 @@ fun CampfireScaffold(
         CampfireAppBar(
             statusBarModifier = statusBarModifier,
             selectedNavigationDestination = navigationDestinations.firstOrNull { it.isSelected }?.destination,
-            userPreferences = userPreferences
+            uiStrings = uiStrings
         )
     },
     bottomBar = {
@@ -53,20 +51,18 @@ fun CampfireAppBar(
     modifier: Modifier = Modifier,
     statusBarModifier: Modifier = Modifier,
     selectedNavigationDestination: CampfireViewModel.NavigationDestination?,
-    userPreferences: UserPreferences?
+    uiStrings: CampfireStrings
 ) = TopAppBar(
     modifier = modifier,
     backgroundColor = MaterialTheme.colors.surface,
     title = {
         Text(
             modifier = statusBarModifier,
-            text = CampfireStrings.getUiStrings(userPreferences).let {
-                when (selectedNavigationDestination) {
-                    CampfireViewModel.NavigationDestination.SONGS -> it.songs
-                    CampfireViewModel.NavigationDestination.PLAYLISTS -> it.playlists
-                    CampfireViewModel.NavigationDestination.SETTINGS -> it.settings
-                    null -> ""
-                }
+            text = when (selectedNavigationDestination) {
+                CampfireViewModel.NavigationDestination.SONGS -> uiStrings.songs
+                CampfireViewModel.NavigationDestination.PLAYLISTS -> uiStrings.playlists
+                CampfireViewModel.NavigationDestination.SETTINGS -> uiStrings.settings
+                null -> ""
             }
         )
     }
@@ -77,7 +73,7 @@ fun CampfireNavigationRail(
     modifier: Modifier = Modifier,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit,
-    userPreferences: UserPreferences?
+    uiStrings: CampfireStrings
 ) = NavigationRail(
     modifier = modifier
 ) {
@@ -90,12 +86,10 @@ fun CampfireNavigationRail(
             icon = {
                 Icon(
                     imageVector = navigationDestination.destination.icon,
-                    contentDescription = CampfireStrings.getUiStrings(userPreferences).let {
-                        when (navigationDestination.destination) {
-                            CampfireViewModel.NavigationDestination.SONGS -> it.songs
-                            CampfireViewModel.NavigationDestination.PLAYLISTS -> it.playlists
-                            CampfireViewModel.NavigationDestination.SETTINGS -> it.settings
-                        }
+                    contentDescription = when (navigationDestination.destination) {
+                        CampfireViewModel.NavigationDestination.SONGS -> uiStrings.songs
+                        CampfireViewModel.NavigationDestination.PLAYLISTS -> uiStrings.playlists
+                        CampfireViewModel.NavigationDestination.SETTINGS -> uiStrings.settings
                     }
                 )
             }
@@ -109,7 +103,7 @@ fun CampfireBottomNavigationBar(
     modifier: Modifier = Modifier,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit,
-    userPreferences: UserPreferences?
+    uiStrings: CampfireStrings
 ) = BottomAppBar(
     modifier = modifier,
     backgroundColor = MaterialTheme.colors.surface
@@ -123,12 +117,10 @@ fun CampfireBottomNavigationBar(
             icon = {
                 Icon(
                     imageVector = navigationDestination.destination.icon,
-                    contentDescription = CampfireStrings.getUiStrings(userPreferences).let {
-                        when (navigationDestination.destination) {
-                            CampfireViewModel.NavigationDestination.SONGS -> it.songs
-                            CampfireViewModel.NavigationDestination.PLAYLISTS -> it.playlists
-                            CampfireViewModel.NavigationDestination.SETTINGS -> it.settings
-                        }
+                    contentDescription = when (navigationDestination.destination) {
+                        CampfireViewModel.NavigationDestination.SONGS -> uiStrings.songs
+                        CampfireViewModel.NavigationDestination.PLAYLISTS -> uiStrings.playlists
+                        CampfireViewModel.NavigationDestination.SETTINGS -> uiStrings.settings
                     }
                 )
             }

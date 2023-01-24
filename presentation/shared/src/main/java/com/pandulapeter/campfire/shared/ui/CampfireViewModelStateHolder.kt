@@ -7,12 +7,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
+import com.pandulapeter.campfire.shared.ui.catalogue.utilities.getUiStrings
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 data class CampfireViewModelStateHolder(
     private val viewModel: CampfireViewModel,
     private val coroutineScope: CoroutineScope,
+    val uiStrings: State<CampfireStrings>,
     val uiMode: State<UserPreferences.UiMode?>,
     val userPreferences: State<UserPreferences?>,
     val selectedNavigationDestination: State<CampfireViewModel.NavigationDestination?>,
@@ -66,6 +71,7 @@ data class CampfireViewModelStateHolder(
         fun fromViewModel(viewModel: CampfireViewModel) = CampfireViewModelStateHolder(
             viewModel = viewModel,
             coroutineScope = rememberCoroutineScope(),
+            uiStrings = viewModel.userPreferences.map { it.getUiStrings() }.distinctUntilChanged().collectAsState(CampfireStrings.English),
             uiMode = viewModel.uiMode.collectAsState(null),
             userPreferences = viewModel.userPreferences.collectAsState(null),
             selectedNavigationDestination = viewModel.selectedNavigationDestination.collectAsState(initial = null),

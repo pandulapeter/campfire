@@ -9,18 +9,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.PullRefreshState
 import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsContentList
 import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsControlsList
 
@@ -40,6 +39,7 @@ internal fun SongsScreenAndroid(
         ) {
             SongsContentListWithPullRefresh(
                 modifier = Modifier.fillMaxWidth(0.65f),
+                uiStrings = stateHolder.uiStrings.value,
                 pullRefreshState = pullRefreshState,
                 isRefreshing = stateHolder.isRefreshing.value,
                 songs = stateHolder.songs.value,
@@ -53,6 +53,7 @@ internal fun SongsScreenAndroid(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(end = 8.dp),
+                uiStrings = stateHolder.uiStrings.value,
                 query = stateHolder.query.value,
                 databases = stateHolder.databases.value,
                 unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
@@ -82,6 +83,7 @@ internal fun SongsScreenAndroid(
     } else {
         SongsContentListWithPullRefresh(
             modifier = modifier,
+            uiStrings = stateHolder.uiStrings.value,
             pullRefreshState = pullRefreshState,
             isRefreshing = stateHolder.isRefreshing.value,
             songs = stateHolder.songs.value,
@@ -95,6 +97,7 @@ internal fun SongsScreenAndroid(
 @Composable
 private fun SongsContentListWithPullRefresh(
     modifier: Modifier,
+    uiStrings: CampfireStrings,
     pullRefreshState: PullRefreshState,
     isRefreshing: Boolean,
     songs: List<Song>,
@@ -105,6 +108,7 @@ private fun SongsContentListWithPullRefresh(
 ) {
     SongsContentList(
         modifier = Modifier.fillMaxHeight(),
+        uiStrings = uiStrings,
         songs = songs,
         onSongClicked = onSongClicked,
         state = lazyListState

@@ -4,11 +4,11 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import java.util.Locale
 
-fun CampfireStrings.getUiStrings(userPreferences: UserPreferences?) = when (userPreferences?.language) {
-    UserPreferences.Language.ENGLISH -> english
-    UserPreferences.Language.HUNGARIAN -> hungarian
+fun UserPreferences?.getUiStrings() = when (this?.language) {
+    UserPreferences.Language.ENGLISH -> CampfireStrings.English
+    UserPreferences.Language.HUNGARIAN -> CampfireStrings.Hungarian
     UserPreferences.Language.SYSTEM_DEFAULT, null -> when (Locale.getDefault().language) {
-        "hu" -> hungarian
-        else -> english
+        "hu" -> CampfireStrings.Hungarian
+        else -> CampfireStrings.English
     }
 }

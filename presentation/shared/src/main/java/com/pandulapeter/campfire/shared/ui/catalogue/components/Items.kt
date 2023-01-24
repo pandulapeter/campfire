@@ -16,8 +16,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +24,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
 @Composable
 internal fun HeaderItem(
@@ -86,6 +86,7 @@ internal fun CheckboxItem(
 internal fun SearchItem(
     modifier: Modifier = Modifier,
     query: String,
+    uiStrings: CampfireStrings,
     onQueryChanged: (String) -> Unit
 ) = RoundedCard(
     modifier = modifier
@@ -100,12 +101,12 @@ internal fun SearchItem(
             ) {
                 Icon(
                     modifier = Modifier.wrapContentSize().padding(8.dp).clip(shape = CircleShape).clickable { onQueryChanged("") }.padding(8.dp),
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Clear",
+                    imageVector = CampfireIcons.clear,
+                    contentDescription = uiStrings.songsClear,
                 )
             }
         },
-        label = { Text("Search") },
+        label = { Text(uiStrings.songsSearch) },
         singleLine = true,
         value = query,
         onValueChange = onQueryChanged

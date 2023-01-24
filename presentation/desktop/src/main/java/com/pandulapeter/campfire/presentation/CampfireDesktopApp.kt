@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
-import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.catalogue.CampfireDesktopTheme
 import com.pandulapeter.campfire.presentation.screens.PlaylistsScreensDesktop
 import com.pandulapeter.campfire.presentation.screens.SettingsScreensDesktop
@@ -20,6 +19,7 @@ import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireBottomNavigationBar
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireNavigationRail
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireScaffold
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import org.koin.java.KoinJavaComponent
 
 @Composable
@@ -38,12 +38,12 @@ fun CampfireDesktopApp(
         CampfireScaffold(
             navigationDestinations = stateHolder.navigationDestinations.value,
             isInLandscape = windowSize.width > windowSize.height,
-            userPreferences = stateHolder.userPreferences.value,
+            uiStrings = stateHolder.uiStrings.value,
             bottomNavigationBar = {
                 CampfireBottomNavigationBar(
                     navigationDestinations = stateHolder.navigationDestinations.value,
                     onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
-                    userPreferences = stateHolder.userPreferences.value
+                    uiStrings = stateHolder.uiStrings.value
                 )
             },
             navigationRail = { scaffoldPadding, content ->
@@ -53,7 +53,7 @@ fun CampfireDesktopApp(
                         .padding(scaffoldPadding),
                     navigationDestinations = stateHolder.navigationDestinations.value,
                     onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
-                    userPreferences = stateHolder.userPreferences.value,
+                    uiStrings = stateHolder.uiStrings.value,
                     content = content
                 )
             },
@@ -91,8 +91,12 @@ private fun Content(
             shouldUseExpandedUi = shouldUseExpandedUi,
             lazyListState = songsScreenScrollState
         )
-        CampfireViewModel.NavigationDestination.PLAYLISTS -> PlaylistsScreensDesktop()
-        CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreensDesktop()
+        CampfireViewModel.NavigationDestination.PLAYLISTS -> PlaylistsScreensDesktop(
+            stateHolder = stateHolder
+        )
+        CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreensDesktop(
+            stateHolder = stateHolder
+        )
         null -> Unit
     }
 }
@@ -102,7 +106,7 @@ private fun NavigationRailWrapper(
     modifier: Modifier = Modifier,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit,
-    userPreferences: UserPreferences?,
+    uiStrings: CampfireStrings,
     content: @Composable () -> Unit
 ) = Row(
     modifier = modifier
@@ -110,7 +114,7 @@ private fun NavigationRailWrapper(
     CampfireNavigationRail(
         navigationDestinations = navigationDestinations,
         onNavigationDestinationSelected = onNavigationDestinationSelected,
-        userPreferences = userPreferences
+        uiStrings = uiStrings
     )
     content()
 }

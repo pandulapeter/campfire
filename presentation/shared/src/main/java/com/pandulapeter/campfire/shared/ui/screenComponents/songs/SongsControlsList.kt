@@ -13,12 +13,14 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.CheckboxItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.ClickableControlItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.HeaderItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SearchItem
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SongsControlsList(
     modifier: Modifier = Modifier,
+    uiStrings: CampfireStrings,
     query: String,
     databases: List<Database>,
     unselectedDatabaseUrls: List<String>,
@@ -38,7 +40,7 @@ fun SongsControlsList(
         item(key = "header_databases") {
             HeaderItem(
                 modifier = Modifier.animateItemPlacement(),
-                text = "All databases"
+                text = uiStrings.songsAllDatabases
             )
         }
         itemsIndexed(
@@ -57,19 +59,20 @@ fun SongsControlsList(
             item(key = "header_filters") {
                 HeaderItem(
                     modifier = Modifier.animateItemPlacement(),
-                    text = "Filters"
+                    text = uiStrings.songsFilters
                 )
             }
             item(key = "filter_search") {
                 SearchItem(
                     query = query,
+                    uiStrings = uiStrings,
                     onQueryChanged = onQueryChanged
                 )
             }
             item(key = "filter_explicit") {
                 CheckboxItem(
                     modifier = Modifier.animateItemPlacement(),
-                    text = "Show explicit songs",
+                    text = uiStrings.songsShowExplicit,
                     isChecked = shouldShowExplicitSongs,
                     onCheckedChanged = onShouldShowExplicitSongsChanged
                 )
@@ -77,7 +80,7 @@ fun SongsControlsList(
             item(key = "filter_songs_without_chords") {
                 CheckboxItem(
                     modifier = Modifier.animateItemPlacement(),
-                    text = "Show songs without chords",
+                    text = uiStrings.songsShowWithoutChords,
                     isChecked = shouldShowSongsWithoutChords,
                     onCheckedChanged = onShouldShowSongsWithoutChordsChanged
                 )
@@ -88,23 +91,29 @@ fun SongsControlsList(
             ) { _, database ->
                 CheckboxItem(
                     modifier = Modifier.animateItemPlacement(),
-                    text = "Database ${database.name}",
+                    text = uiStrings.songsDatabaseFilter(database.name),
                     isChecked = !unselectedDatabaseUrls.contains(database.url),
                     onCheckedChanged = { onDatabaseSelectedChanged(database, it) }
                 )
             }
         }
+        item(key = "header_actions") {
+            HeaderItem(
+                modifier = Modifier.animateItemPlacement(),
+                text = uiStrings.songsActions
+            )
+        }
         item(key = "force_refresh") {
             ClickableControlItem(
                 modifier = Modifier.animateItemPlacement(),
-                text = "Force refresh",
+                text = uiStrings.songsRefresh,
                 onClick = { onForceRefreshPressed() }
             )
         }
         item(key = "delete_local_data") {
             ClickableControlItem(
                 modifier = Modifier.animateItemPlacement(),
-                text = "Delete local data",
+                text = uiStrings.songsDeleteLocalData,
                 onClick = { onDeleteLocalDataPressed() }
             )
         }

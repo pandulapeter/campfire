@@ -12,11 +12,13 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.ui.catalogue.components.HeaderItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SongItem
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SongsContentList(
     modifier: Modifier = Modifier,
+    uiStrings: CampfireStrings,
     state: LazyListState,
     songs: List<Song>,
     onSongClicked: (Song) -> Unit
@@ -28,7 +30,7 @@ fun SongsContentList(
         item(key = "header_no_data") {
             HeaderItem(
                 modifier = Modifier.animateItemPlacement(),
-                text = "No data"
+                text = uiStrings.songsNoData
             )
         }
     }
@@ -36,7 +38,7 @@ fun SongsContentList(
         item(key = "header_songs") {
             HeaderItem(
                 modifier = Modifier.animateItemPlacement(),
-                text = "Songs (${songs.size})"
+                text = uiStrings.songsHeader(songs.size)
             )
         }
         itemsIndexed(

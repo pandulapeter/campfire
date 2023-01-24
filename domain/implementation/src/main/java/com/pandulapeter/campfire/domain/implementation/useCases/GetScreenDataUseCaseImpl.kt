@@ -9,10 +9,12 @@ import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
+import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 class GetScreenDataUseCaseImpl internal constructor(
+    normalizeText: NormalizeTextUseCase,
     databaseRepository: DatabaseRepository,
     playlistRepository: PlaylistRepository,
     songRepository: SongRepository,
@@ -45,8 +47,8 @@ class GetScreenDataUseCaseImpl internal constructor(
                                 .filter { it.isPublic }
                                 .filterExplicit(userPreferences)
                                 .filterHasChords(userPreferences)
-                                .sortedBy { it.title.normalize() }
-                                .sortedBy { it.artist.normalize() },
+                                .sortedBy { normalizeText(it.title) }
+                                .sortedBy { normalizeText(it.artist) },
                             userPreferences = userPreferences
                         ).also {
                             cache = it
@@ -74,22 +76,4 @@ class GetScreenDataUseCaseImpl internal constructor(
     private fun List<Song>.filterExplicit(userPreferences: UserPreferences) = if (userPreferences.shouldShowExplicitSongs) this else filterNot { it.isExplicit }
 
     private fun List<Song>.filterHasChords(userPreferences: UserPreferences) = if (userPreferences.shouldShowSongsWithoutChords) this else filterNot { !it.hasChords }
-
-    //TODO: Not a good solution
-    private fun String.normalize() = lowercase()
-        .replace("á", "a")
-        .replace("é", "e")
-        .replace("í", "i")
-        .replace("ó", "o")
-        .replace("ö", "o")
-        .replace("ő", "o")
-        .replace("ú", "u")
-        .replace("ü", "u")
-        .replace("ű", "u")
-        .replace("ă", "a")
-        .replace("â", "a")
-        .replace("î", "i")
-        .replace("ț", "t")
-        .replace("ș", "s")
-        .replace("ä", "a")
 }

@@ -8,17 +8,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.shared.ui.catalogue.components.RoundedCard
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
 
 @Composable
 fun PlaylistsPlaceholder(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    uiStrings: CampfireStrings
 ) = RoundedCard(
     modifier = modifier.padding(8.dp)
 ) {
     Text(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         textAlign = TextAlign.Center,
-        text = "Playlists"
+        text = uiStrings.playlists
     )
 }

@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.DeleteLocalDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
+import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveDatabasesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
@@ -23,7 +24,8 @@ class CampfireViewModel(
     private val loadScreenData: LoadScreenDataUseCase,
     private val saveDatabases: SaveDatabasesUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
-    private val deleteLocalData: DeleteLocalDataUseCase
+    private val deleteLocalData: DeleteLocalDataUseCase,
+    private val normalizeText: NormalizeTextUseCase
 ) {
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query
@@ -31,7 +33,8 @@ class CampfireViewModel(
         getScreenData().map { it.data?.songs.orEmpty() },
         query
     ) { songs, query ->
-        songs.filter { it.title.contains(query, true) || it.artist.contains(query, true) }
+        val normalizedQuery = normalizeText(query)
+        songs.filter { normalizeText(it.title).contains(normalizedQuery, true) || normalizeText(it.artist).contains(normalizedQuery, true) }
     }.distinctUntilChanged()
     val databases = getScreenData().map { it.data?.databases.orEmpty() }.distinctUntilChanged()
     val userPreferences = getScreenData().map { it.data?.userPreferences }.distinctUntilChanged()
