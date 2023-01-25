@@ -26,7 +26,6 @@ fun SongsControlsList(
     unselectedDatabaseUrls: List<String>,
     shouldShowExplicitSongs: Boolean,
     shouldShowSongsWithoutChords: Boolean,
-    onDatabaseEnabledChanged: (Database, Boolean) -> Unit,
     onDatabaseSelectedChanged: (Database, Boolean) -> Unit,
     onShouldShowExplicitSongsChanged: (Boolean) -> Unit,
     onShouldShowSongsWithoutChordsChanged: (Boolean) -> Unit,
@@ -37,23 +36,6 @@ fun SongsControlsList(
     modifier = modifier
 ) {
     if (databases.isNotEmpty()) {
-        item(key = "header_databases") {
-            HeaderItem(
-                modifier = Modifier.animateItemPlacement(),
-                text = uiStrings.songsAllDatabases
-            )
-        }
-        itemsIndexed(
-            items = databases,
-            key = { _, database -> "database_${database.url}" }
-        ) { _, database ->
-            CheckboxItem(
-                modifier = Modifier.animateItemPlacement(),
-                text = database.name,
-                isChecked = database.isEnabled,
-                onCheckedChanged = { onDatabaseEnabledChanged(database, it) }
-            )
-        }
         val enabledDatabases = databases.filter { it.isEnabled }
         if (enabledDatabases.isNotEmpty()) {
             item(key = "header_filters") {

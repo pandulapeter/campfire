@@ -83,6 +83,10 @@ class CampfireViewModel(
         userPreferences.copy(shouldShowSongsWithoutChords = shouldShowSongsWithoutChords)
     )
 
+    suspend fun onUiModeChanged(userPreferences: UserPreferences, uiMode: UserPreferences.UiMode) = saveUserPreferences(
+        userPreferences.copy(uiMode = uiMode)
+    )
+
     suspend fun onForceRefreshTriggered() = loadScreenData(true)
 
     suspend fun onDeleteLocalDataPressed() = deleteLocalData()

@@ -35,34 +35,51 @@ data class CampfireViewModelStateHolder(
 
     fun onDeleteLocalDataPressed() = coroutineScope.launch { viewModel.onDeleteLocalDataPressed() }
 
-    fun onDatabaseEnabledChanged(databases: List<Database>, database: Database, isEnabled: Boolean) = coroutineScope.launch {
-        viewModel.onDatabaseEnabledChanged(
-            databases = databases,
-            database = database,
-            isEnabled = isEnabled
-        )
+    fun onDatabaseEnabledChanged(database: Database, isEnabled: Boolean) = databases.value.let { databases ->
+        coroutineScope.launch {
+            viewModel.onDatabaseEnabledChanged(
+                databases = databases,
+                database = database,
+                isEnabled = isEnabled
+            )
+        }
     }
 
-    fun onDatabaseSelectedChanged(userPreferences: UserPreferences, database: Database, isSelected: Boolean) = coroutineScope.launch {
-        viewModel.onDatabaseSelectedChanged(
-            userPreferences = userPreferences,
-            database = database,
-            isSelected = isSelected
-        )
+    fun onDatabaseSelectedChanged(database: Database, isSelected: Boolean) = userPreferences.value?.let { userPreferences ->
+        coroutineScope.launch {
+            viewModel.onDatabaseSelectedChanged(
+                userPreferences = userPreferences,
+                database = database,
+                isSelected = isSelected
+            )
+        }
     }
 
-    fun onShouldShowExplicitSongsChanged(userPreferences: UserPreferences, shouldShowExplicitSongs: Boolean) = coroutineScope.launch {
-        viewModel.onShouldShowExplicitSongsChanged(
-            userPreferences = userPreferences,
-            shouldShowExplicitSongs = shouldShowExplicitSongs
-        )
+    fun onShouldShowExplicitSongsChanged(shouldShowExplicitSongs: Boolean) = userPreferences.value?.let { userPreferences ->
+        coroutineScope.launch {
+            viewModel.onShouldShowExplicitSongsChanged(
+                userPreferences = userPreferences,
+                shouldShowExplicitSongs = shouldShowExplicitSongs
+            )
+        }
     }
 
-    fun onShouldShowSongsWithoutChordsChanged(userPreferences: UserPreferences, shouldShowSongsWithoutChords: Boolean) = coroutineScope.launch {
-        viewModel.onShouldShowSongsWithoutChordsChanged(
-            userPreferences = userPreferences,
-            shouldShowSongsWithoutChords = shouldShowSongsWithoutChords
-        )
+    fun onShouldShowSongsWithoutChordsChanged(shouldShowSongsWithoutChords: Boolean) = userPreferences.value?.let { userPreferences ->
+        coroutineScope.launch {
+            viewModel.onShouldShowSongsWithoutChordsChanged(
+                userPreferences = userPreferences,
+                shouldShowSongsWithoutChords = shouldShowSongsWithoutChords
+            )
+        }
+    }
+
+    fun onUiModeChanged(uiMode: UserPreferences.UiMode) = userPreferences.value?.let { userPreferences ->
+        coroutineScope.launch {
+            viewModel.onUiModeChanged(
+                userPreferences = userPreferences,
+                uiMode = uiMode
+            )
+        }
     }
 
     companion object {

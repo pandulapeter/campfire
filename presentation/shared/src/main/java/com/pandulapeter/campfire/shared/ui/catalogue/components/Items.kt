@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Checkbox
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
@@ -71,6 +72,33 @@ internal fun CheckboxItem(
             modifier = Modifier.align(Alignment.CenterVertically),
             checked = isChecked,
             onCheckedChange = onCheckedChanged
+        )
+        Spacer(
+            modifier = Modifier.width(4.dp)
+        )
+        Text(
+            modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically).padding(vertical = 16.dp).padding(end = 8.dp),
+            text = text
+        )
+    }
+}
+
+@Composable
+internal fun RadioButtonItem(
+    modifier: Modifier = Modifier,
+    text: String,
+    isChecked: Boolean,
+    onClick: () -> Unit
+) = RoundedCard(
+    modifier = modifier
+) {
+    Row(
+        modifier = Modifier.clickable { onClick() }
+    ) {
+        RadioButton(
+            modifier = Modifier.align(Alignment.CenterVertically),
+            selected = isChecked,
+            onClick = onClick
         )
         Spacer(
             modifier = Modifier.width(4.dp)

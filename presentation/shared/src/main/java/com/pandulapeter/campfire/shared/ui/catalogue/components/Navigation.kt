@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.shared.ui.catalogue.components
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
@@ -23,6 +24,7 @@ fun CampfireScaffold(
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     isInLandscape: Boolean,
     uiStrings: CampfireStrings,
+    appBarActions: @Composable RowScope.() -> Unit,
     bottomNavigationBar: @Composable () -> Unit,
     navigationRail: @Composable (scaffoldPadding: PaddingValues, content: @Composable () -> Unit) -> Unit,
     content: @Composable (scaffoldPadding: PaddingValues?) -> Unit
@@ -32,6 +34,7 @@ fun CampfireScaffold(
         CampfireAppBar(
             statusBarModifier = statusBarModifier,
             selectedNavigationDestination = navigationDestinations.firstOrNull { it.isSelected }?.destination,
+            actions = appBarActions,
             uiStrings = uiStrings
         )
     },
@@ -54,10 +57,12 @@ fun CampfireAppBar(
     modifier: Modifier = Modifier,
     statusBarModifier: Modifier = Modifier,
     selectedNavigationDestination: CampfireViewModel.NavigationDestination?,
+    actions: @Composable RowScope.() -> Unit,
     uiStrings: CampfireStrings
 ) = TopAppBar(
     modifier = modifier,
     backgroundColor = MaterialTheme.colors.surface,
+    actions = actions,
     title = {
         Text(
             modifier = statusBarModifier,

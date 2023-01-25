@@ -3,12 +3,10 @@ package com.pandulapeter.campfire.presentation.screens
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.runtime.Composable
@@ -25,55 +23,57 @@ internal fun SongsScreenDesktop(
     stateHolder: CampfireViewModelStateHolder,
     lazyListState: LazyListState,
     shouldUseExpandedUi: Boolean
-) = Row(
-    modifier = modifier.fillMaxSize()
-) {
-    Box(
-        modifier = Modifier.fillMaxWidth(0.55f),
+) = if (shouldUseExpandedUi) {
+    Row(
+        modifier = modifier.fillMaxSize()
     ) {
-        SongsContentList(
-            modifier = Modifier.fillMaxSize().padding(end = 8.dp),
-            uiStrings = stateHolder.uiStrings.value,
-            state = lazyListState,
-            songs = stateHolder.songs.value,
-            onSongClicked = stateHolder::onSongClicked
+        SongsContentListWithScrollBar(
+            modifier = Modifier.fillMaxWidth(0.55f),
+            stateHolder = stateHolder,
+            lazyListState = lazyListState
         )
-        VerticalScrollbar(
-            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
-            adapter = rememberScrollbarAdapter(
-                scrollState = lazyListState
-            )
+        SongsControlsList(
+            modifier = Modifier.fillMaxSize(),
+            uiStrings = stateHolder.uiStrings.value,
+            query = stateHolder.query.value,
+            databases = stateHolder.databases.value,
+            unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
+            shouldShowExplicitSongs = stateHolder.userPreferences.value?.shouldShowExplicitSongs == true,
+            shouldShowSongsWithoutChords = stateHolder.userPreferences.value?.shouldShowSongsWithoutChords == true,
+            onDatabaseSelectedChanged = stateHolder::onDatabaseSelectedChanged,
+            onShouldShowExplicitSongsChanged = stateHolder::onShouldShowExplicitSongsChanged,
+            onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged,
+            onForceRefreshPressed = stateHolder::onForceRefreshTriggered,
+            onDeleteLocalDataPressed = stateHolder::onDeleteLocalDataPressed,
+            onQueryChanged = stateHolder::onQueryChanged
         )
     }
-    Spacer(
-        modifier = Modifier.width(8.dp)
+} else {
+    SongsContentListWithScrollBar(
+        stateHolder = stateHolder,
+        lazyListState = lazyListState
     )
-    SongsControlsList(
-        modifier = Modifier.fillMaxSize(),
+}
+
+@Composable
+private fun SongsContentListWithScrollBar(
+    modifier: Modifier = Modifier,
+    stateHolder: CampfireViewModelStateHolder,
+    lazyListState: LazyListState
+) = Box(
+    modifier = modifier,
+) {
+    SongsContentList(
+        modifier = Modifier.fillMaxSize().padding(end = 8.dp),
         uiStrings = stateHolder.uiStrings.value,
-        query = stateHolder.query.value,
-        databases = stateHolder.databases.value,
-        unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
-        shouldShowExplicitSongs = stateHolder.userPreferences.value?.shouldShowExplicitSongs == true,
-        shouldShowSongsWithoutChords = stateHolder.userPreferences.value?.shouldShowSongsWithoutChords == true,
-        onDatabaseEnabledChanged = { database, isEnabled -> stateHolder.onDatabaseEnabledChanged(stateHolder.databases.value, database, isEnabled) },
-        onDatabaseSelectedChanged = { database, isEnabled ->
-            stateHolder.userPreferences.value?.let { userPreferences ->
-                stateHolder.onDatabaseSelectedChanged(userPreferences, database, isEnabled)
-            }
-        },
-        onShouldShowExplicitSongsChanged = { shouldShowExplicitSongs ->
-            stateHolder.userPreferences.value?.let { userPreferences ->
-                stateHolder.onShouldShowExplicitSongsChanged(userPreferences, shouldShowExplicitSongs)
-            }
-        },
-        onShouldShowSongsWithoutChordsChanged = { shouldShowSongsWithoutChords ->
-            stateHolder.userPreferences.value?.let { userPreferences ->
-                stateHolder.onShouldShowSongsWithoutChordsChanged(userPreferences, shouldShowSongsWithoutChords)
-            }
-        },
-        onForceRefreshPressed = stateHolder::onForceRefreshTriggered,
-        onDeleteLocalDataPressed = stateHolder::onDeleteLocalDataPressed,
-        onQueryChanged = stateHolder::onQueryChanged
+        state = lazyListState,
+        songs = stateHolder.songs.value,
+        onSongClicked = stateHolder::onSongClicked
+    )
+    VerticalScrollbar(
+        modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+        adapter = rememberScrollbarAdapter(
+            scrollState = lazyListState
+        )
     )
 }

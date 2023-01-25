@@ -49,6 +49,7 @@ fun CampfireAndroidApp(
         refreshing = stateHolder.isRefreshing.value,
         onRefresh = stateHolder::onForceRefreshTriggered
     )
+    val shouldUseExpandedUi = LocalConfiguration.current.screenWidthDp > 720
 
     CampfireAndroidTheme(
         uiMode = stateHolder.uiMode.value
@@ -57,10 +58,17 @@ fun CampfireAndroidApp(
             modifier = Modifier
                 .imePadding()
                 .statusBarsPadding(),
-            statusBarModifier = Modifier.statusBarsPadding().displayCutoutPadding(), // TODO: Landscape issues .navigationBarsPadding(),
+            statusBarModifier = Modifier
+                .statusBarsPadding()
+                .displayCutoutPadding(), // TODO: Landscape issues .navigationBarsPadding(),
             navigationDestinations = stateHolder.navigationDestinations.value,
             isInLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
             uiStrings = stateHolder.uiStrings.value,
+            appBarActions = {
+                if (!shouldUseExpandedUi) {
+                    // TODO: Add filters
+                }
+            },
             bottomNavigationBar = {
                 BottomNavigationBarWrapper(
                     modifier = Modifier
@@ -97,7 +105,7 @@ fun CampfireAndroidApp(
                     } ?: Modifier,
                     stateHolder = stateHolder,
                     selectedNavigationDestination = stateHolder.selectedNavigationDestination.value,
-                    shouldUseExpandedUi = scaffoldPadding == null, // TODO: Should be based on screen width
+                    shouldUseExpandedUi = shouldUseExpandedUi,
                     songsScreenScrollState = songsScreenScrollState,
                     songsScreenPullRefreshState = songsScreenPullRefreshState
                 )

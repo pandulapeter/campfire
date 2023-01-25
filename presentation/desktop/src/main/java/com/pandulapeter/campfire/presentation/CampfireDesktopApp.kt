@@ -1,15 +1,26 @@
 package com.pandulapeter.campfire.presentation
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.catalogue.CampfireDesktopTheme
 import com.pandulapeter.campfire.presentation.screens.PlaylistsScreensDesktop
 import com.pandulapeter.campfire.presentation.screens.SettingsScreensDesktop
@@ -22,6 +33,7 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireScaffold
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import org.koin.java.KoinJavaComponent
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun CampfireDesktopApp(
     viewModel: CampfireViewModel = KoinJavaComponent.get(CampfireViewModel::class.java),
@@ -31,6 +43,7 @@ fun CampfireDesktopApp(
     LaunchedEffect(Unit) { viewModel.onInitialize() }
 
     val songsScreenScrollState = rememberLazyListState()
+    val shouldUseExpandedUi = windowSize.width > 720.dp
 
     CampfireDesktopTheme(
         uiMode = stateHolder.uiMode.value
@@ -39,6 +52,24 @@ fun CampfireDesktopApp(
             navigationDestinations = stateHolder.navigationDestinations.value,
             isInLandscape = windowSize.width > windowSize.height,
             uiStrings = stateHolder.uiStrings.value,
+            appBarActions = {
+                AnimatedVisibility(
+                    visible = stateHolder.isRefreshing.value,
+                    enter = fadeIn() + scaleIn(),
+                    exit = fadeOut() + scaleOut()
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                }
+                if (!shouldUseExpandedUi) {
+                    // TODO: Add filters
+                }
+                Spacer(
+                    modifier = Modifier.width(16.dp)
+                )
+            },
             bottomNavigationBar = {
                 CampfireBottomNavigationBar(
                     navigationDestinations = stateHolder.navigationDestinations.value,
@@ -66,7 +97,7 @@ fun CampfireDesktopApp(
                     } ?: Modifier,
                     stateHolder = stateHolder,
                     selectedNavigationDestination = stateHolder.selectedNavigationDestination.value,
-                    shouldUseExpandedUi = scaffoldPadding == null, // TODO: Should be based on screen width
+                    shouldUseExpandedUi = shouldUseExpandedUi,
                     songsScreenScrollState = songsScreenScrollState
                 )
             }

@@ -16,7 +16,7 @@ fun PlaylistsPlaceholder(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings
 ) = RoundedCard(
-    modifier = modifier.padding(8.dp)
+    modifier = modifier.padding(top = 8.dp)
 ) {
     Text(
         modifier = Modifier.fillMaxWidth().padding(8.dp),

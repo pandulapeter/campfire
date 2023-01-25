@@ -59,22 +59,9 @@ internal fun SongsScreenAndroid(
                 unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
                 shouldShowExplicitSongs = stateHolder.userPreferences.value?.shouldShowExplicitSongs == true,
                 shouldShowSongsWithoutChords = stateHolder.userPreferences.value?.shouldShowSongsWithoutChords == true,
-                onDatabaseEnabledChanged = { database, isEnabled -> stateHolder.onDatabaseEnabledChanged(stateHolder.databases.value, database, isEnabled) },
-                onDatabaseSelectedChanged = { database, isEnabled ->
-                    stateHolder.userPreferences.value?.let { userPreferences ->
-                        stateHolder.onDatabaseSelectedChanged(userPreferences, database, isEnabled)
-                    }
-                },
-                onShouldShowExplicitSongsChanged = { shouldShowExplicitSongs ->
-                    stateHolder.userPreferences.value?.let { userPreferences ->
-                        stateHolder.onShouldShowExplicitSongsChanged(userPreferences, shouldShowExplicitSongs)
-                    }
-                },
-                onShouldShowSongsWithoutChordsChanged = { shouldShowSongsWithoutChords ->
-                    stateHolder.userPreferences.value?.let { userPreferences ->
-                        stateHolder.onShouldShowSongsWithoutChordsChanged(userPreferences, shouldShowSongsWithoutChords)
-                    }
-                },
+                onDatabaseSelectedChanged = stateHolder::onDatabaseSelectedChanged,
+                onShouldShowExplicitSongsChanged = stateHolder::onShouldShowExplicitSongsChanged,
+                onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged,
                 onForceRefreshPressed = stateHolder::onForceRefreshTriggered,
                 onDeleteLocalDataPressed = stateHolder::onDeleteLocalDataPressed,
                 onQueryChanged = stateHolder::onQueryChanged
