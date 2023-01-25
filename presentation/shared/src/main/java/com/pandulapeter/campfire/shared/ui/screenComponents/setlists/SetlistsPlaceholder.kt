@@ -1,4 +1,4 @@
-package com.pandulapeter.campfire.shared.ui.screenComponents.playlists
+package com.pandulapeter.campfire.shared.ui.screenComponents.setlists
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,7 +12,7 @@ import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
 
 @Composable
-fun PlaylistsPlaceholder(
+fun SetlistsPlaceholder(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings
 ) = RoundedCard(
@@ -21,6 +21,6 @@ fun PlaylistsPlaceholder(
     Text(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         textAlign = TextAlign.Center,
-        text = uiStrings.playlists
+        text = uiStrings.setlists
     )
 }

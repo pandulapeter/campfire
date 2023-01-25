@@ -23,7 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import com.pandulapeter.campfire.presentation.android.catalogue.CampfireAndroidTheme
-import com.pandulapeter.campfire.presentation.android.screens.PlaylistsScreenAndroid
+import com.pandulapeter.campfire.presentation.android.screens.SetlistsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.screens.SettingsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.screens.SongsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.utilities.keyboardState
@@ -134,7 +134,7 @@ private fun Content(
             pullRefreshState = songsScreenPullRefreshState,
             lazyListState = songsScreenScrollState
         )
-        CampfireViewModel.NavigationDestination.PLAYLISTS -> PlaylistsScreenAndroid(
+        CampfireViewModel.NavigationDestination.SETLISTS -> SetlistsScreenAndroid(
             stateHolder = stateHolder
         )
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreenAndroid(

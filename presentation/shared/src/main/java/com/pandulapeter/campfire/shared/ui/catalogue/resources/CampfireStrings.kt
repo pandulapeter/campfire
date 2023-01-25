@@ -2,12 +2,8 @@ package com.pandulapeter.campfire.shared.ui.catalogue.resources
 
 sealed class CampfireStrings {
 
-    // General
-    abstract val songs: String
-    abstract val playlists: String
-    abstract val settings: String
-
     // Songs screen
+    abstract val songs: String
     abstract val songsFilters: String
     abstract val songsSearch: String
     abstract val songsClear: String
@@ -20,7 +16,11 @@ sealed class CampfireStrings {
     abstract val songsNoData: String
     abstract val songsHeader: (songCount: Int) -> String
 
+    // Setlists screen
+    abstract val setlists: String
+
     // Settings screen
+    abstract val settings: String
     abstract val settingsAllDatabases: String
     abstract val settingsAddNewDatabase: String
     abstract val settingsUserInterfaceTheme: String
@@ -33,9 +33,9 @@ sealed class CampfireStrings {
     abstract val settingsUserInterfaceLanguageHungarian: String
 
     object English : CampfireStrings() {
+
+        // Songs screen
         override val songs = "Songs"
-        override val playlists = "Playlists"
-        override val settings = "Settings"
         override val songsFilters = "Filters"
         override val songsSearch = "Search"
         override val songsClear = "Clear"
@@ -47,6 +47,12 @@ sealed class CampfireStrings {
         override val songsDeleteLocalData = "Delete saved songs"
         override val songsNoData = "No songs to show"
         override val songsHeader: (songCount: Int) -> String = { "Songs ($it)" }
+
+        // Setlists screen
+        override val setlists = "Setlists"
+
+        // Settings screen
+        override val settings = "Settings"
         override val settingsAllDatabases = "All databases"
         override val settingsAddNewDatabase = "Add new database"
         override val settingsUserInterfaceTheme = "User interface theme"
@@ -60,9 +66,9 @@ sealed class CampfireStrings {
     }
 
     object Hungarian : CampfireStrings() {
+
+        // Songs screen
         override val songs = "Dalok"
-        override val playlists = "Listák"
-        override val settings = "Beállítások"
         override val songsFilters = "Szűrők"
         override val songsSearch = "Keresés"
         override val songsClear = "Törlés"
@@ -74,6 +80,12 @@ sealed class CampfireStrings {
         override val songsDeleteLocalData = "Mentett dalok törlése"
         override val songsNoData = "Nincsenek dalok"
         override val songsHeader: (songCount: Int) -> String = { "Dalok ($it)" }
+
+        // Setlists screen
+        override val setlists = "Listák"
+
+        // Settings screen
+        override val settings = "Beállítások"
         override val settingsAllDatabases = "Minden adatbázis"
         override val settingsAddNewDatabase = "Új adatbázis hozzáadása"
         override val settingsUserInterfaceTheme = "Felhasználói felület témája"

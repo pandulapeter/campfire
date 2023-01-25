@@ -108,7 +108,7 @@ class CampfireViewModel(
         val icon: ImageVector
     ) {
         SONGS(CampfireIcons.songs),
-        PLAYLISTS(CampfireIcons.playlists),
+        SETLISTS(CampfireIcons.setlists),
         SETTINGS(CampfireIcons.settings)
     }
 }

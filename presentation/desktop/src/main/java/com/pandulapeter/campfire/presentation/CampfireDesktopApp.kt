@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.catalogue.CampfireDesktopTheme
-import com.pandulapeter.campfire.presentation.screens.PlaylistsScreensDesktop
+import com.pandulapeter.campfire.presentation.screens.SetlistsScreensDesktop
 import com.pandulapeter.campfire.presentation.screens.SettingsScreensDesktop
 import com.pandulapeter.campfire.presentation.screens.SongsScreenDesktop
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
@@ -122,7 +122,7 @@ private fun Content(
             shouldUseExpandedUi = shouldUseExpandedUi,
             lazyListState = songsScreenScrollState
         )
-        CampfireViewModel.NavigationDestination.PLAYLISTS -> PlaylistsScreensDesktop(
+        CampfireViewModel.NavigationDestination.SETLISTS -> SetlistsScreensDesktop(
             stateHolder = stateHolder
         )
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreensDesktop(

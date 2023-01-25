@@ -68,7 +68,7 @@ fun CampfireAppBar(
             modifier = statusBarModifier,
             text = when (selectedNavigationDestination) {
                 CampfireViewModel.NavigationDestination.SONGS -> uiStrings.songs
-                CampfireViewModel.NavigationDestination.PLAYLISTS -> uiStrings.playlists
+                CampfireViewModel.NavigationDestination.SETLISTS -> uiStrings.setlists
                 CampfireViewModel.NavigationDestination.SETTINGS -> uiStrings.settings
                 null -> ""
             }
@@ -96,7 +96,7 @@ fun CampfireNavigationRail(
                     imageVector = navigationDestination.destination.icon,
                     contentDescription = when (navigationDestination.destination) {
                         CampfireViewModel.NavigationDestination.SONGS -> uiStrings.songs
-                        CampfireViewModel.NavigationDestination.PLAYLISTS -> uiStrings.playlists
+                        CampfireViewModel.NavigationDestination.SETLISTS -> uiStrings.setlists
                         CampfireViewModel.NavigationDestination.SETTINGS -> uiStrings.settings
                     }
                 )
@@ -127,7 +127,7 @@ fun CampfireBottomNavigationBar(
                     imageVector = navigationDestination.destination.icon,
                     contentDescription = when (navigationDestination.destination) {
                         CampfireViewModel.NavigationDestination.SONGS -> uiStrings.songs
-                        CampfireViewModel.NavigationDestination.PLAYLISTS -> uiStrings.playlists
+                        CampfireViewModel.NavigationDestination.SETLISTS -> uiStrings.setlists
                         CampfireViewModel.NavigationDestination.SETTINGS -> uiStrings.settings
                     }
                 )

@@ -4,7 +4,7 @@ import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.DatabaseRepository
-import com.pandulapeter.campfire.data.repository.api.PlaylistRepository
+import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.models.ScreenData
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 class GetScreenDataUseCaseImpl internal constructor(
     normalizeText: NormalizeTextUseCase,
     databaseRepository: DatabaseRepository,
-    playlistRepository: PlaylistRepository,
+    setlistRepository: SetlistRepository,
     songRepository: SongRepository,
     userPreferencesRepository: UserPreferencesRepository
 ) : GetScreenDataUseCase {
@@ -26,22 +26,22 @@ class GetScreenDataUseCaseImpl internal constructor(
     private var cache: ScreenData? = null
     private val screenDataFlow = combine(
         databaseRepository.databases,
-        playlistRepository.playlists,
+        setlistRepository.setlists,
         songRepository.songs,
         userPreferencesRepository.userPreferences
     ) { databasesDataState,
-        playlistsDataState,
+        setlistsDataState,
         songsDataState,
         userPreferencesDataState ->
 
         fun createScreenData() = databasesDataState.data?.sortedBy { it.priority }?.let { databases ->
-            playlistsDataState.data?.sortedBy { it.priority }?.let { playlists ->
+            setlistsDataState.data?.sortedBy { it.priority }?.let { setlists ->
                 songsDataState.data?.let { songs ->
                     userPreferencesDataState.data?.let { userPreferences ->
                         val filteredDatabases = databases.filter { it.isEnabled }.filter { !userPreferences.unselectedDatabaseUrls.contains(it.url) }
                         ScreenData(
                             databases = databases,
-                            playlists = playlists,
+                            setlists = setlists,
                             songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }
                                 .distinctBy { it.id }
                                 .filter { it.isPublic }
@@ -60,7 +60,7 @@ class GetScreenDataUseCaseImpl internal constructor(
 
         val dataStates = arrayOf(
             databasesDataState,
-            playlistsDataState,
+            setlistsDataState,
             songsDataState,
             userPreferencesDataState
         )

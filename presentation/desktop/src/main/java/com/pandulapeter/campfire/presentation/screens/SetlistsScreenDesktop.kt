@@ -5,13 +5,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
-import com.pandulapeter.campfire.shared.ui.screenComponents.playlists.PlaylistsPlaceholder
+import com.pandulapeter.campfire.shared.ui.screenComponents.setlists.SetlistsPlaceholder
 
 @Composable
-internal fun PlaylistsScreensDesktop(
+internal fun SetlistsScreensDesktop(
     modifier: Modifier = Modifier,
     stateHolder: CampfireViewModelStateHolder
-) = PlaylistsPlaceholder(
+) = SetlistsPlaceholder(
     modifier = modifier.padding(8.dp),
     uiStrings = stateHolder.uiStrings.value
 )

@@ -1,16 +1,16 @@
 package com.pandulapeter.campfire.data.source.local.implementationDesktop.mapper
 
-import com.pandulapeter.campfire.data.model.domain.Playlist
-import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.PlaylistEntity
+import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.SetlistEntity
 
-internal fun PlaylistEntity.toModel() = Playlist(
+internal fun SetlistEntity.toModel() = Setlist(
     id = id,
     title = title,
     songIds = songIds.mapToList(),
     priority = priority
 )
 
-internal fun Playlist.toEntity() = PlaylistEntity().also {
+internal fun Setlist.toEntity() = SetlistEntity().also {
     it.id = id
     it.title = title
     it.songIds = songIds.mapToString()
