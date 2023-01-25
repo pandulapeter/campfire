@@ -87,6 +87,10 @@ class CampfireViewModel(
         userPreferences.copy(uiMode = uiMode)
     )
 
+    suspend fun onLanguageChanged(userPreferences: UserPreferences, language: UserPreferences.Language) = saveUserPreferences(
+        userPreferences.copy(language = language)
+    )
+
     suspend fun onForceRefreshTriggered() = loadScreenData(true)
 
     suspend fun onDeleteLocalDataPressed() = deleteLocalData()

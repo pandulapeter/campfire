@@ -82,6 +82,15 @@ data class CampfireViewModelStateHolder(
         }
     }
 
+    fun onLanguageChanged(language: UserPreferences.Language) = userPreferences.value?.let { userPreferences ->
+        coroutineScope.launch {
+            viewModel.onLanguageChanged(
+                userPreferences = userPreferences,
+                language = language
+            )
+        }
+    }
+
     companion object {
 
         @Composable

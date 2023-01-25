@@ -24,9 +24,13 @@ sealed class CampfireStrings {
     abstract val settingsAllDatabases: String
     abstract val settingsAddNewDatabase: String
     abstract val settingsUserInterfaceTheme: String
+    abstract val settingsUserInterfaceThemeSystemDefault: String
     abstract val settingsUserInterfaceThemeDark: String
     abstract val settingsUserInterfaceThemeLight: String
-    abstract val settingsUserInterfaceThemeSystemDefault: String
+    abstract val settingsUserInterfaceLanguage: String
+    abstract val settingsUserInterfaceLanguageSystemDefault: String
+    abstract val settingsUserInterfaceLanguageEnglish: String
+    abstract val settingsUserInterfaceLanguageHungarian: String
 
     object English : CampfireStrings() {
         override val songs = "Songs"
@@ -46,9 +50,13 @@ sealed class CampfireStrings {
         override val settingsAllDatabases = "All databases"
         override val settingsAddNewDatabase = "Add new database"
         override val settingsUserInterfaceTheme = "User interface theme"
+        override val settingsUserInterfaceThemeSystemDefault = "System default"
         override val settingsUserInterfaceThemeDark = "Dark"
         override val settingsUserInterfaceThemeLight = "Light"
-        override val settingsUserInterfaceThemeSystemDefault = "System default"
+        override val settingsUserInterfaceLanguage = "Language"
+        override val settingsUserInterfaceLanguageSystemDefault = "System default"
+        override val settingsUserInterfaceLanguageEnglish = "English"
+        override val settingsUserInterfaceLanguageHungarian = "Hungarian"
     }
 
     object Hungarian : CampfireStrings() {
@@ -60,7 +68,7 @@ sealed class CampfireStrings {
         override val songsClear = "Törlés"
         override val songsShowExplicit = "Explicit dalok mutatása"
         override val songsShowWithoutChords = "Akkord nélküli dalok mutatása"
-        override val songsDatabaseFilter: (databaseName: String) -> String = { "$it adatbázis" }
+        override val songsDatabaseFilter: (databaseName: String) -> String = { "\"$it\" adatbázis" }
         override val songsActions = "Akciók"
         override val songsRefresh = "Frissítés"
         override val songsDeleteLocalData = "Mentett dalok törlése"
@@ -69,8 +77,12 @@ sealed class CampfireStrings {
         override val settingsAllDatabases = "Minden adatbázis"
         override val settingsAddNewDatabase = "Új adatbázis hozzáadása"
         override val settingsUserInterfaceTheme = "Felhasználói felület témája"
+        override val settingsUserInterfaceThemeSystemDefault = "Rendszer alapértelmezett"
         override val settingsUserInterfaceThemeDark = "Sötét"
         override val settingsUserInterfaceThemeLight = "Világos"
-        override val settingsUserInterfaceThemeSystemDefault = "Rendszer alapértelmezett"
+        override val settingsUserInterfaceLanguage = "Language"
+        override val settingsUserInterfaceLanguageSystemDefault = "Rendszer alapértelmezett"
+        override val settingsUserInterfaceLanguageEnglish = "Angol"
+        override val settingsUserInterfaceLanguageHungarian = "Magyar"
     }
 }

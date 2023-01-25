@@ -17,5 +17,7 @@ internal fun SettingsScreensDesktop(
     databases = stateHolder.databases.value,
     onDatabaseEnabledChanged = stateHolder::onDatabaseEnabledChanged,
     selectedUiMode = stateHolder.userPreferences.value?.uiMode,
-    onSelectedUiModeChanged = stateHolder::onUiModeChanged
+    onSelectedUiModeChanged = stateHolder::onUiModeChanged,
+    selectedLanguage = stateHolder.userPreferences.value?.language,
+    onSelectedLanguageChanged = stateHolder::onLanguageChanged
 )

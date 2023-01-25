@@ -25,7 +25,9 @@ fun SettingsContentList(
     databases: List<Database>,
     onDatabaseEnabledChanged: (Database, Boolean) -> Unit,
     selectedUiMode: UserPreferences.UiMode?,
-    onSelectedUiModeChanged: (UserPreferences.UiMode) -> Unit
+    onSelectedUiModeChanged: (UserPreferences.UiMode) -> Unit,
+    selectedLanguage: UserPreferences.Language?,
+    onSelectedLanguageChanged: (UserPreferences.Language) -> Unit
 ) = LazyColumn(
     modifier = modifier.widthIn(max = 300.dp),
     horizontalAlignment = Alignment.CenterHorizontally
@@ -60,6 +62,14 @@ fun SettingsContentList(
             text = uiStrings.settingsUserInterfaceTheme
         )
     }
+    item(key = "header_user_interface_theme_system_default") {
+        RadioButtonItem(
+            modifier = Modifier.animateItemPlacement(),
+            text = uiStrings.settingsUserInterfaceThemeSystemDefault,
+            isChecked = selectedUiMode == UserPreferences.UiMode.SYSTEM_DEFAULT,
+            onClick = { onSelectedUiModeChanged(UserPreferences.UiMode.SYSTEM_DEFAULT) }
+        )
+    }
     item(key = "header_user_interface_theme_dark") {
         RadioButtonItem(
             modifier = Modifier.animateItemPlacement(),
@@ -76,12 +86,34 @@ fun SettingsContentList(
             onClick = { onSelectedUiModeChanged(UserPreferences.UiMode.LIGHT) }
         )
     }
-    item(key = "header_user_interface_theme_system_default") {
+    item(key = "header_user_interface_language") {
+        HeaderItem(
+            modifier = Modifier.animateItemPlacement(),
+            text = uiStrings.settingsUserInterfaceLanguage
+        )
+    }
+    item(key = "header_user_interface_language_system_default") {
         RadioButtonItem(
             modifier = Modifier.animateItemPlacement(),
-            text = uiStrings.settingsUserInterfaceThemeSystemDefault,
-            isChecked = selectedUiMode == UserPreferences.UiMode.SYSTEM_DEFAULT,
-            onClick = { onSelectedUiModeChanged(UserPreferences.UiMode.SYSTEM_DEFAULT) }
+            text = uiStrings.settingsUserInterfaceLanguageSystemDefault,
+            isChecked = selectedLanguage == UserPreferences.Language.SYSTEM_DEFAULT,
+            onClick = { onSelectedLanguageChanged(UserPreferences.Language.SYSTEM_DEFAULT) }
+        )
+    }
+    item(key = "header_user_interface_language_english") {
+        RadioButtonItem(
+            modifier = Modifier.animateItemPlacement(),
+            text = uiStrings.settingsUserInterfaceLanguageEnglish,
+            isChecked = selectedLanguage == UserPreferences.Language.ENGLISH,
+            onClick = { onSelectedLanguageChanged(UserPreferences.Language.ENGLISH) }
+        )
+    }
+    item(key = "header_user_interface_language_hungarian") {
+        RadioButtonItem(
+            modifier = Modifier.animateItemPlacement(),
+            text = uiStrings.settingsUserInterfaceLanguageHungarian,
+            isChecked = selectedLanguage == UserPreferences.Language.HUNGARIAN,
+            onClick = { onSelectedLanguageChanged(UserPreferences.Language.HUNGARIAN) }
         )
     }
 }
