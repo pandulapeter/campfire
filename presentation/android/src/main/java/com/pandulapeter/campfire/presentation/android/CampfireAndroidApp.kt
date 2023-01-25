@@ -6,6 +6,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -56,7 +57,7 @@ fun CampfireAndroidApp(
             modifier = Modifier
                 .imePadding()
                 .statusBarsPadding(),
-            statusBarModifier = Modifier.statusBarsPadding(),
+            statusBarModifier = Modifier.statusBarsPadding().displayCutoutPadding(), // TODO: Landscape issues .navigationBarsPadding(),
             navigationDestinations = stateHolder.navigationDestinations.value,
             isInLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
             uiStrings = stateHolder.uiStrings.value,

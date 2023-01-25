@@ -40,9 +40,12 @@ fun CampfireScaffold(
             bottomNavigationBar()
         }
     },
-    content =
-    { scaffoldPadding ->
-        if (isInLandscape) navigationRail(scaffoldPadding) { content(null) } else content(scaffoldPadding)
+    content = { scaffoldPadding ->
+        if (isInLandscape) {
+            navigationRail(scaffoldPadding) { content(null) }
+        } else {
+            content(scaffoldPadding)
+        }
     }
 )
 

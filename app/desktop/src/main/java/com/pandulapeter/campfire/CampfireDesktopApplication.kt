@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire
 
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
@@ -27,7 +28,8 @@ fun main() = application {
     Window(
         title = "Campfire",
         onCloseRequest = ::exitApplication,
-        state = windowState
+        state = windowState,
+        icon = painterResource("appIcon.png")
     ) {
         window.minimumSize = Dimension(400, 400)
         CampfireDesktopApp(

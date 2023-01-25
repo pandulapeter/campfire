@@ -21,12 +21,20 @@ version = versionName
 
 compose.desktop {
     application {
-        // TODO: https://github.com/JetBrains/compose-jb/tree/master/tutorials/Native_distributions_and_local_execution#app-icon
         mainClass = "com.pandulapeter.campfire.CampfireDesktopApplicationKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Campfire"
             packageVersion = versionName
+            macOS {
+                iconFile.set(project.file("appIcon.icns"))
+            }
+            windows {
+                iconFile.set(project.file("appIcon.ico"))
+            }
+            linux {
+                iconFile.set(project.file("appIcon.png"))
+            }
         }
     }
 }
