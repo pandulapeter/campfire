@@ -1,11 +1,18 @@
 package com.pandulapeter.campfire.shared.ui
 
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.SongDetails
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.catalogue.utilities.getUiStrings
@@ -14,7 +21,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-data class CampfireViewModelStateHolder(
+data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) constructor(
     private val viewModel: CampfireViewModel,
     private val coroutineScope: CoroutineScope,
     val uiStrings: State<CampfireStrings>,
@@ -25,11 +32,25 @@ data class CampfireViewModelStateHolder(
     val isRefreshing: State<Boolean>,
     val query: State<String>,
     val databases: State<List<Database>>,
-    val songs: State<List<Song>>
+    val songs: State<List<Song>>,
+    val songDetails: State<SongDetails?>,
+    val modalBottomSheetState: ModalBottomSheetState,
+    val songDetailsScrollState: ScrollState
 ) {
     fun onQueryChanged(query: String) = viewModel.onQueryChanged(query)
 
-    fun onSongClicked(song: Song) = coroutineScope.launch { viewModel.onSongClicked(song) }
+    @OptIn(ExperimentalMaterialApi::class)
+    fun onSongClicked(song: Song) = coroutineScope.launch {
+        viewModel.onSongClicked(song)
+        songDetailsScrollState.scrollTo(0)
+        modalBottomSheetState.show()
+    }
+
+    @OptIn(ExperimentalMaterialApi::class)
+    fun onSongClosed() = coroutineScope.launch {
+        modalBottomSheetState.hide()
+        viewModel.onSongClicked(null)
+    }
 
     fun onForceRefreshTriggered() = coroutineScope.launch { viewModel.onForceRefreshTriggered() }
 
@@ -102,6 +123,7 @@ data class CampfireViewModelStateHolder(
 
     companion object {
 
+        @OptIn(ExperimentalMaterialApi::class)
         @Composable
         fun fromViewModel(viewModel: CampfireViewModel) = CampfireViewModelStateHolder(
             viewModel = viewModel,
@@ -114,7 +136,14 @@ data class CampfireViewModelStateHolder(
             isRefreshing = viewModel.shouldShowLoadingIndicator.collectAsState(false),
             query = viewModel.query.collectAsState(""),
             databases = viewModel.databases.collectAsState(emptyList()),
-            songs = viewModel.songs.collectAsState(emptyList())
+            songs = viewModel.songs.collectAsState(emptyList()),
+            songDetails = viewModel.songDetails.collectAsState(null),
+            modalBottomSheetState = rememberModalBottomSheetState(
+                initialValue = ModalBottomSheetValue.Hidden,
+                confirmStateChange = { it != ModalBottomSheetValue.HalfExpanded },
+                skipHalfExpanded = true
+            ),
+            songDetailsScrollState = rememberScrollState()
         )
     }
 }

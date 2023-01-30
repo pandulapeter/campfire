@@ -8,5 +8,5 @@ class LoadSongDetailsUseCaseImpl internal constructor(
     private val songDetailsRepository: SongDetailsRepository
 ) : LoadSongDetailsUseCase {
 
-    override suspend fun invoke(song: Song, isForceRefresh: Boolean) = songDetailsRepository.loadSongDetails(song, isForceRefresh)
+    override suspend fun invoke(song: Song?, isForceRefresh: Boolean) = songDetailsRepository.loadSongDetails(song, isForceRefresh)
 }

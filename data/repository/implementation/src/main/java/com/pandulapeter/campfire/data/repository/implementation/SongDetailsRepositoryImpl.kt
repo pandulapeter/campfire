@@ -14,19 +14,23 @@ internal class SongDetailsRepositoryImpl(
     private val _songDetails = MutableStateFlow<DataState<SongDetails>>(DataState.Failure(null))
     override val songDetails = _songDetails
 
-    override suspend fun loadSongDetails(song: Song, isForceRefresh: Boolean) {
-        val currentSong = _songDetails.value.data
-        _songDetails.value = DataState.Loading(if (currentSong?.song?.id == song.id) currentSong else null)
-        try {
-            _songDetails.value = DataState.Idle(
-                SongDetails(
-                    song = song,
-                    rawData = songDetailsRemoteSource.loadSongDetails(song.url)
+    override suspend fun loadSongDetails(song: Song?, isForceRefresh: Boolean) {
+        if (song == null) {
+            _songDetails.value = DataState.Failure(null)
+        } else {
+            val currentSong = _songDetails.value.data
+            _songDetails.value = DataState.Loading(if (currentSong?.song?.id == song.id) currentSong else null)
+            try {
+                _songDetails.value = DataState.Idle(
+                    SongDetails(
+                        song = song,
+                        rawData = songDetailsRemoteSource.loadSongDetails(song.url)
+                    )
                 )
-            )
-        } catch (exception: Exception) {
-            println(exception.message)
-            _songDetails.value = DataState.Failure(_songDetails.value.data)
+            } catch (exception: Exception) {
+                println(exception.message)
+                _songDetails.value = DataState.Failure(_songDetails.value.data)
+            }
         }
     }
 }

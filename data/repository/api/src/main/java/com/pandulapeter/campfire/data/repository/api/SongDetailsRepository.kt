@@ -9,5 +9,5 @@ interface SongDetailsRepository {
 
     val songDetails: Flow<DataState<SongDetails>>
 
-    suspend fun loadSongDetails(song: Song, isForceRefresh: Boolean)
+    suspend fun loadSongDetails(song: Song?, isForceRefresh: Boolean)
 }

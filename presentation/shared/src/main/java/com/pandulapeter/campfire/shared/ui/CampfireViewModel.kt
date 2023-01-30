@@ -40,6 +40,7 @@ class CampfireViewModel(
         val normalizedQuery = normalizeText(query)
         songs.filter { normalizeText(it.title).contains(normalizedQuery, true) || normalizeText(it.artist).contains(normalizedQuery, true) }
     }.distinctUntilChanged()
+    val songDetails = getSongDetails().map { it.data }.distinctUntilChanged()
     val databases = getScreenData().map { it.data?.databases.orEmpty() }.distinctUntilChanged()
     val userPreferences = getScreenData().map { it.data?.userPreferences }.distinctUntilChanged()
     val uiMode = userPreferences.map { it?.uiMode }
@@ -75,7 +76,7 @@ class CampfireViewModel(
         _query.value = newQuery
     }
 
-    suspend fun onSongClicked(song: Song) = loadSongDetails(song, false)
+    suspend fun onSongClicked(song: Song?) = loadSongDetails(song, false)
 
     suspend fun onShouldShowExplicitSongsChanged(userPreferences: UserPreferences, shouldShowExplicitSongs: Boolean) = saveUserPreferences(
         userPreferences.copy(shouldShowExplicitSongs = shouldShowExplicitSongs)

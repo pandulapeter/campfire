@@ -69,6 +69,10 @@ fun CampfireAndroidApp(
                 .systemBarsPadding()
                 .imePadding(),
             uiStrings = stateHolder.uiStrings.value,
+            songDetails = stateHolder.songDetails.value,
+            onSongClosed = stateHolder::onSongClosed,
+            modalBottomSheetState = stateHolder.modalBottomSheetState,
+            songDetailsScrollState = stateHolder.songDetailsScrollState,
             query = stateHolder.query.value,
             onQueryChanged = stateHolder::onQueryChanged,
             navigationDestinations = stateHolder.navigationDestinations.value,

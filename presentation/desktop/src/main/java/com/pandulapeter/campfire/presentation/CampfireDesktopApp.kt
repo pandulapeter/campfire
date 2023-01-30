@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -31,7 +32,7 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireScaffold
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import org.koin.java.KoinJavaComponent
 
-@OptIn(ExperimentalAnimationApi::class)
+@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun CampfireDesktopApp(
     viewModel: CampfireViewModel = KoinJavaComponent.get(CampfireViewModel::class.java),
@@ -49,6 +50,10 @@ fun CampfireDesktopApp(
         CampfireScaffold(
             navigationDestinations = stateHolder.navigationDestinations.value,
             uiStrings = stateHolder.uiStrings.value,
+            songDetails = stateHolder.songDetails.value,
+            onSongClosed = stateHolder::onSongClosed,
+            modalBottomSheetState = stateHolder.modalBottomSheetState,
+            songDetailsScrollState = stateHolder.songDetailsScrollState,
             query = stateHolder.query.value,
             onQueryChanged = stateHolder::onQueryChanged,
             isInLandscape = windowSize.width > windowSize.height,

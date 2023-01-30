@@ -43,15 +43,30 @@ fun SongsContentList(
             val previousSong = if (index == 0) null else songs[index - 1]
             when (sortingMode ?: UserPreferences.SortingMode.BY_ARTIST) {
                 UserPreferences.SortingMode.BY_TITLE -> {
-                    if (normalizeText(song.title.take(1)) != normalizeText(previousSong?.title?.take(1).orEmpty())) {
-                        val text = normalizeText(song.title.take(1)).uppercase()
-                        item(
-                            key = "header_${text}"
-                        ) {
-                            HeaderItem(
-                                modifier = Modifier.animateItemPlacement(),
-                                text = text
-                            )
+                    val firstCharacter = normalizeText(song.title.take(1))
+                    val previousFirstCharacter = normalizeText(previousSong?.title?.take(1).orEmpty())
+                    if (firstCharacter != previousFirstCharacter) {
+                        if (!firstCharacter.first().isLetter() && previousFirstCharacter.firstOrNull()?.isLetter() != true) {
+                            if (previousSong == null) {
+                                item(
+                                    key = "header_non_letters"
+                                ) {
+                                    HeaderItem(
+                                        modifier = Modifier.animateItemPlacement(),
+                                        text = uiStrings.songsUnsortedLabel
+                                    )
+                                }
+                            }
+                        } else {
+                            val text = normalizeText(song.title.take(1)).uppercase()
+                            item(
+                                key = "header_${text}"
+                            ) {
+                                HeaderItem(
+                                    modifier = Modifier.animateItemPlacement(),
+                                    text = text
+                                )
+                            }
                         }
                     }
                 }
