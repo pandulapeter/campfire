@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.verticalScroll
@@ -53,7 +54,9 @@ fun CampfireScaffold(
     navigationRail: @Composable (scaffoldPadding: PaddingValues, content: @Composable () -> Unit) -> Unit,
     content: @Composable (scaffoldPadding: PaddingValues?) -> Unit
 ) = ModalBottomSheetLayout(
+    modifier = modifier,
     sheetState = modalBottomSheetState,
+    sheetElevation = 0.dp,
     scrimColor = Color.Transparent,
     sheetContent = {
         if (songDetails == null) {
@@ -72,17 +75,17 @@ fun CampfireScaffold(
                         )
                     }
                 },
+                backgroundColor = MaterialTheme.colors.background,
                 title = { Text(text = songDetails.song.title) }
             )
             Text(
-                modifier = Modifier.verticalScroll(songDetailsScrollState).padding(16.dp),
+                modifier = Modifier.fillMaxWidth().verticalScroll(songDetailsScrollState).padding(16.dp),
                 text = songDetails.rawData
             )
         }
     }
 ) {
     Scaffold(
-        modifier = modifier,
         topBar = {
             val selectedNavigationDestination = navigationDestinations.firstOrNull { it.isSelected }?.destination
             CampfireAppBar(
