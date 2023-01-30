@@ -35,8 +35,6 @@ internal fun SongsScreenDesktop(
         SongsControlsList(
             modifier = Modifier.fillMaxSize(),
             uiStrings = stateHolder.uiStrings.value,
-            songCount = stateHolder.songs.value.size,
-            query = stateHolder.query.value,
             databases = stateHolder.databases.value,
             unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
             shouldShowExplicitSongs = stateHolder.userPreferences.value?.shouldShowExplicitSongs == true,
@@ -46,7 +44,6 @@ internal fun SongsScreenDesktop(
             onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged,
             onForceRefreshPressed = stateHolder::onForceRefreshTriggered,
             onDeleteLocalDataPressed = stateHolder::onDeleteLocalDataPressed,
-            onQueryChanged = stateHolder::onQueryChanged,
             sortingMode = stateHolder.userPreferences.value?.sortingMode,
             onSortingModeChanged = stateHolder::onSortingModeChanged
         )

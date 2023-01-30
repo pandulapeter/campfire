@@ -4,7 +4,7 @@ sealed class CampfireStrings {
 
     // Songs screen
     abstract val songs: String
-    abstract val songsFilters: (songCount: Int) -> String
+    abstract val songsFilters: String
     abstract val songsSearch: String
     abstract val songsClear: String
     abstract val songsShowExplicit: String
@@ -38,7 +38,7 @@ sealed class CampfireStrings {
 
         // Songs screen
         override val songs = "Songs"
-        override val songsFilters: (songCount: Int) -> String = { "Filters ($it songs)" }
+        override val songsFilters = "Filters"
         override val songsSearch = "Search"
         override val songsClear = "Clear"
         override val songsShowExplicit = "Show explicit songs"
@@ -73,7 +73,7 @@ sealed class CampfireStrings {
 
         // Songs screen
         override val songs = "Dalok"
-        override val songsFilters: (songCount: Int) -> String = { "Szűrők ($it dal)" }
+        override val songsFilters = "Szűrők"
         override val songsSearch = "Keresés"
         override val songsClear = "Törlés"
         override val songsShowExplicit = "Explicit dalok mutatása"

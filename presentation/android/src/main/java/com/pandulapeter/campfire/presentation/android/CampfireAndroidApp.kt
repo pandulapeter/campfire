@@ -63,6 +63,8 @@ fun CampfireAndroidApp(
         CampfireScaffold(
             modifier = Modifier.safeContentPadding(),
             uiStrings = stateHolder.uiStrings.value,
+            query = stateHolder.query.value,
+            onQueryChanged = stateHolder::onQueryChanged,
             navigationDestinations = stateHolder.navigationDestinations.value,
             isInLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
             appBarActions = {

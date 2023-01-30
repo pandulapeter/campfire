@@ -4,6 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -13,6 +14,7 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.CheckboxItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.ClickableControlItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.HeaderItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.RadioButtonItem
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
 
@@ -52,6 +54,12 @@ fun SettingsContentList(
         ClickableControlItem(
             modifier = Modifier.animateItemPlacement(),
             text = uiStrings.settingsAddNewDatabase,
+            icon = {
+                Icon(
+                    imageVector = CampfireIcons.add,
+                    contentDescription = uiStrings.settingsAddNewDatabase
+                )
+            },
             onClick = { } // TODO
         )
     }

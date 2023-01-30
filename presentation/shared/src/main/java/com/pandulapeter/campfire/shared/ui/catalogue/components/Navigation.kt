@@ -1,7 +1,11 @@
 package com.pandulapeter.campfire.shared.ui.catalogue.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
@@ -11,9 +15,9 @@ import androidx.compose.material.NavigationRailItem
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
-import androidx.compose.material.primarySurface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
@@ -22,6 +26,8 @@ import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
 fun CampfireScaffold(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
+    query: String,
+    onQueryChanged: (String) -> Unit,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     isInLandscape: Boolean,
     appBarActions: @Composable RowScope.() -> Unit,
@@ -31,10 +37,24 @@ fun CampfireScaffold(
 ) = Scaffold(
     modifier = modifier,
     topBar = {
+        val selectedNavigationDestination = navigationDestinations.firstOrNull { it.isSelected }?.destination
         CampfireAppBar(
             uiStrings = uiStrings,
-            selectedNavigationDestination = navigationDestinations.firstOrNull { it.isSelected }?.destination,
-            actions = appBarActions
+            selectedNavigationDestination = selectedNavigationDestination,
+            actions = {
+                appBarActions()
+                Spacer(modifier = Modifier.width(8.dp))
+                AnimatedVisibility(
+                    visible = selectedNavigationDestination == CampfireViewModel.NavigationDestination.SONGS
+                ) {
+                    SearchItem(
+                        modifier = Modifier.width(180.dp).padding(vertical = 8.dp).padding(end = 4.dp),
+                        uiStrings = uiStrings,
+                        query = query,
+                        onQueryChanged = onQueryChanged
+                    )
+                }
+            }
         )
     },
     bottomBar = {

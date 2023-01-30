@@ -3,7 +3,9 @@ package com.pandulapeter.campfire.shared.ui.catalogue.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,25 +13,29 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Checkbox
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
@@ -125,58 +131,88 @@ internal fun RadioButtonItem(
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun SearchItem(
     modifier: Modifier = Modifier,
-    query: String,
     uiStrings: CampfireStrings,
+    query: String,
     onQueryChanged: (String) -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val colors = TextFieldDefaults.textFieldColors()
 
-    OutlinedTextField(
-        modifier = modifier,
-        leadingIcon = {
-            Icon(
-                imageVector = CampfireIcons.search,
-                contentDescription = uiStrings.songsSearch
-            )
-        },
-        trailingIcon = {
-            AnimatedVisibility(
-                visible = query.isNotEmpty(),
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                Icon(
-                    modifier = Modifier.wrapContentSize().padding(8.dp).clip(shape = CircleShape).clickable { onQueryChanged("") }.padding(8.dp),
-                    imageVector = CampfireIcons.clear,
-                    contentDescription = uiStrings.songsClear,
-                )
-            }
-        },
-        label = { Text(uiStrings.songsSearch) },
-        singleLine = true,
+    BasicTextField(
+        modifier = modifier.background(colors.backgroundColor(true).value, MaterialTheme.shapes.small),
+        value = query,
+        textStyle = LocalTextStyle.current.merge(TextStyle(color = colors.textColor(true).value)),
+        cursorBrush = SolidColor(colors.cursorColor(false).value),
+        onValueChange = onQueryChanged,
+        interactionSource = interactionSource,
         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = {
             keyboardController?.hide()
         }),
-        value = query,
-        onValueChange = onQueryChanged
-    )
+        singleLine = true
+    ) {
+        TextFieldDefaults.TextFieldDecorationBox(
+            value = query,
+            innerTextField = it,
+            singleLine = true,
+            enabled = true,
+            visualTransformation = VisualTransformation.None,
+            leadingIcon = {
+                Icon(
+                    imageVector = CampfireIcons.search,
+                    contentDescription = uiStrings.songsSearch
+                )
+            },
+            trailingIcon = {
+                AnimatedVisibility(
+                    visible = query.isNotEmpty(),
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    IconButton(onClick = { onQueryChanged("") }) {
+                        Icon(
+                            imageVector = CampfireIcons.clear,
+                            contentDescription = uiStrings.songsClear
+                        )
+                    }
+                }
+            },
+            placeholder = { Text(text = uiStrings.songsSearch) },
+            interactionSource = interactionSource,
+            contentPadding = TextFieldDefaults.textFieldWithoutLabelPadding(
+                top = 2.dp,
+                bottom = 2.dp
+            )
+        )
+    }
 }
 
 @Composable
 internal fun ClickableControlItem(
     modifier: Modifier = Modifier,
     text: String,
+    icon: (@Composable () -> Unit)? = null,
     onClick: () -> Unit
 ) = RoundedCard(
     modifier = modifier
 ) {
-    Text(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(16.dp),
-        text = text
-    )
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        icon?.let {
+            Spacer(modifier = Modifier.width(4.dp))
+            it()
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        Text(
+            modifier = Modifier.padding(8.dp),
+            text = text
+        )
+    }
 }

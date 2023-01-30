@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.shared.ui.catalogue.resources
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
@@ -19,6 +20,7 @@ object CampfireIcons {
     val settings = Icons.Rounded.Settings
     val clear = Icons.Rounded.Clear
     val search = Icons.Rounded.Search
+    val add = Icons.Rounded.Add
 
     private fun makeIconFromXMLPath(
         pathStr: String,

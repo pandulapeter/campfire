@@ -51,6 +51,8 @@ fun CampfireDesktopApp(
         CampfireScaffold(
             navigationDestinations = stateHolder.navigationDestinations.value,
             uiStrings = stateHolder.uiStrings.value,
+            query = stateHolder.query.value,
+            onQueryChanged = stateHolder::onQueryChanged,
             isInLandscape = windowSize.width > windowSize.height,
             appBarActions = {
                 AnimatedVisibility(

@@ -2,9 +2,7 @@ package com.pandulapeter.campfire.shared.ui.screenComponents.songs
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
@@ -16,7 +14,6 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.CheckboxItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.ClickableControlItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.HeaderItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.RadioButtonItem
-import com.pandulapeter.campfire.shared.ui.catalogue.components.SearchItem
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
 
@@ -25,8 +22,6 @@ import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 fun SongsControlsList(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
-    songCount: Int,
-    query: String,
     databases: List<Database>,
     unselectedDatabaseUrls: List<String>,
     shouldShowExplicitSongs: Boolean,
@@ -36,7 +31,6 @@ fun SongsControlsList(
     onShouldShowSongsWithoutChordsChanged: (Boolean) -> Unit,
     onForceRefreshPressed: () -> Unit,
     onDeleteLocalDataPressed: () -> Unit,
-    onQueryChanged: (String) -> Unit,
     sortingMode: UserPreferences.SortingMode?,
     onSortingModeChanged: (UserPreferences.SortingMode) -> Unit
 ) = LazyColumn(
@@ -45,18 +39,32 @@ fun SongsControlsList(
     if (databases.isNotEmpty()) {
         val enabledDatabases = databases.filter { it.isEnabled }
         if (enabledDatabases.isNotEmpty()) {
+            item(key = "header_sort_by") {
+                HeaderItem(
+                    modifier = Modifier.animateItemPlacement(),
+                    text = uiStrings.songsSortingMode
+                )
+            }
+            item(key = "sorting_mode_by_artist") {
+                RadioButtonItem(
+                    modifier = Modifier.animateItemPlacement(),
+                    text = uiStrings.songsSortingModeByArtist,
+                    isChecked = sortingMode == UserPreferences.SortingMode.BY_ARTIST,
+                    onClick = { onSortingModeChanged(UserPreferences.SortingMode.BY_ARTIST) }
+                )
+            }
+            item(key = "sorting_mode_by_title") {
+                RadioButtonItem(
+                    modifier = Modifier.animateItemPlacement(),
+                    text = uiStrings.songsSortingModeByTitle,
+                    isChecked = sortingMode == UserPreferences.SortingMode.BY_TITLE,
+                    onClick = { onSortingModeChanged(UserPreferences.SortingMode.BY_TITLE) }
+                )
+            }
             item(key = "header_filters") {
                 HeaderItem(
                     modifier = Modifier.animateItemPlacement(),
-                    text = uiStrings.songsFilters(songCount)
-                )
-            }
-            item(key = "filter_search") {
-                SearchItem(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp),
-                    query = query,
-                    uiStrings = uiStrings,
-                    onQueryChanged = onQueryChanged
+                    text = uiStrings.songsFilters
                 )
             }
             item(key = "filter_explicit") {
@@ -86,28 +94,6 @@ fun SongsControlsList(
                     onCheckedChanged = { onDatabaseSelectedChanged(database, it) }
                 )
             }
-        }
-        item(key = "header_sort_by") {
-            HeaderItem(
-                modifier = Modifier.animateItemPlacement(),
-                text = uiStrings.songsSortingMode
-            )
-        }
-        item(key = "sorting_mode_by_artist") {
-            RadioButtonItem(
-                modifier = Modifier.animateItemPlacement(),
-                text = uiStrings.songsSortingModeByArtist,
-                isChecked = sortingMode == UserPreferences.SortingMode.BY_ARTIST,
-                onClick = { onSortingModeChanged(UserPreferences.SortingMode.BY_ARTIST) }
-            )
-        }
-        item(key = "sorting_mode_by_title") {
-            RadioButtonItem(
-                modifier = Modifier.animateItemPlacement(),
-                text = uiStrings.songsSortingModeByTitle,
-                isChecked = sortingMode == UserPreferences.SortingMode.BY_TITLE,
-                onClick = { onSortingModeChanged(UserPreferences.SortingMode.BY_TITLE) }
-            )
         }
         item(key = "header_actions") {
             HeaderItem(
