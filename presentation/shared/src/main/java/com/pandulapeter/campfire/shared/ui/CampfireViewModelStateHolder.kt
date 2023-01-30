@@ -73,6 +73,15 @@ data class CampfireViewModelStateHolder(
         }
     }
 
+    fun onSortingModeChanged(sortingMode: UserPreferences.SortingMode) = userPreferences.value?.let { userPreferences ->
+        coroutineScope.launch {
+            viewModel.onSortingModeChanged(
+                userPreferences = userPreferences,
+                sortingMode = sortingMode
+            )
+        }
+    }
+
     fun onUiModeChanged(uiMode: UserPreferences.UiMode) = userPreferences.value?.let { userPreferences ->
         coroutineScope.launch {
             viewModel.onUiModeChanged(

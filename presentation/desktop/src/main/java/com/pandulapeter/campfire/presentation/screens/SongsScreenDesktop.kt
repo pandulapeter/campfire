@@ -46,7 +46,9 @@ internal fun SongsScreenDesktop(
             onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged,
             onForceRefreshPressed = stateHolder::onForceRefreshTriggered,
             onDeleteLocalDataPressed = stateHolder::onDeleteLocalDataPressed,
-            onQueryChanged = stateHolder::onQueryChanged
+            onQueryChanged = stateHolder::onQueryChanged,
+            sortingMode = stateHolder.userPreferences.value?.sortingMode,
+            onSortingModeChanged = stateHolder::onSortingModeChanged
         )
     }
 } else {
@@ -67,6 +69,7 @@ private fun SongsContentListWithScrollBar(
     SongsContentList(
         modifier = Modifier.fillMaxSize().padding(end = 8.dp),
         uiStrings = stateHolder.uiStrings.value,
+        sortingMode = stateHolder.userPreferences.value?.sortingMode,
         state = lazyListState,
         songs = stateHolder.songs.value,
         onSongClicked = stateHolder::onSongClicked

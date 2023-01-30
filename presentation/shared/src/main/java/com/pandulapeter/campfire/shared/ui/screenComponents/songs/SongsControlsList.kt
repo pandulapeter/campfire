@@ -11,9 +11,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Database
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CheckboxItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.ClickableControlItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.HeaderItem
+import com.pandulapeter.campfire.shared.ui.catalogue.components.RadioButtonItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SearchItem
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
@@ -34,7 +36,9 @@ fun SongsControlsList(
     onShouldShowSongsWithoutChordsChanged: (Boolean) -> Unit,
     onForceRefreshPressed: () -> Unit,
     onDeleteLocalDataPressed: () -> Unit,
-    onQueryChanged: (String) -> Unit
+    onQueryChanged: (String) -> Unit,
+    sortingMode: UserPreferences.SortingMode?,
+    onSortingModeChanged: (UserPreferences.SortingMode) -> Unit
 ) = LazyColumn(
     modifier = modifier
 ) {
@@ -82,6 +86,28 @@ fun SongsControlsList(
                     onCheckedChanged = { onDatabaseSelectedChanged(database, it) }
                 )
             }
+        }
+        item(key = "header_sort_by") {
+            HeaderItem(
+                modifier = Modifier.animateItemPlacement(),
+                text = uiStrings.songsSortingMode
+            )
+        }
+        item(key = "sorting_mode_by_artist") {
+            RadioButtonItem(
+                modifier = Modifier.animateItemPlacement(),
+                text = uiStrings.songsSortingModeByArtist,
+                isChecked = sortingMode == UserPreferences.SortingMode.BY_ARTIST,
+                onClick = { onSortingModeChanged(UserPreferences.SortingMode.BY_ARTIST) }
+            )
+        }
+        item(key = "sorting_mode_by_title") {
+            RadioButtonItem(
+                modifier = Modifier.animateItemPlacement(),
+                text = uiStrings.songsSortingModeByTitle,
+                isChecked = sortingMode == UserPreferences.SortingMode.BY_TITLE,
+                onClick = { onSortingModeChanged(UserPreferences.SortingMode.BY_TITLE) }
+            )
         }
         item(key = "header_actions") {
             HeaderItem(

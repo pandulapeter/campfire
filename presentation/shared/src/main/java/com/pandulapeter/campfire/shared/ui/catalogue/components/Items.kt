@@ -4,9 +4,11 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
@@ -49,16 +51,24 @@ internal fun SongItem(
     modifier: Modifier = Modifier,
     song: Song,
     onSongClicked: (Song) -> Unit
-) = RoundedCard(
-    modifier = modifier
-) {
-    Text(
-        modifier = Modifier
+) = RoundedCard {
+    Column(
+        modifier = modifier
             .clickable { onSongClicked(song) }
             .padding(8.dp)
-            .fillMaxWidth(),
-        text = "${song.artist} - ${song.title}"
-    )
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = song.title
+        )
+        Spacer(
+            modifier = Modifier.height(4.dp)
+        )
+        Text(
+            style = MaterialTheme.typography.caption,
+            text = song.artist
+        )
+    }
 }
 
 @Composable

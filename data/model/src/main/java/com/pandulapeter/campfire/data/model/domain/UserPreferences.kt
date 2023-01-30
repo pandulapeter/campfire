@@ -4,6 +4,7 @@ data class UserPreferences(
     val shouldShowExplicitSongs: Boolean,
     val shouldShowSongsWithoutChords: Boolean,
     val unselectedDatabaseUrls: List<String>,
+    val sortingMode: SortingMode,
     val uiMode: UiMode,
     val language: Language
 ) {

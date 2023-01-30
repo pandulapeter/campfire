@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsContentList
@@ -40,6 +41,7 @@ internal fun SongsScreenAndroid(
             SongsContentListWithPullRefresh(
                 modifier = Modifier.fillMaxWidth(0.65f),
                 uiStrings = stateHolder.uiStrings.value,
+                sortingMode = stateHolder.userPreferences.value?.sortingMode,
                 pullRefreshState = pullRefreshState,
                 isRefreshing = stateHolder.isRefreshing.value,
                 songs = stateHolder.songs.value,
@@ -65,13 +67,16 @@ internal fun SongsScreenAndroid(
                 onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged,
                 onForceRefreshPressed = stateHolder::onForceRefreshTriggered,
                 onDeleteLocalDataPressed = stateHolder::onDeleteLocalDataPressed,
-                onQueryChanged = stateHolder::onQueryChanged
+                onQueryChanged = stateHolder::onQueryChanged,
+                sortingMode = stateHolder.userPreferences.value?.sortingMode,
+                onSortingModeChanged = stateHolder::onSortingModeChanged
             )
         }
     } else {
         SongsContentListWithPullRefresh(
             modifier = modifier,
             uiStrings = stateHolder.uiStrings.value,
+            sortingMode = stateHolder.userPreferences.value?.sortingMode,
             pullRefreshState = pullRefreshState,
             isRefreshing = stateHolder.isRefreshing.value,
             songs = stateHolder.songs.value,
@@ -88,6 +93,7 @@ private fun SongsContentListWithPullRefresh(
     uiStrings: CampfireStrings,
     pullRefreshState: PullRefreshState,
     isRefreshing: Boolean,
+    sortingMode: UserPreferences.SortingMode?,
     songs: List<Song>,
     onSongClicked: (Song) -> Unit,
     lazyListState: LazyListState
@@ -97,6 +103,7 @@ private fun SongsContentListWithPullRefresh(
     SongsContentList(
         modifier = Modifier.fillMaxHeight(),
         uiStrings = uiStrings,
+        sortingMode = sortingMode,
         songs = songs,
         onSongClicked = onSongClicked,
         state = lazyListState

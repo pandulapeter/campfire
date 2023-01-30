@@ -23,6 +23,7 @@ internal class UserPreferencesRepositoryImpl(
             shouldShowExplicitSongs = false,
             shouldShowSongsWithoutChords = false,
             unselectedDatabaseUrls = emptyList(),
+            sortingMode = UserPreferences.SortingMode.BY_ARTIST,
             uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,
             language = UserPreferences.Language.SYSTEM_DEFAULT
         )

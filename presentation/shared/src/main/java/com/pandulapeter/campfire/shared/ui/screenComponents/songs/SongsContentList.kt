@@ -10,17 +10,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.shared.ui.catalogue.components.HeaderItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SongItem
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
+import org.koin.java.KoinJavaComponent.get
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SongsContentList(
+    normalizeText: NormalizeTextUseCase = get(NormalizeTextUseCase::class.java),
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
     state: LazyListState,
-    sortingMode: UserPreferences.SortingMode = UserPreferences.SortingMode.BY_ARTIST,
+    sortingMode: UserPreferences.SortingMode?,
     songs: List<Song>,
     onSongClicked: (Song) -> Unit
 ) = LazyColumn(
@@ -38,10 +41,10 @@ fun SongsContentList(
     if (songs.isNotEmpty()) {
         songs.forEachIndexed { index, song ->
             val previousSong = if (index == 0) null else songs[index - 1]
-            when (sortingMode) {
+            when (sortingMode ?: UserPreferences.SortingMode.BY_ARTIST) {
                 UserPreferences.SortingMode.BY_TITLE -> {
-                    if (song.title.firstOrNull() != previousSong?.title?.firstOrNull()) {
-                        val text = song.title.firstOrNull()?.uppercase().orEmpty()
+                    if (normalizeText(song.title.take(1)) != normalizeText(previousSong?.title?.take(1).orEmpty())) {
+                        val text = normalizeText(song.title.take(1)).uppercase()
                         item(
                             key = "header_${text}"
                         ) {
@@ -53,7 +56,7 @@ fun SongsContentList(
                     }
                 }
                 UserPreferences.SortingMode.BY_ARTIST -> {
-                    if (song.artist != previousSong?.artist) {
+                    if (normalizeText(song.artist) != normalizeText(previousSong?.artist.orEmpty())) {
                         item(
                             key = "header_${song.artist}"
                         ) {

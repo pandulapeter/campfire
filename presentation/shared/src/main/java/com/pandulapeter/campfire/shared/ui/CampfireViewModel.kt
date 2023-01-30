@@ -83,6 +83,10 @@ class CampfireViewModel(
         userPreferences.copy(shouldShowSongsWithoutChords = shouldShowSongsWithoutChords)
     )
 
+    suspend fun onSortingModeChanged(userPreferences: UserPreferences, sortingMode: UserPreferences.SortingMode) = saveUserPreferences(
+        userPreferences.copy(sortingMode = sortingMode)
+    )
+
     suspend fun onUiModeChanged(userPreferences: UserPreferences, uiMode: UserPreferences.UiMode) = saveUserPreferences(
         userPreferences.copy(uiMode = uiMode)
     )

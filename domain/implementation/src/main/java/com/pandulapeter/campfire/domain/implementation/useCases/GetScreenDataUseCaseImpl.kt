@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 class GetScreenDataUseCaseImpl internal constructor(
-    normalizeText: NormalizeTextUseCase,
+    private val normalizeText: NormalizeTextUseCase,
     databaseRepository: DatabaseRepository,
     setlistRepository: SetlistRepository,
     songRepository: SongRepository,
@@ -47,8 +47,7 @@ class GetScreenDataUseCaseImpl internal constructor(
                                 .filter { it.isPublic }
                                 .filterExplicit(userPreferences)
                                 .filterHasChords(userPreferences)
-                                .sortedBy { normalizeText(it.title) }
-                                .sortedBy { normalizeText(it.artist) },
+                                .sort(userPreferences),
                             userPreferences = userPreferences
                         ).also {
                             cache = it
@@ -76,4 +75,9 @@ class GetScreenDataUseCaseImpl internal constructor(
     private fun List<Song>.filterExplicit(userPreferences: UserPreferences) = if (userPreferences.shouldShowExplicitSongs) this else filterNot { it.isExplicit }
 
     private fun List<Song>.filterHasChords(userPreferences: UserPreferences) = if (userPreferences.shouldShowSongsWithoutChords) this else filterNot { !it.hasChords }
+
+    private fun List<Song>.sort(userPreferences: UserPreferences) = when (userPreferences.sortingMode) {
+        UserPreferences.SortingMode.BY_ARTIST -> sortedBy { normalizeText(it.title) }.sortedBy { normalizeText(it.artist) }
+        UserPreferences.SortingMode.BY_TITLE -> sortedBy { normalizeText(it.artist) }.sortedBy { normalizeText(it.title) }
+    }
 }
