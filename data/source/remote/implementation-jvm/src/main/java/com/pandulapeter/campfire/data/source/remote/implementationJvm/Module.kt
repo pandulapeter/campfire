@@ -1,9 +1,11 @@
 package com.pandulapeter.campfire.data.source.remote.implementationJvm
 
 import com.github.theapache64.retrosheet.RetrosheetInterceptor
+import com.pandulapeter.campfire.data.source.remote.api.SongDetailsRemoteSource
 import com.pandulapeter.campfire.data.source.remote.api.SongRemoteSource
 import com.pandulapeter.campfire.data.source.remote.implementationJvm.model.SongResponse
 import com.pandulapeter.campfire.data.source.remote.implementationJvm.networking.NetworkManager
+import com.pandulapeter.campfire.data.source.remote.implementationJvm.source.SongDetailsRemoteSourceImpl
 import com.pandulapeter.campfire.data.source.remote.implementationJvm.source.SongRemoteSourceImpl
 import okhttp3.OkHttpClient
 import org.koin.dsl.module
@@ -23,4 +25,5 @@ val dataRemoteSourceJvmModule = module {
     single { MoshiConverterFactory.create() }
     single { NetworkManager(get(), get()) }
     factory<SongRemoteSource> { SongRemoteSourceImpl(get()) }
+    factory<SongDetailsRemoteSource> { SongDetailsRemoteSourceImpl(get()) }
 }

@@ -23,7 +23,7 @@ compose.desktop {
     application {
         mainClass = "com.pandulapeter.campfire.CampfireDesktopApplicationKt"
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Exe, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Campfire"
             packageVersion = versionName
             macOS {

@@ -8,11 +8,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.CircularProgressIndicator
@@ -54,6 +52,7 @@ fun CampfireDesktopApp(
             query = stateHolder.query.value,
             onQueryChanged = stateHolder::onQueryChanged,
             isInLandscape = windowSize.width > windowSize.height,
+            shouldUseExpandedUi = shouldUseExpandedUi,
             appBarActions = {
                 AnimatedVisibility(
                     visible = stateHolder.isRefreshing.value,
@@ -64,10 +63,6 @@ fun CampfireDesktopApp(
                         modifier = Modifier.size(24.dp),
                         strokeWidth = 2.dp
                     )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                if (!shouldUseExpandedUi) {
-                    // TODO: Add filters
                 }
             },
             bottomNavigationBar = {

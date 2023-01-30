@@ -7,7 +7,9 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.DeleteLocalDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
+import com.pandulapeter.campfire.domain.api.useCases.LoadSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveDatabasesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
@@ -21,7 +23,9 @@ import kotlinx.coroutines.flow.map
 
 class CampfireViewModel(
     getScreenData: GetScreenDataUseCase,
+    getSongDetails: GetSongDetailsUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
+    private val loadSongDetails: LoadSongDetailsUseCase,
     private val saveDatabases: SaveDatabasesUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
     private val deleteLocalData: DeleteLocalDataUseCase,
@@ -71,9 +75,7 @@ class CampfireViewModel(
         _query.value = newQuery
     }
 
-    fun onSongClicked(song: Song) {
-        // TODO
-    }
+    suspend fun onSongClicked(song: Song) = loadSongDetails(song, false)
 
     suspend fun onShouldShowExplicitSongsChanged(userPreferences: UserPreferences, shouldShowExplicitSongs: Boolean) = saveUserPreferences(
         userPreferences.copy(shouldShowExplicitSongs = shouldShowExplicitSongs)

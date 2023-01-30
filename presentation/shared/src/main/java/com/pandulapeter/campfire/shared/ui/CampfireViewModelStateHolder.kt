@@ -29,7 +29,7 @@ data class CampfireViewModelStateHolder(
 ) {
     fun onQueryChanged(query: String) = viewModel.onQueryChanged(query)
 
-    fun onSongClicked(song: Song) = viewModel.onSongClicked(song)
+    fun onSongClicked(song: Song) = coroutineScope.launch { viewModel.onSongClicked(song) }
 
     fun onForceRefreshTriggered() = coroutineScope.launch { viewModel.onForceRefreshTriggered() }
 

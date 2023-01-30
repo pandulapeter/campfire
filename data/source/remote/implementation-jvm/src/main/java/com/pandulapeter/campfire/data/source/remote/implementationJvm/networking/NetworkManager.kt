@@ -8,16 +8,23 @@ internal class NetworkManager(
     private val okHttpClient: OkHttpClient,
     private val moshiConverterFactory: MoshiConverterFactory
 ) {
-    private val networkingServices = mutableMapOf<String, NetworkingService>()
-
-    fun getNetworkingService(databaseUrl: String) = networkingServices[databaseUrl] ?: createNetworkingService(databaseUrl).also {
-        networkingServices[databaseUrl] = it
+    private val songServices = mutableMapOf<String, SongService>()
+    val songDetailsService: SongDetailsService by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://www.pandulapeter.com/") // Will never be used
+            .client(okHttpClient)
+            .build()
+            .create(SongDetailsService::class.java)
     }
 
-    private fun createNetworkingService(databaseUrl: String): NetworkingService = Retrofit.Builder()
+    fun getSongService(databaseUrl: String) = songServices[databaseUrl] ?: createSongService(databaseUrl).also {
+        songServices[databaseUrl] = it
+    }
+
+    private fun createSongService(databaseUrl: String): SongService = Retrofit.Builder()
         .baseUrl(databaseUrl)
         .client(okHttpClient)
         .addConverterFactory(moshiConverterFactory)
         .build()
-        .create(NetworkingService::class.java)
+        .create(SongService::class.java)
 }
