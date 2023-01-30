@@ -2,7 +2,9 @@ package com.pandulapeter.campfire.shared.ui.screenComponents.songs
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
@@ -46,6 +48,7 @@ fun SongsControlsList(
             }
             item(key = "filter_search") {
                 SearchItem(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 8.dp),
                     query = query,
                     uiStrings = uiStrings,
                     onQueryChanged = onQueryChanged

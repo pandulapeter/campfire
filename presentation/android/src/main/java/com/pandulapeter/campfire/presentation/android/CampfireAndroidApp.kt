@@ -3,19 +3,18 @@ package com.pandulapeter.campfire.presentation.android
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.AppBarDefaults
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
 import androidx.compose.material.pullrefresh.PullRefreshState
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
@@ -35,7 +34,7 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireScaffold
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import org.koin.java.KoinJavaComponent.get
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun CampfireAndroidApp(
     viewModel: CampfireViewModel = get(CampfireViewModel::class.java),
@@ -54,16 +53,18 @@ fun CampfireAndroidApp(
     CampfireAndroidTheme(
         uiMode = stateHolder.uiMode.value
     ) {
-        CampfireScaffold(
+        Surface(
             modifier = Modifier
-                .imePadding()
-                .statusBarsPadding(),
-            statusBarModifier = Modifier
-                .statusBarsPadding()
-                .displayCutoutPadding(), // TODO: Landscape issues .navigationBarsPadding(),
+                .fillMaxSize()
+                .background(MaterialTheme.colors.surface),
+            elevation = AppBarDefaults.TopAppBarElevation,
+            content = {}
+        )
+        CampfireScaffold(
+            modifier = Modifier.safeContentPadding(),
+            uiStrings = stateHolder.uiStrings.value,
             navigationDestinations = stateHolder.navigationDestinations.value,
             isInLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
-            uiStrings = stateHolder.uiStrings.value,
             appBarActions = {
                 if (!shouldUseExpandedUi) {
                     // TODO: Add filters
@@ -71,9 +72,7 @@ fun CampfireAndroidApp(
             },
             bottomNavigationBar = {
                 BottomNavigationBarWrapper(
-                    modifier = Modifier
-                        .imePadding()
-                        .navigationBarsPadding(),
+                    modifier = Modifier,
                     navigationDestinations = stateHolder.navigationDestinations.value,
                     onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
                     isKeyboardVisible = isKeyboardVisible.value,
@@ -85,7 +84,6 @@ fun CampfireAndroidApp(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(scaffoldPadding)
-                        .consumeWindowInsets(scaffoldPadding)
                         .systemBarsPadding(),
                     navigationDestinations = stateHolder.navigationDestinations.value,
                     onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
@@ -96,13 +94,7 @@ fun CampfireAndroidApp(
             },
             content = { scaffoldPadding ->
                 Content(
-                    modifier = scaffoldPadding?.let {
-                        Modifier
-                            .fillMaxSize()
-                            .padding(scaffoldPadding)
-                            .consumeWindowInsets(scaffoldPadding)
-                            .systemBarsPadding()
-                    } ?: Modifier,
+                    modifier = scaffoldPadding?.let { Modifier.padding(it) } ?: Modifier,
                     stateHolder = stateHolder,
                     selectedNavigationDestination = stateHolder.selectedNavigationDestination.value,
                     shouldUseExpandedUi = shouldUseExpandedUi,
@@ -147,18 +139,18 @@ private fun Content(
 @Composable
 private fun BottomNavigationBarWrapper(
     modifier: Modifier = Modifier,
+    uiStrings: CampfireStrings,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit,
-    isKeyboardVisible: Boolean,
-    uiStrings: CampfireStrings
+    isKeyboardVisible: Boolean
 ) = AnimatedVisibility(
     modifier = modifier,
     visible = !isKeyboardVisible
 ) {
     CampfireBottomNavigationBar(
+        uiStrings = uiStrings,
         navigationDestinations = navigationDestinations,
-        onNavigationDestinationSelected = onNavigationDestinationSelected,
-        uiStrings = uiStrings
+        onNavigationDestinationSelected = onNavigationDestinationSelected
     )
 }
 

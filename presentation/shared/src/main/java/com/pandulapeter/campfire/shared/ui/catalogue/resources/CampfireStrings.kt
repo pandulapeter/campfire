@@ -21,7 +21,7 @@ sealed class CampfireStrings {
 
     // Settings screen
     abstract val settings: String
-    abstract val settingsAllDatabases: String
+    abstract val settingsActiveDatabases: String
     abstract val settingsAddNewDatabase: String
     abstract val settingsUserInterfaceTheme: String
     abstract val settingsUserInterfaceThemeSystemDefault: String
@@ -53,13 +53,13 @@ sealed class CampfireStrings {
 
         // Settings screen
         override val settings = "Settings"
-        override val settingsAllDatabases = "All databases"
-        override val settingsAddNewDatabase = "Add new database"
+        override val settingsActiveDatabases = "Active databases"
+        override val settingsAddNewDatabase = "Add a new database"
         override val settingsUserInterfaceTheme = "User interface theme"
         override val settingsUserInterfaceThemeSystemDefault = "System default"
         override val settingsUserInterfaceThemeDark = "Dark"
         override val settingsUserInterfaceThemeLight = "Light"
-        override val settingsUserInterfaceLanguage = "Language"
+        override val settingsUserInterfaceLanguage = "User interface language"
         override val settingsUserInterfaceLanguageSystemDefault = "System default"
         override val settingsUserInterfaceLanguageEnglish = "English"
         override val settingsUserInterfaceLanguageHungarian = "Hungarian"
@@ -86,14 +86,14 @@ sealed class CampfireStrings {
 
         // Settings screen
         override val settings = "Beállítások"
-        override val settingsAllDatabases = "Minden adatbázis"
+        override val settingsActiveDatabases = "Aktív adatbázisok"
         override val settingsAddNewDatabase = "Új adatbázis hozzáadása"
         override val settingsUserInterfaceTheme = "Felhasználói felület témája"
-        override val settingsUserInterfaceThemeSystemDefault = "Rendszer alapértelmezett"
+        override val settingsUserInterfaceThemeSystemDefault = "Alapértelmezett"
         override val settingsUserInterfaceThemeDark = "Sötét"
         override val settingsUserInterfaceThemeLight = "Világos"
-        override val settingsUserInterfaceLanguage = "Language"
-        override val settingsUserInterfaceLanguageSystemDefault = "Rendszer alapértelmezett"
+        override val settingsUserInterfaceLanguage = "Felhasználói felület nyelve"
+        override val settingsUserInterfaceLanguageSystemDefault = "Alapértelmezett"
         override val settingsUserInterfaceLanguageEnglish = "Angol"
         override val settingsUserInterfaceLanguageHungarian = "Magyar"
     }

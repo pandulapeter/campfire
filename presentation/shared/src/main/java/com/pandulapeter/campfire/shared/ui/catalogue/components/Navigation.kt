@@ -11,6 +11,7 @@ import androidx.compose.material.NavigationRailItem
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
+import androidx.compose.material.primarySurface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
@@ -20,10 +21,9 @@ import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
 @Composable
 fun CampfireScaffold(
     modifier: Modifier = Modifier,
-    statusBarModifier: Modifier = Modifier,
+    uiStrings: CampfireStrings,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     isInLandscape: Boolean,
-    uiStrings: CampfireStrings,
     appBarActions: @Composable RowScope.() -> Unit,
     bottomNavigationBar: @Composable () -> Unit,
     navigationRail: @Composable (scaffoldPadding: PaddingValues, content: @Composable () -> Unit) -> Unit,
@@ -32,10 +32,9 @@ fun CampfireScaffold(
     modifier = modifier,
     topBar = {
         CampfireAppBar(
-            statusBarModifier = statusBarModifier,
+            uiStrings = uiStrings,
             selectedNavigationDestination = navigationDestinations.firstOrNull { it.isSelected }?.destination,
-            actions = appBarActions,
-            uiStrings = uiStrings
+            actions = appBarActions
         )
     },
     bottomBar = {
@@ -55,17 +54,15 @@ fun CampfireScaffold(
 @Composable
 fun CampfireAppBar(
     modifier: Modifier = Modifier,
-    statusBarModifier: Modifier = Modifier,
+    uiStrings: CampfireStrings,
     selectedNavigationDestination: CampfireViewModel.NavigationDestination?,
-    actions: @Composable RowScope.() -> Unit,
-    uiStrings: CampfireStrings
+    actions: @Composable RowScope.() -> Unit
 ) = TopAppBar(
     modifier = modifier,
-    backgroundColor = MaterialTheme.colors.surface,
     actions = actions,
+    backgroundColor = MaterialTheme.colors.background,
     title = {
         Text(
-            modifier = statusBarModifier,
             text = when (selectedNavigationDestination) {
                 CampfireViewModel.NavigationDestination.SONGS -> uiStrings.songs
                 CampfireViewModel.NavigationDestination.SETLISTS -> uiStrings.setlists
@@ -109,9 +106,9 @@ fun CampfireNavigationRail(
 @Composable
 fun CampfireBottomNavigationBar(
     modifier: Modifier = Modifier,
+    uiStrings: CampfireStrings,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
-    onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit,
-    uiStrings: CampfireStrings
+    onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit
 ) = BottomAppBar(
     modifier = modifier,
     backgroundColor = MaterialTheme.colors.surface

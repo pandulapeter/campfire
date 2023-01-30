@@ -50,8 +50,8 @@ fun CampfireDesktopApp(
     ) {
         CampfireScaffold(
             navigationDestinations = stateHolder.navigationDestinations.value,
-            isInLandscape = windowSize.width > windowSize.height,
             uiStrings = stateHolder.uiStrings.value,
+            isInLandscape = windowSize.width > windowSize.height,
             appBarActions = {
                 AnimatedVisibility(
                     visible = stateHolder.isRefreshing.value,
@@ -63,18 +63,16 @@ fun CampfireDesktopApp(
                         strokeWidth = 2.dp
                     )
                 }
+                Spacer(modifier = Modifier.width(8.dp))
                 if (!shouldUseExpandedUi) {
                     // TODO: Add filters
                 }
-                Spacer(
-                    modifier = Modifier.width(16.dp)
-                )
             },
             bottomNavigationBar = {
                 CampfireBottomNavigationBar(
+                    uiStrings = stateHolder.uiStrings.value,
                     navigationDestinations = stateHolder.navigationDestinations.value,
-                    onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected,
-                    uiStrings = stateHolder.uiStrings.value
+                    onNavigationDestinationSelected = viewModel::onNavigationDestinationSelected
                 )
             },
             navigationRail = { scaffoldPadding, content ->

@@ -11,18 +11,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Checkbox
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
@@ -110,17 +115,24 @@ internal fun RadioButtonItem(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-internal fun SearchItem(
+fun SearchItem(
     modifier: Modifier = Modifier,
     query: String,
     uiStrings: CampfireStrings,
     onQueryChanged: (String) -> Unit
-) = RoundedCard(
-    modifier = modifier
 ) {
-    TextField(
-        modifier = Modifier.fillMaxWidth(),
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    OutlinedTextField(
+        modifier = modifier,
+        leadingIcon = {
+            Icon(
+                imageVector = CampfireIcons.search,
+                contentDescription = uiStrings.songsSearch
+            )
+        },
         trailingIcon = {
             AnimatedVisibility(
                 visible = query.isNotEmpty(),
@@ -136,6 +148,10 @@ internal fun SearchItem(
         },
         label = { Text(uiStrings.songsSearch) },
         singleLine = true,
+        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = {
+            keyboardController?.hide()
+        }),
         value = query,
         onValueChange = onQueryChanged
     )
