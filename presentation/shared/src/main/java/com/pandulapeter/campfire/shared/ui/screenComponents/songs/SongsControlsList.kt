@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 fun SongsControlsList(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
+    songCount: Int,
     query: String,
     databases: List<Database>,
     unselectedDatabaseUrls: List<String>,
@@ -43,7 +44,7 @@ fun SongsControlsList(
             item(key = "header_filters") {
                 HeaderItem(
                     modifier = Modifier.animateItemPlacement(),
-                    text = uiStrings.songsFilters
+                    text = uiStrings.songsFilters(songCount)
                 )
             }
             item(key = "filter_search") {

@@ -35,6 +35,7 @@ internal fun SongsScreenDesktop(
         SongsControlsList(
             modifier = Modifier.fillMaxSize(),
             uiStrings = stateHolder.uiStrings.value,
+            songCount = stateHolder.songs.value.size,
             query = stateHolder.query.value,
             databases = stateHolder.databases.value,
             unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),

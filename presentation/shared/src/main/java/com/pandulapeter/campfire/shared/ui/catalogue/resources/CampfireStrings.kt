@@ -4,7 +4,7 @@ sealed class CampfireStrings {
 
     // Songs screen
     abstract val songs: String
-    abstract val songsFilters: String
+    abstract val songsFilters: (songCount: Int) -> String
     abstract val songsSearch: String
     abstract val songsClear: String
     abstract val songsShowExplicit: String
@@ -14,7 +14,6 @@ sealed class CampfireStrings {
     abstract val songsRefresh: String
     abstract val songsDeleteLocalData: String
     abstract val songsNoData: String
-    abstract val songsHeader: (songCount: Int) -> String
 
     // Setlists screen
     abstract val setlists: String
@@ -36,7 +35,7 @@ sealed class CampfireStrings {
 
         // Songs screen
         override val songs = "Songs"
-        override val songsFilters = "Filters"
+        override val songsFilters: (songCount: Int) -> String = { "Filters ($it songs)" }
         override val songsSearch = "Search"
         override val songsClear = "Clear"
         override val songsShowExplicit = "Show explicit songs"
@@ -46,7 +45,6 @@ sealed class CampfireStrings {
         override val songsRefresh = "Refresh"
         override val songsDeleteLocalData = "Delete saved songs"
         override val songsNoData = "No songs to show"
-        override val songsHeader: (songCount: Int) -> String = { "Songs ($it)" }
 
         // Setlists screen
         override val setlists = "Setlists"
@@ -69,7 +67,7 @@ sealed class CampfireStrings {
 
         // Songs screen
         override val songs = "Dalok"
-        override val songsFilters = "Szűrők"
+        override val songsFilters: (songCount: Int) -> String = { "Szűrők ($it dal)" }
         override val songsSearch = "Keresés"
         override val songsClear = "Törlés"
         override val songsShowExplicit = "Explicit dalok mutatása"
@@ -79,7 +77,6 @@ sealed class CampfireStrings {
         override val songsRefresh = "Frissítés"
         override val songsDeleteLocalData = "Mentett dalok törlése"
         override val songsNoData = "Nincsenek dalok"
-        override val songsHeader: (songCount: Int) -> String = { "Dalok ($it)" }
 
         // Setlists screen
         override val setlists = "Listák"

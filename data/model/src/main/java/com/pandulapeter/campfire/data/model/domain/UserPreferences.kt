@@ -8,6 +8,11 @@ data class UserPreferences(
     val language: Language
 ) {
 
+    enum class SortingMode(val id: String) {
+        BY_TITLE("by_title"),
+        BY_ARTIST("by_artist")
+    }
+
     enum class UiMode(val id: String) {
         LIGHT("light"),
         DARK("dark"),
