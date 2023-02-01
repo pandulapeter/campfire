@@ -5,6 +5,7 @@ import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.data.model.domain.Database
@@ -30,7 +31,7 @@ fun SongsControlsList(
     onSortingModeChanged: (UserPreferences.SortingMode) -> Unit
 ) {
     Column(
-        modifier = modifier.wrapContentSize().scrollable(rememberScrollState(), Orientation.Vertical) // TODO: Doesn't work
+        modifier = modifier.wrapContentSize().verticalScroll(rememberScrollState())
     ) {
         SongsSortingControlsList(
             uiStrings = uiStrings,

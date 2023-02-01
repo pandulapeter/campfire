@@ -246,18 +246,19 @@ private fun SortingModesIconAndDropdown(
                 contentDescription = uiStrings.songsSortingMode
             )
         }
-        DropdownMenu(
-            modifier = Modifier.widthIn(min = 200.dp, max = 300.dp),
-            expanded = isSortingDropdownVisible.value,
-            onDismissRequest = { isSortingDropdownVisible.value = false }
-        ) {
-            SongsSortingControlsList(
-                modifier = Modifier.fillMaxSize(),
-                uiStrings = stateHolder.uiStrings.value,
-                sortingMode = stateHolder.userPreferences.value?.sortingMode,
-                onSortingModeChanged = stateHolder::onSortingModeChanged
-            )
-        }
+// TODO: Crashes on Android
+//        DropdownMenu(
+//            modifier = Modifier.widthIn(min = 200.dp, max = 300.dp),
+//            expanded = isSortingDropdownVisible.value,
+//            onDismissRequest = { isSortingDropdownVisible.value = false }
+//        ) {
+//            SongsSortingControlsList(
+//                modifier = Modifier.fillMaxSize(),
+//                uiStrings = stateHolder.uiStrings.value,
+//                sortingMode = stateHolder.userPreferences.value?.sortingMode,
+//                onSortingModeChanged = stateHolder::onSortingModeChanged
+//            )
+//        }
     }
 }
 
@@ -277,22 +278,23 @@ private fun FiltersIconAndDropdown(
                 contentDescription = uiStrings.songsFilters
             )
         }
-        DropdownMenu(
-            modifier = Modifier.widthIn(min = 200.dp, max = 300.dp),
-            expanded = isFilterDropdownVisible.value,
-            onDismissRequest = { isFilterDropdownVisible.value = false }
-        ) {
-            SongsFilterControlsList(
-                modifier = Modifier.fillMaxSize(),
-                uiStrings = stateHolder.uiStrings.value,
-                databases = stateHolder.databases.value,
-                unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
-                shouldShowExplicitSongs = stateHolder.userPreferences.value?.shouldShowExplicitSongs == true,
-                shouldShowSongsWithoutChords = stateHolder.userPreferences.value?.shouldShowSongsWithoutChords == true,
-                onDatabaseSelectedChanged = stateHolder::onDatabaseSelectedChanged,
-                onShouldShowExplicitSongsChanged = stateHolder::onShouldShowExplicitSongsChanged,
-                onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged
-            )
-        }
+// TODO: Crashes on Android
+//        DropdownMenu(
+//            modifier = Modifier.widthIn(min = 200.dp, max = 300.dp),
+//            expanded = isFilterDropdownVisible.value,
+//            onDismissRequest = { isFilterDropdownVisible.value = false }
+//        ) {
+//            SongsFilterControlsList(
+//                modifier = Modifier.fillMaxSize(),
+//                uiStrings = stateHolder.uiStrings.value,
+//                databases = stateHolder.databases.value,
+//                unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
+//                shouldShowExplicitSongs = stateHolder.userPreferences.value?.shouldShowExplicitSongs == true,
+//                shouldShowSongsWithoutChords = stateHolder.userPreferences.value?.shouldShowSongsWithoutChords == true,
+//                onDatabaseSelectedChanged = stateHolder::onDatabaseSelectedChanged,
+//                onShouldShowExplicitSongsChanged = stateHolder::onShouldShowExplicitSongsChanged,
+//                onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged
+//            )
+//        }
     }
 }

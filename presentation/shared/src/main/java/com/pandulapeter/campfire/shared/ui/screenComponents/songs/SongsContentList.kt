@@ -84,11 +84,12 @@ fun SongsContentList(
 
 @Composable
 private fun StickyHeaderItem(text: String) = Surface(
-    modifier = Modifier.padding(4.dp),
+    modifier = Modifier.padding(8.dp),
     elevation = 6.dp,
     shape = RoundedCornerShape(8.dp),
 ) {
     HeaderItem(
-        text = text
+        text = text,
+        shouldUseLargePadding = false
     )
 }

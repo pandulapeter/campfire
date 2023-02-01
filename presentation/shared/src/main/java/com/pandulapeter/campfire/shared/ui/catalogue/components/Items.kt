@@ -44,9 +44,10 @@ import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 @Composable
 internal fun HeaderItem(
     modifier: Modifier = Modifier,
-    text: String
+    text: String,
+    shouldUseLargePadding: Boolean = true
 ) = Text(
-    modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 16.dp),
+    modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = if (shouldUseLargePadding) 16.dp else 8.dp),
     text = text,
     style = TextStyle.Default.copy(fontWeight = FontWeight.Bold),
     color = MaterialTheme.colors.primary
