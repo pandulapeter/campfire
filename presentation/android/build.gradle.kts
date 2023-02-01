@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":domain:api"))
     implementation(project(":presentation:android-debug-menu"))
     api(project(":presentation:shared")) // TODO: Should be an implementation detail
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material)
     implementation(libs.androidx.compose.ui)
     implementation(libs.google.android.material)

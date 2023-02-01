@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.presentation.android
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
@@ -45,6 +46,7 @@ fun CampfireAndroidApp(
     stateHolder: CampfireViewModelStateHolder,
 ) {
     LaunchedEffect(Unit) { viewModel.onInitialize() }
+    BackHandler(stateHolder.modalBottomSheetState.isVisible) { stateHolder.onSongClosed() }
 
     val isKeyboardVisible = keyboardState()
     val songsScreenScrollState = rememberLazyListState()
