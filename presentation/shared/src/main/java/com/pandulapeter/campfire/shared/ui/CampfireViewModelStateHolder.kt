@@ -54,8 +54,6 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
 
     fun onForceRefreshTriggered() = coroutineScope.launch { viewModel.onForceRefreshTriggered() }
 
-    fun onDeleteLocalDataPressed() = coroutineScope.launch { viewModel.onDeleteLocalDataPressed() }
-
     fun onDatabaseEnabledChanged(database: Database, isEnabled: Boolean) = databases.value.let { databases ->
         coroutineScope.launch {
             viewModel.onDatabaseEnabledChanged(

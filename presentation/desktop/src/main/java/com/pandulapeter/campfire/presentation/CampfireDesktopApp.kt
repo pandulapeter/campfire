@@ -55,6 +55,7 @@ fun CampfireDesktopApp(
             modalBottomSheetState = stateHolder.modalBottomSheetState,
             songDetailsScrollState = stateHolder.songDetailsScrollState,
             query = stateHolder.query.value,
+            stateHolder = stateHolder,
             onQueryChanged = stateHolder::onQueryChanged,
             isInLandscape = windowSize.width > windowSize.height,
             shouldUseExpandedUi = shouldUseExpandedUi,

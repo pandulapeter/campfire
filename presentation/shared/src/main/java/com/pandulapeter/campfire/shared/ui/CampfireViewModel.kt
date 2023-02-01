@@ -5,7 +5,6 @@ import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.domain.api.useCases.DeleteLocalDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
@@ -28,7 +27,6 @@ class CampfireViewModel(
     private val loadSongDetails: LoadSongDetailsUseCase,
     private val saveDatabases: SaveDatabasesUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
-    private val deleteLocalData: DeleteLocalDataUseCase,
     private val normalizeText: NormalizeTextUseCase
 ) {
     private val _query = MutableStateFlow("")
@@ -99,8 +97,6 @@ class CampfireViewModel(
     )
 
     suspend fun onForceRefreshTriggered() = loadScreenData(true)
-
-    suspend fun onDeleteLocalDataPressed() = deleteLocalData()
 
     fun onNavigationDestinationSelected(navigationDestination: NavigationDestination) {
         _selectedNavigationDestination.value = navigationDestination

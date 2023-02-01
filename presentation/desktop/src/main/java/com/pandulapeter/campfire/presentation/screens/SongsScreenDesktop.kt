@@ -42,8 +42,6 @@ internal fun SongsScreenDesktop(
             onDatabaseSelectedChanged = stateHolder::onDatabaseSelectedChanged,
             onShouldShowExplicitSongsChanged = stateHolder::onShouldShowExplicitSongsChanged,
             onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged,
-            onForceRefreshPressed = stateHolder::onForceRefreshTriggered,
-            onDeleteLocalDataPressed = stateHolder::onDeleteLocalDataPressed,
             sortingMode = stateHolder.userPreferences.value?.sortingMode,
             onSortingModeChanged = stateHolder::onSortingModeChanged
         )

@@ -15,9 +15,6 @@ sealed class CampfireStrings {
     abstract val songsSortingMode: String
     abstract val songsSortingModeByArtist: String
     abstract val songsSortingModeByTitle: String
-    abstract val songsActions: String
-    abstract val songsRefresh: String
-    abstract val songsDeleteLocalData: String
     abstract val songsNoData: String
 
     // Setlists screen
@@ -51,9 +48,6 @@ sealed class CampfireStrings {
         override val songsSortingMode = "Sort by"
         override val songsSortingModeByArtist = "Artist"
         override val songsSortingModeByTitle = "Title"
-        override val songsActions = "Actions"
-        override val songsRefresh = "Refresh"
-        override val songsDeleteLocalData = "Delete saved songs"
         override val songsNoData = "No songs to show"
 
         // Setlists screen
@@ -88,9 +82,6 @@ sealed class CampfireStrings {
         override val songsSortingMode = "Rendezési mód"
         override val songsSortingModeByArtist = "Előadó"
         override val songsSortingModeByTitle = "Cím"
-        override val songsActions = "Akciók"
-        override val songsRefresh = "Frissítés"
-        override val songsDeleteLocalData = "Mentett dalok törlése"
         override val songsNoData = "Nincsenek dalok"
 
         // Setlists screen
