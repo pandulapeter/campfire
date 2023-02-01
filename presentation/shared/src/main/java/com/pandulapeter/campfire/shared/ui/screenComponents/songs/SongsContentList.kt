@@ -3,8 +3,11 @@ package com.pandulapeter.campfire.shared.ui.screenComponents.songs
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -48,38 +51,16 @@ fun SongsContentList(
                     if (firstCharacter != previousFirstCharacter) {
                         if (!firstCharacter.first().isLetter() && previousFirstCharacter.firstOrNull()?.isLetter() != true) {
                             if (previousSong == null) {
-                                item(
-                                    key = "header_non_letters"
-                                ) {
-                                    HeaderItem(
-                                        modifier = Modifier.animateItemPlacement(),
-                                        text = uiStrings.songsUnsortedLabel
-                                    )
-                                }
+                                stickyHeader { StickyHeaderItem(uiStrings.songsUnsortedLabel) }
                             }
                         } else {
-                            val text = normalizeText(song.title.take(1)).uppercase()
-                            item(
-                                key = "header_${text}"
-                            ) {
-                                HeaderItem(
-                                    modifier = Modifier.animateItemPlacement(),
-                                    text = text
-                                )
-                            }
+                            stickyHeader { StickyHeaderItem(normalizeText(song.title.take(1)).uppercase()) }
                         }
                     }
                 }
                 UserPreferences.SortingMode.BY_ARTIST -> {
                     if (normalizeText(song.artist) != normalizeText(previousSong?.artist.orEmpty())) {
-                        item(
-                            key = "header_${song.artist}"
-                        ) {
-                            HeaderItem(
-                                modifier = Modifier.animateItemPlacement(),
-                                text = song.artist
-                            )
-                        }
+                        stickyHeader { StickyHeaderItem(song.artist) }
                     }
                 }
             }
@@ -99,4 +80,15 @@ fun SongsContentList(
             modifier = Modifier.height(8.dp)
         )
     }
+}
+
+@Composable
+private fun StickyHeaderItem(text: String) = Surface(
+    modifier = Modifier.padding(4.dp),
+    elevation = 6.dp,
+    shape = RoundedCornerShape(8.dp),
+) {
+    HeaderItem(
+        text = text
+    )
 }

@@ -75,6 +75,7 @@ fun CampfireAndroidApp(
             onSongClosed = stateHolder::onSongClosed,
             modalBottomSheetState = stateHolder.modalBottomSheetState,
             songDetailsScrollState = stateHolder.songDetailsScrollState,
+            stateHolder = stateHolder,
             query = stateHolder.query.value,
             onQueryChanged = stateHolder::onQueryChanged,
             navigationDestinations = stateHolder.navigationDestinations.value,
