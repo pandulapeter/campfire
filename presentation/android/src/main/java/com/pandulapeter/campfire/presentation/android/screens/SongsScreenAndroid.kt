@@ -15,7 +15,9 @@ import androidx.compose.material.pullrefresh.PullRefreshState
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -81,7 +83,7 @@ internal fun SongsScreenAndroid(
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun SongsContentListWithPullRefresh(
     modifier: Modifier,
@@ -95,12 +97,16 @@ private fun SongsContentListWithPullRefresh(
 ) = Box(
     modifier = modifier.pullRefresh(pullRefreshState)
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     SongsContentList(
         modifier = Modifier.fillMaxHeight(),
         uiStrings = uiStrings,
         sortingMode = sortingMode,
         songs = songs,
-        onSongClicked = onSongClicked,
+        onSongClicked = {
+            keyboardController?.hide()
+            onSongClicked(it)
+        },
         state = lazyListState
     )
     PullRefreshIndicator(

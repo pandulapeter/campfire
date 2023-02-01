@@ -4,9 +4,6 @@ import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.unit.IntOffset
 import com.pandulapeter.campfire.presentation.android.catalogue.CampfireAndroidTheme
 import com.pandulapeter.campfire.presentation.android.screens.SetlistsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.screens.SettingsScreenAndroid
@@ -152,17 +148,15 @@ private fun BottomNavigationBarWrapper(
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
     onNavigationDestinationSelected: (CampfireViewModel.NavigationDestination) -> Unit,
     isKeyboardVisible: Boolean
-) = AnimatedVisibility(
-    modifier = modifier,
-    enter = slideIn { IntOffset(0, it.height) },
-    exit = fadeOut(tween(0)),
-    visible = !isKeyboardVisible
 ) {
-    CampfireBottomNavigationBar(
-        uiStrings = uiStrings,
-        navigationDestinations = navigationDestinations,
-        onNavigationDestinationSelected = onNavigationDestinationSelected
-    )
+    if (!isKeyboardVisible) {
+        CampfireBottomNavigationBar(
+            modifier = modifier,
+            uiStrings = uiStrings,
+            navigationDestinations = navigationDestinations,
+            onNavigationDestinationSelected = onNavigationDestinationSelected
+        )
+    }
 }
 
 @Composable

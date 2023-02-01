@@ -60,7 +60,8 @@ fun SongsSortingControlsList(
     modifier = modifier
 ) {
     HeaderItem(
-        text = uiStrings.songsSortingMode
+        text = uiStrings.songsSortingMode,
+        shouldUseLargePadding = false
     )
     RadioButtonItem(
         text = uiStrings.songsSortingModeByArtist,
@@ -89,7 +90,8 @@ fun SongsFilterControlsList(
     modifier = modifier
 ) {
     HeaderItem(
-        text = uiStrings.songsFilters
+        text = uiStrings.songsFilters,
+        shouldUseLargePadding = false
     )
     CheckboxItem(
         text = uiStrings.songsShowExplicit,
