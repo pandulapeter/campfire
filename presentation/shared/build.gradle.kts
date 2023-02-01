@@ -6,5 +6,6 @@ plugins {
 dependencies {
     implementation(project(":domain:api"))
     implementation(compose.desktop.currentOs)
+    implementation(libs.compose.mpp)
     implementation(libs.koin.core)
 }

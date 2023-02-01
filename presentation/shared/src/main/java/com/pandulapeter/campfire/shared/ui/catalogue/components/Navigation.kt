@@ -1,14 +1,15 @@
 package com.pandulapeter.campfire.shared.ui.catalogue.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.BottomNavigationItem
@@ -36,6 +37,9 @@ import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
+import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsFilterControlsList
+import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsSortingControlsList
+import dev.atsushieno.composempp.material.DropdownMenu
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -218,19 +222,18 @@ private fun SortingModesIconAndDropdown(
                 contentDescription = uiStrings.songsSortingMode
             )
         }
-// TODO: Crashes on Android
-//        DropdownMenu(
-//            modifier = Modifier.widthIn(min = 200.dp, max = 300.dp),
-//            expanded = isSortingDropdownVisible.value,
-//            onDismissRequest = { isSortingDropdownVisible.value = false }
-//        ) {
-//            SongsSortingControlsList(
-//                modifier = Modifier.fillMaxSize(),
-//                uiStrings = stateHolder.uiStrings.value,
-//                sortingMode = stateHolder.userPreferences.value?.sortingMode,
-//                onSortingModeChanged = stateHolder::onSortingModeChanged
-//            )
-//        }
+        DropdownMenu(
+            modifier = Modifier.widthIn(min = 200.dp, max = 300.dp),
+            expanded = isSortingDropdownVisible.value,
+            onDismissRequest = { isSortingDropdownVisible.value = false }
+        ) {
+            SongsSortingControlsList(
+                modifier = Modifier.fillMaxSize(),
+                uiStrings = stateHolder.uiStrings.value,
+                sortingMode = stateHolder.userPreferences.value?.sortingMode,
+                onSortingModeChanged = stateHolder::onSortingModeChanged
+            )
+        }
     }
 }
 
@@ -250,23 +253,22 @@ private fun FiltersIconAndDropdown(
                 contentDescription = uiStrings.songsFilters
             )
         }
-// TODO: Crashes on Android
-//        DropdownMenu(
-//            modifier = Modifier.widthIn(min = 200.dp, max = 300.dp),
-//            expanded = isFilterDropdownVisible.value,
-//            onDismissRequest = { isFilterDropdownVisible.value = false }
-//        ) {
-//            SongsFilterControlsList(
-//                modifier = Modifier.fillMaxSize(),
-//                uiStrings = stateHolder.uiStrings.value,
-//                databases = stateHolder.databases.value,
-//                unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
-//                shouldShowExplicitSongs = stateHolder.userPreferences.value?.shouldShowExplicitSongs == true,
-//                shouldShowSongsWithoutChords = stateHolder.userPreferences.value?.shouldShowSongsWithoutChords == true,
-//                onDatabaseSelectedChanged = stateHolder::onDatabaseSelectedChanged,
-//                onShouldShowExplicitSongsChanged = stateHolder::onShouldShowExplicitSongsChanged,
-//                onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged
-//            )
-//        }
+        DropdownMenu(
+            modifier = Modifier.widthIn(min = 200.dp, max = 300.dp),
+            expanded = isFilterDropdownVisible.value,
+            onDismissRequest = { isFilterDropdownVisible.value = false }
+        ) {
+            SongsFilterControlsList(
+                modifier = Modifier.fillMaxSize(),
+                uiStrings = stateHolder.uiStrings.value,
+                databases = stateHolder.databases.value,
+                unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
+                shouldShowExplicitSongs = stateHolder.userPreferences.value?.shouldShowExplicitSongs == true,
+                shouldShowSongsWithoutChords = stateHolder.userPreferences.value?.shouldShowSongsWithoutChords == true,
+                onDatabaseSelectedChanged = stateHolder::onDatabaseSelectedChanged,
+                onShouldShowExplicitSongsChanged = stateHolder::onShouldShowExplicitSongsChanged,
+                onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged
+            )
+        }
     }
 }
