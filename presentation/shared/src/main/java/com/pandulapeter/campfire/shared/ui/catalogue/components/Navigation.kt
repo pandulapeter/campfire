@@ -7,17 +7,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.DropdownMenu
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -42,8 +36,6 @@ import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
-import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsFilterControlsList
-import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsSortingControlsList
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -52,7 +44,6 @@ fun CampfireScaffold(
     uiStrings: CampfireStrings,
     modalBottomSheetState: ModalBottomSheetState,
     songDetails: SongDetails?,
-    songDetailsScrollState: ScrollState,
     onSongClosed: () -> Unit,
     query: String,
     onQueryChanged: (String) -> Unit,
@@ -70,30 +61,11 @@ fun CampfireScaffold(
     sheetElevation = 0.dp,
     scrimColor = Color.Transparent,
     sheetContent = {
-        if (songDetails == null) {
-            CircularProgressIndicator(
-                modifier = Modifier.padding(16.dp)
-            )
-        } else {
-            TopAppBar(
-                navigationIcon = {
-                    IconButton(
-                        onClick = onSongClosed
-                    ) {
-                        Icon(
-                            imageVector = CampfireIcons.close,
-                            contentDescription = uiStrings.songsClose
-                        )
-                    }
-                },
-                backgroundColor = MaterialTheme.colors.background,
-                title = { Text(text = songDetails.song.title) }
-            )
-            Text(
-                modifier = Modifier.fillMaxWidth().verticalScroll(songDetailsScrollState).padding(16.dp),
-                text = songDetails.rawData
-            )
-        }
+        SongDetailsScreen(
+            uiStrings = uiStrings,
+            songDetails = songDetails,
+            onSongClosed = onSongClosed
+        )
     }
 ) {
     Scaffold(

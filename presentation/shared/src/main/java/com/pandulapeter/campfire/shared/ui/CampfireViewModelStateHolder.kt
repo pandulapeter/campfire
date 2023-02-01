@@ -34,16 +34,14 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
     val databases: State<List<Database>>,
     val songs: State<List<Song>>,
     val songDetails: State<SongDetails?>,
-    val modalBottomSheetState: ModalBottomSheetState,
-    val songDetailsScrollState: ScrollState
+    val modalBottomSheetState: ModalBottomSheetState
 ) {
     fun onQueryChanged(query: String) = viewModel.onQueryChanged(query)
 
     @OptIn(ExperimentalMaterialApi::class)
     fun onSongClicked(song: Song) = coroutineScope.launch {
-        viewModel.onSongClicked(song)
-        songDetailsScrollState.scrollTo(0)
         modalBottomSheetState.show()
+        viewModel.onSongClicked(song)
     }
 
     @OptIn(ExperimentalMaterialApi::class)
@@ -140,8 +138,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
                 initialValue = ModalBottomSheetValue.Hidden,
                 confirmStateChange = { it != ModalBottomSheetValue.HalfExpanded },
                 skipHalfExpanded = true
-            ),
-            songDetailsScrollState = rememberScrollState()
+            )
         )
     }
 }

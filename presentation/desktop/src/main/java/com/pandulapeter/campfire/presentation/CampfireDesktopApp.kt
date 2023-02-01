@@ -53,7 +53,6 @@ fun CampfireDesktopApp(
             songDetails = stateHolder.songDetails.value,
             onSongClosed = stateHolder::onSongClosed,
             modalBottomSheetState = stateHolder.modalBottomSheetState,
-            songDetailsScrollState = stateHolder.songDetailsScrollState,
             query = stateHolder.query.value,
             stateHolder = stateHolder,
             onQueryChanged = stateHolder::onQueryChanged,
