@@ -65,11 +65,13 @@ internal fun SongsScreenAndroid(
                 unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
                 shouldShowExplicitSongs = stateHolder.userPreferences.value?.shouldShowExplicitSongs == true,
                 shouldShowSongsWithoutChords = stateHolder.userPreferences.value?.shouldShowSongsWithoutChords == true,
+                showOnlyDownloadedSongs = stateHolder.userPreferences.value?.showOnlyDownloadedSongs == true,
                 onDatabaseSelectedChanged = stateHolder::onDatabaseSelectedChanged,
                 onShouldShowExplicitSongsChanged = stateHolder::onShouldShowExplicitSongsChanged,
                 onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged,
                 sortingMode = stateHolder.userPreferences.value?.sortingMode,
-                onSortingModeChanged = stateHolder::onSortingModeChanged
+                onSortingModeChanged = stateHolder::onSortingModeChanged,
+                onShowOnlyDownloadedSongsChanged = stateHolder::onShowOnlyDownloadedSongsChanged
             )
         }
     } else {
@@ -102,7 +104,7 @@ private fun SongsContentListWithPullRefresh(
     onSongClicked: (Song) -> Unit,
     lazyListState: LazyListState
 ) = Box(
-    modifier = modifier.pullRefresh(pullRefreshState)
+    modifier = modifier.fillMaxWidth().pullRefresh(pullRefreshState)
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     SongsContentList(

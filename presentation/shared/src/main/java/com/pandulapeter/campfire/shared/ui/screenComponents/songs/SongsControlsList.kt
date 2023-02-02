@@ -21,12 +21,14 @@ fun SongsControlsList(
     databases: List<Database>,
     unselectedDatabaseUrls: List<String>,
     shouldShowExplicitSongs: Boolean,
+    showOnlyDownloadedSongs: Boolean,
     shouldShowSongsWithoutChords: Boolean,
     onDatabaseSelectedChanged: (Database, Boolean) -> Unit,
     onShouldShowExplicitSongsChanged: (Boolean) -> Unit,
     onShouldShowSongsWithoutChordsChanged: (Boolean) -> Unit,
     sortingMode: UserPreferences.SortingMode?,
-    onSortingModeChanged: (UserPreferences.SortingMode) -> Unit
+    onSortingModeChanged: (UserPreferences.SortingMode) -> Unit,
+    onShowOnlyDownloadedSongsChanged: (Boolean) -> Unit
 ) {
     Column(
         modifier = modifier.wrapContentSize().verticalScroll(rememberScrollState())
@@ -42,10 +44,12 @@ fun SongsControlsList(
             databases = databases,
             unselectedDatabaseUrls = unselectedDatabaseUrls,
             shouldShowExplicitSongs = shouldShowExplicitSongs,
+            showOnlyDownloadedSongs = showOnlyDownloadedSongs,
             shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
             onDatabaseSelectedChanged = onDatabaseSelectedChanged,
             onShouldShowExplicitSongsChanged = onShouldShowExplicitSongsChanged,
-            onShouldShowSongsWithoutChordsChanged = onShouldShowSongsWithoutChordsChanged
+            onShouldShowSongsWithoutChordsChanged = onShouldShowSongsWithoutChordsChanged,
+            onShowOnlyDownloadedSongsChanged = onShowOnlyDownloadedSongsChanged
         )
     }
 }
@@ -83,9 +87,11 @@ fun SongsFilterControlsList(
     unselectedDatabaseUrls: List<String>,
     shouldShowExplicitSongs: Boolean,
     shouldShowSongsWithoutChords: Boolean,
+    showOnlyDownloadedSongs: Boolean,
     onDatabaseSelectedChanged: (Database, Boolean) -> Unit,
     onShouldShowExplicitSongsChanged: (Boolean) -> Unit,
     onShouldShowSongsWithoutChordsChanged: (Boolean) -> Unit,
+    onShowOnlyDownloadedSongsChanged: (Boolean) -> Unit
 ) = Column(
     modifier = modifier
 ) {
@@ -102,6 +108,11 @@ fun SongsFilterControlsList(
         text = uiStrings.songsShowWithoutChords,
         isChecked = shouldShowSongsWithoutChords,
         onCheckedChanged = onShouldShowSongsWithoutChordsChanged
+    )
+    CheckboxItem(
+        text = uiStrings.showOnlyDownloadedSongs,
+        isChecked = showOnlyDownloadedSongs,
+        onCheckedChanged = onShowOnlyDownloadedSongsChanged
     )
     databases.filter { it.isEnabled }.forEach { database ->
         CheckboxItem(

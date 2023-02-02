@@ -121,6 +121,15 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
         }
     }
 
+    fun onShowOnlyDownloadedSongsChanged(showOnlyDownloadedSongs: Boolean) = userPreferences.value?.let { userPreferences ->
+        coroutineScope.launch {
+            viewModel.onShowOnlyDownloadedSongsChanged(
+                userPreferences = userPreferences,
+                showOnlyDownloadedSongs = showOnlyDownloadedSongs
+            )
+        }
+    }
+
     fun onSortingModeChanged(sortingMode: UserPreferences.SortingMode) = userPreferences.value?.let { userPreferences ->
         scrollToTop()
         coroutineScope.launch {

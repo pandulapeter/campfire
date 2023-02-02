@@ -266,9 +266,11 @@ private fun FiltersIconAndDropdown(
                 unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
                 shouldShowExplicitSongs = stateHolder.userPreferences.value?.shouldShowExplicitSongs == true,
                 shouldShowSongsWithoutChords = stateHolder.userPreferences.value?.shouldShowSongsWithoutChords == true,
+                showOnlyDownloadedSongs = stateHolder.userPreferences.value?.showOnlyDownloadedSongs == true,
                 onDatabaseSelectedChanged = stateHolder::onDatabaseSelectedChanged,
                 onShouldShowExplicitSongsChanged = stateHolder::onShouldShowExplicitSongsChanged,
-                onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged
+                onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged,
+                onShowOnlyDownloadedSongsChanged = stateHolder::onShowOnlyDownloadedSongsChanged
             )
         }
     }

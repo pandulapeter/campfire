@@ -11,6 +11,7 @@ sealed class CampfireStrings {
     abstract val songsClear: String
     abstract val songsShowExplicit: String
     abstract val songsShowWithoutChords: String
+    abstract val showOnlyDownloadedSongs: String
     abstract val songsDatabaseFilter: (databaseName: String) -> String
     abstract val songsSortingMode: String
     abstract val songsSortingModeByArtist: String
@@ -45,6 +46,7 @@ sealed class CampfireStrings {
         override val songsClear = "Clear"
         override val songsShowExplicit = "Show explicit songs"
         override val songsShowWithoutChords = "Show songs without chords"
+        override val showOnlyDownloadedSongs = "Show only downloaded songs"
         override val songsDatabaseFilter: (databaseName: String) -> String = { "Database $it" }
         override val songsSortingMode = "Sort by"
         override val songsSortingModeByArtist = "Artist"
@@ -80,6 +82,7 @@ sealed class CampfireStrings {
         override val songsClear = "Törlés"
         override val songsShowExplicit = "Explicit dalok mutatása"
         override val songsShowWithoutChords = "Akkord nélküli dalok mutatása"
+        override val showOnlyDownloadedSongs = "Csak letöltött dalok mutatása"
         override val songsDatabaseFilter: (databaseName: String) -> String = { "\"$it\" adatbázis" }
         override val songsSortingMode = "Rendezési mód"
         override val songsSortingModeByArtist = "Előadó"

@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.DatabaseRepository
@@ -50,6 +51,7 @@ class GetScreenDataUseCaseImpl internal constructor(
                                 songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }
                                     .distinctBy { it.id }
                                     .filter { it.isPublic }
+                                    .filterDownloaded(userPreferences, rawSongDetails)
                                     .filterExplicit(userPreferences)
                                     .filterHasChords(userPreferences)
                                     .sort(userPreferences),
@@ -79,6 +81,11 @@ class GetScreenDataUseCaseImpl internal constructor(
             DataState.Idle(createScreenData() ?: cache ?: throw IllegalStateException("No data available while all data states are idle."))
         }
     }.distinctUntilChanged()
+
+    private fun List<Song>.filterDownloaded(
+        userPreferences: UserPreferences,
+        rawSongDetails: Map<String, RawSongDetails>
+    ) = if (userPreferences.showOnlyDownloadedSongs) filterNot { rawSongDetails[it.url] == null } else this
 
     private fun List<Song>.filterExplicit(userPreferences: UserPreferences) = if (userPreferences.shouldShowExplicitSongs) this else filterNot { it.isExplicit }
 

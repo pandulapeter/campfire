@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.shared.ui.screenComponents.songs
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -32,7 +33,7 @@ fun SongsContentList(
     rawSongDetails: Map<String, RawSongDetails>,
     onSongClicked: (Song) -> Unit
 ) = LazyColumn(
-    modifier = modifier,
+    modifier = modifier.fillMaxWidth(),
     state = state,
     contentPadding = PaddingValues(vertical = 8.dp)
 ) {

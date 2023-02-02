@@ -22,6 +22,7 @@ internal class UserPreferencesRepositoryImpl(
         private val defaultUserPreferences = UserPreferences(
             shouldShowExplicitSongs = false,
             shouldShowSongsWithoutChords = false,
+            showOnlyDownloadedSongs = false,
             unselectedDatabaseUrls = emptyList(),
             sortingMode = UserPreferences.SortingMode.BY_ARTIST,
             uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,

@@ -6,6 +6,7 @@ import com.pandulapeter.campfire.data.source.local.implementationAndroid.model.U
 internal fun UserPreferencesEntity.toModel() = UserPreferences(
     shouldShowExplicitSongs = shouldShowExplicitSongs,
     shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
+    showOnlyDownloadedSongs = showOnlyDownloadedSongs,
     unselectedDatabaseUrls = unselectedDatabaseUrls.mapToList(),
     sortingMode = UserPreferences.SortingMode.values().firstOrNull { it.id == sortingMode } ?: UserPreferences.SortingMode.BY_ARTIST,
     uiMode = UserPreferences.UiMode.values().firstOrNull { it.id == uiMode } ?: UserPreferences.UiMode.SYSTEM_DEFAULT,
@@ -15,6 +16,7 @@ internal fun UserPreferencesEntity.toModel() = UserPreferences(
 internal fun UserPreferences.toEntity() = UserPreferencesEntity(
     shouldShowExplicitSongs = shouldShowExplicitSongs,
     shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
+    showOnlyDownloadedSongs = showOnlyDownloadedSongs,
     unselectedDatabaseUrls = unselectedDatabaseUrls.mapToString(),
     sortingMode = sortingMode.id,
     uiMode = uiMode.id,
