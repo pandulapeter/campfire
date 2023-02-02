@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
@@ -61,10 +62,13 @@ internal fun SongItem(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
     song: Song,
+    isDownloaded: Boolean,
     onSongClicked: (Song) -> Unit
-) = RoundedCard {
+) = RoundedCard(
+    modifier = modifier.alpha(if (isDownloaded) 1f else 0.5f)
+) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .clickable { onSongClicked(song) }
             .padding(8.dp)
             .fillMaxWidth()

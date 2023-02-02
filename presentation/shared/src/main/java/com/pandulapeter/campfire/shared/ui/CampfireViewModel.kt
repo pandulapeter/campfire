@@ -6,7 +6,6 @@ import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
-import com.pandulapeter.campfire.domain.api.useCases.GetSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
@@ -22,7 +21,6 @@ import kotlinx.coroutines.flow.map
 
 class CampfireViewModel(
     getScreenData: GetScreenDataUseCase,
-    getSongDetails: GetSongDetailsUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
     private val loadSongDetails: LoadSongDetailsUseCase,
     private val saveDatabases: SaveDatabasesUseCase,
@@ -45,7 +43,7 @@ class CampfireViewModel(
                 .sortedByDescending { it.title.startsWith(normalizedQuery, true) }
         }
     }.distinctUntilChanged()
-    val songDetails = getSongDetails().map { it.data }.distinctUntilChanged()
+    val rawSongDetails = getScreenData().map { it.data?.rawSongDetails.orEmpty() }.distinctUntilChanged()
     val databases = getScreenData().map { it.data?.databases.orEmpty() }.distinctUntilChanged()
     val userPreferences = getScreenData().map { it.data?.userPreferences }.distinctUntilChanged()
     val uiMode = userPreferences.map { it?.uiMode }

@@ -30,29 +30,34 @@ class GetScreenDataUseCaseImpl internal constructor(
         databaseRepository.databases,
         setlistRepository.setlists,
         songRepository.songs,
+        rawSongDetailsRepository.rawSongDetails,
         userPreferencesRepository.userPreferences
     ) { databasesDataState,
         setlistsDataState,
         songsDataState,
+        rawSongDetailsDataState,
         userPreferencesDataState ->
 
         fun createScreenData() = databasesDataState.data?.sortedBy { it.priority }?.let { databases ->
             setlistsDataState.data?.sortedBy { it.priority }?.let { setlists ->
                 songsDataState.data?.let { songs ->
-                    userPreferencesDataState.data?.let { userPreferences ->
-                        val filteredDatabases = databases.filter { it.isEnabled }.filter { !userPreferences.unselectedDatabaseUrls.contains(it.url) }
-                        ScreenData(
-                            databases = databases,
-                            setlists = setlists,
-                            songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }
-                                .distinctBy { it.id }
-                                .filter { it.isPublic }
-                                .filterExplicit(userPreferences)
-                                .filterHasChords(userPreferences)
-                                .sort(userPreferences),
-                            userPreferences = userPreferences
-                        ).also {
-                            cache = it
+                    rawSongDetailsDataState.data?.let { rawSongDetails ->
+                        userPreferencesDataState.data?.let { userPreferences ->
+                            val filteredDatabases = databases.filter { it.isEnabled }.filter { !userPreferences.unselectedDatabaseUrls.contains(it.url) }
+                            ScreenData(
+                                databases = databases,
+                                setlists = setlists,
+                                songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }
+                                    .distinctBy { it.id }
+                                    .filter { it.isPublic }
+                                    .filterExplicit(userPreferences)
+                                    .filterHasChords(userPreferences)
+                                    .sort(userPreferences),
+                                rawSongDetails = rawSongDetails,
+                                userPreferences = userPreferences
+                            ).also {
+                                cache = it
+                            }
                         }
                     }
                 }
@@ -63,6 +68,7 @@ class GetScreenDataUseCaseImpl internal constructor(
             databasesDataState,
             setlistsDataState,
             songsDataState,
+            rawSongDetailsDataState,
             userPreferencesDataState
         )
         if (dataStates.any { it is DataState.Failure }) {

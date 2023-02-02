@@ -38,7 +38,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
     val query: State<String>,
     val databases: State<List<Database>>,
     val songs: State<List<Song>>,
-    val rawSongDetails: State<Map<String, RawSongDetails>?>,
+    val rawSongDetails: State<Map<String, RawSongDetails>>,
     val selectedSong: State<Song?>,
     val modalBottomSheetState: ModalBottomSheetState,
     val songsScreenScrollState: LazyListState
@@ -165,7 +165,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
             query = viewModel.query.collectAsState(""),
             databases = viewModel.databases.collectAsState(emptyList()),
             songs = viewModel.songs.collectAsState(emptyList()),
-            rawSongDetails = viewModel.songDetails.collectAsState(null),
+            rawSongDetails = viewModel.rawSongDetails.collectAsState(emptyMap()),
             selectedSong = viewModel.selectedSong.collectAsState(null),
             modalBottomSheetState = rememberModalBottomSheetState(
                 initialValue = ModalBottomSheetValue.Hidden,

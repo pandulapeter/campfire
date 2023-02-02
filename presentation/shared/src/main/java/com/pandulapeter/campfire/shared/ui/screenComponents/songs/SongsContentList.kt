@@ -10,6 +10,7 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
@@ -28,6 +29,7 @@ fun SongsContentList(
     sortingMode: UserPreferences.SortingMode?,
     shouldUseHeaders: Boolean,
     songs: List<Song>,
+    rawSongDetails: Map<String, RawSongDetails>,
     onSongClicked: (Song) -> Unit
 ) = LazyColumn(
     modifier = modifier,
@@ -74,6 +76,7 @@ fun SongsContentList(
                     modifier = Modifier.animateItemPlacement(),
                     uiStrings = uiStrings,
                     song = song,
+                    isDownloaded = rawSongDetails[song.url] != null,
                     onSongClicked = onSongClicked
                 )
             }

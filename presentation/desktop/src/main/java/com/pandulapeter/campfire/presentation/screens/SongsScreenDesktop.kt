@@ -68,6 +68,7 @@ private fun SongsContentListWithScrollBar(
         shouldUseHeaders = stateHolder.query.value.isBlank(),
         state = lazyListState,
         songs = stateHolder.songs.value,
+        rawSongDetails = stateHolder.rawSongDetails.value,
         onSongClicked = stateHolder::onSongClicked
     )
     VerticalScrollbar(

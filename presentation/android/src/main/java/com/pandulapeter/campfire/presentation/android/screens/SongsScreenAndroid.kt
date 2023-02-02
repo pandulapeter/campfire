@@ -19,6 +19,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
@@ -48,6 +49,7 @@ internal fun SongsScreenAndroid(
                 pullRefreshState = pullRefreshState,
                 isRefreshing = stateHolder.isRefreshing.value,
                 songs = stateHolder.songs.value,
+                rawSongDetails = stateHolder.rawSongDetails.value,
                 onSongClicked = stateHolder::onSongClicked,
                 lazyListState = lazyListState
             )
@@ -79,6 +81,7 @@ internal fun SongsScreenAndroid(
             pullRefreshState = pullRefreshState,
             isRefreshing = stateHolder.isRefreshing.value,
             songs = stateHolder.songs.value,
+            rawSongDetails = stateHolder.rawSongDetails.value,
             onSongClicked = stateHolder::onSongClicked,
             lazyListState = lazyListState
         )
@@ -95,6 +98,7 @@ private fun SongsContentListWithPullRefresh(
     sortingMode: UserPreferences.SortingMode?,
     shouldUseHeaders: Boolean,
     songs: List<Song>,
+    rawSongDetails: Map<String, RawSongDetails>,
     onSongClicked: (Song) -> Unit,
     lazyListState: LazyListState
 ) = Box(
@@ -107,6 +111,7 @@ private fun SongsContentListWithPullRefresh(
         sortingMode = sortingMode,
         shouldUseHeaders = shouldUseHeaders,
         songs = songs,
+        rawSongDetails = rawSongDetails,
         onSongClicked = {
             keyboardController?.hide()
             onSongClicked(it)
