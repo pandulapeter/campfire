@@ -35,7 +35,7 @@ fun SettingsContentList(
 ) {
     item(key = "header_databases") {
         HeaderItem(
-            modifier = Modifier.animateItemPlacement(),
+            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
             text = uiStrings.settingsActiveDatabases
         )
     }
@@ -65,7 +65,7 @@ fun SettingsContentList(
     }
     item(key = "header_user_interface_theme") {
         HeaderItem(
-            modifier = Modifier.animateItemPlacement(),
+            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
             text = uiStrings.settingsUserInterfaceTheme
         )
     }
@@ -95,7 +95,7 @@ fun SettingsContentList(
     }
     item(key = "header_user_interface_language") {
         HeaderItem(
-            modifier = Modifier.animateItemPlacement(),
+            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
             text = uiStrings.settingsUserInterfaceLanguage
         )
     }

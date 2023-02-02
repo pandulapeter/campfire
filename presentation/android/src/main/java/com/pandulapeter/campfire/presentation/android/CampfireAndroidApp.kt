@@ -45,7 +45,6 @@ fun CampfireAndroidApp(
     BackHandler(stateHolder.modalBottomSheetState.isVisible) { stateHolder.onSongClosed() }
 
     val isKeyboardVisible = keyboardState()
-    val songsScreenScrollState = rememberLazyListState()
     val songsScreenPullRefreshState = rememberPullRefreshState(
         refreshing = stateHolder.isRefreshing.value,
         onRefresh = stateHolder::onForceRefreshTriggered
@@ -103,7 +102,7 @@ fun CampfireAndroidApp(
                     stateHolder = stateHolder,
                     selectedNavigationDestination = stateHolder.selectedNavigationDestination.value,
                     shouldUseExpandedUi = shouldUseExpandedUi,
-                    songsScreenScrollState = songsScreenScrollState,
+                    songsScreenScrollState = stateHolder.songsScreenScrollState,
                     songsScreenPullRefreshState = songsScreenPullRefreshState
                 )
             }

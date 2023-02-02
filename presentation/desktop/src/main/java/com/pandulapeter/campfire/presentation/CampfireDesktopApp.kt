@@ -41,7 +41,6 @@ fun CampfireDesktopApp(
 ) {
     LaunchedEffect(Unit) { viewModel.onInitialize() }
 
-    val songsScreenScrollState = rememberLazyListState()
     val shouldUseExpandedUi = windowSize.width > 720.dp
 
     CampfireDesktopTheme(
@@ -98,7 +97,7 @@ fun CampfireDesktopApp(
                     stateHolder = stateHolder,
                     selectedNavigationDestination = stateHolder.selectedNavigationDestination.value,
                     shouldUseExpandedUi = shouldUseExpandedUi,
-                    songsScreenScrollState = songsScreenScrollState
+                    songsScreenScrollState = stateHolder.songsScreenScrollState
                 )
             }
         )

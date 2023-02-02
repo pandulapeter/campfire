@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.shared.ui
 
-import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.ModalBottomSheetValue
@@ -17,8 +17,11 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.catalogue.utilities.getUiStrings
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) constructor(
@@ -34,9 +37,29 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
     val databases: State<List<Database>>,
     val songs: State<List<Song>>,
     val songDetails: State<SongDetails?>,
-    val modalBottomSheetState: ModalBottomSheetState
+    val modalBottomSheetState: ModalBottomSheetState,
+    val songsScreenScrollState: LazyListState
 ) {
-    fun onQueryChanged(query: String) = viewModel.onQueryChanged(query)
+    private var shouldScrollOnNextValue = false
+
+    init {
+        viewModel.songs.onEach {
+            if (shouldScrollOnNextValue) {
+                shouldScrollOnNextValue = false
+                delay(100) // TODO: Hacky solution, might not work well on older devices
+                songsScreenScrollState.animateScrollToItem(0)
+            }
+        }.launchIn(coroutineScope)
+    }
+
+    fun onQueryChanged(query: String) {
+        scrollToTop()
+        viewModel.onQueryChanged(query)
+    }
+
+    private fun scrollToTop() {
+        shouldScrollOnNextValue = true
+    }
 
     @OptIn(ExperimentalMaterialApi::class)
     fun onSongClicked(song: Song) = coroutineScope.launch {
@@ -91,6 +114,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
     }
 
     fun onSortingModeChanged(sortingMode: UserPreferences.SortingMode) = userPreferences.value?.let { userPreferences ->
+        scrollToTop()
         coroutineScope.launch {
             viewModel.onSortingModeChanged(
                 userPreferences = userPreferences,
@@ -138,7 +162,8 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
                 initialValue = ModalBottomSheetValue.Hidden,
                 confirmStateChange = { it != ModalBottomSheetValue.HalfExpanded },
                 skipHalfExpanded = true
-            )
+            ),
+            songsScreenScrollState = rememberLazyListState()
         )
     }
 }
