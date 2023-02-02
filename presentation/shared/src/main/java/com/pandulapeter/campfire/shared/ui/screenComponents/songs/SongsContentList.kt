@@ -72,6 +72,7 @@ fun SongsContentList(
             ) {
                 SongItem(
                     modifier = Modifier.animateItemPlacement(),
+                    uiStrings = uiStrings,
                     song = song,
                     onSongClicked = onSongClicked
                 )

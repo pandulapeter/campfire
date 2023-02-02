@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,9 +34,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
@@ -56,6 +59,7 @@ internal fun HeaderItem(
 @Composable
 internal fun SongItem(
     modifier: Modifier = Modifier,
+    uiStrings: CampfireStrings,
     song: Song,
     onSongClicked: (Song) -> Unit
 ) = RoundedCard {
@@ -71,10 +75,23 @@ internal fun SongItem(
         Spacer(
             modifier = Modifier.height(4.dp)
         )
-        Text(
-            style = MaterialTheme.typography.caption,
-            text = song.artist
-        )
+        Row(
+            horizontalArrangement = Arrangement.End
+        ) {
+            Text(
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.caption,
+                text = song.artist
+            )
+            if (!song.hasChords) {
+                Text(
+                    style = MaterialTheme.typography.caption,
+                    text = uiStrings.songsLyricsOnly,
+                    textAlign = TextAlign.End,
+                    fontStyle = FontStyle.Italic
+                )
+            }
+        }
     }
 }
 
