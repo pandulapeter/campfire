@@ -12,6 +12,7 @@ internal class RawSongDetailsRepositoryImpl(
     private val rawSongDetailsRemoteSource: RawSongDetailsRemoteSource
 ) : RawSongDetailsRepository {
 
+    private val isFirstLoadingDone = mutableListOf<String>()
     private val _rawSongDetails = MutableStateFlow<DataState<Map<String, RawSongDetails>>>(DataState.Failure(null))
     override val rawSongDetails = _rawSongDetails
 
@@ -24,7 +25,7 @@ internal class RawSongDetailsRepositoryImpl(
 
     override suspend fun loadRawSongDetails(url: String, isForceRefresh: Boolean) {
         _rawSongDetails.value.data?.get(url).let { rawSongData ->
-            if (rawSongData == null || isForceRefresh) {
+            if (rawSongData == null || isForceRefresh || !isFirstLoadingDone.contains(url)) {
                 _rawSongDetails.value = DataState.Loading(_rawSongDetails.value.data)
                 try {
                     val rawSongDetailsData = rawSongDetailsRemoteSource.loadRawSongDetails(url)
@@ -37,10 +38,16 @@ internal class RawSongDetailsRepositoryImpl(
                     }
                     _rawSongDetails.value = DataState.Loading(newMap)
                     rawSongDetailsLocalSource.saveRawSongDetails(rawSongDetails)
+                    isFirstLoadingDone.add(url)
                     _rawSongDetails.value = DataState.Idle(newMap)
                 } catch (exception: Exception) {
                     println(exception.message)
-                    _rawSongDetails.value = DataState.Failure(_rawSongDetails.value.data)
+                    val currentData = _rawSongDetails.value.data
+                    _rawSongDetails.value = if (currentData == null || isForceRefresh) {
+                        DataState.Failure(currentData)
+                    } else {
+                        DataState.Idle(currentData)
+                    }
                 }
             }
         }
