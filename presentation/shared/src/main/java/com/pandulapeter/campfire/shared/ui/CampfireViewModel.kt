@@ -35,8 +35,15 @@ class CampfireViewModel(
         getScreenData().map { it.data?.songs.orEmpty() },
         query
     ) { songs, query ->
-        val normalizedQuery = normalizeText(query)
-        songs.filter { normalizeText(it.title).contains(normalizedQuery, true) || normalizeText(it.artist).contains(normalizedQuery, true) }
+        if (query.isBlank()) {
+            songs
+        } else {
+            val normalizedQuery = normalizeText(query)
+            songs
+                .filter { normalizeText(it.title).contains(normalizedQuery, true) || normalizeText(it.artist).contains(normalizedQuery, true) }
+                .sortedByDescending { it.artist.startsWith(normalizedQuery, true) }
+                .sortedByDescending { it.title.startsWith(normalizedQuery, true) }
+        }
     }.distinctUntilChanged()
     val songDetails = getSongDetails().map { it.data }.distinctUntilChanged()
     val databases = getScreenData().map { it.data?.databases.orEmpty() }.distinctUntilChanged()

@@ -44,6 +44,7 @@ internal fun SongsScreenAndroid(
                 modifier = Modifier.fillMaxWidth(0.65f),
                 uiStrings = stateHolder.uiStrings.value,
                 sortingMode = stateHolder.userPreferences.value?.sortingMode,
+                shouldUseHeaders = stateHolder.query.value.isBlank(),
                 pullRefreshState = pullRefreshState,
                 isRefreshing = stateHolder.isRefreshing.value,
                 songs = stateHolder.songs.value,
@@ -74,6 +75,7 @@ internal fun SongsScreenAndroid(
             modifier = modifier,
             uiStrings = stateHolder.uiStrings.value,
             sortingMode = stateHolder.userPreferences.value?.sortingMode,
+            shouldUseHeaders = stateHolder.query.value.isBlank(),
             pullRefreshState = pullRefreshState,
             isRefreshing = stateHolder.isRefreshing.value,
             songs = stateHolder.songs.value,
@@ -91,6 +93,7 @@ private fun SongsContentListWithPullRefresh(
     pullRefreshState: PullRefreshState,
     isRefreshing: Boolean,
     sortingMode: UserPreferences.SortingMode?,
+    shouldUseHeaders: Boolean,
     songs: List<Song>,
     onSongClicked: (Song) -> Unit,
     lazyListState: LazyListState
@@ -102,6 +105,7 @@ private fun SongsContentListWithPullRefresh(
         modifier = Modifier.fillMaxHeight(),
         uiStrings = uiStrings,
         sortingMode = sortingMode,
+        shouldUseHeaders = shouldUseHeaders,
         songs = songs,
         onSongClicked = {
             keyboardController?.hide()

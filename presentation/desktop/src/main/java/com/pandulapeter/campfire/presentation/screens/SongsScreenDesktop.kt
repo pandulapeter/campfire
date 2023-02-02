@@ -65,6 +65,7 @@ private fun SongsContentListWithScrollBar(
         modifier = Modifier.fillMaxSize().padding(end = 8.dp),
         uiStrings = stateHolder.uiStrings.value,
         sortingMode = stateHolder.userPreferences.value?.sortingMode,
+        shouldUseHeaders = stateHolder.query.value.isBlank(),
         state = lazyListState,
         songs = stateHolder.songs.value,
         onSongClicked = stateHolder::onSongClicked

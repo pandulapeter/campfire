@@ -47,7 +47,7 @@ internal fun HeaderItem(
     text: String,
     shouldUseLargePadding: Boolean = true
 ) = Text(
-    modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = if (shouldUseLargePadding) 16.dp else 8.dp),
+    modifier = modifier.padding(horizontal = 8.dp, vertical = if (shouldUseLargePadding) 16.dp else 8.dp),
     text = text,
     style = TextStyle.Default.copy(fontWeight = FontWeight.Bold),
     color = MaterialTheme.colors.primary
