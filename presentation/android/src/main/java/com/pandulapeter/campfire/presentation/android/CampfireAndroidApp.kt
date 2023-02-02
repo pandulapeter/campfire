@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.AppBarDefaults
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
@@ -66,7 +65,7 @@ fun CampfireAndroidApp(
                 .systemBarsPadding()
                 .imePadding(),
             uiStrings = stateHolder.uiStrings.value,
-            songDetails = stateHolder.songDetails.value,
+            rawSongDetails = stateHolder.rawSongDetails.value,
             onSongClosed = stateHolder::onSongClosed,
             modalBottomSheetState = stateHolder.modalBottomSheetState,
             stateHolder = stateHolder,

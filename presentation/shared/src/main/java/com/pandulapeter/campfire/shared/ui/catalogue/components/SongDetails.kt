@@ -16,7 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.data.model.domain.SongDetails
+import com.pandulapeter.campfire.data.model.domain.RawSongDetails
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
@@ -24,7 +25,8 @@ import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 internal fun SongDetailsScreen(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
-    songDetails: SongDetails?,
+    song: Song?,
+    rawSongDetails: RawSongDetails?,
     onSongClosed: () -> Unit
 ) = Column(
     modifier = modifier.fillMaxSize()
@@ -41,16 +43,16 @@ internal fun SongDetailsScreen(
             }
         },
         backgroundColor = MaterialTheme.colors.background,
-        title = { Text(text = songDetails?.song?.title.orEmpty()) }
+        title = { Text(text = song?.title.orEmpty()) }
     )
-    if (songDetails == null) {
+    if (rawSongDetails == null) {
         CircularProgressIndicator(
             modifier = Modifier.padding(16.dp).align(Alignment.CenterHorizontally)
         )
     } else {
         Text(
             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
-            text = songDetails.rawData
+            text = rawSongDetails.rawData
         )
     }
 }

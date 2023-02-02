@@ -6,4 +6,5 @@ data class Database(
     val isEnabled: Boolean,
     val priority: Int,
     val isAddedByUser: Boolean
+    // TODO: Last update timestamp
 )

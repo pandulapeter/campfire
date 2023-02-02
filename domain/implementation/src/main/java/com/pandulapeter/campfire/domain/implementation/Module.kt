@@ -19,9 +19,9 @@ import com.pandulapeter.campfire.domain.implementation.useCases.SaveUserPreferen
 import org.koin.dsl.module
 
 val domainModule = module {
-    factory<GetScreenDataUseCase> { GetScreenDataUseCaseImpl(get(), get(), get(), get(), get()) }
+    factory<GetScreenDataUseCase> { GetScreenDataUseCaseImpl(get(), get(), get(), get(), get(), get()) }
     factory<GetSongDetailsUseCase> { GetSongDetailsUseCaseImpl(get()) }
-    factory<LoadScreenDataUseCase> { LoadScreenDataUseCaseImpl(get(), get(), get(), get()) }
+    factory<LoadScreenDataUseCase> { LoadScreenDataUseCaseImpl(get(), get(), get(), get(), get()) }
     factory<LoadSongDetailsUseCase> { LoadSongDetailsUseCaseImpl(get()) }
     factory<NormalizeTextUseCase> { NormalizeTextUseCaseImpl() }
     factory<SaveDatabasesUseCase> { SaveDatabasesUseCaseImpl(get(), get()) }

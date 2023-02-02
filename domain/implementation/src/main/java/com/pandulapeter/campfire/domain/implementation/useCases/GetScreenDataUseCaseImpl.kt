@@ -4,6 +4,7 @@ import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.DatabaseRepository
+import com.pandulapeter.campfire.data.repository.api.RawSongDetailsRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
@@ -18,6 +19,7 @@ class GetScreenDataUseCaseImpl internal constructor(
     databaseRepository: DatabaseRepository,
     setlistRepository: SetlistRepository,
     songRepository: SongRepository,
+    rawSongDetailsRepository: RawSongDetailsRepository,
     userPreferencesRepository: UserPreferencesRepository
 ) : GetScreenDataUseCase {
 

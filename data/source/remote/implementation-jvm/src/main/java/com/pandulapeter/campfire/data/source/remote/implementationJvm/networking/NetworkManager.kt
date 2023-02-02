@@ -9,12 +9,12 @@ internal class NetworkManager(
     private val moshiConverterFactory: MoshiConverterFactory
 ) {
     private val songServices = mutableMapOf<String, SongService>()
-    val songDetailsService: SongDetailsService by lazy {
+    val rawSongDetailsService: RawSongDetailsService by lazy {
         Retrofit.Builder()
             .baseUrl("https://www.pandulapeter.com/") // Will never be used
             .client(okHttpClient)
             .build()
-            .create(SongDetailsService::class.java)
+            .create(RawSongDetailsService::class.java)
     }
 
     fun getSongService(databaseUrl: String) = songServices[databaseUrl] ?: createSongService(databaseUrl).also {

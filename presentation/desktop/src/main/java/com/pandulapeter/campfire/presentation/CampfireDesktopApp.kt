@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
@@ -49,7 +48,7 @@ fun CampfireDesktopApp(
         CampfireScaffold(
             navigationDestinations = stateHolder.navigationDestinations.value,
             uiStrings = stateHolder.uiStrings.value,
-            songDetails = stateHolder.songDetails.value,
+            rawSongDetails = stateHolder.rawSongDetails.value,
             onSongClosed = stateHolder::onSongClosed,
             modalBottomSheetState = stateHolder.modalBottomSheetState,
             query = stateHolder.query.value,

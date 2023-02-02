@@ -2,10 +2,12 @@ package com.pandulapeter.campfire.data.source.local.implementationAndroid
 
 import androidx.room.Room
 import com.pandulapeter.campfire.data.source.local.api.DatabaseLocalSource
+import com.pandulapeter.campfire.data.source.local.api.RawSongDetailsLocalSource
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 import com.pandulapeter.campfire.data.source.local.api.UserPreferencesLocalSource
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.source.DatabaseLocalSourceImpl
+import com.pandulapeter.campfire.data.source.local.implementationAndroid.source.RawSongDetailsLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.source.SetlistLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.source.SongLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.source.UserPreferencesLocalSourceImpl
@@ -21,9 +23,11 @@ val dataLocalSourceAndroidModule = module {
     factory { get<StorageManager>().getDatabaseDao() }
     factory { get<StorageManager>().getSetlistDao() }
     factory { get<StorageManager>().getSongsDao() }
+    factory { get<StorageManager>().getRawSongDetailsDao() }
     factory { get<StorageManager>().getUserPreferencesDao() }
     factory<DatabaseLocalSource> { DatabaseLocalSourceImpl(get()) }
     factory<SetlistLocalSource> { SetlistLocalSourceImpl(get()) }
     factory<SongLocalSource> { SongLocalSourceImpl(get()) }
+    factory<RawSongDetailsLocalSource> { RawSongDetailsLocalSourceImpl(get()) }
     factory<UserPreferencesLocalSource> { UserPreferencesLocalSourceImpl(get()) }
 }

@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.repository.api.DatabaseRepository
+import com.pandulapeter.campfire.data.repository.api.RawSongDetailsRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
@@ -15,6 +16,7 @@ class LoadScreenDataUseCaseImpl internal constructor(
     private val databaseRepository: DatabaseRepository,
     private val setlistRepository: SetlistRepository,
     private val songRepository: SongRepository,
+    private val rawSongDetailsRepository: RawSongDetailsRepository,
     private val userPreferencesRepository: UserPreferencesRepository
 ) : LoadScreenDataUseCase {
 
@@ -26,6 +28,7 @@ class LoadScreenDataUseCaseImpl internal constructor(
         with(scope) {
             listOf(
                 async { setlistRepository.loadSetlistsIfNeeded() },
+                async { rawSongDetailsRepository.loadRawSongDetailsIfNeeded() },
                 async {
                     val userPreferences = userPreferencesRepository.loadUserPreferencesIfNeeded()
                     val databaseUrls = databaseRepository.loadDatabasesIfNeeded()

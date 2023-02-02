@@ -60,6 +60,8 @@ class CampfireViewModel(
             )
         }
     }
+    private val _selectedSong = MutableStateFlow<Song?>(null)
+    val selectedSong: Flow<Song?> = _selectedSong
 
     suspend fun onInitialize() = loadScreenData(false)
 
@@ -81,7 +83,12 @@ class CampfireViewModel(
         _query.value = newQuery
     }
 
-    suspend fun onSongClicked(song: Song?) = loadSongDetails(song, false)
+    suspend fun onSongClicked(song: Song?) {
+        _selectedSong.value = song
+        if (song != null) {
+            loadSongDetails(song.url, false)
+        }
+    }
 
     suspend fun onShouldShowExplicitSongsChanged(userPreferences: UserPreferences, shouldShowExplicitSongs: Boolean) = saveUserPreferences(
         userPreferences.copy(shouldShowExplicitSongs = shouldShowExplicitSongs)

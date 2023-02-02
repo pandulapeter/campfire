@@ -31,7 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.pandulapeter.campfire.data.model.domain.SongDetails
+import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
@@ -47,7 +47,7 @@ fun CampfireScaffold(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
     modalBottomSheetState: ModalBottomSheetState,
-    songDetails: SongDetails?,
+    rawSongDetails: Map<String, RawSongDetails>?,
     onSongClosed: () -> Unit,
     query: String,
     onQueryChanged: (String) -> Unit,
@@ -67,7 +67,8 @@ fun CampfireScaffold(
     sheetContent = {
         SongDetailsScreen(
             uiStrings = uiStrings,
-            songDetails = songDetails,
+            song = stateHolder.selectedSong.value,
+            rawSongDetails = stateHolder.selectedSong.value?.let { rawSongDetails?.get(it.url) },
             onSongClosed = onSongClosed
         )
     }
