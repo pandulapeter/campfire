@@ -74,6 +74,7 @@ fun CampfireScaffold(
     }
 ) {
     Scaffold(
+        scaffoldState = stateHolder.scaffoldState,
         topBar = {
             val selectedNavigationDestination = navigationDestinations.firstOrNull { it.isSelected }?.destination
             CampfireAppBar(

@@ -25,6 +25,7 @@ fun SettingsContentList(
     uiStrings: CampfireStrings,
     databases: List<Database>,
     onDatabaseEnabledChanged: (Database, Boolean) -> Unit,
+    onAddDatabaseClicked: () -> Unit,
     selectedUiMode: UserPreferences.UiMode?,
     onSelectedUiModeChanged: (UserPreferences.UiMode) -> Unit,
     selectedLanguage: UserPreferences.Language?,
@@ -60,7 +61,7 @@ fun SettingsContentList(
                     contentDescription = uiStrings.settingsAddNewDatabase
                 )
             },
-            onClick = { } // TODO
+            onClick = onAddDatabaseClicked
         )
     }
     item(key = "header_user_interface_theme") {

@@ -5,7 +5,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.ScaffoldState
 import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -41,7 +43,8 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
     val rawSongDetails: State<Map<String, RawSongDetails>>,
     val selectedSong: State<Song?>,
     val modalBottomSheetState: ModalBottomSheetState,
-    val songsScreenScrollState: LazyListState
+    val songsScreenScrollState: LazyListState,
+    val scaffoldState: ScaffoldState
 ) {
     private var shouldScrollOnNextValue = false
 
@@ -78,7 +81,6 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
 
     fun onSongClicked(song: Song) = coroutineScope.launch { viewModel.onSongClicked(song) }
 
-    @OptIn(ExperimentalMaterialApi::class)
     fun onSongClosed() = coroutineScope.launch { viewModel.onSongClicked(null) }
 
     fun onForceRefreshTriggered() = coroutineScope.launch { viewModel.onForceRefreshTriggered() }
@@ -158,6 +160,12 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
         }
     }
 
+    fun onAddDatabaseClicked() = coroutineScope.launch {
+        scaffoldState.snackbarHostState.showSnackbar(
+            message = uiStrings.value.settingsAddNewDatabaseComingSoon
+        )
+    }
+
     companion object {
 
         @OptIn(ExperimentalMaterialApi::class)
@@ -181,7 +189,8 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
                 confirmStateChange = { it != ModalBottomSheetValue.HalfExpanded },
                 skipHalfExpanded = true
             ),
-            songsScreenScrollState = rememberLazyListState()
+            songsScreenScrollState = rememberLazyListState(),
+            scaffoldState = rememberScaffoldState()
         )
     }
 }
