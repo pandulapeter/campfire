@@ -65,11 +65,12 @@ internal fun SongItem(
     isDownloaded: Boolean,
     onSongClicked: (Song) -> Unit
 ) = RoundedCard(
-    modifier = modifier.alpha(if (isDownloaded) 1f else 0.5f)
+    modifier = modifier
 ) {
     Column(
         modifier = Modifier
             .clickable { onSongClicked(song) }
+            .alpha(if (isDownloaded) 1f else 0.5f)
             .padding(8.dp)
             .fillMaxWidth()
     ) {
