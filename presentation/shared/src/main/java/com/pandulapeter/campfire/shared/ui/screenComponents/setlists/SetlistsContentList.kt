@@ -32,7 +32,7 @@ fun SetlistsContentList(
 ) = LazyColumn(
     modifier = modifier.fillMaxWidth(),
     state = state,
-    contentPadding = PaddingValues(vertical = 8.dp)
+    contentPadding = PaddingValues(top = 8.dp, bottom = 80.dp)
 ) {
     if (setlists.isEmpty()) {
         item(key = "header_no_setlists") {

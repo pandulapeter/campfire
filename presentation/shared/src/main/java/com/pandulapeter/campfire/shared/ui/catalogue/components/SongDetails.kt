@@ -17,7 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
+import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
@@ -25,8 +27,10 @@ import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 internal fun SongDetailsScreen(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
+    stateHolder: CampfireViewModelStateHolder,
     song: Song?,
     rawSongDetails: RawSongDetails?,
+    setlists: List<Setlist>,
     onSongClosed: () -> Unit
 ) = Column(
     modifier = modifier.fillMaxSize()
@@ -40,6 +44,18 @@ internal fun SongDetailsScreen(
                     imageVector = CampfireIcons.close,
                     contentDescription = uiStrings.songsClose
                 )
+            }
+        },
+        actions = {
+            if (setlists.isNotEmpty()) {
+                IconButton(
+                    onClick = { song?.id?.let(stateHolder::onSetlistPickerClicked) }
+                ) {
+                    Icon(
+                        imageVector = CampfireIcons.setlists,
+                        contentDescription = uiStrings.setlists
+                    )
+                }
             }
         },
         backgroundColor = MaterialTheme.colors.background,

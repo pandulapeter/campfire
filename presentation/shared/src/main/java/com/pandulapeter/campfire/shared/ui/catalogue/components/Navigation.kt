@@ -85,8 +85,10 @@ fun CampfireScaffold(
     sheetContent = {
         SongDetailsScreen(
             uiStrings = uiStrings,
+            stateHolder = stateHolder,
             song = stateHolder.selectedSong.value,
             rawSongDetails = stateHolder.selectedSong.value?.let { rawSongDetails?.get(it.url) },
+            setlists = stateHolder.setlists.value,
             onSongClosed = onSongClosed
         )
     }
@@ -108,7 +110,7 @@ fun CampfireScaffold(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             SearchItem(
-                                modifier = Modifier.width(160.dp).padding(vertical = 8.dp),
+                                modifier = Modifier.width(168.dp).padding(vertical = 8.dp),
                                 uiStrings = uiStrings,
                                 query = query,
                                 onQueryChanged = onQueryChanged
@@ -332,8 +334,9 @@ private fun DynamicDialog(
             title = {
                 Text(
                     text = when (visibleDialog) {
-                        CampfireViewModel.DialogType.NEW_SETLIST -> uiStrings.setlistsNewSetlist
-                        CampfireViewModel.DialogType.NEW_DATABASE -> uiStrings.settingsAddNewDatabase
+                        CampfireViewModel.DialogType.NewSetlist -> uiStrings.setlistsNewSetlist
+                        CampfireViewModel.DialogType.NewDatabase -> uiStrings.settingsAddNewDatabase
+                        is CampfireViewModel.DialogType.SetlistPicker -> uiStrings.songDetailsAddToSetlist
                     }
                 )
             },
@@ -344,7 +347,7 @@ private fun DynamicDialog(
                         text = ""
                     )
                     when (visibleDialog) {
-                        CampfireViewModel.DialogType.NEW_SETLIST -> {
+                        CampfireViewModel.DialogType.NewSetlist -> {
                             OutlinedTextField(
                                 modifier = Modifier.fillMaxWidth(),
                                 label = { Text(uiStrings.setlistsNewSetlistTitle) },
@@ -353,7 +356,7 @@ private fun DynamicDialog(
                                 singleLine = true
                             )
                         }
-                        CampfireViewModel.DialogType.NEW_DATABASE -> {
+                        CampfireViewModel.DialogType.NewDatabase -> {
                             OutlinedTextField(
                                 modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                                 label = { Text(uiStrings.settingsAddNewDatabaseName) },
@@ -376,6 +379,27 @@ private fun DynamicDialog(
                                 text = uiStrings.settingsAddNewDatabaseHint
                             )
                         }
+                        is CampfireViewModel.DialogType.SetlistPicker -> {
+                            stateHolder.setlists.value.forEach { setlist ->
+                                CheckboxItem(
+                                    text = setlist.title,
+                                    isChecked = setlist.songIds.contains(visibleDialog.songId),
+                                    onCheckedChanged = {
+                                        if (it) {
+                                            stateHolder.addSongToSetlist(
+                                                songId = visibleDialog.songId,
+                                                setlistId = setlist.id
+                                            )
+                                        } else {
+                                            stateHolder.removeSongFromSetlist(
+                                                songId = visibleDialog.songId,
+                                                setlistId = setlist.id
+                                            )
+                                        }
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             },
@@ -383,20 +407,23 @@ private fun DynamicDialog(
                 TextButton(
                     onClick = {
                         when (visibleDialog) {
-                            CampfireViewModel.DialogType.NEW_SETLIST -> stateHolder.createNewSetlist(firstTextInputValue.value)
-                            CampfireViewModel.DialogType.NEW_DATABASE -> stateHolder.createNewDatabase(firstTextInputValue.value, secondTextInputValue.value)
+                            CampfireViewModel.DialogType.NewSetlist -> stateHolder.createNewSetlist(firstTextInputValue.value)
+                            CampfireViewModel.DialogType.NewDatabase -> stateHolder.createNewDatabase(firstTextInputValue.value, secondTextInputValue.value)
+                            is CampfireViewModel.DialogType.SetlistPicker -> stateHolder.dismissDialog()
                         }
                     },
                     // TODO: Improve validation
                     enabled = when (visibleDialog) {
-                        CampfireViewModel.DialogType.NEW_SETLIST -> firstTextInputValue.value.isNotBlank()
-                        CampfireViewModel.DialogType.NEW_DATABASE -> firstTextInputValue.value.isNotBlank() && secondTextInputValue.value.isNotBlank()
+                        CampfireViewModel.DialogType.NewSetlist -> firstTextInputValue.value.isNotBlank()
+                        CampfireViewModel.DialogType.NewDatabase -> firstTextInputValue.value.isNotBlank() && secondTextInputValue.value.isNotBlank()
+                        is CampfireViewModel.DialogType.SetlistPicker -> true
                     }
                 ) {
                     Text(
                         when (visibleDialog) {
-                            CampfireViewModel.DialogType.NEW_SETLIST -> uiStrings.setlistsCreate
-                            CampfireViewModel.DialogType.NEW_DATABASE -> uiStrings.settingsAdd
+                            CampfireViewModel.DialogType.NewSetlist -> uiStrings.setlistsCreate
+                            CampfireViewModel.DialogType.NewDatabase -> uiStrings.settingsAdd
+                            is CampfireViewModel.DialogType.SetlistPicker -> uiStrings.songDetailsDone
                         }
                     )
                 }

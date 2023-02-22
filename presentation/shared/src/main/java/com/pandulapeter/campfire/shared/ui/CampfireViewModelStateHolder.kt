@@ -187,6 +187,24 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
 
     fun onAddDatabaseClicked() = viewModel.onAddDatabaseClicked()
 
+    fun onSetlistPickerClicked(songId: String) = viewModel.onSetlistPickerClicked(songId)
+
+    fun addSongToSetlist(songId: String, setlistId: String) = coroutineScope.launch {
+        viewModel.addSongToSetlist(
+            songId = songId,
+            setlistId = setlistId,
+            setlists = setlists.value
+        )
+    }
+
+    fun removeSongFromSetlist(songId: String, setlistId: String) = coroutineScope.launch {
+        viewModel.removeSongFromSetlist(
+            songId = songId,
+            setlistId = setlistId,
+            setlists = setlists.value
+        )
+    }
+
     private fun showSnackbar(message: String) = coroutineScope.launch {
         scaffoldState.snackbarHostState.showSnackbar(
             message = message

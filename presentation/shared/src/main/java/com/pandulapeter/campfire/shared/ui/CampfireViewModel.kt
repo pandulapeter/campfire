@@ -89,7 +89,7 @@ class CampfireViewModel(
     }
 
     fun onNewSetlistClicked() {
-        _visibleDialog.value = DialogType.NEW_SETLIST
+        _visibleDialog.value = DialogType.NewSetlist
     }
 
     suspend fun createNewSetlist(newSetlistTitle: String, currentSetlists: List<Setlist>) = saveSetlists(
@@ -106,8 +106,36 @@ class CampfireViewModel(
     )
 
     fun onAddDatabaseClicked() {
-        _visibleDialog.value = DialogType.NEW_DATABASE
+        _visibleDialog.value = DialogType.NewDatabase
     }
+
+    fun onSetlistPickerClicked(songId: String) {
+        _visibleDialog.value = DialogType.SetlistPicker(songId)
+    }
+
+    suspend fun addSongToSetlist(songId: String, setlistId: String, setlists: List<Setlist>) = saveSetlists(
+        setlists.map { setlist ->
+            if (setlist.id == setlistId) {
+                setlist.copy(
+                    songIds = setlist.songIds.toMutableList().apply { add(0, songId) }.distinct()
+                )
+            } else {
+                setlist
+            }
+        }
+    )
+
+    suspend fun removeSongFromSetlist(songId: String, setlistId: String, setlists: List<Setlist>) = saveSetlists(
+        setlists.map { setlist ->
+            if (setlist.id == setlistId) {
+                setlist.copy(
+                    songIds = setlist.songIds.filterNot { it == songId }
+                )
+            } else {
+                setlist
+            }
+        }
+    )
 
     suspend fun addNewDatabase(newDatabaseName: String, newDatabaseUrl: String, currentDatabases: List<Database>) = saveDatabases(
         currentDatabases.toMutableList().apply {
@@ -177,8 +205,11 @@ class CampfireViewModel(
         SETTINGS(CampfireIcons.settings)
     }
 
-    enum class DialogType {
-        NEW_SETLIST,
-        NEW_DATABASE
+    sealed class DialogType {
+        object NewSetlist : DialogType()
+
+        object NewDatabase : DialogType()
+
+        data class SetlistPicker(val songId: String) : DialogType()
     }
 }
