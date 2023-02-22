@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -29,6 +30,7 @@ import androidx.compose.material.NavigationRail
 import androidx.compose.material.NavigationRailItem
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +47,7 @@ import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
 import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsFilterControlsList
 import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsSortingControlsList
+import dev.atsushieno.composempp.material.AlertDialog
 import dev.atsushieno.composempp.material.DropdownMenu
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalAnimationApi::class)
@@ -145,6 +148,10 @@ fun CampfireScaffold(
                 content(scaffoldPadding)
             }
         }
+    )
+    DynamicDialog(
+        stateHolder = stateHolder,
+        uiStrings = uiStrings
     )
 }
 
@@ -296,5 +303,40 @@ private fun FiltersIconAndDropdown(
                 onShowOnlyDownloadedSongsChanged = stateHolder::onShowOnlyDownloadedSongsChanged
             )
         }
+    }
+}
+
+@Composable
+private fun DynamicDialog(
+    modifier: Modifier = Modifier,
+    stateHolder: CampfireViewModelStateHolder,
+    uiStrings: CampfireStrings
+) = stateHolder.visibleDialog.value.let { visibleDialog ->
+    if (visibleDialog != null) {
+        AlertDialog(
+            modifier = modifier.defaultMinSize(minWidth = 300.dp),
+            onDismissRequest = stateHolder::dismissDialog,
+            title = {
+                Text(
+                    when (visibleDialog) {
+                        CampfireViewModel.DialogType.NEW_SETLIST -> uiStrings.setlistsNewSetlist
+                        CampfireViewModel.DialogType.NEW_DATABASE -> uiStrings.settingsAddNewDatabase
+                    }
+                )
+            },
+            text = {
+                Text("Work in progress") // TODO
+            },
+            confirmButton = {
+                TextButton(onClick = stateHolder::dismissDialog) {
+                    Text(
+                        when (visibleDialog) {
+                            CampfireViewModel.DialogType.NEW_SETLIST -> uiStrings.setlistsCreate
+                            CampfireViewModel.DialogType.NEW_DATABASE -> uiStrings.settingsAdd
+                        }
+                    )
+                }
+            }
+        )
     }
 }

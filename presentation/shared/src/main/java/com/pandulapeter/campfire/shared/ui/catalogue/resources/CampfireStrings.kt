@@ -23,12 +23,13 @@ sealed class CampfireStrings {
     abstract val setlists: String
     abstract val setlistsNoData: String
     abstract val setlistsNewSetlist: String
+    abstract val setlistsCreate: String
 
     // Settings screen
     abstract val settings: String
     abstract val settingsActiveDatabases: String
     abstract val settingsAddNewDatabase: String
-    abstract val settingsAddNewDatabaseComingSoon: String
+    abstract val settingsAdd: String
     abstract val settingsUserInterfaceTheme: String
     abstract val settingsUserInterfaceThemeSystemDefault: String
     abstract val settingsUserInterfaceThemeDark: String
@@ -61,12 +62,13 @@ sealed class CampfireStrings {
         override val setlists = "Setlists"
         override val setlistsNoData = "No setlists to show"
         override val setlistsNewSetlist = "New setlist"
+        override val setlistsCreate = "Create"
 
         // Settings screen
         override val settings = "Settings"
         override val settingsActiveDatabases = "Active databases"
         override val settingsAddNewDatabase = "Add a new database"
-        override val settingsAddNewDatabaseComingSoon = "Coming soon"
+        override val settingsAdd = "Add"
         override val settingsUserInterfaceTheme = "User interface theme"
         override val settingsUserInterfaceThemeSystemDefault = "System default"
         override val settingsUserInterfaceThemeDark = "Dark"
@@ -100,12 +102,13 @@ sealed class CampfireStrings {
         override val setlists = "Listák"
         override val setlistsNoData = "Nincsenek listák"
         override val setlistsNewSetlist = "Új lista"
+        override val setlistsCreate = "Létrehozás"
 
         // Settings screen
         override val settings = "Beállítások"
         override val settingsActiveDatabases = "Aktív adatbázisok"
         override val settingsAddNewDatabase = "Új adatbázis hozzáadása"
-        override val settingsAddNewDatabaseComingSoon = "Hamarosan elérhető"
+        override val settingsAdd = "Hozzáadás"
         override val settingsUserInterfaceTheme = "Felhasználói felület témája"
         override val settingsUserInterfaceThemeSystemDefault = "Alapértelmezett"
         override val settingsUserInterfaceThemeDark = "Sötét"

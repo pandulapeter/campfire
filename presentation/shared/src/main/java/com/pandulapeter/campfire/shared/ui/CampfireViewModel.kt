@@ -49,6 +49,8 @@ class CampfireViewModel(
     val userPreferences = getScreenData().map { it.data?.userPreferences }.distinctUntilChanged()
     val uiMode = userPreferences.map { it?.uiMode }
     val shouldShowLoadingIndicator = getScreenData().map { it is DataState.Loading }.distinctUntilChanged()
+    private val _visibleDialog = MutableStateFlow<DialogType?>(null)
+    val visibleDialog: StateFlow<DialogType?> = _visibleDialog
     private val _selectedNavigationDestination = MutableStateFlow(NavigationDestination.SONGS)
     val selectedNavigationDestination: Flow<NavigationDestination> = _selectedNavigationDestination
     val navigationDestinations = selectedNavigationDestination.map { selectedNavigationDestination ->
@@ -80,6 +82,18 @@ class CampfireViewModel(
 
     fun onQueryChanged(newQuery: String) {
         _query.value = newQuery
+    }
+
+    fun onNewSetlistClicked() {
+        _visibleDialog.value = DialogType.NEW_SETLIST
+    }
+
+    fun onAddDatabaseClicked() {
+        _visibleDialog.value = DialogType.NEW_DATABASE
+    }
+
+    fun dismissDialog() {
+        _visibleDialog.value = null
     }
 
     suspend fun onSongClicked(song: Song?) {
@@ -130,5 +144,10 @@ class CampfireViewModel(
         SONGS(CampfireIcons.songs),
         SETLISTS(CampfireIcons.setlists),
         SETTINGS(CampfireIcons.settings)
+    }
+
+    enum class DialogType {
+        NEW_SETLIST,
+        NEW_DATABASE
     }
 }

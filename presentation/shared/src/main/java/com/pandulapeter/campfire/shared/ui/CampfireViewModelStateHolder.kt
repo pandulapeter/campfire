@@ -38,6 +38,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
     val selectedNavigationDestination: State<CampfireViewModel.NavigationDestination?>,
     val navigationDestinations: State<List<CampfireViewModel.NavigationDestinationWrapper>>,
     val isRefreshing: State<Boolean>,
+    val visibleDialog: State<CampfireViewModel.DialogType?>,
     val query: State<String>,
     val databases: State<List<Database>>,
     val songs: State<List<Song>>,
@@ -81,6 +82,8 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
     private fun scrollToTop() {
         shouldScrollOnNextValue = true
     }
+
+    fun dismissDialog() = viewModel.dismissDialog()
 
     fun onSongClicked(song: Song) = coroutineScope.launch { viewModel.onSongClicked(song) }
 
@@ -145,12 +148,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
         }
     }
 
-    // TODO
-    fun onNewSetlistClicked() = coroutineScope.launch {
-        scaffoldState.snackbarHostState.showSnackbar(
-            message = uiStrings.value.settingsAddNewDatabaseComingSoon
-        )
-    }
+    fun onNewSetlistClicked() = viewModel.onNewSetlistClicked()
 
     fun onUiModeChanged(uiMode: UserPreferences.UiMode) = userPreferences.value?.let { userPreferences ->
         coroutineScope.launch {
@@ -170,10 +168,11 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
         }
     }
 
-    // TODO
-    fun onAddDatabaseClicked() = coroutineScope.launch {
+    fun onAddDatabaseClicked() = viewModel.onAddDatabaseClicked()
+
+    private fun showSnackbar(message: String) = coroutineScope.launch {
         scaffoldState.snackbarHostState.showSnackbar(
-            message = uiStrings.value.settingsAddNewDatabaseComingSoon
+            message = message
         )
     }
 
@@ -190,6 +189,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
             selectedNavigationDestination = viewModel.selectedNavigationDestination.collectAsState(initial = null),
             navigationDestinations = viewModel.navigationDestinations.collectAsState(initial = emptyList()),
             isRefreshing = viewModel.shouldShowLoadingIndicator.collectAsState(false),
+            visibleDialog = viewModel.visibleDialog.collectAsState(null),
             query = viewModel.query.collectAsState(""),
             databases = viewModel.databases.collectAsState(emptyList()),
             songs = viewModel.songs.collectAsState(emptyList()),
