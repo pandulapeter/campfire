@@ -30,6 +30,8 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireNavigati
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireScaffold
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import org.koin.java.KoinJavaComponent
+import java.awt.Desktop
+import java.net.URI
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterialApi::class)
 @Composable
@@ -99,7 +101,8 @@ fun CampfireDesktopApp(
                     songsScreenScrollState = stateHolder.songsScreenScrollState,
                     setlistsScreenScrollState = stateHolder.setlistsScreenScrollState
                 )
-            }
+            },
+            urlOpener = ::openUrl
         )
     }
 }
@@ -153,4 +156,19 @@ private fun NavigationRailWrapper(
         uiStrings = uiStrings
     )
     content()
+}
+
+private fun openUrl(url: String) {
+    try {
+        val desktop = Desktop.getDesktop()
+        val osName by lazy(LazyThreadSafetyMode.NONE) { System.getProperty("os.name").lowercase() }
+        when {
+            Desktop.isDesktopSupported() && desktop.isSupported(Desktop.Action.BROWSE) -> desktop.browse(URI(url))
+            "mac" in osName -> Runtime.getRuntime().exec("open $url")
+            "nix" in osName || "nux" in osName -> Runtime.getRuntime().exec("xdg-open $url")
+            else -> println("Cannot open url: $url")
+        }
+    } catch (_: NoClassDefFoundError) {
+        println("Cannot open url: $url")
+    }
 }

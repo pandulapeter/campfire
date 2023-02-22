@@ -23,12 +23,16 @@ sealed class CampfireStrings {
     abstract val setlists: String
     abstract val setlistsNoData: String
     abstract val setlistsNewSetlist: String
+    abstract val setlistsNewSetlistTitle: String
     abstract val setlistsCreate: String
 
     // Settings screen
     abstract val settings: String
     abstract val settingsActiveDatabases: String
     abstract val settingsAddNewDatabase: String
+    abstract val settingsAddNewDatabaseName: String
+    abstract val settingsAddNewDatabaseUrl: String
+    abstract val settingsAddNewDatabaseHint: String
     abstract val settingsAdd: String
     abstract val settingsUserInterfaceTheme: String
     abstract val settingsUserInterfaceThemeSystemDefault: String
@@ -62,12 +66,16 @@ sealed class CampfireStrings {
         override val setlists = "Setlists"
         override val setlistsNoData = "No setlists to show"
         override val setlistsNewSetlist = "New setlist"
+        override val setlistsNewSetlistTitle = "Setlist title"
         override val setlistsCreate = "Create"
 
         // Settings screen
         override val settings = "Settings"
         override val settingsActiveDatabases = "Active databases"
         override val settingsAddNewDatabase = "Add a new database"
+        override val settingsAddNewDatabaseName = "Database name"
+        override val settingsAddNewDatabaseUrl = "Database URL"
+        override val settingsAddNewDatabaseHint = "More information"
         override val settingsAdd = "Add"
         override val settingsUserInterfaceTheme = "User interface theme"
         override val settingsUserInterfaceThemeSystemDefault = "System default"
@@ -102,12 +110,16 @@ sealed class CampfireStrings {
         override val setlists = "Listák"
         override val setlistsNoData = "Nincsenek listák"
         override val setlistsNewSetlist = "Új lista"
+        override val setlistsNewSetlistTitle = "Lista címe"
         override val setlistsCreate = "Létrehozás"
 
         // Settings screen
         override val settings = "Beállítások"
         override val settingsActiveDatabases = "Aktív adatbázisok"
         override val settingsAddNewDatabase = "Új adatbázis hozzáadása"
+        override val settingsAddNewDatabaseName = "Adatbázis neve"
+        override val settingsAddNewDatabaseUrl = "Adatbázis URL"
+        override val settingsAddNewDatabaseHint = "Több információ"
         override val settingsAdd = "Hozzáadás"
         override val settingsUserInterfaceTheme = "Felhasználói felület témája"
         override val settingsUserInterfaceThemeSystemDefault = "Alapértelmezett"

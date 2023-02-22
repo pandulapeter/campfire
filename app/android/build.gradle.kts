@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":presentation:android-debug-menu"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.browser)
     implementation(libs.google.android.material)
     implementation(libs.koin.android)
 }

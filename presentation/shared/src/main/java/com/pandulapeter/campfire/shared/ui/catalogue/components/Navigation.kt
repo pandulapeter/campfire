@@ -6,16 +6,21 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.BottomNavigationItem
@@ -28,6 +33,7 @@ import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.NavigationRail
 import androidx.compose.material.NavigationRailItem
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
@@ -38,6 +44,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
@@ -67,7 +75,8 @@ fun CampfireScaffold(
     appBarActions: @Composable RowScope.() -> Unit = {},
     bottomNavigationBar: @Composable () -> Unit,
     navigationRail: @Composable (scaffoldPadding: PaddingValues, content: @Composable () -> Unit) -> Unit,
-    content: @Composable (scaffoldPadding: PaddingValues?) -> Unit
+    content: @Composable (scaffoldPadding: PaddingValues?) -> Unit,
+    urlOpener: (String) -> Unit
 ) = ModalBottomSheetLayout(
     modifier = modifier,
     sheetState = modalBottomSheetState,
@@ -151,7 +160,8 @@ fun CampfireScaffold(
     )
     DynamicDialog(
         stateHolder = stateHolder,
-        uiStrings = uiStrings
+        uiStrings = uiStrings,
+        urlOpener = urlOpener
     )
 }
 
@@ -310,22 +320,64 @@ private fun FiltersIconAndDropdown(
 private fun DynamicDialog(
     modifier: Modifier = Modifier,
     stateHolder: CampfireViewModelStateHolder,
-    uiStrings: CampfireStrings
+    uiStrings: CampfireStrings,
+    urlOpener: (String) -> Unit
 ) = stateHolder.visibleDialog.value.let { visibleDialog ->
     if (visibleDialog != null) {
+        val firstTextInputValue = remember { mutableStateOf("") }
+        val secondTextInputValue = remember { mutableStateOf("") }
         AlertDialog(
             modifier = modifier.defaultMinSize(minWidth = 300.dp),
             onDismissRequest = stateHolder::dismissDialog,
             title = {
                 Text(
-                    when (visibleDialog) {
+                    text = when (visibleDialog) {
                         CampfireViewModel.DialogType.NEW_SETLIST -> uiStrings.setlistsNewSetlist
                         CampfireViewModel.DialogType.NEW_DATABASE -> uiStrings.settingsAddNewDatabase
                     }
                 )
             },
             text = {
-                Text("Work in progress") // TODO
+                Column {
+                    Text(
+                        modifier = Modifier.height(0.dp),
+                        text = ""
+                    )
+                    when (visibleDialog) {
+                        CampfireViewModel.DialogType.NEW_SETLIST -> {
+                            OutlinedTextField(
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text(uiStrings.setlistsNewSetlistTitle) },
+                                value = firstTextInputValue.value,
+                                onValueChange = { firstTextInputValue.value = it },
+                                singleLine = true
+                            )
+                        }
+                        CampfireViewModel.DialogType.NEW_DATABASE -> {
+                            OutlinedTextField(
+                                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                                label = { Text(uiStrings.settingsAddNewDatabaseName) },
+                                value = firstTextInputValue.value,
+                                onValueChange = { firstTextInputValue.value = it },
+                                singleLine = true
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text(uiStrings.settingsAddNewDatabaseUrl) },
+                                value = secondTextInputValue.value,
+                                onValueChange = { secondTextInputValue.value = it },
+                                singleLine = true
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                modifier = Modifier.clickable { urlOpener("https://github.com/pandulapeter") }, // TODO
+                                style = TextStyle.Default.copy(fontWeight = FontWeight.Bold),
+                                text = uiStrings.settingsAddNewDatabaseHint
+                            )
+                        }
+                    }
+                }
             },
             confirmButton = {
                 TextButton(onClick = stateHolder::dismissDialog) {

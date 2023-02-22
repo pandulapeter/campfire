@@ -1,8 +1,12 @@
 package com.pandulapeter.campfire
 
+import android.content.ActivityNotFoundException
+import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -31,8 +35,18 @@ class CampfireActivity : AppCompatActivity() {
         }.launchIn(lifecycleScope)
         setContent {
             CampfireAndroidApp(
-                stateHolder = CampfireViewModelStateHolder.fromViewModel(viewModel)
+                stateHolder = CampfireViewModelStateHolder.fromViewModel(viewModel),
+                urlOpener = ::openUrl
             )
         }
+    }
+
+    private fun openUrl(url: String) = try {
+        CustomTabsIntent.Builder()
+            .setColorScheme(if (resources.getBoolean(R.bool.is_in_dark_mode)) CustomTabsIntent.COLOR_SCHEME_DARK else CustomTabsIntent.COLOR_SCHEME_LIGHT)
+            .build()
+            .launchUrl(this, Uri.parse(url))
+    } catch (exception: ActivityNotFoundException) {
+        Toast.makeText(this, exception.message, Toast.LENGTH_SHORT).show()
     }
 }

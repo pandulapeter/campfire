@@ -154,13 +154,48 @@ internal fun RadioButtonItem(
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun SearchItem(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
     query: String,
     onQueryChanged: (String) -> Unit
+) = TextInputItem(
+    modifier = modifier,
+    placeholder = uiStrings.songsSearch,
+    text = query,
+    onTextChanged = onQueryChanged,
+    leadingIcon = {
+        Icon(
+            imageVector = CampfireIcons.search,
+            contentDescription = uiStrings.songsSearch
+        )
+    },
+    trailingIcon = {
+        AnimatedVisibility(
+            visible = query.isNotEmpty(),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            IconButton(onClick = { onQueryChanged("") }) {
+                Icon(
+                    imageVector = CampfireIcons.clear,
+                    contentDescription = uiStrings.songsClear
+                )
+            }
+        }
+    }
+)
+
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class)
+@Composable
+private fun TextInputItem(
+    modifier: Modifier = Modifier,
+    placeholder: String,
+    text: String,
+    onTextChanged: (String) -> Unit,
+    leadingIcon: @Composable (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -168,10 +203,10 @@ fun SearchItem(
 
     BasicTextField(
         modifier = modifier.background(colors.backgroundColor(true).value, MaterialTheme.shapes.small),
-        value = query,
+        value = text,
         textStyle = LocalTextStyle.current.merge(TextStyle(color = colors.textColor(true).value)),
         cursorBrush = SolidColor(colors.cursorColor(false).value),
-        onValueChange = onQueryChanged,
+        onValueChange = onTextChanged,
         interactionSource = interactionSource,
         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = {
@@ -180,32 +215,14 @@ fun SearchItem(
         singleLine = true
     ) {
         TextFieldDefaults.TextFieldDecorationBox(
-            value = query,
+            value = text,
             innerTextField = it,
             singleLine = true,
             enabled = true,
             visualTransformation = VisualTransformation.None,
-            leadingIcon = {
-                Icon(
-                    imageVector = CampfireIcons.search,
-                    contentDescription = uiStrings.songsSearch
-                )
-            },
-            trailingIcon = {
-                AnimatedVisibility(
-                    visible = query.isNotEmpty(),
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    IconButton(onClick = { onQueryChanged("") }) {
-                        Icon(
-                            imageVector = CampfireIcons.clear,
-                            contentDescription = uiStrings.songsClear
-                        )
-                    }
-                }
-            },
-            placeholder = { Text(text = uiStrings.songsSearch) },
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            placeholder = { Text(text = placeholder) },
             interactionSource = interactionSource,
             contentPadding = TextFieldDefaults.textFieldWithoutLabelPadding(
                 top = 2.dp,

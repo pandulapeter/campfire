@@ -39,6 +39,7 @@ import org.koin.java.KoinJavaComponent.get
 fun CampfireAndroidApp(
     viewModel: CampfireViewModel = get(CampfireViewModel::class.java),
     stateHolder: CampfireViewModelStateHolder,
+    urlOpener: (String) -> Unit
 ) {
     LaunchedEffect(Unit) { viewModel.onInitialize() }
     BackHandler(stateHolder.modalBottomSheetState.isVisible) { stateHolder.onSongClosed() }
@@ -105,7 +106,8 @@ fun CampfireAndroidApp(
                     setlistsScreenScrollState = stateHolder.setlistsScreenScrollState,
                     songsScreenPullRefreshState = songsScreenPullRefreshState
                 )
-            }
+            },
+            urlOpener = urlOpener
         )
     }
 }
