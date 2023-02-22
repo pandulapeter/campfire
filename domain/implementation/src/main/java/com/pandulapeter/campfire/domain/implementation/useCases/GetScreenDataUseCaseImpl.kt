@@ -40,7 +40,7 @@ class GetScreenDataUseCaseImpl internal constructor(
         userPreferencesDataState ->
 
         fun createScreenData() = databasesDataState.data?.sortedBy { it.priority }?.let { databases ->
-            setlistsDataState.data?.sortedBy { it.priority }?.let { setlists ->
+            setlistsDataState.data?.sortedByDescending { it.priority }?.let { setlists ->
                 songsDataState.data?.let { songs ->
                     rawSongDetailsDataState.data?.let { rawSongDetails ->
                         userPreferencesDataState.data?.let { userPreferences ->

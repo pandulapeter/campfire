@@ -10,6 +10,7 @@ androidx-core-splashscreen = "1.0.0" # https://developer.android.com/jetpack/and
 androidx-room = "2.5.0" # https://developer.android.com/jetpack/androidx/releases/room
 beagle = "2.9.0" # https://github.com/pandulapeter/beagle/releases\
 compose-mpp = "0.1.4" # https://github.com/atsushieno/compose-mpp/tags
+compose-reorderable = "0.9.6" # https://github.com/aclassen/ComposeReorderable/releases
 google-android-material = "1.8.0" # https://github.com/material-components/material-components-android/releases
 gradle = "7.4.1" # https://developer.android.com/studio/releases/gradle-plugin
 jetbrains-compose = "1.3.0" # https://github.com/JetBrains/compose-jb/releases
@@ -37,6 +38,7 @@ androidx-room-codegen = { module = "androidx.room:room-compiler", version.ref = 
 beagle = { module = "io.github.pandulapeter.beagle:ui-drawer", version.ref = "beagle" }
 beagle-crashLogger = { module = "io.github.pandulapeter.beagle:log-crash", version.ref = "beagle" }
 compose-mpp = { module = "dev.atsushieno:compose-mpp", version.ref = "compose-mpp" }
+compose-reorderable = { module = "org.burnoutcrew.composereorderable:reorderable", version.ref = "compose-reorderable" }
 google-android-material = { module = "com.google.android.material:material", version.ref = "google-android-material" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }

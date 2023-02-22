@@ -1,6 +1,9 @@
 package com.pandulapeter.campfire
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
@@ -23,18 +26,21 @@ fun main() = application {
     startKoin { modules(dataModules + domainModule + presentationModule) }
 
     val windowState = rememberWindowState()
-    val stateHolder = CampfireViewModelStateHolder.fromViewModel(KoinJavaComponent.get(CampfireViewModel::class.java))
-
-    Window(
-        title = "Campfire",
-        onCloseRequest = ::exitApplication,
-        state = windowState,
-        icon = painterResource("appIcon.png")
+    CompositionLocalProvider(
+        LocalLayoutDirection.providesDefault(LayoutDirection.Ltr)
     ) {
-        window.minimumSize = Dimension(400, 400)
-        CampfireDesktopApp(
-            stateHolder = stateHolder,
-            windowSize = windowState.size
-        )
+        val stateHolder = CampfireViewModelStateHolder.fromViewModel(KoinJavaComponent.get(CampfireViewModel::class.java))
+        Window(
+            title = "Campfire",
+            onCloseRequest = ::exitApplication,
+            state = windowState,
+            icon = painterResource("appIcon.png")
+        ) {
+            window.minimumSize = Dimension(400, 400)
+            CampfireDesktopApp(
+                stateHolder = stateHolder,
+                windowSize = windowState.size
+            )
+        }
     }
 }

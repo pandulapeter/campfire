@@ -29,6 +29,7 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireBottomNa
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireNavigationRail
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireScaffold
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
+import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.koin.java.KoinJavaComponent
 import java.awt.Desktop
 import java.net.URI
@@ -114,7 +115,7 @@ private fun Content(
     stateHolder: CampfireViewModelStateHolder,
     shouldUseExpandedUi: Boolean,
     songsScreenScrollState: LazyListState,
-    setlistsScreenScrollState: LazyListState
+    setlistsScreenScrollState: ReorderableLazyListState
 ) = Crossfade(
     modifier = modifier.fillMaxSize(),
     targetState = selectedNavigationDestination

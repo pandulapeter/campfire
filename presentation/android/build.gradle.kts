@@ -11,6 +11,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material)
     implementation(libs.androidx.compose.ui)
+    implementation(libs.compose.reorderable)
     implementation(libs.google.android.material)
     implementation(libs.koin.android)
     implementation(libs.kotlin.coroutines)

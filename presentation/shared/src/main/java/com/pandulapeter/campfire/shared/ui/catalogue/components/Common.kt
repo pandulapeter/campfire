@@ -13,13 +13,14 @@ import androidx.compose.ui.unit.dp
 @Composable
 internal fun RoundedCard(
     modifier: Modifier = Modifier,
+    isBeingDragged: Boolean = false,
     content: @Composable () -> Unit
 ) = Column(
     modifier = modifier
 ) {
     Surface(
         modifier = Modifier.padding(horizontal = 8.dp),
-        elevation = 4.dp,
+        elevation = if (isBeingDragged) 16.dp else 4.dp,
         shape = RoundedCornerShape(8.dp),
         content = content
     )

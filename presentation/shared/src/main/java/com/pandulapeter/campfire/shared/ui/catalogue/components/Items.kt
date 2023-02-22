@@ -62,10 +62,12 @@ internal fun SongItem(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
     song: Song,
+    isBeingDragged: Boolean = false,
     isDownloaded: Boolean,
     onSongClicked: (Song) -> Unit
 ) = RoundedCard(
-    modifier = modifier
+    modifier = modifier,
+    isBeingDragged = isBeingDragged
 ) {
     Column(
         modifier = Modifier

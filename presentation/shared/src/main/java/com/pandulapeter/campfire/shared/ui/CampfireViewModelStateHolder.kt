@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.catalogue.utilities.getUiStrings
+import com.pandulapeter.campfire.shared.ui.screenComponents.setlists.SetlistItemKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -27,6 +28,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.burnoutcrew.reorderable.ReorderableLazyListState
+import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 
 @OptIn(ExperimentalMaterialApi::class)
 data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) constructor(
@@ -47,7 +50,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
     val selectedSong: State<Song?>,
     val modalBottomSheetState: ModalBottomSheetState,
     val songsScreenScrollState: LazyListState,
-    val setlistsScreenScrollState: LazyListState,
+    val setlistsScreenScrollState: ReorderableLazyListState,
     val scaffoldState: ScaffoldState
 ) {
     private var shouldScrollOnNextValue = false
@@ -215,30 +218,60 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
 
         @OptIn(ExperimentalMaterialApi::class)
         @Composable
-        fun fromViewModel(viewModel: CampfireViewModel) = CampfireViewModelStateHolder(
-            viewModel = viewModel,
-            coroutineScope = rememberCoroutineScope(),
-            uiStrings = viewModel.userPreferences.map { it.getUiStrings() }.distinctUntilChanged().collectAsState(CampfireStrings.English),
-            uiMode = viewModel.uiMode.collectAsState(null),
-            userPreferences = viewModel.userPreferences.collectAsState(null),
-            selectedNavigationDestination = viewModel.selectedNavigationDestination.collectAsState(initial = null),
-            navigationDestinations = viewModel.navigationDestinations.collectAsState(initial = emptyList()),
-            isRefreshing = viewModel.shouldShowLoadingIndicator.collectAsState(false),
-            visibleDialog = viewModel.visibleDialog.collectAsState(null),
-            query = viewModel.query.collectAsState(""),
-            databases = viewModel.databases.collectAsState(emptyList()),
-            songs = viewModel.songs.collectAsState(emptyList()),
-            setlists = viewModel.setlists.collectAsState(emptyList()),
-            rawSongDetails = viewModel.rawSongDetails.collectAsState(emptyMap()),
-            selectedSong = viewModel.selectedSong.collectAsState(null),
-            modalBottomSheetState = rememberModalBottomSheetState(
-                initialValue = ModalBottomSheetValue.Hidden,
-                confirmStateChange = { it != ModalBottomSheetValue.HalfExpanded },
-                skipHalfExpanded = true
-            ),
-            songsScreenScrollState = rememberLazyListState(),
-            setlistsScreenScrollState = rememberLazyListState(),
-            scaffoldState = rememberScaffoldState()
-        )
+        fun fromViewModel(viewModel: CampfireViewModel): CampfireViewModelStateHolder {
+            val setlists = viewModel.setlists.collectAsState(emptyList())
+            val coroutineScope = rememberCoroutineScope()
+            return CampfireViewModelStateHolder(
+                viewModel = viewModel,
+                coroutineScope = coroutineScope,
+                uiStrings = viewModel.userPreferences.map { it.getUiStrings() }.distinctUntilChanged().collectAsState(CampfireStrings.English),
+                uiMode = viewModel.uiMode.collectAsState(null),
+                userPreferences = viewModel.userPreferences.collectAsState(null),
+                selectedNavigationDestination = viewModel.selectedNavigationDestination.collectAsState(initial = null),
+                navigationDestinations = viewModel.navigationDestinations.collectAsState(initial = emptyList()),
+                isRefreshing = viewModel.shouldShowLoadingIndicator.collectAsState(false),
+                visibleDialog = viewModel.visibleDialog.collectAsState(null),
+                query = viewModel.query.collectAsState(""),
+                databases = viewModel.databases.collectAsState(emptyList()),
+                songs = viewModel.songs.collectAsState(emptyList()),
+                setlists = setlists,
+                rawSongDetails = viewModel.rawSongDetails.collectAsState(emptyMap()),
+                selectedSong = viewModel.selectedSong.collectAsState(null),
+                modalBottomSheetState = rememberModalBottomSheetState(
+                    initialValue = ModalBottomSheetValue.Hidden,
+                    confirmStateChange = { it != ModalBottomSheetValue.HalfExpanded },
+                    skipHalfExpanded = true
+                ),
+                songsScreenScrollState = rememberLazyListState(),
+                setlistsScreenScrollState = rememberReorderableLazyListState(
+                    canDragOver = { from, to ->
+                        val fromKey = SetlistItemKey(from.key as? String)
+                        val toKey = SetlistItemKey(to.key as? String)
+                        fromKey.setlistId == toKey.setlistId
+                    },
+                    onMove = { from, to ->
+                        val fromKey = SetlistItemKey(from.key as? String)
+                        val toKey = SetlistItemKey(to.key as? String)
+                        fromKey.setlistId?.let { setlistId ->
+                            fromKey.songId?.let { fromSongId ->
+                                toKey.songId?.let { toSongId ->
+                                    if (setlistId == toKey.setlistId) {
+                                        coroutineScope.launch {
+                                            viewModel.swapSongsInSetlist(
+                                                setlistId = setlistId,
+                                                fromSongId = fromSongId,
+                                                toSongId = toSongId,
+                                                setlists = setlists.value
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ),
+                scaffoldState = rememberScaffoldState()
+            )
+        }
     }
 }

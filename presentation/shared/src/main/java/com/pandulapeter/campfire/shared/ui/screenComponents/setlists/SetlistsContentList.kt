@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
@@ -17,6 +16,10 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.ui.catalogue.components.HeaderItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SongItem
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
+import org.burnoutcrew.reorderable.ReorderableItem
+import org.burnoutcrew.reorderable.ReorderableLazyListState
+import org.burnoutcrew.reorderable.detectReorderAfterLongPress
+import org.burnoutcrew.reorderable.reorderable
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -24,14 +27,16 @@ import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 fun SetlistsContentList(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
-    state: LazyListState,
+    state: ReorderableLazyListState,
     songs: List<Song>,
     setlists: List<Setlist>,
     rawSongDetails: Map<String, RawSongDetails>,
     onSongClicked: (Song) -> Unit
 ) = LazyColumn(
-    modifier = modifier.fillMaxWidth(),
-    state = state,
+    modifier = modifier.fillMaxWidth()
+        .reorderable(state)
+        .detectReorderAfterLongPress(state),
+    state = state.listState,
     contentPadding = PaddingValues(top = 8.dp, bottom = 80.dp)
 ) {
     if (setlists.isEmpty()) {
@@ -52,20 +57,27 @@ fun SetlistsContentList(
                 )
             }
         } else {
-            setlists.sortedByDescending { it.priority }.forEach { setlist ->
+            setlists.forEach { setlist ->
                 stickyHeader { StickyHeaderItem(setlist.title) }
                 setlist.songIds.forEach { songId ->
                     songs.firstOrNull { it.id == songId }?.let { song ->
+                        val key = SetlistItemKey(
+                            setlistId = setlist.id,
+                            songId = song.id
+                        ).string
                         item(
-                            key = "song_${setlist.id}_${song.id}"
+                            key = key
                         ) {
-                            SongItem(
-                                modifier = Modifier.animateItemPlacement(),
-                                uiStrings = uiStrings,
-                                song = song,
-                                isDownloaded = rawSongDetails[song.url] != null,
-                                onSongClicked = onSongClicked
-                            )
+                            ReorderableItem(state, key = key) { isBeingDragged ->
+                                SongItem(
+                                    modifier = Modifier.animateItemPlacement(),
+                                    uiStrings = uiStrings,
+                                    isBeingDragged = isBeingDragged,
+                                    song = song,
+                                    isDownloaded = rawSongDetails[song.url] != null,
+                                    onSongClicked = onSongClicked
+                                )
+                            }
                         }
                     }
                 }
@@ -84,4 +96,24 @@ private fun StickyHeaderItem(text: String) = Surface(
         text = text,
         shouldUseLargePadding = false
     )
+}
+
+@JvmInline
+value class SetlistItemKey(
+    val string: String?
+) {
+    constructor(
+        setlistId: String,
+        songId: String
+    ) : this(
+        "${setlistId}$TOKEN${songId}"
+    )
+
+    val setlistId get() = string?.split(TOKEN)?.firstOrNull()
+
+    val songId get() = string?.split(TOKEN)?.lastOrNull()
+
+    companion object {
+        private const val TOKEN = "#*#"
+    }
 }

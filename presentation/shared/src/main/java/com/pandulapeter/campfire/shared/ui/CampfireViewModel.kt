@@ -137,6 +137,20 @@ class CampfireViewModel(
         }
     )
 
+    suspend fun swapSongsInSetlist(setlistId: String, fromSongId: String, toSongId: String, setlists: List<Setlist>) = saveSetlists(
+        setlists.map { setlist ->
+            if (setlist.id == setlistId) {
+                setlist.copy(
+                    songIds = setlist.songIds.toMutableList().apply {
+                        add(indexOf(toSongId), removeAt(indexOf(fromSongId)))
+                    }
+                )
+            } else {
+                setlist
+            }
+        }
+    )
+
     suspend fun addNewDatabase(newDatabaseName: String, newDatabaseUrl: String, currentDatabases: List<Database>) = saveDatabases(
         currentDatabases.toMutableList().apply {
             add(
