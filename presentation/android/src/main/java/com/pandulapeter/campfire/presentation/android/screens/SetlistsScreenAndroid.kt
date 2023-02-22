@@ -21,6 +21,7 @@ internal fun SetlistsScreenAndroid(
 ) = SetlistsContentList(
     modifier = modifier,
     uiStrings = stateHolder.uiStrings.value,
+    stateHolder = stateHolder,
     state = state,
     songs = songs,
     setlists = setlists,

@@ -6,13 +6,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.DismissValue
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Surface
+import androidx.compose.material.SwipeToDismiss
+import androidx.compose.material.rememberDismissState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.components.HeaderItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SongItem
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
@@ -22,16 +28,17 @@ import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.reorderable
 
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun SetlistsContentList(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
+    stateHolder: CampfireViewModelStateHolder,
     state: ReorderableLazyListState,
     songs: List<Song>,
     setlists: List<Setlist>,
     rawSongDetails: Map<String, RawSongDetails>,
-    onSongClicked: (Song) -> Unit
+    onSongClicked: (Song) -> Unit,
 ) = LazyColumn(
     modifier = modifier.fillMaxWidth()
         .reorderable(state)
@@ -64,19 +71,42 @@ fun SetlistsContentList(
                         val key = SetlistItemKey(
                             setlistId = setlist.id,
                             songId = song.id
-                        ).string
+                        )
                         item(
-                            key = key
+                            key = key.string
                         ) {
-                            ReorderableItem(state, key = key) { isBeingDragged ->
-                                SongItem(
-                                    modifier = Modifier.animateItemPlacement(),
-                                    uiStrings = uiStrings,
-                                    isBeingDragged = isBeingDragged,
-                                    song = song,
-                                    isDownloaded = rawSongDetails[song.url] != null,
-                                    onSongClicked = onSongClicked
-                                )
+                            val currentItem = rememberUpdatedState(key)
+                            SwipeToDismiss(
+                                modifier = Modifier.animateItemPlacement(),
+                                state = rememberDismissState(
+                                    confirmStateChange = {
+                                        when (it) {
+                                            DismissValue.Default -> false
+                                            else -> {
+                                                currentItem.value.songId?.let { currentItemSongId ->
+                                                    currentItem.value.setlistId?.let { currentItemSetlistId ->
+                                                        stateHolder.removeSongFromSetlist(songId = currentItemSongId, setlistId = currentItemSetlistId)
+                                                    }
+                                                }
+                                                true
+                                            }
+                                        }
+                                    }
+                                ),
+                                background = {}
+                            ) {
+                                ReorderableItem(
+                                    state = state,
+                                    key = key.string
+                                ) { isBeingDragged ->
+                                    SongItem(
+                                        uiStrings = uiStrings,
+                                        isBeingDragged = isBeingDragged,
+                                        song = song,
+                                        isDownloaded = rawSongDetails[song.url] != null,
+                                        onSongClicked = onSongClicked
+                                    )
+                                }
                             }
                         }
                     }
