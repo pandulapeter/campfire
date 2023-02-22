@@ -102,6 +102,7 @@ fun CampfireAndroidApp(
                     selectedNavigationDestination = stateHolder.selectedNavigationDestination.value,
                     shouldUseExpandedUi = shouldUseExpandedUi,
                     songsScreenScrollState = stateHolder.songsScreenScrollState,
+                    setlistsScreenScrollState = stateHolder.setlistsScreenScrollState,
                     songsScreenPullRefreshState = songsScreenPullRefreshState
                 )
             }
@@ -117,7 +118,8 @@ private fun Content(
     stateHolder: CampfireViewModelStateHolder,
     shouldUseExpandedUi: Boolean,
     songsScreenPullRefreshState: PullRefreshState,
-    songsScreenScrollState: LazyListState
+    songsScreenScrollState: LazyListState,
+    setlistsScreenScrollState: LazyListState
 ) = Crossfade(
     modifier = modifier.fillMaxSize(),
     targetState = selectedNavigationDestination
@@ -130,7 +132,12 @@ private fun Content(
             lazyListState = songsScreenScrollState
         )
         CampfireViewModel.NavigationDestination.SETLISTS -> SetlistsScreenAndroid(
-            stateHolder = stateHolder
+            stateHolder = stateHolder,
+            state = setlistsScreenScrollState,
+            songs = stateHolder.songs.value,
+            setlists = stateHolder.setlists.value,
+            rawSongDetails = stateHolder.rawSongDetails.value,
+            onSongClicked = stateHolder::onSongClicked
         )
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreenAndroid(
             stateHolder = stateHolder

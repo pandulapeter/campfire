@@ -96,7 +96,8 @@ fun CampfireDesktopApp(
                     stateHolder = stateHolder,
                     selectedNavigationDestination = stateHolder.selectedNavigationDestination.value,
                     shouldUseExpandedUi = shouldUseExpandedUi,
-                    songsScreenScrollState = stateHolder.songsScreenScrollState
+                    songsScreenScrollState = stateHolder.songsScreenScrollState,
+                    setlistsScreenScrollState = stateHolder.setlistsScreenScrollState
                 )
             }
         )
@@ -109,7 +110,8 @@ private fun Content(
     selectedNavigationDestination: CampfireViewModel.NavigationDestination?,
     stateHolder: CampfireViewModelStateHolder,
     shouldUseExpandedUi: Boolean,
-    songsScreenScrollState: LazyListState
+    songsScreenScrollState: LazyListState,
+    setlistsScreenScrollState: LazyListState
 ) = Crossfade(
     modifier = modifier.fillMaxSize(),
     targetState = selectedNavigationDestination
@@ -121,7 +123,12 @@ private fun Content(
             lazyListState = songsScreenScrollState
         )
         CampfireViewModel.NavigationDestination.SETLISTS -> SetlistsScreensDesktop(
-            stateHolder = stateHolder
+            stateHolder = stateHolder,
+            state = setlistsScreenScrollState,
+            songs = stateHolder.songs.value,
+            setlists = stateHolder.setlists.value,
+            rawSongDetails = stateHolder.rawSongDetails.value,
+            onSongClicked = stateHolder::onSongClicked
         )
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreensDesktop(
             stateHolder = stateHolder

@@ -15,6 +15,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
+import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
@@ -40,10 +41,12 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
     val query: State<String>,
     val databases: State<List<Database>>,
     val songs: State<List<Song>>,
+    val setlists: State<List<Setlist>>,
     val rawSongDetails: State<Map<String, RawSongDetails>>,
     val selectedSong: State<Song?>,
     val modalBottomSheetState: ModalBottomSheetState,
     val songsScreenScrollState: LazyListState,
+    val setlistsScreenScrollState: LazyListState,
     val scaffoldState: ScaffoldState
 ) {
     private var shouldScrollOnNextValue = false
@@ -182,6 +185,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
             query = viewModel.query.collectAsState(""),
             databases = viewModel.databases.collectAsState(emptyList()),
             songs = viewModel.songs.collectAsState(emptyList()),
+            setlists = viewModel.setlists.collectAsState(emptyList()),
             rawSongDetails = viewModel.rawSongDetails.collectAsState(emptyMap()),
             selectedSong = viewModel.selectedSong.collectAsState(null),
             modalBottomSheetState = rememberModalBottomSheetState(
@@ -190,6 +194,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
                 skipHalfExpanded = true
             ),
             songsScreenScrollState = rememberLazyListState(),
+            setlistsScreenScrollState = rememberLazyListState(),
             scaffoldState = rememberScaffoldState()
         )
     }

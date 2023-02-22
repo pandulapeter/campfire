@@ -43,6 +43,7 @@ class CampfireViewModel(
                 .sortedByDescending { it.title.startsWith(normalizedQuery, true) }
         }
     }.distinctUntilChanged()
+    val setlists = getScreenData().map { it.data?.setlists.orEmpty() }.distinctUntilChanged()
     val rawSongDetails = getScreenData().map { it.data?.rawSongDetails.orEmpty() }.distinctUntilChanged()
     val databases = getScreenData().map { it.data?.databases.orEmpty() }.distinctUntilChanged()
     val userPreferences = getScreenData().map { it.data?.userPreferences }.distinctUntilChanged()

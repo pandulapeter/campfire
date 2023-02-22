@@ -44,8 +44,7 @@ fun SongsContentList(
                 text = uiStrings.songsNoData
             )
         }
-    }
-    if (songs.isNotEmpty()) {
+    } else {
         songs.forEachIndexed { index, song ->
             if (shouldUseHeaders) {
                 val previousSong = if (index == 0) null else songs[index - 1]
