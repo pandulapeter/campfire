@@ -22,6 +22,7 @@ sealed class CampfireStrings {
     // Setlists screen
     abstract val setlists: String
     abstract val setlistsNoData: String
+    abstract val setlistsNewSetlist: String
 
     // Settings screen
     abstract val settings: String
@@ -59,6 +60,7 @@ sealed class CampfireStrings {
         // Setlists screen
         override val setlists = "Setlists"
         override val setlistsNoData = "No setlists to show"
+        override val setlistsNewSetlist = "New setlist"
 
         // Settings screen
         override val settings = "Settings"
@@ -97,6 +99,7 @@ sealed class CampfireStrings {
         // Setlists screen
         override val setlists = "Listák"
         override val setlistsNoData = "Nincsenek listák"
+        override val setlistsNewSetlist = "Új lista"
 
         // Settings screen
         override val settings = "Beállítások"

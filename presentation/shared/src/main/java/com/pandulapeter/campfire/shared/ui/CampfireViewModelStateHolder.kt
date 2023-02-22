@@ -145,6 +145,13 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
         }
     }
 
+    // TODO
+    fun onNewSetlistClicked() = coroutineScope.launch {
+        scaffoldState.snackbarHostState.showSnackbar(
+            message = uiStrings.value.settingsAddNewDatabaseComingSoon
+        )
+    }
+
     fun onUiModeChanged(uiMode: UserPreferences.UiMode) = userPreferences.value?.let { userPreferences ->
         coroutineScope.launch {
             viewModel.onUiModeChanged(
@@ -163,6 +170,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
         }
     }
 
+    // TODO
     fun onAddDatabaseClicked() = coroutineScope.launch {
         scaffoldState.snackbarHostState.showSnackbar(
             message = uiStrings.value.settingsAddNewDatabaseComingSoon

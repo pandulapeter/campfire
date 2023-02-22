@@ -1,10 +1,8 @@
 package com.pandulapeter.campfire.presentation.screens
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -21,7 +19,7 @@ internal fun SetlistsScreensDesktop(
     rawSongDetails: Map<String, RawSongDetails>,
     onSongClicked: (Song) -> Unit
 ) = SetlistsContentList(
-    modifier = modifier.padding(8.dp),
+    modifier = modifier,
     uiStrings = stateHolder.uiStrings.value,
     state = state,
     songs = songs,

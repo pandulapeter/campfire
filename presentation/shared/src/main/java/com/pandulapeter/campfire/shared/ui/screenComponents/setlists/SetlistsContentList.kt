@@ -37,16 +37,18 @@ fun SetlistsContentList(
     if (setlists.isEmpty()) {
         item(key = "header_no_setlists") {
             HeaderItem(
-                modifier = Modifier.animateItemPlacement(),
-                text = uiStrings.setlistsNoData
+                modifier = Modifier.animateItemPlacement().padding(horizontal = 8.dp),
+                text = uiStrings.setlistsNoData,
+                shouldUseLargePadding = false
             )
         }
     } else {
         if (songs.isEmpty()) {
             item(key = "header_no_songs") {
                 HeaderItem(
-                    modifier = Modifier.animateItemPlacement(),
-                    text = uiStrings.songsNoData
+                    modifier = Modifier.animateItemPlacement().padding(horizontal = 8.dp),
+                    text = uiStrings.songsNoData,
+                    shouldUseLargePadding = false
                 )
             }
         } else {

@@ -1,6 +1,11 @@
 package com.pandulapeter.campfire.shared.ui.catalogue.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -14,6 +19,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -41,7 +47,7 @@ import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsFilterCon
 import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsSortingControlsList
 import dev.atsushieno.composempp.material.DropdownMenu
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun CampfireScaffold(
     modifier: Modifier = Modifier,
@@ -73,10 +79,10 @@ fun CampfireScaffold(
         )
     }
 ) {
+    val selectedNavigationDestination = navigationDestinations.firstOrNull { it.isSelected }?.destination
     Scaffold(
         scaffoldState = stateHolder.scaffoldState,
         topBar = {
-            val selectedNavigationDestination = navigationDestinations.firstOrNull { it.isSelected }?.destination
             CampfireAppBar(
                 uiStrings = uiStrings,
                 selectedNavigationDestination = selectedNavigationDestination,
@@ -114,6 +120,22 @@ fun CampfireScaffold(
         bottomBar = {
             if (!isInLandscape) {
                 bottomNavigationBar()
+            }
+        },
+        floatingActionButton = {
+            AnimatedVisibility(
+                visible = selectedNavigationDestination == CampfireViewModel.NavigationDestination.SETLISTS,
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut()
+            ) {
+                FloatingActionButton(
+                    onClick = stateHolder::onNewSetlistClicked
+                ) {
+                    Icon(
+                        imageVector = CampfireIcons.add,
+                        contentDescription = uiStrings.setlistsNewSetlist
+                    )
+                }
             }
         },
         content = { scaffoldPadding ->

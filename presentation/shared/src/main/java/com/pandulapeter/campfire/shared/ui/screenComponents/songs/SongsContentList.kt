@@ -40,8 +40,9 @@ fun SongsContentList(
     if (songs.isEmpty()) {
         item(key = "header_no_data") {
             HeaderItem(
-                modifier = Modifier.animateItemPlacement(),
-                text = uiStrings.songsNoData
+                modifier = Modifier.animateItemPlacement().padding(horizontal = 8.dp),
+                text = uiStrings.songsNoData,
+                shouldUseLargePadding = false
             )
         }
     } else {
