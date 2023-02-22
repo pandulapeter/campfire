@@ -3,6 +3,7 @@ package com.pandulapeter.campfire.shared.ui
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Database
+import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
@@ -10,6 +11,7 @@ import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveDatabasesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import kotlinx.coroutines.flow.Flow
@@ -18,12 +20,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import java.util.UUID
 
 class CampfireViewModel(
     getScreenData: GetScreenDataUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
     private val loadSongDetails: LoadSongDetailsUseCase,
     private val saveDatabases: SaveDatabasesUseCase,
+    private val saveSetlists: SaveSetlistsUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
     private val normalizeText: NormalizeTextUseCase
 ) {
@@ -88,9 +92,36 @@ class CampfireViewModel(
         _visibleDialog.value = DialogType.NEW_SETLIST
     }
 
+    suspend fun createNewSetlist(newSetlistTitle: String, currentSetlists: List<Setlist>) = saveSetlists(
+        currentSetlists.toMutableList().apply {
+            add(
+                0, Setlist(
+                    id = UUID.randomUUID().toString(),
+                    title = newSetlistTitle,
+                    songIds = emptyList(),
+                    priority = currentSetlists.size
+                )
+            )
+        }
+    )
+
     fun onAddDatabaseClicked() {
         _visibleDialog.value = DialogType.NEW_DATABASE
     }
+
+    suspend fun addNewDatabase(newDatabaseName: String, newDatabaseUrl: String, currentDatabases: List<Database>) = saveDatabases(
+        currentDatabases.toMutableList().apply {
+            add(
+                0, Database(
+                    url = newDatabaseUrl,
+                    name = newDatabaseName,
+                    isEnabled = true,
+                    priority = currentDatabases.size,
+                    isAddedByUser = true
+                )
+            )
+        }
+    )
 
     fun dismissDialog() {
         _visibleDialog.value = null

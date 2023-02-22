@@ -371,7 +371,7 @@ private fun DynamicDialog(
                             )
                             Spacer(modifier = Modifier.height(24.dp))
                             Text(
-                                modifier = Modifier.clickable { urlOpener("https://github.com/pandulapeter") }, // TODO
+                                modifier = Modifier.clickable { urlOpener("https://github.com/pandulapeter") }, // TODO: Change URL
                                 style = TextStyle.Default.copy(fontWeight = FontWeight.Bold),
                                 text = uiStrings.settingsAddNewDatabaseHint
                             )
@@ -380,7 +380,19 @@ private fun DynamicDialog(
                 }
             },
             confirmButton = {
-                TextButton(onClick = stateHolder::dismissDialog) {
+                TextButton(
+                    onClick = {
+                        when (visibleDialog) {
+                            CampfireViewModel.DialogType.NEW_SETLIST -> stateHolder.createNewSetlist(firstTextInputValue.value)
+                            CampfireViewModel.DialogType.NEW_DATABASE -> stateHolder.createNewDatabase(firstTextInputValue.value, secondTextInputValue.value)
+                        }
+                    },
+                    // TODO: Improve validation
+                    enabled = when (visibleDialog) {
+                        CampfireViewModel.DialogType.NEW_SETLIST -> firstTextInputValue.value.isNotBlank()
+                        CampfireViewModel.DialogType.NEW_DATABASE -> firstTextInputValue.value.isNotBlank() && secondTextInputValue.value.isNotBlank()
+                    }
+                ) {
                     Text(
                         when (visibleDialog) {
                             CampfireViewModel.DialogType.NEW_SETLIST -> uiStrings.setlistsCreate

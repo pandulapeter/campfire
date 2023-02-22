@@ -85,6 +85,23 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
 
     fun dismissDialog() = viewModel.dismissDialog()
 
+    fun createNewSetlist(title: String) = coroutineScope.launch {
+        dismissDialog()
+        viewModel.createNewSetlist(
+            newSetlistTitle = title.trim(),
+            currentSetlists = setlists.value
+        )
+    }
+
+    fun createNewDatabase(name: String, url: String) = coroutineScope.launch {
+        viewModel.addNewDatabase(
+            newDatabaseName = name.trim(),
+            newDatabaseUrl = url.trim(),
+            currentDatabases = databases.value
+        )
+        dismissDialog()
+    }
+
     fun onSongClicked(song: Song) = coroutineScope.launch { viewModel.onSongClicked(song) }
 
     fun onSongClosed() = coroutineScope.launch { viewModel.onSongClicked(null) }
