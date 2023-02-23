@@ -1,11 +1,13 @@
 package com.pandulapeter.campfire.shared.ui.screenComponents.songs
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CheckboxItem
@@ -31,7 +33,7 @@ fun SongsControlsList(
     onShowOnlyDownloadedSongsChanged: (Boolean) -> Unit
 ) {
     Column(
-        modifier = modifier.wrapContentSize().verticalScroll(rememberScrollState())
+        modifier = modifier.verticalScroll(rememberScrollState()).padding(top = 8.dp)
     ) {
         SongsSortingControlsList(
             uiStrings = uiStrings,

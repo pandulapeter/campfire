@@ -4,9 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.ExperimentalMaterialApi
@@ -25,6 +23,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SongDetailsScreenData
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.UiConstants
 import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsContentList
 import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsControlsList
 
@@ -43,7 +42,7 @@ internal fun SongsScreenAndroid(
             modifier = modifier
         ) {
             SongsContentListWithPullRefresh(
-                modifier = Modifier.fillMaxWidth(0.65f),
+                modifier = Modifier.fillMaxWidth(UiConstants.VERTICAL_DIVIDER_RATIO),
                 uiStrings = stateHolder.uiStrings.value,
                 sortingMode = stateHolder.userPreferences.value?.sortingMode,
                 shouldUseHeaders = stateHolder.query.value.isBlank(),
@@ -58,9 +57,7 @@ internal fun SongsScreenAndroid(
                 modifier = Modifier.width(8.dp)
             )
             SongsControlsList(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(end = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 uiStrings = stateHolder.uiStrings.value,
                 databases = stateHolder.databases.value,
                 unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
@@ -105,7 +102,9 @@ private fun SongsContentListWithPullRefresh(
     onSongClicked: (SongDetailsScreenData) -> Unit,
     lazyListState: LazyListState
 ) = Box(
-    modifier = modifier.fillMaxWidth().pullRefresh(pullRefreshState)
+    modifier = modifier
+        .fillMaxWidth()
+        .pullRefresh(pullRefreshState)
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     SongsContentList(
