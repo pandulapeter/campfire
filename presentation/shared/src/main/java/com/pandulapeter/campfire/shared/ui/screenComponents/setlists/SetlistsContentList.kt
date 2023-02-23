@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.DismissDirection
 import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FractionalThreshold
 import androidx.compose.material.Surface
 import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.rememberDismissState
@@ -75,30 +77,32 @@ fun SetlistsContentList(
                         item(
                             key = key.string
                         ) {
-                            val currentItem = rememberUpdatedState(key)
-                            SwipeToDismiss(
-                                modifier = Modifier.animateItemPlacement(),
-                                state = rememberDismissState(
-                                    confirmStateChange = {
-                                        when (it) {
-                                            DismissValue.Default -> false
-                                            else -> {
-                                                currentItem.value.songId?.let { currentItemSongId ->
-                                                    currentItem.value.setlistId?.let { currentItemSetlistId ->
-                                                        stateHolder.removeSongFromSetlist(songId = currentItemSongId, setlistId = currentItemSetlistId)
+                            ReorderableItem(
+                                defaultDraggingModifier = Modifier.animateItemPlacement(),
+                                state = state,
+                                key = key.string
+                            ) { isBeingDragged ->
+                                val currentItem = rememberUpdatedState(key)
+                                SwipeToDismiss(
+                                    directions = setOf(DismissDirection.StartToEnd),
+                                    dismissThresholds = { FractionalThreshold(0.5f) },
+                                    state = rememberDismissState(
+                                        confirmStateChange = {
+                                            when (it) {
+                                                DismissValue.Default -> false
+                                                else -> {
+                                                    currentItem.value.songId?.let { currentItemSongId ->
+                                                        currentItem.value.setlistId?.let { currentItemSetlistId ->
+                                                            stateHolder.removeSongFromSetlist(songId = currentItemSongId, setlistId = currentItemSetlistId)
+                                                        }
                                                     }
+                                                    true
                                                 }
-                                                true
                                             }
                                         }
-                                    }
-                                ),
-                                background = {}
-                            ) {
-                                ReorderableItem(
-                                    state = state,
-                                    key = key.string
-                                ) { isBeingDragged ->
+                                    ),
+                                    background = {}
+                                ) {
                                     SongItem(
                                         uiStrings = uiStrings,
                                         isBeingDragged = isBeingDragged,

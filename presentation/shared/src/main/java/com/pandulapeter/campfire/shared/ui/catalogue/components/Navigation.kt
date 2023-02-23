@@ -404,28 +404,16 @@ private fun DynamicDialog(
                 }
             },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        when (visibleDialog) {
-                            CampfireViewModel.DialogType.NewSetlist -> stateHolder.createNewSetlist(firstTextInputValue.value)
-                            CampfireViewModel.DialogType.NewDatabase -> stateHolder.createNewDatabase(firstTextInputValue.value, secondTextInputValue.value)
-                            is CampfireViewModel.DialogType.SetlistPicker -> stateHolder.dismissDialog()
-                        }
-                    },
-                    // TODO: Improve validation
-                    enabled = when (visibleDialog) {
-                        CampfireViewModel.DialogType.NewSetlist -> firstTextInputValue.value.isNotBlank()
-                        CampfireViewModel.DialogType.NewDatabase -> firstTextInputValue.value.isNotBlank() && secondTextInputValue.value.isNotBlank()
-                        is CampfireViewModel.DialogType.SetlistPicker -> true
-                    }
-                ) {
-                    Text(
-                        when (visibleDialog) {
-                            CampfireViewModel.DialogType.NewSetlist -> uiStrings.setlistsCreate
-                            CampfireViewModel.DialogType.NewDatabase -> uiStrings.settingsAdd
-                            is CampfireViewModel.DialogType.SetlistPicker -> uiStrings.songDetailsDone
-                        }
-                    )
+                when (visibleDialog) {
+                    CampfireViewModel.DialogType.NewSetlist -> TextButton(
+                        onClick = { stateHolder.createNewSetlist(firstTextInputValue.value) },
+                        enabled = firstTextInputValue.value.isNotBlank()  // TODO: Improve validation
+                    ) { Text(uiStrings.setlistsCreate) }
+                    CampfireViewModel.DialogType.NewDatabase -> TextButton(
+                        onClick = { stateHolder.createNewDatabase(firstTextInputValue.value, secondTextInputValue.value) },
+                        enabled = firstTextInputValue.value.isNotBlank() && secondTextInputValue.value.isNotBlank()      // TODO: Improve validation
+                    ) { Text(uiStrings.settingsAdd) }
+                    is CampfireViewModel.DialogType.SetlistPicker -> Unit
                 }
             }
         )

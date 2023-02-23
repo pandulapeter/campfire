@@ -45,7 +45,6 @@ sealed class CampfireStrings {
 
     // Song details screen
     abstract val songDetailsAddToSetlist: String
-    abstract val songDetailsDone: String
 
     object English : CampfireStrings() {
 
@@ -92,7 +91,6 @@ sealed class CampfireStrings {
 
         // Song details screen
         override val songDetailsAddToSetlist = "Add to setlist"
-        override val songDetailsDone = "Done"
     }
 
     object Hungarian : CampfireStrings() {
@@ -140,6 +138,5 @@ sealed class CampfireStrings {
 
         // Song details screen
         override val songDetailsAddToSetlist = "Hozzáadás listához"
-        override val songDetailsDone = "Kész"
     }
 }
