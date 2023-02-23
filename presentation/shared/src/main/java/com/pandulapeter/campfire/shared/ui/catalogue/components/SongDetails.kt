@@ -28,13 +28,20 @@ internal fun SongDetailsScreen(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
     stateHolder: CampfireViewModelStateHolder,
-    song: Song?,
-    rawSongDetails: RawSongDetails?,
+    songDetailsScreenData: SongDetailsScreenData?,
+    rawSongDetailsMap: Map<String, RawSongDetails>?,
     setlists: List<Setlist>,
     onSongClosed: () -> Unit
 ) = Column(
     modifier = modifier.fillMaxSize()
 ) {
+    // TODO: Add pager component
+    val currentSong = when (songDetailsScreenData) {
+        is SongDetailsScreenData.SetlistData -> songDetailsScreenData.songs[songDetailsScreenData.initiallySelectedSongIndex]
+        is SongDetailsScreenData.SongData -> songDetailsScreenData.song
+        null -> null
+    }
+    val rawSongDetails = currentSong?.url?.let { songUrl -> rawSongDetailsMap?.get(songUrl) }
     TopAppBar(
         navigationIcon = {
             IconButton(
@@ -49,7 +56,14 @@ internal fun SongDetailsScreen(
         actions = {
             if (setlists.isNotEmpty()) {
                 IconButton(
-                    onClick = { song?.id?.let(stateHolder::onSetlistPickerClicked) }
+                    onClick = {
+                        currentSong?.id?.let { songId ->
+                            stateHolder.onSetlistPickerClicked(
+                                songId = songId,
+                                currentSetlistId = (songDetailsScreenData as? SongDetailsScreenData.SetlistData)?.setlistId
+                            )
+                        }
+                    }
                 ) {
                     Icon(
                         imageVector = CampfireIcons.setlists,
@@ -59,7 +73,7 @@ internal fun SongDetailsScreen(
             }
         },
         backgroundColor = MaterialTheme.colors.background,
-        title = { Text(text = song?.title.orEmpty()) }
+        title = { Text(text = currentSong?.title.orEmpty()) }
     )
     if (rawSongDetails == null) {
         CircularProgressIndicator(
@@ -70,5 +84,23 @@ internal fun SongDetailsScreen(
             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
             text = rawSongDetails.rawData
         )
+    }
+}
+
+sealed class SongDetailsScreenData {
+
+    abstract val songUrl: String
+
+    data class SongData(val song: Song) : SongDetailsScreenData() {
+        override val songUrl = song.url
+    }
+
+    data class SetlistData(
+        val setlistId: String,
+        val songs: List<Song>,
+        val initiallySelectedSongIndex: Int
+    ) : SongDetailsScreenData() {
+
+        override val songUrl = songs[initiallySelectedSongIndex].url
     }
 }

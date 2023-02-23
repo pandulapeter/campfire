@@ -22,6 +22,7 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.components.HeaderItem
+import com.pandulapeter.campfire.shared.ui.catalogue.components.SongDetailsScreenData
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SongItem
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import org.burnoutcrew.reorderable.ReorderableItem
@@ -36,11 +37,12 @@ fun SetlistsContentList(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
     stateHolder: CampfireViewModelStateHolder,
+    shouldUseExpandedUi: Boolean,
     state: ReorderableLazyListState,
     songs: List<Song>,
     setlists: List<Setlist>,
     rawSongDetails: Map<String, RawSongDetails>,
-    onSongClicked: (Song) -> Unit,
+    onSongClicked: (SongDetailsScreenData) -> Unit
 ) = LazyColumn(
     modifier = modifier.fillMaxWidth()
         .reorderable(state)
@@ -68,49 +70,56 @@ fun SetlistsContentList(
         } else {
             setlists.forEach { setlist ->
                 stickyHeader { StickyHeaderItem(setlist.title) }
-                setlist.songIds.forEach { songId ->
-                    songs.firstOrNull { it.id == songId }?.let { song ->
-                        val key = SetlistItemKey(
-                            setlistId = setlist.id,
-                            songId = song.id
-                        )
-                        item(
+                val allSongsInSetlist = setlist.songIds.mapNotNull { songId -> songs.firstOrNull { it.id == songId } }
+                allSongsInSetlist.forEachIndexed { songIndex, song ->
+                    val key = SetlistItemKey(
+                        setlistId = setlist.id,
+                        songId = song.id
+                    )
+                    item(
+                        key = key.string
+                    ) {
+                        ReorderableItem(
+                            defaultDraggingModifier = Modifier.animateItemPlacement(),
+                            state = state,
                             key = key.string
-                        ) {
-                            ReorderableItem(
-                                defaultDraggingModifier = Modifier.animateItemPlacement(),
-                                state = state,
-                                key = key.string
-                            ) { isBeingDragged ->
-                                val currentItem = rememberUpdatedState(key)
-                                SwipeToDismiss(
-                                    directions = setOf(DismissDirection.StartToEnd),
-                                    dismissThresholds = { FractionalThreshold(0.5f) },
-                                    state = rememberDismissState(
-                                        confirmStateChange = {
-                                            when (it) {
-                                                DismissValue.Default -> false
-                                                else -> {
-                                                    currentItem.value.songId?.let { currentItemSongId ->
-                                                        currentItem.value.setlistId?.let { currentItemSetlistId ->
-                                                            stateHolder.removeSongFromSetlist(songId = currentItemSongId, setlistId = currentItemSetlistId)
-                                                        }
+                        ) { isBeingDragged ->
+                            val currentItem = rememberUpdatedState(key)
+                            SwipeToDismiss(
+                                directions = setOf(DismissDirection.StartToEnd),
+                                dismissThresholds = { FractionalThreshold(0.5f) },
+                                state = rememberDismissState(
+                                    confirmStateChange = {
+                                        when (it) {
+                                            DismissValue.Default -> false
+                                            else -> {
+                                                currentItem.value.songId?.let { currentItemSongId ->
+                                                    currentItem.value.setlistId?.let { currentItemSetlistId ->
+                                                        stateHolder.removeSongFromSetlist(songId = currentItemSongId, setlistId = currentItemSetlistId)
                                                     }
-                                                    true
                                                 }
+                                                true
                                             }
                                         }
-                                    ),
-                                    background = {}
-                                ) {
-                                    SongItem(
-                                        uiStrings = uiStrings,
-                                        isBeingDragged = isBeingDragged,
-                                        song = song,
-                                        isDownloaded = rawSongDetails[song.url] != null,
-                                        onSongClicked = onSongClicked
-                                    )
-                                }
+                                    }
+                                ),
+                                background = {}
+                            ) {
+                                SongItem(
+                                    uiStrings = uiStrings,
+                                    isBeingDragged = isBeingDragged,
+                                    song = song,
+                                    isDownloaded = rawSongDetails[song.url] != null,
+                                    onSongClicked = {
+                                        onSongClicked(
+                                            SongDetailsScreenData.SetlistData(
+                                                setlistId = setlist.id,
+                                                songs = allSongsInSetlist,
+                                                initiallySelectedSongIndex = songIndex
+                                            )
+                                        )
+                                    }
+                                )
                             }
                         }
                     }

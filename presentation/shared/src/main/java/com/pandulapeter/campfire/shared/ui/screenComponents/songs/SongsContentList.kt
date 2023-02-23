@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.shared.ui.catalogue.components.HeaderItem
+import com.pandulapeter.campfire.shared.ui.catalogue.components.SongDetailsScreenData
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SongItem
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import org.koin.java.KoinJavaComponent.get
@@ -31,7 +32,7 @@ fun SongsContentList(
     shouldUseHeaders: Boolean,
     songs: List<Song>,
     rawSongDetails: Map<String, RawSongDetails>,
-    onSongClicked: (Song) -> Unit
+    onSongClicked: (SongDetailsScreenData) -> Unit
 ) = LazyColumn(
     modifier = modifier.fillMaxWidth(),
     state = state,
@@ -78,7 +79,7 @@ fun SongsContentList(
                     uiStrings = uiStrings,
                     song = song,
                     isDownloaded = rawSongDetails[song.url] != null,
-                    onSongClicked = onSongClicked
+                    onSongClicked = { onSongClicked(SongDetailsScreenData.SongData(it)) }
                 )
             }
         }

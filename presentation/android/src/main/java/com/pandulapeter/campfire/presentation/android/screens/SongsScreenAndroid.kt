@@ -23,6 +23,7 @@ import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
+import com.pandulapeter.campfire.shared.ui.catalogue.components.SongDetailsScreenData
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsContentList
 import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsControlsList
@@ -101,7 +102,7 @@ private fun SongsContentListWithPullRefresh(
     shouldUseHeaders: Boolean,
     songs: List<Song>,
     rawSongDetails: Map<String, RawSongDetails>,
-    onSongClicked: (Song) -> Unit,
+    onSongClicked: (SongDetailsScreenData) -> Unit,
     lazyListState: LazyListState
 ) = Box(
     modifier = modifier.fillMaxWidth().pullRefresh(pullRefreshState)

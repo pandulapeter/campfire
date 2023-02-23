@@ -67,7 +67,7 @@ fun CampfireAndroidApp(
                 .systemBarsPadding()
                 .imePadding(),
             uiStrings = stateHolder.uiStrings.value,
-            rawSongDetails = stateHolder.rawSongDetails.value,
+            rawSongDetailsMap = stateHolder.rawSongDetails.value,
             onSongClosed = stateHolder::onSongClosed,
             modalBottomSheetState = stateHolder.modalBottomSheetState,
             stateHolder = stateHolder,
@@ -137,10 +137,7 @@ private fun Content(
         CampfireViewModel.NavigationDestination.SETLISTS -> SetlistsScreenAndroid(
             stateHolder = stateHolder,
             state = setlistsScreenScrollState,
-            songs = stateHolder.songs.value,
-            setlists = stateHolder.setlists.value,
-            rawSongDetails = stateHolder.rawSongDetails.value,
-            onSongClicked = stateHolder::onSongClicked
+            shouldUseExpandedUi = shouldUseExpandedUi
         )
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreenAndroid(
             stateHolder = stateHolder

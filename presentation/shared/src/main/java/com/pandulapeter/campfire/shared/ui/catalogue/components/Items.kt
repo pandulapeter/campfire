@@ -106,24 +106,31 @@ internal fun SongItem(
 internal fun CheckboxItem(
     modifier: Modifier = Modifier,
     text: String,
+    isEnabled: Boolean = true,
     isChecked: Boolean,
     onCheckedChanged: (Boolean) -> Unit
 ) = RoundedCard(
     modifier = modifier
 ) {
     Row(
-        modifier = Modifier.clickable { onCheckedChanged(!isChecked) }
+        modifier = Modifier.clickable { if (isEnabled) onCheckedChanged(!isChecked) }
     ) {
         Checkbox(
             modifier = Modifier.align(Alignment.CenterVertically),
             checked = isChecked,
-            onCheckedChange = onCheckedChanged
+            enabled = isEnabled,
+            onCheckedChange = { if (isEnabled) onCheckedChanged(it) }
         )
         Spacer(
             modifier = Modifier.width(4.dp)
         )
         Text(
-            modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically).padding(vertical = 16.dp).padding(end = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.CenterVertically)
+                .padding(vertical = 16.dp)
+                .padding(end = 8.dp)
+                .alpha(if (isEnabled) 1f else 0.5f),
             text = text
         )
     }

@@ -18,6 +18,7 @@ import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.shared.ui.catalogue.components.SongDetailsScreenData
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.catalogue.utilities.getUiStrings
 import com.pandulapeter.campfire.shared.ui.screenComponents.setlists.SetlistItemKey
@@ -47,7 +48,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
     val songs: State<List<Song>>,
     val setlists: State<List<Setlist>>,
     val rawSongDetails: State<Map<String, RawSongDetails>>,
-    val selectedSong: State<Song?>,
+    val selectedSong: State<SongDetailsScreenData?>,
     val modalBottomSheetState: ModalBottomSheetState,
     val songsScreenScrollState: LazyListState,
     val setlistsScreenScrollState: ReorderableLazyListState,
@@ -105,7 +106,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
         dismissDialog()
     }
 
-    fun onSongClicked(song: Song) = coroutineScope.launch { viewModel.onSongClicked(song) }
+    fun onSongClicked(songDetailsScreenData: SongDetailsScreenData) = coroutineScope.launch { viewModel.onSongClicked(songDetailsScreenData) }
 
     fun onSongClosed() = coroutineScope.launch { viewModel.onSongClicked(null) }
 
@@ -190,7 +191,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
 
     fun onAddDatabaseClicked() = viewModel.onAddDatabaseClicked()
 
-    fun onSetlistPickerClicked(songId: String) = viewModel.onSetlistPickerClicked(songId)
+    fun onSetlistPickerClicked(songId: String, currentSetlistId: String?) = viewModel.onSetlistPickerClicked(songId, currentSetlistId)
 
     fun addSongToSetlist(songId: String, setlistId: String) = coroutineScope.launch {
         viewModel.addSongToSetlist(

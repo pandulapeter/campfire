@@ -64,7 +64,7 @@ fun CampfireScaffold(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
     modalBottomSheetState: ModalBottomSheetState,
-    rawSongDetails: Map<String, RawSongDetails>?,
+    rawSongDetailsMap: Map<String, RawSongDetails>?,
     onSongClosed: () -> Unit,
     query: String,
     onQueryChanged: (String) -> Unit,
@@ -86,8 +86,8 @@ fun CampfireScaffold(
         SongDetailsScreen(
             uiStrings = uiStrings,
             stateHolder = stateHolder,
-            song = stateHolder.selectedSong.value,
-            rawSongDetails = stateHolder.selectedSong.value?.let { rawSongDetails?.get(it.url) },
+            songDetailsScreenData = stateHolder.selectedSong.value,
+            rawSongDetailsMap = rawSongDetailsMap,
             setlists = stateHolder.setlists.value,
             onSongClosed = onSongClosed
         )
@@ -121,11 +121,17 @@ fun CampfireScaffold(
                                     uiStrings = uiStrings,
                                     stateHolder = stateHolder
                                 )
-                                FiltersIconAndDropdown(
-                                    uiStrings = uiStrings,
-                                    stateHolder = stateHolder
-                                )
                             }
+                        }
+                    }
+                    if (!shouldUseExpandedUi) {
+                        AnimatedVisibility(
+                            visible = selectedNavigationDestination == CampfireViewModel.NavigationDestination.SONGS || selectedNavigationDestination == CampfireViewModel.NavigationDestination.SETLISTS
+                        ) {
+                            FiltersIconAndDropdown(
+                                uiStrings = uiStrings,
+                                stateHolder = stateHolder
+                            )
                         }
                     }
                 }
@@ -383,6 +389,7 @@ private fun DynamicDialog(
                             stateHolder.setlists.value.forEach { setlist ->
                                 CheckboxItem(
                                     text = setlist.title,
+                                    isEnabled = visibleDialog.currentSetlistId != setlist.id,
                                     isChecked = setlist.songIds.contains(visibleDialog.songId),
                                     onCheckedChanged = {
                                         if (it) {

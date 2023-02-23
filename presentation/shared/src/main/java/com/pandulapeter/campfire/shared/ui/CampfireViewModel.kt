@@ -4,7 +4,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.Setlist
-import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
@@ -13,6 +12,7 @@ import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveDatabasesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
+import com.pandulapeter.campfire.shared.ui.catalogue.components.SongDetailsScreenData
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -65,8 +65,8 @@ class CampfireViewModel(
             )
         }
     }
-    private val _selectedSong = MutableStateFlow<Song?>(null)
-    val selectedSong: Flow<Song?> = _selectedSong
+    private val _selectedSong = MutableStateFlow<SongDetailsScreenData?>(null)
+    val selectedSong: Flow<SongDetailsScreenData?> = _selectedSong
 
     suspend fun onInitialize() = loadScreenData(false)
 
@@ -109,8 +109,8 @@ class CampfireViewModel(
         _visibleDialog.value = DialogType.NewDatabase
     }
 
-    fun onSetlistPickerClicked(songId: String) {
-        _visibleDialog.value = DialogType.SetlistPicker(songId)
+    fun onSetlistPickerClicked(songId: String, currentSetlistId: String?) {
+        _visibleDialog.value = DialogType.SetlistPicker(songId, currentSetlistId)
     }
 
     suspend fun addSongToSetlist(songId: String, setlistId: String, setlists: List<Setlist>) = saveSetlists(
@@ -169,10 +169,10 @@ class CampfireViewModel(
         _visibleDialog.value = null
     }
 
-    suspend fun onSongClicked(song: Song?) {
-        _selectedSong.value = song
-        if (song != null) {
-            loadSongDetails(song.url, false)
+    suspend fun onSongClicked(songDetailsScreenData: SongDetailsScreenData?) {
+        _selectedSong.value = songDetailsScreenData
+        if (songDetailsScreenData != null) {
+            loadSongDetails(songDetailsScreenData.songUrl, false)
         }
     }
 
@@ -224,6 +224,6 @@ class CampfireViewModel(
 
         object NewDatabase : DialogType()
 
-        data class SetlistPicker(val songId: String) : DialogType()
+        data class SetlistPicker(val songId: String, val currentSetlistId: String?) : DialogType()
     }
 }
