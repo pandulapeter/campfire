@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Star
@@ -21,6 +22,7 @@ object CampfireIcons {
     val settings = Icons.Rounded.Settings
     val clear = Icons.Rounded.Clear
     val close = Icons.Rounded.Close
+    val remove = Icons.Rounded.Delete
     val search = Icons.Rounded.Search
     val add = Icons.Rounded.Add
     val sort by lazy { makeIconFromXMLPath("M18 21L14 17H17V7H14L18 3L22 7H19V17H22M2 19V17H12V19M2 13V11H9V13M2 7V5H6V7H2Z") }

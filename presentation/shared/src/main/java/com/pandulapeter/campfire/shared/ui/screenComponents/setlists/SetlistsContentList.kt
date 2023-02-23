@@ -2,6 +2,8 @@ package com.pandulapeter.campfire.shared.ui.screenComponents.setlists
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +12,8 @@ import androidx.compose.material.DismissDirection
 import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FractionalThreshold
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.Surface
 import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.rememberDismissState
@@ -24,20 +28,73 @@ import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.components.HeaderItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SongDetailsScreenData
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SongItem
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
+import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsFilterControlsList
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.reorderable
 
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun SetlistsContentList(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
     stateHolder: CampfireViewModelStateHolder,
     shouldUseExpandedUi: Boolean,
+    state: ReorderableLazyListState,
+    songs: List<Song>,
+    setlists: List<Setlist>,
+    rawSongDetails: Map<String, RawSongDetails>,
+    onSongClicked: (SongDetailsScreenData) -> Unit
+) = if (shouldUseExpandedUi) {
+    Row(
+        modifier = modifier.fillMaxSize()
+    ) {
+        SetlistContentList(
+            modifier = Modifier.fillMaxWidth(0.55f),
+            uiStrings = uiStrings,
+            stateHolder = stateHolder,
+            state = state,
+            songs = songs,
+            setlists = setlists,
+            rawSongDetails = rawSongDetails,
+            onSongClicked = onSongClicked
+        )
+        SongsFilterControlsList(
+            modifier = Modifier.fillMaxWidth(),
+            uiStrings = uiStrings,
+            databases = stateHolder.databases.value,
+            unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
+            shouldShowExplicitSongs = stateHolder.userPreferences.value?.shouldShowExplicitSongs == true,
+            showOnlyDownloadedSongs = stateHolder.userPreferences.value?.showOnlyDownloadedSongs == true,
+            shouldShowSongsWithoutChords = stateHolder.userPreferences.value?.shouldShowSongsWithoutChords == true,
+            onDatabaseSelectedChanged = stateHolder::onDatabaseSelectedChanged,
+            onShouldShowExplicitSongsChanged = stateHolder::onShouldShowExplicitSongsChanged,
+            onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged,
+            onShowOnlyDownloadedSongsChanged = stateHolder::onShowOnlyDownloadedSongsChanged
+        )
+    }
+} else {
+    SetlistContentList(
+        modifier = modifier.fillMaxWidth(),
+        uiStrings = uiStrings,
+        stateHolder = stateHolder,
+        state = state,
+        songs = songs,
+        setlists = setlists,
+        rawSongDetails = rawSongDetails,
+        onSongClicked = onSongClicked
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
+@Composable
+private fun SetlistContentList(
+    modifier: Modifier = Modifier,
+    uiStrings: CampfireStrings,
+    stateHolder: CampfireViewModelStateHolder,
     state: ReorderableLazyListState,
     songs: List<Song>,
     setlists: List<Setlist>,
@@ -87,7 +144,7 @@ fun SetlistsContentList(
                             val currentItem = rememberUpdatedState(key)
                             SwipeToDismiss(
                                 directions = setOf(DismissDirection.StartToEnd),
-                                dismissThresholds = { FractionalThreshold(0.5f) },
+                                dismissThresholds = { FractionalThreshold(0.4f) },
                                 state = rememberDismissState(
                                     confirmStateChange = {
                                         when (it) {
@@ -103,7 +160,14 @@ fun SetlistsContentList(
                                         }
                                     }
                                 ),
-                                background = {}
+                                background = {
+                                    IconButton(onClick = {}) {
+                                        Icon(
+                                            imageVector = CampfireIcons.remove,
+                                            contentDescription = uiStrings.setlistsRemoveSong
+                                        )
+                                    }
+                                }
                             ) {
                                 SongItem(
                                     uiStrings = uiStrings,
