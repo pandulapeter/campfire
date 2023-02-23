@@ -36,7 +36,7 @@ fun SongsContentList(
 ) = LazyColumn(
     modifier = modifier.fillMaxWidth(),
     state = state,
-    contentPadding = PaddingValues(vertical = 8.dp)
+    contentPadding = PaddingValues(top = 8.dp)
 ) {
     if (songs.isEmpty()) {
         item(key = "header_no_data") {

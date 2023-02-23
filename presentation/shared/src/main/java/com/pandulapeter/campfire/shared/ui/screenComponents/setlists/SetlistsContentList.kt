@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.DismissDirection
 import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
@@ -56,6 +59,7 @@ fun SetlistsContentList(
             modifier = Modifier.fillMaxWidth(0.55f),
             uiStrings = uiStrings,
             stateHolder = stateHolder,
+            shouldUseExpandedUi = true,
             state = state,
             songs = songs,
             setlists = setlists,
@@ -63,7 +67,7 @@ fun SetlistsContentList(
             onSongClicked = onSongClicked
         )
         SongsFilterControlsList(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().wrapContentSize().verticalScroll(rememberScrollState()).padding(bottom = 80.dp),
             uiStrings = uiStrings,
             databases = stateHolder.databases.value,
             unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
@@ -81,6 +85,7 @@ fun SetlistsContentList(
         modifier = modifier.fillMaxWidth(),
         uiStrings = uiStrings,
         stateHolder = stateHolder,
+        shouldUseExpandedUi = false,
         state = state,
         songs = songs,
         setlists = setlists,
@@ -96,6 +101,7 @@ private fun SetlistContentList(
     uiStrings: CampfireStrings,
     stateHolder: CampfireViewModelStateHolder,
     state: ReorderableLazyListState,
+    shouldUseExpandedUi: Boolean,
     songs: List<Song>,
     setlists: List<Setlist>,
     rawSongDetails: Map<String, RawSongDetails>,
@@ -105,7 +111,7 @@ private fun SetlistContentList(
         .reorderable(state)
         .detectReorderAfterLongPress(state),
     state = state.listState,
-    contentPadding = PaddingValues(top = 8.dp, bottom = 80.dp)
+    contentPadding = PaddingValues(top = 8.dp, bottom = if (shouldUseExpandedUi) 0.dp else 80.dp)
 ) {
     if (setlists.isEmpty()) {
         item(key = "header_no_setlists") {

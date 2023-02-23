@@ -1,9 +1,14 @@
 package com.pandulapeter.campfire.shared.ui.catalogue.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
@@ -23,26 +28,75 @@ import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SongDetailsScreen(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
+    lazyListState: LazyListState,
     stateHolder: CampfireViewModelStateHolder,
     songDetailsScreenData: SongDetailsScreenData?,
     rawSongDetailsMap: Map<String, RawSongDetails>?,
     setlists: List<Setlist>,
     onSongClosed: () -> Unit
-) = Column(
-    modifier = modifier.fillMaxSize()
 ) {
-    // TODO: Add pager component
-    val currentSong = when (songDetailsScreenData) {
-        is SongDetailsScreenData.SetlistData -> songDetailsScreenData.songs[songDetailsScreenData.initiallySelectedSongIndex]
-        is SongDetailsScreenData.SongData -> songDetailsScreenData.song
-        null -> null
+    LazyRow(
+        modifier = modifier.fillMaxSize(),
+        state = lazyListState,
+        flingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState)
+    ) {
+        when (songDetailsScreenData) {
+            is SongDetailsScreenData.SetlistData -> {
+                items(
+                    items = songDetailsScreenData.songs,
+                    key = { it.id }
+                ) { song ->
+                    SongDetailsPage(
+                        modifier = Modifier.fillParentMaxSize(),
+                        uiStrings = uiStrings,
+                        stateHolder = stateHolder,
+                        currentSong = song,
+                        rawSongDetails = rawSongDetailsMap?.get(song.url),
+                        setlistId = songDetailsScreenData.setlistId,
+                        setlists = setlists,
+                        onSongClosed = onSongClosed
+                    )
+                }
+            }
+            is SongDetailsScreenData.SongData -> {
+                item(key = songDetailsScreenData.song.id) {
+                    SongDetailsPage(
+                        modifier = Modifier.fillParentMaxSize(),
+                        uiStrings = uiStrings,
+                        stateHolder = stateHolder,
+                        currentSong = songDetailsScreenData.song,
+                        rawSongDetails = rawSongDetailsMap?.get(songDetailsScreenData.song.url),
+                        setlistId = null,
+                        setlists = setlists,
+                        onSongClosed = onSongClosed
+                    )
+                }
+            }
+            null -> Unit
+        }
     }
-    val rawSongDetails = currentSong?.url?.let { songUrl -> rawSongDetailsMap?.get(songUrl) }
+}
+
+@Composable
+private fun SongDetailsPage(
+    modifier: Modifier = Modifier,
+    uiStrings: CampfireStrings,
+    stateHolder: CampfireViewModelStateHolder,
+    currentSong: Song?,
+    rawSongDetails: RawSongDetails?,
+    setlistId: String?,
+    setlists: List<Setlist>,
+    onSongClosed: () -> Unit
+) = Column(
+    modifier = modifier
+) {
     TopAppBar(
+        modifier = Modifier.fillMaxWidth(),
         navigationIcon = {
             IconButton(
                 onClick = onSongClosed
@@ -60,7 +114,7 @@ internal fun SongDetailsScreen(
                         currentSong?.id?.let { songId ->
                             stateHolder.onSetlistPickerClicked(
                                 songId = songId,
-                                currentSetlistId = (songDetailsScreenData as? SongDetailsScreenData.SetlistData)?.setlistId
+                                currentSetlistId = setlistId
                             )
                         }
                     }

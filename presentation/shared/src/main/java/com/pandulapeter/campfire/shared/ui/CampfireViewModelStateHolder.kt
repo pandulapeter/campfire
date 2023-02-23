@@ -50,6 +50,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
     val rawSongDetails: State<Map<String, RawSongDetails>>,
     val selectedSong: State<SongDetailsScreenData?>,
     val modalBottomSheetState: ModalBottomSheetState,
+    val detailScreenCarouselState: LazyListState,
     val songsScreenScrollState: LazyListState,
     val setlistsScreenScrollState: ReorderableLazyListState,
     val scaffoldState: ScaffoldState
@@ -106,7 +107,11 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
         dismissDialog()
     }
 
-    fun onSongClicked(songDetailsScreenData: SongDetailsScreenData) = coroutineScope.launch { viewModel.onSongClicked(songDetailsScreenData) }
+    fun onSongClicked(songDetailsScreenData: SongDetailsScreenData) = coroutineScope.launch {
+        viewModel.onSongClicked(songDetailsScreenData)
+        delay(25L) // TODO: Bad practice
+        detailScreenCarouselState.animateScrollToItem((songDetailsScreenData as? SongDetailsScreenData.SetlistData)?.initiallySelectedSongIndex ?: 0)
+    }
 
     fun onSongClosed() = coroutineScope.launch { viewModel.onSongClicked(null) }
 
@@ -243,6 +248,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
                     confirmStateChange = { it != ModalBottomSheetValue.HalfExpanded },
                     skipHalfExpanded = true
                 ),
+                detailScreenCarouselState = rememberLazyListState(),
                 songsScreenScrollState = rememberLazyListState(),
                 setlistsScreenScrollState = rememberReorderableLazyListState(
                     canDragOver = { from, to ->
