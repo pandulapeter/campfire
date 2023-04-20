@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 include(
     ":app:android",
     ":app:desktop",
@@ -17,7 +19,6 @@ include(
     ":presentation:shared"
 )
 rootProject.name = "Campfire"
-enableFeaturePreview("VERSION_CATALOGS")
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {

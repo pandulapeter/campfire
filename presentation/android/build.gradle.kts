@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 plugins {
     id("com.android.library")
     id("kotlin-android")
@@ -21,12 +23,11 @@ android {
     val targetSdkVersion = System.getProperty("TARGET_SDK_VERSION").toInt()
     compileSdk = targetSdkVersion
     defaultConfig.minSdk = System.getProperty("MIN_SDK_VERSION").toInt()
-    kotlinOptions.jvmTarget = libs.versions.jvm.target.get()
     buildFeatures.compose = true
     composeOptions.kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
     namespace = "com.pandulapeter.campfire.presentation.android"
+    compileOptions {// TODO: Remove this block after upgrading to Gradle 8.1.0.
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 }

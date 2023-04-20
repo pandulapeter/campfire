@@ -24,8 +24,6 @@ class CampfireAndroidApplication : Application() {
         DebugMenu.initialize(
             application = this,
             applicationTitle = getString(R.string.campfire),
-            versionName = BuildConfig.VERSION_NAME,
-            versionCode = BuildConfig.VERSION_CODE,
             themeResourceId = R.style.Campfire
         )
     }

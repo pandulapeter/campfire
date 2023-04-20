@@ -245,7 +245,7 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
                 selectedSong = viewModel.selectedSong.collectAsState(null),
                 modalBottomSheetState = rememberModalBottomSheetState(
                     initialValue = ModalBottomSheetValue.Hidden,
-                    confirmStateChange = { it != ModalBottomSheetValue.HalfExpanded },
+                    confirmValueChange = { it != ModalBottomSheetValue.HalfExpanded },
                     skipHalfExpanded = true
                 ),
                 detailScreenCarouselState = rememberLazyListState(),

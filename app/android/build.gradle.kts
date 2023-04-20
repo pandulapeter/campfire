@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -29,13 +31,8 @@ android {
         versionCode = System.getProperty("VERSION_CODE").toInt()
         versionName = System.getProperty("VERSION_NAME")
     }
-    kotlinOptions.jvmTarget = libs.versions.jvm.target.get()
     buildFeatures.compose = true
     composeOptions.kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
     val internalSigningConfig = "internal"
     val releaseSigningConfig = "release"
     signingConfigs {
@@ -68,5 +65,9 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName(releaseSigningConfig)
         }
+    }
+    compileOptions {// TODO: Remove this block after upgrading to Gradle 8.1.0.
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }

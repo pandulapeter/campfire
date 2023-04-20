@@ -14,10 +14,9 @@ android {
     val targetSdkVersion = System.getProperty("TARGET_SDK_VERSION").toInt()
     compileSdk = targetSdkVersion
     defaultConfig.minSdk = System.getProperty("MIN_SDK_VERSION").toInt()
-    kotlinOptions.jvmTarget = libs.versions.jvm.target.get()
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
     namespace = "com.pandulapeter.campfire.presentation.androidDebugMenu"
+    compileOptions { // TODO: Remove this block after upgrading to Gradle 8.1.0.
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 }

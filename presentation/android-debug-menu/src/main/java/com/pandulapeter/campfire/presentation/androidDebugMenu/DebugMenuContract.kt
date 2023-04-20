@@ -8,8 +8,6 @@ interface DebugMenuContract {
     fun initialize(
         application: Application,
         applicationTitle: String,
-        versionName: String,
-        versionCode: Int,
         @StyleRes themeResourceId: Int
     ) = Unit
 

@@ -20,3 +20,9 @@ buildscript {
         classpath(libs.realm.gradle)
     }
 }
+
+subprojects {
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions.jvmTarget = libs.versions.jvm.target.get()
+    }
+}

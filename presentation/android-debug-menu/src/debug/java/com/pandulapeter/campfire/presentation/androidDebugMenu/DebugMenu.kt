@@ -1,6 +1,8 @@
 package com.pandulapeter.campfire.presentation.androidDebugMenu
 
 import android.app.Application
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import androidx.annotation.StyleRes
 import com.pandulapeter.beagle.Beagle
@@ -18,8 +20,6 @@ object DebugMenu : DebugMenuContract {
     override fun initialize(
         application: Application,
         applicationTitle: String,
-        versionName: String,
-        versionCode: Int,
         @StyleRes themeResourceId: Int
     ) {
         Beagle.initialize(
@@ -34,11 +34,24 @@ object DebugMenu : DebugMenuContract {
                 )
             )
         )
+        val packageInfo = with(application) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+                } else {
+                    @Suppress("DEPRECATION")
+                    packageManager.getPackageInfo(packageName, 0)
+                }
+            } catch (_: PackageManager.NameNotFoundException) {
+                null
+            }
+        }
         Beagle.set(
             modules = (createHeaderSection(
                 applicationTitle = applicationTitle,
-                versionName = versionName,
-                versionCode = versionCode
+                packageName = application.packageName,
+                versionName = packageInfo?.versionName.orEmpty(),
+                versionCode = packageInfo?.versionCode ?: 0
             ) + createGeneralSection(
             ) + createShortcutsSection(
             ) + createTestingSection(
