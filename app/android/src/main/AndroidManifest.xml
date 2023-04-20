@@ -8,6 +8,7 @@
         android:name=".CampfireAndroidApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/campfire"
@@ -15,6 +16,7 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="false"
         android:theme="@style/Campfire"
+        tools:ignore="UnusedAttribute"
         tools:targetApi="s">
 
         <activity
