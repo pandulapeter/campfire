@@ -20,6 +20,8 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Setlist
@@ -27,6 +29,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
+import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -82,6 +85,8 @@ internal fun SongDetailsScreen(
     }
 }
 
+private val chordRegex = Regex("\\[(.*?)[]]")
+
 @Composable
 private fun SongDetailsPage(
     modifier: Modifier = Modifier,
@@ -136,7 +141,12 @@ private fun SongDetailsPage(
     } else {
         Text(
             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
-            text = rawSongDetails.rawData
+            text = buildAnnotatedString {
+                append(rawSongDetails.rawData)
+                chordRegex.findAll(rawSongDetails.rawData).forEach { result ->
+                    addStyle(SpanStyle(CampfireColors.colorCampfireOrange), result.range.first, result.range.last + 1)
+                }
+            }
         )
     }
 }
