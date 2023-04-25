@@ -1,5 +1,6 @@
 *.iml
 *.db
+*.mx
 *.db.lock
 .gradle
 /local.properties
@@ -7,4 +8,5 @@
 .DS_Store
 build
 /captures
+/campfireDatabase.db.management
 .externalNativeBuild
