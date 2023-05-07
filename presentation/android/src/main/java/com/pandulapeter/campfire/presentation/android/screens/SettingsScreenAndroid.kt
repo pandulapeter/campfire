@@ -8,7 +8,8 @@ import com.pandulapeter.campfire.shared.ui.screenComponents.settings.SettingsCon
 @Composable
 internal fun SettingsScreenAndroid(
     modifier: Modifier = Modifier,
-    stateHolder: CampfireViewModelStateHolder
+    stateHolder: CampfireViewModelStateHolder,
+    urlOpener: (String) -> Unit
 ) = SettingsContentList(
     modifier = modifier,
     uiStrings = stateHolder.uiStrings.value,
@@ -19,5 +20,6 @@ internal fun SettingsScreenAndroid(
     onAddDatabaseClicked = stateHolder::onAddDatabaseClicked,
     onSelectedUiModeChanged = stateHolder::onUiModeChanged,
     selectedLanguage = stateHolder.userPreferences.value?.language,
-    onSelectedLanguageChanged = stateHolder::onLanguageChanged
+    onSelectedLanguageChanged = stateHolder::onLanguageChanged,
+    urlOpener = urlOpener
 )

@@ -37,7 +37,8 @@ fun SettingsContentList(
     selectedUiMode: UserPreferences.UiMode?,
     onSelectedUiModeChanged: (UserPreferences.UiMode) -> Unit,
     selectedLanguage: UserPreferences.Language?,
-    onSelectedLanguageChanged: (UserPreferences.Language) -> Unit
+    onSelectedLanguageChanged: (UserPreferences.Language) -> Unit,
+    urlOpener: (String) -> Unit
 ) = LazyColumn(
     modifier = modifier.fillMaxWidth(),
     horizontalAlignment = Alignment.CenterHorizontally
@@ -105,7 +106,7 @@ fun SettingsContentList(
             text = uiStrings.settingsUserInterfaceTheme
         )
     }
-    item(key = "header_user_interface_theme_system_default") {
+    item(key = "user_interface_theme_system_default") {
         RadioButtonItem(
             modifier = Modifier.animateItemPlacement(),
             text = uiStrings.settingsUserInterfaceThemeSystemDefault,
@@ -113,7 +114,7 @@ fun SettingsContentList(
             onClick = { onSelectedUiModeChanged(UserPreferences.UiMode.SYSTEM_DEFAULT) }
         )
     }
-    item(key = "header_user_interface_theme_dark") {
+    item(key = "user_interface_theme_dark") {
         RadioButtonItem(
             modifier = Modifier.animateItemPlacement(),
             text = uiStrings.settingsUserInterfaceThemeDark,
@@ -121,7 +122,7 @@ fun SettingsContentList(
             onClick = { onSelectedUiModeChanged(UserPreferences.UiMode.DARK) }
         )
     }
-    item(key = "header_user_interface_theme_light") {
+    item(key = "user_interface_theme_light") {
         RadioButtonItem(
             modifier = Modifier.animateItemPlacement(),
             text = uiStrings.settingsUserInterfaceThemeLight,
@@ -135,7 +136,7 @@ fun SettingsContentList(
             text = uiStrings.settingsUserInterfaceLanguage
         )
     }
-    item(key = "header_user_interface_language_system_default") {
+    item(key = "user_interface_language_system_default") {
         RadioButtonItem(
             modifier = Modifier.animateItemPlacement(),
             text = uiStrings.settingsUserInterfaceLanguageSystemDefault,
@@ -143,7 +144,7 @@ fun SettingsContentList(
             onClick = { onSelectedLanguageChanged(UserPreferences.Language.SYSTEM_DEFAULT) }
         )
     }
-    item(key = "header_user_interface_language_english") {
+    item(key = "user_interface_language_english") {
         RadioButtonItem(
             modifier = Modifier.animateItemPlacement(),
             text = uiStrings.settingsUserInterfaceLanguageEnglish,
@@ -151,12 +152,57 @@ fun SettingsContentList(
             onClick = { onSelectedLanguageChanged(UserPreferences.Language.ENGLISH) }
         )
     }
-    item(key = "header_user_interface_language_hungarian") {
+    item(key = "user_interface_language_hungarian") {
         RadioButtonItem(
             modifier = Modifier.animateItemPlacement(),
             text = uiStrings.settingsUserInterfaceLanguageHungarian,
             isChecked = selectedLanguage == UserPreferences.Language.HUNGARIAN,
             onClick = { onSelectedLanguageChanged(UserPreferences.Language.HUNGARIAN) }
+        )
+    }
+    item(key = "header_about") {
+        HeaderItem(
+            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
+            text = uiStrings.settingsAbout
+        )
+    }
+    item(key = "website") {
+        ClickableControlItem(
+            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
+            text = uiStrings.settingsWebsite,
+            icon = {
+                Icon(
+                    imageVector = CampfireIcons.website,
+                    contentDescription = uiStrings.settingsWebsite
+                )
+            },
+            onClick = { urlOpener("http://www.pandulapeter.com/") }
+        )
+    }
+    item(key = "github") {
+        ClickableControlItem(
+            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
+            text = uiStrings.settingsGitHub,
+            icon = {
+                Icon(
+                    imageVector = CampfireIcons.gitHub,
+                    contentDescription = uiStrings.settingsGitHub
+                )
+            },
+            onClick = { urlOpener("https://github.com/pandulapeter") }
+        )
+    }
+    item(key = "privacy_policy") {
+        ClickableControlItem(
+            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
+            text = uiStrings.settingsPrivacyPolicy,
+            icon = {
+                Icon(
+                    imageVector = CampfireIcons.privacyPolicy,
+                    contentDescription = uiStrings.settingsPrivacyPolicy
+                )
+            },
+            onClick = { urlOpener("https://pandulapeter.github.io/legal/privacy_policy-campfire.html") }
         )
     }
 }

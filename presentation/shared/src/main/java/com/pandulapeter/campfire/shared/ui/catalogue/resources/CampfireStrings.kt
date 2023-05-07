@@ -43,6 +43,10 @@ sealed class CampfireStrings {
     abstract val settingsUserInterfaceLanguageSystemDefault: String
     abstract val settingsUserInterfaceLanguageEnglish: String
     abstract val settingsUserInterfaceLanguageHungarian: String
+    abstract val settingsAbout: String
+    abstract val settingsWebsite: String
+    abstract val settingsGitHub: String
+    abstract val settingsPrivacyPolicy: String
 
     // Song details screen
     abstract val songDetailsAddToSetlist: String
@@ -90,6 +94,10 @@ sealed class CampfireStrings {
         override val settingsUserInterfaceLanguageSystemDefault = "System default"
         override val settingsUserInterfaceLanguageEnglish = "English"
         override val settingsUserInterfaceLanguageHungarian = "Hungarian"
+        override val settingsAbout = "About"
+        override val settingsWebsite = "Website"
+        override val settingsGitHub = "GitHub page"
+        override val settingsPrivacyPolicy = "Privacy Policy"
 
         // Song details screen
         override val songDetailsAddToSetlist = "Add to setlist"
@@ -138,6 +146,10 @@ sealed class CampfireStrings {
         override val settingsUserInterfaceLanguageSystemDefault = "Alapértelmezett"
         override val settingsUserInterfaceLanguageEnglish = "Angol"
         override val settingsUserInterfaceLanguageHungarian = "Magyar"
+        override val settingsAbout = "Az alkalmazásról"
+        override val settingsWebsite = "Weboldal"
+        override val settingsGitHub = "GitHub oldal"
+        override val settingsPrivacyPolicy = "Adatvédelmi nyilatkozat"
 
         // Song details screen
         override val songDetailsAddToSetlist = "Hozzáadás listához"

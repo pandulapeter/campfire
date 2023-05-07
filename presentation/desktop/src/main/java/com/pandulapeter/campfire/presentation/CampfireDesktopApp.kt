@@ -132,7 +132,8 @@ private fun Content(
             shouldUseExpandedUi = shouldUseExpandedUi
         )
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreensDesktop(
-            stateHolder = stateHolder
+            stateHolder = stateHolder,
+            urlOpener = ::openUrl
         )
         null -> Unit
     }
