@@ -39,11 +39,11 @@ fun FilterControlsList(
         isChecked = shouldShowSongsWithoutChords,
         onCheckedChanged = onShouldShowSongsWithoutChordsChanged
     )
-    CheckboxItem(
-        text = uiStrings.showOnlyDownloadedSongs,
-        isChecked = showOnlyDownloadedSongs,
-        onCheckedChanged = onShowOnlyDownloadedSongsChanged
-    )
+//    CheckboxItem(
+//        text = uiStrings.showOnlyDownloadedSongs,
+//        isChecked = showOnlyDownloadedSongs,
+//        onCheckedChanged = onShowOnlyDownloadedSongsChanged
+//    )
     databases.filter { it.isEnabled }.forEach { database ->
         CheckboxItem(
             text = uiStrings.songsDatabaseFilter(database.name),
