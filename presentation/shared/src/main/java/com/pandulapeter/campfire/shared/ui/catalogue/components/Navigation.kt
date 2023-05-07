@@ -80,8 +80,7 @@ fun CampfireScaffold(
 ) = ModalBottomSheetLayout(
     modifier = modifier,
     sheetState = modalBottomSheetState,
-    sheetElevation = 0.dp,
-    scrimColor = Color.Transparent,
+    sheetElevation = 16.dp,
     sheetContent = {
         SongDetailsScreen(
             uiStrings = uiStrings,
