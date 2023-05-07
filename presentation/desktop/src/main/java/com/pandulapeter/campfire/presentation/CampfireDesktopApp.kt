@@ -53,7 +53,6 @@ fun CampfireDesktopApp(
             uiStrings = stateHolder.uiStrings.value,
             rawSongDetailsMap = stateHolder.rawSongDetails.value,
             onSongClosed = stateHolder::onSongClosed,
-            modalBottomSheetState = stateHolder.modalBottomSheetState,
             query = stateHolder.query.value,
             stateHolder = stateHolder,
             onQueryChanged = stateHolder::onQueryChanged,
@@ -126,15 +125,18 @@ private fun Content(
             shouldUseExpandedUi = shouldUseExpandedUi,
             lazyListState = songsScreenScrollState
         )
+
         CampfireViewModel.NavigationDestination.SETLISTS -> SetlistsScreensDesktop(
             stateHolder = stateHolder,
             state = setlistsScreenScrollState,
             shouldUseExpandedUi = shouldUseExpandedUi
         )
+
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreensDesktop(
             stateHolder = stateHolder,
             urlOpener = ::openUrl
         )
+
         null -> Unit
     }
 }

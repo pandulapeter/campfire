@@ -29,8 +29,6 @@ import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.NavigationRail
 import androidx.compose.material.NavigationRailItem
 import androidx.compose.material.OutlinedTextField
@@ -43,7 +41,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -63,7 +60,6 @@ import dev.atsushieno.composempp.material.DropdownMenu
 fun CampfireScaffold(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
-    modalBottomSheetState: ModalBottomSheetState,
     rawSongDetailsMap: Map<String, RawSongDetails>?,
     onSongClosed: () -> Unit,
     query: String,
@@ -77,21 +73,8 @@ fun CampfireScaffold(
     navigationRail: @Composable (scaffoldPadding: PaddingValues, content: @Composable () -> Unit) -> Unit,
     content: @Composable (scaffoldPadding: PaddingValues?) -> Unit,
     urlOpener: (String) -> Unit
-) = ModalBottomSheetLayout(
-    modifier = modifier,
-    sheetState = modalBottomSheetState,
-    sheetElevation = 16.dp,
-    sheetContent = {
-        SongDetailsScreen(
-            uiStrings = uiStrings,
-            stateHolder = stateHolder,
-            lazyListState = stateHolder.detailScreenCarouselState,
-            songDetailsScreenData = stateHolder.selectedSong.value,
-            rawSongDetailsMap = rawSongDetailsMap,
-            setlists = stateHolder.setlists.value,
-            onSongClosed = onSongClosed
-        )
-    }
+) = Box(
+    modifier = modifier
 ) {
     val selectedNavigationDestination = navigationDestinations.firstOrNull { it.isSelected }?.destination
     Scaffold(
@@ -166,6 +149,20 @@ fun CampfireScaffold(
             }
         }
     )
+    AnimatedVisibility(
+        modifier = Modifier.fillMaxSize(),
+        visible = stateHolder.selectedSong.value != null
+    ) {
+        SongDetailsScreen(
+            uiStrings = uiStrings,
+            stateHolder = stateHolder,
+            lazyListState = stateHolder.detailScreenCarouselState,
+            songDetailsScreenData = stateHolder.selectedSong.value,
+            rawSongDetailsMap = rawSongDetailsMap,
+            setlists = stateHolder.setlists.value,
+            onSongClosed = onSongClosed
+        )
+    }
     DynamicDialog(
         stateHolder = stateHolder,
         uiStrings = uiStrings,
@@ -362,6 +359,7 @@ private fun DynamicDialog(
                                 singleLine = true
                             )
                         }
+
                         CampfireViewModel.DialogType.NewDatabase -> {
                             OutlinedTextField(
                                 modifier = Modifier.fillMaxWidth().wrapContentHeight(),

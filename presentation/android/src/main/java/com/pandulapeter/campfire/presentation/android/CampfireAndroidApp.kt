@@ -43,7 +43,7 @@ fun CampfireAndroidApp(
     urlOpener: (String) -> Unit
 ) {
     LaunchedEffect(Unit) { viewModel.onInitialize() }
-    BackHandler(stateHolder.modalBottomSheetState.isVisible) { stateHolder.onSongClosed() }
+    BackHandler(stateHolder.selectedSong.value != null) { stateHolder.onSongClosed() }
 
     val isKeyboardVisible = keyboardState()
     val songsScreenPullRefreshState = rememberPullRefreshState(
@@ -69,7 +69,6 @@ fun CampfireAndroidApp(
             uiStrings = stateHolder.uiStrings.value,
             rawSongDetailsMap = stateHolder.rawSongDetails.value,
             onSongClosed = stateHolder::onSongClosed,
-            modalBottomSheetState = stateHolder.modalBottomSheetState,
             stateHolder = stateHolder,
             query = stateHolder.query.value,
             onQueryChanged = stateHolder::onQueryChanged,

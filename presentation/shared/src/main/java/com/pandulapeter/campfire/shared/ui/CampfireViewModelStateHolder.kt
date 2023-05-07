@@ -3,16 +3,12 @@ package com.pandulapeter.campfire.shared.ui
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ModalBottomSheetState
-import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.ScaffoldState
-import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Setlist
@@ -49,7 +45,6 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
     val setlists: State<List<Setlist>>,
     val rawSongDetails: State<Map<String, RawSongDetails>>,
     val selectedSong: State<SongDetailsScreenData?>,
-    val modalBottomSheetState: ModalBottomSheetState,
     val detailScreenCarouselState: LazyListState,
     val songsScreenScrollState: LazyListState,
     val setlistsScreenScrollState: ReorderableLazyListState,
@@ -63,18 +58,6 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
                 shouldScrollOnNextValue = false
                 delay(100) // TODO: Hacky solution, might not work well on older devices
                 songsScreenScrollState.animateScrollToItem(0)
-            }
-        }.launchIn(coroutineScope)
-        viewModel.selectedSong.onEach { selectedSong ->
-            if (selectedSong == null) {
-                modalBottomSheetState.hide()
-            } else {
-                modalBottomSheetState.show()
-            }
-        }.launchIn(coroutineScope)
-        snapshotFlow { modalBottomSheetState.isVisible }.onEach {
-            if (!it) {
-                onSongClosed()
             }
         }.launchIn(coroutineScope)
     }
@@ -110,97 +93,109 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
     fun onSongClicked(songDetailsScreenData: SongDetailsScreenData) = coroutineScope.launch {
         viewModel.onSongClicked(songDetailsScreenData)
         delay(25L) // TODO: Bad practice
-        detailScreenCarouselState.animateScrollToItem((songDetailsScreenData as? SongDetailsScreenData.SetlistData)?.initiallySelectedSongIndex ?: 0)
+        detailScreenCarouselState.animateScrollToItem(
+            (songDetailsScreenData as? SongDetailsScreenData.SetlistData)?.initiallySelectedSongIndex
+                ?: 0
+        )
     }
 
     fun onSongClosed() = coroutineScope.launch { viewModel.onSongClicked(null) }
 
     fun onForceRefreshTriggered() = coroutineScope.launch { viewModel.onForceRefreshTriggered() }
 
-    fun onDatabaseEnabledChanged(database: Database, isEnabled: Boolean) = databases.value.let { databases ->
-        coroutineScope.launch {
-            viewModel.onDatabaseEnabledChanged(
-                databases = databases,
-                database = database,
-                isEnabled = isEnabled
-            )
+    fun onDatabaseEnabledChanged(database: Database, isEnabled: Boolean) =
+        databases.value.let { databases ->
+            coroutineScope.launch {
+                viewModel.onDatabaseEnabledChanged(
+                    databases = databases,
+                    database = database,
+                    isEnabled = isEnabled
+                )
+            }
         }
-    }
 
     fun onDatabaseRemoved(databaseUrl: String) = coroutineScope.launch {
         viewModel.updateDatabases(databases.value.filter { it.url != databaseUrl })
     }
 
-    fun onDatabaseSelectedChanged(database: Database, isSelected: Boolean) = userPreferences.value?.let { userPreferences ->
-        coroutineScope.launch {
-            viewModel.onDatabaseSelectedChanged(
-                userPreferences = userPreferences,
-                database = database,
-                isSelected = isSelected
-            )
+    fun onDatabaseSelectedChanged(database: Database, isSelected: Boolean) =
+        userPreferences.value?.let { userPreferences ->
+            coroutineScope.launch {
+                viewModel.onDatabaseSelectedChanged(
+                    userPreferences = userPreferences,
+                    database = database,
+                    isSelected = isSelected
+                )
+            }
         }
-    }
 
-    fun onShouldShowExplicitSongsChanged(shouldShowExplicitSongs: Boolean) = userPreferences.value?.let { userPreferences ->
-        coroutineScope.launch {
-            viewModel.onShouldShowExplicitSongsChanged(
-                userPreferences = userPreferences,
-                shouldShowExplicitSongs = shouldShowExplicitSongs
-            )
+    fun onShouldShowExplicitSongsChanged(shouldShowExplicitSongs: Boolean) =
+        userPreferences.value?.let { userPreferences ->
+            coroutineScope.launch {
+                viewModel.onShouldShowExplicitSongsChanged(
+                    userPreferences = userPreferences,
+                    shouldShowExplicitSongs = shouldShowExplicitSongs
+                )
+            }
         }
-    }
 
-    fun onShouldShowSongsWithoutChordsChanged(shouldShowSongsWithoutChords: Boolean) = userPreferences.value?.let { userPreferences ->
-        coroutineScope.launch {
-            viewModel.onShouldShowSongsWithoutChordsChanged(
-                userPreferences = userPreferences,
-                shouldShowSongsWithoutChords = shouldShowSongsWithoutChords
-            )
+    fun onShouldShowSongsWithoutChordsChanged(shouldShowSongsWithoutChords: Boolean) =
+        userPreferences.value?.let { userPreferences ->
+            coroutineScope.launch {
+                viewModel.onShouldShowSongsWithoutChordsChanged(
+                    userPreferences = userPreferences,
+                    shouldShowSongsWithoutChords = shouldShowSongsWithoutChords
+                )
+            }
         }
-    }
 
-    fun onShowOnlyDownloadedSongsChanged(showOnlyDownloadedSongs: Boolean) = userPreferences.value?.let { userPreferences ->
-        coroutineScope.launch {
-            viewModel.onShowOnlyDownloadedSongsChanged(
-                userPreferences = userPreferences,
-                showOnlyDownloadedSongs = showOnlyDownloadedSongs
-            )
+    fun onShowOnlyDownloadedSongsChanged(showOnlyDownloadedSongs: Boolean) =
+        userPreferences.value?.let { userPreferences ->
+            coroutineScope.launch {
+                viewModel.onShowOnlyDownloadedSongsChanged(
+                    userPreferences = userPreferences,
+                    showOnlyDownloadedSongs = showOnlyDownloadedSongs
+                )
+            }
         }
-    }
 
-    fun onSortingModeChanged(sortingMode: UserPreferences.SortingMode) = userPreferences.value?.let { userPreferences ->
-        scrollToTop()
-        coroutineScope.launch {
-            viewModel.onSortingModeChanged(
-                userPreferences = userPreferences,
-                sortingMode = sortingMode
-            )
+    fun onSortingModeChanged(sortingMode: UserPreferences.SortingMode) =
+        userPreferences.value?.let { userPreferences ->
+            scrollToTop()
+            coroutineScope.launch {
+                viewModel.onSortingModeChanged(
+                    userPreferences = userPreferences,
+                    sortingMode = sortingMode
+                )
+            }
         }
-    }
 
     fun onNewSetlistClicked() = viewModel.onNewSetlistClicked()
 
-    fun onUiModeChanged(uiMode: UserPreferences.UiMode) = userPreferences.value?.let { userPreferences ->
-        coroutineScope.launch {
-            viewModel.onUiModeChanged(
-                userPreferences = userPreferences,
-                uiMode = uiMode
-            )
+    fun onUiModeChanged(uiMode: UserPreferences.UiMode) =
+        userPreferences.value?.let { userPreferences ->
+            coroutineScope.launch {
+                viewModel.onUiModeChanged(
+                    userPreferences = userPreferences,
+                    uiMode = uiMode
+                )
+            }
         }
-    }
 
-    fun onLanguageChanged(language: UserPreferences.Language) = userPreferences.value?.let { userPreferences ->
-        coroutineScope.launch {
-            viewModel.onLanguageChanged(
-                userPreferences = userPreferences,
-                language = language
-            )
+    fun onLanguageChanged(language: UserPreferences.Language) =
+        userPreferences.value?.let { userPreferences ->
+            coroutineScope.launch {
+                viewModel.onLanguageChanged(
+                    userPreferences = userPreferences,
+                    language = language
+                )
+            }
         }
-    }
 
     fun onAddDatabaseClicked() = viewModel.onAddDatabaseClicked()
 
-    fun onSetlistPickerClicked(songId: String, currentSetlistId: String?) = viewModel.onSetlistPickerClicked(songId, currentSetlistId)
+    fun onSetlistPickerClicked(songId: String, currentSetlistId: String?) =
+        viewModel.onSetlistPickerClicked(songId, currentSetlistId)
 
     fun addSongToSetlist(songId: String, setlistId: String) = coroutineScope.launch {
         viewModel.addSongToSetlist(
@@ -234,10 +229,13 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
             return CampfireViewModelStateHolder(
                 viewModel = viewModel,
                 coroutineScope = coroutineScope,
-                uiStrings = viewModel.userPreferences.map { it.getUiStrings() }.distinctUntilChanged().collectAsState(CampfireStrings.English),
+                uiStrings = viewModel.userPreferences.map { it.getUiStrings() }
+                    .distinctUntilChanged().collectAsState(CampfireStrings.English),
                 uiMode = viewModel.uiMode.collectAsState(null),
                 userPreferences = viewModel.userPreferences.collectAsState(null),
-                selectedNavigationDestination = viewModel.selectedNavigationDestination.collectAsState(initial = null),
+                selectedNavigationDestination = viewModel.selectedNavigationDestination.collectAsState(
+                    initial = null
+                ),
                 navigationDestinations = viewModel.navigationDestinations.collectAsState(initial = emptyList()),
                 isRefreshing = viewModel.shouldShowLoadingIndicator.collectAsState(false),
                 visibleDialog = viewModel.visibleDialog.collectAsState(null),
@@ -247,11 +245,6 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
                 setlists = setlists,
                 rawSongDetails = viewModel.rawSongDetails.collectAsState(emptyMap()),
                 selectedSong = viewModel.selectedSong.collectAsState(null),
-                modalBottomSheetState = rememberModalBottomSheetState(
-                    initialValue = ModalBottomSheetValue.Hidden,
-                    confirmValueChange = { it != ModalBottomSheetValue.HalfExpanded },
-                    skipHalfExpanded = true
-                ),
                 detailScreenCarouselState = rememberLazyListState(),
                 songsScreenScrollState = rememberLazyListState(),
                 setlistsScreenScrollState = rememberReorderableLazyListState(

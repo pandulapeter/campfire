@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.shared.ui.catalogue.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,7 +45,7 @@ internal fun SongDetailsScreen(
     onSongClosed: () -> Unit
 ) {
     LazyRow(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().background(MaterialTheme.colors.background),
         state = lazyListState,
         flingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState)
     ) {
@@ -146,7 +147,8 @@ private fun SongDetailsPage(
                 chordRegex.findAll(rawSongDetails.rawData).forEach { result ->
                     addStyle(SpanStyle(CampfireColors.colorCampfireOrange), result.range.first, result.range.last + 1)
                 }
-            }
+            },
+            color = MaterialTheme.colors.onSurface
         )
     }
 }
