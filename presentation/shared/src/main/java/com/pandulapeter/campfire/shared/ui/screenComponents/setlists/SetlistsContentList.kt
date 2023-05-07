@@ -2,16 +2,10 @@ package com.pandulapeter.campfire.shared.ui.screenComponents.setlists
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.DismissDirection
 import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
@@ -34,79 +28,20 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.SongDetailsScree
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SongItem
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
-import com.pandulapeter.campfire.shared.ui.catalogue.resources.UiConstants
-import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsFilterControlsList
 import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.reorderable
 
 
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun SetlistsContentList(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
     stateHolder: CampfireViewModelStateHolder,
-    shouldUseExpandedUi: Boolean,
     state: ReorderableLazyListState,
-    songs: List<Song>,
-    setlists: List<Setlist>,
-    rawSongDetails: Map<String, RawSongDetails>,
-    onSongClicked: (SongDetailsScreenData) -> Unit
-) = if (shouldUseExpandedUi) {
-    Row(
-        modifier = modifier.fillMaxSize()
-    ) {
-        SetlistContentList(
-            modifier = Modifier.fillMaxWidth(UiConstants.VERTICAL_DIVIDER_RATIO),
-            uiStrings = uiStrings,
-            stateHolder = stateHolder,
-            shouldUseExpandedUi = true,
-            state = state,
-            songs = songs,
-            setlists = setlists,
-            rawSongDetails = rawSongDetails,
-            onSongClicked = onSongClicked
-        )
-        Spacer(
-            modifier = Modifier.width(8.dp)
-        )
-        SongsFilterControlsList(
-            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(top = 8.dp, bottom = 80.dp),
-            uiStrings = uiStrings,
-            databases = stateHolder.databases.value,
-            unselectedDatabaseUrls = stateHolder.userPreferences.value?.unselectedDatabaseUrls.orEmpty(),
-            shouldShowExplicitSongs = stateHolder.userPreferences.value?.shouldShowExplicitSongs == true,
-            showOnlyDownloadedSongs = stateHolder.userPreferences.value?.showOnlyDownloadedSongs == true,
-            shouldShowSongsWithoutChords = stateHolder.userPreferences.value?.shouldShowSongsWithoutChords == true,
-            onDatabaseSelectedChanged = stateHolder::onDatabaseSelectedChanged,
-            onShouldShowExplicitSongsChanged = stateHolder::onShouldShowExplicitSongsChanged,
-            onShouldShowSongsWithoutChordsChanged = stateHolder::onShouldShowSongsWithoutChordsChanged,
-            onShowOnlyDownloadedSongsChanged = stateHolder::onShowOnlyDownloadedSongsChanged
-        )
-    }
-} else {
-    SetlistContentList(
-        modifier = modifier.fillMaxWidth(),
-        uiStrings = uiStrings,
-        stateHolder = stateHolder,
-        shouldUseExpandedUi = false,
-        state = state,
-        songs = songs,
-        setlists = setlists,
-        rawSongDetails = rawSongDetails,
-        onSongClicked = onSongClicked
-    )
-}
-
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
-@Composable
-private fun SetlistContentList(
-    modifier: Modifier = Modifier,
-    uiStrings: CampfireStrings,
-    stateHolder: CampfireViewModelStateHolder,
-    state: ReorderableLazyListState,
-    shouldUseExpandedUi: Boolean,
+    shouldAddFabPadding: Boolean,
     songs: List<Song>,
     setlists: List<Setlist>,
     rawSongDetails: Map<String, RawSongDetails>,
@@ -116,7 +51,7 @@ private fun SetlistContentList(
         .reorderable(state)
         .detectReorderAfterLongPress(state),
     state = state.listState,
-    contentPadding = PaddingValues(top = 8.dp, bottom = if (shouldUseExpandedUi) 0.dp else 80.dp)
+    contentPadding = PaddingValues(top = 8.dp, bottom = if (shouldAddFabPadding) 80.dp else 0.dp)
 ) {
     if (setlists.isEmpty()) {
         item(key = "header_no_setlists") {

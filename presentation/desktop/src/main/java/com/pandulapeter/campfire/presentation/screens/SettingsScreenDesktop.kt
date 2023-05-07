@@ -12,7 +12,7 @@ internal fun SettingsScreensDesktop(
     modifier: Modifier = Modifier,
     stateHolder: CampfireViewModelStateHolder
 ) = SettingsContentList(
-    modifier = modifier.padding(8.dp),
+    modifier = modifier,
     uiStrings = stateHolder.uiStrings.value,
     databases = stateHolder.databases.value,
     onDatabaseEnabledChanged = stateHolder::onDatabaseEnabledChanged,

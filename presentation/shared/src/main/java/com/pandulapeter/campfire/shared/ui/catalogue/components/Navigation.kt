@@ -53,7 +53,7 @@ import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
-import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsFilterControlsList
+import com.pandulapeter.campfire.shared.ui.screenComponents.shared.FilterControlsList
 import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsSortingControlsList
 import dev.atsushieno.composempp.material.AlertDialog
 import dev.atsushieno.composempp.material.DropdownMenu
@@ -308,7 +308,7 @@ private fun FiltersIconAndDropdown(
             expanded = isFilterDropdownVisible.value,
             onDismissRequest = { isFilterDropdownVisible.value = false }
         ) {
-            SongsFilterControlsList(
+            FilterControlsList(
                 modifier = Modifier.fillMaxSize(),
                 uiStrings = stateHolder.uiStrings.value,
                 databases = stateHolder.databases.value,
@@ -363,6 +363,7 @@ private fun DynamicDialog(
                                 singleLine = true
                             )
                         }
+
                         CampfireViewModel.DialogType.NewDatabase -> {
                             OutlinedTextField(
                                 modifier = Modifier.fillMaxWidth().wrapContentHeight(),
@@ -386,6 +387,7 @@ private fun DynamicDialog(
                                 text = uiStrings.settingsAddNewDatabaseHint
                             )
                         }
+
                         is CampfireViewModel.DialogType.SetlistPicker -> {
                             stateHolder.setlists.value.forEach { setlist ->
                                 CheckboxItem(
@@ -417,10 +419,12 @@ private fun DynamicDialog(
                         onClick = { stateHolder.createNewSetlist(firstTextInputValue.value) },
                         enabled = firstTextInputValue.value.isNotBlank()  // TODO: Improve validation
                     ) { Text(uiStrings.setlistsCreate) }
+
                     CampfireViewModel.DialogType.NewDatabase -> TextButton(
                         onClick = { stateHolder.createNewDatabase(firstTextInputValue.value, secondTextInputValue.value) },
                         enabled = firstTextInputValue.value.isNotBlank() && secondTextInputValue.value.isNotBlank()      // TODO: Improve validation
                     ) { Text(uiStrings.settingsAdd) }
+
                     is CampfireViewModel.DialogType.SetlistPicker -> Unit
                 }
             }

@@ -3,12 +3,10 @@ package com.pandulapeter.campfire.presentation.screens
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.runtime.Composable
@@ -34,9 +32,6 @@ internal fun SongsScreenDesktop(
             modifier = Modifier.fillMaxWidth(UiConstants.VERTICAL_DIVIDER_RATIO),
             stateHolder = stateHolder,
             lazyListState = lazyListState
-        )
-        Spacer(
-            modifier = Modifier.width(8.dp)
         )
         SongsControlsList(
             modifier = Modifier.fillMaxSize(),
@@ -70,7 +65,7 @@ private fun SongsContentListWithScrollBar(
     modifier = modifier,
 ) {
     SongsContentList(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(end = 8.dp),
         uiStrings = stateHolder.uiStrings.value,
         sortingMode = stateHolder.userPreferences.value?.sortingMode,
         shouldUseHeaders = stateHolder.query.value.isBlank(),
