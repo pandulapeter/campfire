@@ -359,17 +359,16 @@ private fun DynamicDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 label = { Text(uiStrings.setlistsNewSetlistTitle) },
                                 value = firstTextInputValue.value,
-                                onValueChange = { firstTextInputValue.value = it },
+                                onValueChange = { firstTextInputValue.value = it.replace("\n", "").take(40) },
                                 singleLine = true
                             )
                         }
-
                         CampfireViewModel.DialogType.NewDatabase -> {
                             OutlinedTextField(
                                 modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                                 label = { Text(uiStrings.settingsAddNewDatabaseName) },
                                 value = firstTextInputValue.value,
-                                onValueChange = { firstTextInputValue.value = it },
+                                onValueChange = { firstTextInputValue.value = it.replace("\n", "").take(30) },
                                 singleLine = true
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -377,12 +376,12 @@ private fun DynamicDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 label = { Text(uiStrings.settingsAddNewDatabaseUrl) },
                                 value = secondTextInputValue.value,
-                                onValueChange = { secondTextInputValue.value = it },
+                                onValueChange = { secondTextInputValue.value = it.replace("\n", "") },
                                 singleLine = true
                             )
                             Spacer(modifier = Modifier.height(24.dp))
                             Text(
-                                modifier = Modifier.clickable { urlOpener("https://github.com/pandulapeter") }, // TODO: Change URL
+                                modifier = Modifier.clickable { urlOpener("https://pandulapeter.github.io/campfire/documents/adding-new-databases.html") }, // TODO: Change URL
                                 style = TextStyle.Default.copy(fontWeight = FontWeight.Bold),
                                 text = uiStrings.settingsAddNewDatabaseHint
                             )

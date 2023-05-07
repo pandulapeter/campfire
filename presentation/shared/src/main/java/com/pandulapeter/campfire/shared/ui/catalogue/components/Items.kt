@@ -215,13 +215,14 @@ private fun TextInputItem(
         value = text,
         textStyle = LocalTextStyle.current.merge(TextStyle(color = colors.textColor(true).value)),
         cursorBrush = SolidColor(colors.cursorColor(false).value),
-        onValueChange = onTextChanged,
+        onValueChange = { newText -> onTextChanged(newText.replace("\n", "")) },
         interactionSource = interactionSource,
         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = {
             keyboardController?.hide()
         }),
-        singleLine = true
+        singleLine = true,
+        maxLines = 1
     ) {
         TextFieldDefaults.TextFieldDecorationBox(
             value = text,

@@ -127,6 +127,10 @@ data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) c
         }
     }
 
+    fun onDatabaseRemoved(databaseUrl: String) = coroutineScope.launch {
+        viewModel.updateDatabases(databases.value.filter { it.url != databaseUrl })
+    }
+
     fun onDatabaseSelectedChanged(database: Database, isSelected: Boolean) = userPreferences.value?.let { userPreferences ->
         coroutineScope.launch {
             viewModel.onDatabaseSelectedChanged(

@@ -74,6 +74,8 @@ class CampfireViewModel(
         databases.map { if (it.url == database.url) database.copy(isEnabled = isEnabled) else it }
     )
 
+    suspend fun updateDatabases(databases: List<Database>) = saveDatabases(databases)
+
     suspend fun onDatabaseSelectedChanged(userPreferences: UserPreferences, database: Database, isSelected: Boolean) = saveUserPreferences(
         userPreferences.copy(unselectedDatabaseUrls = userPreferences.unselectedDatabaseUrls.toMutableList().apply {
             if (isSelected) {

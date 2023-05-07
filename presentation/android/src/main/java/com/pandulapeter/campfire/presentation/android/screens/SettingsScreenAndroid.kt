@@ -14,8 +14,9 @@ internal fun SettingsScreenAndroid(
     uiStrings = stateHolder.uiStrings.value,
     databases = stateHolder.databases.value,
     onDatabaseEnabledChanged = stateHolder::onDatabaseEnabledChanged,
-    onAddDatabaseClicked = stateHolder::onAddDatabaseClicked,
     selectedUiMode = stateHolder.userPreferences.value?.uiMode,
+    onDatabaseRemoved = stateHolder::onDatabaseRemoved,
+    onAddDatabaseClicked = stateHolder::onAddDatabaseClicked,
     onSelectedUiModeChanged = stateHolder::onUiModeChanged,
     selectedLanguage = stateHolder.userPreferences.value?.language,
     onSelectedLanguageChanged = stateHolder::onLanguageChanged

@@ -3,9 +3,16 @@ package com.pandulapeter.campfire.shared.ui.screenComponents.settings
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.DismissDirection
+import androidx.compose.material.DismissValue
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FractionalThreshold
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.SwipeToDismiss
+import androidx.compose.material.rememberDismissState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.pandulapeter.campfire.data.model.domain.Database
@@ -18,7 +25,7 @@ import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun SettingsContentList(
     modifier: Modifier = Modifier,
@@ -26,6 +33,7 @@ fun SettingsContentList(
     databases: List<Database>,
     onDatabaseEnabledChanged: (Database, Boolean) -> Unit,
     onAddDatabaseClicked: () -> Unit,
+    onDatabaseRemoved: (String) -> Unit,
     selectedUiMode: UserPreferences.UiMode?,
     onSelectedUiModeChanged: (UserPreferences.UiMode) -> Unit,
     selectedLanguage: UserPreferences.Language?,
@@ -40,16 +48,43 @@ fun SettingsContentList(
             text = uiStrings.settingsActiveDatabases
         )
     }
-    itemsIndexed(
-        items = databases,
-        key = { _, database -> "database_${database.url}" }
-    ) { _, database ->
-        CheckboxItem(
-            modifier = Modifier.animateItemPlacement(),
-            text = database.name,
-            isChecked = database.isEnabled,
-            onCheckedChanged = { onDatabaseEnabledChanged(database, it) }
-        )
+    databases.forEach { database ->
+        val key = DatabaseItemKey(database.url)
+        item(key = key.key) {
+            val currentItem = rememberUpdatedState(key)
+            SwipeToDismiss(
+                directions = if (database.isAddedByUser) setOf(DismissDirection.StartToEnd) else emptySet(),
+                dismissThresholds = { FractionalThreshold(0.4f) },
+                state = rememberDismissState(
+                    confirmStateChange = { dismissValue ->
+                        when (dismissValue) {
+                            DismissValue.Default -> false
+                            else -> {
+                                onDatabaseRemoved(currentItem.value.databaseUrl)
+                                true
+                            }
+                        }
+                    }
+                ),
+                background = {
+                    if (database.isAddedByUser) {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = CampfireIcons.remove,
+                                contentDescription = uiStrings.setlistsRemoveSong
+                            )
+                        }
+                    }
+                }
+            ) {
+                CheckboxItem(
+                    modifier = Modifier.animateItemPlacement(),
+                    text = database.name,
+                    isChecked = database.isEnabled,
+                    onCheckedChanged = { onDatabaseEnabledChanged(database, it) }
+                )
+            }
+        }
     }
     item(key = "add_database") {
         ClickableControlItem(
@@ -124,4 +159,10 @@ fun SettingsContentList(
             onClick = { onSelectedLanguageChanged(UserPreferences.Language.HUNGARIAN) }
         )
     }
+}
+
+private data class DatabaseItemKey(
+    val databaseUrl: String
+) {
+    val key = "database_$databaseUrl"
 }
