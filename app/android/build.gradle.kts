@@ -3,7 +3,6 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    id("kotlin-kapt")
 }
 
 dependencies {
@@ -14,9 +13,9 @@ dependencies {
     implementation(project(":presentation:android"))
     implementation(project(":presentation:android-debug-menu"))
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.appCompat)
     implementation(libs.androidx.browser)
-    implementation(libs.google.android.material)
+    implementation(libs.google.material)
     implementation(libs.koin.android)
 }
 
@@ -66,8 +65,8 @@ android {
             signingConfig = signingConfigs.getByName(releaseSigningConfig)
         }
     }
-    compileOptions {// TODO: Remove this block after upgrading to Gradle 8.1.0.
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
+}
+
+kotlin {
+    jvmToolchain(libs.versions.jvmTarget.get().toInt())
 }

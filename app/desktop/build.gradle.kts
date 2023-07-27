@@ -16,7 +16,7 @@ dependencies {
 }
 
 val versionName = System.getProperty("VERSION_NAME").orEmpty()
-group = "com.pandulapeter.accountant"
+group = "com.pandulapeter.campfire"
 version = versionName
 
 compose.desktop {
