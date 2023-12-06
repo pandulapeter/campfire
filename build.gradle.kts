@@ -4,7 +4,7 @@
 "KEY_PASSWORD" set "android"
 "STORE_FILE" set "internal.keystore"
 "STORE_PASSWORD" set "android"
-"TARGET_SDK_VERSION" set 33
+"TARGET_SDK_VERSION" set 34
 "MIN_SDK_VERSION" set 28
 
 infix fun String.set(value: Any) = System.setProperty(this, value.toString())
