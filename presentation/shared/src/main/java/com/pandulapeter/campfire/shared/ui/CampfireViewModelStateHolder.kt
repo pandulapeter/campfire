@@ -28,8 +28,7 @@ import kotlinx.coroutines.launch
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
 
-@OptIn(ExperimentalMaterialApi::class)
-data class CampfireViewModelStateHolder @OptIn(ExperimentalMaterialApi::class) constructor(
+data class CampfireViewModelStateHolder(
     private val viewModel: CampfireViewModel,
     private val coroutineScope: CoroutineScope,
     val uiStrings: State<CampfireStrings>,

@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.shared.ui.catalogue.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -24,7 +23,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -55,7 +53,6 @@ import com.pandulapeter.campfire.shared.ui.screenComponents.songs.SongsSortingCo
 import dev.atsushieno.composempp.material.AlertDialog
 import dev.atsushieno.composempp.material.DropdownMenu
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun CampfireScaffold(
     modifier: Modifier = Modifier,
@@ -81,43 +78,13 @@ fun CampfireScaffold(
         scaffoldState = stateHolder.scaffoldState,
         topBar = {
             CampfireAppBar(
+                stateHolder = stateHolder,
                 uiStrings = uiStrings,
+                shouldUseExpandedUi = shouldUseExpandedUi,
                 selectedNavigationDestination = selectedNavigationDestination,
-                actions = {
-                    appBarActions()
-                    Spacer(modifier = Modifier.width(8.dp))
-                    AnimatedVisibility(
-                        visible = selectedNavigationDestination == CampfireViewModel.NavigationDestination.SONGS
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            SearchItem(
-                                modifier = Modifier.width(168.dp).padding(vertical = 8.dp),
-                                uiStrings = uiStrings,
-                                query = query,
-                                onQueryChanged = onQueryChanged
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            if (!shouldUseExpandedUi) {
-                                SortingModesIconAndDropdown(
-                                    uiStrings = uiStrings,
-                                    stateHolder = stateHolder
-                                )
-                            }
-                        }
-                    }
-                    if (!shouldUseExpandedUi) {
-                        AnimatedVisibility(
-                            visible = selectedNavigationDestination == CampfireViewModel.NavigationDestination.SONGS || selectedNavigationDestination == CampfireViewModel.NavigationDestination.SETLISTS
-                        ) {
-                            FiltersIconAndDropdown(
-                                uiStrings = uiStrings,
-                                stateHolder = stateHolder
-                            )
-                        }
-                    }
-                }
+                query = query,
+                onQueryChanged = onQueryChanged,
+                appBarActions = appBarActions,
             )
         },
         bottomBar = {
@@ -173,22 +140,52 @@ fun CampfireScaffold(
 @Composable
 fun CampfireAppBar(
     modifier: Modifier = Modifier,
+    stateHolder: CampfireViewModelStateHolder,
     uiStrings: CampfireStrings,
+    shouldUseExpandedUi: Boolean,
     selectedNavigationDestination: CampfireViewModel.NavigationDestination?,
-    actions: @Composable RowScope.() -> Unit
+    query: String,
+    onQueryChanged: (String) -> Unit,
+    appBarActions: @Composable RowScope.() -> Unit = {}
 ) = TopAppBar(
     modifier = modifier,
-    actions = actions,
+    actions = {
+        appBarActions()
+        if (!shouldUseExpandedUi) {
+            if (selectedNavigationDestination == CampfireViewModel.NavigationDestination.SONGS) {
+                SortingModesIconAndDropdown(
+                    uiStrings = uiStrings,
+                    stateHolder = stateHolder
+                )
+            }
+            if (selectedNavigationDestination == CampfireViewModel.NavigationDestination.SONGS || selectedNavigationDestination == CampfireViewModel.NavigationDestination.SETLISTS) {
+                FiltersIconAndDropdown(
+                    uiStrings = uiStrings,
+                    stateHolder = stateHolder
+                )
+            }
+        }
+    },
     backgroundColor = MaterialTheme.colors.background,
     title = {
-        Text(
-            text = when (selectedNavigationDestination) {
-                CampfireViewModel.NavigationDestination.SONGS -> uiStrings.songs
-                CampfireViewModel.NavigationDestination.SETLISTS -> uiStrings.setlists
-                CampfireViewModel.NavigationDestination.SETTINGS -> uiStrings.settings
-                null -> ""
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            when (selectedNavigationDestination) {
+                CampfireViewModel.NavigationDestination.SONGS -> {
+                    SearchItem(
+                        modifier = Modifier.weight(1f).padding(vertical = 8.dp),
+                        uiStrings = uiStrings,
+                        query = query,
+                        onQueryChanged = onQueryChanged
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                CampfireViewModel.NavigationDestination.SETLISTS -> Text(text = uiStrings.setlists)
+                CampfireViewModel.NavigationDestination.SETTINGS -> Text(text = uiStrings.settings)
+                else -> Unit
             }
-        )
+        }
     }
 )
 

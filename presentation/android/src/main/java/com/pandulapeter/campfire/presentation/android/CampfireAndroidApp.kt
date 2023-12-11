@@ -126,7 +126,8 @@ private fun Content(
     urlOpener: (String) -> Unit
 ) = Crossfade(
     modifier = modifier.fillMaxSize(),
-    targetState = selectedNavigationDestination
+    targetState = selectedNavigationDestination,
+    label = "mainNavigation"
 ) { destination ->
     when (destination) {
         CampfireViewModel.NavigationDestination.SONGS -> SongsScreenAndroid(
@@ -144,6 +145,7 @@ private fun Content(
             stateHolder = stateHolder,
             urlOpener = urlOpener
         )
+
         null -> Unit
     }
 }

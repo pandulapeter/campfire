@@ -33,7 +33,6 @@ internal fun SongsScreenAndroid(
     pullRefreshState: PullRefreshState,
     lazyListState: LazyListState
 ) {
-
     if (shouldUseExpandedUi) {
         Row(
             modifier = modifier
