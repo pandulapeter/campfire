@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.presentation.android
 
-import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -21,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.android.catalogue.CampfireAndroidTheme
 import com.pandulapeter.campfire.presentation.android.screens.SetlistsScreenAndroid
 import com.pandulapeter.campfire.presentation.android.screens.SettingsScreenAndroid
@@ -31,6 +31,7 @@ import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireBottomNavigationBar
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireNavigationRail
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireScaffold
+import com.pandulapeter.campfire.shared.ui.catalogue.components.UiSize
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.koin.java.KoinJavaComponent.get
@@ -50,7 +51,7 @@ fun CampfireAndroidApp(
         refreshing = stateHolder.isRefreshing.value,
         onRefresh = stateHolder::onForceRefreshTriggered
     )
-    val shouldUseExpandedUi = LocalConfiguration.current.screenWidthDp > 720
+    val uiSize = UiSize.fromScreenWidth(LocalConfiguration.current.screenWidthDp.dp)
 
     CampfireAndroidTheme(
         uiMode = stateHolder.uiMode.value
@@ -73,8 +74,7 @@ fun CampfireAndroidApp(
             query = stateHolder.query.value,
             onQueryChanged = stateHolder::onQueryChanged,
             navigationDestinations = stateHolder.navigationDestinations.value,
-            isInLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
-            shouldUseExpandedUi = shouldUseExpandedUi,
+            uiSize = uiSize,
             bottomNavigationBar = {
                 BottomNavigationBarWrapper(
                     navigationDestinations = stateHolder.navigationDestinations.value,
@@ -101,7 +101,7 @@ fun CampfireAndroidApp(
                     modifier = scaffoldPadding?.let { Modifier.padding(it) } ?: Modifier,
                     stateHolder = stateHolder,
                     selectedNavigationDestination = stateHolder.selectedNavigationDestination.value,
-                    shouldUseExpandedUi = shouldUseExpandedUi,
+                    uiSize = uiSize,
                     songsScreenScrollState = stateHolder.songsScreenScrollState,
                     setlistsScreenScrollState = stateHolder.setlistsScreenScrollState,
                     songsScreenPullRefreshState = songsScreenPullRefreshState,
@@ -119,7 +119,7 @@ private fun Content(
     modifier: Modifier = Modifier,
     selectedNavigationDestination: CampfireViewModel.NavigationDestination?,
     stateHolder: CampfireViewModelStateHolder,
-    shouldUseExpandedUi: Boolean,
+    uiSize: UiSize,
     songsScreenPullRefreshState: PullRefreshState,
     songsScreenScrollState: LazyListState,
     setlistsScreenScrollState: ReorderableLazyListState,
@@ -132,15 +132,17 @@ private fun Content(
     when (destination) {
         CampfireViewModel.NavigationDestination.SONGS -> SongsScreenAndroid(
             stateHolder = stateHolder,
-            shouldUseExpandedUi = shouldUseExpandedUi,
+            shouldUseExpandedUi = uiSize.shouldUseExpandedUi,
             pullRefreshState = songsScreenPullRefreshState,
             lazyListState = songsScreenScrollState
         )
+
         CampfireViewModel.NavigationDestination.SETLISTS -> SetlistsScreenAndroid(
             stateHolder = stateHolder,
             state = setlistsScreenScrollState,
-            shouldUseExpandedUi = shouldUseExpandedUi
+            shouldUseExpandedUi = uiSize.shouldUseExpandedUi
         )
+
         CampfireViewModel.NavigationDestination.SETTINGS -> SettingsScreenAndroid(
             stateHolder = stateHolder,
             urlOpener = urlOpener

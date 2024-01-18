@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.view.WindowCompat
@@ -24,7 +25,7 @@ class CampfireActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        enableEdgeToEdge()
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
         viewModel.uiMode.distinctUntilChanged().onEach {
             windowInsetsController.isAppearanceLightStatusBars = when (it) {

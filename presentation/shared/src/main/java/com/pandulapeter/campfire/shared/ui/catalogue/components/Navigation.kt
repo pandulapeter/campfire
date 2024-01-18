@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
@@ -62,8 +63,7 @@ fun CampfireScaffold(
     query: String,
     onQueryChanged: (String) -> Unit,
     navigationDestinations: List<CampfireViewModel.NavigationDestinationWrapper>,
-    isInLandscape: Boolean,
-    shouldUseExpandedUi: Boolean,
+    uiSize: UiSize,
     stateHolder: CampfireViewModelStateHolder,
     appBarActions: @Composable RowScope.() -> Unit = {},
     bottomNavigationBar: @Composable () -> Unit,
@@ -80,7 +80,7 @@ fun CampfireScaffold(
             CampfireAppBar(
                 stateHolder = stateHolder,
                 uiStrings = uiStrings,
-                shouldUseExpandedUi = shouldUseExpandedUi,
+                shouldUseExpandedUi = uiSize.shouldUseExpandedUi,
                 selectedNavigationDestination = selectedNavigationDestination,
                 query = query,
                 onQueryChanged = onQueryChanged,
@@ -88,7 +88,7 @@ fun CampfireScaffold(
             )
         },
         bottomBar = {
-            if (!isInLandscape) {
+            if (!uiSize.shouldUseNavigationRail) {
                 bottomNavigationBar()
             }
         },
@@ -109,7 +109,7 @@ fun CampfireScaffold(
             }
         },
         content = { scaffoldPadding ->
-            if (isInLandscape) {
+            if (uiSize.shouldUseNavigationRail) {
                 navigationRail(scaffoldPadding) { content(null) }
             } else {
                 content(scaffoldPadding)
@@ -135,6 +135,24 @@ fun CampfireScaffold(
         uiStrings = uiStrings,
         urlOpener = urlOpener
     )
+}
+
+enum class UiSize(private val size: Int) {
+    COMPACT(1), MEDIUM(2), EXPANDED(3);
+
+    val shouldUseExpandedUi get() = size >= EXPANDED.size
+
+    val shouldUseNavigationRail get() = size >= MEDIUM.size
+
+    companion object {
+        fun fromScreenWidth(screenWidth: Dp) = if (screenWidth < 480.dp) {
+            COMPACT
+        } else if (screenWidth > 720.dp) {
+            EXPANDED
+        } else {
+            MEDIUM
+        }
+    }
 }
 
 @Composable
@@ -181,6 +199,7 @@ fun CampfireAppBar(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
+
                 CampfireViewModel.NavigationDestination.SETLISTS -> Text(text = uiStrings.setlists)
                 CampfireViewModel.NavigationDestination.SETTINGS -> Text(text = uiStrings.settings)
                 else -> Unit
