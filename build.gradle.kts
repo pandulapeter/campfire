@@ -1,5 +1,5 @@
-"VERSION_NAME" set "2.0.1"
-"VERSION_CODE" set 23
+"VERSION_NAME" set "2.0.2"
+"VERSION_CODE" set 24
 "KEY_ALIAS" set "androiddebugkey"
 "KEY_PASSWORD" set "android"
 "STORE_FILE" set "internal.keystore"
