@@ -1,9 +1,13 @@
 package com.pandulapeter.campfire.shared.ui
 
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
@@ -15,14 +19,18 @@ import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveTranspositionsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeRawSongDetailsUseCase
-import com.pandulapeter.campfire.shared.ui.catalogue.components.SongDetailsScreenData
-import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
+import com.pandulapeter.campfire.shared.ui.navigation.CampfireDestination
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -37,253 +45,280 @@ class CampfireViewModel(
     private val saveTranspositions: SaveTranspositionsUseCase,
     private val normalizeText: NormalizeTextUseCase,
     private val transposeRawSongDetails: TransposeRawSongDetailsUseCase
-) {
+) : ViewModel() {
+
+    private val screenData = getScreenData()
+
+    // Navigation
+    val backStack: SnapshotStateList<CampfireDestination> = mutableStateListOf(CampfireDestination.Songs)
+
+    // Data
     private val _query = MutableStateFlow("")
-    val query: StateFlow<String> = _query
-    val songs = combine(
-        getScreenData().map { it.data?.songs.orEmpty() },
-        query
-    ) { songs, query ->
+    val query: StateFlow<String> = _query.asStateFlow()
+    val isLoading = screenData.map { it is DataState.Loading }.asState(false)
+    val userPreferences = screenData.map { it.data?.userPreferences }.asState(null)
+    val databases = screenData.map { it.data?.databases.orEmpty() }.asState(emptyList())
+    val setlists = screenData.map { it.data?.setlists.orEmpty() }.asState(emptyList())
+    val rawSongDetails = screenData.map { it.data?.rawSongDetails.orEmpty() }.asState(emptyMap())
+    val transpositions = screenData.map { it.data?.transpositions.orEmpty() }.asState(emptyMap())
+    val allSongs = screenData.map { it.data?.songs.orEmpty() }.asState(emptyList())
+    val songGroups = combine(allSongs, query, userPreferences.map { it?.sortingMode }) { songs, query, sortingMode ->
         if (query.isBlank()) {
-            songs
+            songs.groupIntoSections(sortingMode ?: UserPreferences.SortingMode.BY_ARTIST)
         } else {
-            val normalizedQuery = normalizeText(query)
-            songs
-                .filter { normalizeText(it.title).contains(normalizedQuery, true) || normalizeText(it.artist).contains(normalizedQuery, true) }
-                .sortedByDescending { it.artist.startsWith(normalizedQuery, true) }
-                .sortedByDescending { it.title.startsWith(normalizedQuery, true) }
+            listOf(SongGroup(header = null, songs = songs.filterAndRank(query)))
         }
-    }.distinctUntilChanged()
-    val setlists = getScreenData().map { it.data?.setlists.orEmpty() }.distinctUntilChanged()
-    val rawSongDetails = getScreenData().map { it.data?.rawSongDetails.orEmpty() }.distinctUntilChanged()
-    val databases = getScreenData().map { it.data?.databases.orEmpty() }.distinctUntilChanged()
-    val userPreferences = getScreenData().map { it.data?.userPreferences }.distinctUntilChanged()
-    val transpositions = getScreenData().map { it.data?.transpositions.orEmpty() }.distinctUntilChanged()
-    val uiMode = userPreferences.map { it?.uiMode }
-    val shouldShowLoadingIndicator = getScreenData().map { it is DataState.Loading }.distinctUntilChanged()
+    }.asState(emptyList())
+    val setlistsWithSongs = combine(setlists, allSongs) { setlists, songs ->
+        val songsById = songs.associateBy { it.id }
+        setlists.map { setlist -> SetlistWithSongs(setlist = setlist, songs = setlist.songIds.mapNotNull { songsById[it] }) }
+    }.asState(emptyList())
+
+    // Dialogs
     private val _visibleDialog = MutableStateFlow<DialogType?>(null)
-    val visibleDialog: StateFlow<DialogType?> = _visibleDialog
-    private val _selectedNavigationDestination = MutableStateFlow(NavigationDestination.SONGS)
-    val selectedNavigationDestination: Flow<NavigationDestination> = _selectedNavigationDestination
-    val navigationDestinations = selectedNavigationDestination.map { selectedNavigationDestination ->
-        NavigationDestination.values().map { navigationDestination ->
-            NavigationDestinationWrapper(
-                destination = navigationDestination,
-                isSelected = navigationDestination == selectedNavigationDestination
-            )
+    val visibleDialog: StateFlow<DialogType?> = _visibleDialog.asStateFlow()
+
+    init {
+        viewModelScope.launch { loadScreenData(false) }
+    }
+
+    // Navigation
+
+    fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) {
+        if (backStack.lastOrNull() == destination) return
+        backStack.clear()
+        backStack.add(CampfireDestination.Songs)
+        if (destination != CampfireDestination.Songs) {
+            backStack.add(destination)
         }
     }
-    private val _selectedSong = MutableStateFlow<SongDetailsScreenData?>(null)
-    val selectedSong: Flow<SongDetailsScreenData?> = _selectedSong
 
-    suspend fun onInitialize() = loadScreenData(false)
-
-    suspend fun onDatabaseEnabledChanged(databases: List<Database>, database: Database, isEnabled: Boolean) = saveDatabases(
-        databases.map { if (it.url == database.url) database.copy(isEnabled = isEnabled) else it }
+    fun openSong(song: Song) = openSongDetails(
+        CampfireDestination.SongDetails(songIds = listOf(song.id), setlistId = null, initialIndex = 0)
     )
 
-    suspend fun updateDatabases(databases: List<Database>) = saveDatabases(databases)
+    fun openSongInSetlist(setlistWithSongs: SetlistWithSongs, index: Int) = openSongDetails(
+        CampfireDestination.SongDetails(
+            songIds = setlistWithSongs.songs.map { it.id },
+            setlistId = setlistWithSongs.setlist.id,
+            initialIndex = index
+        )
+    )
 
-    suspend fun onDatabaseSelectedChanged(userPreferences: UserPreferences, database: Database, isSelected: Boolean) = saveUserPreferences(
-        userPreferences.copy(unselectedDatabaseUrls = userPreferences.unselectedDatabaseUrls.toMutableList().apply {
-            if (isSelected) {
-                remove(database.url)
-            } else {
-                add(database.url)
+    private fun openSongDetails(destination: CampfireDestination.SongDetails) {
+        if (backStack.lastOrNull() !is CampfireDestination.SongDetails) {
+            backStack.add(destination)
+        }
+    }
+
+    fun navigateBack() {
+        if (backStack.size > 1) {
+            backStack.removeAt(backStack.lastIndex)
+        }
+    }
+
+    // Songs
+
+    fun onQueryChanged(newQuery: String) = _query.update { newQuery }
+
+    fun refresh() = viewModelScope.launch { loadScreenData(true) }
+
+    fun loadSongDetails(song: Song) = viewModelScope.launch { loadSongDetails(song.url, false) }
+
+    fun transpose(rawData: String, transposition: Int) = transposeRawSongDetails(rawData, transposition)
+
+    fun setTransposition(songId: String, setlistId: String?, transposition: Int) = viewModelScope.launch {
+        saveTranspositions(
+            transpositions.value.toMutableMap().apply {
+                val key = TranspositionKey(songId = songId, setlistId = setlistId)
+                val clampedTransposition = transposition.coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION)
+                if (clampedTransposition == 0) remove(key) else put(key, clampedTransposition)
             }
-        }.distinct())
-    )
-
-    fun onQueryChanged(newQuery: String) {
-        _query.value = newQuery
+        )
     }
 
-    fun onNewSetlistClicked() {
-        _visibleDialog.value = DialogType.NewSetlist
-    }
+    // Setlists
 
-    suspend fun createNewSetlist(newSetlistTitle: String, currentSetlists: List<Setlist>) = saveSetlists(
-        currentSetlists.toMutableList().apply {
-            add(
-                0, Setlist(
+    fun createSetlist(title: String) = viewModelScope.launch {
+        val currentSetlists = setlists.value
+        saveSetlists(
+            listOf(
+                Setlist(
                     id = Uuid.random().toString(),
-                    title = newSetlistTitle,
+                    title = title.trim(),
                     songIds = emptyList(),
                     priority = currentSetlists.size
                 )
-            )
-        }
-    )
-
-    fun onAddDatabaseClicked() {
-        _visibleDialog.value = DialogType.NewDatabase
+            ) + currentSetlists
+        )
     }
 
-    fun onSetlistPickerClicked(songId: String, currentSetlistId: String?) {
-        _visibleDialog.value = DialogType.SetlistPicker(songId, currentSetlistId)
-    }
-
-    suspend fun addSongToSetlist(songId: String, setlistId: String, setlists: List<Setlist>) = saveSetlists(
-        setlists.map { setlist ->
-            if (setlist.id == setlistId) {
-                setlist.copy(
-                    songIds = setlist.songIds.toMutableList().apply { add(0, songId) }.distinct()
-                )
-            } else {
-                setlist
+    fun addSongToSetlist(songId: String, setlistId: String) = viewModelScope.launch {
+        saveSetlists(
+            setlists.value.map { setlist ->
+                if (setlist.id == setlistId) setlist.copy(songIds = (listOf(songId) + setlist.songIds).distinct()) else setlist
             }
-        }
-    )
+        )
+    }
 
-    suspend fun removeSongFromSetlist(
-        songId: String,
-        setlistId: String,
-        setlists: List<Setlist>,
-        transpositions: Map<TranspositionKey, Int>
-    ) = setlists.map { setlist ->
-        if (setlist.id == setlistId) {
-            setlist.copy(
-                songIds = setlist.songIds.filterNot { it == songId }
-            )
-        } else {
-            setlist
+    fun removeSongFromSetlist(songId: String, setlistId: String) = viewModelScope.launch {
+        val updatedSetlists = setlists.value.map { setlist ->
+            if (setlist.id == setlistId) setlist.copy(songIds = setlist.songIds.filterNot { it == songId }) else setlist
         }
-    }.let { updatedSetlists ->
         saveSetlists(updatedSetlists)
-        removeOrphanedTranspositions(updatedSetlists, transpositions)
+        removeOrphanedTranspositions(updatedSetlists)
     }
 
     // Transpositions of the main song list are kept forever, the rest only live as long as the song stays in the setlist.
-    private suspend fun removeOrphanedTranspositions(
-        setlists: List<Setlist>,
-        transpositions: Map<TranspositionKey, Int>
-    ) = transpositions.filterKeys { key ->
-        key.setlistId == null || setlists.any { it.id == key.setlistId && key.songId in it.songIds }
-    }.let { remainingTranspositions ->
+    private suspend fun removeOrphanedTranspositions(setlists: List<Setlist>) {
+        val transpositions = transpositions.value
+        val remainingTranspositions = transpositions.filterKeys { key ->
+            key.setlistId == null || setlists.any { it.id == key.setlistId && key.songId in it.songIds }
+        }
         if (remainingTranspositions.size != transpositions.size) {
             saveTranspositions(remainingTranspositions)
         }
     }
 
-    suspend fun swapSongsInSetlist(setlistId: String, fromSongId: String, toSongId: String, setlists: List<Setlist>) = saveSetlists(
-        setlists.map { setlist ->
-            if (setlist.id == setlistId) {
-                setlist.copy(
-                    songIds = setlist.songIds.toMutableList().apply {
-                        add(indexOf(toSongId), removeAt(indexOf(fromSongId)))
-                    }
-                )
-            } else {
-                setlist
+    fun moveSongInSetlist(setlistId: String, fromSongId: String, toSongId: String) = viewModelScope.launch {
+        saveSetlists(
+            setlists.value.map { setlist ->
+                if (setlist.id == setlistId) {
+                    setlist.copy(
+                        songIds = setlist.songIds.toMutableList().apply {
+                            val toIndex = indexOf(toSongId)
+                            val fromIndex = indexOf(fromSongId)
+                            if (toIndex >= 0 && fromIndex >= 0) add(toIndex, removeAt(fromIndex))
+                        }
+                    )
+                } else {
+                    setlist
+                }
             }
-        }
-    )
+        )
+    }
 
-    suspend fun addNewDatabase(newDatabaseName: String, newDatabaseUrl: String, currentDatabases: List<Database>) = saveDatabases(
-        currentDatabases.toMutableList().apply {
-            add(
-                0, Database(
-                    url = newDatabaseUrl,
-                    name = newDatabaseName,
+    // Databases
+
+    fun addDatabase(name: String, url: String) = viewModelScope.launch {
+        val currentDatabases = databases.value
+        saveDatabases(
+            listOf(
+                Database(
+                    url = url.trim(),
+                    name = name.trim(),
                     isEnabled = true,
                     priority = currentDatabases.size,
                     isAddedByUser = true
                 )
-            )
-        }
+            ) + currentDatabases
+        )
+    }
+
+    fun setDatabaseEnabled(database: Database, isEnabled: Boolean) = viewModelScope.launch {
+        saveDatabases(databases.value.map { if (it.url == database.url) it.copy(isEnabled = isEnabled) else it })
+    }
+
+    fun removeDatabase(database: Database) = viewModelScope.launch {
+        saveDatabases(databases.value.filterNot { it.url == database.url })
+    }
+
+    // User preferences
+
+    fun setDatabaseSelected(database: Database, isSelected: Boolean) = updateUserPreferences {
+        copy(
+            unselectedDatabaseUrls = (if (isSelected) unselectedDatabaseUrls - database.url else unselectedDatabaseUrls + database.url).distinct()
+        )
+    }
+
+    fun setShouldShowExplicitSongs(value: Boolean) = updateUserPreferences { copy(shouldShowExplicitSongs = value) }
+
+    fun setShouldShowSongsWithoutChords(value: Boolean) = updateUserPreferences { copy(shouldShowSongsWithoutChords = value) }
+
+    fun setLyricsOnlyModeEnabled(value: Boolean) = updateUserPreferences { copy(isLyricsOnlyModeEnabled = value) }
+
+    fun setSortingMode(value: UserPreferences.SortingMode) = updateUserPreferences { copy(sortingMode = value) }
+
+    fun setUiMode(value: UserPreferences.UiMode) = updateUserPreferences { copy(uiMode = value) }
+
+    fun setLanguage(value: UserPreferences.Language) = updateUserPreferences { copy(language = value) }
+
+    private fun updateUserPreferences(update: UserPreferences.() -> UserPreferences) = userPreferences.value?.let { userPreferences ->
+        viewModelScope.launch { saveUserPreferences(userPreferences.update()) }
+    }
+
+    // Dialogs
+
+    fun showDialog(dialogType: DialogType) = _visibleDialog.update { dialogType }
+
+    fun dismissDialog() = _visibleDialog.update { null }
+
+    // Helpers
+
+    private fun <T> Flow<T>.asState(initialValue: T) = distinctUntilChanged().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+        initialValue = initialValue
     )
 
-    fun dismissDialog() {
-        _visibleDialog.value = null
+    private fun List<Song>.filterAndRank(query: String): List<Song> {
+        val normalizedQuery = normalizeText(query)
+        return filter { normalizeText(it.title).contains(normalizedQuery, true) || normalizeText(it.artist).contains(normalizedQuery, true) }
+            .sortedByDescending { normalizeText(it.artist).startsWith(normalizedQuery, true) }
+            .sortedByDescending { normalizeText(it.title).startsWith(normalizedQuery, true) }
     }
 
-    suspend fun onSongClicked(songDetailsScreenData: SongDetailsScreenData?) {
-        _selectedSong.value = songDetailsScreenData
-        if (songDetailsScreenData != null) {
-            loadSongDetails(songDetailsScreenData.songUrl, false)
-        }
-    }
-
-    suspend fun onTranspositionChanged(
-        transpositions: Map<TranspositionKey, Int>,
-        songId: String,
-        setlistId: String?,
-        transposition: Int
-    ) = saveTranspositions(
-        transpositions.toMutableMap().apply {
-            val key = TranspositionKey(
-                songId = songId,
-                setlistId = setlistId
-            )
-            transposition.coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION).let { clampedTransposition ->
-                if (clampedTransposition == 0) {
-                    remove(key)
-                } else {
-                    put(key, clampedTransposition)
+    private fun List<Song>.groupIntoSections(sortingMode: UserPreferences.SortingMode): List<SongGroup> {
+        val groups = mutableListOf<Pair<SongGroup.Header, MutableList<Song>>>()
+        forEach { song ->
+            val header = when (sortingMode) {
+                UserPreferences.SortingMode.BY_ARTIST -> SongGroup.Header.Artist(song.artist)
+                UserPreferences.SortingMode.BY_TITLE -> normalizeText(song.title.take(1)).firstOrNull().let { firstCharacter ->
+                    if (firstCharacter?.isLetter() == true) SongGroup.Header.Letter(firstCharacter.uppercaseChar()) else SongGroup.Header.Symbols
                 }
             }
+            val lastGroup = groups.lastOrNull()
+            if (lastGroup != null && lastGroup.first.matches(header)) {
+                lastGroup.second += song
+            } else {
+                groups += header to mutableListOf(song)
+            }
         }
+        return groups.map { (header, songs) -> SongGroup(header, songs) }
+    }
+
+    private fun SongGroup.Header.matches(other: SongGroup.Header) = when (this) {
+        is SongGroup.Header.Artist -> other is SongGroup.Header.Artist && normalizeText(name) == normalizeText(other.name)
+        else -> this == other
+    }
+
+    data class SongGroup(
+        val header: Header?,
+        val songs: List<Song>
+    ) {
+        sealed interface Header {
+            data class Artist(val name: String) : Header
+            data class Letter(val letter: Char) : Header
+            data object Symbols : Header
+        }
+    }
+
+    data class SetlistWithSongs(
+        val setlist: Setlist,
+        val songs: List<Song>
     )
 
-    fun getTransposedRawData(rawData: String, transposition: Int) = transposeRawSongDetails(rawData, transposition)
-
-    suspend fun onShouldShowExplicitSongsChanged(userPreferences: UserPreferences, shouldShowExplicitSongs: Boolean) = saveUserPreferences(
-        userPreferences.copy(shouldShowExplicitSongs = shouldShowExplicitSongs)
-    )
-
-    suspend fun onShouldShowSongsWithoutChordsChanged(userPreferences: UserPreferences, shouldShowSongsWithoutChords: Boolean) = saveUserPreferences(
-        userPreferences.copy(shouldShowSongsWithoutChords = shouldShowSongsWithoutChords)
-    )
-
-    suspend fun onShowOnlyDownloadedSongsChanged(userPreferences: UserPreferences, showOnlyDownloadedSongs: Boolean) = saveUserPreferences(
-        userPreferences.copy(showOnlyDownloadedSongs = showOnlyDownloadedSongs)
-    )
-
-    suspend fun onLyricsOnlyModeChanged(userPreferences: UserPreferences, isLyricsOnlyModeEnabled: Boolean) = saveUserPreferences(
-        userPreferences.copy(isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled)
-    )
-
-    suspend fun onSortingModeChanged(userPreferences: UserPreferences, sortingMode: UserPreferences.SortingMode) = saveUserPreferences(
-        userPreferences.copy(sortingMode = sortingMode)
-    )
-
-    suspend fun onUiModeChanged(userPreferences: UserPreferences, uiMode: UserPreferences.UiMode) = saveUserPreferences(
-        userPreferences.copy(uiMode = uiMode)
-    )
-
-    suspend fun onLanguageChanged(userPreferences: UserPreferences, language: UserPreferences.Language) = saveUserPreferences(
-        userPreferences.copy(language = language)
-    )
-
-    suspend fun onForceRefreshTriggered() = loadScreenData(true)
-
-    fun onNavigationDestinationSelected(navigationDestination: NavigationDestination) {
-        _selectedNavigationDestination.value = navigationDestination
+    sealed interface DialogType {
+        data object NewSetlist : DialogType
+        data object NewDatabase : DialogType
+        data object SongsControls : DialogType
+        data object SetlistsControls : DialogType
+        data class SetlistPicker(val songId: String, val currentSetlistId: String?) : DialogType
     }
 
     companion object {
         const val MIN_TRANSPOSITION = -11
         const val MAX_TRANSPOSITION = 11
-    }
-
-    data class NavigationDestinationWrapper(
-        val destination: NavigationDestination,
-        val isSelected: Boolean
-    )
-
-    enum class NavigationDestination(
-        val icon: ImageVector
-    ) {
-        SONGS(CampfireIcons.songs),
-        SETLISTS(CampfireIcons.setlists),
-        SETTINGS(CampfireIcons.settings)
-    }
-
-    sealed class DialogType {
-        object NewSetlist : DialogType()
-
-        object NewDatabase : DialogType()
-
-        data class SetlistPicker(val songId: String, val currentSetlistId: String?) : DialogType()
+        private const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }

@@ -7,9 +7,7 @@ import com.pandulapeter.campfire.data.source.remote.implementation.dataRemoteSou
 import com.pandulapeter.campfire.domain.implementation.domainModule
 import com.pandulapeter.campfire.presentation.ios.CampfireIosApp
 import com.pandulapeter.campfire.shared.presentationModule
-import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import org.koin.core.context.startKoin
-import org.koin.mp.KoinPlatform
 import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
 import platform.UIKit.UIViewController
@@ -29,7 +27,6 @@ fun CampfireViewController(): UIViewController {
     koinApplication
     return ComposeUIViewController {
         CampfireIosApp(
-            stateHolder = CampfireViewModelStateHolder.fromViewModel(KoinPlatform.getKoin().get()),
             urlOpener = ::openUrl
         )
     }

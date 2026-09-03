@@ -1,9 +1,8 @@
 # :presentation:desktop
 
-Desktop Compose shell around `:presentation:shared` (re-exported as `api` — TODO to make it an implementation detail). Mirrors `:presentation:android` and `:presentation:ios`.
+Thin desktop shell around `:presentation:shared` (re-exported as `api` — TODO to make it an implementation detail).
 
-- `CampfireDesktopApp(viewModel, stateHolder, windowSize)` — root composable; `UiSize` comes from the window width rather than screen configuration, and refresh is a `CircularProgressIndicator` in the app bar instead of pull-to-refresh. Links open through `java.awt.Desktop`.
-- `catalogue/CampfireDesktopTheme` — `UiMode` to Material theme.
-- `screens/` — desktop arrangement of the shared screen components.
+- `CampfireDesktopApp()` — hosts the shared `CampfireApp`; links open through `java.awt.Desktop`.
+- `CampfireViewModel.handleKeyEvent(...)` — desktop has no back gesture, so the window's `onKeyEvent` pops the back stack on Escape.
 
-Keep screen behavior aligned with the Android and iOS modules; anything non-trivial belongs in `:presentation:shared` instead.
+Anything non-trivial belongs in `:presentation:shared` (desktop-only behavior such as scrollbars is done there with `expect`/`actual`).

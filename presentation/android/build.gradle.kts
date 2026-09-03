@@ -9,14 +9,11 @@ dependencies {
     implementation(project(":domain:api"))
     api(project(":presentation:shared")) // TODO: Should be an implementation detail
     implementation(libs.androidx.activity.compose)
-    implementation(libs.compose.animation)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.compose.foundation)
-    implementation(libs.compose.material)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
-    implementation(libs.google.material)
-    implementation(libs.koin.android)
-    implementation(libs.kotlin.coroutines)
+    implementation(libs.koin.compose.viewmodel)
 }
 
 android {

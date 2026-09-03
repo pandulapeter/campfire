@@ -1,0 +1,76 @@
+<resources>
+
+    <!-- Shared -->
+    <string name="back">Vissza</string>
+    <string name="close">Bezárás</string>
+    <string name="cancel">Mégse</string>
+    <string name="refresh">Frissítés</string>
+    <string name="remove">Eltávolítás</string>
+    <string name="filters">Szűrők</string>
+
+    <!-- Songs screen -->
+    <string name="songs">Dalok</string>
+    <string name="songs_search">Keresés a dalokban</string>
+    <string name="songs_clear">Törlés</string>
+    <string name="songs_sort_and_filter">Rendezés és szűrés</string>
+    <string name="songs_unsorted_label">0 - 9</string>
+    <string name="songs_show_explicit">Explicit dalok mutatása</string>
+    <string name="songs_show_without_chords">Akkord nélküli dalok mutatása</string>
+    <string name="songs_database_filter">\"%1$s\" adatbázis</string>
+    <string name="songs_sorting_mode">Rendezési mód</string>
+    <string name="songs_sorting_mode_by_artist">Előadó</string>
+    <string name="songs_sorting_mode_by_title">Cím</string>
+    <string name="songs_no_data">Nincsenek dalok</string>
+    <string name="songs_no_data_hint">Próbáld módosítani a keresést vagy a szűrőket.</string>
+    <string name="songs_lyrics_only">Csak dalszöveg</string>
+
+    <!-- Setlists screen -->
+    <string name="setlists">Listák</string>
+    <string name="setlists_no_data">Még nincsenek listák</string>
+    <string name="setlists_no_data_hint">Hozz létre egy listát, majd adj hozzá dalokat a dal részletei képernyőről.</string>
+    <string name="setlists_new_setlist">Új lista</string>
+    <string name="setlists_new_setlist_title">Lista címe</string>
+    <string name="setlists_create">Létrehozás</string>
+    <string name="setlists_remove_song">Dal eltávolítása</string>
+    <string name="setlists_reorder_hint">Hosszan nyomva átrendezheted, elhúzva eltávolíthatod a dalokat.</string>
+
+    <!-- Settings screen -->
+    <string name="settings">Beállítások</string>
+    <string name="settings_active_databases">Aktív adatbázisok</string>
+    <string name="settings_add_new_database">Új adatbázis hozzáadása</string>
+    <string name="settings_add_new_database_name">Adatbázis neve</string>
+    <string name="settings_add_new_database_url">Adatbázis URL</string>
+    <string name="settings_add_new_database_url_error">Adj meg egy érvényes http(s) URL-t</string>
+    <string name="settings_add_new_database_hint">Több információ</string>
+    <string name="settings_add">Hozzáadás</string>
+    <string name="settings_remove_database">Adatbázis eltávolítása</string>
+    <string name="settings_song_display">Dalok megjelenítése</string>
+    <string name="settings_lyrics_only_mode">Csak dalszöveg mód</string>
+    <string name="settings_lyrics_only_mode_description">Akkordok elrejtése</string>
+    <string name="settings_user_interface_theme">Téma</string>
+    <string name="settings_user_interface_theme_system_default">Rendszer</string>
+    <string name="settings_user_interface_theme_dark">Sötét</string>
+    <string name="settings_user_interface_theme_light">Világos</string>
+    <string name="settings_user_interface_language">Nyelv</string>
+    <string name="settings_user_interface_language_system_default">Rendszer</string>
+    <string name="settings_user_interface_language_english">Angol</string>
+    <string name="settings_user_interface_language_hungarian">Magyar</string>
+    <string name="settings_about">Az alkalmazásról</string>
+    <string name="settings_website">Weboldal</string>
+    <string name="settings_git_hub">GitHub oldal</string>
+    <string name="settings_privacy_policy">Adatvédelmi nyilatkozat</string>
+
+    <!-- Song details screen -->
+    <string name="song_details_add_to_setlist">Hozzáadás listához</string>
+    <string name="song_details_transpose_up">Transzponálás felfelé</string>
+    <string name="song_details_transpose_down">Transzponálás lefelé</string>
+    <string name="song_details_transpose_reset">Transzponálás visszaállítása</string>
+    <string name="song_details_section_intro">Intro</string>
+    <string name="song_details_section_verse">Versszak</string>
+    <string name="song_details_section_pre_chorus">Elő-refrén</string>
+    <string name="song_details_section_chorus">Refrén</string>
+    <string name="song_details_section_bridge">Átvezetés</string>
+    <string name="song_details_section_solo">Szóló</string>
+    <string name="song_details_section_outro">Outro</string>
+
+</resources>

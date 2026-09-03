@@ -13,7 +13,10 @@ dependencies {
     implementation(project(":domain:implementation"))
     implementation(project(":presentation:desktop"))
     implementation(compose.desktop.currentOs)
+    implementation(libs.koin.compose)
+    implementation(libs.koin.compose.viewmodel)
     implementation(libs.koin.core)
+    runtimeOnly(libs.kotlin.coroutines.swing) // Provides Dispatchers.Main for viewModelScope.
 }
 
 val versionName = System.getProperty("VERSION_NAME").orEmpty()
