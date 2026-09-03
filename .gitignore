@@ -1,17 +1,24 @@
+# Gradle / Kotlin build output
+build/
+.gradle/
+.kotlin/
+/local.properties
+
+# IDE
+/.idea/
 *.iml
+/captures
+*.hprof
+
+# Xcode
+**/xcuserdata/
+
+# Room / SQLite databases
 *.db
-*.mx
-*.db.lock
-*.db.lck
 *.db-shm
 *.db-wal
-.gradle
-.kotlin
-/local.properties
-/.idea/
+*.db.lck
+*.db.lock
+
+# macOS
 .DS_Store
-build
-/captures
-/campfireDatabase.db.management
-.externalNativeBuild*/iosApp/iosApp.xcodeproj/xcuserdata/*
-*/iosApp/iosApp.xcodeproj/project.xcworkspace/xcuserdata/*
