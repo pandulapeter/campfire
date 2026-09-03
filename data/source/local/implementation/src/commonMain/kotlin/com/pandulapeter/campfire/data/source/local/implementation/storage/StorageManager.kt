@@ -26,7 +26,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.dao.Us
         UserPreferencesEntity::class,
         TranspositionEntity::class
     ],
-    version = 3,
+    version = 1,
     exportSchema = false
 )
 @ConstructedBy(StorageManagerConstructor::class)

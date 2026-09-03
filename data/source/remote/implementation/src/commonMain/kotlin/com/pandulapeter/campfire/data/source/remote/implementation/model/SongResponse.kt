@@ -12,8 +12,7 @@ internal data class SongResponse(
     @SerialName(KEY_ARTIST) val artist: String? = null,
     @SerialName(KEY_KEY) val key: String? = null,
     @SerialName(KEY_IS_EXPLICIT) val isExplicit: Boolean? = null,
-    @SerialName(KEY_HAS_CHORDS) val hasChords: Boolean? = null,
-    @SerialName(KEY_IS_PUBLIC) val isPublic: Boolean? = null
+    @SerialName(KEY_HAS_CHORDS) val hasChords: Boolean? = null
 ) {
     companion object {
         const val SHEET_NAME = "songs"
@@ -24,7 +23,6 @@ internal data class SongResponse(
         private const val KEY_KEY = "key"
         private const val KEY_IS_EXPLICIT = "is_explicit"
         private const val KEY_HAS_CHORDS = "has_chords"
-        private const val KEY_IS_PUBLIC = "is_public"
 
         internal fun addSheet(configBuilder: RetrosheetConfig.Builder) = configBuilder.addSheet(
             SHEET_NAME,
@@ -34,8 +32,7 @@ internal data class SongResponse(
             KEY_ARTIST,
             KEY_KEY,
             KEY_IS_EXPLICIT,
-            KEY_HAS_CHORDS,
-            KEY_IS_PUBLIC
+            KEY_HAS_CHORDS
         )
     }
 }

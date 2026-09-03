@@ -13,8 +13,6 @@ import com.pandulapeter.campfire.data.source.local.implementation.source.Setlist
 import com.pandulapeter.campfire.data.source.local.implementation.source.SongLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementation.source.TranspositionLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementation.source.UserPreferencesLocalSourceImpl
-import com.pandulapeter.campfire.data.source.local.implementation.storage.MIGRATION_1_2
-import com.pandulapeter.campfire.data.source.local.implementation.storage.MIGRATION_2_3
 import com.pandulapeter.campfire.data.source.local.implementation.storage.StorageManager
 import com.pandulapeter.campfire.data.source.local.implementation.storage.createStorageManagerBuilder
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +22,6 @@ import org.koin.dsl.module
 val dataLocalSourceModule = module {
     single {
         createStorageManagerBuilder()
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .fallbackToDestructiveMigration(dropAllTables = true)
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)

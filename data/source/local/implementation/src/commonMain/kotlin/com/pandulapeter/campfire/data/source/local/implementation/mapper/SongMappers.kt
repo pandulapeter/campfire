@@ -10,8 +10,7 @@ internal fun SongEntity.toModel() = Song(
     artist = artist,
     key = key,
     isExplicit = isExplicit,
-    hasChords = hasChords,
-    isPublic = isPublic
+    hasChords = hasChords
 )
 
 internal fun Song.toEntity(databaseUrl: String) = SongEntity(
@@ -22,6 +21,5 @@ internal fun Song.toEntity(databaseUrl: String) = SongEntity(
     key = key,
     isExplicit = isExplicit,
     hasChords = hasChords,
-    isPublic = isPublic,
     databaseUrl = databaseUrl
 )

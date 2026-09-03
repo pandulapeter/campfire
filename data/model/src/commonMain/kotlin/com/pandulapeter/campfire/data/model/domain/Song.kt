@@ -7,6 +7,5 @@ data class Song(
     val artist: String,
     val key: String,
     val isExplicit: Boolean,
-    val hasChords: Boolean,
-    val isPublic: Boolean
+    val hasChords: Boolean
 )

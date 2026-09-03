@@ -57,7 +57,6 @@ class GetScreenDataUseCaseImpl internal constructor(
                                     setlists = setlists,
                                     songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }
                                         .distinctBy { it.id }
-                                        .filter { it.isPublic }
                                         .filterDownloaded(userPreferences, rawSongDetails)
                                         .filterExplicit(userPreferences)
                                         .filterHasChords(userPreferences)
