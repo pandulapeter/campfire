@@ -22,6 +22,7 @@ import org.koin.dsl.module
 val dataLocalSourceModule = module {
     single {
         createStorageManagerBuilder()
+            .addMigrations(*StorageManager.migrations)
             .fallbackToDestructiveMigration(dropAllTables = true)
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)

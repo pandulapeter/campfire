@@ -110,6 +110,7 @@ private fun SongDetailsPage(
 ) = Column(
     modifier = modifier
 ) {
+    val shouldShowChords = stateHolder.userPreferences.value?.isLyricsOnlyModeEnabled != true
     TopAppBar(
         modifier = Modifier.fillMaxWidth(),
         navigationIcon = {
@@ -123,7 +124,7 @@ private fun SongDetailsPage(
             }
         },
         actions = {
-            if (currentSong?.hasChords == true && rawSongDetails != null) {
+            if (shouldShowChords && currentSong?.hasChords == true && rawSongDetails != null) {
                 TranspositionControls(
                     uiStrings = uiStrings,
                     transposition = transposition,
@@ -156,13 +157,14 @@ private fun SongDetailsPage(
             modifier = Modifier.padding(16.dp).align(Alignment.CenterHorizontally)
         )
     } else {
-        val transposedRawData = remember(rawSongDetails.rawData, transposition) {
-            stateHolder.getTransposedRawData(rawSongDetails.rawData, transposition)
+        val transposedRawData = remember(rawSongDetails.rawData, transposition, shouldShowChords) {
+            if (shouldShowChords) stateHolder.getTransposedRawData(rawSongDetails.rawData, transposition) else rawSongDetails.rawData
         }
         SongLyrics(
             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
             uiStrings = uiStrings,
-            rawData = transposedRawData
+            rawData = transposedRawData,
+            shouldShowChords = shouldShowChords
         )
     }
 }

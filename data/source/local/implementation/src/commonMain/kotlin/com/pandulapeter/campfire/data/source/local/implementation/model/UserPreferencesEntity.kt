@@ -10,6 +10,7 @@ internal data class UserPreferencesEntity(
     @ColumnInfo(name = "shouldShowExplicitSongs") val shouldShowExplicitSongs: Boolean,
     @ColumnInfo(name = "shouldShowSongsWithoutChords") val shouldShowSongsWithoutChords: Boolean,
     @ColumnInfo(name = "showOnlyDownloadedSongs") val showOnlyDownloadedSongs: Boolean,
+    @ColumnInfo(name = "isLyricsOnlyModeEnabled", defaultValue = "0") val isLyricsOnlyModeEnabled: Boolean,
     @ColumnInfo(name = "unselectedDatabaseUrls") val unselectedDatabaseUrls: String,
     @ColumnInfo(name = "sortingMode") val sortingMode: String,
     @ColumnInfo(name = "uiMode") val uiMode: String,

@@ -239,6 +239,10 @@ class CampfireViewModel(
         userPreferences.copy(showOnlyDownloadedSongs = showOnlyDownloadedSongs)
     )
 
+    suspend fun onLyricsOnlyModeChanged(userPreferences: UserPreferences, isLyricsOnlyModeEnabled: Boolean) = saveUserPreferences(
+        userPreferences.copy(isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled)
+    )
+
     suspend fun onSortingModeChanged(userPreferences: UserPreferences, sortingMode: UserPreferences.SortingMode) = saveUserPreferences(
         userPreferences.copy(sortingMode = sortingMode)
     )

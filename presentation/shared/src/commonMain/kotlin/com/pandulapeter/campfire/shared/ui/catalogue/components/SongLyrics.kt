@@ -30,14 +30,19 @@ import kotlin.math.max
 
 /**
  * Renders the raw song data with the chords displayed above the lyrics, aligned to the syllable they belong to.
+ * When [shouldShowChords] is false, only the lyrics are rendered: the chords are dropped and lines that consisted of
+ * nothing but chords (e.g. an intro) are skipped entirely.
  */
 @Composable
 internal fun SongLyrics(
     modifier: Modifier = Modifier,
     uiStrings: CampfireStrings,
-    rawData: String
+    rawData: String,
+    shouldShowChords: Boolean = true
 ) {
-    val lines = remember(rawData) { parseSongLines(rawData) }
+    val lines = remember(rawData, shouldShowChords) {
+        parseSongLines(rawData).let { if (shouldShowChords) it else it.withoutChords() }
+    }
     val lyricsStyle = LocalTextStyle.current
     val chordStyle = lyricsStyle.copy(
         color = CampfireColors.colorCampfireOrange,
@@ -70,6 +75,17 @@ internal fun SongLyrics(
                     )
                 }
             }
+        }
+    }
+}
+
+private fun List<SongLine>.withoutChords() = mapNotNull { line ->
+    when (line) {
+        is SongLine.SectionHeader -> line
+        is SongLine.Lyrics -> when {
+            line.chords.isEmpty() -> line
+            line.lyrics.isBlank() -> null
+            else -> line.copy(chords = emptyList())
         }
     }
 }

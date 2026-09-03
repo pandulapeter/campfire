@@ -15,6 +15,8 @@ internal fun SettingsScreenAndroid(
     uiStrings = stateHolder.uiStrings.value,
     databases = stateHolder.databases.value,
     onDatabaseEnabledChanged = stateHolder::onDatabaseEnabledChanged,
+    isLyricsOnlyModeEnabled = stateHolder.userPreferences.value?.isLyricsOnlyModeEnabled == true,
+    onLyricsOnlyModeChanged = stateHolder::onLyricsOnlyModeChanged,
     selectedUiMode = stateHolder.userPreferences.value?.uiMode,
     onDatabaseRemoved = stateHolder::onDatabaseRemoved,
     onAddDatabaseClicked = stateHolder::onAddDatabaseClicked,

@@ -17,6 +17,8 @@ internal fun SettingsScreensDesktop(
     onDatabaseEnabledChanged = stateHolder::onDatabaseEnabledChanged,
     onAddDatabaseClicked = stateHolder::onAddDatabaseClicked,
     onDatabaseRemoved = stateHolder::onDatabaseRemoved,
+    isLyricsOnlyModeEnabled = stateHolder.userPreferences.value?.isLyricsOnlyModeEnabled == true,
+    onLyricsOnlyModeChanged = stateHolder::onLyricsOnlyModeChanged,
     selectedUiMode = stateHolder.userPreferences.value?.uiMode,
     onSelectedUiModeChanged = stateHolder::onUiModeChanged,
     selectedLanguage = stateHolder.userPreferences.value?.language,

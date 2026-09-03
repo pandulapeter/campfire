@@ -24,6 +24,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
+import androidx.compose.material.Switch
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -132,6 +133,37 @@ internal fun CheckboxItem(
                 .padding(end = 8.dp)
                 .alpha(if (isEnabled) 1f else 0.5f),
             text = text
+        )
+    }
+}
+
+@Composable
+internal fun SwitchItem(
+    modifier: Modifier = Modifier,
+    text: String,
+    isEnabled: Boolean = true,
+    isChecked: Boolean,
+    onCheckedChanged: (Boolean) -> Unit
+) = RoundedCard(
+    modifier = modifier
+) {
+    Row(
+        modifier = Modifier.clickable { if (isEnabled) onCheckedChanged(!isChecked) }
+    ) {
+        Text(
+            modifier = Modifier
+                .weight(1f)
+                .align(Alignment.CenterVertically)
+                .padding(vertical = 16.dp)
+                .padding(start = 16.dp, end = 8.dp)
+                .alpha(if (isEnabled) 1f else 0.5f),
+            text = text
+        )
+        Switch(
+            modifier = Modifier.align(Alignment.CenterVertically).padding(end = 8.dp),
+            checked = isChecked,
+            enabled = isEnabled,
+            onCheckedChange = { if (isEnabled) onCheckedChanged(it) }
         )
     }
 }

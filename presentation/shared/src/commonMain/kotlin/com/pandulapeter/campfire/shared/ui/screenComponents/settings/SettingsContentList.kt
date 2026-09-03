@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.CheckboxItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.ClickableControlItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.HeaderItem
 import com.pandulapeter.campfire.shared.ui.catalogue.components.RadioButtonItem
+import com.pandulapeter.campfire.shared.ui.catalogue.components.SwitchItem
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
@@ -33,6 +34,8 @@ fun SettingsContentList(
     onDatabaseEnabledChanged: (Database, Boolean) -> Unit,
     onAddDatabaseClicked: () -> Unit,
     onDatabaseRemoved: (String) -> Unit,
+    isLyricsOnlyModeEnabled: Boolean,
+    onLyricsOnlyModeChanged: (Boolean) -> Unit,
     selectedUiMode: UserPreferences.UiMode?,
     onSelectedUiModeChanged: (UserPreferences.UiMode) -> Unit,
     selectedLanguage: UserPreferences.Language?,
@@ -97,6 +100,20 @@ fun SettingsContentList(
                 )
             },
             onClick = onAddDatabaseClicked
+        )
+    }
+    item(key = "header_song_display") {
+        HeaderItem(
+            modifier = Modifier.fillMaxWidth().animateItem(),
+            text = uiStrings.settingsSongDisplay
+        )
+    }
+    item(key = "song_display_lyrics_only_mode") {
+        SwitchItem(
+            modifier = Modifier.animateItem(),
+            text = uiStrings.settingsLyricsOnlyMode,
+            isChecked = isLyricsOnlyModeEnabled,
+            onCheckedChanged = onLyricsOnlyModeChanged
         )
     }
     item(key = "header_user_interface_theme") {

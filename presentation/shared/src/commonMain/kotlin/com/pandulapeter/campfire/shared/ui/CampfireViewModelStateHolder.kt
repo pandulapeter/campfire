@@ -161,6 +161,16 @@ data class CampfireViewModelStateHolder(
             }
         }
 
+    fun onLyricsOnlyModeChanged(isLyricsOnlyModeEnabled: Boolean) =
+        userPreferences.value?.let { userPreferences ->
+            coroutineScope.launch {
+                viewModel.onLyricsOnlyModeChanged(
+                    userPreferences = userPreferences,
+                    isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled
+                )
+            }
+        }
+
     fun onSortingModeChanged(sortingMode: UserPreferences.SortingMode) =
         userPreferences.value?.let { userPreferences ->
             scrollToTop()

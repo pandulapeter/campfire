@@ -35,6 +35,8 @@ sealed class CampfireStrings {
     abstract val settingsAddNewDatabaseUrl: String
     abstract val settingsAddNewDatabaseHint: String
     abstract val settingsAdd: String
+    abstract val settingsSongDisplay: String
+    abstract val settingsLyricsOnlyMode: String
     abstract val settingsUserInterfaceTheme: String
     abstract val settingsUserInterfaceThemeSystemDefault: String
     abstract val settingsUserInterfaceThemeDark: String
@@ -95,6 +97,8 @@ sealed class CampfireStrings {
         override val settingsAddNewDatabaseUrl = "Database URL"
         override val settingsAddNewDatabaseHint = "More information"
         override val settingsAdd = "Add"
+        override val settingsSongDisplay = "Song display"
+        override val settingsLyricsOnlyMode = "Lyrics only mode (hide chords)"
         override val settingsUserInterfaceTheme = "User interface theme"
         override val settingsUserInterfaceThemeSystemDefault = "System default"
         override val settingsUserInterfaceThemeDark = "Dark"
@@ -156,6 +160,8 @@ sealed class CampfireStrings {
         override val settingsAddNewDatabaseUrl = "Adatbázis URL"
         override val settingsAddNewDatabaseHint = "Több információ"
         override val settingsAdd = "Hozzáadás"
+        override val settingsSongDisplay = "Dalok megjelenítése"
+        override val settingsLyricsOnlyMode = "Csak dalszöveg mód (akkordok elrejtése)"
         override val settingsUserInterfaceTheme = "Felhasználói felület témája"
         override val settingsUserInterfaceThemeSystemDefault = "Alapértelmezett"
         override val settingsUserInterfaceThemeDark = "Sötét"

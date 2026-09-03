@@ -40,10 +40,6 @@ class CampfireActivity : AppCompatActivity() {
                 urlOpener = ::openUrl
             )
         }
-        // TODO: Remove the following call
-        if (savedInstanceState == null) {
-            TemporaryWarningManager.showWarningMessageIfNeeded(this)
-        }
     }
 
     private fun openUrl(url: String) = try {
