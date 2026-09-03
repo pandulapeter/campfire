@@ -1,14 +1,14 @@
 @file:Suppress("UnstableApiUsage")
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.compose.compiler)
 }
 
 dependencies {
     implementation(project(":data:repository:implementation"))
-    implementation(project(":data:source:local:implementation-android"))
-    implementation(project(":data:source:remote:implementation-jvm"))
+    implementation(project(":data:source:local:implementation"))
+    implementation(project(":data:source:remote:implementation"))
     implementation(project(":domain:implementation"))
     implementation(project(":presentation:android"))
     implementation(project(":presentation:android-debug-menu"))
@@ -21,11 +21,11 @@ dependencies {
 
 android {
     namespace = "com.pandulapeter.campfire"
-    val targetSdkVersion = System.getProperty("TARGET_SDK_VERSION").toInt()
+    val targetSdkVersion = libs.versions.android.compileSdk.get().toInt()
     compileSdk = targetSdkVersion
     defaultConfig {
         applicationId = "com.pandulapeter.campfire"
-        minSdk = System.getProperty("MIN_SDK_VERSION").toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = targetSdkVersion
         versionCode = System.getProperty("VERSION_CODE").toInt()
         versionName = System.getProperty("VERSION_NAME")

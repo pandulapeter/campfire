@@ -2,7 +2,7 @@
 
 Android application entry point. The only Android module that knows about implementation modules.
 
-- `CampfireAndroidApplication` — starts Koin with `dataLocalSourceAndroidModule + dataRemoteSourceJvmModule + dataRepositoryModule + domainModule + presentationModule`, then initializes `DebugMenu`. Add new Koin modules here.
+- `CampfireAndroidApplication` — starts Koin with `dataLocalSourceModule + dataRemoteSourceModule + dataRepositoryModule + domainModule + presentationModule`, then initializes `DebugMenu`. Add new Koin modules here.
 - `CampfireActivity` — single `AppCompatActivity`, edge-to-edge, hosts `CampfireAndroidApp`. Syncs status bar appearance with `viewModel.uiMode`, and opens links via Custom Tabs.
 - `TemporaryWarningManager` — one-off "under development" dialog, marked for deletion.
 

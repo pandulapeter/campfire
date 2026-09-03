@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,13 +17,12 @@ import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.UiConstants
 import com.pandulapeter.campfire.shared.ui.screenComponents.setlists.SetlistsContentList
 import com.pandulapeter.campfire.shared.ui.screenComponents.setlists.SetlistsControlsList
-import org.burnoutcrew.reorderable.ReorderableLazyListState
 
 @Composable
 internal fun SetlistsScreensDesktop(
     modifier: Modifier = Modifier,
     stateHolder: CampfireViewModelStateHolder,
-    state: ReorderableLazyListState,
+    state: LazyListState,
     shouldUseExpandedUi: Boolean
 ) = if (shouldUseExpandedUi) {
     Row(
@@ -61,7 +61,7 @@ internal fun SetlistsScreensDesktop(
 private fun SetlistsContentListWithScrollbar(
     modifier: Modifier = Modifier,
     stateHolder: CampfireViewModelStateHolder,
-    state: ReorderableLazyListState,
+    state: LazyListState,
     shouldUseExpandedUi: Boolean
 ) = Box(
     modifier = modifier
@@ -80,7 +80,7 @@ private fun SetlistsContentListWithScrollbar(
     VerticalScrollbar(
         modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
         adapter = rememberScrollbarAdapter(
-            scrollState = state.listState
+            scrollState = state
         )
     )
 }

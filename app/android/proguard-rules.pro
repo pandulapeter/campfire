@@ -1,7 +1,3 @@
--keep,allowobfuscation,allowshrinking interface retrofit2.Call
--keep,allowobfuscation,allowshrinking class retrofit2.Response
+# Ktor, Ktorfit and kotlinx.serialization ship their own consumer rules; only the coroutine machinery needs an explicit keep.
 -keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
--dontwarn okhttp3.internal.platform.**
--dontwarn org.conscrypt.**
--dontwarn org.bouncycastle.**
--dontwarn org.openjsse.**
+-dontwarn org.slf4j.**

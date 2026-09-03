@@ -1,27 +1,28 @@
 @file:Suppress("UnstableApiUsage")
 
 plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("org.jetbrains.compose") version libs.versions.jetbrains.compose.get()
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.compose.compiler)
 }
 
 dependencies {
     implementation(project(":domain:api"))
     implementation(project(":presentation:android-debug-menu"))
     api(project(":presentation:shared")) // TODO: Should be an implementation detail
-    implementation(compose.desktop.currentOs)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.compose.reorderable)
+    implementation(libs.compose.animation)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material)
+    implementation(libs.compose.runtime)
+    implementation(libs.compose.ui)
     implementation(libs.google.material)
     implementation(libs.koin.android)
     implementation(libs.kotlin.coroutines)
 }
 
 android {
-    val targetSdkVersion = System.getProperty("TARGET_SDK_VERSION").toInt()
-    compileSdk = targetSdkVersion
-    defaultConfig.minSdk = System.getProperty("MIN_SDK_VERSION").toInt()
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    defaultConfig.minSdk = libs.versions.android.minSdk.get().toInt()
     buildFeatures.compose = true
     namespace = "com.pandulapeter.campfire.presentation.android"
 }

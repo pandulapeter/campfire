@@ -8,8 +8,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.pandulapeter.campfire.data.repository.dataRepositoryModule
-import com.pandulapeter.campfire.data.source.local.implementationDesktop.dataLocalSourceDesktopModule
-import com.pandulapeter.campfire.data.source.remote.implementationJvm.dataRemoteSourceJvmModule
+import com.pandulapeter.campfire.data.source.local.implementation.dataLocalSourceModule
+import com.pandulapeter.campfire.data.source.remote.implementation.dataRemoteSourceModule
 import com.pandulapeter.campfire.domain.implementation.domainModule
 import com.pandulapeter.campfire.presentation.CampfireDesktopApp
 import com.pandulapeter.campfire.shared.presentationModule
@@ -20,7 +20,7 @@ import org.koin.java.KoinJavaComponent
 import java.awt.Dimension
 
 private val dataModules
-    get() = dataLocalSourceDesktopModule + dataRemoteSourceJvmModule + dataRepositoryModule
+    get() = dataLocalSourceModule + dataRemoteSourceModule + dataRepositoryModule
 
 fun main() = application {
     startKoin { modules(dataModules + domainModule + presentationModule) }

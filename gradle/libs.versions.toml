@@ -1,4 +1,6 @@
 [versions]
+android-compileSdk = "37" # https://developer.android.com/tools/releases/platforms
+android-minSdk = "28"
 androidx-activity = "1.13.0" # https://developer.android.com/jetpack/androidx/releases/activity
 androidx-appCompat = "1.8.0" # https://developer.android.com/jetpack/androidx/releases/appcompat
 androidx-browser = "1.10.0" # https://developer.android.com/jetpack/androidx/releases/browser
@@ -6,8 +8,7 @@ androidx-core = "1.19.0" # https://developer.android.com/jetpack/androidx/releas
 androidx-room = "2.8.4" # https://developer.android.com/jetpack/androidx/releases/room
 androidx-sqlite = "2.7.0" # https://developer.android.com/jetpack/androidx/releases/sqlite
 beagle = "2.9.12" # https://github.com/pandulapeter/beagle/releases
-compose-mpp = "0.1.4" # https://github.com/atsushieno/compose-mpp/tags
-compose-reorderable = "0.9.6" # https://github.com/aclassen/ComposeReorderable/releases
+compose-reorderable = "3.1.0" # https://github.com/Calvin-LL/Reorderable/releases
 google-material = "1.14.0" # https://github.com/material-components/material-components-android/releases
 gradle = "9.4.0" # https://developer.android.com/studio/releases/gradle-plugin
 jetbrains-compose = "1.12.0" # https://github.com/JetBrains/compose-jb/releases
@@ -16,36 +17,48 @@ koin = "4.2.2" # https://github.com/InsertKoinIO/koin/tags
 kotlin = "2.4.10" # https://kotlinlang.org/docs/releases.html#release-details
 kotlin-coroutines = "1.11.0" # https://github.com/Kotlin/kotlinx.coroutines/releases
 kotlin-ksp = "2.3.11" # https://github.com/google/ksp/releases
-square-moshi = "1.15.2" # https://github.com/square/moshi/tags
-square-okhttp = "5.5.0" # https://github.com/square/okhttp/tags
-square-retrofit = "3.0.0" # https://github.com/square/retrofit/tags
-# Pinned: Retrosheet 3.x is a Ktorfit/kotlinx.serialization rewrite with no RetrosheetInterceptor.
-theapache64-retrosheet = "2.0.2" # https://github.com/theapache64/retrosheet/releases
+kotlin-serialization = "1.11.0" # https://github.com/Kotlin/kotlinx.serialization/releases
+ktor = "3.5.2" # https://github.com/ktorio/ktor/releases
+ktorfit = "2.7.5" # https://github.com/Foso/Ktorfit/releases
+theapache64-retrosheet = "3.0.3" # https://github.com/theapache64/retrosheet/releases
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
 androidx-appCompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appCompat" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
 androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
-androidx-room = { module = "androidx.room:room-ktx", version.ref = "androidx-room" }
 androidx-room-codegen = { module = "androidx.room:room-compiler", version.ref = "androidx-room" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidx-room" }
 androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidx-sqlite" }
 beagle = { module = "io.github.pandulapeter.beagle:ui-drawer", version.ref = "beagle" }
 beagle-crashLogger = { module = "io.github.pandulapeter.beagle:log-crash", version.ref = "beagle" }
-compose-mpp = { module = "dev.atsushieno:compose-mpp", version.ref = "compose-mpp" }
-compose-reorderable = { module = "org.burnoutcrew.composereorderable:reorderable", version.ref = "compose-reorderable" }
+compose-animation = { module = "org.jetbrains.compose.animation:animation", version.ref = "jetbrains-compose" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "jetbrains-compose" }
+compose-material = { module = "org.jetbrains.compose.material:material", version.ref = "jetbrains-compose" }
+compose-reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "compose-reorderable" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "jetbrains-compose" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "jetbrains-compose" }
 google-material = { module = "com.google.android.material:material", version.ref = "google-material" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-kotlin-compose-compiler = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
-square-moshi = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "square-moshi" }
-square-moshi-codegen = { module = "com.squareup.moshi:moshi-kotlin-codegen", version.ref = "square-moshi" }
-square-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "square-okhttp" }
-square-retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "square-retrofit" }
-square-retrofit-converter = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "square-retrofit" }
-theapache64-retrosheet = { module = "com.github.theapache64:retrosheet", version.ref = "theapache64-retrosheet" }
+kotlin-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-contentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktorfit = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref = "ktorfit" }
+theapache64-retrosheet = { module = "io.github.theapache64:retrosheet", version.ref = "theapache64-retrosheet" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "gradle" }
+android-library = { id = "com.android.library", version.ref = "gradle" }
+android-multiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "gradle" }
+compose = { id = "org.jetbrains.compose", version.ref = "jetbrains-compose" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "kotlin-ksp" }
+ktorfit = { id = "de.jensklingenberg.ktorfit", version.ref = "ktorfit" }

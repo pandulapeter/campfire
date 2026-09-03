@@ -1,15 +1,15 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
-    id("kotlin")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("org.jetbrains.compose") version libs.versions.jetbrains.compose.get()
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.compose)
+    alias(libs.plugins.compose.compiler)
 }
 
 dependencies {
     implementation(project(":data:repository:implementation"))
-    implementation(project(":data:source:local:implementation-desktop"))
-    implementation(project(":data:source:remote:implementation-jvm"))
+    implementation(project(":data:source:local:implementation"))
+    implementation(project(":data:source:remote:implementation"))
     implementation(project(":domain:implementation"))
     implementation(project(":presentation:desktop"))
     implementation(compose.desktop.currentOs)

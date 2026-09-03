@@ -1,11 +1,11 @@
 plugins {
-    id("kotlin")
-}
-
-dependencies {
-    api(project(":data:model"))
+    id("campfire-library")
 }
 
 kotlin {
-    jvmToolchain(libs.versions.jvmTarget.get().toInt())
+    sourceSets {
+        commonMain.dependencies {
+            api(project(":data:model"))
+        }
+    }
 }

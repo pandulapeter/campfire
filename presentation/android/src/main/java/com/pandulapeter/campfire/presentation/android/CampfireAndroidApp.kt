@@ -33,7 +33,6 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireNavigati
 import com.pandulapeter.campfire.shared.ui.catalogue.components.CampfireScaffold
 import com.pandulapeter.campfire.shared.ui.catalogue.components.UiSize
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
-import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.koin.java.KoinJavaComponent.get
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -122,7 +121,7 @@ private fun Content(
     uiSize: UiSize,
     songsScreenPullRefreshState: PullRefreshState,
     songsScreenScrollState: LazyListState,
-    setlistsScreenScrollState: ReorderableLazyListState,
+    setlistsScreenScrollState: LazyListState,
     urlOpener: (String) -> Unit
 ) = Crossfade(
     modifier = modifier.fillMaxSize(),

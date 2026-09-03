@@ -1,17 +1,19 @@
 plugins {
-    id("kotlin")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("org.jetbrains.compose") version libs.versions.jetbrains.compose.get()
-}
-
-dependencies {
-    implementation(project(":domain:api"))
-    implementation(compose.desktop.currentOs)
-    implementation(libs.compose.mpp)
-    implementation(libs.compose.reorderable)
-    implementation(libs.koin.core)
+    id("campfire-compose-library")
 }
 
 kotlin {
-    jvmToolchain(libs.versions.jvmTarget.get().toInt())
+    sourceSets {
+        commonMain.dependencies {
+            implementation(project(":domain:api"))
+            implementation(libs.compose.animation)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material)
+            implementation(libs.compose.reorderable)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.ui)
+            implementation(libs.koin.core)
+            implementation(libs.kotlin.coroutines)
+        }
+    }
 }

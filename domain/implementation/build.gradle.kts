@@ -1,14 +1,14 @@
 plugins {
-    id("kotlin")
-}
-
-dependencies {
-    api(project(":domain:api"))
-    implementation(project(":data:repository:api"))
-    implementation(libs.koin.core)
-    implementation(libs.kotlin.coroutines)
+    id("campfire-library")
 }
 
 kotlin {
-    jvmToolchain(libs.versions.jvmTarget.get().toInt())
+    sourceSets {
+        commonMain.dependencies {
+            api(project(":domain:api"))
+            implementation(project(":data:repository:api"))
+            implementation(libs.koin.core)
+            implementation(libs.kotlin.coroutines)
+        }
+    }
 }

@@ -1,0 +1,285 @@
+package com.pandulapeter.campfire.shared.ui
+
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.Database
+import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.domain.TranspositionKey
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
+import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
+import com.pandulapeter.campfire.domain.api.useCases.LoadSongDetailsUseCase
+import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SaveDatabasesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistsUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SaveTranspositionsUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.TransposeRawSongDetailsUseCase
+import com.pandulapeter.campfire.shared.ui.catalogue.components.SongDetailsScreenData
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
+
+@OptIn(ExperimentalUuidApi::class)
+class CampfireViewModel(
+    getScreenData: GetScreenDataUseCase,
+    private val loadScreenData: LoadScreenDataUseCase,
+    private val loadSongDetails: LoadSongDetailsUseCase,
+    private val saveDatabases: SaveDatabasesUseCase,
+    private val saveSetlists: SaveSetlistsUseCase,
+    private val saveUserPreferences: SaveUserPreferencesUseCase,
+    private val saveTranspositions: SaveTranspositionsUseCase,
+    private val normalizeText: NormalizeTextUseCase,
+    private val transposeRawSongDetails: TransposeRawSongDetailsUseCase
+) {
+    private val _query = MutableStateFlow("")
+    val query: StateFlow<String> = _query
+    val songs = combine(
+        getScreenData().map { it.data?.songs.orEmpty() },
+        query
+    ) { songs, query ->
+        if (query.isBlank()) {
+            songs
+        } else {
+            val normalizedQuery = normalizeText(query)
+            songs
+                .filter { normalizeText(it.title).contains(normalizedQuery, true) || normalizeText(it.artist).contains(normalizedQuery, true) }
+                .sortedByDescending { it.artist.startsWith(normalizedQuery, true) }
+                .sortedByDescending { it.title.startsWith(normalizedQuery, true) }
+        }
+    }.distinctUntilChanged()
+    val setlists = getScreenData().map { it.data?.setlists.orEmpty() }.distinctUntilChanged()
+    val rawSongDetails = getScreenData().map { it.data?.rawSongDetails.orEmpty() }.distinctUntilChanged()
+    val databases = getScreenData().map { it.data?.databases.orEmpty() }.distinctUntilChanged()
+    val userPreferences = getScreenData().map { it.data?.userPreferences }.distinctUntilChanged()
+    val transpositions = getScreenData().map { it.data?.transpositions.orEmpty() }.distinctUntilChanged()
+    val uiMode = userPreferences.map { it?.uiMode }
+    val shouldShowLoadingIndicator = getScreenData().map { it is DataState.Loading }.distinctUntilChanged()
+    private val _visibleDialog = MutableStateFlow<DialogType?>(null)
+    val visibleDialog: StateFlow<DialogType?> = _visibleDialog
+    private val _selectedNavigationDestination = MutableStateFlow(NavigationDestination.SONGS)
+    val selectedNavigationDestination: Flow<NavigationDestination> = _selectedNavigationDestination
+    val navigationDestinations = selectedNavigationDestination.map { selectedNavigationDestination ->
+        NavigationDestination.values().map { navigationDestination ->
+            NavigationDestinationWrapper(
+                destination = navigationDestination,
+                isSelected = navigationDestination == selectedNavigationDestination
+            )
+        }
+    }
+    private val _selectedSong = MutableStateFlow<SongDetailsScreenData?>(null)
+    val selectedSong: Flow<SongDetailsScreenData?> = _selectedSong
+
+    suspend fun onInitialize() = loadScreenData(false)
+
+    suspend fun onDatabaseEnabledChanged(databases: List<Database>, database: Database, isEnabled: Boolean) = saveDatabases(
+        databases.map { if (it.url == database.url) database.copy(isEnabled = isEnabled) else it }
+    )
+
+    suspend fun updateDatabases(databases: List<Database>) = saveDatabases(databases)
+
+    suspend fun onDatabaseSelectedChanged(userPreferences: UserPreferences, database: Database, isSelected: Boolean) = saveUserPreferences(
+        userPreferences.copy(unselectedDatabaseUrls = userPreferences.unselectedDatabaseUrls.toMutableList().apply {
+            if (isSelected) {
+                remove(database.url)
+            } else {
+                add(database.url)
+            }
+        }.distinct())
+    )
+
+    fun onQueryChanged(newQuery: String) {
+        _query.value = newQuery
+    }
+
+    fun onNewSetlistClicked() {
+        _visibleDialog.value = DialogType.NewSetlist
+    }
+
+    suspend fun createNewSetlist(newSetlistTitle: String, currentSetlists: List<Setlist>) = saveSetlists(
+        currentSetlists.toMutableList().apply {
+            add(
+                0, Setlist(
+                    id = Uuid.random().toString(),
+                    title = newSetlistTitle,
+                    songIds = emptyList(),
+                    priority = currentSetlists.size
+                )
+            )
+        }
+    )
+
+    fun onAddDatabaseClicked() {
+        _visibleDialog.value = DialogType.NewDatabase
+    }
+
+    fun onSetlistPickerClicked(songId: String, currentSetlistId: String?) {
+        _visibleDialog.value = DialogType.SetlistPicker(songId, currentSetlistId)
+    }
+
+    suspend fun addSongToSetlist(songId: String, setlistId: String, setlists: List<Setlist>) = saveSetlists(
+        setlists.map { setlist ->
+            if (setlist.id == setlistId) {
+                setlist.copy(
+                    songIds = setlist.songIds.toMutableList().apply { add(0, songId) }.distinct()
+                )
+            } else {
+                setlist
+            }
+        }
+    )
+
+    suspend fun removeSongFromSetlist(
+        songId: String,
+        setlistId: String,
+        setlists: List<Setlist>,
+        transpositions: Map<TranspositionKey, Int>
+    ) = setlists.map { setlist ->
+        if (setlist.id == setlistId) {
+            setlist.copy(
+                songIds = setlist.songIds.filterNot { it == songId }
+            )
+        } else {
+            setlist
+        }
+    }.let { updatedSetlists ->
+        saveSetlists(updatedSetlists)
+        removeOrphanedTranspositions(updatedSetlists, transpositions)
+    }
+
+    // Transpositions of the main song list are kept forever, the rest only live as long as the song stays in the setlist.
+    private suspend fun removeOrphanedTranspositions(
+        setlists: List<Setlist>,
+        transpositions: Map<TranspositionKey, Int>
+    ) = transpositions.filterKeys { key ->
+        key.setlistId == null || setlists.any { it.id == key.setlistId && key.songId in it.songIds }
+    }.let { remainingTranspositions ->
+        if (remainingTranspositions.size != transpositions.size) {
+            saveTranspositions(remainingTranspositions)
+        }
+    }
+
+    suspend fun swapSongsInSetlist(setlistId: String, fromSongId: String, toSongId: String, setlists: List<Setlist>) = saveSetlists(
+        setlists.map { setlist ->
+            if (setlist.id == setlistId) {
+                setlist.copy(
+                    songIds = setlist.songIds.toMutableList().apply {
+                        add(indexOf(toSongId), removeAt(indexOf(fromSongId)))
+                    }
+                )
+            } else {
+                setlist
+            }
+        }
+    )
+
+    suspend fun addNewDatabase(newDatabaseName: String, newDatabaseUrl: String, currentDatabases: List<Database>) = saveDatabases(
+        currentDatabases.toMutableList().apply {
+            add(
+                0, Database(
+                    url = newDatabaseUrl,
+                    name = newDatabaseName,
+                    isEnabled = true,
+                    priority = currentDatabases.size,
+                    isAddedByUser = true
+                )
+            )
+        }
+    )
+
+    fun dismissDialog() {
+        _visibleDialog.value = null
+    }
+
+    suspend fun onSongClicked(songDetailsScreenData: SongDetailsScreenData?) {
+        _selectedSong.value = songDetailsScreenData
+        if (songDetailsScreenData != null) {
+            loadSongDetails(songDetailsScreenData.songUrl, false)
+        }
+    }
+
+    suspend fun onTranspositionChanged(
+        transpositions: Map<TranspositionKey, Int>,
+        songId: String,
+        setlistId: String?,
+        transposition: Int
+    ) = saveTranspositions(
+        transpositions.toMutableMap().apply {
+            val key = TranspositionKey(
+                songId = songId,
+                setlistId = setlistId
+            )
+            transposition.coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION).let { clampedTransposition ->
+                if (clampedTransposition == 0) {
+                    remove(key)
+                } else {
+                    put(key, clampedTransposition)
+                }
+            }
+        }
+    )
+
+    fun getTransposedRawData(rawData: String, transposition: Int) = transposeRawSongDetails(rawData, transposition)
+
+    suspend fun onShouldShowExplicitSongsChanged(userPreferences: UserPreferences, shouldShowExplicitSongs: Boolean) = saveUserPreferences(
+        userPreferences.copy(shouldShowExplicitSongs = shouldShowExplicitSongs)
+    )
+
+    suspend fun onShouldShowSongsWithoutChordsChanged(userPreferences: UserPreferences, shouldShowSongsWithoutChords: Boolean) = saveUserPreferences(
+        userPreferences.copy(shouldShowSongsWithoutChords = shouldShowSongsWithoutChords)
+    )
+
+    suspend fun onShowOnlyDownloadedSongsChanged(userPreferences: UserPreferences, showOnlyDownloadedSongs: Boolean) = saveUserPreferences(
+        userPreferences.copy(showOnlyDownloadedSongs = showOnlyDownloadedSongs)
+    )
+
+    suspend fun onSortingModeChanged(userPreferences: UserPreferences, sortingMode: UserPreferences.SortingMode) = saveUserPreferences(
+        userPreferences.copy(sortingMode = sortingMode)
+    )
+
+    suspend fun onUiModeChanged(userPreferences: UserPreferences, uiMode: UserPreferences.UiMode) = saveUserPreferences(
+        userPreferences.copy(uiMode = uiMode)
+    )
+
+    suspend fun onLanguageChanged(userPreferences: UserPreferences, language: UserPreferences.Language) = saveUserPreferences(
+        userPreferences.copy(language = language)
+    )
+
+    suspend fun onForceRefreshTriggered() = loadScreenData(true)
+
+    fun onNavigationDestinationSelected(navigationDestination: NavigationDestination) {
+        _selectedNavigationDestination.value = navigationDestination
+    }
+
+    companion object {
+        const val MIN_TRANSPOSITION = -11
+        const val MAX_TRANSPOSITION = 11
+    }
+
+    data class NavigationDestinationWrapper(
+        val destination: NavigationDestination,
+        val isSelected: Boolean
+    )
+
+    enum class NavigationDestination(
+        val icon: ImageVector
+    ) {
+        SONGS(CampfireIcons.songs),
+        SETLISTS(CampfireIcons.setlists),
+        SETTINGS(CampfireIcons.settings)
+    }
+
+    sealed class DialogType {
+        object NewSetlist : DialogType()
+
+        object NewDatabase : DialogType()
+
+        data class SetlistPicker(val songId: String, val currentSetlistId: String?) : DialogType()
+    }
+}

@@ -11,7 +11,7 @@ Campfire is completely free, without any ads.
 
 ### Work in progress
 The app is being rewritten from scratch.
-The new version will use GitHub + [Google Sheets](https://docs.google.com/spreadsheets/d/1fMJzjAYOqFi_DTiacPnf6XNWqhx5MqlGNIRRqJk_aCY/) as the source of data (since Heroku is no longer free). It will also feature updated UI and better architecture.
+The new version will use GitHub + [Google Sheets](https://docs.google.com/spreadsheets/d/1fMJzjAYOqFi_DTiacPnf6XNWqhx5MqlGNIRRqJk_aCY/) as the source of data (since Heroku is no longer free). It will also feature updated UI and better architecture, and it is built with Compose Multiplatform so the same code base runs on Android, iOS and desktop.
 The old version can be found on the **master_legacy_v1** branch.
 
 ### Screenshots

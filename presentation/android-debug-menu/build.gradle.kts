@@ -1,5 +1,5 @@
 plugins {
-    id("com.android.library")
+    alias(libs.plugins.android.library)
 }
 
 dependencies {
@@ -10,9 +10,8 @@ dependencies {
 }
 
 android {
-    val targetSdkVersion = System.getProperty("TARGET_SDK_VERSION").toInt()
-    compileSdk = targetSdkVersion
-    defaultConfig.minSdk = System.getProperty("MIN_SDK_VERSION").toInt()
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    defaultConfig.minSdk = libs.versions.android.minSdk.get().toInt()
     namespace = "com.pandulapeter.campfire.presentation.androidDebugMenu"
 }
 
