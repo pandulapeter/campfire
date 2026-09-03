@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.shared.ui.catalogue.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.ContentAlpha
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import com.pandulapeter.campfire.shared.ui.catalogue.theme.CampfireColors
 import kotlin.math.ceil
 import kotlin.math.max
@@ -32,6 +34,7 @@ import kotlin.math.max
 @Composable
 internal fun SongLyrics(
     modifier: Modifier = Modifier,
+    uiStrings: CampfireStrings,
     rawData: String
 ) {
     val lines = remember(rawData) { parseSongLines(rawData) }
@@ -44,22 +47,45 @@ internal fun SongLyrics(
         modifier = modifier
     ) {
         lines.forEach { line ->
-            if (line.chords.isEmpty()) {
-                Text(
+            when (line) {
+                is SongLine.SectionHeader -> Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = line.lyrics,
+                    text = line.getTitle(uiStrings),
                     style = lyricsStyle,
-                    color = MaterialTheme.colors.onSurface
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.medium)
                 )
-            } else {
-                SongLineWithChords(
-                    line = line,
-                    lyricsStyle = lyricsStyle,
-                    chordStyle = chordStyle
-                )
+                is SongLine.Lyrics -> if (line.chords.isEmpty()) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = line.lyrics,
+                        style = lyricsStyle,
+                        color = MaterialTheme.colors.onSurface
+                    )
+                } else {
+                    SongLineWithChords(
+                        line = line,
+                        lyricsStyle = lyricsStyle,
+                        chordStyle = chordStyle
+                    )
+                }
             }
         }
     }
+}
+
+private fun SongLine.SectionHeader.getTitle(uiStrings: CampfireStrings): String {
+    val localizedName = when (section) {
+        SongSection.INTRO -> uiStrings.songDetailsSectionIntro
+        SongSection.VERSE -> uiStrings.songDetailsSectionVerse
+        SongSection.PRE_CHORUS -> uiStrings.songDetailsSectionPreChorus
+        SongSection.CHORUS -> uiStrings.songDetailsSectionChorus
+        SongSection.BRIDGE -> uiStrings.songDetailsSectionBridge
+        SongSection.SOLO -> uiStrings.songDetailsSectionSolo
+        SongSection.OUTRO -> uiStrings.songDetailsSectionOutro
+        null -> name
+    }
+    return if (suffix.isEmpty()) localizedName else "$localizedName $suffix"
 }
 
 /**
@@ -70,7 +96,7 @@ internal fun SongLyrics(
  */
 @Composable
 private fun SongLineWithChords(
-    line: SongLine,
+    line: SongLine.Lyrics,
     lyricsStyle: TextStyle,
     chordStyle: TextStyle
 ) {
@@ -136,11 +162,11 @@ private fun SongLineWithChords(
  * Returns a copy of the line where every piece of lyrics that sits under a chord is at least as wide as the chord
  * (plus [gap]), by appending non-breaking spaces to it. Chord positions are updated to point into the padded lyrics.
  */
-private fun SongLine.padLyricsToFitChords(
+private fun SongLine.Lyrics.padLyricsToFitChords(
     chordWidths: List<Float>,
     gap: Float,
     measureWidth: (String) -> Float
-): SongLine {
+): SongLine.Lyrics {
     val paddingWidth = measureWidth(PADDING.toString())
     val paddedLyrics = StringBuilder(lyrics.substring(0, chords.first().position))
     val paddedChords = chords.mapIndexed { index, chord ->
@@ -153,39 +179,78 @@ private fun SongLine.padLyricsToFitChords(
         }
         paddedChord
     }
-    return SongLine(lyrics = paddedLyrics.toString(), chords = paddedChords)
+    return SongLine.Lyrics(lyrics = paddedLyrics.toString(), chords = paddedChords)
 }
 
-internal data class SongLine(
-    val lyrics: String,
-    val chords: List<Chord>
-) {
-    data class Chord(
-        val position: Int, // Index of the character in [lyrics] the chord is placed above.
-        val name: String
-    )
+internal sealed class SongLine {
+
+    /**
+     * A "{c: Chorus 2}" style section marker, split into the [name] of the section ("Chorus"), the [section] it was
+     * recognized as (null for unknown names) and whatever followed the name ("2").
+     */
+    data class SectionHeader(
+        val name: String,
+        val suffix: String,
+        val section: SongSection?
+    ) : SongLine()
+
+    data class Lyrics(
+        val lyrics: String,
+        val chords: List<Chord>
+    ) : SongLine() {
+
+        data class Chord(
+            val position: Int, // Index of the character in [lyrics] the chord is placed above.
+            val name: String
+        )
+    }
+}
+
+internal enum class SongSection(val rawName: String) {
+    INTRO("Intro"),
+    VERSE("Verse"),
+    PRE_CHORUS("Pre-Chorus"),
+    CHORUS("Chorus"),
+    BRIDGE("Bridge"),
+    SOLO("Solo"),
+    OUTRO("Outro")
 }
 
 /**
- * Splits the raw song data into lines, removing the inline chord markers (e.g. "[Am]") from the lyrics
- * and remembering the position where each chord was.
+ * Splits the raw song data into lines. Section markers (e.g. "{c: Verse 1}") become [SongLine.SectionHeader]s, every
+ * other line becomes [SongLine.Lyrics] with the inline chord markers (e.g. "[Am]") removed from the lyrics and their
+ * positions remembered.
  */
 internal fun parseSongLines(rawData: String): List<SongLine> = rawData.lines().map { rawLine ->
+    sectionHeaderRegex.matchEntire(rawLine.trim())?.let { match -> parseSectionHeader(match.groupValues[1].trim()) } ?: parseLyrics(rawLine)
+}
+
+private fun parseSectionHeader(title: String): SongLine.SectionHeader {
+    val name = title.substringBefore(' ')
+    return SongLine.SectionHeader(
+        name = name,
+        suffix = title.substringAfter(' ', missingDelimiterValue = "").trim(),
+        section = SongSection.entries.firstOrNull { it.rawName.equals(name, ignoreCase = true) }
+    )
+}
+
+private fun parseLyrics(rawLine: String): SongLine.Lyrics {
     val lyrics = StringBuilder()
-    val chords = mutableListOf<SongLine.Chord>()
+    val chords = mutableListOf<SongLine.Lyrics.Chord>()
     var consumedUntil = 0
     chordRegex.findAll(rawLine).forEach { match ->
         lyrics.append(rawLine, consumedUntil, match.range.first)
         match.groupValues[1].trim().takeIf { it.isNotEmpty() }?.let { chordName ->
-            chords += SongLine.Chord(position = lyrics.length, name = chordName)
+            chords += SongLine.Lyrics.Chord(position = lyrics.length, name = chordName)
         }
         consumedUntil = match.range.last + 1
     }
     lyrics.append(rawLine, consumedUntil, rawLine.length)
-    SongLine(lyrics = lyrics.toString(), chords = chords)
+    return SongLine.Lyrics(lyrics = lyrics.toString(), chords = chords)
 }
 
+private val sectionHeaderRegex = Regex("\\{c:(.*)}")
 private val chordRegex = Regex("\\[(.*?)]")
-private val CHORD_GAP = 8.dp
+private val CHORD_GAP = 4.dp
 private const val LINE_HEIGHT_SAMPLE = "X"
 private const val PADDING = '\u00A0' // Non-breaking space, so that the padding never gets trimmed or wrapped.

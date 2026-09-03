@@ -52,6 +52,13 @@ sealed class CampfireStrings {
     abstract val songDetailsAddToSetlist: String
     abstract val songDetailsTransposeUp: String
     abstract val songDetailsTransposeDown: String
+    abstract val songDetailsSectionIntro: String
+    abstract val songDetailsSectionVerse: String
+    abstract val songDetailsSectionPreChorus: String
+    abstract val songDetailsSectionChorus: String
+    abstract val songDetailsSectionBridge: String
+    abstract val songDetailsSectionSolo: String
+    abstract val songDetailsSectionOutro: String
 
     object English : CampfireStrings() {
 
@@ -105,6 +112,13 @@ sealed class CampfireStrings {
         override val songDetailsAddToSetlist = "Add to setlist"
         override val songDetailsTransposeUp = "Transpose up"
         override val songDetailsTransposeDown = "Transpose down"
+        override val songDetailsSectionIntro = "Intro"
+        override val songDetailsSectionVerse = "Verse"
+        override val songDetailsSectionPreChorus = "Pre-Chorus"
+        override val songDetailsSectionChorus = "Chorus"
+        override val songDetailsSectionBridge = "Bridge"
+        override val songDetailsSectionSolo = "Solo"
+        override val songDetailsSectionOutro = "Outro"
     }
 
     object Hungarian : CampfireStrings() {
@@ -159,5 +173,12 @@ sealed class CampfireStrings {
         override val songDetailsAddToSetlist = "Hozzáadás listához"
         override val songDetailsTransposeUp = "Transzponálás felfelé"
         override val songDetailsTransposeDown = "Transzponálás lefelé"
+        override val songDetailsSectionIntro = "Intro"
+        override val songDetailsSectionVerse = "Versszak"
+        override val songDetailsSectionPreChorus = "Elő-refrén"
+        override val songDetailsSectionChorus = "Refrén"
+        override val songDetailsSectionBridge = "Átvezetés"
+        override val songDetailsSectionSolo = "Szóló"
+        override val songDetailsSectionOutro = "Outro"
     }
 }

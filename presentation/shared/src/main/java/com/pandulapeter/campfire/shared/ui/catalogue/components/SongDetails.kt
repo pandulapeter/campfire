@@ -160,6 +160,7 @@ private fun SongDetailsPage(
         }
         SongLyrics(
             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
+            uiStrings = uiStrings,
             rawData = transposedRawData
         )
     }
