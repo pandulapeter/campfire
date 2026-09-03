@@ -26,10 +26,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Setlist
@@ -97,8 +95,6 @@ internal fun SongDetailsScreen(
     }
 }
 
-private val chordRegex = Regex("\\[(.*?)[]]")
-
 @Composable
 private fun SongDetailsPage(
     modifier: Modifier = Modifier,
@@ -162,15 +158,9 @@ private fun SongDetailsPage(
         val transposedRawData = remember(rawSongDetails.rawData, transposition) {
             stateHolder.getTransposedRawData(rawSongDetails.rawData, transposition)
         }
-        Text(
+        SongLyrics(
             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
-            text = buildAnnotatedString {
-                append(transposedRawData)
-                chordRegex.findAll(transposedRawData).forEach { result ->
-                    addStyle(SpanStyle(CampfireColors.colorCampfireOrange), result.range.first, result.range.last + 1)
-                }
-            },
-            color = MaterialTheme.colors.onSurface
+            rawData = transposedRawData
         )
     }
 }
