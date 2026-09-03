@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
@@ -132,17 +133,35 @@ class CampfireViewModel(
         }
     )
 
-    suspend fun removeSongFromSetlist(songId: String, setlistId: String, setlists: List<Setlist>) = saveSetlists(
-        setlists.map { setlist ->
-            if (setlist.id == setlistId) {
-                setlist.copy(
-                    songIds = setlist.songIds.filterNot { it == songId }
-                )
-            } else {
-                setlist
-            }
+    suspend fun removeSongFromSetlist(
+        songId: String,
+        setlistId: String,
+        setlists: List<Setlist>,
+        transpositions: Map<TranspositionKey, Int>
+    ) = setlists.map { setlist ->
+        if (setlist.id == setlistId) {
+            setlist.copy(
+                songIds = setlist.songIds.filterNot { it == songId }
+            )
+        } else {
+            setlist
         }
-    )
+    }.let { updatedSetlists ->
+        saveSetlists(updatedSetlists)
+        removeOrphanedTranspositions(updatedSetlists, transpositions)
+    }
+
+    // Transpositions of the main song list are kept forever, the rest only live as long as the song stays in the setlist.
+    private suspend fun removeOrphanedTranspositions(
+        setlists: List<Setlist>,
+        transpositions: Map<TranspositionKey, Int>
+    ) = transpositions.filterKeys { key ->
+        key.setlistId == null || setlists.any { it.id == key.setlistId && key.songId in it.songIds }
+    }.let { remainingTranspositions ->
+        if (remainingTranspositions.size != transpositions.size) {
+            saveTranspositions(remainingTranspositions)
+        }
+    }
 
     suspend fun swapSongsInSetlist(setlistId: String, fromSongId: String, toSongId: String, setlists: List<Setlist>) = saveSetlists(
         setlists.map { setlist ->
@@ -183,13 +202,22 @@ class CampfireViewModel(
         }
     }
 
-    suspend fun onTranspositionChanged(transpositions: Map<String, Int>, songId: String, transposition: Int) = saveTranspositions(
+    suspend fun onTranspositionChanged(
+        transpositions: Map<TranspositionKey, Int>,
+        songId: String,
+        setlistId: String?,
+        transposition: Int
+    ) = saveTranspositions(
         transpositions.toMutableMap().apply {
+            val key = TranspositionKey(
+                songId = songId,
+                setlistId = setlistId
+            )
             transposition.coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION).let { clampedTransposition ->
                 if (clampedTransposition == 0) {
-                    remove(songId)
+                    remove(key)
                 } else {
-                    put(songId, clampedTransposition)
+                    put(key, clampedTransposition)
                 }
             }
         }

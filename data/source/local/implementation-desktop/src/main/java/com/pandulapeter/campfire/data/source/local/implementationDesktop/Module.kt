@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.source.local.implementationDesktop.source.
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.source.TranspositionLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.source.UserPreferencesLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.storage.MIGRATION_1_2
+import com.pandulapeter.campfire.data.source.local.implementationDesktop.storage.MIGRATION_2_3
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.storage.StorageManager
 import kotlinx.coroutines.Dispatchers
 import org.koin.dsl.module
@@ -22,7 +23,7 @@ import org.koin.dsl.module
 val dataLocalSourceDesktopModule = module {
     single {
         Room.databaseBuilder<StorageManager>(name = "campfireDatabase.db")
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .fallbackToDestructiveMigration(dropAllTables = true)
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)

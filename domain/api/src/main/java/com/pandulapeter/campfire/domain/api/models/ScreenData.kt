@@ -4,6 +4,7 @@ import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
 data class ScreenData(
@@ -12,5 +13,5 @@ data class ScreenData(
     val songs: List<Song>,
     val userPreferences: UserPreferences,
     val rawSongDetails: Map<String, RawSongDetails>,
-    val transpositions: Map<String, Int>
+    val transpositions: Map<TranspositionKey, Int>
 )

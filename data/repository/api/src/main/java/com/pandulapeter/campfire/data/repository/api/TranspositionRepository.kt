@@ -1,13 +1,14 @@
 package com.pandulapeter.campfire.data.repository.api
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import kotlinx.coroutines.flow.Flow
 
 interface TranspositionRepository {
 
-    val transpositions: Flow<DataState<Map<String, Int>>>
+    val transpositions: Flow<DataState<Map<TranspositionKey, Int>>>
 
-    suspend fun loadTranspositionsIfNeeded(): Map<String, Int>
+    suspend fun loadTranspositionsIfNeeded(): Map<TranspositionKey, Int>
 
-    suspend fun saveTranspositions(transpositions: Map<String, Int>)
+    suspend fun saveTranspositions(transpositions: Map<TranspositionKey, Int>)
 }

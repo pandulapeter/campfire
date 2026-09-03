@@ -24,7 +24,7 @@ import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage
         UserPreferencesEntity::class,
         TranspositionEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 internal abstract class StorageManager : RoomDatabase() {

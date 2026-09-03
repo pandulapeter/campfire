@@ -14,13 +14,14 @@ import com.pandulapeter.campfire.data.source.local.implementationAndroid.source.
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.source.TranspositionLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.source.UserPreferencesLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage.MIGRATION_1_2
+import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage.MIGRATION_2_3
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage.StorageManager
 import org.koin.dsl.module
 
 val dataLocalSourceAndroidModule = module {
     single {
         Room.databaseBuilder(get(), StorageManager::class.java, "campfireDatabase.db")
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }

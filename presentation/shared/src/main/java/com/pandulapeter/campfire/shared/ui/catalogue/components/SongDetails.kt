@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
@@ -47,7 +48,7 @@ internal fun SongDetailsScreen(
     stateHolder: CampfireViewModelStateHolder,
     songDetailsScreenData: SongDetailsScreenData?,
     rawSongDetailsMap: Map<String, RawSongDetails>?,
-    transpositions: Map<String, Int>,
+    transpositions: Map<TranspositionKey, Int>,
     setlists: List<Setlist>,
     onSongClosed: () -> Unit
 ) {
@@ -68,7 +69,7 @@ internal fun SongDetailsScreen(
                         stateHolder = stateHolder,
                         currentSong = song,
                         rawSongDetails = rawSongDetailsMap?.get(song.url),
-                        transposition = transpositions[song.id] ?: 0,
+                        transposition = transpositions[TranspositionKey(song.id, songDetailsScreenData.setlistId)] ?: 0,
                         setlistId = songDetailsScreenData.setlistId,
                         setlists = setlists,
                         onSongClosed = onSongClosed
@@ -83,7 +84,7 @@ internal fun SongDetailsScreen(
                         stateHolder = stateHolder,
                         currentSong = songDetailsScreenData.song,
                         rawSongDetails = rawSongDetailsMap?.get(songDetailsScreenData.song.url),
-                        transposition = transpositions[songDetailsScreenData.song.id] ?: 0,
+                        transposition = transpositions[TranspositionKey(songDetailsScreenData.song.id, null)] ?: 0,
                         setlistId = null,
                         setlists = setlists,
                         onSongClosed = onSongClosed
@@ -126,7 +127,7 @@ private fun SongDetailsPage(
                 TranspositionControls(
                     uiStrings = uiStrings,
                     transposition = transposition,
-                    onTranspositionChanged = { stateHolder.onTranspositionChanged(currentSong.id, it) }
+                    onTranspositionChanged = { stateHolder.onTranspositionChanged(currentSong.id, setlistId, it) }
                 )
             }
             if (setlists.isNotEmpty()) {

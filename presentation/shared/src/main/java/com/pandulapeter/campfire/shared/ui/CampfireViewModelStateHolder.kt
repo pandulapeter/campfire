@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SongDetailsScreenData
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
@@ -43,7 +44,7 @@ data class CampfireViewModelStateHolder(
     val songs: State<List<Song>>,
     val setlists: State<List<Setlist>>,
     val rawSongDetails: State<Map<String, RawSongDetails>>,
-    val transpositions: State<Map<String, Int>>,
+    val transpositions: State<Map<TranspositionKey, Int>>,
     val selectedSong: State<SongDetailsScreenData?>,
     val detailScreenCarouselState: LazyListState,
     val songsScreenScrollState: LazyListState,
@@ -209,14 +210,16 @@ data class CampfireViewModelStateHolder(
         viewModel.removeSongFromSetlist(
             songId = songId,
             setlistId = setlistId,
-            setlists = setlists.value
+            setlists = setlists.value,
+            transpositions = transpositions.value
         )
     }
 
-    fun onTranspositionChanged(songId: String, transposition: Int) = coroutineScope.launch {
+    fun onTranspositionChanged(songId: String, setlistId: String?, transposition: Int) = coroutineScope.launch {
         viewModel.onTranspositionChanged(
             transpositions = transpositions.value,
             songId = songId,
+            setlistId = setlistId,
             transposition = transposition
         )
     }
