@@ -11,7 +11,9 @@ import com.pandulapeter.campfire.domain.api.useCases.LoadSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveDatabasesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistsUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SaveTranspositionsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.TransposeRawSongDetailsUseCase
 import com.pandulapeter.campfire.shared.ui.catalogue.components.SongDetailsScreenData
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import kotlinx.coroutines.flow.Flow
@@ -29,7 +31,9 @@ class CampfireViewModel(
     private val saveDatabases: SaveDatabasesUseCase,
     private val saveSetlists: SaveSetlistsUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
-    private val normalizeText: NormalizeTextUseCase
+    private val saveTranspositions: SaveTranspositionsUseCase,
+    private val normalizeText: NormalizeTextUseCase,
+    private val transposeRawSongDetails: TransposeRawSongDetailsUseCase
 ) {
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query
@@ -51,6 +55,7 @@ class CampfireViewModel(
     val rawSongDetails = getScreenData().map { it.data?.rawSongDetails.orEmpty() }.distinctUntilChanged()
     val databases = getScreenData().map { it.data?.databases.orEmpty() }.distinctUntilChanged()
     val userPreferences = getScreenData().map { it.data?.userPreferences }.distinctUntilChanged()
+    val transpositions = getScreenData().map { it.data?.transpositions.orEmpty() }.distinctUntilChanged()
     val uiMode = userPreferences.map { it?.uiMode }
     val shouldShowLoadingIndicator = getScreenData().map { it is DataState.Loading }.distinctUntilChanged()
     private val _visibleDialog = MutableStateFlow<DialogType?>(null)
@@ -178,6 +183,20 @@ class CampfireViewModel(
         }
     }
 
+    suspend fun onTranspositionChanged(transpositions: Map<String, Int>, songId: String, transposition: Int) = saveTranspositions(
+        transpositions.toMutableMap().apply {
+            transposition.coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION).let { clampedTransposition ->
+                if (clampedTransposition == 0) {
+                    remove(songId)
+                } else {
+                    put(songId, clampedTransposition)
+                }
+            }
+        }
+    )
+
+    fun getTransposedRawData(rawData: String, transposition: Int) = transposeRawSongDetails(rawData, transposition)
+
     suspend fun onShouldShowExplicitSongsChanged(userPreferences: UserPreferences, shouldShowExplicitSongs: Boolean) = saveUserPreferences(
         userPreferences.copy(shouldShowExplicitSongs = shouldShowExplicitSongs)
     )
@@ -206,6 +225,11 @@ class CampfireViewModel(
 
     fun onNavigationDestinationSelected(navigationDestination: NavigationDestination) {
         _selectedNavigationDestination.value = navigationDestination
+    }
+
+    companion object {
+        const val MIN_TRANSPOSITION = -11
+        const val MAX_TRANSPOSITION = 11
     }
 
     data class NavigationDestinationWrapper(

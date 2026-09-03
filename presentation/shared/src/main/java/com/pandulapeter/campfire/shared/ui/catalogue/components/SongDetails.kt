@@ -2,8 +2,12 @@ package com.pandulapeter.campfire.shared.ui.catalogue.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,14 +23,18 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.CampfireViewModelStateHolder
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
@@ -41,6 +49,7 @@ internal fun SongDetailsScreen(
     stateHolder: CampfireViewModelStateHolder,
     songDetailsScreenData: SongDetailsScreenData?,
     rawSongDetailsMap: Map<String, RawSongDetails>?,
+    transpositions: Map<String, Int>,
     setlists: List<Setlist>,
     onSongClosed: () -> Unit
 ) {
@@ -61,6 +70,7 @@ internal fun SongDetailsScreen(
                         stateHolder = stateHolder,
                         currentSong = song,
                         rawSongDetails = rawSongDetailsMap?.get(song.url),
+                        transposition = transpositions[song.id] ?: 0,
                         setlistId = songDetailsScreenData.setlistId,
                         setlists = setlists,
                         onSongClosed = onSongClosed
@@ -75,6 +85,7 @@ internal fun SongDetailsScreen(
                         stateHolder = stateHolder,
                         currentSong = songDetailsScreenData.song,
                         rawSongDetails = rawSongDetailsMap?.get(songDetailsScreenData.song.url),
+                        transposition = transpositions[songDetailsScreenData.song.id] ?: 0,
                         setlistId = null,
                         setlists = setlists,
                         onSongClosed = onSongClosed
@@ -95,6 +106,7 @@ private fun SongDetailsPage(
     stateHolder: CampfireViewModelStateHolder,
     currentSong: Song?,
     rawSongDetails: RawSongDetails?,
+    transposition: Int,
     setlistId: String?,
     setlists: List<Setlist>,
     onSongClosed: () -> Unit
@@ -114,6 +126,13 @@ private fun SongDetailsPage(
             }
         },
         actions = {
+            if (currentSong?.hasChords == true && rawSongDetails != null) {
+                TranspositionControls(
+                    uiStrings = uiStrings,
+                    transposition = transposition,
+                    onTranspositionChanged = { stateHolder.onTranspositionChanged(currentSong.id, it) }
+                )
+            }
             if (setlists.isNotEmpty()) {
                 IconButton(
                     onClick = {
@@ -140,15 +159,57 @@ private fun SongDetailsPage(
             modifier = Modifier.padding(16.dp).align(Alignment.CenterHorizontally)
         )
     } else {
+        val transposedRawData = remember(rawSongDetails.rawData, transposition) {
+            stateHolder.getTransposedRawData(rawSongDetails.rawData, transposition)
+        }
         Text(
             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
             text = buildAnnotatedString {
-                append(rawSongDetails.rawData)
-                chordRegex.findAll(rawSongDetails.rawData).forEach { result ->
+                append(transposedRawData)
+                chordRegex.findAll(transposedRawData).forEach { result ->
                     addStyle(SpanStyle(CampfireColors.colorCampfireOrange), result.range.first, result.range.last + 1)
                 }
             },
             color = MaterialTheme.colors.onSurface
+        )
+    }
+}
+
+@Composable
+private fun RowScope.TranspositionControls(
+    uiStrings: CampfireStrings,
+    transposition: Int,
+    onTranspositionChanged: (Int) -> Unit
+) = Row(
+    modifier = Modifier.align(Alignment.CenterVertically)
+) {
+    IconButton(
+        enabled = transposition > CampfireViewModel.MIN_TRANSPOSITION,
+        onClick = { onTranspositionChanged(transposition - 1) }
+    ) {
+        Icon(
+            imageVector = CampfireIcons.subtract,
+            contentDescription = uiStrings.songDetailsTransposeDown
+        )
+    }
+    Text(
+        modifier = Modifier
+            .align(Alignment.CenterVertically)
+            .defaultMinSize(minWidth = 32.dp)
+            .clickable(enabled = transposition != 0) { onTranspositionChanged(0) }
+            .padding(vertical = 8.dp),
+        text = if (transposition > 0) "+$transposition" else transposition.toString(),
+        textAlign = TextAlign.Center,
+        fontWeight = FontWeight.Bold,
+        color = if (transposition == 0) MaterialTheme.colors.onSurface else CampfireColors.colorCampfireOrange
+    )
+    IconButton(
+        enabled = transposition < CampfireViewModel.MAX_TRANSPOSITION,
+        onClick = { onTranspositionChanged(transposition + 1) }
+    ) {
+        Icon(
+            imageVector = CampfireIcons.add,
+            contentDescription = uiStrings.songDetailsTransposeUp
         )
     }
 }

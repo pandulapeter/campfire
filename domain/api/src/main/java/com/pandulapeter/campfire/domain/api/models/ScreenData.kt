@@ -11,5 +11,6 @@ data class ScreenData(
     val setlists: List<Setlist>,
     val songs: List<Song>,
     val userPreferences: UserPreferences,
-    val rawSongDetails: Map<String, RawSongDetails>
+    val rawSongDetails: Map<String, RawSongDetails>,
+    val transpositions: Map<String, Int>
 )

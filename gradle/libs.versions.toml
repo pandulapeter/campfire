@@ -20,7 +20,7 @@ square-moshi = "1.15.2" # https://github.com/square/moshi/tags
 square-okhttp = "5.5.0" # https://github.com/square/okhttp/tags
 square-retrofit = "3.0.0" # https://github.com/square/retrofit/tags
 # Pinned: Retrosheet 3.x is a Ktorfit/kotlinx.serialization rewrite with no RetrosheetInterceptor.
-theapache64-retrosheet = "2.0.1" # https://github.com/theapache64/retrosheet/releases
+theapache64-retrosheet = "2.0.2" # https://github.com/theapache64/retrosheet/releases
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }

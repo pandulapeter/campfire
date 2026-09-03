@@ -50,6 +50,8 @@ sealed class CampfireStrings {
 
     // Song details screen
     abstract val songDetailsAddToSetlist: String
+    abstract val songDetailsTransposeUp: String
+    abstract val songDetailsTransposeDown: String
 
     object English : CampfireStrings() {
 
@@ -101,6 +103,8 @@ sealed class CampfireStrings {
 
         // Song details screen
         override val songDetailsAddToSetlist = "Add to setlist"
+        override val songDetailsTransposeUp = "Transpose up"
+        override val songDetailsTransposeDown = "Transpose down"
     }
 
     object Hungarian : CampfireStrings() {
@@ -153,5 +157,7 @@ sealed class CampfireStrings {
 
         // Song details screen
         override val songDetailsAddToSetlist = "Hozzáadás listához"
+        override val songDetailsTransposeUp = "Transzponálás felfelé"
+        override val songDetailsTransposeDown = "Transzponálás lefelé"
     }
 }

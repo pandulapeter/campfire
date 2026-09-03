@@ -126,6 +126,7 @@ fun CampfireScaffold(
             lazyListState = stateHolder.detailScreenCarouselState,
             songDetailsScreenData = stateHolder.selectedSong.value,
             rawSongDetailsMap = rawSongDetailsMap,
+            transpositions = stateHolder.transpositions.value,
             setlists = stateHolder.setlists.value,
             onSongClosed = onSongClosed
         )

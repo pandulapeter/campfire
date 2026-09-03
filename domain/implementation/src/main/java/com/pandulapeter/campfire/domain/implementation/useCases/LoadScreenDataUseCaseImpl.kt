@@ -4,6 +4,7 @@ import com.pandulapeter.campfire.data.repository.api.DatabaseRepository
 import com.pandulapeter.campfire.data.repository.api.RawSongDetailsRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
+import com.pandulapeter.campfire.data.repository.api.TranspositionRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import kotlinx.coroutines.CoroutineScope
@@ -17,7 +18,8 @@ class LoadScreenDataUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
     private val songRepository: SongRepository,
     private val rawSongDetailsRepository: RawSongDetailsRepository,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val transpositionRepository: TranspositionRepository
 ) : LoadScreenDataUseCase {
 
     private val scope = object : CoroutineScope {
@@ -29,6 +31,7 @@ class LoadScreenDataUseCaseImpl internal constructor(
             listOf(
                 async { setlistRepository.loadSetlistsIfNeeded() },
                 async { rawSongDetailsRepository.loadRawSongDetailsIfNeeded() },
+                async { transpositionRepository.loadTranspositionsIfNeeded() },
                 async {
                     val userPreferences = userPreferencesRepository.loadUserPreferencesIfNeeded()
                     val databaseUrls = databaseRepository.loadDatabasesIfNeeded()

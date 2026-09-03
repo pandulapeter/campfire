@@ -43,6 +43,7 @@ data class CampfireViewModelStateHolder(
     val songs: State<List<Song>>,
     val setlists: State<List<Setlist>>,
     val rawSongDetails: State<Map<String, RawSongDetails>>,
+    val transpositions: State<Map<String, Int>>,
     val selectedSong: State<SongDetailsScreenData?>,
     val detailScreenCarouselState: LazyListState,
     val songsScreenScrollState: LazyListState,
@@ -212,6 +213,16 @@ data class CampfireViewModelStateHolder(
         )
     }
 
+    fun onTranspositionChanged(songId: String, transposition: Int) = coroutineScope.launch {
+        viewModel.onTranspositionChanged(
+            transpositions = transpositions.value,
+            songId = songId,
+            transposition = transposition
+        )
+    }
+
+    fun getTransposedRawData(rawData: String, transposition: Int) = viewModel.getTransposedRawData(rawData, transposition)
+
     private fun showSnackbar(message: String) = coroutineScope.launch {
         scaffoldState.snackbarHostState.showSnackbar(
             message = message
@@ -243,6 +254,7 @@ data class CampfireViewModelStateHolder(
                 songs = viewModel.songs.collectAsState(emptyList()),
                 setlists = setlists,
                 rawSongDetails = viewModel.rawSongDetails.collectAsState(emptyMap()),
+                transpositions = viewModel.transpositions.collectAsState(emptyMap()),
                 selectedSong = viewModel.selectedSong.collectAsState(null),
                 detailScreenCarouselState = rememberLazyListState(),
                 songsScreenScrollState = rememberLazyListState(),

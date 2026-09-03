@@ -6,11 +6,13 @@ import com.pandulapeter.campfire.data.source.local.implementationAndroid.model.D
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.model.RawSongDetailsEntity
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.model.SetlistEntity
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.model.SongEntity
+import com.pandulapeter.campfire.data.source.local.implementationAndroid.model.TranspositionEntity
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.model.UserPreferencesEntity
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage.dao.DatabaseDao
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage.dao.RawSongDetailsDao
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage.dao.SetlistDao
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage.dao.SongDao
+import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage.dao.TranspositionDao
 import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage.dao.UserPreferencesDao
 
 @Database(
@@ -19,9 +21,10 @@ import com.pandulapeter.campfire.data.source.local.implementationAndroid.storage
         SetlistEntity::class,
         SongEntity::class,
         RawSongDetailsEntity::class,
-        UserPreferencesEntity::class
+        UserPreferencesEntity::class,
+        TranspositionEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 internal abstract class StorageManager : RoomDatabase() {
@@ -35,4 +38,6 @@ internal abstract class StorageManager : RoomDatabase() {
     abstract fun getRawSongDetailsDao(): RawSongDetailsDao
 
     abstract fun getUserPreferencesDao(): UserPreferencesDao
+
+    abstract fun getTranspositionDao(): TranspositionDao
 }

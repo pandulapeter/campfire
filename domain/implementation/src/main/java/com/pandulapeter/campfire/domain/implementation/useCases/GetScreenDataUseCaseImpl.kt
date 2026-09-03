@@ -8,6 +8,7 @@ import com.pandulapeter.campfire.data.repository.api.DatabaseRepository
 import com.pandulapeter.campfire.data.repository.api.RawSongDetailsRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
+import com.pandulapeter.campfire.data.repository.api.TranspositionRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
@@ -21,44 +22,52 @@ class GetScreenDataUseCaseImpl internal constructor(
     setlistRepository: SetlistRepository,
     songRepository: SongRepository,
     rawSongDetailsRepository: RawSongDetailsRepository,
-    userPreferencesRepository: UserPreferencesRepository
+    userPreferencesRepository: UserPreferencesRepository,
+    transpositionRepository: TranspositionRepository
 ) : GetScreenDataUseCase {
 
     override operator fun invoke() = screenDataFlow
 
     private var cache: ScreenData? = null
     private val screenDataFlow = combine(
-        databaseRepository.databases,
-        setlistRepository.setlists,
-        songRepository.songs,
-        rawSongDetailsRepository.rawSongDetails,
-        userPreferencesRepository.userPreferences
-    ) { databasesDataState,
-        setlistsDataState,
-        songsDataState,
-        rawSongDetailsDataState,
-        userPreferencesDataState ->
+        combine(
+            databaseRepository.databases,
+            setlistRepository.setlists,
+            songRepository.songs,
+            ::Triple
+        ),
+        combine(
+            rawSongDetailsRepository.rawSongDetails,
+            userPreferencesRepository.userPreferences,
+            transpositionRepository.transpositions,
+            ::Triple
+        )
+    ) { (databasesDataState, setlistsDataState, songsDataState),
+        (rawSongDetailsDataState, userPreferencesDataState, transpositionsDataState) ->
 
         fun createScreenData() = databasesDataState.data?.sortedBy { it.priority }?.let { databases ->
             setlistsDataState.data?.sortedByDescending { it.priority }?.let { setlists ->
                 songsDataState.data?.let { songs ->
                     rawSongDetailsDataState.data?.let { rawSongDetails ->
                         userPreferencesDataState.data?.let { userPreferences ->
-                            val filteredDatabases = databases.filter { it.isEnabled }.filter { !userPreferences.unselectedDatabaseUrls.contains(it.url) }
-                            ScreenData(
-                                databases = databases,
-                                setlists = setlists,
-                                songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }
-                                    .distinctBy { it.id }
-                                    .filter { it.isPublic }
-                                    .filterDownloaded(userPreferences, rawSongDetails)
-                                    .filterExplicit(userPreferences)
-                                    .filterHasChords(userPreferences)
-                                    .sort(userPreferences),
-                                rawSongDetails = rawSongDetails,
-                                userPreferences = userPreferences
-                            ).also {
-                                cache = it
+                            transpositionsDataState.data?.let { transpositions ->
+                                val filteredDatabases = databases.filter { it.isEnabled }.filter { !userPreferences.unselectedDatabaseUrls.contains(it.url) }
+                                ScreenData(
+                                    databases = databases,
+                                    setlists = setlists,
+                                    songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }
+                                        .distinctBy { it.id }
+                                        .filter { it.isPublic }
+                                        .filterDownloaded(userPreferences, rawSongDetails)
+                                        .filterExplicit(userPreferences)
+                                        .filterHasChords(userPreferences)
+                                        .sort(userPreferences),
+                                    rawSongDetails = rawSongDetails,
+                                    userPreferences = userPreferences,
+                                    transpositions = transpositions
+                                ).also {
+                                    cache = it
+                                }
                             }
                         }
                     }
@@ -71,7 +80,8 @@ class GetScreenDataUseCaseImpl internal constructor(
             setlistsDataState,
             songsDataState,
             rawSongDetailsDataState,
-            userPreferencesDataState
+            userPreferencesDataState,
+            transpositionsDataState
         )
         if (dataStates.any { it is DataState.Failure }) {
             DataState.Failure(createScreenData() ?: cache)
