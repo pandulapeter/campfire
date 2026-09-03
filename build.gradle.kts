@@ -11,7 +11,7 @@ plugins {
     alias(libs.plugins.ktorfit) apply false
 }
 
-"VERSION_NAME" set "2.0.2"
+"VERSION_NAME" set "2.1.0"
 "VERSION_CODE" set 24
 "KEY_ALIAS" set "androiddebugkey"
 "KEY_PASSWORD" set "android"
