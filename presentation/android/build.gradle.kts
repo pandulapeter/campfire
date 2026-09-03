@@ -7,7 +7,6 @@ plugins {
 
 dependencies {
     implementation(project(":domain:api"))
-    implementation(project(":presentation:android-debug-menu"))
     api(project(":presentation:shared")) // TODO: Should be an implementation detail
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.animation)

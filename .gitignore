@@ -3,6 +3,7 @@ build/
 .gradle/
 .kotlin/
 /local.properties
+/app/android/release.keystore
 
 # IDE
 /.idea/

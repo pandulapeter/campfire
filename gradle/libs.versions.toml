@@ -7,7 +7,6 @@ androidx-browser = "1.10.0" # https://developer.android.com/jetpack/androidx/rel
 androidx-core = "1.19.0" # https://developer.android.com/jetpack/androidx/releases/core
 androidx-room = "2.8.4" # https://developer.android.com/jetpack/androidx/releases/room
 androidx-sqlite = "2.7.0" # https://developer.android.com/jetpack/androidx/releases/sqlite
-beagle = "2.9.12" # https://github.com/pandulapeter/beagle/releases
 compose-reorderable = "3.1.0" # https://github.com/Calvin-LL/Reorderable/releases
 google-material = "1.14.0" # https://github.com/material-components/material-components-android/releases
 gradle = "9.4.0" # https://developer.android.com/studio/releases/gradle-plugin
@@ -30,8 +29,6 @@ androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-room-codegen = { module = "androidx.room:room-compiler", version.ref = "androidx-room" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidx-room" }
 androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidx-sqlite" }
-beagle = { module = "io.github.pandulapeter.beagle:ui-drawer", version.ref = "beagle" }
-beagle-crashLogger = { module = "io.github.pandulapeter.beagle:log-crash", version.ref = "beagle" }
 compose-animation = { module = "org.jetbrains.compose.animation:animation", version.ref = "jetbrains-compose" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "jetbrains-compose" }
 compose-material = { module = "org.jetbrains.compose.material:material", version.ref = "jetbrains-compose" }

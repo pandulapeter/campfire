@@ -11,7 +11,6 @@ dependencies {
     implementation(project(":data:source:remote:implementation"))
     implementation(project(":domain:implementation"))
     implementation(project(":presentation:android"))
-    implementation(project(":presentation:android-debug-menu"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.browser)

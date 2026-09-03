@@ -23,7 +23,7 @@ Data flow: `LocalSource`/`RemoteSource` -> `Repository` (emits `DataState<T>`, l
 
 - Library modules apply the convention plugins from `gradle/build-logic` (`campfire-library`, or `campfire-compose-library` when they contain Compose). These configure the Android, `desktop` (JVM), `iosArm64` and `iosSimulatorArm64` targets and derive the Android namespace from the Gradle path. Sources live in `src/commonMain/kotlin`; platform code goes in `androidMain` / `desktopMain` / `iosMain` via `expect`/`actual`.
 - Shared code must stay JVM-free: no `java.*`, `KoinJavaComponent`, or JVM-only libraries. Use `kotlin.uuid.Uuid`, `androidx.compose.ui.text.intl.Locale`, `KoinPlatform.getKoin()`, and `import kotlinx.coroutines.IO` for `Dispatchers.IO`.
-- `:app:android`, `:presentation:android`, `:presentation:android-debug-menu` are plain Android modules; `:app:desktop`, `:presentation:desktop` are plain JVM modules; `:app:ios`, `:presentation:ios` are Kotlin/Native-only.
+- `:app:android` and `:presentation:android` are plain Android modules; `:app:desktop`, `:presentation:desktop` are plain JVM modules; `:app:ios`, `:presentation:ios` are Kotlin/Native-only.
 - Every module's Koin wiring lives in a top-level `Module.kt` exposing one `val xxxModule = module { ... }`. New bindings go there.
 - Implementation classes are `internal` and named `<Interface>Impl`. Use cases are `operator fun invoke`.
 - Repositories extend `BaseLocalDataRepository` (local only) or `BaseLocalRemoteDataRepository` (local + remote cache).

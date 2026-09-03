@@ -265,8 +265,8 @@ private fun parseLyrics(rawLine: String): SongLine.Lyrics {
     return SongLine.Lyrics(lyrics = lyrics.toString(), chords = chords)
 }
 
-private val sectionHeaderRegex = Regex("\\{c:(.*)}")
-private val chordRegex = Regex("\\[(.*?)]")
+private val sectionHeaderRegex = Regex("\\{c:(.*)\\}")
+private val chordRegex = Regex("\\[(.*?)\\]")
 private val CHORD_GAP = 4.dp
 private const val LINE_HEIGHT_SAMPLE = "X"
 private const val PADDING = '\u00A0' // Non-breaking space, so that the padding never gets trimmed or wrapped.

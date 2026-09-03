@@ -36,7 +36,6 @@ include(
     ":domain:api",
     ":domain:implementation",
     ":presentation:android",
-    ":presentation:android-debug-menu",
     ":presentation:desktop",
     ":presentation:ios",
     ":presentation:shared"
