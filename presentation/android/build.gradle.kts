@@ -2,7 +2,7 @@
 
 plugins {
     id("com.android.library")
-    id("kotlin-android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.compose") version libs.versions.jetbrains.compose.get()
 }
 
@@ -23,7 +23,6 @@ android {
     compileSdk = targetSdkVersion
     defaultConfig.minSdk = System.getProperty("MIN_SDK_VERSION").toInt()
     buildFeatures.compose = true
-    composeOptions.kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
     namespace = "com.pandulapeter.campfire.presentation.android"
 }
 

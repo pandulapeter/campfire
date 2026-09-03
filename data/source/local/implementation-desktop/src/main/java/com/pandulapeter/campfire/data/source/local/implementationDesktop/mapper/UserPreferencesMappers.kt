@@ -13,12 +13,12 @@ internal fun UserPreferencesEntity.toModel() = UserPreferences(
     language = UserPreferences.Language.values().firstOrNull { it.id == language } ?: UserPreferences.Language.SYSTEM_DEFAULT
 )
 
-internal fun UserPreferences.toEntity() = UserPreferencesEntity().also {
-    it.shouldShowExplicitSongs = shouldShowExplicitSongs
-    it.shouldShowSongsWithoutChords = shouldShowSongsWithoutChords
-    it.showOnlyDownloadedSongs = showOnlyDownloadedSongs
-    it.unselectedDatabaseUrls = unselectedDatabaseUrls.mapToString()
-    it.sortingMode = sortingMode.id
-    it.uiMode = uiMode.id
-    it.language = language.id
-}
+internal fun UserPreferences.toEntity() = UserPreferencesEntity(
+    shouldShowExplicitSongs = shouldShowExplicitSongs,
+    shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
+    showOnlyDownloadedSongs = showOnlyDownloadedSongs,
+    unselectedDatabaseUrls = unselectedDatabaseUrls.mapToString(),
+    sortingMode = sortingMode.id,
+    uiMode = uiMode.id,
+    language = language.id
+)

@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.shared.ui.screenComponents.setlists
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -34,7 +33,7 @@ import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.reorderable
 
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SetlistsContentList(
     modifier: Modifier = Modifier,
@@ -56,7 +55,7 @@ fun SetlistsContentList(
     if (setlists.isEmpty()) {
         item(key = "header_no_setlists") {
             HeaderItem(
-                modifier = Modifier.animateItemPlacement().padding(horizontal = 8.dp),
+                modifier = Modifier.animateItem().padding(horizontal = 8.dp),
                 text = uiStrings.setlistsNoData,
                 shouldUseLargePadding = false
             )
@@ -65,7 +64,7 @@ fun SetlistsContentList(
         if (songs.isEmpty()) {
             item(key = "header_no_songs") {
                 HeaderItem(
-                    modifier = Modifier.animateItemPlacement().padding(horizontal = 8.dp),
+                    modifier = Modifier.animateItem().padding(horizontal = 8.dp),
                     text = uiStrings.songsNoData,
                     shouldUseLargePadding = false
                 )
@@ -83,7 +82,7 @@ fun SetlistsContentList(
                         key = key.string
                     ) {
                         ReorderableItem(
-                            defaultDraggingModifier = Modifier.animateItemPlacement(),
+                            defaultDraggingModifier = Modifier.animateItem(),
                             state = state,
                             key = key.string
                         ) { isBeingDragged ->

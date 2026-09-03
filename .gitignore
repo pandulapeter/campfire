@@ -2,7 +2,11 @@
 *.db
 *.mx
 *.db.lock
+*.db.lck
+*.db-shm
+*.db-wal
 .gradle
+.kotlin
 /local.properties
 /.idea/
 .DS_Store

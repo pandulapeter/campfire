@@ -1,10 +1,16 @@
 package com.pandulapeter.campfire.data.source.local.implementationDesktop.model
 
-import io.realm.kotlin.types.RealmObject
-import io.realm.kotlin.types.annotations.PrimaryKey
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-internal class RawSongDetailsEntity : RealmObject {
+@Entity(tableName = RawSongDetailsEntity.TABLE_NAME)
+internal data class RawSongDetailsEntity(
+    @PrimaryKey @ColumnInfo(name = "url") val url: String,
+    @ColumnInfo(name = "rawData") val rawData: String,
+) {
 
-    @PrimaryKey var url: String = ""
-    var rawData: String = ""
+    companion object {
+        const val TABLE_NAME = "rawSongDetails"
+    }
 }

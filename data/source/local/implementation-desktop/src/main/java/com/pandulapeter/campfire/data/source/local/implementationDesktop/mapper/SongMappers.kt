@@ -14,14 +14,14 @@ internal fun SongEntity.toModel() = Song(
     isPublic = isPublic
 )
 
-internal fun Song.toEntity(databaseUrl: String) = SongEntity().also {
-    it.id = id
-    it.url = url
-    it.title = title
-    it.artist = artist
-    it.key = key
-    it.isExplicit = isExplicit
-    it.hasChords = hasChords
-    it.isPublic = isPublic
-    it.databaseUrl = databaseUrl
-}
+internal fun Song.toEntity(databaseUrl: String) = SongEntity(
+    id = id,
+    url = url,
+    title = title,
+    artist = artist,
+    key = key,
+    isExplicit = isExplicit,
+    hasChords = hasChords,
+    isPublic = isPublic,
+    databaseUrl = databaseUrl
+)

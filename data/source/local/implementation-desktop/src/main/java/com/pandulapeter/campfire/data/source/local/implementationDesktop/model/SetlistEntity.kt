@@ -1,12 +1,18 @@
 package com.pandulapeter.campfire.data.source.local.implementationDesktop.model
 
-import io.realm.kotlin.types.RealmObject
-import io.realm.kotlin.types.annotations.PrimaryKey
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-internal class SetlistEntity : RealmObject {
+@Entity(tableName = SetlistEntity.TABLE_NAME)
+internal data class SetlistEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: String,
+    @ColumnInfo(name = "title") val title: String,
+    @ColumnInfo(name = "songIds") val songIds: String,
+    @ColumnInfo(name = "priority") val priority: Int
+) {
 
-    @PrimaryKey var id: String = ""
-    var title: String = ""
-    var songIds: String = ""
-    var priority: Int = -1
+    companion object {
+        const val TABLE_NAME = "setlists"
+    }
 }

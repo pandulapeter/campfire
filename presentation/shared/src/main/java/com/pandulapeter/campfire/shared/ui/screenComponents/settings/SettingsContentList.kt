@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.shared.ui.screenComponents.settings
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.DismissDirection
@@ -25,7 +24,7 @@ import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SettingsContentList(
     modifier: Modifier = Modifier,
@@ -45,7 +44,7 @@ fun SettingsContentList(
 ) {
     item(key = "header_databases") {
         HeaderItem(
-            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
+            modifier = Modifier.fillMaxWidth().animateItem(),
             text = uiStrings.settingsActiveDatabases
         )
     }
@@ -79,7 +78,7 @@ fun SettingsContentList(
                 }
             ) {
                 CheckboxItem(
-                    modifier = Modifier.animateItemPlacement(),
+                    modifier = Modifier.animateItem(),
                     text = database.name,
                     isChecked = database.isEnabled,
                     onCheckedChanged = { onDatabaseEnabledChanged(database, it) }
@@ -89,7 +88,7 @@ fun SettingsContentList(
     }
     item(key = "add_database") {
         ClickableControlItem(
-            modifier = Modifier.animateItemPlacement(),
+            modifier = Modifier.animateItem(),
             text = uiStrings.settingsAddNewDatabase,
             icon = {
                 Icon(
@@ -102,13 +101,13 @@ fun SettingsContentList(
     }
     item(key = "header_user_interface_theme") {
         HeaderItem(
-            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
+            modifier = Modifier.fillMaxWidth().animateItem(),
             text = uiStrings.settingsUserInterfaceTheme
         )
     }
     item(key = "user_interface_theme_system_default") {
         RadioButtonItem(
-            modifier = Modifier.animateItemPlacement(),
+            modifier = Modifier.animateItem(),
             text = uiStrings.settingsUserInterfaceThemeSystemDefault,
             isChecked = selectedUiMode == UserPreferences.UiMode.SYSTEM_DEFAULT,
             onClick = { onSelectedUiModeChanged(UserPreferences.UiMode.SYSTEM_DEFAULT) }
@@ -116,7 +115,7 @@ fun SettingsContentList(
     }
     item(key = "user_interface_theme_dark") {
         RadioButtonItem(
-            modifier = Modifier.animateItemPlacement(),
+            modifier = Modifier.animateItem(),
             text = uiStrings.settingsUserInterfaceThemeDark,
             isChecked = selectedUiMode == UserPreferences.UiMode.DARK,
             onClick = { onSelectedUiModeChanged(UserPreferences.UiMode.DARK) }
@@ -124,7 +123,7 @@ fun SettingsContentList(
     }
     item(key = "user_interface_theme_light") {
         RadioButtonItem(
-            modifier = Modifier.animateItemPlacement(),
+            modifier = Modifier.animateItem(),
             text = uiStrings.settingsUserInterfaceThemeLight,
             isChecked = selectedUiMode == UserPreferences.UiMode.LIGHT,
             onClick = { onSelectedUiModeChanged(UserPreferences.UiMode.LIGHT) }
@@ -132,13 +131,13 @@ fun SettingsContentList(
     }
     item(key = "header_user_interface_language") {
         HeaderItem(
-            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
+            modifier = Modifier.fillMaxWidth().animateItem(),
             text = uiStrings.settingsUserInterfaceLanguage
         )
     }
     item(key = "user_interface_language_system_default") {
         RadioButtonItem(
-            modifier = Modifier.animateItemPlacement(),
+            modifier = Modifier.animateItem(),
             text = uiStrings.settingsUserInterfaceLanguageSystemDefault,
             isChecked = selectedLanguage == UserPreferences.Language.SYSTEM_DEFAULT,
             onClick = { onSelectedLanguageChanged(UserPreferences.Language.SYSTEM_DEFAULT) }
@@ -146,7 +145,7 @@ fun SettingsContentList(
     }
     item(key = "user_interface_language_english") {
         RadioButtonItem(
-            modifier = Modifier.animateItemPlacement(),
+            modifier = Modifier.animateItem(),
             text = uiStrings.settingsUserInterfaceLanguageEnglish,
             isChecked = selectedLanguage == UserPreferences.Language.ENGLISH,
             onClick = { onSelectedLanguageChanged(UserPreferences.Language.ENGLISH) }
@@ -154,7 +153,7 @@ fun SettingsContentList(
     }
     item(key = "user_interface_language_hungarian") {
         RadioButtonItem(
-            modifier = Modifier.animateItemPlacement(),
+            modifier = Modifier.animateItem(),
             text = uiStrings.settingsUserInterfaceLanguageHungarian,
             isChecked = selectedLanguage == UserPreferences.Language.HUNGARIAN,
             onClick = { onSelectedLanguageChanged(UserPreferences.Language.HUNGARIAN) }
@@ -162,13 +161,13 @@ fun SettingsContentList(
     }
     item(key = "header_about") {
         HeaderItem(
-            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
+            modifier = Modifier.fillMaxWidth().animateItem(),
             text = uiStrings.settingsAbout
         )
     }
     item(key = "website") {
         ClickableControlItem(
-            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
+            modifier = Modifier.fillMaxWidth().animateItem(),
             text = uiStrings.settingsWebsite,
             icon = {
                 Icon(
@@ -181,7 +180,7 @@ fun SettingsContentList(
     }
     item(key = "github") {
         ClickableControlItem(
-            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
+            modifier = Modifier.fillMaxWidth().animateItem(),
             text = uiStrings.settingsGitHub,
             icon = {
                 Icon(
@@ -194,7 +193,7 @@ fun SettingsContentList(
     }
     item(key = "privacy_policy") {
         ClickableControlItem(
-            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
+            modifier = Modifier.fillMaxWidth().animateItem(),
             text = uiStrings.settingsPrivacyPolicy,
             icon = {
                 Icon(

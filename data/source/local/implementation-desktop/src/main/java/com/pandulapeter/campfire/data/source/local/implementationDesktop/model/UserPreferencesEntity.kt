@@ -1,18 +1,20 @@
 package com.pandulapeter.campfire.data.source.local.implementationDesktop.model
 
-import io.realm.kotlin.types.RealmObject
-import io.realm.kotlin.types.annotations.PrimaryKey
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-internal class UserPreferencesEntity : RealmObject {
-
-    @PrimaryKey var id: String = TABLE_NAME
-    var shouldShowExplicitSongs: Boolean = false
-    var shouldShowSongsWithoutChords: Boolean = false
-    var showOnlyDownloadedSongs: Boolean = false
-    var unselectedDatabaseUrls: String = ""
-    var sortingMode: String = ""
-    var uiMode: String = ""
-    var language: String = ""
+@Entity(tableName = UserPreferencesEntity.TABLE_NAME)
+internal data class UserPreferencesEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: String = TABLE_NAME,
+    @ColumnInfo(name = "shouldShowExplicitSongs") val shouldShowExplicitSongs: Boolean,
+    @ColumnInfo(name = "shouldShowSongsWithoutChords") val shouldShowSongsWithoutChords: Boolean,
+    @ColumnInfo(name = "showOnlyDownloadedSongs") val showOnlyDownloadedSongs: Boolean,
+    @ColumnInfo(name = "unselectedDatabaseUrls") val unselectedDatabaseUrls: String,
+    @ColumnInfo(name = "sortingMode") val sortingMode: String,
+    @ColumnInfo(name = "uiMode") val uiMode: String,
+    @ColumnInfo(name = "language") val language: String
+) {
 
     companion object {
         const val TABLE_NAME = "userPreferences"

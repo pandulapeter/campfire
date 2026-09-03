@@ -4,19 +4,13 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.mapper.toEntity
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.mapper.toModel
-import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.SetlistEntity
-import com.pandulapeter.campfire.data.source.local.implementationDesktop.storage.StorageManager
-import io.realm.kotlin.ext.query
+import com.pandulapeter.campfire.data.source.local.implementationDesktop.storage.dao.SetlistDao
 
 internal class SetlistLocalSourceImpl(
-    private val storageManager: StorageManager
+    private val setlistDao: SetlistDao
 ) : SetlistLocalSource {
 
-    override suspend fun loadSetlists() =
-        storageManager.database.query<SetlistEntity>().find().toList().map { it.toModel() }
+    override suspend fun loadSetlists() = setlistDao.getAll().map { it.toModel() }
 
-    override suspend fun saveSetlists(setlists: List<Setlist>) = with(storageManager.database) {
-        write { delete(query<SetlistEntity>().find()) }
-        writeBlocking { setlists.forEach { copyToRealm(it.toEntity()) } }
-    }
+    override suspend fun saveSetlists(setlists: List<Setlist>) = setlistDao.updateAll(setlists.map { it.toEntity() })
 }

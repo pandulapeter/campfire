@@ -2,7 +2,7 @@
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 dependencies {
@@ -31,7 +31,6 @@ android {
         versionName = System.getProperty("VERSION_NAME")
     }
     buildFeatures.compose = true
-    composeOptions.kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
     val internalSigningConfig = "internal"
     val releaseSigningConfig = "release"
     signingConfigs {

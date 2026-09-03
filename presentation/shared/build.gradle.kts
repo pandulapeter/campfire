@@ -1,5 +1,6 @@
 plugins {
     id("kotlin")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.compose") version libs.versions.jetbrains.compose.get()
 }
 
@@ -9,4 +10,8 @@ dependencies {
     implementation(libs.compose.mpp)
     implementation(libs.compose.reorderable)
     implementation(libs.koin.core)
+}
+
+kotlin {
+    jvmToolchain(libs.versions.jvmTarget.get().toInt())
 }

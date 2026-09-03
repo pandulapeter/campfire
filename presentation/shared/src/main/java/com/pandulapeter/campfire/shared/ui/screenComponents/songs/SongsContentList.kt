@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.shared.ui.screenComponents.songs
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,7 +20,6 @@ import com.pandulapeter.campfire.shared.ui.catalogue.components.SongItem
 import com.pandulapeter.campfire.shared.ui.catalogue.resources.CampfireStrings
 import org.koin.java.KoinJavaComponent.get
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SongsContentList(
     normalizeText: NormalizeTextUseCase = get(NormalizeTextUseCase::class.java),
@@ -41,7 +39,7 @@ fun SongsContentList(
     if (songs.isEmpty()) {
         item(key = "header_no_data") {
             HeaderItem(
-                modifier = Modifier.animateItemPlacement().padding(horizontal = 8.dp),
+                modifier = Modifier.animateItem().padding(horizontal = 8.dp),
                 text = uiStrings.songsNoData,
                 shouldUseLargePadding = false
             )
@@ -75,7 +73,7 @@ fun SongsContentList(
                 key = "song_${song.id}"
             ) {
                 SongItem(
-                    modifier = Modifier.animateItemPlacement(),
+                    modifier = Modifier.animateItem(),
                     uiStrings = uiStrings,
                     song = song,
                     isDownloaded = rawSongDetails[song.url] != null,

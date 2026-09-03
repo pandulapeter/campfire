@@ -4,7 +4,7 @@
 "KEY_PASSWORD" set "android"
 "STORE_FILE" set "internal.keystore"
 "STORE_PASSWORD" set "android"
-"TARGET_SDK_VERSION" set 34
+"TARGET_SDK_VERSION" set 37
 "MIN_SDK_VERSION" set 28
 
 infix fun String.set(value: Any) = System.setProperty(this, value.toString())
@@ -12,17 +12,12 @@ infix fun String.set(value: Any) = System.setProperty(this, value.toString())
 buildscript {
     repositories {
         google()
+        mavenCentral()
         maven { url = uri("https://plugins.gradle.org/m2/") }
     }
     dependencies {
         classpath(libs.gradle)
         classpath(libs.kotlin)
-        classpath(libs.realm.gradle)
-    }
-}
-
-subprojects {
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        kotlinOptions.jvmTarget = libs.versions.jvmTarget.get()
+        classpath(libs.kotlin.compose.compiler)
     }
 }

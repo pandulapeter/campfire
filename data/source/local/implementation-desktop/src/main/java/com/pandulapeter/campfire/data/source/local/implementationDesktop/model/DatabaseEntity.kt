@@ -1,13 +1,19 @@
 package com.pandulapeter.campfire.data.source.local.implementationDesktop.model
 
-import io.realm.kotlin.types.RealmObject
-import io.realm.kotlin.types.annotations.PrimaryKey
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-internal class DatabaseEntity : RealmObject {
+@Entity(tableName = DatabaseEntity.TABLE_NAME)
+internal data class DatabaseEntity(
+    @PrimaryKey @ColumnInfo(name = "url") val url: String,
+    @ColumnInfo(name = "name") val name: String,
+    @ColumnInfo(name = "isEnabled") val isEnabled: Boolean,
+    @ColumnInfo(name = "priority") val priority: Int,
+    @ColumnInfo(name = "isAddedByUser") val isAddedByUser: Boolean
+) {
 
-    @PrimaryKey var url: String = ""
-    var name: String = ""
-    var isEnabled: Boolean = false
-    var priority: Int = -1
-    var isAddedByUser: Boolean = false
+    companion object {
+        const val TABLE_NAME = "sheets"
+    }
 }

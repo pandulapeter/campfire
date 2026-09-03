@@ -8,7 +8,7 @@ internal fun RawSongDetailsEntity.toModel() = RawSongDetails(
     rawData = rawData
 )
 
-internal fun RawSongDetails.toEntity() = RawSongDetailsEntity().also {
-    it.url = url
-    it.rawData = rawData
-}
+internal fun RawSongDetails.toEntity() = RawSongDetailsEntity(
+    url = url,
+    rawData = rawData
+)

@@ -8,3 +8,7 @@ dependencies {
     implementation(libs.koin.core)
     implementation(libs.kotlin.coroutines)
 }
+
+kotlin {
+    jvmToolchain(libs.versions.jvmTarget.get().toInt())
+}

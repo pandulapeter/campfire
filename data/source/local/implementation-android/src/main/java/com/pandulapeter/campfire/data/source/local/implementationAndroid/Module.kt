@@ -17,7 +17,7 @@ import org.koin.dsl.module
 val dataLocalSourceAndroidModule = module {
     single {
         Room.databaseBuilder(get(), StorageManager::class.java, "campfireDatabase.db")
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }
     factory { get<StorageManager>().getDatabaseDao() }

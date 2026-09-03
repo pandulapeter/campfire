@@ -11,10 +11,10 @@ internal fun DatabaseEntity.toModel() = Database(
     isAddedByUser = isAddedByUser
 )
 
-internal fun Database.toEntity() = DatabaseEntity().also {
-    it.url = url
-    it.name = name
-    it.isEnabled = isEnabled
-    it.priority = priority
-    it.isAddedByUser = isAddedByUser
-}
+internal fun Database.toEntity() = DatabaseEntity(
+    url = url,
+    name = name,
+    isEnabled = isEnabled,
+    priority = priority,
+    isAddedByUser = isAddedByUser
+)

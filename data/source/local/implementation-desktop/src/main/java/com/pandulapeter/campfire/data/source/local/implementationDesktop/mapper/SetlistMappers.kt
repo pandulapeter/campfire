@@ -10,9 +10,9 @@ internal fun SetlistEntity.toModel() = Setlist(
     priority = priority
 )
 
-internal fun Setlist.toEntity() = SetlistEntity().also {
-    it.id = id
-    it.title = title
-    it.songIds = songIds.mapToString()
-    it.priority = priority
-}
+internal fun Setlist.toEntity() = SetlistEntity(
+    id = id,
+    title = title,
+    songIds = songIds.mapToString(),
+    priority = priority
+)

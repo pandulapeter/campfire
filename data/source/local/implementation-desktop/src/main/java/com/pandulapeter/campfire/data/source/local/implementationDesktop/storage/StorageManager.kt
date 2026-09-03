@@ -1,30 +1,38 @@
 package com.pandulapeter.campfire.data.source.local.implementationDesktop.storage
 
+import androidx.room.Database
+import androidx.room.RoomDatabase
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.DatabaseEntity
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.RawSongDetailsEntity
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.SetlistEntity
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.SongEntity
 import com.pandulapeter.campfire.data.source.local.implementationDesktop.model.UserPreferencesEntity
-import io.realm.kotlin.Realm
-import io.realm.kotlin.RealmConfiguration
-import io.realm.kotlin.migration.AutomaticSchemaMigration
+import com.pandulapeter.campfire.data.source.local.implementationDesktop.storage.dao.DatabaseDao
+import com.pandulapeter.campfire.data.source.local.implementationDesktop.storage.dao.RawSongDetailsDao
+import com.pandulapeter.campfire.data.source.local.implementationDesktop.storage.dao.SetlistDao
+import com.pandulapeter.campfire.data.source.local.implementationDesktop.storage.dao.SongDao
+import com.pandulapeter.campfire.data.source.local.implementationDesktop.storage.dao.UserPreferencesDao
 
-internal class StorageManager {
+@Database(
+    entities = [
+        DatabaseEntity::class,
+        SetlistEntity::class,
+        SongEntity::class,
+        RawSongDetailsEntity::class,
+        UserPreferencesEntity::class
+    ],
+    version = 1,
+    exportSchema = false
+)
+internal abstract class StorageManager : RoomDatabase() {
 
-    val database = Realm.open(
-        RealmConfiguration.Builder(
-            schema = setOf(
-                DatabaseEntity::class,
-                SetlistEntity::class,
-                SongEntity::class,
-                RawSongDetailsEntity::class,
-                UserPreferencesEntity::class
-            )
-        )
-            .name("campfireDatabase.db")
-            .migration(object : AutomaticSchemaMigration {
-                override fun migrate(migrationContext: AutomaticSchemaMigration.MigrationContext) = Unit
-            })
-            .build()
-    )
+    abstract fun getDatabaseDao(): DatabaseDao
+
+    abstract fun getSetlistDao(): SetlistDao
+
+    abstract fun getSongsDao(): SongDao
+
+    abstract fun getRawSongDetailsDao(): RawSongDetailsDao
+
+    abstract fun getUserPreferencesDao(): UserPreferencesDao
 }

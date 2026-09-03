@@ -1,17 +1,24 @@
 package com.pandulapeter.campfire.data.source.local.implementationDesktop.model
 
-import io.realm.kotlin.types.RealmObject
-import io.realm.kotlin.types.annotations.PrimaryKey
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-internal class SongEntity : RealmObject {
+@Entity(tableName = SongEntity.TABLE_NAME)
+internal data class SongEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: String,
+    @ColumnInfo(name = "url") val url: String,
+    @ColumnInfo(name = "title") val title: String,
+    @ColumnInfo(name = "artist") val artist: String,
+    @ColumnInfo(name = "key") val key: String,
+    @ColumnInfo(name = "isExplicit") val isExplicit: Boolean,
+    @ColumnInfo(name = "hasChords") val hasChords: Boolean,
+    @ColumnInfo(name = "isPublic") val isPublic: Boolean,
+    @ColumnInfo(name = DATABASE_URL) val databaseUrl: String
+) {
 
-    @PrimaryKey var id: String = ""
-    var url: String = ""
-    var title: String = ""
-    var artist: String = ""
-    var key: String = ""
-    var isExplicit: Boolean = false
-    var hasChords: Boolean = false
-    var isPublic: Boolean = false
-    var databaseUrl: String = ""
+    companion object {
+        const val TABLE_NAME = "songs"
+        const val DATABASE_URL = "databaseUrl"
+    }
 }
