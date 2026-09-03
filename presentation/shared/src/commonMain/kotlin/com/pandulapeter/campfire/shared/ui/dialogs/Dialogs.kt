@@ -12,6 +12,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetState
@@ -31,7 +32,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.shared.resources.Res
 import com.pandulapeter.campfire.shared.resources.cancel
+import com.pandulapeter.campfire.shared.resources.delete
+import com.pandulapeter.campfire.shared.resources.remove
 import com.pandulapeter.campfire.shared.resources.setlists_create
+import com.pandulapeter.campfire.shared.resources.setlists_delete_setlist
+import com.pandulapeter.campfire.shared.resources.setlists_delete_setlist_confirmation
 import com.pandulapeter.campfire.shared.resources.setlists_new_setlist
 import com.pandulapeter.campfire.shared.resources.setlists_new_setlist_title
 import com.pandulapeter.campfire.shared.resources.settings_add
@@ -40,6 +45,8 @@ import com.pandulapeter.campfire.shared.resources.settings_add_new_database_hint
 import com.pandulapeter.campfire.shared.resources.settings_add_new_database_name
 import com.pandulapeter.campfire.shared.resources.settings_add_new_database_url
 import com.pandulapeter.campfire.shared.resources.settings_add_new_database_url_error
+import com.pandulapeter.campfire.shared.resources.settings_remove_database
+import com.pandulapeter.campfire.shared.resources.settings_remove_database_confirmation
 import com.pandulapeter.campfire.shared.resources.song_details_add_to_setlist
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.components.ActionListItem
@@ -96,9 +103,53 @@ internal fun CampfireDialogs(
             dialog = dialog
         )
 
+        is CampfireViewModel.DialogType.DeleteSetlist -> ConfirmationDialog(
+            title = stringResource(Res.string.setlists_delete_setlist),
+            text = stringResource(Res.string.setlists_delete_setlist_confirmation, dialog.setlist.title),
+            confirmLabel = stringResource(Res.string.delete),
+            onDismiss = viewModel::dismissDialog,
+            onConfirm = {
+                viewModel.deleteSetlist(dialog.setlist.id)
+                viewModel.dismissDialog()
+            }
+        )
+
+        is CampfireViewModel.DialogType.DeleteDatabase -> ConfirmationDialog(
+            title = stringResource(Res.string.settings_remove_database),
+            text = stringResource(Res.string.settings_remove_database_confirmation, dialog.database.name),
+            confirmLabel = stringResource(Res.string.remove),
+            onDismiss = viewModel::dismissDialog,
+            onConfirm = {
+                viewModel.removeDatabase(dialog.database)
+                viewModel.dismissDialog()
+            }
+        )
+
         null -> Unit
     }
 }
+
+@Composable
+private fun ConfirmationDialog(
+    title: String,
+    text: String,
+    confirmLabel: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) = AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text(title) },
+    text = { Text(text) },
+    confirmButton = {
+        TextButton(
+            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            onClick = onConfirm
+        ) { Text(confirmLabel) }
+    },
+    dismissButton = {
+        TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
+    }
+)
 
 @Composable
 private fun NewSetlistDialog(

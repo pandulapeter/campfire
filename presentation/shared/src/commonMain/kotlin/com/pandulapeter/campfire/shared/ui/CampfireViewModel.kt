@@ -1,6 +1,9 @@
 package com.pandulapeter.campfire.shared.ui
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -52,6 +55,16 @@ class CampfireViewModel(
     // Navigation
     val backStack: SnapshotStateList<CampfireDestination> = mutableStateListOf(CampfireDestination.Songs)
 
+    /**
+     * Bumped whenever the back stack changes while a navigation transition is still running. The UI puts it into
+     * the metadata of every entry, which makes the new scene differ from the one the running transition started
+     * from: Navigation 3 then retargets the running animation instead of taking its "predictive back cancelled"
+     * path, which cannot handle an interrupted animation and leaves the UI stuck halfway.
+     */
+    var navigationGeneration by mutableIntStateOf(0)
+        private set
+    private var isNavigationTransitionRunning = false
+
     // Data
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
@@ -84,12 +97,24 @@ class CampfireViewModel(
 
     // Navigation
 
+    /** Reported by the UI whenever the state of the navigation transition changes, see [navigationGeneration]. */
+    fun setNavigationTransitionRunning(isRunning: Boolean) {
+        isNavigationTransitionRunning = isRunning
+    }
+
+    private fun updateBackStack(update: SnapshotStateList<CampfireDestination>.() -> Unit) {
+        if (isNavigationTransitionRunning) navigationGeneration++
+        backStack.update()
+    }
+
     fun selectTopLevelDestination(destination: CampfireDestination.TopLevel) {
         if (backStack.lastOrNull() == destination) return
-        backStack.clear()
-        backStack.add(CampfireDestination.Songs)
-        if (destination != CampfireDestination.Songs) {
-            backStack.add(destination)
+        updateBackStack {
+            clear()
+            add(CampfireDestination.Songs)
+            if (destination != CampfireDestination.Songs) {
+                add(destination)
+            }
         }
     }
 
@@ -107,13 +132,13 @@ class CampfireViewModel(
 
     private fun openSongDetails(destination: CampfireDestination.SongDetails) {
         if (backStack.lastOrNull() !is CampfireDestination.SongDetails) {
-            backStack.add(destination)
+            updateBackStack { add(destination) }
         }
     }
 
     fun navigateBack() {
         if (backStack.size > 1) {
-            backStack.removeAt(backStack.lastIndex)
+            updateBackStack { removeAt(lastIndex) }
         }
     }
 
@@ -159,6 +184,15 @@ class CampfireViewModel(
                 if (setlist.id == setlistId) setlist.copy(songIds = (listOf(songId) + setlist.songIds).distinct()) else setlist
             }
         )
+    }
+
+    fun deleteSetlist(setlistId: String) = viewModelScope.launch {
+        val updatedSetlists = setlists.value
+            .filterNot { it.id == setlistId }
+            .sortedBy { it.priority }
+            .mapIndexed { index, setlist -> setlist.copy(priority = index) }
+        saveSetlists(updatedSetlists)
+        removeOrphanedTranspositions(updatedSetlists)
     }
 
     fun removeSongFromSetlist(songId: String, setlistId: String) = viewModelScope.launch {
@@ -314,6 +348,8 @@ class CampfireViewModel(
         data object SongsControls : DialogType
         data object SetlistsControls : DialogType
         data class SetlistPicker(val songId: String, val currentSetlistId: String?) : DialogType
+        data class DeleteSetlist(val setlist: Setlist) : DialogType
+        data class DeleteDatabase(val database: Database) : DialogType
     }
 
     companion object {

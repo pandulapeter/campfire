@@ -6,6 +6,7 @@
     <string name="cancel">Mégse</string>
     <string name="refresh">Frissítés</string>
     <string name="remove">Eltávolítás</string>
+    <string name="delete">Törlés</string>
     <string name="filters">Szűrők</string>
 
     <!-- Songs screen -->
@@ -33,6 +34,8 @@
     <string name="setlists_create">Létrehozás</string>
     <string name="setlists_remove_song">Dal eltávolítása</string>
     <string name="setlists_reorder_hint">Hosszan nyomva átrendezheted, elhúzva eltávolíthatod a dalokat.</string>
+    <string name="setlists_delete_setlist">Lista törlése</string>
+    <string name="setlists_delete_setlist_confirmation">Törlöd a(z) „%1$s” listát? A dalok a könyvtárban maradnak.</string>
 
     <!-- Settings screen -->
     <string name="settings">Beállítások</string>
@@ -44,6 +47,7 @@
     <string name="settings_add_new_database_hint">Több információ</string>
     <string name="settings_add">Hozzáadás</string>
     <string name="settings_remove_database">Adatbázis eltávolítása</string>
+    <string name="settings_remove_database_confirmation">Eltávolítod a(z) „%1$s” adatbázist? A dalai többé nem jelennek meg.</string>
     <string name="settings_song_display">Dalok megjelenítése</string>
     <string name="settings_lyrics_only_mode">Csak dalszöveg mód</string>
     <string name="settings_lyrics_only_mode_description">Akkordok elrejtése</string>

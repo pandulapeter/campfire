@@ -6,6 +6,7 @@
     <string name="cancel">Cancel</string>
     <string name="refresh">Refresh</string>
     <string name="remove">Remove</string>
+    <string name="delete">Delete</string>
     <string name="filters">Filters</string>
 
     <!-- Songs screen -->
@@ -33,6 +34,8 @@
     <string name="setlists_create">Create</string>
     <string name="setlists_remove_song">Remove song</string>
     <string name="setlists_reorder_hint">Long press a song to reorder, swipe to remove.</string>
+    <string name="setlists_delete_setlist">Delete setlist</string>
+    <string name="setlists_delete_setlist_confirmation">Delete the \"%1$s\" setlist? The songs stay in your library.</string>
 
     <!-- Settings screen -->
     <string name="settings">Settings</string>
@@ -44,6 +47,7 @@
     <string name="settings_add_new_database_hint">More information</string>
     <string name="settings_add">Add</string>
     <string name="settings_remove_database">Remove database</string>
+    <string name="settings_remove_database_confirmation">Remove the \"%1$s\" database? Its songs will no longer be shown.</string>
     <string name="settings_song_display">Song display</string>
     <string name="settings_lyrics_only_mode">Lyrics only mode</string>
     <string name="settings_lyrics_only_mode_description">Hide the chords</string>

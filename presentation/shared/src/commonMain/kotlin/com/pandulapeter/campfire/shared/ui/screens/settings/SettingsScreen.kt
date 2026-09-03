@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -24,6 +26,7 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -62,6 +65,7 @@ import com.pandulapeter.campfire.shared.ui.components.SwitchListItem
 import com.pandulapeter.campfire.shared.ui.platform.PlatformVerticalScrollbar
 import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
 import com.pandulapeter.campfire.shared.localization.stringResource
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,7 +115,7 @@ internal fun SettingsScreen(
                         isEnabled = database.isEnabled,
                         isRemovable = database.isAddedByUser,
                         onEnabledChanged = { viewModel.setDatabaseEnabled(database, it) },
-                        onRemoved = { viewModel.removeDatabase(database) }
+                        onRemoved = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteDatabase(database)) }
                     )
                 }
                 item(key = "add_database") {
@@ -222,6 +226,7 @@ private fun DatabaseItem(
     onRemoved: () -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState()
+    val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(Unit) { dismissState.reset() }
     SwipeToDismissBox(
         modifier = modifier,
@@ -229,7 +234,13 @@ private fun DatabaseItem(
         enableDismissFromStartToEnd = isRemovable,
         enableDismissFromEndToStart = false,
         gesturesEnabled = isRemovable,
-        onDismiss = { if (it == SwipeToDismissBoxValue.StartToEnd) onRemoved() },
+        onDismiss = {
+            // Removal is confirmed in a dialog, so the row must return to its resting position.
+            if (it == SwipeToDismissBoxValue.StartToEnd) {
+                onRemoved()
+                coroutineScope.launch { dismissState.reset() }
+            }
+        },
         backgroundContent = {
             AnimatedVisibility(visible = isRemovable) {
                 Box(
@@ -245,11 +256,28 @@ private fun DatabaseItem(
             }
         }
     ) {
-        CheckboxListItem(
+        Row(
             modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface),
-            title = name,
-            isChecked = isEnabled,
-            onCheckedChange = onEnabledChanged
-        )
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CheckboxListItem(
+                modifier = Modifier.weight(1f),
+                title = name,
+                isChecked = isEnabled,
+                onCheckedChange = onEnabledChanged
+            )
+            AnimatedVisibility(visible = isRemovable) {
+                IconButton(
+                    modifier = Modifier.padding(end = 4.dp),
+                    onClick = onRemoved
+                ) {
+                    Icon(
+                        imageVector = CampfireIcons.delete,
+                        contentDescription = stringResource(Res.string.settings_remove_database),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
     }
 }

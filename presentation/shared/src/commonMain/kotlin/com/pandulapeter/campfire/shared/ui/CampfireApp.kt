@@ -41,6 +41,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -51,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.Scene
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEvent
 import com.pandulapeter.campfire.shared.resources.Res
@@ -112,6 +114,8 @@ private fun CampfireContent(
     val isNavigationRailVisible = windowSize.usesNavigationRail && !isSongDetailsOpen
     val layoutDirection = LocalLayoutDirection.current
     val motionScheme = MaterialTheme.motionScheme
+    // Makes interrupted transitions retarget instead of getting stuck, see CampfireViewModel.navigationGeneration.
+    val navigationMetadata = mapOf(NAVIGATION_GENERATION_METADATA_KEY to viewModel.navigationGeneration)
 
     Scaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.union(WindowInsets.ime),
@@ -184,33 +188,38 @@ private fun CampfireContent(
                     .consumeWindowInsets(if (isNavigationRailVisible) WindowInsets.systemBars.only(WindowInsetsSides.Start) else WindowInsets(0)),
                 backStack = backStack,
                 onBack = viewModel::navigateBack,
-                transitionSpec = { pushTransition(motionScheme) },
-                popTransitionSpec = { popTransition(motionScheme) },
+                // The same spec decides the direction for both parameters, see navigationTransition.
+                transitionSpec = { navigationTransition(motionScheme) },
+                popTransitionSpec = { navigationTransition(motionScheme) },
                 predictivePopTransitionSpec = { swipeEdge -> predictivePopTransition(swipeEdge) },
-                // The destinations themselves are used as content keys so that the transitions can inspect them.
+                // Stable string content keys, so that the transitions can recognize the top level destinations.
                 entryProvider = entryProvider {
-                    entry<CampfireDestination.Songs>(clazzContentKey = { it }) {
+                    entry<CampfireDestination.Songs>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
+                        ReportNavigationTransition(viewModel)
                         SongsScreen(
                             viewModel = viewModel,
                             windowSize = windowSize,
                             contentPadding = contentPadding
                         )
                     }
-                    entry<CampfireDestination.Setlists>(clazzContentKey = { it }) {
+                    entry<CampfireDestination.Setlists>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
+                        ReportNavigationTransition(viewModel)
                         SetlistsScreen(
                             viewModel = viewModel,
                             windowSize = windowSize,
                             contentPadding = contentPadding
                         )
                     }
-                    entry<CampfireDestination.Settings>(clazzContentKey = { it }) {
+                    entry<CampfireDestination.Settings>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) {
+                        ReportNavigationTransition(viewModel)
                         SettingsScreen(
                             viewModel = viewModel,
                             contentPadding = contentPadding,
                             urlOpener = urlOpener
                         )
                     }
-                    entry<CampfireDestination.SongDetails>(clazzContentKey = { it }) { destination ->
+                    entry<CampfireDestination.SongDetails>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                        ReportNavigationTransition(viewModel)
                         SongDetailsScreen(
                             viewModel = viewModel,
                             destination = destination,
@@ -230,43 +239,44 @@ private fun CampfireContent(
 
 /**
  * Switching between top level destinations uses a fade through with a subtle slide in the direction of the tab
- * order. Pushing a screen slides it in over the current one, which drifts away with a parallax effect.
+ * order. Pushing a screen slides it in over the current one, which drifts away with a parallax effect; popping
+ * reverses that.
  *
- * The same specs are used on every platform (the desktop default would be no animation at all).
+ * Whether a transition is a push or a pop is decided here from the depth of the scenes instead of relying on
+ * Navigation 3's own detection: when a back stack change interrupts a running transition, Navigation 3 records the
+ * already updated back stack as the transition's starting point and animates a pop with the push spec. That leaves
+ * the outgoing screen invisible but still covering (and swallowing clicks on) the screen underneath until the
+ * animation ends. The same specs are used on every platform (the desktop default would be no animation at all).
  */
-@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3ExpressiveApi::class)
-private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTransition(motionScheme: MotionScheme): ContentTransform {
-    val from = initialState.entries.lastOrNull()?.contentKey
-    val to = targetState.entries.lastOrNull()?.contentKey
-    return if (from is CampfireDestination.TopLevel && to is CampfireDestination.TopLevel) {
-        tabTransition(towards = if (to.index > from.index) AnimatedContentTransitionScope.SlideDirection.Start else AnimatedContentTransitionScope.SlideDirection.End)
-    } else {
-        ContentTransform(
-            targetContentEnter = slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, motionScheme.defaultSpatialSpec()) +
-                    fadeIn(motionScheme.defaultEffectsSpec()),
-            initialContentExit = slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, motionScheme.defaultSpatialSpec()) { it / PARALLAX_FRACTION } +
-                    fadeOut(motionScheme.defaultEffectsSpec()),
-            targetContentZIndex = targetState.zIndex
-        )
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigationTransition(motionScheme: MotionScheme): ContentTransform {
+    val from = CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey)
+    val to = CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey)
+    return when {
+        from != null && to != null ->
+            tabTransition(towards = if (to.index > from.index) AnimatedContentTransitionScope.SlideDirection.Start else AnimatedContentTransitionScope.SlideDirection.End)
+        targetState.zIndex < initialState.zIndex -> popTransition(motionScheme)
+        else -> pushTransition(motionScheme)
     }
 }
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3ExpressiveApi::class)
-private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.popTransition(motionScheme: MotionScheme): ContentTransform {
-    val from = initialState.entries.lastOrNull()?.contentKey
-    val to = targetState.entries.lastOrNull()?.contentKey
-    return if (from is CampfireDestination.TopLevel && to is CampfireDestination.TopLevel) {
-        tabTransition(towards = if (to.index > from.index) AnimatedContentTransitionScope.SlideDirection.Start else AnimatedContentTransitionScope.SlideDirection.End)
-    } else {
-        ContentTransform(
-            targetContentEnter = slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End, motionScheme.defaultSpatialSpec()) { it / PARALLAX_FRACTION } +
-                    fadeIn(motionScheme.defaultEffectsSpec()),
-            initialContentExit = slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, motionScheme.defaultSpatialSpec()) +
-                    fadeOut(motionScheme.defaultEffectsSpec()),
-            targetContentZIndex = targetState.zIndex
-        )
-    }
-}
+private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTransition(motionScheme: MotionScheme) = ContentTransform(
+    targetContentEnter = slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, motionScheme.defaultSpatialSpec()) +
+            fadeIn(motionScheme.defaultEffectsSpec()),
+    initialContentExit = slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, motionScheme.defaultSpatialSpec()) { it / PARALLAX_FRACTION } +
+            fadeOut(motionScheme.defaultEffectsSpec()),
+    targetContentZIndex = targetState.zIndex
+)
+
+@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3ExpressiveApi::class)
+private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.popTransition(motionScheme: MotionScheme) = ContentTransform(
+    targetContentEnter = slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End, motionScheme.defaultSpatialSpec()) { it / PARALLAX_FRACTION } +
+            fadeIn(motionScheme.defaultEffectsSpec()),
+    initialContentExit = slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, motionScheme.defaultSpatialSpec()) +
+            fadeOut(motionScheme.defaultEffectsSpec()),
+    targetContentZIndex = targetState.zIndex
+)
 
 /**
  * The pop transition driven by the predictive back gesture (Android) or the edge swipe (iOS). The progress follows
@@ -311,6 +321,17 @@ private val CampfireDestination.TopLevel.label: StringResource
         CampfireDestination.Settings -> Res.string.settings
     }
 
+/**
+ * Every entry reports whether the [NavDisplay] transition hosting it is running, so that the view model knows when
+ * a back stack change interrupts an animation (see [CampfireViewModel.navigationGeneration]).
+ */
+@Composable
+private fun ReportNavigationTransition(viewModel: CampfireViewModel) {
+    val isRunning = LocalNavAnimatedContentScope.current.transition.isRunning
+    SideEffect { viewModel.setNavigationTransitionRunning(isRunning) }
+}
+
+private const val NAVIGATION_GENERATION_METADATA_KEY = "navigationGeneration"
 private const val TAB_TRANSITION_DURATION = 300
 private const val TAB_SLIDE_FRACTION = 12
 private const val PARALLAX_FRACTION = 4

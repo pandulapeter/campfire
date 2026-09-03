@@ -44,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.shared.resources.Res
 import com.pandulapeter.campfire.shared.resources.filters
 import com.pandulapeter.campfire.shared.resources.setlists
+import com.pandulapeter.campfire.shared.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.shared.resources.setlists_no_data
 import com.pandulapeter.campfire.shared.resources.setlists_no_data_hint
 import com.pandulapeter.campfire.shared.resources.setlists_remove_song
@@ -54,6 +55,7 @@ import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.shared.ui.components.EmptyState
 import com.pandulapeter.campfire.shared.ui.components.SectionHeader
+import com.pandulapeter.campfire.shared.ui.components.SectionHeaderAction
 import com.pandulapeter.campfire.shared.ui.components.SongListItem
 import com.pandulapeter.campfire.shared.ui.components.SongsControls
 import com.pandulapeter.campfire.shared.ui.components.WindowSize
@@ -170,7 +172,14 @@ private fun SetlistList(
                     stickyHeader(key = "setlist_${setlistWithSongs.setlist.id}") {
                         SectionHeader(
                             modifier = Modifier.animateItem(),
-                            text = setlistWithSongs.setlist.title
+                            text = setlistWithSongs.setlist.title,
+                            action = {
+                                SectionHeaderAction(
+                                    icon = CampfireIcons.delete,
+                                    contentDescription = stringResource(Res.string.setlists_delete_setlist),
+                                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlistWithSongs.setlist)) }
+                                )
+                            }
                         )
                     }
                     if (setlistWithSongs.songs.isEmpty()) {
