@@ -17,7 +17,6 @@
     <string name="songs_unsorted_label">0 - 9</string>
     <string name="songs_show_explicit">Explicit dalok mutatása</string>
     <string name="songs_show_without_chords">Akkord nélküli dalok mutatása</string>
-    <string name="songs_database_filter">\"%1$s\" adatbázis</string>
     <string name="songs_sorting_mode">Rendezési mód</string>
     <string name="songs_sorting_mode_by_artist">Előadó</string>
     <string name="songs_sorting_mode_by_title">Cím</string>

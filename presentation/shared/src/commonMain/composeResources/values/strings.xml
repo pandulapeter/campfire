@@ -17,7 +17,6 @@
     <string name="songs_unsorted_label">0 - 9</string>
     <string name="songs_show_explicit">Show explicit songs</string>
     <string name="songs_show_without_chords">Show songs without chords</string>
-    <string name="songs_database_filter">Database %1$s</string>
     <string name="songs_sorting_mode">Sort by</string>
     <string name="songs_sorting_mode_by_artist">Artist</string>
     <string name="songs_sorting_mode_by_title">Title</string>

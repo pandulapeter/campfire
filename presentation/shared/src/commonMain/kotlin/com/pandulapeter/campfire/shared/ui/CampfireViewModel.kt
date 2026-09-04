@@ -306,10 +306,8 @@ class CampfireViewModel(
         val groups = mutableListOf<Pair<SongGroup.Header, MutableList<Song>>>()
         forEach { song ->
             val header = when (sortingMode) {
-                UserPreferences.SortingMode.BY_ARTIST -> SongGroup.Header.Artist(song.artist)
-                UserPreferences.SortingMode.BY_TITLE -> normalizeText(song.title.take(1)).firstOrNull().let { firstCharacter ->
-                    if (firstCharacter?.isLetter() == true) SongGroup.Header.Letter(firstCharacter.uppercaseChar()) else SongGroup.Header.Symbols
-                }
+                UserPreferences.SortingMode.BY_ARTIST -> SongGroup.Header.Artist(name = song.artist, initial = song.artist.initialLetter())
+                UserPreferences.SortingMode.BY_TITLE -> song.title.initialLetter()?.let { SongGroup.Header.Letter(it) } ?: SongGroup.Header.Symbols
             }
             val lastGroup = groups.lastOrNull()
             if (lastGroup != null && lastGroup.first.matches(header)) {
@@ -321,6 +319,9 @@ class CampfireViewModel(
         return groups.map { (header, songs) -> SongGroup(header, songs) }
     }
 
+    /** The upper case, accent-free first character of the text if it is a letter. */
+    private fun String.initialLetter() = normalizeText(take(1)).firstOrNull()?.takeIf { it.isLetter() }?.uppercaseChar()
+
     private fun SongGroup.Header.matches(other: SongGroup.Header) = when (this) {
         is SongGroup.Header.Artist -> other is SongGroup.Header.Artist && normalizeText(name) == normalizeText(other.name)
         else -> this == other
@@ -331,7 +332,8 @@ class CampfireViewModel(
         val songs: List<Song>
     ) {
         sealed interface Header {
-            data class Artist(val name: String) : Header
+            /** @param initial The first letter of the artist's name, null if the name starts with a symbol. */
+            data class Artist(val name: String, val initial: Char?) : Header
             data class Letter(val letter: Char) : Header
             data object Symbols : Header
         }

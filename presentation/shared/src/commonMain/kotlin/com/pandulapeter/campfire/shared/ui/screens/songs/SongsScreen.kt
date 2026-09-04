@@ -1,26 +1,22 @@
 package com.pandulapeter.campfire.shared.ui.screens.songs
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,15 +24,14 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -53,12 +48,14 @@ import com.pandulapeter.campfire.shared.resources.songs_unsorted_label
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.shared.ui.components.EmptyState
+import com.pandulapeter.campfire.shared.ui.components.FastScroller
+import com.pandulapeter.campfire.shared.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.shared.ui.components.SearchField
 import com.pandulapeter.campfire.shared.ui.components.SectionHeader
 import com.pandulapeter.campfire.shared.ui.components.SongListItem
-import com.pandulapeter.campfire.shared.ui.components.SongsControls
+import com.pandulapeter.campfire.shared.ui.components.SongsControlsSidePanel
 import com.pandulapeter.campfire.shared.ui.components.WindowSize
-import com.pandulapeter.campfire.shared.ui.platform.PlatformVerticalScrollbar
+import com.pandulapeter.campfire.shared.ui.components.besideSidePanel
 import com.pandulapeter.campfire.shared.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
 import com.pandulapeter.campfire.shared.localization.stringResource
@@ -74,60 +71,54 @@ internal fun SongsScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    Column(
-        modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
+    val listState = rememberLazyListState()
+    KeepTopAppBarInSync(scrollBehavior, listState)
+    Row(
+        modifier = modifier.fillMaxSize()
     ) {
-        CampfireTopAppBar(
-            scrollBehavior = scrollBehavior,
-            title = {
-                SearchField(
-                    modifier = Modifier.fillMaxWidth(),
-                    query = query,
-                    onQueryChanged = viewModel::onQueryChanged
-                )
-            },
-            actions = {
-                if (isDesktopPlatform) {
-                    RefreshAction(
-                        isLoading = isLoading,
-                        onClick = viewModel::refresh
+        Column(
+            modifier = Modifier.weight(1f).fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
+        ) {
+            CampfireTopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = {
+                    SearchField(
+                        modifier = Modifier.fillMaxWidth(),
+                        query = query,
+                        onQueryChanged = viewModel::onQueryChanged
                     )
-                }
-                if (!windowSize.usesSidePanel) {
-                    IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) }) {
-                        Icon(
-                            imageVector = CampfireIcons.tune,
-                            contentDescription = stringResource(Res.string.songs_sort_and_filter)
+                },
+                actions = {
+                    if (isDesktopPlatform) {
+                        RefreshAction(
+                            isLoading = isLoading,
+                            onClick = viewModel::refresh
                         )
                     }
+                    if (!windowSize.usesSidePanel) {
+                        IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) }) {
+                            Icon(
+                                imageVector = CampfireIcons.tune,
+                                contentDescription = stringResource(Res.string.songs_sort_and_filter)
+                            )
+                        }
+                    }
                 }
-            }
-        )
-        Row(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            SongList(
-                modifier = Modifier.weight(1f).fillMaxSize(),
-                viewModel = viewModel,
-                isLoading = isLoading,
-                contentPadding = contentPadding
             )
-            AnimatedVisibility(
-                visible = windowSize.usesSidePanel,
-                enter = expandHorizontally() + fadeIn(),
-                exit = shrinkHorizontally() + fadeOut()
-            ) {
-                Row {
-                    VerticalDivider()
-                    SongsControls(
-                        modifier = Modifier.width(SIDE_PANEL_WIDTH).fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainerLow),
-                        viewModel = viewModel,
-                        shouldIncludeSorting = true,
-                        contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding())
-                    )
-                }
-            }
+            SongList(
+                modifier = Modifier.fillMaxSize(),
+                viewModel = viewModel,
+                listState = listState,
+                isLoading = isLoading,
+                contentPadding = contentPadding.besideSidePanel(windowSize.usesSidePanel)
+            )
         }
+        SongsControlsSidePanel(
+            isVisible = windowSize.usesSidePanel,
+            viewModel = viewModel,
+            shouldIncludeSorting = true,
+            contentPadding = contentPadding
+        )
     }
 }
 
@@ -162,6 +153,7 @@ private fun RefreshAction(
 private fun SongList(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
+    listState: LazyListState,
     isLoading: Boolean,
     contentPadding: PaddingValues
 ) {
@@ -169,9 +161,15 @@ private fun SongList(
     val rawSongDetails by viewModel.rawSongDetails.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val listState = rememberLazyListState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val layoutDirection = LocalLayoutDirection.current
+    // The section label of every list item (headers included), in the order of the lazy list, for the fast scroller.
+    val sectionLabels = remember(songGroups) {
+        songGroups.flatMap { group ->
+            val label = group.header?.fastScrollerLabel
+            List(size = group.songs.size + (if (group.header == null) 0 else 1)) { label }
+        }
+    }
 
     // Scroll back to the top whenever the search query or the sorting changes, before the new items arrive.
     LaunchedEffect(query, userPreferences?.sortingMode) { listState.scrollToItem(0) }
@@ -229,12 +227,23 @@ private fun SongList(
                 }
             }
         }
-        PlatformVerticalScrollbar(
+        FastScroller(
+            modifier = Modifier.padding(contentPadding),
             listState = listState,
-            modifier = Modifier.padding(contentPadding)
+            labelForItem = { sectionLabels.getOrNull(it) }
         )
     }
 }
+
+/**
+ * The single character shown in the bubble of the fast scroller while this section is at the top of the list.
+ */
+private val CampfireViewModel.SongGroup.Header.fastScrollerLabel: String
+    get() = when (this) {
+        is CampfireViewModel.SongGroup.Header.Artist -> initial?.toString() ?: SYMBOLS_LABEL
+        is CampfireViewModel.SongGroup.Header.Letter -> letter.toString()
+        CampfireViewModel.SongGroup.Header.Symbols -> SYMBOLS_LABEL
+    }
 
 /**
  * Pull to refresh only makes sense with touch input; on desktop the app bar has a refresh action instead.
@@ -269,4 +278,4 @@ private fun RefreshableContainer(
     )
 }
 
-private val SIDE_PANEL_WIDTH = 320.dp
+private const val SYMBOLS_LABEL = "#"

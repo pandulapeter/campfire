@@ -1,11 +1,6 @@
 package com.pandulapeter.campfire.shared.ui.screens.setlists
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -30,7 +24,6 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,9 +50,9 @@ import com.pandulapeter.campfire.shared.ui.components.EmptyState
 import com.pandulapeter.campfire.shared.ui.components.SectionHeader
 import com.pandulapeter.campfire.shared.ui.components.SectionHeaderAction
 import com.pandulapeter.campfire.shared.ui.components.SongListItem
-import com.pandulapeter.campfire.shared.ui.components.SongsControls
+import com.pandulapeter.campfire.shared.ui.components.SongsControlsSidePanel
+import com.pandulapeter.campfire.shared.ui.components.besideSidePanel
 import com.pandulapeter.campfire.shared.ui.components.WindowSize
-import com.pandulapeter.campfire.shared.ui.platform.PlatformVerticalScrollbar
 import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
 import com.pandulapeter.campfire.shared.localization.stringResource
 import sh.calvin.reorderable.ReorderableItem
@@ -74,47 +67,38 @@ internal fun SetlistsScreen(
     contentPadding: PaddingValues
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    Column(
-        modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
+    Row(
+        modifier = modifier.fillMaxSize()
     ) {
-        CampfireTopAppBar(
-            scrollBehavior = scrollBehavior,
-            title = { Text(stringResource(Res.string.setlists)) },
-            actions = {
-                if (!windowSize.usesSidePanel) {
-                    IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistsControls) }) {
-                        Icon(
-                            imageVector = CampfireIcons.tune,
-                            contentDescription = stringResource(Res.string.filters)
-                        )
+        Column(
+            modifier = Modifier.weight(1f).fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
+        ) {
+            CampfireTopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = { Text(stringResource(Res.string.setlists)) },
+                actions = {
+                    if (!windowSize.usesSidePanel) {
+                        IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistsControls) }) {
+                            Icon(
+                                imageVector = CampfireIcons.tune,
+                                contentDescription = stringResource(Res.string.filters)
+                            )
+                        }
                     }
                 }
-            }
-        )
-        Row(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            SetlistList(
-                modifier = Modifier.weight(1f).fillMaxSize(),
-                viewModel = viewModel,
-                contentPadding = contentPadding
             )
-            AnimatedVisibility(
-                visible = windowSize.usesSidePanel,
-                enter = expandHorizontally() + fadeIn(),
-                exit = shrinkHorizontally() + fadeOut()
-            ) {
-                Row {
-                    VerticalDivider()
-                    SongsControls(
-                        modifier = Modifier.width(SIDE_PANEL_WIDTH).fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainerLow),
-                        viewModel = viewModel,
-                        shouldIncludeSorting = false,
-                        contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding())
-                    )
-                }
-            }
+            SetlistList(
+                modifier = Modifier.fillMaxSize(),
+                viewModel = viewModel,
+                contentPadding = contentPadding.besideSidePanel(windowSize.usesSidePanel)
+            )
         }
+        SongsControlsSidePanel(
+            isVisible = windowSize.usesSidePanel,
+            viewModel = viewModel,
+            shouldIncludeSorting = false,
+            contentPadding = contentPadding
+        )
     }
 }
 
@@ -137,96 +121,88 @@ private fun SetlistList(
         }
     }
     val layoutDirection = LocalLayoutDirection.current
-    Box(
-        modifier = modifier
+    LazyColumn(
+        modifier = modifier,
+        state = listState,
+        contentPadding = PaddingValues(
+            start = contentPadding.calculateStartPadding(layoutDirection),
+            end = contentPadding.calculateEndPadding(layoutDirection),
+            bottom = contentPadding.calculateBottomPadding() + FAB_CLEARANCE
+        )
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = listState,
-            contentPadding = PaddingValues(
-                start = contentPadding.calculateStartPadding(layoutDirection),
-                end = contentPadding.calculateEndPadding(layoutDirection),
-                bottom = contentPadding.calculateBottomPadding() + FAB_CLEARANCE
-            )
-        ) {
-            when {
-                setlistsWithSongs.isEmpty() -> item(key = "empty") {
-                    EmptyState(
-                        modifier = Modifier.fillMaxWidth().animateItem(),
-                        icon = CampfireIcons.setlists,
-                        title = stringResource(Res.string.setlists_no_data),
-                        hint = stringResource(Res.string.setlists_no_data_hint)
-                    )
-                }
+        when {
+            setlistsWithSongs.isEmpty() -> item(key = "empty") {
+                EmptyState(
+                    modifier = Modifier.fillMaxWidth().animateItem(),
+                    icon = CampfireIcons.setlists,
+                    title = stringResource(Res.string.setlists_no_data),
+                    hint = stringResource(Res.string.setlists_no_data_hint)
+                )
+            }
 
-                allSongs.isEmpty() -> item(key = "empty") {
-                    EmptyState(
-                        modifier = Modifier.fillMaxWidth().animateItem(),
-                        icon = CampfireIcons.songs,
-                        title = stringResource(Res.string.songs_no_data),
-                        hint = stringResource(Res.string.songs_no_data_hint)
-                    )
-                }
+            allSongs.isEmpty() -> item(key = "empty") {
+                EmptyState(
+                    modifier = Modifier.fillMaxWidth().animateItem(),
+                    icon = CampfireIcons.songs,
+                    title = stringResource(Res.string.songs_no_data),
+                    hint = stringResource(Res.string.songs_no_data_hint)
+                )
+            }
 
-                else -> setlistsWithSongs.forEach { setlistWithSongs ->
-                    stickyHeader(key = "setlist_${setlistWithSongs.setlist.id}") {
-                        SectionHeader(
-                            modifier = Modifier.animateItem(),
-                            text = setlistWithSongs.setlist.title,
-                            action = {
-                                SectionHeaderAction(
-                                    icon = CampfireIcons.delete,
-                                    contentDescription = stringResource(Res.string.setlists_delete_setlist),
-                                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlistWithSongs.setlist)) }
-                                )
-                            }
-                        )
-                    }
-                    if (setlistWithSongs.songs.isEmpty()) {
-                        item(key = "hint_${setlistWithSongs.setlist.id}") {
-                            Text(
-                                modifier = Modifier.animateItem().padding(horizontal = 16.dp, vertical = 8.dp),
-                                text = stringResource(Res.string.setlists_reorder_hint),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+            else -> setlistsWithSongs.forEach { setlistWithSongs ->
+                stickyHeader(key = "setlist_${setlistWithSongs.setlist.id}") {
+                    SectionHeader(
+                        modifier = Modifier.animateItem(),
+                        text = setlistWithSongs.setlist.title,
+                        action = {
+                            SectionHeaderAction(
+                                icon = CampfireIcons.delete,
+                                contentDescription = stringResource(Res.string.setlists_delete_setlist),
+                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlistWithSongs.setlist)) }
                             )
                         }
+                    )
+                }
+                if (setlistWithSongs.songs.isEmpty()) {
+                    item(key = "hint_${setlistWithSongs.setlist.id}") {
+                        Text(
+                            modifier = Modifier.animateItem().padding(horizontal = 16.dp, vertical = 8.dp),
+                            text = stringResource(Res.string.setlists_reorder_hint),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                    itemsIndexed(
-                        items = setlistWithSongs.songs,
-                        key = { _, song -> SetlistItemKey(setlistId = setlistWithSongs.setlist.id, songId = song.id).string.orEmpty() }
-                    ) { index, song ->
-                        val key = SetlistItemKey(setlistId = setlistWithSongs.setlist.id, songId = song.id)
-                        ReorderableItem(
-                            modifier = Modifier.animateItem(),
-                            state = reorderableState,
-                            key = key.string.orEmpty()
-                        ) { isBeingDragged ->
-                            DismissibleSongItem(
-                                onDismissed = { viewModel.removeSongFromSetlist(songId = song.id, setlistId = setlistWithSongs.setlist.id) }
+                }
+                itemsIndexed(
+                    items = setlistWithSongs.songs,
+                    key = { _, song -> SetlistItemKey(setlistId = setlistWithSongs.setlist.id, songId = song.id).string.orEmpty() }
+                ) { index, song ->
+                    val key = SetlistItemKey(setlistId = setlistWithSongs.setlist.id, songId = song.id)
+                    ReorderableItem(
+                        modifier = Modifier.animateItem(),
+                        state = reorderableState,
+                        key = key.string.orEmpty()
+                    ) { isBeingDragged ->
+                        DismissibleSongItem(
+                            onDismissed = { viewModel.removeSongFromSetlist(songId = song.id, setlistId = setlistWithSongs.setlist.id) }
+                        ) {
+                            val elevation by animateDpAsState(if (isBeingDragged) 8.dp else 0.dp)
+                            Surface(
+                                shadowElevation = elevation
                             ) {
-                                val elevation by animateDpAsState(if (isBeingDragged) 8.dp else 0.dp)
-                                Surface(
-                                    shadowElevation = elevation
-                                ) {
-                                    SongListItem(
-                                        modifier = Modifier.longPressDraggableHandle(),
-                                        song = song,
-                                        isDownloaded = rawSongDetails[song.url] != null,
-                                        isBeingDragged = isBeingDragged,
-                                        onClick = { viewModel.openSongInSetlist(setlistWithSongs, index) }
-                                    )
-                                }
+                                SongListItem(
+                                    modifier = Modifier.longPressDraggableHandle(),
+                                    song = song,
+                                    isDownloaded = rawSongDetails[song.url] != null,
+                                    isBeingDragged = isBeingDragged,
+                                    onClick = { viewModel.openSongInSetlist(setlistWithSongs, index) }
+                                )
                             }
                         }
                     }
                 }
             }
         }
-        PlatformVerticalScrollbar(
-            listState = listState,
-            modifier = Modifier.padding(contentPadding)
-        )
     }
 }
 
@@ -278,5 +254,4 @@ private class SetlistItemKey(val string: String?) {
     }
 }
 
-private val SIDE_PANEL_WIDTH = 320.dp
 private val FAB_CLEARANCE = 88.dp

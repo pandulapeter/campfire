@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.shared.ui.components
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -10,6 +11,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,6 +53,25 @@ internal fun CampfireTopAppBar(
             ),
             scrollBehavior = scrollBehavior
         )
+    }
+}
+
+/**
+ * Programmatic scrolls (jumping to the top on a new query, dragging the fast scroller) bypass the nested scroll
+ * connection, so the overlap state of the app bar is corrected from the list here.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun KeepTopAppBarInSync(
+    scrollBehavior: TopAppBarScrollBehavior,
+    listState: LazyListState
+) = LaunchedEffect(scrollBehavior, listState) {
+    snapshotFlow { listState.canScrollBackward }.collect { canScrollBackward ->
+        if (!canScrollBackward) {
+            scrollBehavior.state.contentOffset = 0f
+        } else if (scrollBehavior.state.contentOffset == 0f) {
+            scrollBehavior.state.contentOffset = scrollBehavior.state.heightOffsetLimit
+        }
     }
 }
 
