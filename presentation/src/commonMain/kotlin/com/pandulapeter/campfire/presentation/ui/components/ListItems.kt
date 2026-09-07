@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -28,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -50,10 +50,13 @@ internal fun SongListItem(
     onClick: () -> Unit
 ) {
     val alpha by animateFloatAsState(if (isDownloaded) 1f else 0.6f, MaterialTheme.motionScheme.defaultEffectsSpec())
-    val containerColor by animateColorAsState(
-        if (isBeingDragged) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surface,
+    // A progress value instead of an animated color, so that the row follows the color scheme immediately while it
+    // is animating between the light and the dark theme (a color animation would chase it and trail behind).
+    val dragProgress by animateFloatAsState(
+        if (isBeingDragged) 1f else 0f,
         MaterialTheme.motionScheme.defaultEffectsSpec()
     )
+    val containerColor = lerp(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceContainerHigh, dragProgress)
     ListItem(
         modifier = modifier.clickable(onClick = onClick).alpha(alpha),
         colors = ListItemDefaults.colors(containerColor = containerColor),

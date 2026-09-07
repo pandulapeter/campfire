@@ -57,6 +57,11 @@ import kotlin.math.max
  *
  * @param availableHeight The height the song can occupy without scrolling; the column count is picked so that it
  * fits into this if it can.
+ * @param extraWidth How much wider this layout is going to be once the animation that is currently resizing it has
+ * finished (see [SongDetailsScreen]'s settled width). The column count is decided for that final width, so that the
+ * sections do not flow into a different number of columns for the duration of a navigation transition and then jump
+ * back. While it is not zero the sections also stop animating to their new place: the layout is following a width
+ * that changes on every frame, and springing after each of those only makes it lag behind.
  * @param fontScale Multiplier applied to the text sizes (and to the column widths, so that larger text does not get
  * squeezed into narrow columns).
  */
@@ -66,6 +71,7 @@ internal fun SongLyrics(
     modifier: Modifier = Modifier,
     rawData: String,
     availableHeight: Dp = Dp.Unspecified,
+    extraWidth: Dp = 0.dp,
     shouldShowChords: Boolean = true,
     fontScale: Float = 1f
 ) {
@@ -85,10 +91,11 @@ internal fun SongLyrics(
             maxColumnWidth = MAX_COLUMN_WIDTH * fontScale,
             columnGap = COLUMN_GAP,
             sectionGap = SECTION_GAP,
-            availableHeight = availableHeight
+            availableHeight = availableHeight,
+            extraWidth = extraWidth
         ) {
             sections.forEach { section ->
-                val sectionModifier = Modifier.animateBounds(this@LookaheadScope)
+                val sectionModifier = if (extraWidth > 0.dp) Modifier else Modifier.animateBounds(this@LookaheadScope)
                 if (section.header?.section == SongSection.CHORUS) {
                     Surface(
                         modifier = sectionModifier,
@@ -201,6 +208,10 @@ private fun TextStyle.scaled(scale: Float) = copy(
  * The candidate column counts are evaluated with the sections' intrinsic heights (they are only measured once, with
  * the width that won), starting from a single column and jumping straight to the smallest count that could possibly
  * fit whenever the current one does not.
+ *
+ * The count is decided for the width the layout settles at ([extraWidth]), the columns themselves are laid out in
+ * the width that is available right now, so that a layout that is still being resized keeps its sections where they
+ * are and only lets them grow into the space as it arrives.
  */
 @Composable
 private fun SongSectionsLayout(
@@ -210,24 +221,26 @@ private fun SongSectionsLayout(
     columnGap: Dp,
     sectionGap: Dp,
     availableHeight: Dp,
+    extraWidth: Dp,
     content: @Composable () -> Unit
 ) = Layout(
     modifier = modifier,
     content = content
 ) { measurables, constraints ->
     val width = constraints.maxWidth
+    val settledWidth = width + extraWidth.roundToPx()
     val columnGapPx = columnGap.roundToPx()
     val sectionGapPx = sectionGap.roundToPx()
     val maxColumnWidthPx = maxColumnWidth.roundToPx()
     val availableHeightPx = if (availableHeight.isSpecified) availableHeight.roundToPx() else 0
-    val maxColumnCount = ((width + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceIn(1, maxOf(1, measurables.size))
-    fun columnWidthFor(columnCount: Int) = ((width - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
+    val maxColumnCount = ((settledWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceIn(1, maxOf(1, measurables.size))
+    fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
 
     var columnCount = maxColumnCount
     if (availableHeightPx > 0) {
         var candidate = 1
         while (candidate < maxColumnCount) {
-            val heights = measurables.map { it.maxIntrinsicHeight(columnWidthFor(candidate)) }
+            val heights = measurables.map { it.maxIntrinsicHeight(columnWidthFor(settledWidth, candidate)) }
             if (heights.balanceIntoColumns(candidate, sectionGapPx).height <= availableHeightPx) break
             // Even a perfectly even split needs this many columns, so there is no point in trying the ones in between.
             val totalHeight = heights.sum() + sectionGapPx * (heights.size - 1).coerceAtLeast(0)
@@ -236,7 +249,7 @@ private fun SongSectionsLayout(
         columnCount = candidate.coerceAtMost(maxColumnCount)
     }
 
-    val columnWidth = columnWidthFor(columnCount)
+    val columnWidth = columnWidthFor(width, columnCount)
     val placeables = measurables.map { it.measure(Constraints(minWidth = columnWidth, maxWidth = columnWidth, maxHeight = constraints.maxHeight)) }
     val columns = placeables.map { it.height }.balanceIntoColumns(columnCount, sectionGapPx)
     val contentWidth = columnWidth * columnCount + columnGapPx * (columnCount - 1)

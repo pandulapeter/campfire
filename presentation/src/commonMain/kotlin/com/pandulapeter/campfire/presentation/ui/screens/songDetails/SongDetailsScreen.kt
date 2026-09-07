@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
@@ -61,6 +62,12 @@ import org.jetbrains.compose.resources.painterResource
  * adjusted from the app bar: inline steppers when the window is wide enough, otherwise from a bottom sheet behind
  * a single "display options" action, so that the bar does not get crowded. The text size can also be changed with
  * a pinch or Ctrl / Cmd + scroll on the content itself, see [fontScaleGestures].
+ *
+ * @param settledWidth The width this screen has once the navigation chrome has finished animating. While a
+ * navigation transition is running the screen is still as narrow as the rail next to it leaves it, and laying the
+ * lyrics out for that would flow them into fewer columns for the duration of the transition, only to reflow them
+ * once the rail is gone. Only the width needs this: the bar that could change the height instead of the width is
+ * only used on windows narrow enough for a single column.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -69,6 +76,7 @@ internal fun SongDetailsScreen(
     viewModel: CampfireViewModel,
     destination: CampfireDestination.SongDetails,
     windowSize: WindowSize,
+    settledWidth: Dp,
     contentPadding: PaddingValues,
     onBack: () -> Unit
 ) {
@@ -194,6 +202,7 @@ internal fun SongDetailsScreen(
                 transposition = transpositions[TranspositionKey(song.id, destination.setlistId)] ?: 0,
                 shouldShowChords = shouldShowChords,
                 fontScale = fontScale,
+                settledWidth = settledWidth,
                 contentPadding = contentPadding,
                 transpose = viewModel::transpose
             )
@@ -209,6 +218,7 @@ private fun SongDetailsPage(
     transposition: Int,
     shouldShowChords: Boolean,
     fontScale: Float,
+    settledWidth: Dp,
     contentPadding: PaddingValues,
     transpose: (rawData: String, transposition: Int) -> String
 ) = AnimatedContent(
@@ -248,6 +258,8 @@ private fun SongDetailsPage(
                     ),
                 rawData = transposedRawData,
                 availableHeight = maxHeight - topPadding - bottomPadding,
+                // The pages fill the screen, so whatever the screen is still missing this layout is missing too.
+                extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
                 shouldShowChords = shouldShowChords,
                 fontScale = fontScale
             )

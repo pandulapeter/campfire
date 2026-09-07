@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -43,6 +42,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.layout
@@ -51,6 +51,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -92,12 +93,20 @@ internal fun BoxScope.FastScroller(
         targetValue = if (isVisible) 1f else 0f,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
     )
-    val thumbColor by animateColorAsState(
-        when {
-            state.isDragging -> MaterialTheme.colorScheme.primary
-            isHovered -> MaterialTheme.colorScheme.onSurfaceVariant
-            else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = IDLE_THUMB_ALPHA)
-        }
+    // Progress values instead of animated colors, so that the thumb follows the color scheme immediately while it is
+    // animating between the light and the dark theme (a color animation would chase it and trail behind).
+    val hoverProgress by animateFloatAsState(
+        targetValue = if (isHovered || state.isDragging) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
+    )
+    val dragProgress by animateFloatAsState(
+        targetValue = if (state.isDragging) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
+    )
+    val thumbColor = lerp(
+        start = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = lerp(IDLE_THUMB_ALPHA, 1f, hoverProgress)),
+        stop = MaterialTheme.colorScheme.primary,
+        fraction = dragProgress
     )
     val label = labelForItem(gridState.firstVisibleItemIndex)
 

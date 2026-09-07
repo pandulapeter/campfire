@@ -5,6 +5,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -45,6 +48,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
@@ -109,6 +113,8 @@ private fun CampfireContent(
     modifier = Modifier.fillMaxSize()
 ) {
     val windowSize = WindowSize.fromWidth(maxWidth)
+    // Both bars are hidden on the song details screen, so it always settles at the full width of the window.
+    val settledSongDetailsWidth = maxWidth
     val backStack = viewModel.backStack
     val currentDestination = backStack.lastOrNull()
     val currentTopLevelDestination = backStack.lastOrNull { it is CampfireDestination.TopLevel } as? CampfireDestination.TopLevel
@@ -127,8 +133,8 @@ private fun CampfireContent(
             // Expanding / shrinking (instead of sliding) lets the content area follow the bar frame by frame.
             AnimatedVisibility(
                 visible = isNavigationBarVisible,
-                enter = expandVertically(motionScheme.defaultSpatialSpec()) + fadeIn(motionScheme.defaultEffectsSpec()),
-                exit = shrinkVertically(motionScheme.defaultSpatialSpec()) + fadeOut(motionScheme.defaultEffectsSpec())
+                enter = expandVertically(BAR_SIZE_SPEC) + fadeIn(motionScheme.defaultEffectsSpec()),
+                exit = shrinkVertically(BAR_SIZE_SPEC) + fadeOut(motionScheme.defaultEffectsSpec())
             ) {
                 NavigationBar {
                     CampfireDestination.TopLevel.entries.forEach { destination ->
@@ -164,11 +170,12 @@ private fun CampfireContent(
         Row(
             modifier = Modifier.fillMaxSize()
         ) {
-            // The rail shrinks with the same spatial spring that moves the screens, so the content follows it smoothly.
+            // The rail shrinks with almost the same spatial spring that moves the screens, so the content follows it
+            // smoothly, see BAR_SIZE_SPEC.
             AnimatedVisibility(
                 visible = isNavigationRailVisible,
-                enter = expandHorizontally(motionScheme.defaultSpatialSpec()) + fadeIn(motionScheme.defaultEffectsSpec()),
-                exit = shrinkHorizontally(motionScheme.defaultSpatialSpec()) + fadeOut(motionScheme.defaultEffectsSpec())
+                enter = expandHorizontally(BAR_SIZE_SPEC) + fadeIn(motionScheme.defaultEffectsSpec()),
+                exit = shrinkHorizontally(BAR_SIZE_SPEC) + fadeOut(motionScheme.defaultEffectsSpec())
             ) {
                 NavigationRail {
                     CampfireDestination.TopLevel.entries.forEach { destination ->
@@ -228,6 +235,7 @@ private fun CampfireContent(
                             viewModel = viewModel,
                             destination = destination,
                             windowSize = windowSize,
+                            settledWidth = settledSongDetailsWidth,
                             contentPadding = contentPadding,
                             onBack = viewModel::navigateBack
                         )
@@ -335,6 +343,28 @@ private fun ReportNavigationTransition(viewModel: CampfireViewModel) {
     val isRunning = LocalNavAnimatedContentScope.current.transition.isRunning
     SideEffect { viewModel.setNavigationTransitionRunning(isRunning) }
 }
+
+/**
+ * Resizes the navigation bars, which is what gives the screens next to them their width.
+ *
+ * Deliberately not the motion scheme's spatial spec, which the screens themselves move with, for two reasons.
+ *
+ * Its springs are slightly underdamped, and the bars would overshoot their final size by a pixel or two at the end
+ * of the animation. That is invisible on the bar itself, but the screen next to it is that much narrower for a few
+ * frames, which is enough to drop a column from the song list when the window happens to be exactly as wide as a
+ * whole number of columns (the default desktop window is: 800dp minus the 80dp rail is exactly two columns).
+ *
+ * And it settles at about the same time as the screen it is animating next to. Everything the screens lay out from
+ * their width reflows for as long as the bar is still moving, down to individual lines of lyrics rewrapping, so the
+ * last of those reflows would land on the frame the transition ends on, in front of a screen that has come to rest.
+ * This is stiff enough to settle in the first third of the transition instead, while the screen arriving over it is
+ * still moving and half transparent.
+ */
+private val BAR_SIZE_SPEC = spring(
+    dampingRatio = Spring.DampingRatioNoBouncy,
+    stiffness = Spring.StiffnessMedium,
+    visibilityThreshold = IntSize.VisibilityThreshold
+)
 
 private const val NAVIGATION_GENERATION_METADATA_KEY = "navigationGeneration"
 private const val TAB_TRANSITION_DURATION = 300

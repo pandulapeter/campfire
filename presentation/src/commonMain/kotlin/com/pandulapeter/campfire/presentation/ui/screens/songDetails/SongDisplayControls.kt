@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -166,10 +167,13 @@ private fun Stepper(
             contentDescription = decreaseLabel
         )
     }
-    val color by animateColorAsState(
-        if (isDefault) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary,
+    // A progress value instead of an animated color, so that the label follows the color scheme immediately while it
+    // is animating between the light and the dark theme (a color animation would chase it and trail behind).
+    val changedProgress by animateFloatAsState(
+        if (isDefault) 0f else 1f,
         MaterialTheme.motionScheme.defaultEffectsSpec()
     )
+    val color = lerp(MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.primary, changedProgress)
     AnimatedContent(
         targetState = value,
         transitionSpec = { fadeIn() togetherWith fadeOut() }

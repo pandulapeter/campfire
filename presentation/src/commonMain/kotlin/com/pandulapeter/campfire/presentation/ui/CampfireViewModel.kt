@@ -95,11 +95,19 @@ class CampfireViewModel(
     /**
      * The text size multiplier of the song details screen. A pinch gesture changes it on every frame, so the latest
      * value is kept here and only written to the user preferences once the changes have settled.
+     *
+     * Started eagerly instead of with [asState]: the song details screen is the only subscriber, so a flow that only
+     * starts with it would hand the first song [DEFAULT_FONT_SCALE] and the saved scale a frame later, reflowing the
+     * lyrics into a different number of columns right as the screen animates in.
      */
     private val pendingFontScale = MutableStateFlow<Float?>(null)
     val fontScale = combine(userPreferences, pendingFontScale) { userPreferences, pendingFontScale ->
         pendingFontScale ?: userPreferences?.fontScale ?: DEFAULT_FONT_SCALE
-    }.asState(DEFAULT_FONT_SCALE)
+    }.distinctUntilChanged().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = DEFAULT_FONT_SCALE
+    )
 
     // Dialogs
     private val _visibleDialog = MutableStateFlow<DialogType?>(null)
