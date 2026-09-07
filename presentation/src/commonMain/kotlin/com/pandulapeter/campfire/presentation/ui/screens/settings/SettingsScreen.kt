@@ -46,6 +46,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_add_new_databas
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode_description
+import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow
+import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.settings_remove_database
 import com.pandulapeter.campfire.presentation.resources.settings_song_display
@@ -137,6 +139,15 @@ internal fun SettingsScreen(
                     description = stringResource(Res.string.settings_lyrics_only_mode_description),
                     isChecked = userPreferences?.isLyricsOnlyModeEnabled == true,
                     onCheckedChange = viewModel::setLyricsOnlyModeEnabled
+                )
+            }
+            item(key = "horizontal_section_flow") {
+                SwitchListItem(
+                    modifier = Modifier.animateItem(),
+                    title = stringResource(Res.string.settings_horizontal_section_flow),
+                    description = stringResource(Res.string.settings_horizontal_section_flow_description),
+                    isChecked = userPreferences?.isHorizontalSectionFlowEnabled == true,
+                    onCheckedChange = viewModel::setHorizontalSectionFlowEnabled
                 )
             }
             item(key = "header_theme") {

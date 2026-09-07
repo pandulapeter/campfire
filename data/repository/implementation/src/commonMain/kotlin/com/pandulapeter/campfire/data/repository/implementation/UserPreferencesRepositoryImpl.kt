@@ -23,6 +23,7 @@ internal class UserPreferencesRepositoryImpl(
             shouldShowSongsWithoutChords = false,
             showOnlyDownloadedSongs = false,
             isLyricsOnlyModeEnabled = false,
+            isHorizontalSectionFlowEnabled = false,
             fontScale = 1f,
             unselectedDatabaseUrls = emptyList(),
             sortingMode = UserPreferences.SortingMode.BY_ARTIST,

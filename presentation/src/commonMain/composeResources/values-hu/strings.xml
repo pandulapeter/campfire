@@ -49,6 +49,8 @@
     <string name="settings_song_display">Dalok megjelenítése</string>
     <string name="settings_lyrics_only_mode">Csak dalszöveg mód</string>
     <string name="settings_lyrics_only_mode_description">Akkordok elrejtése</string>
+    <string name="settings_horizontal_section_flow">Vízszintes szakaszelrendezés</string>
+    <string name="settings_horizontal_section_flow_description">A szakaszok az oszlopokon keresztül, majd lefelé követik egymást, így görgetés közben sosem kell visszalapozni</string>
     <string name="settings_user_interface_theme">Téma</string>
     <string name="settings_user_interface_theme_system_default">Rendszer</string>
     <string name="settings_user_interface_theme_dark">Sötét</string>

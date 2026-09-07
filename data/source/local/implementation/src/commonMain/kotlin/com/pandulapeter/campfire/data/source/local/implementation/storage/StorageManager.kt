@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.dao.Us
         UserPreferencesEntity::class,
         TranspositionEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @ConstructedBy(StorageManagerConstructor::class)
@@ -67,6 +67,12 @@ internal abstract class StorageManager : RoomDatabase() {
                 override fun migrate(connection: SQLiteConnection) {
                     connection.execSQL("ALTER TABLE ${SongEntity.TABLE_NAME} DROP COLUMN isExplicit")
                     connection.execSQL("ALTER TABLE ${UserPreferencesEntity.TABLE_NAME} DROP COLUMN shouldShowExplicitSongs")
+                }
+            },
+            // Version 5: "Horizontal section flow" setting of the song details screen.
+            object : Migration(4, 5) {
+                override fun migrate(connection: SQLiteConnection) {
+                    connection.execSQL("ALTER TABLE ${UserPreferencesEntity.TABLE_NAME} ADD COLUMN isHorizontalSectionFlowEnabled INTEGER NOT NULL DEFAULT 0")
                 }
             }
         )

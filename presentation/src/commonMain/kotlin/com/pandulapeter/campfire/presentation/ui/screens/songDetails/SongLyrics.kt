@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -50,10 +51,10 @@ import kotlin.math.max
  * When [shouldShowChords] is false, only the lyrics are rendered: the chords are dropped and lines that consisted of
  * nothing but chords (e.g. an intro) are skipped entirely.
  *
- * The song is split into sections (verse, chorus, ...) which are flowed into columns by [SongSectionsLayout].
- * Choruses are drawn on a raised card of their own so that they stand out from the surrounding sections.
- * A section is never split between columns, and sections animate to their new place when the column count
- * changes (e.g. when a window is resized).
+ * The song is split into sections (verse, chorus, ...) which are flowed into columns by [SongSectionsLayout], either
+ * top to bottom or, when [isHorizontalFlow] is set, in rows across the columns. Choruses are drawn on a raised card
+ * of their own so that they stand out from the surrounding sections. A section is never split between columns, and
+ * sections animate to their new place when the column count changes (e.g. when a window is resized).
  *
  * @param availableHeight The height the song can occupy without scrolling; the column count is picked so that it
  * fits into this if it can.
@@ -64,6 +65,8 @@ import kotlin.math.max
  * that changes on every frame, and springing after each of those only makes it lag behind.
  * @param fontScale Multiplier applied to the text sizes (and to the column widths, so that larger text does not get
  * squeezed into narrow columns).
+ * @param isHorizontalFlow Whether the sections should be read across the columns and then downwards (see
+ * [SongSectionsLayout]) instead of column by column.
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -73,7 +76,8 @@ internal fun SongLyrics(
     availableHeight: Dp = Dp.Unspecified,
     extraWidth: Dp = 0.dp,
     shouldShowChords: Boolean = true,
-    fontScale: Float = 1f
+    fontScale: Float = 1f,
+    isHorizontalFlow: Boolean = false
 ) {
     val sections = remember(rawData, shouldShowChords) {
         parseSongLines(rawData).let { if (shouldShowChords) it else it.withoutChords() }.groupIntoSections()
@@ -91,8 +95,11 @@ internal fun SongLyrics(
             maxColumnWidth = MAX_COLUMN_WIDTH * fontScale,
             columnGap = COLUMN_GAP,
             sectionGap = SECTION_GAP,
+            rowGap = ROW_GAP,
             availableHeight = availableHeight,
-            extraWidth = extraWidth
+            extraWidth = extraWidth,
+            sectionCount = sections.size,
+            isHorizontalFlow = isHorizontalFlow
         ) {
             sections.forEach { section ->
                 val sectionModifier = if (extraWidth > 0.dp) Modifier else Modifier.animateBounds(this@LookaheadScope)
@@ -125,6 +132,9 @@ internal fun SongLyrics(
                     )
                 }
             }
+            // The dividers between the rows of the horizontal flow. At most one fewer than there are sections is
+            // ever placed, the rest stay unmeasured.
+            repeat((sections.size - 1).coerceAtLeast(0)) { HorizontalDivider() }
         }
     }
 }
@@ -196,7 +206,16 @@ private fun TextStyle.scaled(scale: Float) = copy(
 )
 
 /**
- * Flows its children (the song sections) into columns.
+ * Flows its children (the song sections, followed by the dividers that may be drawn between rows of them) into
+ * columns.
+ *
+ * By default the sections fill the columns top to bottom and the reader continues at the top of the next column.
+ * With [isHorizontalFlow] they are read across the columns instead, the way the systems of sheet music are: the
+ * sections are packed into rows, so that a song that needs to be scrolled never sends the reader back to the top of
+ * the next column, since whatever has been scrolled past has been played. Consecutive short sections are stacked
+ * into the same column of a row as long as the stack is no taller than the tallest section of the row, so that the
+ * rows stay compact. The rows are told apart by a divider drawn in the gap between them. (A single column reads the
+ * same way in both modes, so it is always laid out as a plain column, without dividers.)
  *
  * The columns are made as wide (and therefore as few) as possible while the whole song still fits into
  * [availableHeight], so that the lyrics wrap as little as they can and the vertical space is actually used: a song
@@ -220,28 +239,39 @@ private fun SongSectionsLayout(
     maxColumnWidth: Dp,
     columnGap: Dp,
     sectionGap: Dp,
+    rowGap: Dp,
     availableHeight: Dp,
     extraWidth: Dp,
+    sectionCount: Int,
+    isHorizontalFlow: Boolean,
     content: @Composable () -> Unit
 ) = Layout(
     modifier = modifier,
     content = content
-) { measurables, constraints ->
+) { allMeasurables, constraints ->
+    val measurables = allMeasurables.take(sectionCount)
+    val dividerMeasurables = allMeasurables.drop(sectionCount)
     val width = constraints.maxWidth
     val settledWidth = width + extraWidth.roundToPx()
     val columnGapPx = columnGap.roundToPx()
     val sectionGapPx = sectionGap.roundToPx()
+    val rowGapPx = rowGap.roundToPx()
     val maxColumnWidthPx = maxColumnWidth.roundToPx()
     val availableHeightPx = if (availableHeight.isSpecified) availableHeight.roundToPx() else 0
     val maxColumnCount = ((settledWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceIn(1, maxOf(1, measurables.size))
     fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
+    fun List<Int>.arrangeInto(columnCount: Int) = if (isHorizontalFlow && columnCount > 1) {
+        flowIntoRows(columnCount, sectionGapPx, rowGapPx)
+    } else {
+        balanceIntoColumns(columnCount, sectionGapPx)
+    }
 
     var columnCount = maxColumnCount
     if (availableHeightPx > 0) {
         var candidate = 1
         while (candidate < maxColumnCount) {
             val heights = measurables.map { it.maxIntrinsicHeight(columnWidthFor(settledWidth, candidate)) }
-            if (heights.balanceIntoColumns(candidate, sectionGapPx).height <= availableHeightPx) break
+            if (heights.arrangeInto(candidate).height <= availableHeightPx) break
             // Even a perfectly even split needs this many columns, so there is no point in trying the ones in between.
             val totalHeight = heights.sum() + sectionGapPx * (heights.size - 1).coerceAtLeast(0)
             candidate = maxOf(candidate + 1, ceil(totalHeight.toDouble() / availableHeightPx).toInt())
@@ -251,46 +281,43 @@ private fun SongSectionsLayout(
 
     val columnWidth = columnWidthFor(width, columnCount)
     val placeables = measurables.map { it.measure(Constraints(minWidth = columnWidth, maxWidth = columnWidth, maxHeight = constraints.maxHeight)) }
-    val columns = placeables.map { it.height }.balanceIntoColumns(columnCount, sectionGapPx)
+    val arrangement = placeables.map { it.height }.arrangeInto(columnCount)
     val contentWidth = columnWidth * columnCount + columnGapPx * (columnCount - 1)
     val startX = ((width - contentWidth) / 2).coerceAtLeast(0)
-    var column = 0
-    var columnHeight = 0
-    var height = 0
-    val positions = placeables.mapIndexed { index, placeable ->
-        if (column + 1 < columnCount && index == columns.starts[column + 1]) {
-            column++
-            columnHeight = 0
-        }
-        val position = IntOffset(x = startX + column * (columnWidth + columnGapPx), y = columnHeight)
-        columnHeight += placeable.height + sectionGapPx
-        height = max(height, columnHeight - sectionGapPx)
-        position
+    val dividers = arrangement.dividerTops.take(dividerMeasurables.size).mapIndexed { index, top ->
+        val placeable = dividerMeasurables[index].measure(Constraints(minWidth = contentWidth, maxWidth = contentWidth))
+        placeable to IntOffset(x = startX, y = top - placeable.height / 2)
     }
-    layout(width, height.coerceIn(constraints.minHeight, constraints.maxHeight)) {
-        placeables.forEachIndexed { index, placeable -> placeable.place(positions[index]) }
+    layout(width, arrangement.height.coerceIn(constraints.minHeight, constraints.maxHeight)) {
+        placeables.forEachIndexed { index, placeable ->
+            placeable.place(x = startX + arrangement.columns[index] * (columnWidth + columnGapPx), y = arrangement.tops[index])
+        }
+        dividers.forEach { (placeable, position) -> placeable.place(position) }
     }
 }
 
 /**
- * The index of the first section of every column, and the height of the tallest column.
+ * Where every section goes: its column, its y position, the total height of the layout and the y positions
+ * (centers) of the gaps between rows that should get a divider.
  */
-private class SongColumns(
-    val starts: IntArray,
-    val height: Int
+private class SongArrangement(
+    val columns: IntArray,
+    val tops: IntArray,
+    val height: Int,
+    val dividerTops: List<Int> = emptyList()
 )
 
 /**
- * Distributes the sections (given by their heights, in order) into [columnCount] columns so that the columns end up
- * as close to equally tall as possible without ever splitting a section.
+ * Distributes the sections (given by their heights, in order) into [columnCount] columns, filled top to bottom, so
+ * that the columns end up as close to equally tall as possible without ever splitting a section.
  *
  * A greedy fill would leave every column a little short of the ideal height and dump all of the accumulated slack on
  * the last one, so instead this is a dynamic program over the split points that minimizes the squared deviation of
  * the columns from the ideal height. Every column gets at least one section, so the columns always span the full
  * width of the layout.
  */
-private fun List<Int>.balanceIntoColumns(columnCount: Int, sectionGap: Int): SongColumns {
-    if (isEmpty()) return SongColumns(starts = IntArray(columnCount), height = 0)
+private fun List<Int>.balanceIntoColumns(columnCount: Int, sectionGap: Int): SongArrangement {
+    if (isEmpty()) return SongArrangement(columns = IntArray(0), tops = IntArray(0), height = 0)
     val prefixHeights = IntArray(size + 1)
     forEachIndexed { index, height -> prefixHeights[index + 1] = prefixHeights[index] + height + sectionGap }
     fun heightOf(from: Int, until: Int) = prefixHeights[until] - prefixHeights[from] - sectionGap
@@ -322,11 +349,97 @@ private fun List<Int>.balanceIntoColumns(columnCount: Int, sectionGap: Int): Son
         starts[column] = splits[column][until]
         until = starts[column]
     }
+    val columns = IntArray(size)
+    val tops = IntArray(size)
     var height = 0
     for (column in 0 until columnCount) {
-        height = max(height, heightOf(starts[column], if (column == columnCount - 1) size else starts[column + 1]))
+        val end = if (column == columnCount - 1) size else starts[column + 1]
+        var top = 0
+        for (index in starts[column] until end) {
+            columns[index] = column
+            tops[index] = top
+            top += this[index] + sectionGap
+        }
+        height = max(height, top - sectionGap)
     }
-    return SongColumns(starts = starts, height = height)
+    return SongArrangement(columns = columns, tops = tops, height = height)
+}
+
+/**
+ * Packs the sections (given by their heights, in order) into rows of [columnCount] cells that are read across, then
+ * downwards. A row is as tall as its tallest section, and a cell may hold several consecutive sections (stacked
+ * [sectionGap] apart) as long as it stays no taller than that. Rows are [rowGap] apart.
+ *
+ * Where a row ends decides how well the rest of the song can be packed, so the row boundaries are chosen by a
+ * dynamic program (from the last section backwards) that minimizes the total height. A candidate row is feasible if
+ * a first-fit stacking of its sections needs no more than [columnCount] cells; first-fit is optimal for keeping
+ * consecutive sections in as few cells as possible. Adding a taller section to a row raises its cap, so a row that
+ * does not fit can become feasible again with more sections in it, which is why every length is tried. Leaving a
+ * cell empty can make the song shorter (a row of two short sections next to a hole is not as tall as one with a
+ * chorus in the third cell), but a hole in the middle of a song looks like a mistake while slack at its end looks
+ * natural, so rows with empty cells are avoided before the height is minimized, except for the last row.
+ */
+private fun List<Int>.flowIntoRows(columnCount: Int, sectionGap: Int, rowGap: Int): SongArrangement {
+    if (isEmpty()) return SongArrangement(columns = IntArray(0), tops = IntArray(0), height = 0)
+    // Returns the number of cells that first-fit stacking needs for the sections in [start, end) with the given cap.
+    fun cellCount(start: Int, end: Int, cap: Int): Int {
+        var cells = 1
+        var cellHeight = this[start]
+        for (index in start + 1 until end) {
+            if (cellHeight + sectionGap + this[index] <= cap) {
+                cellHeight += sectionGap + this[index]
+            } else {
+                cells++
+                cellHeight = this[index]
+            }
+        }
+        return cells
+    }
+    // costs[i] is the smallest cost (the number of rows with an empty cell, then the total height) of the sections
+    // from i onwards, rowEnds[i] where their first row ends.
+    val costs = LongArray(size + 1)
+    val rowEnds = IntArray(size + 1)
+    for (start in size - 1 downTo 0) {
+        var best = Long.MAX_VALUE
+        var tallest = 0
+        for (end in start + 1..size) {
+            tallest = max(tallest, this[end - 1])
+            val cells = cellCount(start, end, tallest)
+            if (cells > columnCount) continue
+            val holePenalty = if (end < size && cells < columnCount) HOLE_PENALTY else 0L
+            val cost = holePenalty + tallest + if (end < size) rowGap + costs[end] else 0
+            // Ties go to the longer row, so that the slack ends up at the bottom of the song rather than in its middle.
+            if (cost <= best) {
+                best = cost
+                rowEnds[start] = end
+            }
+        }
+        costs[start] = best
+    }
+    val columns = IntArray(size)
+    val tops = IntArray(size)
+    val dividerTops = mutableListOf<Int>()
+    var start = 0
+    var rowTop = 0
+    while (start < size) {
+        val end = rowEnds[start]
+        val cap = subList(start, end).max()
+        var column = 0
+        var cellHeight = 0
+        for (index in start until end) {
+            if (index > start && cellHeight + sectionGap + this[index] > cap) {
+                column++
+                cellHeight = 0
+            }
+            columns[index] = column
+            tops[index] = rowTop + cellHeight + if (cellHeight > 0) sectionGap else 0
+            cellHeight = tops[index] - rowTop + this[index]
+        }
+        rowTop += cap + rowGap
+        if (end < size) dividerTops += rowTop - rowGap / 2
+        start = end
+    }
+    return SongArrangement(columns = columns, tops = tops, height = rowTop - rowGap, dividerTops = dividerTops)
 }
 
 /**
@@ -562,5 +675,7 @@ private val MIN_COLUMN_WIDTH = 384.dp
 private val MAX_COLUMN_WIDTH = 560.dp
 private val COLUMN_GAP = 32.dp
 private val SECTION_GAP = 20.dp
+private val ROW_GAP = 40.dp
+private const val HOLE_PENALTY = 1L shl 40 // Larger than any height, so that a hole always costs more than height does.
 private const val LINE_HEIGHT_SAMPLE = "X"
 private const val PADDING = '\u00A0' // Non-breaking space, so that the padding never gets trimmed or wrapped.

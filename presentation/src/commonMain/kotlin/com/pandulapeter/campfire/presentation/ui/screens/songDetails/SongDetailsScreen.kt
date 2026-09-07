@@ -92,6 +92,7 @@ internal fun SongDetailsScreen(
     val pagerState = rememberPagerState(initialPage = destination.initialIndex.coerceIn(0, maxOf(0, songs.lastIndex))) { songs.size }
     val currentSong = songs.getOrNull(pagerState.currentPage)
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
+    val isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true
     val currentTransposition = currentSong?.let { transpositions[TranspositionKey(it.id, destination.setlistId)] } ?: 0
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
@@ -202,6 +203,7 @@ internal fun SongDetailsScreen(
                 transposition = transpositions[TranspositionKey(song.id, destination.setlistId)] ?: 0,
                 shouldShowChords = shouldShowChords,
                 fontScale = fontScale,
+                isHorizontalFlow = isHorizontalFlow,
                 settledWidth = settledWidth,
                 contentPadding = contentPadding,
                 transpose = viewModel::transpose
@@ -218,6 +220,7 @@ private fun SongDetailsPage(
     transposition: Int,
     shouldShowChords: Boolean,
     fontScale: Float,
+    isHorizontalFlow: Boolean,
     settledWidth: Dp,
     contentPadding: PaddingValues,
     transpose: (rawData: String, transposition: Int) -> String
@@ -261,7 +264,8 @@ private fun SongDetailsPage(
                 // The pages fill the screen, so whatever the screen is still missing this layout is missing too.
                 extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
                 shouldShowChords = shouldShowChords,
-                fontScale = fontScale
+                fontScale = fontScale,
+                isHorizontalFlow = isHorizontalFlow
             )
         }
     }

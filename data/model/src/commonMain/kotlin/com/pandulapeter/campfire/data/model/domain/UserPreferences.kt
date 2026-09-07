@@ -4,6 +4,7 @@ data class UserPreferences(
     val shouldShowSongsWithoutChords: Boolean,
     val showOnlyDownloadedSongs: Boolean,
     val isLyricsOnlyModeEnabled: Boolean,
+    val isHorizontalSectionFlowEnabled: Boolean, // Whether the song sections are read across the columns (then downwards) instead of column by column.
     val fontScale: Float, // Multiplier applied to the text size of the song details screen, 1 being the default.
     val unselectedDatabaseUrls: List<String>,
     val sortingMode: SortingMode,
