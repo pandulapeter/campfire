@@ -12,7 +12,8 @@ import java.net.URI
 
 /**
  * Desktop shell of the shared UI. Desktop has no back gesture, so the Escape key (see [handleKeyEvent]) dismisses the
- * visible modal, pops the back stack when there is none, and closes the application on the root screen.
+ * visible modal, pops the back stack when there is none, clears the Songs search query on the root screen if it's
+ * not already empty, and closes the application otherwise.
  */
 @Composable
 fun CampfireDesktopApp(
@@ -33,7 +34,11 @@ fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Bo
         // back stack behind an open dialog or bottom sheet. Those register their own back handlers: leaving the event
         // unconsumed lets the top one dismiss itself (with its exit animation).
         if (visibleDialog.value != null) return false
-        if (backStack.size > 1) navigateBack() else onExit()
+        when {
+            backStack.size > 1 -> navigateBack()
+            query.value.isNotEmpty() -> onQueryChanged("")
+            else -> onExit()
+        }
         return true
     }
     return false
