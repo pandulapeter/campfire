@@ -5,8 +5,8 @@ import com.pandulapeter.campfire.data.repository.dataRepositoryModule
 import com.pandulapeter.campfire.data.source.local.implementation.dataLocalSourceModule
 import com.pandulapeter.campfire.data.source.remote.implementation.dataRemoteSourceModule
 import com.pandulapeter.campfire.domain.implementation.domainModule
-import com.pandulapeter.campfire.presentation.ios.CampfireIosApp
-import com.pandulapeter.campfire.shared.presentationModule
+import com.pandulapeter.campfire.presentation.presentationModule
+import com.pandulapeter.campfire.presentation.ui.CampfireIosApp
 import org.koin.core.context.startKoin
 import platform.Foundation.NSURL
 import platform.UIKit.UIApplication

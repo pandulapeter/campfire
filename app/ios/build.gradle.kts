@@ -20,7 +20,7 @@ kotlin {
             implementation(project(":data:source:local:implementation"))
             implementation(project(":data:source:remote:implementation"))
             implementation(project(":domain:implementation"))
-            implementation(project(":presentation:ios"))
+            implementation(project(":presentation"))
             implementation(libs.compose.runtime)
             implementation(libs.compose.ui)
             implementation(libs.koin.core)

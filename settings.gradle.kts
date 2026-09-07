@@ -35,8 +35,5 @@ include(
     ":data:source:remote:implementation",
     ":domain:api",
     ":domain:implementation",
-    ":presentation:android",
-    ":presentation:desktop",
-    ":presentation:ios",
-    ":presentation:shared"
+    ":presentation"
 )

@@ -12,12 +12,12 @@ import com.pandulapeter.campfire.data.repository.dataRepositoryModule
 import com.pandulapeter.campfire.data.source.local.implementation.dataLocalSourceModule
 import com.pandulapeter.campfire.data.source.remote.implementation.dataRemoteSourceModule
 import com.pandulapeter.campfire.domain.implementation.domainModule
-import com.pandulapeter.campfire.presentation.CampfireDesktopApp
-import com.pandulapeter.campfire.presentation.handleKeyEvent
+import com.pandulapeter.campfire.presentation.presentationModule
+import com.pandulapeter.campfire.presentation.ui.CampfireDesktopApp
+import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.handleKeyEvent
 import com.pandulapeter.campfire.resources.Res
 import com.pandulapeter.campfire.resources.app_icon
-import com.pandulapeter.campfire.shared.presentationModule
-import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import java.awt.Dimension
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.KoinApplication

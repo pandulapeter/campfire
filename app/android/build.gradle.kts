@@ -10,7 +10,7 @@ dependencies {
     implementation(project(":data:source:local:implementation"))
     implementation(project(":data:source:remote:implementation"))
     implementation(project(":domain:implementation"))
-    implementation(project(":presentation:android"))
+    implementation(project(":presentation"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.browser)

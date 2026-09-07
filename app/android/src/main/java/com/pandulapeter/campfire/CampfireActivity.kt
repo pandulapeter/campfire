@@ -8,7 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import android.net.Uri
-import com.pandulapeter.campfire.presentation.android.CampfireAndroidApp
+import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
 
 class CampfireActivity : AppCompatActivity() {
 
