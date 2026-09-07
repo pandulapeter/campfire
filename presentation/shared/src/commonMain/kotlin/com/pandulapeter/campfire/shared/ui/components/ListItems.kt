@@ -57,11 +57,22 @@ internal fun SongListItem(
         modifier = modifier.clickable(onClick = onClick).alpha(alpha),
         colors = ListItemDefaults.colors(containerColor = containerColor),
         headlineContent = {
-            Text(
-                text = song.title,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    modifier = Modifier.weight(1f, fill = false),
+                    text = song.title,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (!song.hasChords) {
+                    Text(
+                        modifier = Modifier.padding(start = 8.dp),
+                        text = stringResource(Res.string.songs_lyrics_only),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         },
         supportingContent = {
             Text(
@@ -69,15 +80,6 @@ internal fun SongListItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-        },
-        trailingContent = if (song.hasChords) null else {
-            {
-                Text(
-                    text = stringResource(Res.string.songs_lyrics_only),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
     )
 }

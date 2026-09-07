@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.buildLogic.plugins
 
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import com.pandulapeter.campfire.buildLogic.extensions.configureKotlinMultiplatform
 import com.pandulapeter.campfire.buildLogic.extensions.libs
 import com.pandulapeter.campfire.buildLogic.extensions.pluginId
@@ -17,6 +18,13 @@ class ComposeLibraryPlugin : Plugin<Project> {
             apply(libs.pluginId("compose"))
             apply(libs.pluginId("compose-compiler"))
         }
-        extensions.configure<KotlinMultiplatformExtension>(::configureKotlinMultiplatform)
+        extensions.configure<KotlinMultiplatformExtension> {
+            configureKotlinMultiplatform(this)
+            configure<KotlinMultiplatformAndroidLibraryTarget> {
+                androidResources {
+                    enable = true
+                }
+            }
+        }
     }
 }

@@ -302,11 +302,12 @@ private fun CampfireBottomSheet(
     onDismiss: () -> Unit,
     content: @Composable (sheetState: SheetState, dismiss: () -> Unit) -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val coroutineScope = rememberCoroutineScope()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState
+        sheetState = sheetState,
+        dragHandle = null
     ) {
         content(sheetState) {
             coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }

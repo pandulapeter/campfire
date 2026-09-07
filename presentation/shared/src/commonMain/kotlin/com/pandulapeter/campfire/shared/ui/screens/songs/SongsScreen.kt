@@ -32,7 +32,10 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -175,8 +178,17 @@ private fun SongList(
         }
     }
 
-    // Scroll back to the top whenever the search query or the sorting changes, before the new items arrive.
-    LaunchedEffect(query, userPreferences?.sortingMode) { listState.scrollToItem(0) }
+    // Scroll back to the top whenever the search query or the sorting changes, before the new items arrive. The
+    // combination that was last scrolled to the top is remembered across recompositions and state restoration, so
+    // that coming back from the song details keeps the restored scroll position instead of jumping to the top.
+    val scrollToTopKey = "$query|${userPreferences?.sortingMode?.name}"
+    var lastScrollToTopKey by rememberSaveable { mutableStateOf(scrollToTopKey) }
+    LaunchedEffect(scrollToTopKey) {
+        if (scrollToTopKey != lastScrollToTopKey) {
+            lastScrollToTopKey = scrollToTopKey
+            listState.scrollToItem(0)
+        }
+    }
 
     RefreshableContainer(
         modifier = modifier,

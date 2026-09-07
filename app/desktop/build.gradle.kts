@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":data:source:remote:implementation"))
     implementation(project(":domain:implementation"))
     implementation(project(":presentation:desktop"))
+    implementation(libs.compose.components.resources)
     implementation(compose.desktop.currentOs)
     implementation(libs.koin.compose)
     implementation(libs.koin.compose.viewmodel)
@@ -41,10 +42,16 @@ compose.desktop {
                 iconFile.set(project.file("src/main/resources/appIcon.ico"))
             }
             linux {
-                iconFile.set(project.file("src/main/resources/appIcon.png"))
+                iconFile.set(project.file("src/main/composeResources/drawable/app_icon.png"))
             }
         }
     }
+}
+
+compose.resources {
+    publicResClass = false
+    packageOfResClass = "com.pandulapeter.campfire.resources"
+    generateResClass = always
 }
 
 kotlin {
