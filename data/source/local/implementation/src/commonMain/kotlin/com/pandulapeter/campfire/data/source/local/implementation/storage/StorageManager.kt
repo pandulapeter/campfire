@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.dao.Us
         UserPreferencesEntity::class,
         TranspositionEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @ConstructedBy(StorageManagerConstructor::class)
@@ -54,6 +54,12 @@ internal abstract class StorageManager : RoomDatabase() {
             object : Migration(1, 2) {
                 override fun migrate(connection: SQLiteConnection) {
                     connection.execSQL("ALTER TABLE ${UserPreferencesEntity.TABLE_NAME} ADD COLUMN isLyricsOnlyModeEnabled INTEGER NOT NULL DEFAULT 0")
+                }
+            },
+            // Version 3: text size of the song details screen.
+            object : Migration(2, 3) {
+                override fun migrate(connection: SQLiteConnection) {
+                    connection.execSQL("ALTER TABLE ${UserPreferencesEntity.TABLE_NAME} ADD COLUMN fontScale REAL NOT NULL DEFAULT 1.0")
                 }
             }
         )

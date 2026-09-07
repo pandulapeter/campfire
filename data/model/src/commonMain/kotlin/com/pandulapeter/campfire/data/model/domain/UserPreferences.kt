@@ -5,6 +5,7 @@ data class UserPreferences(
     val shouldShowSongsWithoutChords: Boolean,
     val showOnlyDownloadedSongs: Boolean,
     val isLyricsOnlyModeEnabled: Boolean,
+    val fontScale: Float, // Multiplier applied to the text size of the song details screen, 1 being the default.
     val unselectedDatabaseUrls: List<String>,
     val sortingMode: SortingMode,
     val uiMode: UiMode,

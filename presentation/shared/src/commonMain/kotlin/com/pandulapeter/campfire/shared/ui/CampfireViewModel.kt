@@ -23,21 +23,26 @@ import com.pandulapeter.campfire.domain.api.useCases.SaveTranspositionsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeRawSongDetailsUseCase
 import com.pandulapeter.campfire.shared.ui.navigation.CampfireDestination
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
+@OptIn(ExperimentalUuidApi::class, FlowPreview::class)
 class CampfireViewModel(
     getScreenData: GetScreenDataUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
@@ -87,12 +92,26 @@ class CampfireViewModel(
         setlists.map { setlist -> SetlistWithSongs(setlist = setlist, songs = setlist.songIds.mapNotNull { songsById[it] }) }
     }.asState(emptyList())
 
+    /**
+     * The text size multiplier of the song details screen. A pinch gesture changes it on every frame, so the latest
+     * value is kept here and only written to the user preferences once the changes have settled.
+     */
+    private val pendingFontScale = MutableStateFlow<Float?>(null)
+    val fontScale = combine(userPreferences, pendingFontScale) { userPreferences, pendingFontScale ->
+        pendingFontScale ?: userPreferences?.fontScale ?: DEFAULT_FONT_SCALE
+    }.asState(DEFAULT_FONT_SCALE)
+
     // Dialogs
     private val _visibleDialog = MutableStateFlow<DialogType?>(null)
     val visibleDialog: StateFlow<DialogType?> = _visibleDialog.asStateFlow()
 
     init {
         viewModelScope.launch { loadScreenData(false) }
+        viewModelScope.launch {
+            pendingFontScale.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { fontScale ->
+                userPreferences.value?.let { saveUserPreferences(it.copy(fontScale = fontScale)) }
+            }
+        }
     }
 
     // Navigation
@@ -271,6 +290,19 @@ class CampfireViewModel(
 
     fun setLyricsOnlyModeEnabled(value: Boolean) = updateUserPreferences { copy(isLyricsOnlyModeEnabled = value) }
 
+    fun setFontScale(value: Float) = pendingFontScale.update { value.coerceIn(MIN_FONT_SCALE, MAX_FONT_SCALE) }
+
+    /**
+     * Moves the font scale by the given number of [FONT_SCALE_STEP]s. A value set by a gesture is first snapped to the
+     * grid of steps in the direction of the change, so that a single tap always lands on the next step (125% goes to
+     * 120% or 130%, never past them).
+     */
+    fun adjustFontScale(steps: Int) {
+        val currentSteps = fontScale.value / FONT_SCALE_STEP
+        val snappedSteps = if (steps > 0) floor(currentSteps + FONT_SCALE_STEP_TOLERANCE) else ceil(currentSteps - FONT_SCALE_STEP_TOLERANCE)
+        setFontScale((snappedSteps + steps) * FONT_SCALE_STEP)
+    }
+
     fun setSortingMode(value: UserPreferences.SortingMode) = updateUserPreferences { copy(sortingMode = value) }
 
     fun setUiMode(value: UserPreferences.UiMode) = updateUserPreferences { copy(uiMode = value) }
@@ -350,6 +382,7 @@ class CampfireViewModel(
         data object SongsControls : DialogType
         data object SetlistsControls : DialogType
         data class SetlistPicker(val songId: String, val currentSetlistId: String?) : DialogType
+        data class SongDisplayControls(val songId: String, val setlistId: String?) : DialogType
         data class DeleteSetlist(val setlist: Setlist) : DialogType
         data class DeleteDatabase(val database: Database) : DialogType
     }
@@ -357,6 +390,12 @@ class CampfireViewModel(
     companion object {
         const val MIN_TRANSPOSITION = -11
         const val MAX_TRANSPOSITION = 11
+        const val DEFAULT_FONT_SCALE = 1f
+        const val MIN_FONT_SCALE = 0.5f
+        const val MAX_FONT_SCALE = 2.5f
+        const val FONT_SCALE_STEP = 0.1f
+        private const val FONT_SCALE_STEP_TOLERANCE = 0.01f // Floating point slack, so that 1.1000001 still counts as step 11.
+        private const val FONT_SCALE_SAVE_DELAY_MILLIS = 500L
         private const val STOP_TIMEOUT_MILLIS = 5_000L
     }
 }

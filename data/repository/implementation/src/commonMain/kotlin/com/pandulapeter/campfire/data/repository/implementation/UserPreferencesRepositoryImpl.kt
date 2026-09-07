@@ -24,6 +24,7 @@ internal class UserPreferencesRepositoryImpl(
             shouldShowSongsWithoutChords = false,
             showOnlyDownloadedSongs = false,
             isLyricsOnlyModeEnabled = false,
+            fontScale = 1f,
             unselectedDatabaseUrls = emptyList(),
             sortingMode = UserPreferences.SortingMode.BY_ARTIST,
             uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,

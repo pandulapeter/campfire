@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import com.pandulapeter.campfire.shared.resources.Res
 import com.pandulapeter.campfire.shared.resources.song_details_section_bridge
 import com.pandulapeter.campfire.shared.resources.song_details_section_chorus
@@ -50,18 +51,23 @@ import kotlin.math.max
  * The song is split into sections (verse, chorus, ...) which are flowed into as many columns as the available width
  * allows. A section is never split between columns, and sections animate to their new place when the column count
  * changes (e.g. when a window is resized).
+ *
+ * @param fontScale Multiplier applied to the text sizes (and the minimum column width, so that larger text does not
+ * get squeezed into narrow columns).
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun SongLyrics(
     modifier: Modifier = Modifier,
     rawData: String,
-    shouldShowChords: Boolean = true
+    shouldShowChords: Boolean = true,
+    fontScale: Float = 1f
 ) {
     val sections = remember(rawData, shouldShowChords) {
         parseSongLines(rawData).let { if (shouldShowChords) it else it.withoutChords() }.groupIntoSections()
     }
-    val lyricsStyle = LocalTextStyle.current.merge(MaterialTheme.typography.bodyLarge)
+    val lyricsStyle = LocalTextStyle.current.merge(MaterialTheme.typography.bodyLarge).scaled(fontScale)
+    val headerStyle = MaterialTheme.typography.titleSmall.scaled(fontScale)
     val chordStyle = lyricsStyle.copy(
         color = MaterialTheme.colorScheme.primary,
         fontWeight = FontWeight.Bold
@@ -69,7 +75,7 @@ internal fun SongLyrics(
     LookaheadScope {
         SongSectionsLayout(
             modifier = modifier,
-            minColumnWidth = MIN_COLUMN_WIDTH,
+            minColumnWidth = MIN_COLUMN_WIDTH * fontScale,
             columnGap = COLUMN_GAP,
             sectionGap = SECTION_GAP
         ) {
@@ -81,7 +87,7 @@ internal fun SongLyrics(
                         Text(
                             modifier = Modifier.fillMaxWidth(),
                             text = header.title(),
-                            style = MaterialTheme.typography.titleSmall,
+                            style = headerStyle,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -106,6 +112,11 @@ internal fun SongLyrics(
         }
     }
 }
+
+private fun TextStyle.scaled(scale: Float) = copy(
+    fontSize = if (fontSize.isSpecified) fontSize * scale else fontSize,
+    lineHeight = if (lineHeight.isSpecified) lineHeight * scale else lineHeight
+)
 
 /**
  * Flows its children (the song sections) into columns. The column count is derived from the available width and

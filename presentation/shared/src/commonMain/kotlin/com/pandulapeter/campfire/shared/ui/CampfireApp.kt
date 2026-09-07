@@ -223,6 +223,7 @@ private fun CampfireContent(
                         SongDetailsScreen(
                             viewModel = viewModel,
                             destination = destination,
+                            windowSize = windowSize,
                             contentPadding = contentPadding,
                             onBack = viewModel::navigateBack
                         )

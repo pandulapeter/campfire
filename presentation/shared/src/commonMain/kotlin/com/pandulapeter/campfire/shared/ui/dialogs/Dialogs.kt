@@ -53,6 +53,7 @@ import com.pandulapeter.campfire.shared.ui.components.ActionListItem
 import com.pandulapeter.campfire.shared.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.shared.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.shared.ui.components.SongsControls
+import com.pandulapeter.campfire.shared.ui.screens.songDetails.SongDisplayControls
 import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
 import kotlinx.coroutines.launch
 import com.pandulapeter.campfire.shared.localization.stringResource
@@ -102,6 +103,13 @@ internal fun CampfireDialogs(
             viewModel = viewModel,
             dialog = dialog
         )
+
+        is CampfireViewModel.DialogType.SongDisplayControls -> CampfireBottomSheet(onDismiss = viewModel::dismissDialog) {
+            SongDisplayControls(
+                viewModel = viewModel,
+                dialog = dialog
+            )
+        }
 
         is CampfireViewModel.DialogType.DeleteSetlist -> ConfirmationDialog(
             title = stringResource(Res.string.setlists_delete_setlist),

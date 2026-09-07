@@ -2,22 +2,17 @@ package com.pandulapeter.campfire.shared.ui.screens.songDetails
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -35,36 +30,41 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.TranspositionKey
+import com.pandulapeter.campfire.shared.localization.stringResource
 import com.pandulapeter.campfire.shared.resources.Res
 import com.pandulapeter.campfire.shared.resources.back
 import com.pandulapeter.campfire.shared.resources.song_details_add_to_setlist
-import com.pandulapeter.campfire.shared.resources.song_details_transpose_down
-import com.pandulapeter.campfire.shared.resources.song_details_transpose_reset
-import com.pandulapeter.campfire.shared.resources.song_details_transpose_up
+import com.pandulapeter.campfire.shared.resources.song_details_display_options
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.components.CampfireTopAppBar
+import com.pandulapeter.campfire.shared.ui.components.WindowSize
 import com.pandulapeter.campfire.shared.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
-import com.pandulapeter.campfire.shared.localization.stringResource
 
+/**
+ * The lyrics (and chords) of a song, or of a setlist's songs in a pager. The transposition and the text size can be
+ * adjusted from the app bar: inline steppers when the window is wide enough, otherwise from a bottom sheet behind
+ * a single "display options" action, so that the bar does not get crowded. The text size can also be changed with
+ * a pinch or Ctrl / Cmd + scroll on the content itself, see [fontScaleGestures].
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun SongDetailsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     destination: CampfireDestination.SongDetails,
+    windowSize: WindowSize,
     contentPadding: PaddingValues,
     onBack: () -> Unit
 ) {
@@ -72,6 +72,7 @@ internal fun SongDetailsScreen(
     val rawSongDetails by viewModel.rawSongDetails.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
     val songs = remember(destination, allSongs) {
         val songsById = allSongs.associateBy { it.id }
         destination.songIds.mapNotNull { songsById[it] }
@@ -123,16 +124,23 @@ internal fun SongDetailsScreen(
                 }
             },
             actions = {
-                AnimatedVisibility(
-                    visible = shouldShowChords && currentSong?.hasChords == true && currentSong.url in rawSongDetails,
-                    enter = fadeIn() + scaleIn(),
-                    exit = fadeOut() + scaleOut()
-                ) {
-                    TranspositionControls(
-                        transposition = currentTransposition,
-                        onTranspositionChanged = { transposition ->
-                            currentSong?.let { viewModel.setTransposition(it.id, destination.setlistId, transposition) }
-                        }
+                if (windowSize.usesInlineSongControls) {
+                    AnimatedVisibility(
+                        visible = shouldShowChords && currentSong?.hasChords == true && currentSong.url in rawSongDetails,
+                        enter = fadeIn() + scaleIn(),
+                        exit = fadeOut() + scaleOut()
+                    ) {
+                        TranspositionControls(
+                            transposition = currentTransposition,
+                            onTranspositionChanged = { transposition ->
+                                currentSong?.let { viewModel.setTransposition(it.id, destination.setlistId, transposition) }
+                            }
+                        )
+                    }
+                    FontScaleControls(
+                        fontScale = fontScale,
+                        onFontScaleAdjusted = viewModel::adjustFontScale,
+                        onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) }
                     )
                 }
                 IconButton(
@@ -147,10 +155,30 @@ internal fun SongDetailsScreen(
                         contentDescription = stringResource(Res.string.song_details_add_to_setlist)
                     )
                 }
+                if (!windowSize.usesInlineSongControls) {
+                    IconButton(
+                        onClick = {
+                            currentSong?.let {
+                                viewModel.showDialog(CampfireViewModel.DialogType.SongDisplayControls(songId = it.id, setlistId = destination.setlistId))
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = CampfireIcons.tune,
+                            contentDescription = stringResource(Res.string.song_details_display_options)
+                        )
+                    }
+                }
             }
         )
+        val currentFontScale by rememberUpdatedState(fontScale)
         HorizontalPager(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .fontScaleGestures(
+                    fontScale = { currentFontScale },
+                    onFontScaleChanged = viewModel::setFontScale
+                ),
             state = pagerState,
             key = { songs[it].id },
             beyondViewportPageCount = 1
@@ -161,6 +189,7 @@ internal fun SongDetailsScreen(
                 rawSongDetails = rawSongDetails[song.url],
                 transposition = transpositions[TranspositionKey(song.id, destination.setlistId)] ?: 0,
                 shouldShowChords = shouldShowChords,
+                fontScale = fontScale,
                 contentPadding = contentPadding,
                 transpose = viewModel::transpose
             )
@@ -175,6 +204,7 @@ private fun SongDetailsPage(
     rawSongDetails: RawSongDetails?,
     transposition: Int,
     shouldShowChords: Boolean,
+    fontScale: Float,
     contentPadding: PaddingValues,
     transpose: (rawData: String, transposition: Int) -> String
 ) = AnimatedContent(
@@ -206,54 +236,8 @@ private fun SongDetailsPage(
                     bottom = contentPadding.calculateBottomPadding() + 32.dp
                 ),
             rawData = transposedRawData,
-            shouldShowChords = shouldShowChords
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun TranspositionControls(
-    transposition: Int,
-    onTranspositionChanged: (Int) -> Unit
-) = Row(
-    verticalAlignment = Alignment.CenterVertically
-) {
-    IconButton(
-        enabled = transposition > CampfireViewModel.MIN_TRANSPOSITION,
-        onClick = { onTranspositionChanged(transposition - 1) }
-    ) {
-        Icon(
-            imageVector = CampfireIcons.subtract,
-            contentDescription = stringResource(Res.string.song_details_transpose_down)
-        )
-    }
-    val color by animateColorAsState(
-        if (transposition == 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary,
-        MaterialTheme.motionScheme.defaultEffectsSpec()
-    )
-    AnimatedContent(
-        targetState = transposition,
-        transitionSpec = { fadeIn() togetherWith fadeOut() }
-    ) { value ->
-        Text(
-            modifier = Modifier
-                .defaultMinSize(minWidth = 32.dp)
-                .clickable(enabled = value != 0, onClickLabel = stringResource(Res.string.song_details_transpose_reset)) { onTranspositionChanged(0) }
-                .padding(vertical = 8.dp),
-            text = if (value > 0) "+$value" else value.toString(),
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold,
-            color = color
-        )
-    }
-    IconButton(
-        enabled = transposition < CampfireViewModel.MAX_TRANSPOSITION,
-        onClick = { onTranspositionChanged(transposition + 1) }
-    ) {
-        Icon(
-            imageVector = CampfireIcons.add,
-            contentDescription = stringResource(Res.string.song_details_transpose_up)
+            shouldShowChords = shouldShowChords,
+            fontScale = fontScale
         )
     }
 }

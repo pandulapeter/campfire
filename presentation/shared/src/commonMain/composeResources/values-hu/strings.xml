@@ -68,6 +68,12 @@
     <string name="song_details_transpose_up">Transzponálás felfelé</string>
     <string name="song_details_transpose_down">Transzponálás lefelé</string>
     <string name="song_details_transpose_reset">Transzponálás visszaállítása</string>
+    <string name="song_details_display_options">Megjelenítési beállítások</string>
+    <string name="song_details_transposition">Transzponálás</string>
+    <string name="song_details_text_size">Szövegméret</string>
+    <string name="song_details_text_size_increase">Szöveg nagyítása</string>
+    <string name="song_details_text_size_decrease">Szöveg kicsinyítése</string>
+    <string name="song_details_text_size_reset">Szövegméret visszaállítása</string>
     <string name="song_details_section_intro">Intro</string>
     <string name="song_details_section_verse">Versszak</string>
     <string name="song_details_section_pre_chorus">Elő-refrén</string>

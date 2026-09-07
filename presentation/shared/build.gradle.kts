@@ -39,3 +39,9 @@ compose.resources {
 localization {
     outputPackage.set("com.pandulapeter.campfire.shared.localization")
 }
+
+// The plugin's task only declares the resources folder path as an input, so edited strings.xml files would leave the
+// generated string tables stale (and every new string would show up as "???") until a clean build.
+tasks.named("generateTranslateFile") {
+    inputs.files(fileTree("src/commonMain/composeResources") { include("values*/strings.xml") })
+}

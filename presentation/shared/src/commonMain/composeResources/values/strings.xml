@@ -68,6 +68,12 @@
     <string name="song_details_transpose_up">Transpose up</string>
     <string name="song_details_transpose_down">Transpose down</string>
     <string name="song_details_transpose_reset">Reset transposition</string>
+    <string name="song_details_display_options">Display options</string>
+    <string name="song_details_transposition">Transposition</string>
+    <string name="song_details_text_size">Text size</string>
+    <string name="song_details_text_size_increase">Increase text size</string>
+    <string name="song_details_text_size_decrease">Decrease text size</string>
+    <string name="song_details_text_size_reset">Reset text size</string>
     <string name="song_details_section_intro">Intro</string>
     <string name="song_details_section_verse">Verse</string>
     <string name="song_details_section_pre_chorus">Pre-Chorus</string>
