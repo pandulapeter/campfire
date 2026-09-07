@@ -15,6 +15,9 @@ Campfire is completely free, without any ads.
 - Pull-to-refresh on web should only be enabled for touchscreen devices: fall back to the desktop implementation otherwise.
 - Version number should be displayed in Settings
 - Add Crashlytics and Analytics
+- Web app search icon alignment issue
+- Screen transitions should depend on the active navigation type
+- Predictive back looks weird when swiping from right to left
 
 ### Screenshots
 <img src="screenshots/01.png" width="20%" /> <img src="screenshots/02.png" width="20%" />
