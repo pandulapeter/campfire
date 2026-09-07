@@ -34,7 +34,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.resources.Res
 import com.pandulapeter.campfire.shared.resources.filters
-import com.pandulapeter.campfire.shared.resources.songs_show_explicit
 import com.pandulapeter.campfire.shared.resources.songs_show_without_chords
 import com.pandulapeter.campfire.shared.resources.songs_sorting_mode
 import com.pandulapeter.campfire.shared.resources.songs_sorting_mode_by_artist
@@ -125,11 +124,6 @@ internal fun SongsControls(
             )
         }
         SettingsSectionTitle(text = stringResource(Res.string.filters))
-        CheckboxListItem(
-            title = stringResource(Res.string.songs_show_explicit),
-            isChecked = userPreferences?.shouldShowExplicitSongs == true,
-            onCheckedChange = viewModel::setShouldShowExplicitSongs
-        )
         CheckboxListItem(
             title = stringResource(Res.string.songs_show_without_chords),
             isChecked = userPreferences?.shouldShowSongsWithoutChords == true,

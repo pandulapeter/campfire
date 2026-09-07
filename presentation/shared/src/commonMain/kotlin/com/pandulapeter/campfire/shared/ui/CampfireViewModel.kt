@@ -284,8 +284,6 @@ class CampfireViewModel(
         )
     }
 
-    fun setShouldShowExplicitSongs(value: Boolean) = updateUserPreferences { copy(shouldShowExplicitSongs = value) }
-
     fun setShouldShowSongsWithoutChords(value: Boolean) = updateUserPreferences { copy(shouldShowSongsWithoutChords = value) }
 
     fun setLyricsOnlyModeEnabled(value: Boolean) = updateUserPreferences { copy(isLyricsOnlyModeEnabled = value) }

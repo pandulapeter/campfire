@@ -20,7 +20,6 @@ internal class UserPreferencesRepositoryImpl(
 
     companion object {
         private val defaultUserPreferences = UserPreferences(
-            shouldShowExplicitSongs = false,
             shouldShowSongsWithoutChords = false,
             showOnlyDownloadedSongs = false,
             isLyricsOnlyModeEnabled = false,

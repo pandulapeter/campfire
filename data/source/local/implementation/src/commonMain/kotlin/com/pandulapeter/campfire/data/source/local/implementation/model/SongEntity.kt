@@ -11,7 +11,6 @@ internal data class SongEntity(
     @ColumnInfo(name = "title") val title: String,
     @ColumnInfo(name = "artist") val artist: String,
     @ColumnInfo(name = "key") val key: String,
-    @ColumnInfo(name = "isExplicit") val isExplicit: Boolean,
     @ColumnInfo(name = "hasChords") val hasChords: Boolean,
     @ColumnInfo(name = DATABASE_URL) val databaseUrl: String
 ) {

@@ -11,7 +11,6 @@ internal fun SongResponse.toModel() = try {
         title = title.toSongTitle(),
         artist = artist.toSongArtist(),
         key = key.toSongKey(),
-        isExplicit = isExplicit.toSongIsExplicit(),
         hasChords = hasChords.toSongHasChords()
     )
 } catch (exception: DataValidationException) {
@@ -28,7 +27,5 @@ private fun String?.toSongTitle() = toText("Missing song title.")
 private fun String?.toSongArtist() = toText("Missing song artist.")
 
 private fun String?.toSongKey() = toText("Missing song key.")
-
-private fun Boolean?.toSongIsExplicit() = toBoolean()
 
 private fun Boolean?.toSongHasChords() = toBoolean()

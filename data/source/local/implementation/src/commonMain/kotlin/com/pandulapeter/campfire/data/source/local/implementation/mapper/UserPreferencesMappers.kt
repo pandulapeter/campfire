@@ -4,7 +4,6 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesEntity
 
 internal fun UserPreferencesEntity.toModel() = UserPreferences(
-    shouldShowExplicitSongs = shouldShowExplicitSongs,
     shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
     showOnlyDownloadedSongs = showOnlyDownloadedSongs,
     isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled,
@@ -16,7 +15,6 @@ internal fun UserPreferencesEntity.toModel() = UserPreferences(
 )
 
 internal fun UserPreferences.toEntity() = UserPreferencesEntity(
-    shouldShowExplicitSongs = shouldShowExplicitSongs,
     shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
     showOnlyDownloadedSongs = showOnlyDownloadedSongs,
     isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled,

@@ -7,7 +7,6 @@ import androidx.room.PrimaryKey
 @Entity(tableName = UserPreferencesEntity.TABLE_NAME)
 internal data class UserPreferencesEntity(
     @PrimaryKey @ColumnInfo(name = "id") val id: String = TABLE_NAME,
-    @ColumnInfo(name = "shouldShowExplicitSongs") val shouldShowExplicitSongs: Boolean,
     @ColumnInfo(name = "shouldShowSongsWithoutChords") val shouldShowSongsWithoutChords: Boolean,
     @ColumnInfo(name = "showOnlyDownloadedSongs") val showOnlyDownloadedSongs: Boolean,
     @ColumnInfo(name = "isLyricsOnlyModeEnabled", defaultValue = "0") val isLyricsOnlyModeEnabled: Boolean,

@@ -15,7 +15,6 @@
     <string name="songs_clear">Törlés</string>
     <string name="songs_sort_and_filter">Rendezés és szűrés</string>
     <string name="songs_unsorted_label">0 - 9</string>
-    <string name="songs_show_explicit">Explicit dalok mutatása</string>
     <string name="songs_show_without_chords">Akkord nélküli dalok mutatása</string>
     <string name="songs_sorting_mode">Rendezési mód</string>
     <string name="songs_sorting_mode_by_artist">Előadó</string>

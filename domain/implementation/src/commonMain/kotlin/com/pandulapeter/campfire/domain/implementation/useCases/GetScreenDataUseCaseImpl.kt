@@ -58,7 +58,6 @@ class GetScreenDataUseCaseImpl internal constructor(
                                     songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }
                                         .distinctBy { it.id }
                                         .filterDownloaded(userPreferences, rawSongDetails)
-                                        .filterExplicit(userPreferences)
                                         .filterHasChords(userPreferences)
                                         .sort(userPreferences),
                                     rawSongDetails = rawSongDetails,
@@ -95,8 +94,6 @@ class GetScreenDataUseCaseImpl internal constructor(
         userPreferences: UserPreferences,
         rawSongDetails: Map<String, RawSongDetails>
     ) = if (userPreferences.showOnlyDownloadedSongs) filterNot { rawSongDetails[it.url] == null } else this
-
-    private fun List<Song>.filterExplicit(userPreferences: UserPreferences) = if (userPreferences.shouldShowExplicitSongs) this else filterNot { it.isExplicit }
 
     private fun List<Song>.filterHasChords(userPreferences: UserPreferences) = if (userPreferences.shouldShowSongsWithoutChords) this else filterNot { !it.hasChords }
 

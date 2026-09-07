@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.data.model.domain
 
 data class UserPreferences(
-    val shouldShowExplicitSongs: Boolean,
     val shouldShowSongsWithoutChords: Boolean,
     val showOnlyDownloadedSongs: Boolean,
     val isLyricsOnlyModeEnabled: Boolean,

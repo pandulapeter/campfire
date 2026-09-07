@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.dao.Us
         UserPreferencesEntity::class,
         TranspositionEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @ConstructedBy(StorageManagerConstructor::class)
@@ -60,6 +60,13 @@ internal abstract class StorageManager : RoomDatabase() {
             object : Migration(2, 3) {
                 override fun migrate(connection: SQLiteConnection) {
                     connection.execSQL("ALTER TABLE ${UserPreferencesEntity.TABLE_NAME} ADD COLUMN fontScale REAL NOT NULL DEFAULT 1.0")
+                }
+            },
+            // Version 4: the "explicit" flag of songs and the filter based on it were removed.
+            object : Migration(3, 4) {
+                override fun migrate(connection: SQLiteConnection) {
+                    connection.execSQL("ALTER TABLE ${SongEntity.TABLE_NAME} DROP COLUMN isExplicit")
+                    connection.execSQL("ALTER TABLE ${UserPreferencesEntity.TABLE_NAME} DROP COLUMN shouldShowExplicitSongs")
                 }
             }
         )
