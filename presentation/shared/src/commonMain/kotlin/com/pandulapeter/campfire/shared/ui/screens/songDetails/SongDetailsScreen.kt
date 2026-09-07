@@ -8,6 +8,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -44,13 +45,15 @@ import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.shared.localization.stringResource
 import com.pandulapeter.campfire.shared.resources.Res
 import com.pandulapeter.campfire.shared.resources.back
+import com.pandulapeter.campfire.shared.resources.playlist_add
 import com.pandulapeter.campfire.shared.resources.song_details_add_to_setlist
 import com.pandulapeter.campfire.shared.resources.song_details_display_options
+import com.pandulapeter.campfire.shared.resources.tune
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.shared.ui.components.WindowSize
 import com.pandulapeter.campfire.shared.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * The lyrics (and chords) of a song, or of a setlist's songs in a pager. The transposition and the text size can be
@@ -96,7 +99,7 @@ internal fun SongDetailsScreen(
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(
-                        imageVector = CampfireIcons.back,
+                        painter = painterResource(Res.drawable.back),
                         contentDescription = stringResource(Res.string.back)
                     )
                 }
@@ -151,7 +154,7 @@ internal fun SongDetailsScreen(
                     }
                 ) {
                     Icon(
-                        imageVector = CampfireIcons.playlistAdd,
+                        painter = painterResource(Res.drawable.playlist_add),
                         contentDescription = stringResource(Res.string.song_details_add_to_setlist)
                     )
                 }
@@ -164,7 +167,7 @@ internal fun SongDetailsScreen(
                         }
                     ) {
                         Icon(
-                            imageVector = CampfireIcons.tune,
+                            painter = painterResource(Res.drawable.tune),
                             contentDescription = stringResource(Res.string.song_details_display_options)
                         )
                     }
@@ -225,19 +228,28 @@ private fun SongDetailsPage(
         val transposedRawData = remember(details.rawData, transposition, shouldShowChords) {
             if (shouldShowChords && song.hasChords) transpose(details.rawData, transposition) else details.rawData
         }
-        SongLyrics(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
-                    end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
-                    top = 8.dp,
-                    bottom = contentPadding.calculateBottomPadding() + 32.dp
-                ),
-            rawData = transposedRawData,
-            shouldShowChords = shouldShowChords,
-            fontScale = fontScale
-        )
+        val topPadding = 8.dp
+        val bottomPadding = contentPadding.calculateBottomPadding() + 32.dp
+        // The lyrics scroll, so they need to be told from the outside how much room there is for them without
+        // scrolling: that is what decides how many columns they are flowed into.
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            SongLyrics(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
+                        end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
+                        top = topPadding,
+                        bottom = bottomPadding
+                    ),
+                rawData = transposedRawData,
+                availableHeight = maxHeight - topPadding - bottomPadding,
+                shouldShowChords = shouldShowChords,
+                fontScale = fontScale
+            )
+        }
     }
 }

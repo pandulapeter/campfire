@@ -15,10 +15,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -41,15 +42,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.shared.resources.Res
 import com.pandulapeter.campfire.shared.resources.refresh
+import com.pandulapeter.campfire.shared.resources.songs
 import com.pandulapeter.campfire.shared.resources.songs_no_data
 import com.pandulapeter.campfire.shared.resources.songs_no_data_hint
 import com.pandulapeter.campfire.shared.resources.songs_sort_and_filter
 import com.pandulapeter.campfire.shared.resources.songs_unsorted_label
+import com.pandulapeter.campfire.shared.resources.tune
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.shared.ui.components.EmptyState
 import com.pandulapeter.campfire.shared.ui.components.FastScroller
 import com.pandulapeter.campfire.shared.ui.components.KeepTopAppBarInSync
+import com.pandulapeter.campfire.shared.ui.components.ListColumns
 import com.pandulapeter.campfire.shared.ui.components.SearchField
 import com.pandulapeter.campfire.shared.ui.components.SectionHeader
 import com.pandulapeter.campfire.shared.ui.components.SongListItem
@@ -57,8 +61,8 @@ import com.pandulapeter.campfire.shared.ui.components.SongsControlsSidePanel
 import com.pandulapeter.campfire.shared.ui.components.WindowSize
 import com.pandulapeter.campfire.shared.ui.components.besideSidePanel
 import com.pandulapeter.campfire.shared.ui.platform.isDesktopPlatform
-import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
 import com.pandulapeter.campfire.shared.localization.stringResource
+import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -71,7 +75,7 @@ internal fun SongsScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val listState = rememberLazyListState()
+    val listState = rememberLazyGridState()
     KeepTopAppBarInSync(scrollBehavior, listState)
     Row(
         modifier = modifier.fillMaxSize()
@@ -98,7 +102,7 @@ internal fun SongsScreen(
                     if (!windowSize.usesSidePanel) {
                         IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) }) {
                             Icon(
-                                imageVector = CampfireIcons.tune,
+                                painter = painterResource(Res.drawable.tune),
                                 contentDescription = stringResource(Res.string.songs_sort_and_filter)
                             )
                         }
@@ -141,7 +145,7 @@ private fun RefreshAction(
     } else {
         IconButton(onClick = onClick) {
             Icon(
-                imageVector = CampfireIcons.refresh,
+                painter = painterResource(Res.drawable.refresh),
                 contentDescription = stringResource(Res.string.refresh)
             )
         }
@@ -153,7 +157,7 @@ private fun RefreshAction(
 private fun SongList(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    listState: LazyListState,
+    listState: LazyGridState,
     isLoading: Boolean,
     contentPadding: PaddingValues
 ) {
@@ -163,7 +167,7 @@ private fun SongList(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
     val layoutDirection = LocalLayoutDirection.current
-    // The section label of every list item (headers included), in the order of the lazy list, for the fast scroller.
+    // The section label of every list item (headers included), in the order of the lazy grid, for the fast scroller.
     val sectionLabels = remember(songGroups) {
         songGroups.flatMap { group ->
             val label = group.header?.fastScrollerLabel
@@ -179,7 +183,8 @@ private fun SongList(
         isRefreshing = isLoading,
         onRefresh = viewModel::refresh
     ) {
-        LazyColumn(
+        LazyVerticalGrid(
+            columns = ListColumns,
             modifier = Modifier.fillMaxSize(),
             state = listState,
             contentPadding = PaddingValues(
@@ -189,10 +194,13 @@ private fun SongList(
             )
         ) {
             if (songGroups.isEmpty()) {
-                item(key = "empty") {
+                item(
+                    key = "empty",
+                    span = { GridItemSpan(maxLineSpan) }
+                ) {
                     EmptyState(
                         modifier = Modifier.fillMaxWidth().animateItem(),
-                        icon = CampfireIcons.songs,
+                        icon = painterResource(Res.drawable.songs),
                         title = stringResource(Res.string.songs_no_data),
                         hint = stringResource(Res.string.songs_no_data_hint)
                     )
@@ -229,7 +237,7 @@ private fun SongList(
         }
         FastScroller(
             modifier = Modifier.padding(contentPadding),
-            listState = listState,
+            gridState = listState,
             labelForItem = { sectionLabels.getOrNull(it) }
         )
     }

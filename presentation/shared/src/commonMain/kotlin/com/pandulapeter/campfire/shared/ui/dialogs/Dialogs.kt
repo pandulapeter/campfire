@@ -31,8 +31,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.shared.resources.Res
+import com.pandulapeter.campfire.shared.resources.add
 import com.pandulapeter.campfire.shared.resources.cancel
 import com.pandulapeter.campfire.shared.resources.delete
+import com.pandulapeter.campfire.shared.resources.open_in_new
 import com.pandulapeter.campfire.shared.resources.remove
 import com.pandulapeter.campfire.shared.resources.setlists_create
 import com.pandulapeter.campfire.shared.resources.setlists_delete_setlist
@@ -54,8 +56,8 @@ import com.pandulapeter.campfire.shared.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.shared.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.shared.ui.components.SongsControls
 import com.pandulapeter.campfire.shared.ui.screens.songDetails.SongDisplayControls
-import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
 import com.pandulapeter.campfire.shared.localization.stringResource
 
 /**
@@ -236,7 +238,7 @@ private fun NewDatabaseDialog(
                 ) {
                     Icon(
                         modifier = Modifier.size(ButtonDefaults.IconSize),
-                        imageVector = CampfireIcons.openInNew,
+                        painter = painterResource(Res.drawable.open_in_new),
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
@@ -282,7 +284,7 @@ private fun SetlistPickerSheet(
         }
         ActionListItem(
             title = stringResource(Res.string.setlists_new_setlist),
-            icon = CampfireIcons.add,
+            icon = painterResource(Res.drawable.add),
             onClick = {
                 coroutineScope.launch {
                     sheetState.hide()

@@ -44,7 +44,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -56,6 +55,7 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEvent
 import com.pandulapeter.campfire.shared.resources.Res
+import com.pandulapeter.campfire.shared.resources.add
 import com.pandulapeter.campfire.shared.resources.setlists
 import com.pandulapeter.campfire.shared.resources.setlists_new_setlist
 import com.pandulapeter.campfire.shared.resources.settings
@@ -68,9 +68,10 @@ import com.pandulapeter.campfire.shared.ui.screens.settings.SettingsScreen
 import com.pandulapeter.campfire.shared.ui.screens.songDetails.SongDetailsScreen
 import com.pandulapeter.campfire.shared.ui.screens.songs.SongsScreen
 import com.pandulapeter.campfire.shared.ui.theme.ApplyLanguagePreference
-import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
 import com.pandulapeter.campfire.shared.ui.theme.CampfireTheme
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.painterResource
 import com.pandulapeter.campfire.shared.localization.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -131,7 +132,7 @@ private fun CampfireContent(
                         NavigationBarItem(
                             selected = destination == currentTopLevelDestination,
                             onClick = { viewModel.selectTopLevelDestination(destination) },
-                            icon = { Icon(imageVector = destination.icon, contentDescription = null) },
+                            icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
                             label = { Text(stringResource(destination.label)) }
                         )
                     }
@@ -139,16 +140,18 @@ private fun CampfireContent(
             }
         },
         floatingActionButton = {
+            // Scale only: a fade would wrap the button in an alpha layer, which composites at its layout bounds and
+            // cuts the shadow off. Scaling from zero hides it just as well.
             AnimatedVisibility(
                 visible = currentTopLevelDestination == CampfireDestination.Setlists && !isSongDetailsOpen,
-                enter = scaleIn() + fadeIn(),
-                exit = scaleOut() + fadeOut()
+                enter = scaleIn(motionScheme.defaultSpatialSpec()),
+                exit = scaleOut(motionScheme.defaultSpatialSpec())
             ) {
                 FloatingActionButton(
                     onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) }
                 ) {
                     Icon(
-                        imageVector = CampfireIcons.add,
+                        painter = painterResource(Res.drawable.add),
                         contentDescription = stringResource(Res.string.setlists_new_setlist)
                     )
                 }
@@ -169,7 +172,7 @@ private fun CampfireContent(
                         NavigationRailItem(
                             selected = destination == currentTopLevelDestination,
                             onClick = { viewModel.selectTopLevelDestination(destination) },
-                            icon = { Icon(imageVector = destination.icon, contentDescription = null) },
+                            icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
                             label = { Text(stringResource(destination.label)) }
                         )
                     }
@@ -308,11 +311,11 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.tabTransi
 private val Scene<CampfireDestination>.zIndex: Float
     get() = previousEntries.size.toFloat()
 
-private val CampfireDestination.TopLevel.icon: ImageVector
+private val CampfireDestination.TopLevel.icon: DrawableResource
     get() = when (this) {
-        CampfireDestination.Songs -> CampfireIcons.songs
-        CampfireDestination.Setlists -> CampfireIcons.setlists
-        CampfireDestination.Settings -> CampfireIcons.settings
+        CampfireDestination.Songs -> Res.drawable.songs
+        CampfireDestination.Setlists -> Res.drawable.setlists
+        CampfireDestination.Settings -> Res.drawable.settings
     }
 
 private val CampfireDestination.TopLevel.label: StringResource

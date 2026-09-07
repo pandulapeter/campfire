@@ -1,7 +1,7 @@
 package com.pandulapeter.campfire.shared.ui.components
 
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -64,9 +64,9 @@ internal fun CampfireTopAppBar(
 @Composable
 internal fun KeepTopAppBarInSync(
     scrollBehavior: TopAppBarScrollBehavior,
-    listState: LazyListState
-) = LaunchedEffect(scrollBehavior, listState) {
-    snapshotFlow { listState.canScrollBackward }.collect { canScrollBackward ->
+    scrollableState: ScrollableState
+) = LaunchedEffect(scrollBehavior, scrollableState) {
+    snapshotFlow { scrollableState.canScrollBackward }.collect { canScrollBackward ->
         if (!canScrollBackward) {
             scrollBehavior.state.contentOffset = 0f
         } else if (scrollBehavior.state.contentOffset == 0f) {

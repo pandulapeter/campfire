@@ -28,15 +28,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.shared.resources.Res
+import com.pandulapeter.campfire.shared.resources.open_in_new
 import com.pandulapeter.campfire.shared.resources.songs_lyrics_only
-import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
 import com.pandulapeter.campfire.shared.localization.stringResource
+import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -117,7 +118,7 @@ internal fun SectionHeader(
  */
 @Composable
 internal fun SectionHeaderAction(
-    icon: ImageVector,
+    icon: Painter,
     contentDescription: String,
     onClick: () -> Unit
 ) = IconButton(
@@ -126,7 +127,7 @@ internal fun SectionHeaderAction(
 ) {
     Icon(
         modifier = Modifier.size(18.dp),
-        imageVector = icon,
+        painter = icon,
         contentDescription = contentDescription,
         tint = MaterialTheme.colorScheme.onSurfaceVariant
     )
@@ -191,16 +192,16 @@ internal fun RadioButtonListItem(
 internal fun LinkListItem(
     modifier: Modifier = Modifier,
     title: String,
-    icon: ImageVector,
+    icon: Painter,
     onClick: () -> Unit
 ) = ListItem(
     modifier = modifier.clickable(onClick = onClick),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
-    leadingContent = { Icon(imageVector = icon, contentDescription = null) },
+    leadingContent = { Icon(painter = icon, contentDescription = null) },
     trailingContent = {
         Icon(
-            imageVector = CampfireIcons.openInNew,
+            painter = painterResource(Res.drawable.open_in_new),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -211,7 +212,7 @@ internal fun LinkListItem(
 internal fun ActionListItem(
     modifier: Modifier = Modifier,
     title: String,
-    icon: ImageVector,
+    icon: Painter,
     onClick: () -> Unit
 ) = ListItem(
     modifier = modifier.clickable(onClick = onClick),
@@ -221,13 +222,13 @@ internal fun ActionListItem(
         leadingIconColor = MaterialTheme.colorScheme.primary
     ),
     headlineContent = { Text(title) },
-    leadingContent = { Icon(imageVector = icon, contentDescription = null) }
+    leadingContent = { Icon(painter = icon, contentDescription = null) }
 )
 
 @Composable
 internal fun EmptyState(
     modifier: Modifier = Modifier,
-    icon: ImageVector,
+    icon: Painter,
     title: String,
     hint: String
 ) = Column(
@@ -236,7 +237,7 @@ internal fun EmptyState(
 ) {
     Icon(
         modifier = Modifier.padding(bottom = 16.dp).alpha(0.6f),
-        imageVector = icon,
+        painter = icon,
         contentDescription = null,
         tint = MaterialTheme.colorScheme.primary
     )

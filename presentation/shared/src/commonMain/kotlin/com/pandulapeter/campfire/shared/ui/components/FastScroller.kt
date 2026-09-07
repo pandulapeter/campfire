@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -58,7 +58,7 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
- * Draggable scrollbar of a long lazy list, in the style of the fast scroller of a contacts app: the thumb sits on the
+ * Draggable scrollbar of a long lazy grid, in the style of the fast scroller of a contacts app: the thumb sits on the
  * end edge with a wide touch target, and while it is dragged a bubble next to it shows the label of the section that
  * is currently at the top of the list. On touch platforms the scroller appears while the list is scrolling or dragged
  * and hides shortly after; on desktop it is always shown. Touches outside the thumb go through to the list.
@@ -69,15 +69,15 @@ import kotlin.math.roundToInt
 @Composable
 internal fun BoxScope.FastScroller(
     modifier: Modifier = Modifier,
-    listState: LazyListState,
+    gridState: LazyGridState,
     labelForItem: (index: Int) -> String?
 ) {
     val coroutineScope = rememberCoroutineScope()
     val minThumbHeight = with(LocalDensity.current) { MIN_THUMB_HEIGHT.toPx() }
-    val state = remember(listState) { FastScrollerState(listState, minThumbHeight) }
+    val state = remember(gridState) { FastScrollerState(gridState, minThumbHeight) }
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
-    val isScrolling = listState.isScrollInProgress
+    val isScrolling = gridState.isScrollInProgress
     var isRecentlyActive by remember { mutableStateOf(false) }
     LaunchedEffect(isScrolling, state.isDragging) {
         if (isScrolling || state.isDragging) {
@@ -99,7 +99,7 @@ internal fun BoxScope.FastScroller(
             else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = IDLE_THUMB_ALPHA)
         }
     )
-    val label = labelForItem(listState.firstVisibleItemIndex)
+    val label = labelForItem(gridState.firstVisibleItemIndex)
 
     Box(
         modifier = modifier
@@ -185,7 +185,7 @@ internal fun BoxScope.FastScroller(
 }
 
 private class FastScrollerState(
-    private val listState: LazyListState,
+    private val gridState: LazyGridState,
     private val minThumbHeight: Float
 ) {
     var trackHeight by mutableIntStateOf(0)
@@ -193,7 +193,7 @@ private class FastScrollerState(
         private set
     private var draggedThumbTop by mutableFloatStateOf(0f)
 
-    private val metrics: ScrollMetrics? get() = listState.scrollMetrics()
+    private val metrics: ScrollMetrics? get() = gridState.scrollMetrics()
 
     val isScrollable: Boolean get() = trackHeight > 0 && metrics != null
 
@@ -209,8 +209,8 @@ private class FastScrollerState(
 
     private val scrollFraction: Float
         get() = when {
-            !listState.canScrollBackward -> 0f
-            !listState.canScrollForward -> 1f
+            !gridState.canScrollBackward -> 0f
+            !gridState.canScrollForward -> 1f
             else -> metrics?.scrollFraction ?: 0f
         }
 
@@ -235,15 +235,15 @@ private class FastScrollerState(
         val metrics = metrics ?: return
         val scrollOffset = fraction * metrics.maxScrollOffset
         val index = (scrollOffset / metrics.averageItemSize).toInt().coerceIn(0, metrics.totalItemsCount - 1)
-        listState.scrollToItem(index, (scrollOffset - index * metrics.averageItemSize).roundToInt())
+        gridState.scrollToItem(index, (scrollOffset - index * metrics.averageItemSize).roundToInt())
     }
 }
 
 /**
- * Estimates the scroll position from the sizes of the visible items, as the total content size of a lazy list is
+ * Estimates the scroll position from the sizes of the visible items, as the total content size of a lazy grid is
  * unknown. Null if the whole list fits into the viewport.
  */
-private fun LazyListState.scrollMetrics(): ScrollMetrics? {
+private fun LazyGridState.scrollMetrics(): ScrollMetrics? {
     if (!canScrollForward && !canScrollBackward) return null
     val info = layoutInfo
     val firstIndex = firstVisibleItemIndex
@@ -252,7 +252,9 @@ private fun LazyListState.scrollMetrics(): ScrollMetrics? {
     if (visibleItems.isEmpty() || info.totalItemsCount == 0) return null
     val first = visibleItems.first()
     val last = visibleItems.last()
-    val averageItemSize = (last.offset + last.size - first.offset).toFloat() / visibleItems.size
+    // Items of the same row share their offset, so this averages the height of a row over the items in it: the
+    // per item slice of the content the index based math below works with.
+    val averageItemSize = (last.offset.y + last.size.height - first.offset.y).toFloat() / visibleItems.size
     if (averageItemSize <= 0f) return null
     val contentHeight = info.beforeContentPadding + averageItemSize * info.totalItemsCount + info.afterContentPadding
     val maxScrollOffset = max(contentHeight - info.viewportSize.height, 1f)

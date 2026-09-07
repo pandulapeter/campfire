@@ -11,9 +11,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -35,6 +36,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.shared.resources.Res
+import com.pandulapeter.campfire.shared.resources.delete
 import com.pandulapeter.campfire.shared.resources.filters
 import com.pandulapeter.campfire.shared.resources.setlists
 import com.pandulapeter.campfire.shared.resources.setlists_delete_setlist
@@ -42,21 +44,24 @@ import com.pandulapeter.campfire.shared.resources.setlists_no_data
 import com.pandulapeter.campfire.shared.resources.setlists_no_data_hint
 import com.pandulapeter.campfire.shared.resources.setlists_remove_song
 import com.pandulapeter.campfire.shared.resources.setlists_reorder_hint
+import com.pandulapeter.campfire.shared.resources.songs
 import com.pandulapeter.campfire.shared.resources.songs_no_data
 import com.pandulapeter.campfire.shared.resources.songs_no_data_hint
+import com.pandulapeter.campfire.shared.resources.tune
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.shared.ui.components.EmptyState
+import com.pandulapeter.campfire.shared.ui.components.ListColumns
 import com.pandulapeter.campfire.shared.ui.components.SectionHeader
 import com.pandulapeter.campfire.shared.ui.components.SectionHeaderAction
 import com.pandulapeter.campfire.shared.ui.components.SongListItem
 import com.pandulapeter.campfire.shared.ui.components.SongsControlsSidePanel
 import com.pandulapeter.campfire.shared.ui.components.besideSidePanel
 import com.pandulapeter.campfire.shared.ui.components.WindowSize
-import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
 import com.pandulapeter.campfire.shared.localization.stringResource
+import org.jetbrains.compose.resources.painterResource
 import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
+import sh.calvin.reorderable.rememberReorderableLazyGridState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +85,7 @@ internal fun SetlistsScreen(
                     if (!windowSize.usesSidePanel) {
                         IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistsControls) }) {
                             Icon(
-                                imageVector = CampfireIcons.tune,
+                                painter = painterResource(Res.drawable.tune),
                                 contentDescription = stringResource(Res.string.filters)
                             )
                         }
@@ -111,8 +116,8 @@ private fun SetlistList(
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
     val allSongs by viewModel.allSongs.collectAsStateWithLifecycle()
     val rawSongDetails by viewModel.rawSongDetails.collectAsStateWithLifecycle()
-    val listState = rememberLazyListState()
-    val reorderableState = rememberReorderableLazyListState(listState) { from, to ->
+    val listState = rememberLazyGridState()
+    val reorderableState = rememberReorderableLazyGridState(listState) { from, to ->
         val fromKey = SetlistItemKey(from.key as? String)
         val toKey = SetlistItemKey(to.key as? String)
         // Songs can only be reordered within their own setlist.
@@ -121,7 +126,8 @@ private fun SetlistList(
         }
     }
     val layoutDirection = LocalLayoutDirection.current
-    LazyColumn(
+    LazyVerticalGrid(
+        columns = ListColumns,
         modifier = modifier,
         state = listState,
         contentPadding = PaddingValues(
@@ -131,19 +137,25 @@ private fun SetlistList(
         )
     ) {
         when {
-            setlistsWithSongs.isEmpty() -> item(key = "empty") {
+            setlistsWithSongs.isEmpty() -> item(
+                key = "empty",
+                span = { GridItemSpan(maxLineSpan) }
+            ) {
                 EmptyState(
                     modifier = Modifier.fillMaxWidth().animateItem(),
-                    icon = CampfireIcons.setlists,
+                    icon = painterResource(Res.drawable.setlists),
                     title = stringResource(Res.string.setlists_no_data),
                     hint = stringResource(Res.string.setlists_no_data_hint)
                 )
             }
 
-            allSongs.isEmpty() -> item(key = "empty") {
+            allSongs.isEmpty() -> item(
+                key = "empty",
+                span = { GridItemSpan(maxLineSpan) }
+            ) {
                 EmptyState(
                     modifier = Modifier.fillMaxWidth().animateItem(),
-                    icon = CampfireIcons.songs,
+                    icon = painterResource(Res.drawable.songs),
                     title = stringResource(Res.string.songs_no_data),
                     hint = stringResource(Res.string.songs_no_data_hint)
                 )
@@ -156,7 +168,7 @@ private fun SetlistList(
                         text = setlistWithSongs.setlist.title,
                         action = {
                             SectionHeaderAction(
-                                icon = CampfireIcons.delete,
+                                icon = painterResource(Res.drawable.delete),
                                 contentDescription = stringResource(Res.string.setlists_delete_setlist),
                                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlistWithSongs.setlist)) }
                             )
@@ -164,7 +176,10 @@ private fun SetlistList(
                     )
                 }
                 if (setlistWithSongs.songs.isEmpty()) {
-                    item(key = "hint_${setlistWithSongs.setlist.id}") {
+                    item(
+                        key = "hint_${setlistWithSongs.setlist.id}",
+                        span = { GridItemSpan(maxLineSpan) }
+                    ) {
                         Text(
                             modifier = Modifier.animateItem().padding(horizontal = 16.dp, vertical = 8.dp),
                             text = stringResource(Res.string.setlists_reorder_hint),
@@ -225,7 +240,7 @@ private fun DismissibleSongItem(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Icon(
-                    imageVector = CampfireIcons.delete,
+                    painter = painterResource(Res.drawable.delete),
                     contentDescription = stringResource(Res.string.setlists_remove_song),
                     tint = MaterialTheme.colorScheme.onErrorContainer
                 )

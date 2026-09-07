@@ -24,7 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.shared.localization.stringResource
 import com.pandulapeter.campfire.shared.resources.Res
+import com.pandulapeter.campfire.shared.resources.add
 import com.pandulapeter.campfire.shared.resources.song_details_display_options
 import com.pandulapeter.campfire.shared.resources.song_details_text_size
 import com.pandulapeter.campfire.shared.resources.song_details_text_size_decrease
@@ -41,10 +42,13 @@ import com.pandulapeter.campfire.shared.resources.song_details_transpose_down
 import com.pandulapeter.campfire.shared.resources.song_details_transpose_reset
 import com.pandulapeter.campfire.shared.resources.song_details_transpose_up
 import com.pandulapeter.campfire.shared.resources.song_details_transposition
+import com.pandulapeter.campfire.shared.resources.subtract
+import com.pandulapeter.campfire.shared.resources.text_decrease
+import com.pandulapeter.campfire.shared.resources.text_increase
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.components.SettingsSectionTitle
-import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
 import kotlin.math.roundToInt
+import org.jetbrains.compose.resources.painterResource
 
 /**
  * The transposition and text size steppers of the song details screen in a bottom sheet, for windows whose app bar
@@ -96,11 +100,11 @@ internal fun TranspositionControls(
 ) = Stepper(
     value = if (transposition > 0) "+$transposition" else transposition.toString(),
     isDefault = transposition == 0,
-    decreaseIcon = CampfireIcons.subtract,
+    decreaseIcon = painterResource(Res.drawable.subtract),
     decreaseLabel = stringResource(Res.string.song_details_transpose_down),
     canDecrease = transposition > CampfireViewModel.MIN_TRANSPOSITION,
     onDecrease = { onTranspositionChanged(transposition - 1) },
-    increaseIcon = CampfireIcons.add,
+    increaseIcon = painterResource(Res.drawable.add),
     increaseLabel = stringResource(Res.string.song_details_transpose_up),
     canIncrease = transposition < CampfireViewModel.MAX_TRANSPOSITION,
     onIncrease = { onTranspositionChanged(transposition + 1) },
@@ -118,11 +122,11 @@ internal fun FontScaleControls(
     Stepper(
         value = "$percentage%",
         isDefault = percentage == (CampfireViewModel.DEFAULT_FONT_SCALE * 100).roundToInt(),
-        decreaseIcon = CampfireIcons.textDecrease,
+        decreaseIcon = painterResource(Res.drawable.text_decrease),
         decreaseLabel = stringResource(Res.string.song_details_text_size_decrease),
         canDecrease = fontScale > CampfireViewModel.MIN_FONT_SCALE,
         onDecrease = { onFontScaleAdjusted(-1) },
-        increaseIcon = CampfireIcons.textIncrease,
+        increaseIcon = painterResource(Res.drawable.text_increase),
         increaseLabel = stringResource(Res.string.song_details_text_size_increase),
         canIncrease = fontScale < CampfireViewModel.MAX_FONT_SCALE,
         onIncrease = { onFontScaleAdjusted(1) },
@@ -140,11 +144,11 @@ internal fun FontScaleControls(
 private fun Stepper(
     value: String,
     isDefault: Boolean,
-    decreaseIcon: ImageVector,
+    decreaseIcon: Painter,
     decreaseLabel: String,
     canDecrease: Boolean,
     onDecrease: () -> Unit,
-    increaseIcon: ImageVector,
+    increaseIcon: Painter,
     increaseLabel: String,
     canIncrease: Boolean,
     onIncrease: () -> Unit,
@@ -158,7 +162,7 @@ private fun Stepper(
         onClick = onDecrease
     ) {
         Icon(
-            imageVector = decreaseIcon,
+            painter = decreaseIcon,
             contentDescription = decreaseLabel
         )
     }
@@ -186,7 +190,7 @@ private fun Stepper(
         onClick = onIncrease
     ) {
         Icon(
-            imageVector = increaseIcon,
+            painter = increaseIcon,
             contentDescription = increaseLabel
         )
     }

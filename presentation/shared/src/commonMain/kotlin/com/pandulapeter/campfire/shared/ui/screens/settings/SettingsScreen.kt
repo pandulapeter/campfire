@@ -34,6 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.shared.resources.Res
+import com.pandulapeter.campfire.shared.resources.add
+import com.pandulapeter.campfire.shared.resources.delete
+import com.pandulapeter.campfire.shared.resources.git_hub
+import com.pandulapeter.campfire.shared.resources.privacy_policy
 import com.pandulapeter.campfire.shared.resources.settings
 import com.pandulapeter.campfire.shared.resources.settings_about
 import com.pandulapeter.campfire.shared.resources.settings_active_databases
@@ -53,6 +57,7 @@ import com.pandulapeter.campfire.shared.resources.settings_user_interface_theme_
 import com.pandulapeter.campfire.shared.resources.settings_user_interface_theme_light
 import com.pandulapeter.campfire.shared.resources.settings_user_interface_theme_system_default
 import com.pandulapeter.campfire.shared.resources.settings_website
+import com.pandulapeter.campfire.shared.resources.website
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.ui.components.ActionListItem
 import com.pandulapeter.campfire.shared.ui.components.CampfireTopAppBar
@@ -61,9 +66,9 @@ import com.pandulapeter.campfire.shared.ui.components.LinkListItem
 import com.pandulapeter.campfire.shared.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.shared.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.shared.ui.components.SwitchListItem
-import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
 import com.pandulapeter.campfire.shared.localization.stringResource
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,7 +120,7 @@ internal fun SettingsScreen(
                 ActionListItem(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_add_new_database),
-                    icon = CampfireIcons.add,
+                    icon = painterResource(Res.drawable.add),
                     onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewDatabase) }
                 )
             }
@@ -180,7 +185,7 @@ internal fun SettingsScreen(
                 LinkListItem(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_website),
-                    icon = CampfireIcons.website,
+                    icon = painterResource(Res.drawable.website),
                     onClick = { urlOpener("https://www.pandulapeter.com/") }
                 )
             }
@@ -188,7 +193,7 @@ internal fun SettingsScreen(
                 LinkListItem(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_git_hub),
-                    icon = CampfireIcons.gitHub,
+                    icon = painterResource(Res.drawable.git_hub),
                     onClick = { urlOpener("https://github.com/pandulapeter") }
                 )
             }
@@ -196,7 +201,7 @@ internal fun SettingsScreen(
                 LinkListItem(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_privacy_policy),
-                    icon = CampfireIcons.privacyPolicy,
+                    icon = painterResource(Res.drawable.privacy_policy),
                     onClick = { urlOpener("https://pandulapeter.github.io/legal/privacy_policy-campfire.html") }
                 )
             }
@@ -236,7 +241,7 @@ private fun DatabaseItem(
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Icon(
-                        imageVector = CampfireIcons.delete,
+                        painter = painterResource(Res.drawable.delete),
                         contentDescription = stringResource(Res.string.settings_remove_database),
                         tint = MaterialTheme.colorScheme.onErrorContainer
                     )
@@ -260,7 +265,7 @@ private fun DatabaseItem(
                     onClick = onRemoved
                 ) {
                     Icon(
-                        imageVector = CampfireIcons.delete,
+                        painter = painterResource(Res.drawable.delete),
                         contentDescription = stringResource(Res.string.settings_remove_database),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -16,10 +16,12 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import com.pandulapeter.campfire.shared.resources.Res
+import com.pandulapeter.campfire.shared.resources.clear
+import com.pandulapeter.campfire.shared.resources.search
 import com.pandulapeter.campfire.shared.resources.songs_clear
 import com.pandulapeter.campfire.shared.resources.songs_search
-import com.pandulapeter.campfire.shared.ui.theme.CampfireIcons
 import com.pandulapeter.campfire.shared.localization.stringResource
+import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +41,7 @@ internal fun SearchField(
         placeholder = { Text(stringResource(Res.string.songs_search)) },
         leadingIcon = {
             Icon(
-                imageVector = CampfireIcons.search,
+                painter = painterResource(Res.drawable.search),
                 contentDescription = null
             )
         },
@@ -55,7 +57,7 @@ internal fun SearchField(
                     onClick = { onQueryChanged("") }
                 ) {
                     Icon(
-                        imageVector = CampfireIcons.clear,
+                        painter = painterResource(Res.drawable.clear),
                         contentDescription = stringResource(Res.string.songs_clear)
                     )
                 }

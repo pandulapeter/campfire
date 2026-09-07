@@ -20,13 +20,15 @@ import com.pandulapeter.campfire.shared.presentationModule
 import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import org.koin.compose.KoinApplication
 import org.koin.compose.viewmodel.koinViewModel
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import java.awt.Dimension
 
 private val dataModules
     get() = dataLocalSourceModule + dataRemoteSourceModule + dataRepositoryModule
 
 fun main() = application {
-    val windowState = rememberWindowState()
+    val windowState = rememberWindowState(size = DpSize(System.getProperty("campfire.w", "1500").toInt().dp, 900.dp))
     // The view model is created inside the window (which owns the ViewModelStore), but the key handler needs it here.
     val viewModel = remember { mutableStateOf<CampfireViewModel?>(null) }
     Window(
