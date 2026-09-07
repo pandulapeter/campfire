@@ -201,7 +201,6 @@ private fun CampfireContent(
                         ReportNavigationTransition(viewModel)
                         SongsScreen(
                             viewModel = viewModel,
-                            windowSize = windowSize,
                             contentPadding = contentPadding
                         )
                     }
@@ -209,7 +208,6 @@ private fun CampfireContent(
                         ReportNavigationTransition(viewModel)
                         SetlistsScreen(
                             viewModel = viewModel,
-                            windowSize = windowSize,
                             contentPadding = contentPadding
                         )
                     }

@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -61,8 +62,8 @@ import com.pandulapeter.campfire.shared.ui.components.SearchField
 import com.pandulapeter.campfire.shared.ui.components.SectionHeader
 import com.pandulapeter.campfire.shared.ui.components.SongListItem
 import com.pandulapeter.campfire.shared.ui.components.SongsControlsSidePanel
-import com.pandulapeter.campfire.shared.ui.components.WindowSize
 import com.pandulapeter.campfire.shared.ui.components.besideSidePanel
+import com.pandulapeter.campfire.shared.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.shared.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.shared.localization.stringResource
 import org.jetbrains.compose.resources.painterResource
@@ -72,16 +73,18 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SongsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    windowSize: WindowSize,
     contentPadding: PaddingValues
+) = BoxWithConstraints(
+    modifier = modifier.fillMaxSize()
 ) {
     val query by viewModel.query.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyGridState()
+    val isSidePanelVisible = hasRoomForSidePanel(maxWidth)
     KeepTopAppBarInSync(scrollBehavior, listState)
     Row(
-        modifier = modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         Column(
             modifier = Modifier.weight(1f).fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -102,7 +105,7 @@ internal fun SongsScreen(
                             onClick = viewModel::refresh
                         )
                     }
-                    if (!windowSize.usesSidePanel) {
+                    if (!isSidePanelVisible) {
                         IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) }) {
                             Icon(
                                 painter = painterResource(Res.drawable.tune),
@@ -117,11 +120,11 @@ internal fun SongsScreen(
                 viewModel = viewModel,
                 listState = listState,
                 isLoading = isLoading,
-                contentPadding = contentPadding.besideSidePanel(windowSize.usesSidePanel)
+                contentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
             )
         }
         SongsControlsSidePanel(
-            isVisible = windowSize.usesSidePanel,
+            isVisible = isSidePanelVisible,
             viewModel = viewModel,
             shouldIncludeSorting = true,
             contentPadding = contentPadding

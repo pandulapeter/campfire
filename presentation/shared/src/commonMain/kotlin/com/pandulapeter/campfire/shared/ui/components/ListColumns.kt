@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.shared.ui.components
 
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
@@ -20,6 +21,11 @@ internal object ListColumns : GridCells {
         return List(count) { columnWidth + if (it < remainingPixels) 1 else 0 }
     }
 }
+
+/**
+ * The number of columns [ListColumns] produces in the given width, without the need to measure the list first.
+ */
+internal fun columnCountForWidth(width: Dp) = (width / MIN_COLUMN_WIDTH).toInt().coerceIn(1, MAX_COLUMN_COUNT)
 
 private val MIN_COLUMN_WIDTH = 360.dp
 private const val MAX_COLUMN_COUNT = 4

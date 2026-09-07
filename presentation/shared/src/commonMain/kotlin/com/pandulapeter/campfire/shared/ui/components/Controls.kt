@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -42,8 +43,15 @@ import com.pandulapeter.campfire.shared.ui.CampfireViewModel
 import com.pandulapeter.campfire.shared.localization.stringResource
 
 /**
+ * Whether the [SongsControlsSidePanel] fits into a screen of the given width: the song list comes first, so the panel
+ * only gets its space when at least [SIDE_PANEL_MIN_COLUMN_COUNT] columns of songs remain next to it. On narrower
+ * screens the same controls are shown in a bottom sheet instead.
+ */
+internal fun hasRoomForSidePanel(screenWidth: Dp) = columnCountForWidth(screenWidth - SIDE_PANEL_WIDTH) >= SIDE_PANEL_MIN_COLUMN_COUNT
+
+/**
  * [SongsControls] in a panel that spans the full height of the screen next to its app bar and content, shown on
- * expanded windows.
+ * screens that are wide enough for it, see [hasRoomForSidePanel].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,7 +98,7 @@ internal fun PaddingValues.besideSidePanel(isSidePanelVisible: Boolean): Padding
 }
 
 /**
- * Sorting and filter controls of the song list, shown in a side panel on expanded windows and in a bottom sheet
+ * Sorting and filter controls of the song list, shown in a side panel on wide enough screens and in a bottom sheet
  * otherwise.
  */
 @Composable
@@ -138,3 +146,4 @@ internal fun SongsControls(
 }
 
 private val SIDE_PANEL_WIDTH = 320.dp
+private const val SIDE_PANEL_MIN_COLUMN_COUNT = 3
