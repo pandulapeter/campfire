@@ -31,10 +31,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.add
 import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.delete
-import com.pandulapeter.campfire.presentation.resources.open_in_new
+import com.pandulapeter.campfire.presentation.resources.ic_add
+import com.pandulapeter.campfire.presentation.resources.ic_open_in_new
 import com.pandulapeter.campfire.presentation.resources.remove
 import com.pandulapeter.campfire.presentation.resources.setlists_create
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
@@ -238,7 +238,7 @@ private fun NewDatabaseDialog(
                 ) {
                     Icon(
                         modifier = Modifier.size(ButtonDefaults.IconSize),
-                        painter = painterResource(Res.drawable.open_in_new),
+                        painter = painterResource(Res.drawable.ic_open_in_new),
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
@@ -284,7 +284,7 @@ private fun SetlistPickerSheet(
         }
         ActionListItem(
             title = stringResource(Res.string.setlists_new_setlist),
-            icon = painterResource(Res.drawable.add),
+            icon = painterResource(Res.drawable.ic_add),
             onClick = {
                 coroutineScope.launch {
                     sheetState.hide()

@@ -16,8 +16,8 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.clear
-import com.pandulapeter.campfire.presentation.resources.search
+import com.pandulapeter.campfire.presentation.resources.ic_clear
+import com.pandulapeter.campfire.presentation.resources.ic_search
 import com.pandulapeter.campfire.presentation.resources.songs_clear
 import com.pandulapeter.campfire.presentation.resources.songs_search
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -41,7 +41,7 @@ internal fun SearchField(
         placeholder = { Text(stringResource(Res.string.songs_search)) },
         leadingIcon = {
             Icon(
-                painter = painterResource(Res.drawable.search),
+                painter = painterResource(Res.drawable.ic_search),
                 contentDescription = null
             )
         },
@@ -57,7 +57,7 @@ internal fun SearchField(
                     onClick = { onQueryChanged("") }
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.clear),
+                        painter = painterResource(Res.drawable.ic_clear),
                         contentDescription = stringResource(Res.string.songs_clear)
                     )
                 }

@@ -45,10 +45,11 @@ import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
-import com.pandulapeter.campfire.presentation.resources.playlist_add
+import com.pandulapeter.campfire.presentation.resources.ic_back
+import com.pandulapeter.campfire.presentation.resources.ic_playlist_add
+import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.song_details_add_to_setlist
 import com.pandulapeter.campfire.presentation.resources.song_details_display_options
-import com.pandulapeter.campfire.presentation.resources.tune
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
@@ -99,7 +100,7 @@ internal fun SongDetailsScreen(
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(
-                        painter = painterResource(Res.drawable.back),
+                        painter = painterResource(Res.drawable.ic_back),
                         contentDescription = stringResource(Res.string.back)
                     )
                 }
@@ -154,7 +155,7 @@ internal fun SongDetailsScreen(
                     }
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.playlist_add),
+                        painter = painterResource(Res.drawable.ic_playlist_add),
                         contentDescription = stringResource(Res.string.song_details_add_to_setlist)
                     )
                 }
@@ -167,7 +168,7 @@ internal fun SongDetailsScreen(
                         }
                     ) {
                         Icon(
-                            painter = painterResource(Res.drawable.tune),
+                            painter = painterResource(Res.drawable.ic_tune),
                             contentDescription = stringResource(Res.string.song_details_display_options)
                         )
                     }

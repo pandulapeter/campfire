@@ -32,7 +32,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.add
+import com.pandulapeter.campfire.presentation.resources.ic_add
+import com.pandulapeter.campfire.presentation.resources.ic_subtract
+import com.pandulapeter.campfire.presentation.resources.ic_text_decrease
+import com.pandulapeter.campfire.presentation.resources.ic_text_increase
 import com.pandulapeter.campfire.presentation.resources.song_details_display_options
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size
 import com.pandulapeter.campfire.presentation.resources.song_details_text_size_decrease
@@ -42,9 +45,6 @@ import com.pandulapeter.campfire.presentation.resources.song_details_transpose_d
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_reset
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_up
 import com.pandulapeter.campfire.presentation.resources.song_details_transposition
-import com.pandulapeter.campfire.presentation.resources.subtract
-import com.pandulapeter.campfire.presentation.resources.text_decrease
-import com.pandulapeter.campfire.presentation.resources.text_increase
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import kotlin.math.roundToInt
@@ -100,11 +100,11 @@ internal fun TranspositionControls(
 ) = Stepper(
     value = if (transposition > 0) "+$transposition" else transposition.toString(),
     isDefault = transposition == 0,
-    decreaseIcon = painterResource(Res.drawable.subtract),
+    decreaseIcon = painterResource(Res.drawable.ic_subtract),
     decreaseLabel = stringResource(Res.string.song_details_transpose_down),
     canDecrease = transposition > CampfireViewModel.MIN_TRANSPOSITION,
     onDecrease = { onTranspositionChanged(transposition - 1) },
-    increaseIcon = painterResource(Res.drawable.add),
+    increaseIcon = painterResource(Res.drawable.ic_add),
     increaseLabel = stringResource(Res.string.song_details_transpose_up),
     canIncrease = transposition < CampfireViewModel.MAX_TRANSPOSITION,
     onIncrease = { onTranspositionChanged(transposition + 1) },
@@ -122,11 +122,11 @@ internal fun FontScaleControls(
     Stepper(
         value = "$percentage%",
         isDefault = percentage == (CampfireViewModel.DEFAULT_FONT_SCALE * 100).roundToInt(),
-        decreaseIcon = painterResource(Res.drawable.text_decrease),
+        decreaseIcon = painterResource(Res.drawable.ic_text_decrease),
         decreaseLabel = stringResource(Res.string.song_details_text_size_decrease),
         canDecrease = fontScale > CampfireViewModel.MIN_FONT_SCALE,
         onDecrease = { onFontScaleAdjusted(-1) },
-        increaseIcon = painterResource(Res.drawable.text_increase),
+        increaseIcon = painterResource(Res.drawable.ic_text_increase),
         increaseLabel = stringResource(Res.string.song_details_text_size_increase),
         canIncrease = fontScale < CampfireViewModel.MAX_FONT_SCALE,
         onIncrease = { onFontScaleAdjusted(1) },

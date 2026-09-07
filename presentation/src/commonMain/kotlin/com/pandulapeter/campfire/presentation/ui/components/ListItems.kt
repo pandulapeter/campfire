@@ -35,8 +35,8 @@ import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.dot
-import com.pandulapeter.campfire.presentation.resources.open_in_new
+import com.pandulapeter.campfire.presentation.resources.ic_dot
+import com.pandulapeter.campfire.presentation.resources.ic_open_in_new
 import com.pandulapeter.campfire.presentation.resources.songs_lyrics_only
 import org.jetbrains.compose.resources.painterResource
 
@@ -69,7 +69,7 @@ internal fun SongListItem(
                 )
                 if (!song.hasChords) {
                     Icon(
-                        painter = painterResource(Res.drawable.dot),
+                        painter = painterResource(Res.drawable.ic_dot),
                         contentDescription = null
                     )
                     Text(
@@ -210,7 +210,7 @@ internal fun LinkListItem(
     leadingContent = { Icon(painter = icon, contentDescription = null) },
     trailingContent = {
         Icon(
-            painter = painterResource(Res.drawable.open_in_new),
+            painter = painterResource(Res.drawable.ic_open_in_new),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )

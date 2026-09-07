@@ -45,13 +45,14 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_refresh
+import com.pandulapeter.campfire.presentation.resources.ic_songs
+import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.refresh
-import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_no_data
 import com.pandulapeter.campfire.presentation.resources.songs_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
-import com.pandulapeter.campfire.presentation.resources.tune
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
@@ -108,7 +109,7 @@ internal fun SongsScreen(
                     if (!isSidePanelVisible) {
                         IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) }) {
                             Icon(
-                                painter = painterResource(Res.drawable.tune),
+                                painter = painterResource(Res.drawable.ic_tune),
                                 contentDescription = stringResource(Res.string.songs_sort_and_filter)
                             )
                         }
@@ -151,7 +152,7 @@ private fun RefreshAction(
     } else {
         IconButton(onClick = onClick) {
             Icon(
-                painter = painterResource(Res.drawable.refresh),
+                painter = painterResource(Res.drawable.ic_refresh),
                 contentDescription = stringResource(Res.string.refresh)
             )
         }
@@ -215,7 +216,7 @@ private fun SongList(
                 ) {
                     EmptyState(
                         modifier = Modifier.fillMaxWidth().animateItem(),
-                        icon = painterResource(Res.drawable.songs),
+                        icon = painterResource(Res.drawable.ic_songs),
                         title = stringResource(Res.string.songs_no_data),
                         hint = stringResource(Res.string.songs_no_data_hint)
                     )

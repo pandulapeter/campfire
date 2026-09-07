@@ -55,7 +55,10 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEvent
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.add
+import com.pandulapeter.campfire.presentation.resources.ic_add
+import com.pandulapeter.campfire.presentation.resources.ic_setlists
+import com.pandulapeter.campfire.presentation.resources.ic_settings
+import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.settings
@@ -151,7 +154,7 @@ private fun CampfireContent(
                     onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) }
                 ) {
                     Icon(
-                        painter = painterResource(Res.drawable.add),
+                        painter = painterResource(Res.drawable.ic_add),
                         contentDescription = stringResource(Res.string.setlists_new_setlist)
                     )
                 }
@@ -311,9 +314,9 @@ private val Scene<CampfireDestination>.zIndex: Float
 
 private val CampfireDestination.TopLevel.icon: DrawableResource
     get() = when (this) {
-        CampfireDestination.Songs -> Res.drawable.songs
-        CampfireDestination.Setlists -> Res.drawable.setlists
-        CampfireDestination.Settings -> Res.drawable.settings
+        CampfireDestination.Songs -> Res.drawable.ic_songs
+        CampfireDestination.Setlists -> Res.drawable.ic_setlists
+        CampfireDestination.Settings -> Res.drawable.ic_settings
     }
 
 private val CampfireDestination.TopLevel.label: StringResource

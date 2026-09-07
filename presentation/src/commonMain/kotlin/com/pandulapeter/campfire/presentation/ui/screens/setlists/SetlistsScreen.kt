@@ -37,18 +37,19 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.filters
+import com.pandulapeter.campfire.presentation.resources.ic_delete
+import com.pandulapeter.campfire.presentation.resources.ic_setlists
+import com.pandulapeter.campfire.presentation.resources.ic_songs
+import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_no_data
 import com.pandulapeter.campfire.presentation.resources.setlists_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.resources.setlists_reorder_hint
-import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.resources.songs_no_data
 import com.pandulapeter.campfire.presentation.resources.songs_no_data_hint
-import com.pandulapeter.campfire.presentation.resources.tune
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
@@ -88,7 +89,7 @@ internal fun SetlistsScreen(
                     if (!isSidePanelVisible) {
                         IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistsControls) }) {
                             Icon(
-                                painter = painterResource(Res.drawable.tune),
+                                painter = painterResource(Res.drawable.ic_tune),
                                 contentDescription = stringResource(Res.string.filters)
                             )
                         }
@@ -146,7 +147,7 @@ private fun SetlistList(
             ) {
                 EmptyState(
                     modifier = Modifier.fillMaxWidth().animateItem(),
-                    icon = painterResource(Res.drawable.setlists),
+                    icon = painterResource(Res.drawable.ic_setlists),
                     title = stringResource(Res.string.setlists_no_data),
                     hint = stringResource(Res.string.setlists_no_data_hint)
                 )
@@ -158,7 +159,7 @@ private fun SetlistList(
             ) {
                 EmptyState(
                     modifier = Modifier.fillMaxWidth().animateItem(),
-                    icon = painterResource(Res.drawable.songs),
+                    icon = painterResource(Res.drawable.ic_songs),
                     title = stringResource(Res.string.songs_no_data),
                     hint = stringResource(Res.string.songs_no_data_hint)
                 )
@@ -171,7 +172,7 @@ private fun SetlistList(
                         text = setlistWithSongs.setlist.title,
                         action = {
                             SectionHeaderAction(
-                                icon = painterResource(Res.drawable.delete),
+                                icon = painterResource(Res.drawable.ic_delete),
                                 contentDescription = stringResource(Res.string.setlists_delete_setlist),
                                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlistWithSongs.setlist)) }
                             )
@@ -243,7 +244,7 @@ private fun DismissibleSongItem(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Icon(
-                    painter = painterResource(Res.drawable.delete),
+                    painter = painterResource(Res.drawable.ic_delete),
                     contentDescription = stringResource(Res.string.setlists_remove_song),
                     tint = MaterialTheme.colorScheme.onErrorContainer
                 )
