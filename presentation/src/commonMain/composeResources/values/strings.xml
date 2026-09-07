@@ -65,6 +65,9 @@
     <string name="settings_privacy_policy">Privacy Policy</string>
 
     <!-- Song details screen -->
+    <string name="song_details_previous_song">Previous song</string>
+    <string name="song_details_next_song">Next song</string>
+    <string name="song_details_song_position">%1$d / %2$d</string>
     <string name="song_details_add_to_setlist">Add to setlist</string>
     <string name="song_details_transpose_up">Transpose up</string>
     <string name="song_details_transpose_down">Transpose down</string>

@@ -261,7 +261,7 @@ private fun SongSectionsLayout(
     val maxColumnCount = ((settledWidth + columnGapPx) / (minColumnWidth.roundToPx() + columnGapPx)).coerceIn(1, maxOf(1, measurables.size))
     fun columnWidthFor(totalWidth: Int, columnCount: Int) = ((totalWidth - columnGapPx * (columnCount - 1)) / columnCount).coerceIn(0, maxColumnWidthPx)
     fun List<Int>.arrangeInto(columnCount: Int) = if (isHorizontalFlow && columnCount > 1) {
-        flowIntoRows(columnCount, sectionGapPx, rowGapPx)
+        flowIntoRows(columnCount, sectionGapPx, rowGapPx, maxStackHeight = if (availableHeightPx > 0) availableHeightPx else Int.MAX_VALUE)
     } else {
         balanceIntoColumns(columnCount, sectionGapPx)
     }
@@ -368,7 +368,9 @@ private fun List<Int>.balanceIntoColumns(columnCount: Int, sectionGap: Int): Son
 /**
  * Packs the sections (given by their heights, in order) into rows of [columnCount] cells that are read across, then
  * downwards. A row is as tall as its tallest section, and a cell may hold several consecutive sections (stacked
- * [sectionGap] apart) as long as it stays no taller than that. Rows are [rowGap] apart.
+ * [sectionGap] apart) as long as it stays no taller than that, and no taller than [maxStackHeight] (the height of the
+ * screen): a section that is taller than the screen has to be scrolled anyway, but the sections stacked next to it
+ * must not grow into a column that sends the reader back up once they reach its bottom. Rows are [rowGap] apart.
  *
  * Where a row ends decides how well the rest of the song can be packed, so the row boundaries are chosen by a
  * dynamic program (from the last section backwards) that minimizes the total height. A candidate row is feasible if
@@ -379,10 +381,12 @@ private fun List<Int>.balanceIntoColumns(columnCount: Int, sectionGap: Int): Son
  * chorus in the third cell), but a hole in the middle of a song looks like a mistake while slack at its end looks
  * natural, so rows with empty cells are avoided before the height is minimized, except for the last row.
  */
-private fun List<Int>.flowIntoRows(columnCount: Int, sectionGap: Int, rowGap: Int): SongArrangement {
+private fun List<Int>.flowIntoRows(columnCount: Int, sectionGap: Int, rowGap: Int, maxStackHeight: Int): SongArrangement {
     if (isEmpty()) return SongArrangement(columns = IntArray(0), tops = IntArray(0), height = 0)
-    // Returns the number of cells that first-fit stacking needs for the sections in [start, end) with the given cap.
-    fun cellCount(start: Int, end: Int, cap: Int): Int {
+    // Returns the number of cells that first-fit stacking needs for the sections in [start, end) when a stack may be
+    // as tall as the tallest section of the row, but never taller than the screen.
+    fun cellCount(start: Int, end: Int, tallest: Int): Int {
+        val cap = minOf(tallest, maxStackHeight)
         var cells = 1
         var cellHeight = this[start]
         for (index in start + 1 until end) {
@@ -423,7 +427,8 @@ private fun List<Int>.flowIntoRows(columnCount: Int, sectionGap: Int, rowGap: In
     var rowTop = 0
     while (start < size) {
         val end = rowEnds[start]
-        val cap = subList(start, end).max()
+        val tallest = subList(start, end).max()
+        val cap = minOf(tallest, maxStackHeight)
         var column = 0
         var cellHeight = 0
         for (index in start until end) {
@@ -435,7 +440,7 @@ private fun List<Int>.flowIntoRows(columnCount: Int, sectionGap: Int, rowGap: In
             tops[index] = rowTop + cellHeight + if (cellHeight > 0) sectionGap else 0
             cellHeight = tops[index] - rowTop + this[index]
         }
-        rowTop += cap + rowGap
+        rowTop += tallest + rowGap
         if (end < size) dividerTops += rowTop - rowGap / 2
         start = end
     }
