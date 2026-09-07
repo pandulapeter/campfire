@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.model
 
-import io.github.theapache64.retrosheet.core.RetrosheetConfig
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -15,21 +14,11 @@ internal data class SongResponse(
 ) {
     companion object {
         const val SHEET_NAME = "songs"
-        private const val KEY_ID = "id"
-        private const val KEY_URL = "url"
-        private const val KEY_TITLE = "title"
-        private const val KEY_ARTIST = "artist"
-        private const val KEY_KEY = "key"
-        private const val KEY_HAS_CHORDS = "has_chords"
-
-        internal fun addSheet(configBuilder: RetrosheetConfig.Builder) = configBuilder.addSheet(
-            SHEET_NAME,
-            KEY_ID,
-            KEY_URL,
-            KEY_TITLE,
-            KEY_ARTIST,
-            KEY_KEY,
-            KEY_HAS_CHORDS
-        )
+        const val KEY_ID = "id"
+        const val KEY_URL = "url"
+        const val KEY_TITLE = "title"
+        const val KEY_ARTIST = "artist"
+        const val KEY_KEY = "key"
+        const val KEY_HAS_CHORDS = "has_chords"
     }
 }

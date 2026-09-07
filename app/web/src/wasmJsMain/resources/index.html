@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <title>Campfire</title>
+    <link rel="icon" type="image/png" href="appIcon.png">
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000000;
+        }
+
+        /* Shown until the Compose canvas takes over, which needs the .wasm binary to be downloaded first. */
+        #loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 96px;
+            height: 96px;
+            margin: -48px 0 0 -48px;
+            background-image: url("appIcon.png");
+            background-size: contain;
+            background-repeat: no-repeat;
+            animation: pulse 1.6s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+<div id="loader"></div>
+<script type="application/javascript" src="campfire.js"></script>
+</body>
+</html>

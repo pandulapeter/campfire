@@ -1,24 +1,14 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.networking
 
-import de.jensklingenberg.ktorfit.Ktorfit
-import io.github.theapache64.retrosheet.core.RetrosheetConfig
-import io.github.theapache64.retrosheet.core.RetrosheetConverter
-import io.ktor.client.HttpClient
+import com.pandulapeter.campfire.data.source.remote.implementation.model.SongResponse
 
-internal class NetworkManager(
-    val httpClient: HttpClient,
-    private val retrosheetConfig: RetrosheetConfig
-) {
-    private val songServices = mutableMapOf<String, SongService>()
+/**
+ * Reads the song list of a Google Sheets database.
+ *
+ * Every platform but the web goes through Retrosheet; the wasmJs implementation calls the same CSV endpoint directly,
+ * because Retrosheet's Ktorfit converter makes the Kotlin/Wasm compiler emit a binary the browser refuses to load.
+ */
+internal interface NetworkManager {
 
-    fun getSongService(databaseUrl: String) = songServices[databaseUrl] ?: createSongService(databaseUrl).also {
-        songServices[databaseUrl] = it
-    }
-
-    private fun createSongService(databaseUrl: String): SongService = Ktorfit.Builder()
-        .baseUrl(if (databaseUrl.endsWith("/")) databaseUrl else "$databaseUrl/")
-        .httpClient(httpClient)
-        .converterFactories(RetrosheetConverter(retrosheetConfig))
-        .build()
-        .createSongService()
+    suspend fun loadSongs(databaseUrl: String): List<SongResponse>
 }

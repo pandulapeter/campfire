@@ -4,12 +4,14 @@ import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import org.gradle.api.Project
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.configure
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 /**
- * Configures the shared set of targets every Campfire library module compiles for: Android, desktop (JVM) and iOS.
+ * Configures the shared set of targets every Campfire library module compiles for: Android, desktop (JVM), iOS and web (wasmJs).
  * The Android namespace is derived from the Gradle path, so modules only need to override it when they want something else.
  */
+@OptIn(ExperimentalWasmDsl::class)
 internal fun Project.configureKotlinMultiplatform(
     extension: KotlinMultiplatformExtension
 ) = extension.apply {
@@ -29,4 +31,7 @@ internal fun Project.configureKotlinMultiplatform(
     jvm("desktop")
     iosArm64()
     iosSimulatorArm64()
+    wasmJs {
+        browser()
+    }
 }

@@ -31,6 +31,10 @@ kotlin {
             // Edge-to-edge system bar styling, done by the Android shell in ui/CampfireAndroidApp.kt.
             implementation(libs.androidx.activity.compose)
         }
+        wasmJsMain.dependencies {
+            // Opening URLs in a new tab, done by the web shell in ui/CampfireWebApp.kt.
+            implementation(libs.kotlin.browser)
+        }
     }
 }
 

@@ -8,8 +8,7 @@ internal class SongRemoteSourceImpl(
     private val networkManager: NetworkManager
 ) : SongRemoteSource {
 
-    override suspend fun loadSongs(databaseUrl: String) = networkManager.getSongService(databaseUrl)
-        .getSongs()
+    override suspend fun loadSongs(databaseUrl: String) = networkManager.loadSongs(databaseUrl)
         .mapNotNull { it.toModel() }
         .distinctBy { it.id }
 }
