@@ -13,8 +13,8 @@ import java.awt.Desktop
 import java.net.URI
 
 /**
- * Desktop shell of the shared UI. Desktop has no back gesture, so the Escape key (and the mouse back button, see
- * [handleKeyEvent]) pops the back stack.
+ * Desktop shell of the shared UI. Desktop has no back gesture, so the Escape key (see [handleKeyEvent]) dismisses the
+ * visible modal, pops the back stack when there is none, and closes the application on the root screen.
  */
 @Composable
 fun CampfireDesktopApp(
@@ -26,10 +26,16 @@ fun CampfireDesktopApp(
 
 /**
  * To be wired into the window's key event handler. Returns true if the event was consumed.
+ *
+ * @param onExit Closes the application, called when there is nothing left to navigate back from.
  */
-fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent): Boolean {
-    if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Escape && backStack.size > 1) {
-        navigateBack()
+fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Boolean {
+    if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Escape) {
+        // Window key handlers run before Compose turns Escape into a back event, so consuming it here would pop the
+        // back stack behind an open dialog or bottom sheet. Those register their own back handlers: leaving the event
+        // unconsumed lets the top one dismiss itself (with its exit animation).
+        if (visibleDialog.value != null) return false
+        if (backStack.size > 1) navigateBack() else onExit()
         return true
     }
     return false

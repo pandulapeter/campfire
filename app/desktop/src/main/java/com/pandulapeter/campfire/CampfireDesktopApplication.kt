@@ -34,7 +34,7 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         state = windowState,
         icon = painterResource("appIcon.png"),
-        onKeyEvent = { keyEvent -> viewModel.value?.handleKeyEvent(keyEvent) == true }
+        onKeyEvent = { keyEvent -> viewModel.value?.handleKeyEvent(keyEvent, onExit = ::exitApplication) == true }
     ) {
         window.minimumSize = Dimension(400, 400)
         KoinApplication(
