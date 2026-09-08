@@ -197,7 +197,7 @@ internal fun SettingsScreen(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_website),
                     icon = painterResource(Res.drawable.ic_website),
-                    onClick = { urlOpener("https://www.pandulapeter.com/") }
+                    onClick = { urlOpener("https://pandulapeter.github.io/") }
                 )
             }
             item(key = "github") {
