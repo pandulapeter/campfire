@@ -47,19 +47,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_refresh
-import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.refresh
-import com.pandulapeter.campfire.presentation.resources.songs_no_data
-import com.pandulapeter.campfire.presentation.resources.songs_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
-import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
+import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.SearchField
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
@@ -83,6 +80,7 @@ internal fun SongsScreen(
 ) {
     val query by viewModel.query.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val placeholder by viewModel.songsPlaceholder.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyGridState()
     val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
@@ -129,7 +127,10 @@ internal fun SongsScreen(
                 modifier = Modifier.fillMaxSize(),
                 viewModel = viewModel,
                 listState = listState,
-                isLoading = isLoading,
+                placeholder = placeholder,
+                // While the list is empty its own placeholder is the loading indicator; two of them at once would
+                // only say the same thing twice.
+                isRefreshing = isLoading && placeholder == null,
                 columnCount = columnCount,
                 contentPadding = listContentPadding
             )
@@ -175,7 +176,8 @@ private fun SongList(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     listState: LazyGridState,
-    isLoading: Boolean,
+    placeholder: CampfireViewModel.Placeholder?,
+    isRefreshing: Boolean,
     columnCount: Int,
     contentPadding: PaddingValues
 ) {
@@ -208,7 +210,7 @@ private fun SongList(
 
     RefreshableContainer(
         modifier = modifier,
-        isRefreshing = isLoading,
+        isRefreshing = isRefreshing,
         onRefresh = viewModel::refresh
     ) {
         LazyVerticalGrid(
@@ -222,16 +224,15 @@ private fun SongList(
                 bottom = contentPadding.calculateBottomPadding() + 8.dp
             )
         ) {
-            if (songGroups.isEmpty()) {
+            placeholder?.let {
                 item(
-                    key = "empty",
+                    key = "placeholder",
                     span = { GridItemSpan(maxLineSpan) }
                 ) {
-                    EmptyState(
+                    ListPlaceholder(
                         modifier = Modifier.fillMaxWidth().animateItem(),
-                        icon = painterResource(Res.drawable.ic_songs),
-                        title = stringResource(Res.string.songs_no_data),
-                        hint = stringResource(Res.string.songs_no_data_hint)
+                        placeholder = it,
+                        onRetry = viewModel::refresh
                     )
                 }
             }

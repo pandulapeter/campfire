@@ -17,7 +17,7 @@ internal class SongRepositoryImpl(
 
     override val songs = dataState
 
-    override suspend fun loadSongs(databaseUrls: List<String>, isForceRefresh: Boolean) = loadData(
+    override suspend fun loadSongs(databaseUrls: List<String>, isForceRefresh: Boolean): Boolean = loadData(
         databaseUrls = databaseUrls,
         isForceRefresh = isForceRefresh
     )

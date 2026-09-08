@@ -8,7 +8,8 @@ interface UserPreferencesRepository {
 
     val userPreferences: Flow<DataState<UserPreferences>>
 
-    suspend fun loadUserPreferencesIfNeeded() : UserPreferences
+    /** The saved preferences, or null if they could not be read - see `BaseLocalDataRepository.loadDataIfNeeded`. */
+    suspend fun loadUserPreferencesIfNeeded(): UserPreferences?
 
     suspend fun saveUserPreferences(userPreferences: UserPreferences)
 }

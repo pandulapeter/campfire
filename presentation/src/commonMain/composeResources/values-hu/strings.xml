@@ -8,6 +8,12 @@
     <string name="remove">Eltávolítás</string>
     <string name="delete">Törlés</string>
     <string name="filters">Szűrők</string>
+    <string name="retry">Újra</string>
+
+    <!-- Errors -->
+    <string name="error_no_data">Nem sikerült betölteni az adatokat</string>
+    <string name="error_no_data_hint">Ellenőrizd az internetkapcsolatot, majd próbáld újra.</string>
+    <string name="error_refresh_failed">Nem sikerült frissíteni a dalokat.</string>
 
     <!-- Songs screen -->
     <string name="songs">Dalok</string>
@@ -21,6 +27,8 @@
     <string name="songs_sorting_mode_by_title">Cím</string>
     <string name="songs_no_data">Nincsenek dalok</string>
     <string name="songs_no_data_hint">Próbáld módosítani a keresést vagy a szűrőket.</string>
+    <string name="songs_no_search_results">Nincs találat</string>
+    <string name="songs_no_search_results_hint">Egyetlen dal sem felel meg a keresésnek.</string>
     <string name="songs_lyrics_only">Csak dalszöveg</string>
 
     <!-- Setlists screen -->
@@ -86,5 +94,7 @@
     <string name="song_details_section_bridge">Átvezetés</string>
     <string name="song_details_section_solo">Szóló</string>
     <string name="song_details_section_outro">Outro</string>
+    <string name="song_details_no_data">Ezt a dalt nem sikerült betölteni</string>
+    <string name="song_details_no_data_hint">Ellenőrizd az internetkapcsolatot, majd próbáld újra.</string>
 
 </resources>

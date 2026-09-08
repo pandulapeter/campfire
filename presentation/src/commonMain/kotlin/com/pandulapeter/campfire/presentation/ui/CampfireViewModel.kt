@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.useCases.GetDatabasesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongDetailsUseCase
@@ -26,10 +27,14 @@ import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeRawSongDetailsUseCase
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -64,10 +69,11 @@ class CampfireViewModel(
      * [GetScreenDataUseCase] directly, which would re-run the whole repository combine once per state. Started
      * eagerly so that the data is loaded into memory as the app starts, rather than when a screen first asks for it.
      */
-    private val screenData = getScreenData().stateIn(
+    private val screenData: StateFlow<DataState<ScreenData>> = getScreenData().stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
-        initialValue = DataState.Failure(null)
+        // Loading, not Failure: nothing has been asked for yet, which is not something to show an error for.
+        initialValue = DataState.Loading(null)
     )
 
     // Navigation
@@ -113,13 +119,46 @@ class CampfireViewModel(
         if (query.isBlank()) {
             songs.groupIntoSections(sortingMode ?: UserPreferences.SortingMode.BY_ARTIST)
         } else {
-            listOf(SongGroup(header = null, songs = songs.filterAndRank(query)))
+            // No groups at all when nothing matches, rather than one empty group: a search with no results has to
+            // look empty to whoever decides between the list and a placeholder, not like a list with one section.
+            songs.filterAndRank(query).takeIf { it.isNotEmpty() }?.let { listOf(SongGroup(header = null, songs = it)) }.orEmpty()
         }
     }.asState(emptyList())
+
+    /**
+     * What the song list has to show instead of songs, null while it has songs. A library that is empty because
+     * the search matched nothing is told apart from one that is empty because the load has not finished (or has
+     * failed) here, so that a list without data never sits on a loading indicator that nothing will ever replace.
+     */
+    val songsPlaceholder = combine(screenData, songGroups) { screenData, songGroups ->
+        when {
+            songGroups.isNotEmpty() -> null
+            screenData.data?.songs.isNullOrEmpty() -> screenData.emptyLibraryPlaceholder
+            else -> Placeholder.NO_SEARCH_RESULTS
+        }
+    }.asState(Placeholder.LOADING)
+
+    /** The same for the screens that show the library without the search query, such as the setlists. */
+    val libraryPlaceholder = screenData
+        .map { if (it.data?.songs.isNullOrEmpty()) it.emptyLibraryPlaceholder else null }
+        .asState(Placeholder.LOADING)
+
     val setlistsWithSongs = combine(setlists, allSongs) { setlists, songs ->
         val songsById = songs.associateBy { it.id }
         setlists.map { setlist -> SetlistWithSongs(setlist = setlist, songs = setlist.songIds.mapNotNull { songsById[it] }) }
     }.asState(emptyList())
+
+    /** The urls of the songs whose text could not be loaded and that have no saved copy to show instead. */
+    private val _failedSongUrls = MutableStateFlow(emptySet<String>())
+    val failedSongUrls: StateFlow<Set<String>> = _failedSongUrls.asStateFlow()
+
+    /**
+     * Emitted when a refresh the user asked for has failed while there were still songs on screen. Every other
+     * failure is silent: a background refresh has cached data to fall back on, and a list that ended up with nothing
+     * says so itself, see [songsPlaceholder].
+     */
+    private val _refreshFailedEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val refreshFailedEvents: SharedFlow<Unit> = _refreshFailedEvents.asSharedFlow()
 
     /**
      * The text size multiplier of the song details screen. A pinch gesture changes it on every frame, so the latest
@@ -198,9 +237,18 @@ class CampfireViewModel(
 
     fun onQueryChanged(newQuery: String) = _query.update { newQuery }
 
-    fun refresh() = viewModelScope.launch { loadScreenData(true) }
+    fun refresh() = viewModelScope.launch {
+        val isSuccessful = loadScreenData(true)
+        // A failure with nothing to fall back on is already on screen as the list's own error state, retry and all;
+        // the message is for the case where the songs behind it stay perfectly usable.
+        if (!isSuccessful && screenData.value.data?.songs?.isNotEmpty() == true) _refreshFailedEvents.emit(Unit)
+    }
 
-    fun loadSongDetails(song: Song) = viewModelScope.launch { loadSongDetails(song.url, false) }
+    fun loadSongDetails(song: Song) = viewModelScope.launch {
+        // Cleared first, so that a retry shows the loading state again instead of staying on the error.
+        _failedSongUrls.update { it - song.url }
+        if (!loadSongDetails(song.url, false)) _failedSongUrls.update { it + song.url }
+    }
 
     fun transpose(rawData: String, transposition: Int) = transposeRawSongDetails(rawData, transposition)
 
@@ -420,6 +468,22 @@ class CampfireViewModel(
 
     /** The upper case, accent-free first character of the text if it is a letter. */
     private fun String.initialLetter() = normalizeText(take(1)).firstOrNull()?.takeIf { it.isLetter() }?.uppercaseChar()
+
+    /** What a list without content has in its place. */
+    enum class Placeholder {
+        LOADING,
+        ERROR,
+        NO_SONGS,
+        NO_SEARCH_RESULTS
+    }
+
+    /** A library with no songs in it is only an error once the load that would have filled it has actually failed. */
+    private val DataState<ScreenData>.emptyLibraryPlaceholder
+        get() = when (this) {
+            is DataState.Loading -> Placeholder.LOADING
+            is DataState.Failure -> Placeholder.ERROR
+            is DataState.Idle -> Placeholder.NO_SONGS
+        }
 
     private class MatchingSong(
         val song: Song,

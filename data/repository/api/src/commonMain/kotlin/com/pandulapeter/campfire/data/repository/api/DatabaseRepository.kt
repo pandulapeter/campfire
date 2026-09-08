@@ -8,7 +8,8 @@ interface DatabaseRepository {
 
     val databases: Flow<DataState<List<Database>>>
 
-    suspend fun loadDatabasesIfNeeded(): List<Database>
+    /** The known databases, or null if they could not be read - see `BaseLocalDataRepository.loadDataIfNeeded`. */
+    suspend fun loadDatabasesIfNeeded(): List<Database>?
 
     suspend fun saveDatabases(databases: List<Database>)
 }

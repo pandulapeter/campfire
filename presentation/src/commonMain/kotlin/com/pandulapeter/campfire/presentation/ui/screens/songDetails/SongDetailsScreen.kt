@@ -54,17 +54,22 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
 import com.pandulapeter.campfire.presentation.resources.ic_back
+import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.ic_playlist_add
 import com.pandulapeter.campfire.presentation.resources.ic_previous
 import com.pandulapeter.campfire.presentation.resources.ic_tune
+import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.song_details_add_to_setlist
 import com.pandulapeter.campfire.presentation.resources.song_details_display_options
 import com.pandulapeter.campfire.presentation.resources.song_details_next_song
+import com.pandulapeter.campfire.presentation.resources.song_details_no_data
+import com.pandulapeter.campfire.presentation.resources.song_details_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_song
 import com.pandulapeter.campfire.presentation.resources.song_details_song_position
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.launch
@@ -99,6 +104,7 @@ internal fun SongDetailsScreen(
     val allSongs by viewModel.allSongs.collectAsStateWithLifecycle()
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     val rawSongDetails by viewModel.rawSongDetails.collectAsStateWithLifecycle()
+    val failedSongUrls by viewModel.failedSongUrls.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
@@ -236,13 +242,15 @@ internal fun SongDetailsScreen(
             SongDetailsPage(
                 song = song,
                 rawSongDetails = rawSongDetails[song.url],
+                hasFailed = song.url in failedSongUrls,
                 transposition = transpositions[TranspositionKey(song.id, destination.setlistId)] ?: 0,
                 shouldShowChords = shouldShowChords,
                 fontScale = fontScale,
                 isHorizontalFlow = isHorizontalFlow,
                 settledWidth = settledWidth,
                 contentPadding = pageContentPadding,
-                transpose = viewModel::transpose
+                transpose = viewModel::transpose,
+                onRetry = { viewModel.loadSongDetails(song) }
             )
         }
         if (canPage) {
@@ -339,18 +347,24 @@ private fun SongPagerControls(
     }
 }
 
+/**
+ * @param hasFailed Whether the text of this song could not be fetched and there is no saved copy to show instead.
+ *   The page then offers a retry rather than a loading indicator that has nothing left to wait for.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SongDetailsPage(
     song: Song,
     rawSongDetails: RawSongDetails?,
+    hasFailed: Boolean,
     transposition: Int,
     shouldShowChords: Boolean,
     fontScale: Float,
     isHorizontalFlow: Boolean,
     settledWidth: Dp,
     contentPadding: PaddingValues,
-    transpose: (rawData: String, transposition: Int) -> String
+    transpose: (rawData: String, transposition: Int) -> String,
+    onRetry: () -> Unit
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
     targetState = rawSongDetails,
@@ -362,7 +376,17 @@ private fun SongDetailsPage(
             modifier = Modifier.fillMaxSize().padding(contentPadding),
             contentAlignment = Alignment.Center
         ) {
-            ContainedLoadingIndicator()
+            if (hasFailed) {
+                EmptyState(
+                    icon = painterResource(Res.drawable.ic_error),
+                    title = stringResource(Res.string.song_details_no_data),
+                    hint = stringResource(Res.string.song_details_no_data_hint),
+                    actionText = stringResource(Res.string.retry),
+                    onAction = onRetry
+                )
+            } else {
+                ContainedLoadingIndicator()
+            }
         }
     } else {
         val layoutDirection = LocalLayoutDirection.current

@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,15 +34,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.error_no_data
+import com.pandulapeter.campfire.presentation.resources.error_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.ic_dot
+import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.ic_open_in_new
+import com.pandulapeter.campfire.presentation.resources.ic_search
+import com.pandulapeter.campfire.presentation.resources.ic_songs
+import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.songs_lyrics_only
+import com.pandulapeter.campfire.presentation.resources.songs_no_data
+import com.pandulapeter.campfire.presentation.resources.songs_no_data_hint
+import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
+import com.pandulapeter.campfire.presentation.resources.songs_no_search_results_hint
+import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -255,15 +269,64 @@ internal fun ActionListItem(
     leadingContent = { Icon(painter = icon, contentDescription = null) }
 )
 
+/**
+ * What a song list shows in place of its songs: the indicator of a load that is still running, the error of one
+ * that failed with nothing cached to fall back on, or an empty state. A list that has no data is always in one of
+ * these, so a load that never arrives ends in something the user can act on rather than in an endless indicator.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+internal fun ListPlaceholder(
+    modifier: Modifier = Modifier,
+    placeholder: CampfireViewModel.Placeholder,
+    onRetry: () -> Unit
+) = when (placeholder) {
+    CampfireViewModel.Placeholder.LOADING -> Box(
+        modifier = modifier.padding(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        ContainedLoadingIndicator()
+    }
+
+    CampfireViewModel.Placeholder.ERROR -> EmptyState(
+        modifier = modifier,
+        icon = painterResource(Res.drawable.ic_error),
+        title = stringResource(Res.string.error_no_data),
+        hint = stringResource(Res.string.error_no_data_hint),
+        actionText = stringResource(Res.string.retry),
+        onAction = onRetry
+    )
+
+    CampfireViewModel.Placeholder.NO_SONGS -> EmptyState(
+        modifier = modifier,
+        icon = painterResource(Res.drawable.ic_songs),
+        title = stringResource(Res.string.songs_no_data),
+        hint = stringResource(Res.string.songs_no_data_hint)
+    )
+
+    CampfireViewModel.Placeholder.NO_SEARCH_RESULTS -> EmptyState(
+        modifier = modifier,
+        icon = painterResource(Res.drawable.ic_search),
+        title = stringResource(Res.string.songs_no_search_results),
+        hint = stringResource(Res.string.songs_no_search_results_hint)
+    )
+}
+
+/**
+ * @param actionText The label of the button under the hint. Without it (and [onAction]) the state is text only,
+ *   which is what an empty list that is empty for a good reason gets: there is nothing to retry.
+ */
 @Composable
 internal fun EmptyState(
     modifier: Modifier = Modifier,
     icon: Painter,
     title: String,
-    hint: String
+    hint: String,
+    actionText: String? = null,
+    onAction: (() -> Unit)? = null
 ) = Column(
     modifier = modifier.padding(32.dp),
-    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+    horizontalAlignment = Alignment.CenterHorizontally
 ) {
     Icon(
         modifier = Modifier.padding(bottom = 16.dp).alpha(0.6f),
@@ -274,15 +337,23 @@ internal fun EmptyState(
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium,
-        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        textAlign = TextAlign.Center
     )
     Text(
         modifier = Modifier.padding(top = 4.dp),
         text = hint,
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        textAlign = TextAlign.Center
     )
+    if (actionText != null && onAction != null) {
+        Button(
+            modifier = Modifier.padding(top = 16.dp),
+            onClick = onAction
+        ) {
+            Text(actionText)
+        }
+    }
 }
 
 /**

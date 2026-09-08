@@ -8,7 +8,8 @@ interface SetlistRepository {
 
     val setlists: Flow<DataState<List<Setlist>>>
 
-    suspend fun loadSetlistsIfNeeded() : List<Setlist>
+    /** The saved setlists, or null if they could not be read - see `BaseLocalDataRepository.loadDataIfNeeded`. */
+    suspend fun loadSetlistsIfNeeded(): List<Setlist>?
 
     suspend fun saveSetlists(setlists: List<Setlist>)
 }

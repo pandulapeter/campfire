@@ -43,7 +43,6 @@ import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.filters
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
-import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
@@ -52,12 +51,11 @@ import com.pandulapeter.campfire.presentation.resources.setlists_no_data
 import com.pandulapeter.campfire.presentation.resources.setlists_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.resources.setlists_reorder_hint
-import com.pandulapeter.campfire.presentation.resources.songs_no_data
-import com.pandulapeter.campfire.presentation.resources.songs_no_data_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
+import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderAction
@@ -152,7 +150,8 @@ private fun SetlistList(
     contentPadding: PaddingValues
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
-    val allSongs by viewModel.allSongs.collectAsStateWithLifecycle()
+    // Read once, so that the branch below and the placeholder it renders can never disagree about it.
+    val libraryPlaceholder = viewModel.libraryPlaceholder.collectAsStateWithLifecycle().value
     val downloadedSongUrls by viewModel.downloadedSongUrls.collectAsStateWithLifecycle()
     val listState = rememberLazyGridState()
     val reorderableState = rememberReorderableLazyGridState(listState) { from, to ->
@@ -189,15 +188,16 @@ private fun SetlistList(
                 )
             }
 
-            allSongs.isEmpty() -> item(
-                key = "empty",
+            // The setlists are saved locally, but the songs in them come from the library: without it, the rows of
+            // every setlist would be missing rather than the setlists themselves.
+            libraryPlaceholder != null -> item(
+                key = "placeholder",
                 span = { GridItemSpan(maxLineSpan) }
             ) {
-                EmptyState(
+                ListPlaceholder(
                     modifier = Modifier.fillMaxWidth().animateItem(),
-                    icon = painterResource(Res.drawable.ic_songs),
-                    title = stringResource(Res.string.songs_no_data),
-                    hint = stringResource(Res.string.songs_no_data_hint)
+                    placeholder = libraryPlaceholder,
+                    onRetry = viewModel::refresh
                 )
             }
 

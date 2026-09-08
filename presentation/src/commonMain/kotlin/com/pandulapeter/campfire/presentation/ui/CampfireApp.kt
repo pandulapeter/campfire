@@ -32,9 +32,14 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,9 +59,11 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEvent
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.error_refresh_failed
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.ic_songs
+import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.songs
@@ -216,10 +223,53 @@ private fun CampfireContent(
                 }
             }
         )
+        RefreshFailedSnackbar(
+            viewModel = viewModel,
+            railWidth = railWidth,
+            navigationBarHeight = navigationBarHeight,
+            contentPadding = shellContentPadding
+        )
     }
     CampfireDialogs(
         viewModel = viewModel,
         urlOpener = urlOpener
+    )
+}
+
+/**
+ * The only error the app reports rather than shows: a refresh the user asked for that did not work out. It is a
+ * snackbar because there is a screen full of cached songs behind it that is still perfectly usable - a refresh with
+ * nothing to fall back on leaves the list in its own error state instead, which is where the retry belongs then.
+ *
+ * Laid over the navigation chrome instead of inside a screen, since the songs it is about are on the deck's bottom
+ * card; it clears whichever bar the window has and the insets that bar does not already cover.
+ */
+@Composable
+private fun BoxScope.RefreshFailedSnackbar(
+    viewModel: CampfireViewModel,
+    railWidth: Dp,
+    navigationBarHeight: Dp,
+    contentPadding: PaddingValues
+) {
+    val hostState = remember { SnackbarHostState() }
+    val message = stringResource(Res.string.error_refresh_failed)
+    val actionLabel = stringResource(Res.string.retry)
+    LaunchedEffect(viewModel, message, actionLabel) {
+        viewModel.refreshFailedEvents.collect {
+            val result = hostState.showSnackbar(
+                message = message,
+                actionLabel = actionLabel,
+                duration = SnackbarDuration.Long
+            )
+            if (result == SnackbarResult.ActionPerformed) viewModel.refresh()
+        }
+    }
+    SnackbarHost(
+        hostState = hostState,
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .padding(start = railWidth, bottom = navigationBarHeight)
+            .padding(contentPadding)
     )
 }
 

@@ -26,25 +26,31 @@ class LoadScreenDataUseCaseImpl internal constructor(
         override val coroutineContext = SupervisorJob() + Dispatchers.Default
     }
 
-    override suspend operator fun invoke(isForceRefresh: Boolean) {
+    /**
+     * Every source is loaded even if another one has already failed, so that one broken part of the screen does not
+     * keep the rest of it empty; whether all of them made it is what the caller gets back.
+     */
+    override suspend operator fun invoke(isForceRefresh: Boolean): Boolean {
         with(scope) {
-            listOf(
-                async { setlistRepository.loadSetlistsIfNeeded() },
+            return listOf(
+                async { setlistRepository.loadSetlistsIfNeeded() != null },
                 async { rawSongDetailsRepository.loadDownloadedSongUrlsIfNeeded() },
-                async { transpositionRepository.loadTranspositionsIfNeeded() },
+                async { transpositionRepository.loadTranspositionsIfNeeded() != null },
                 async {
                     // The databases are loaded in parallel with the preferences, so that the Settings screen has them
                     // as early as possible even though the song list needs both before it can start.
                     val databases = async { databaseRepository.loadDatabasesIfNeeded() }
                     val userPreferences = userPreferencesRepository.loadUserPreferencesIfNeeded()
                     val databaseUrls = databases.await()
-                        .filter { it.isEnabled }
-                        .filterNot { it.url in userPreferences.unselectedDatabaseUrls }
-                        .sortedBy { it.priority }
-                        .map { it.url }
-                    songRepository.loadSongs(databaseUrls, isForceRefresh)
+                        ?.filter { it.isEnabled }
+                        ?.filterNot { it.url in userPreferences?.unselectedDatabaseUrls.orEmpty() }
+                        ?.sortedBy { it.priority }
+                        ?.map { it.url }
+                    // Without the databases, or the preferences that say which of them to skip, there is nothing to
+                    // ask the song list for.
+                    userPreferences != null && databaseUrls != null && songRepository.loadSongs(databaseUrls, isForceRefresh)
                 }
-            ).awaitAll()
+            ).awaitAll().all { it }
         }
     }
 }
