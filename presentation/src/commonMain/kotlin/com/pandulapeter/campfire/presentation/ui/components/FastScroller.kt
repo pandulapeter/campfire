@@ -25,7 +25,6 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -52,8 +51,6 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
-import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -61,8 +58,8 @@ import kotlin.math.roundToInt
 /**
  * Draggable scrollbar of a long lazy grid, in the style of the fast scroller of a contacts app: the thumb sits on the
  * end edge with a wide touch target, and while it is dragged a bubble next to it shows the label of the section that
- * is currently at the top of the list. On touch platforms the scroller appears while the list is scrolling or dragged
- * and hides shortly after; on desktop it is always shown. Touches outside the thumb go through to the list.
+ * is currently at the top of the list. The scroller stays visible for as long as the list is scrollable. Touches
+ * outside the thumb go through to the list.
  *
  * @param labelForItem Returns the label of the section the item at the given index belongs to, or null if none.
  */
@@ -78,17 +75,7 @@ internal fun BoxScope.FastScroller(
     val state = remember(gridState) { FastScrollerState(gridState, minThumbHeight) }
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
-    val isScrolling = gridState.isScrollInProgress
-    var isRecentlyActive by remember { mutableStateOf(false) }
-    LaunchedEffect(isScrolling, state.isDragging) {
-        if (isScrolling || state.isDragging) {
-            isRecentlyActive = true
-        } else {
-            delay(HIDE_DELAY)
-            isRecentlyActive = false
-        }
-    }
-    val isVisible = state.isScrollable && (isDesktopPlatform || isRecentlyActive)
+    val isVisible = state.isScrollable
     val alpha by animateFloatAsState(
         targetValue = if (isVisible) 1f else 0f,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
@@ -295,4 +282,3 @@ private val BUBBLE_SPACING = 4.dp
 private val BUBBLE_ELEVATION = 2.dp
 private val BUBBLE_TRANSFORM_ORIGIN = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0.5f)
 private const val IDLE_THUMB_ALPHA = 0.5f
-private const val HIDE_DELAY = 1500L

@@ -63,6 +63,7 @@
     <string name="settings_website">Website</string>
     <string name="settings_git_hub">GitHub page</string>
     <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="settings_version">Version %1$s</string>
 
     <!-- Song details screen -->
     <string name="song_details_previous_song">Previous song</string>

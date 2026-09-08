@@ -30,9 +30,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_delete
@@ -59,6 +61,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_dark
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_light
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_system_default
+import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.resources.settings_website
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
@@ -214,6 +217,15 @@ internal fun SettingsScreen(
                     title = stringResource(Res.string.settings_privacy_policy),
                     icon = painterResource(Res.drawable.ic_privacy_policy),
                     onClick = { urlOpener("https://pandulapeter.github.io/legal/privacy_policy-campfire.html") }
+                )
+            }
+            item(key = "version") {
+                Text(
+                    modifier = Modifier.animateItem().fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
+                    text = stringResource(Res.string.settings_version, CAMPFIRE_VERSION_NAME),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
                 )
             }
         }

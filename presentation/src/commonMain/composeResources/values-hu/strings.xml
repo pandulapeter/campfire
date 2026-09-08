@@ -63,6 +63,7 @@
     <string name="settings_website">Weboldal</string>
     <string name="settings_git_hub">GitHub oldal</string>
     <string name="settings_privacy_policy">Adatvédelmi nyilatkozat</string>
+    <string name="settings_version">%1$s verzió</string>
 
     <!-- Song details screen -->
     <string name="song_details_previous_song">Előző dal</string>
