@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.domain.implementation
 
+import com.pandulapeter.campfire.domain.api.useCases.GetDatabasesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
@@ -10,6 +11,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveTranspositionsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeRawSongDetailsUseCase
+import com.pandulapeter.campfire.domain.implementation.useCases.GetDatabasesUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.GetScreenDataUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.GetSongDetailsUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.LoadScreenDataUseCaseImpl
@@ -23,6 +25,7 @@ import com.pandulapeter.campfire.domain.implementation.useCases.TransposeRawSong
 import org.koin.dsl.module
 
 val domainModule = module {
+    factory<GetDatabasesUseCase> { GetDatabasesUseCaseImpl(get()) }
     factory<GetScreenDataUseCase> { GetScreenDataUseCaseImpl(get(), get(), get(), get(), get(), get(), get()) }
     factory<GetSongDetailsUseCase> { GetSongDetailsUseCaseImpl(get()) }
     factory<LoadScreenDataUseCase> { LoadScreenDataUseCaseImpl(get(), get(), get(), get(), get(), get()) }

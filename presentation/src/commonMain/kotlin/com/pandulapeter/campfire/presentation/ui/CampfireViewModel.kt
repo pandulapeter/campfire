@@ -13,7 +13,9 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.domain.api.useCases.GetDatabasesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
@@ -45,6 +47,8 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class, FlowPreview::class)
 class CampfireViewModel(
     getScreenData: GetScreenDataUseCase,
+    getDatabases: GetDatabasesUseCase,
+    getSongDetails: GetSongDetailsUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
     private val loadSongDetails: LoadSongDetailsUseCase,
     private val saveDatabases: SaveDatabasesUseCase,
@@ -55,7 +59,16 @@ class CampfireViewModel(
     private val transposeRawSongDetails: TransposeRawSongDetailsUseCase
 ) : ViewModel() {
 
-    private val screenData = getScreenData()
+    /**
+     * The single subscription to the domain layer: every state below maps over this instead of over
+     * [GetScreenDataUseCase] directly, which would re-run the whole repository combine once per state. Started
+     * eagerly so that the data is loaded into memory as the app starts, rather than when a screen first asks for it.
+     */
+    private val screenData = getScreenData().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = DataState.Failure(null)
+    )
 
     // Navigation
     val backStack: SnapshotStateList<CampfireDestination> = mutableStateListOf(CampfireDestination.Songs)
@@ -75,9 +88,25 @@ class CampfireViewModel(
     val query: StateFlow<String> = _query.asStateFlow()
     val isLoading = screenData.map { it is DataState.Loading }.asState(false)
     val userPreferences = screenData.map { it.data?.userPreferences }.asState(null)
-    val databases = screenData.map { it.data?.databases.orEmpty() }.asState(emptyList())
+
+    /**
+     * Read from [GetDatabasesUseCase] rather than from [screenData], which only has data once every source has it,
+     * and started eagerly, so that the databases are in memory from app start. Their only subscribers are the
+     * Settings screen and the song list controls, and a flow that waited for them would hand a freshly opened screen
+     * an empty list and the real databases a frame later, animating every row in.
+     */
+    val databases = getDatabases().asEagerState(emptyList())
+
     val setlists = screenData.map { it.data?.setlists.orEmpty() }.asState(emptyList())
-    val rawSongDetails = screenData.map { it.data?.rawSongDetails.orEmpty() }.asState(emptyMap())
+    val downloadedSongUrls = screenData.map { it.data?.downloadedSongUrls.orEmpty() }.asState(emptySet())
+
+    /**
+     * The text of the songs opened so far. It deliberately does not travel in [screenData]: the song lists only need
+     * [downloadedSongUrls] to mark a song as downloaded, and putting the whole library's text there meant nothing
+     * could be shown until every downloaded song had been read back from storage.
+     */
+    val rawSongDetails = getSongDetails().map { it.data.orEmpty() }.asState(emptyMap())
+
     val transpositions = screenData.map { it.data?.transpositions.orEmpty() }.asState(emptyMap())
     val allSongs = screenData.map { it.data?.songs.orEmpty() }.asState(emptyList())
     val songGroups = combine(allSongs, query, userPreferences.map { it?.sortingMode }) { songs, query, sortingMode ->
@@ -103,11 +132,7 @@ class CampfireViewModel(
     private val pendingFontScale = MutableStateFlow<Float?>(null)
     val fontScale = combine(userPreferences, pendingFontScale) { userPreferences, pendingFontScale ->
         pendingFontScale ?: userPreferences?.fontScale ?: DEFAULT_FONT_SCALE
-    }.distinctUntilChanged().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.Eagerly,
-        initialValue = DEFAULT_FONT_SCALE
-    )
+    }.asEagerState(DEFAULT_FONT_SCALE)
 
     // Dialogs
     private val _visibleDialog = MutableStateFlow<DialogType?>(null)
@@ -335,25 +360,59 @@ class CampfireViewModel(
         initialValue = initialValue
     )
 
+    /** Like [asState], but kept up to date from app start, so that the first subscriber never sees [initialValue]. */
+    private fun <T> Flow<T>.asEagerState(initialValue: T) = distinctUntilChanged().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = initialValue
+    )
+
+    /**
+     * Runs on every keystroke over the whole library, so each song is normalized once and the ranking is decided
+     * before sorting - a comparator's selector runs on every comparison, not once per song.
+     */
     private fun List<Song>.filterAndRank(query: String): List<Song> {
         val normalizedQuery = normalizeText(query)
-        return filter { normalizeText(it.title).contains(normalizedQuery, true) || normalizeText(it.artist).contains(normalizedQuery, true) }
-            .sortedByDescending { normalizeText(it.artist).startsWith(normalizedQuery, true) }
-            .sortedByDescending { normalizeText(it.title).startsWith(normalizedQuery, true) }
+        return mapNotNull { song ->
+            val title = normalizeText(song.title)
+            val artist = normalizeText(song.artist)
+            // Both sides are already lower case, so these don't have to pay for a case insensitive comparison.
+            if (title.contains(normalizedQuery) || artist.contains(normalizedQuery)) {
+                MatchingSong(
+                    song = song,
+                    doesTitleStartWithQuery = title.startsWith(normalizedQuery),
+                    doesArtistStartWithQuery = artist.startsWith(normalizedQuery)
+                )
+            } else {
+                null
+            }
+        }.sortedWith(
+            compareByDescending<MatchingSong> { it.doesTitleStartWithQuery }.thenByDescending { it.doesArtistStartWithQuery }
+        ).map { it.song }
     }
 
+    /**
+     * The songs arrive sorted, so a song joins the previous group whenever it has the same key. Comparing the keys
+     * rather than the headers keeps this to one normalization per song.
+     */
     private fun List<Song>.groupIntoSections(sortingMode: UserPreferences.SortingMode): List<SongGroup> {
         val groups = mutableListOf<Pair<SongGroup.Header, MutableList<Song>>>()
+        var lastKey: String? = null
         forEach { song ->
-            val header = when (sortingMode) {
-                UserPreferences.SortingMode.BY_ARTIST -> SongGroup.Header.Artist(name = song.artist, initial = song.artist.initialLetter())
-                UserPreferences.SortingMode.BY_TITLE -> song.title.initialLetter()?.let { SongGroup.Header.Letter(it) } ?: SongGroup.Header.Symbols
+            val key = when (sortingMode) {
+                UserPreferences.SortingMode.BY_ARTIST -> normalizeText(song.artist)
+                UserPreferences.SortingMode.BY_TITLE -> song.title.initialLetter()?.toString().orEmpty()
             }
             val lastGroup = groups.lastOrNull()
-            if (lastGroup != null && lastGroup.first.matches(header)) {
+            if (lastGroup != null && key == lastKey) {
                 lastGroup.second += song
             } else {
+                val header = when (sortingMode) {
+                    UserPreferences.SortingMode.BY_ARTIST -> SongGroup.Header.Artist(name = song.artist, initial = song.artist.initialLetter())
+                    UserPreferences.SortingMode.BY_TITLE -> key.firstOrNull()?.let { SongGroup.Header.Letter(it) } ?: SongGroup.Header.Symbols
+                }
                 groups += header to mutableListOf(song)
+                lastKey = key
             }
         }
         return groups.map { (header, songs) -> SongGroup(header, songs) }
@@ -362,10 +421,11 @@ class CampfireViewModel(
     /** The upper case, accent-free first character of the text if it is a letter. */
     private fun String.initialLetter() = normalizeText(take(1)).firstOrNull()?.takeIf { it.isLetter() }?.uppercaseChar()
 
-    private fun SongGroup.Header.matches(other: SongGroup.Header) = when (this) {
-        is SongGroup.Header.Artist -> other is SongGroup.Header.Artist && normalizeText(name) == normalizeText(other.name)
-        else -> this == other
-    }
+    private class MatchingSong(
+        val song: Song,
+        val doesTitleStartWithQuery: Boolean,
+        val doesArtistStartWithQuery: Boolean
+    )
 
     data class SongGroup(
         val header: Header?,

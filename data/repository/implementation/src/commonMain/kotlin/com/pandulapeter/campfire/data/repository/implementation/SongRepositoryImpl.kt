@@ -12,8 +12,7 @@ internal class SongRepositoryImpl(
 ) : BaseLocalRemoteDataRepository<Song>(
     loadDataFromLocalSource = songLocalSource::loadSongs,
     loadDataFromRemoteSource = songRemoteSource::loadSongs,
-    saveDataToLocalSource = songLocalSource::saveSongs,
-    deleteDataFromLocalSource = songLocalSource::deleteAllSongs
+    saveDataToLocalSource = songLocalSource::saveSongs
 ), SongRepository {
 
     override val songs = dataState
@@ -22,8 +21,6 @@ internal class SongRepositoryImpl(
         databaseUrls = databaseUrls,
         isForceRefresh = isForceRefresh
     )
-
-    override suspend fun deleteLocalSongs() = deleteLocalData()
 
     override fun List<Song>?.isValid() = !isNullOrEmpty()
 }

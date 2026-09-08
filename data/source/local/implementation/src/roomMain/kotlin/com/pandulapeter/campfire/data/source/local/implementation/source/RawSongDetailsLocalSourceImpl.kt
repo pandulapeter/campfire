@@ -10,7 +10,9 @@ internal class RawSongDetailsLocalSourceImpl(
     private val rawSongDetailsDao: RawSongDetailsDao
 ) : RawSongDetailsLocalSource {
 
-    override suspend fun loadRawSongDetails() = rawSongDetailsDao.getAll().map { it.toModel() }
+    override suspend fun loadDownloadedSongUrls() = rawSongDetailsDao.getAllUrls().toSet()
+
+    override suspend fun loadRawSongDetails(url: String) = rawSongDetailsDao.get(url)?.toModel()
 
     override suspend fun saveRawSongDetails(rawSongDetails: RawSongDetails) = rawSongDetailsDao.insert(rawSongDetails.toEntity())
 }

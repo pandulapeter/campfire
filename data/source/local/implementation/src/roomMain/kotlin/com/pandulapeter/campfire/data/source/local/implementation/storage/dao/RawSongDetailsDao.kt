@@ -9,11 +9,11 @@ import com.pandulapeter.campfire.data.source.local.implementation.model.RawSongD
 @Dao
 internal interface RawSongDetailsDao {
 
-    @Query("SELECT * FROM ${RawSongDetailsEntity.TABLE_NAME}")
-    suspend fun getAll(): List<RawSongDetailsEntity>
+    @Query("SELECT url FROM ${RawSongDetailsEntity.TABLE_NAME}")
+    suspend fun getAllUrls(): List<String>
 
-    @Query("DELETE FROM ${RawSongDetailsEntity.TABLE_NAME}")
-    suspend fun deleteAll()
+    @Query("SELECT * FROM ${RawSongDetailsEntity.TABLE_NAME} WHERE url = :url")
+    suspend fun get(url: String): RawSongDetailsEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(rawSongDetails: RawSongDetailsEntity)

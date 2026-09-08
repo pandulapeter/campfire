@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_search
@@ -40,7 +42,10 @@ internal fun SearchField(
         onExpandedChange = {},
         placeholder = { Text(stringResource(Res.string.songs_search)) },
         leadingIcon = {
+            // The web build fetches the drawable over the network, so without an explicit size the icon has no size
+            // at all on the first frame and the input field keeps placing it as if it still had none.
             Icon(
+                modifier = Modifier.size(SEARCH_ICON_SIZE),
                 painter = painterResource(Res.drawable.ic_search),
                 contentDescription = null
             )
@@ -65,3 +70,5 @@ internal fun SearchField(
         }
     )
 }
+
+private val SEARCH_ICON_SIZE = 24.dp

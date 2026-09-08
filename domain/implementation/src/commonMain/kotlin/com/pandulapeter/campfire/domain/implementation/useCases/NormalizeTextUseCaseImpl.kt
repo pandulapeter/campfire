@@ -4,20 +4,38 @@ import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 
 class NormalizeTextUseCaseImpl internal constructor() : NormalizeTextUseCase {
 
-    override fun invoke(text: String) = text.trim().lowercase()
-        .replace("á", "a")
-        .replace("é", "e")
-        .replace("í", "i")
-        .replace("ó", "o")
-        .replace("ö", "o")
-        .replace("ő", "o")
-        .replace("ú", "u")
-        .replace("ü", "u")
-        .replace("ű", "u")
-        .replace("ă", "a")
-        .replace("â", "a")
-        .replace("î", "i")
-        .replace("ț", "t")
-        .replace("ș", "s")
-        .replace("ä", "a")
+    /**
+     * Sorting, grouping and searching all run this over every song, so it walks the text once and only allocates a
+     * new string when there is actually an accent to replace - a chain of [String.replace] calls allocated one for
+     * every accent the app knows about, whether the text contained it or not.
+     */
+    override fun invoke(text: String): String {
+        val lowercase = text.trim().lowercase()
+        var builder: StringBuilder? = null
+        for (index in lowercase.indices) {
+            val character = lowercase[index]
+            val replacement = character.withoutAccent()
+            if (replacement == character) {
+                builder?.append(character)
+            } else {
+                if (builder == null) {
+                    builder = StringBuilder(lowercase.length).append(lowercase, 0, index)
+                }
+                builder.append(replacement)
+            }
+        }
+        return builder?.toString() ?: lowercase
+    }
+
+    // A `when` over the characters rather than a map, so that the lookup doesn't box a Char per character of a song.
+    private fun Char.withoutAccent() = when (this) {
+        'á', 'ă', 'â', 'ä' -> 'a'
+        'é' -> 'e'
+        'í', 'î' -> 'i'
+        'ó', 'ö', 'ő' -> 'o'
+        'ú', 'ü', 'ű' -> 'u'
+        'ț' -> 't'
+        'ș' -> 's'
+        else -> this
+    }
 }

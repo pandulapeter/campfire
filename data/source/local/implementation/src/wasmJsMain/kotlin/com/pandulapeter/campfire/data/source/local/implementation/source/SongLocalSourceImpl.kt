@@ -10,12 +10,12 @@ internal class SongLocalSourceImpl(
     private val storageManager: StorageManager
 ) : SongLocalSource {
 
-    override suspend fun loadSongs(databaseUrl: String) = storageManager.loadSongs().filter { it.databaseUrl == databaseUrl }.map { it.toModel() }
+    override suspend fun loadSongs(databaseUrl: String) = storageManager.loadSongs().mapNotNull { entity ->
+        if (entity.databaseUrl == databaseUrl) entity.toModel() else null
+    }
 
     // Songs of every database share one document, so only the rows of the given one are replaced.
     override suspend fun saveSongs(databaseUrl: String, songs: List<Song>) = storageManager.saveSongs(
         storageManager.loadSongs().filterNot { it.databaseUrl == databaseUrl } + songs.map { it.toEntity(databaseUrl) }
     )
-
-    override suspend fun deleteAllSongs() = storageManager.saveSongs(emptyList())
 }

@@ -30,11 +30,14 @@ class LoadScreenDataUseCaseImpl internal constructor(
         with(scope) {
             listOf(
                 async { setlistRepository.loadSetlistsIfNeeded() },
-                async { rawSongDetailsRepository.loadRawSongDetailsIfNeeded() },
+                async { rawSongDetailsRepository.loadDownloadedSongUrlsIfNeeded() },
                 async { transpositionRepository.loadTranspositionsIfNeeded() },
                 async {
+                    // The databases are loaded in parallel with the preferences, so that the Settings screen has them
+                    // as early as possible even though the song list needs both before it can start.
+                    val databases = async { databaseRepository.loadDatabasesIfNeeded() }
                     val userPreferences = userPreferencesRepository.loadUserPreferencesIfNeeded()
-                    val databaseUrls = databaseRepository.loadDatabasesIfNeeded()
+                    val databaseUrls = databases.await()
                         .filter { it.isEnabled }
                         .filterNot { it.url in userPreferences.unselectedDatabaseUrls }
                         .sortedBy { it.priority }

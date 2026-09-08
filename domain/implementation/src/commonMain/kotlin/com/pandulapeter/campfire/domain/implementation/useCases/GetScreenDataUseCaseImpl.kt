@@ -1,7 +1,6 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.DatabaseRepository
@@ -37,31 +36,32 @@ class GetScreenDataUseCaseImpl internal constructor(
             ::Triple
         ),
         combine(
-            rawSongDetailsRepository.rawSongDetails,
+            rawSongDetailsRepository.downloadedSongUrls,
             userPreferencesRepository.userPreferences,
             transpositionRepository.transpositions,
             ::Triple
         )
     ) { (databasesDataState, setlistsDataState, songsDataState),
-        (rawSongDetailsDataState, userPreferencesDataState, transpositionsDataState) ->
+        (downloadedSongUrlsDataState, userPreferencesDataState, transpositionsDataState) ->
 
-        fun createScreenData() = databasesDataState.data?.sortedBy { it.priority }?.let { databases ->
+        fun createScreenData() = databasesDataState.data?.let { databases ->
             setlistsDataState.data?.sortedByDescending { it.priority }?.let { setlists ->
                 songsDataState.data?.let { songs ->
-                    rawSongDetailsDataState.data?.let { rawSongDetails ->
+                    downloadedSongUrlsDataState.data?.let { downloadedSongUrls ->
                         userPreferencesDataState.data?.let { userPreferences ->
                             transpositionsDataState.data?.let { transpositions ->
-                                val filteredDatabases = databases.filter { it.isEnabled }.filter { !userPreferences.unselectedDatabaseUrls.contains(it.url) }
+                                val selectedDatabases = databases
+                                    .filter { it.isEnabled && it.url !in userPreferences.unselectedDatabaseUrls }
+                                    .sortedBy { it.priority }
                                 ScreenData(
-                                    databases = databases,
                                     setlists = setlists,
-                                    songs = filteredDatabases.flatMap { songs[it.url].orEmpty() }
+                                    songs = selectedDatabases.flatMap { songs[it.url].orEmpty() }
                                         .distinctBy { it.id }
-                                        .filterDownloaded(userPreferences, rawSongDetails)
+                                        .filterDownloaded(userPreferences, downloadedSongUrls)
                                         .filterHasChords(userPreferences)
                                         .sort(userPreferences),
-                                    rawSongDetails = rawSongDetails,
                                     userPreferences = userPreferences,
+                                    downloadedSongUrls = downloadedSongUrls,
                                     transpositions = transpositions
                                 ).also {
                                     cache = it
@@ -77,7 +77,7 @@ class GetScreenDataUseCaseImpl internal constructor(
             databasesDataState,
             setlistsDataState,
             songsDataState,
-            rawSongDetailsDataState,
+            downloadedSongUrlsDataState,
             userPreferencesDataState,
             transpositionsDataState
         )
@@ -92,13 +92,28 @@ class GetScreenDataUseCaseImpl internal constructor(
 
     private fun List<Song>.filterDownloaded(
         userPreferences: UserPreferences,
-        rawSongDetails: Map<String, RawSongDetails>
-    ) = if (userPreferences.showOnlyDownloadedSongs) filterNot { rawSongDetails[it.url] == null } else this
+        downloadedSongUrls: Set<String>
+    ) = if (userPreferences.showOnlyDownloadedSongs) filter { it.url in downloadedSongUrls } else this
 
-    private fun List<Song>.filterHasChords(userPreferences: UserPreferences) = if (userPreferences.shouldShowSongsWithoutChords) this else filterNot { !it.hasChords }
+    private fun List<Song>.filterHasChords(userPreferences: UserPreferences) = if (userPreferences.shouldShowSongsWithoutChords) this else filter { it.hasChords }
 
-    private fun List<Song>.sort(userPreferences: UserPreferences) = when (userPreferences.sortingMode) {
-        UserPreferences.SortingMode.BY_ARTIST -> sortedBy { normalizeText(it.title) }.sortedBy { normalizeText(it.artist) }
-        UserPreferences.SortingMode.BY_TITLE -> sortedBy { normalizeText(it.artist) }.sortedBy { normalizeText(it.title) }
+    /**
+     * The selector of a comparator runs on every comparison, so sorting this way used to normalize each title and
+     * artist a logarithmic number of times over. The keys are computed once per song here instead.
+     */
+    private fun List<Song>.sort(userPreferences: UserPreferences): List<Song> {
+        val comparator = when (userPreferences.sortingMode) {
+            UserPreferences.SortingMode.BY_ARTIST -> compareBy<SortableSong>({ it.artist }, { it.title })
+            UserPreferences.SortingMode.BY_TITLE -> compareBy<SortableSong>({ it.title }, { it.artist })
+        }
+        return map { SortableSong(song = it, artist = normalizeText(it.artist), title = normalizeText(it.title)) }
+            .sortedWith(comparator)
+            .map { it.song }
     }
+
+    private class SortableSong(
+        val song: Song,
+        val artist: String,
+        val title: String
+    )
 }

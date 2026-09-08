@@ -169,7 +169,7 @@ private fun SongList(
     contentPadding: PaddingValues
 ) {
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
-    val rawSongDetails by viewModel.rawSongDetails.collectAsStateWithLifecycle()
+    val downloadedSongUrls by viewModel.downloadedSongUrls.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -242,7 +242,7 @@ private fun SongList(
                     SongListItem(
                         modifier = Modifier.animateItem(),
                         song = song,
-                        isDownloaded = rawSongDetails[song.url] != null,
+                        isDownloaded = song.url in downloadedSongUrls,
                         onClick = {
                             keyboardController?.hide()
                             viewModel.openSong(song)

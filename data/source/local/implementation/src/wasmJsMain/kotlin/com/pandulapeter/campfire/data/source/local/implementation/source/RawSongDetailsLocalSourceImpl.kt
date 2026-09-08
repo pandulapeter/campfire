@@ -10,10 +10,10 @@ internal class RawSongDetailsLocalSourceImpl(
     private val storageManager: StorageManager
 ) : RawSongDetailsLocalSource {
 
-    override suspend fun loadRawSongDetails() = storageManager.loadRawSongDetails().map { it.toModel() }
+    override suspend fun loadDownloadedSongUrls() = storageManager.loadDownloadedSongUrls()
 
-    // The url is the primary key of the Room table, so the entity with a matching one is replaced rather than appended.
-    override suspend fun saveRawSongDetails(rawSongDetails: RawSongDetails) = rawSongDetails.toEntity().let { entity ->
-        storageManager.saveRawSongDetails(storageManager.loadRawSongDetails().filterNot { it.url == entity.url } + entity)
-    }
+    override suspend fun loadRawSongDetails(url: String) = storageManager.loadRawSongDetails(url)?.toModel()
+
+    // Each song has a key of its own, like the url primary key of the Room table, so this replaces just that one song.
+    override suspend fun saveRawSongDetails(rawSongDetails: RawSongDetails) = storageManager.saveRawSongDetails(rawSongDetails.toEntity())
 }

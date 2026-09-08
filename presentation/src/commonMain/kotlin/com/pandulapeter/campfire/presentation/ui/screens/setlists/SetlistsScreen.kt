@@ -119,7 +119,7 @@ private fun SetlistList(
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
     val allSongs by viewModel.allSongs.collectAsStateWithLifecycle()
-    val rawSongDetails by viewModel.rawSongDetails.collectAsStateWithLifecycle()
+    val downloadedSongUrls by viewModel.downloadedSongUrls.collectAsStateWithLifecycle()
     val listState = rememberLazyGridState()
     val reorderableState = rememberReorderableLazyGridState(listState) { from, to ->
         val fromKey = SetlistItemKey(from.key as? String)
@@ -212,7 +212,7 @@ private fun SetlistList(
                                 SongListItem(
                                     modifier = Modifier.longPressDraggableHandle(),
                                     song = song,
-                                    isDownloaded = rawSongDetails[song.url] != null,
+                                    isDownloaded = song.url in downloadedSongUrls,
                                     isBeingDragged = isBeingDragged,
                                     onClick = { viewModel.openSongInSetlist(setlistWithSongs, index) }
                                 )
