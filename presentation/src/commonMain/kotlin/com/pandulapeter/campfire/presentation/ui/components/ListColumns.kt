@@ -6,14 +6,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * The columns of the song lists: as many [MIN_COLUMN_WIDTH] wide columns as fit next to each other, so that wide
- * windows show several songs side by side instead of one very long line of text. Same as [GridCells.Adaptive], except
- * that the count is capped, so that a maximized desktop window does not turn the list into a wall of narrow columns.
+ * The columns of the song lists: [count] equally wide columns filling the available width, so that wide windows show
+ * several songs side by side instead of one very long line of text.
+ *
+ * The count is decided by the caller from the width the screen settles at (see [songListColumnCount]) instead of
+ * being measured from the width the grid is given. That width follows the navigation bars while they animate, so a
+ * grid that picked its own count would start a navigation transition laid out for one count and switch to another
+ * halfway through it, moving every item that is already on screen.
  */
-internal object ListColumns : GridCells {
+internal data class ListColumns(private val count: Int) : GridCells {
 
     override fun Density.calculateCrossAxisCellSizes(availableSize: Int, spacing: Int): List<Int> {
-        val count = ((availableSize + spacing) / (MIN_COLUMN_WIDTH.roundToPx() + spacing)).coerceIn(1, MAX_COLUMN_COUNT)
         val sizeWithoutSpacing = availableSize - spacing * (count - 1)
         val columnWidth = sizeWithoutSpacing / count
         val remainingPixels = sizeWithoutSpacing % count
@@ -23,7 +26,8 @@ internal object ListColumns : GridCells {
 }
 
 /**
- * The number of columns [ListColumns] produces in the given width, without the need to measure the list first.
+ * The number of [MIN_COLUMN_WIDTH] wide columns that fit into the given width. Capped, so that a maximized desktop
+ * window does not turn the list into a wall of narrow columns.
  */
 internal fun columnCountForWidth(width: Dp) = (width / MIN_COLUMN_WIDTH).toInt().coerceIn(1, MAX_COLUMN_COUNT)
 

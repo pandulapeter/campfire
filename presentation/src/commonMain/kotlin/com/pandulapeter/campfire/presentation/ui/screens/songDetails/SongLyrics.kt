@@ -2,22 +2,28 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateBounds
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -34,6 +40,8 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.zIndex
+import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_details_section_bridge
 import com.pandulapeter.campfire.presentation.resources.song_details_section_chorus
@@ -43,6 +51,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_section_pre
 import com.pandulapeter.campfire.presentation.resources.song_details_section_solo
 import com.pandulapeter.campfire.presentation.resources.song_details_section_verse
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import kotlinx.coroutines.launch
 import kotlin.math.ceil
 import kotlin.math.max
 
@@ -67,6 +76,10 @@ import kotlin.math.max
  * squeezed into narrow columns).
  * @param isHorizontalFlow Whether the sections should be read across the columns and then downwards (see
  * [SongSectionsLayout]) instead of column by column.
+ * @param scrollState The state of the scrolling container this layout is placed in. The section headers stick to the
+ * top of it while their section is being scrolled through, and clicking one scrolls back to the start of its section.
+ * @param topInset The distance between the top of that scrolling container and the top of this layout, which is what
+ * turns a position inside the layout into a position on the screen.
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -77,11 +90,20 @@ internal fun SongLyrics(
     extraWidth: Dp = 0.dp,
     shouldShowChords: Boolean = true,
     fontScale: Float = 1f,
-    isHorizontalFlow: Boolean = false
+    isHorizontalFlow: Boolean = false,
+    scrollState: ScrollState,
+    topInset: Dp
 ) {
     val sections = remember(rawData, shouldShowChords) {
         parseSongLines(rawData).let { if (shouldShowChords) it else it.withoutChords() }.groupIntoSections()
     }
+    // Where the sections ended up, published by the layout so that their headers can stick to the top of the screen.
+    val sectionBounds = remember(sections) { List(sections.size) { SectionBounds() } }
+    val density = LocalDensity.current
+    val topInsetPx = with(density) { topInset.roundToPx() }
+    // A pinned header stops here rather than at the very top of the screen, which is where the lists stop theirs.
+    val stickyInsetPx = with(density) { SECTION_HEADER_GAP.roundToPx() }
+    val coroutineScope = rememberCoroutineScope()
     val lyricsStyle = LocalTextStyle.current.merge(MaterialTheme.typography.bodyLarge).scaled(fontScale)
     val headerStyle = MaterialTheme.typography.titleSmall.scaled(fontScale)
     val chordStyle = lyricsStyle.copy(
@@ -99,9 +121,11 @@ internal fun SongLyrics(
             availableHeight = availableHeight,
             extraWidth = extraWidth,
             sectionCount = sections.size,
-            isHorizontalFlow = isHorizontalFlow
+            isHorizontalFlow = isHorizontalFlow,
+            sectionBounds = sectionBounds
         ) {
-            sections.forEach { section ->
+            sections.forEachIndexed { index, section ->
+                val bounds = sectionBounds[index]
                 val sectionModifier = if (extraWidth > 0.dp) Modifier else Modifier.animateBounds(this@LookaheadScope)
                 if (section.header?.section == SongSection.CHORUS) {
                     Surface(
@@ -128,7 +152,15 @@ internal fun SongLyrics(
                         isOnCard = false,
                         headerStyle = headerStyle,
                         lyricsStyle = lyricsStyle,
-                        chordStyle = chordStyle
+                        chordStyle = chordStyle,
+                        // How far the top of the section has scrolled off the screen, at most as far down as the
+                        // section itself reaches, so that the header leaves with it instead of hanging around.
+                        headerOffset = { headerHeight ->
+                            (scrollState.value + stickyInsetPx - topInsetPx - bounds.top)
+                                .coerceIn(0, (bounds.height - headerHeight).coerceAtLeast(0))
+                        },
+                        // Scrolls the section's first line just below the top of the screen, where it starts out.
+                        onHeaderClick = { coroutineScope.launch { scrollState.animateScrollTo(bounds.top) } }
                     )
                 }
             }
@@ -143,9 +175,10 @@ internal fun SongLyrics(
  * The optional header of a section followed by its lines, with the chords drawn above the lyrics.
  *
  * The header is the same raised pill the song list uses for its sticky headers, so that the sections are told apart
- * at a glance. A chorus already stands out through its card, where another raised surface would only add noise, so
- * there ([isOnCard]) the header stays a plain label. The pill hangs into the section's left padding, so that its
- * text starts on the same keyline as the lyrics below it.
+ * at a glance, and it sticks to the top of the screen while its section is being scrolled through, just like the
+ * headers of the lists do (see [headerOffset]). A chorus already stands out through its card, where another raised
+ * surface would only add noise, so there ([isOnCard]) the header stays a plain label, which is left where it is. The
+ * pill hangs into the section's left padding, so that its text starts on the same keyline as the lyrics below it.
  */
 @Composable
 private fun SongSectionContent(
@@ -154,7 +187,9 @@ private fun SongSectionContent(
     isOnCard: Boolean,
     headerStyle: TextStyle,
     lyricsStyle: TextStyle,
-    chordStyle: TextStyle
+    chordStyle: TextStyle,
+    headerOffset: (headerHeight: Int) -> Int = { 0 },
+    onHeaderClick: () -> Unit = {}
 ) = Column(
     modifier = modifier
 ) {
@@ -167,18 +202,32 @@ private fun SongSectionContent(
                 color = MaterialTheme.colorScheme.primary
             )
         } else {
-            Surface(
-                modifier = Modifier.offset(x = -HEADER_HORIZONTAL_PADDING).padding(bottom = HEADER_GAP),
-                shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                shadowElevation = HEADER_ELEVATION
-            ) {
-                Text(
-                    modifier = Modifier.padding(horizontal = HEADER_HORIZONTAL_PADDING, vertical = HEADER_VERTICAL_PADDING),
-                    text = header.title(),
-                    style = headerStyle,
-                    color = MaterialTheme.colorScheme.primary
-                )
+            // The pill is laid out at its own size: the touch target enforcement would grow it to 48dp and push the
+            // lines of the section down, just as it would in the lists (see [SectionHeader]).
+            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+                Surface(
+                    onClick = onHeaderClick,
+                    // Drawn over the lines it slides across, and moved without taking the space it moves into away
+                    // from them.
+                    modifier = Modifier
+                        .zIndex(1f)
+                        .layout { measurable, constraints ->
+                            val placeable = measurable.measure(constraints)
+                            layout(placeable.width, placeable.height) { placeable.place(x = 0, y = headerOffset(placeable.height)) }
+                        }
+                        .offset(x = -HEADER_HORIZONTAL_PADDING)
+                        .padding(bottom = HEADER_GAP),
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shadowElevation = HEADER_ELEVATION
+                ) {
+                    Text(
+                        modifier = Modifier.padding(horizontal = HEADER_HORIZONTAL_PADDING, vertical = HEADER_VERTICAL_PADDING),
+                        text = header.title(),
+                        style = headerStyle,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }
@@ -244,6 +293,7 @@ private fun SongSectionsLayout(
     extraWidth: Dp,
     sectionCount: Int,
     isHorizontalFlow: Boolean,
+    sectionBounds: List<SectionBounds>,
     content: @Composable () -> Unit
 ) = Layout(
     modifier = modifier,
@@ -290,10 +340,24 @@ private fun SongSectionsLayout(
     }
     layout(width, arrangement.height.coerceIn(constraints.minHeight, constraints.maxHeight)) {
         placeables.forEachIndexed { index, placeable ->
+            // Published before the section is placed, so that its header can already stick with the new bounds.
+            sectionBounds[index].top = arrangement.tops[index]
+            sectionBounds[index].height = placeable.height
             placeable.place(x = startX + arrangement.columns[index] * (columnWidth + columnGapPx), y = arrangement.tops[index])
         }
         dividers.forEach { (placeable, position) -> placeable.place(position) }
     }
+}
+
+/**
+ * Where a section ended up inside [SongSectionsLayout]. The layout is the only one that knows this, and the sections
+ * need it to keep their headers pinned to the top of the screen, so it is handed back to them through this.
+ */
+private class SectionBounds {
+
+    var top by mutableIntStateOf(0)
+
+    var height by mutableIntStateOf(0)
 }
 
 /**

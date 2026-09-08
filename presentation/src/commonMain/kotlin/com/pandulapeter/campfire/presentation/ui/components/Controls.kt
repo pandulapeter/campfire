@@ -49,6 +49,27 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 internal fun hasRoomForSidePanel(screenWidth: Dp) = columnCountForWidth(screenWidth - SIDE_PANEL_WIDTH) >= SIDE_PANEL_MIN_COLUMN_COUNT
 
 /**
+ * The number of columns the song lists lay their items out in, measured from the width the screen settles at rather
+ * than from the width the grid currently has, see [ListColumns].
+ *
+ * @param settledWidth The width of the screen once the navigation bars have finished animating.
+ * @param contentPadding The insets the screen hands to its list, whose start and end are not part of its width.
+ */
+@Composable
+internal fun songListColumnCount(
+    settledWidth: Dp,
+    contentPadding: PaddingValues,
+    isSidePanelVisible: Boolean
+): Int {
+    val layoutDirection = LocalLayoutDirection.current
+    // The panel covers the end inset while it is visible (see besideSidePanel), so either way the same width goes.
+    val sidePanelWidth = if (isSidePanelVisible) SIDE_PANEL_WIDTH else 0.dp
+    return columnCountForWidth(
+        settledWidth - contentPadding.calculateStartPadding(layoutDirection) - contentPadding.calculateEndPadding(layoutDirection) - sidePanelWidth
+    )
+}
+
+/**
  * [SongsControls] in a panel that spans the full height of the screen next to its app bar and content, shown on
  * screens that are wide enough for it, see [hasRoomForSidePanel].
  */

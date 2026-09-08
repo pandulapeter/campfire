@@ -12,7 +12,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -68,10 +71,12 @@ import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
+import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
+import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
-import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -94,20 +99,23 @@ internal fun SettingsScreen(
         val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
         val databases by viewModel.databases.collectAsStateWithLifecycle()
         val layoutDirection = LocalLayoutDirection.current
+        val listState = rememberLazyListState()
+        val coroutineScope = rememberCoroutineScope()
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
+            state = listState,
             contentPadding = PaddingValues(
                 start = contentPadding.calculateStartPadding(layoutDirection),
+                top = SECTION_HEADER_GAP,
                 end = contentPadding.calculateEndPadding(layoutDirection),
                 bottom = contentPadding.calculateBottomPadding() + 16.dp
             )
         ) {
-            item(key = "header_databases") {
-                SettingsSectionTitle(
-                    modifier = Modifier.animateItem(),
-                    text = stringResource(Res.string.settings_active_databases)
-                )
-            }
+            sectionHeader(
+                key = "header_databases",
+                listState = listState,
+                coroutineScope = coroutineScope
+            ) { stringResource(Res.string.settings_active_databases) }
             items(
                 items = databases,
                 key = { "database_${it.url}" }
@@ -129,12 +137,11 @@ internal fun SettingsScreen(
                     onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewDatabase) }
                 )
             }
-            item(key = "header_song_display") {
-                SettingsSectionTitle(
-                    modifier = Modifier.animateItem(),
-                    text = stringResource(Res.string.settings_song_display)
-                )
-            }
+            sectionHeader(
+                key = "header_song_display",
+                listState = listState,
+                coroutineScope = coroutineScope
+            ) { stringResource(Res.string.settings_song_display) }
             item(key = "lyrics_only_mode") {
                 SwitchListItem(
                     modifier = Modifier.animateItem(),
@@ -153,12 +160,11 @@ internal fun SettingsScreen(
                     onCheckedChange = viewModel::setHorizontalSectionFlowEnabled
                 )
             }
-            item(key = "header_theme") {
-                SettingsSectionTitle(
-                    modifier = Modifier.animateItem(),
-                    text = stringResource(Res.string.settings_user_interface_theme)
-                )
-            }
+            sectionHeader(
+                key = "header_theme",
+                listState = listState,
+                coroutineScope = coroutineScope
+            ) { stringResource(Res.string.settings_user_interface_theme) }
             item(key = "theme") {
                 SegmentedChoice(
                     modifier = Modifier.animateItem(),
@@ -171,12 +177,11 @@ internal fun SettingsScreen(
                     onSelected = viewModel::setUiMode
                 )
             }
-            item(key = "header_language") {
-                SettingsSectionTitle(
-                    modifier = Modifier.animateItem(),
-                    text = stringResource(Res.string.settings_user_interface_language)
-                )
-            }
+            sectionHeader(
+                key = "header_language",
+                listState = listState,
+                coroutineScope = coroutineScope
+            ) { stringResource(Res.string.settings_user_interface_language) }
             item(key = "language") {
                 SegmentedChoice(
                     modifier = Modifier.animateItem(),
@@ -189,12 +194,11 @@ internal fun SettingsScreen(
                     onSelected = viewModel::setLanguage
                 )
             }
-            item(key = "header_about") {
-                SettingsSectionTitle(
-                    modifier = Modifier.animateItem(),
-                    text = stringResource(Res.string.settings_about)
-                )
-            }
+            sectionHeader(
+                key = "header_about",
+                listState = listState,
+                coroutineScope = coroutineScope
+            ) { stringResource(Res.string.settings_about) }
             item(key = "website") {
                 LinkListItem(
                     modifier = Modifier.animateItem(),
@@ -230,6 +234,23 @@ internal fun SettingsScreen(
             }
         }
     }
+}
+
+/**
+ * A sticky section header of the settings list. The same pill as the section headers of the song lists, so that the
+ * three main screens look and behave the same way: clicking it scrolls back to the start of its own section.
+ */
+private fun LazyListScope.sectionHeader(
+    key: String,
+    listState: LazyListState,
+    coroutineScope: CoroutineScope,
+    text: @Composable () -> String
+) = stickyHeader(key = key) { headerIndex ->
+    SectionHeader(
+        modifier = Modifier.animateItem(),
+        text = text(),
+        onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } }
+    )
 }
 
 @Composable

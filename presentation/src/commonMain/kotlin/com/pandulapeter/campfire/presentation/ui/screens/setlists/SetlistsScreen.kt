@@ -3,7 +3,6 @@ package com.pandulapeter.campfire.presentation.ui.screens.setlists
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -18,6 +17,7 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,19 +30,23 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.filters
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.setlists
+import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_no_data
 import com.pandulapeter.campfire.presentation.resources.setlists_no_data_hint
@@ -54,13 +58,16 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
+import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderAction
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongsControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
@@ -70,14 +77,18 @@ import sh.calvin.reorderable.rememberReorderableLazyGridState
 internal fun SetlistsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
+    settledWidth: Dp,
     contentPadding: PaddingValues
-) = BoxWithConstraints(
-    modifier = modifier.fillMaxSize()
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val isSidePanelVisible = hasRoomForSidePanel(maxWidth)
+    val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
+    val columnCount = songListColumnCount(
+        settledWidth = settledWidth,
+        contentPadding = contentPadding,
+        isSidePanelVisible = isSidePanelVisible
+    )
     Row(
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) {
         Column(
             modifier = Modifier.weight(1f).fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -96,11 +107,33 @@ internal fun SetlistsScreen(
                     }
                 }
             )
-            SetlistList(
-                modifier = Modifier.fillMaxSize(),
-                viewModel = viewModel,
-                contentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
-            )
+            val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                SetlistList(
+                    modifier = Modifier.fillMaxSize(),
+                    viewModel = viewModel,
+                    columnCount = columnCount,
+                    contentPadding = listContentPadding
+                )
+                // The button belongs to this screen rather than to the app's chrome, so that it is dealt in and out
+                // with the screen it acts on instead of animating on its own while the screen slides.
+                FloatingActionButton(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(
+                            end = listContentPadding.calculateEndPadding(LocalLayoutDirection.current) + FAB_MARGIN,
+                            bottom = listContentPadding.calculateBottomPadding() + FAB_MARGIN
+                        ),
+                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) }
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_add),
+                        contentDescription = stringResource(Res.string.setlists_new_setlist)
+                    )
+                }
+            }
         }
         SongsControlsSidePanel(
             isVisible = isSidePanelVisible,
@@ -115,6 +148,7 @@ internal fun SetlistsScreen(
 private fun SetlistList(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
+    columnCount: Int,
     contentPadding: PaddingValues
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
@@ -130,12 +164,14 @@ private fun SetlistList(
         }
     }
     val layoutDirection = LocalLayoutDirection.current
+    val coroutineScope = rememberCoroutineScope()
     LazyVerticalGrid(
-        columns = ListColumns,
+        columns = ListColumns(columnCount),
         modifier = modifier,
         state = listState,
         contentPadding = PaddingValues(
             start = contentPadding.calculateStartPadding(layoutDirection),
+            top = SECTION_HEADER_GAP,
             end = contentPadding.calculateEndPadding(layoutDirection),
             bottom = contentPadding.calculateBottomPadding() + FAB_CLEARANCE
         )
@@ -166,10 +202,11 @@ private fun SetlistList(
             }
 
             else -> setlistsWithSongs.forEach { setlistWithSongs ->
-                stickyHeader(key = "setlist_${setlistWithSongs.setlist.id}") {
+                stickyHeader(key = "setlist_${setlistWithSongs.setlist.id}") { headerIndex ->
                     SectionHeader(
                         modifier = Modifier.animateItem(),
                         text = setlistWithSongs.setlist.title,
+                        onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
                         action = {
                             SectionHeaderAction(
                                 icon = painterResource(Res.drawable.ic_delete),
@@ -274,3 +311,4 @@ private class SetlistItemKey(val string: String?) {
 }
 
 private val FAB_CLEARANCE = 88.dp
+private val FAB_MARGIN = 16.dp

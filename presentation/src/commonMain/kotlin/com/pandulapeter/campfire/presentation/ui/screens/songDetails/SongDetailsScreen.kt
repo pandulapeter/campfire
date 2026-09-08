@@ -371,6 +371,8 @@ private fun SongDetailsPage(
         }
         val topPadding = 8.dp
         val bottomPadding = contentPadding.calculateBottomPadding() + 32.dp
+        // Shared with the lyrics, whose section headers stick to the top of it while they are scrolled through.
+        val scrollState = rememberScrollState()
         // The lyrics scroll, so they need to be told from the outside how much room there is for them without
         // scrolling: that is what decides how many columns they are flowed into.
         BoxWithConstraints(
@@ -379,7 +381,7 @@ private fun SongDetailsPage(
             SongLyrics(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
                     .padding(
                         start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
                         end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
@@ -392,7 +394,9 @@ private fun SongDetailsPage(
                 extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),
                 shouldShowChords = shouldShowChords,
                 fontScale = fontScale,
-                isHorizontalFlow = isHorizontalFlow
+                isHorizontalFlow = isHorizontalFlow,
+                scrollState = scrollState,
+                topInset = topPadding
             )
         }
     }

@@ -16,12 +16,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +33,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -96,31 +99,46 @@ internal fun SongListItem(
 
 /**
  * Header of a list section: a raised pill that floats above the items scrolling underneath it when used as a sticky
- * header.
+ * header. Clicking it scrolls the list back to the first item of its own section, which is the header itself: the
+ * index the list hands to the content of a sticky header is the global index of that item.
+ *
+ * The pill hangs into the keyline of the items below it, so that its text and their text start at the same x
+ * position (see [LIST_ITEM_KEYLINE]).
  */
 @Composable
 internal fun SectionHeader(
     modifier: Modifier = Modifier,
     text: String,
+    onClick: () -> Unit,
     action: (@Composable () -> Unit)? = null
 ) = Box(
-    modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
+    modifier = modifier.fillMaxWidth().padding(horizontal = LIST_ITEM_KEYLINE - SECTION_HEADER_PADDING, vertical = SECTION_HEADER_GAP)
 ) {
-    Surface(
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shadowElevation = 2.dp
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+    // The pill is a label first and a control second, and the touch target enforcement would grow it (and with it
+    // the gaps around it) to 48dp, so it is laid out at its own size, like the other compact controls of the app.
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+        Surface(
+            onClick = onClick,
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            shadowElevation = 2.dp
         ) {
-            Text(
-                modifier = Modifier.padding(start = 12.dp, end = if (action == null) 12.dp else 4.dp, top = 6.dp, bottom = 6.dp),
-                text = text,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            action?.invoke()
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    modifier = Modifier.padding(
+                        start = SECTION_HEADER_PADDING,
+                        end = if (action == null) SECTION_HEADER_PADDING else 4.dp,
+                        top = 6.dp,
+                        bottom = 6.dp
+                    ),
+                    text = text,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                action?.invoke()
+            }
         }
     }
 }
@@ -266,3 +284,20 @@ internal fun EmptyState(
         textAlign = androidx.compose.ui.text.style.TextAlign.Center
     )
 }
+
+/**
+ * The x position the text of a [ListItem] starts at, which the pills of the sticky headers line up with.
+ */
+private val LIST_ITEM_KEYLINE = 16.dp
+
+/**
+ * The padding between the edge of a [SectionHeader] pill and its text.
+ */
+private val SECTION_HEADER_PADDING = 12.dp
+
+/**
+ * The gap a [SectionHeader] pill keeps from whatever is above and below it. Lists add the same gap above their first
+ * item, so that a pill at the top of a list clears the app bar by twice this; a pinned pill keeps one of the two,
+ * since the item it is pinned inside of stops at the top of the list.
+ */
+internal val SECTION_HEADER_GAP = 4.dp

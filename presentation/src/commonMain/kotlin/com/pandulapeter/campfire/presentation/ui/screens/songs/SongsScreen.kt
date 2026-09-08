@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -35,6 +34,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.resources.Res
@@ -60,13 +61,16 @@ import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.SearchField
+import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongsControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -74,18 +78,23 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SongsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
+    settledWidth: Dp,
     contentPadding: PaddingValues
-) = BoxWithConstraints(
-    modifier = modifier.fillMaxSize()
 ) {
     val query by viewModel.query.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyGridState()
-    val isSidePanelVisible = hasRoomForSidePanel(maxWidth)
+    val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
+    val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
+    val columnCount = songListColumnCount(
+        settledWidth = settledWidth,
+        contentPadding = contentPadding,
+        isSidePanelVisible = isSidePanelVisible
+    )
     KeepTopAppBarInSync(scrollBehavior, listState)
     Row(
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) {
         Column(
             modifier = Modifier.weight(1f).fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -121,7 +130,8 @@ internal fun SongsScreen(
                 viewModel = viewModel,
                 listState = listState,
                 isLoading = isLoading,
-                contentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
+                columnCount = columnCount,
+                contentPadding = listContentPadding
             )
         }
         SongsControlsSidePanel(
@@ -166,6 +176,7 @@ private fun SongList(
     viewModel: CampfireViewModel,
     listState: LazyGridState,
     isLoading: Boolean,
+    columnCount: Int,
     contentPadding: PaddingValues
 ) {
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
@@ -174,6 +185,7 @@ private fun SongList(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
     val layoutDirection = LocalLayoutDirection.current
+    val coroutineScope = rememberCoroutineScope()
     // The section label of every list item (headers included), in the order of the lazy grid, for the fast scroller.
     val sectionLabels = remember(songGroups) {
         songGroups.flatMap { group ->
@@ -200,11 +212,12 @@ private fun SongList(
         onRefresh = viewModel::refresh
     ) {
         LazyVerticalGrid(
-            columns = ListColumns,
+            columns = ListColumns(columnCount),
             modifier = Modifier.fillMaxSize(),
             state = listState,
             contentPadding = PaddingValues(
                 start = contentPadding.calculateStartPadding(layoutDirection),
+                top = SECTION_HEADER_GAP,
                 end = contentPadding.calculateEndPadding(layoutDirection),
                 bottom = contentPadding.calculateBottomPadding() + 8.dp
             )
@@ -224,14 +237,15 @@ private fun SongList(
             }
             songGroups.forEach { group ->
                 group.header?.let { header ->
-                    stickyHeader(key = "header_$header") {
+                    stickyHeader(key = "header_$header") { headerIndex ->
                         SectionHeader(
                             modifier = Modifier.animateItem(),
                             text = when (header) {
                                 is CampfireViewModel.SongGroup.Header.Artist -> header.name
                                 is CampfireViewModel.SongGroup.Header.Letter -> header.letter.toString()
                                 CampfireViewModel.SongGroup.Header.Symbols -> stringResource(Res.string.songs_unsorted_label)
-                            }
+                            },
+                            onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } }
                         )
                     }
                 }
