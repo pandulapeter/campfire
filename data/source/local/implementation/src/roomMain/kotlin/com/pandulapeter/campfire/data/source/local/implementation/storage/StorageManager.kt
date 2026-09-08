@@ -29,7 +29,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.dao.Us
         UserPreferencesEntity::class,
         TranspositionEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @ConstructedBy(StorageManagerConstructor::class)
@@ -73,6 +73,13 @@ internal abstract class StorageManager : RoomDatabase() {
             object : Migration(4, 5) {
                 override fun migrate(connection: SQLiteConnection) {
                     connection.execSQL("ALTER TABLE ${UserPreferencesEntity.TABLE_NAME} ADD COLUMN isHorizontalSectionFlowEnabled INTEGER NOT NULL DEFAULT 0")
+                }
+            },
+            // Version 6: the moment the text of a song was last downloaded. Songs saved before this are dated to the
+            // epoch, so the first time each of them is opened it gets refreshed.
+            object : Migration(5, 6) {
+                override fun migrate(connection: SQLiteConnection) {
+                    connection.execSQL("ALTER TABLE ${RawSongDetailsEntity.TABLE_NAME} ADD COLUMN refreshTimestamp INTEGER NOT NULL DEFAULT 0")
                 }
             }
         )

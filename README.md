@@ -11,6 +11,7 @@ Campfire is completely free, without any ads.
 
 ### Known issues
 - Android splash screen should be improved
+- Search empty state is missing
 - Add Crashlytics and Analytics
 - Predictive back looks weird when swiping from right to left
 - iOS app icon should be improved

@@ -8,6 +8,7 @@ import androidx.room.PrimaryKey
 internal data class RawSongDetailsEntity(
     @PrimaryKey @ColumnInfo(name = "url") val url: String,
     @ColumnInfo(name = "rawData") val rawData: String,
+    @ColumnInfo(name = "refreshTimestamp") val refreshTimestamp: Long,
 ) {
 
     companion object {

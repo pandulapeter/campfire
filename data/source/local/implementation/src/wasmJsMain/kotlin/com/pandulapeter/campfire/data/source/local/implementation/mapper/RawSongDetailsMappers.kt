@@ -5,10 +5,12 @@ import com.pandulapeter.campfire.data.source.local.implementation.model.RawSongD
 
 internal fun RawSongDetailsEntity.toModel() = RawSongDetails(
     url = url,
-    rawData = rawData
+    rawData = rawData,
+    refreshTimestamp = refreshTimestamp
 )
 
 internal fun RawSongDetails.toEntity() = RawSongDetailsEntity(
     url = url,
-    rawData = rawData
+    rawData = rawData,
+    refreshTimestamp = refreshTimestamp
 )
