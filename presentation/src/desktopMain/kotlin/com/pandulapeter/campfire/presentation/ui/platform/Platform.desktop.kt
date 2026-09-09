@@ -11,7 +11,7 @@ internal actual val isDesktopPlatform = true
  * `FileStorage.desktop.kt` in `:data:source:local:implementation` (`:presentation` cannot see that module, which
  * only the `:app:*` modules depend on).
  */
-internal actual val libraryLocationHint: String? = File(desktopDataDirectory(), LIBRARY_DIRECTORY).absolutePath
+internal actual val libraryLocation: LibraryLocation? = LibraryLocation.Folder(File(desktopDataDirectory(), LIBRARY_DIRECTORY).absolutePath)
 
 private fun desktopDataDirectory(): File {
     val userHome = File(System.getProperty("user.home").orEmpty())

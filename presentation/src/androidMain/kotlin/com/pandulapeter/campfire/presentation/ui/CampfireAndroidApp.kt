@@ -10,9 +10,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.rememberAndroidFilePicker
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -20,11 +23,13 @@ import org.koin.compose.viewmodel.koinViewModel
  * the system theme) and lets the URL opener follow it too.
  *
  * @param urlOpener Opens the given URL, styled for the given theme.
+ * @param filesToImport Files from an "open with" or a share, read by the activity that received the intent.
  */
 @Composable
 fun CampfireAndroidApp(
     viewModel: CampfireViewModel = koinViewModel(),
-    urlOpener: (url: String, isDarkTheme: Boolean) -> Unit
+    urlOpener: (url: String, isDarkTheme: Boolean) -> Unit,
+    filesToImport: Flow<List<ImportedFile>> = emptyFlow()
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
@@ -40,7 +45,8 @@ fun CampfireAndroidApp(
     ) {
         CampfireApp(
             viewModel = viewModel,
-            urlOpener = { urlOpener(it, isDarkTheme) }
+            urlOpener = { urlOpener(it, isDarkTheme) },
+            filesToImport = filesToImport
         )
     }
 }

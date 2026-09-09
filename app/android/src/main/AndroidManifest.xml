@@ -19,14 +19,59 @@
 
         <activity
             android:name=".CampfireActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!--
+              Opening a ChordPro file with Campfire. The pattern has to carry a MIME type to match a content URI at
+              all, and there is no registered type for these extensions, so the type is the wildcard and the
+              extension is what actually decides. Only the ChordPro family is listed: zip and plain text belong to
+              everything, and claiming them would put Campfire in the way of every archive and note on the device.
+            -->
+            <intent-filter android:label="@string/campfire">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:host="*" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.cho" />
+                <data android:pathPattern=".*\\.chopro" />
+                <data android:pathPattern=".*\\.chordpro" />
+                <data android:pathPattern=".*\\.crd" />
+                <data android:pathPattern=".*\\.chord" />
+                <data android:pathPattern=".*\\.pro" />
+            </intent-filter>
+
+            <!--
+              Sharing a song to Campfire. Narrowed to text, for the same reason: a filter on every type would put
+              Campfire in the share sheet of every photo and video on the device.
+            -->
+            <intent-filter android:label="@string/campfire">
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
         </activity>
+
+        <!-- Lets a shared song leave the app's private storage as a content URI, see CampfireActivity.shareFile. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

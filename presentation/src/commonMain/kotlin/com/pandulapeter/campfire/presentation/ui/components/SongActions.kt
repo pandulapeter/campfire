@@ -23,6 +23,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_playlist_add
+import com.pandulapeter.campfire.presentation.resources.ic_share
+import com.pandulapeter.campfire.presentation.resources.share
 import com.pandulapeter.campfire.presentation.resources.song_details_add_to_setlist
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -64,6 +66,12 @@ internal fun SongActions(
     }
     item(stringResource(Res.string.export), painterResource(Res.drawable.ic_export), true) {
         viewModel.exportSong(filePicker, song.fileName)
+    }
+    // Only where sending a file is a different thing from saving one, which on desktop and the web it is not.
+    if (filePicker.canShare) {
+        item(stringResource(Res.string.share), painterResource(Res.drawable.ic_share), true) {
+            viewModel.shareSong(filePicker, song.fileName)
+        }
     }
     item(stringResource(Res.string.delete), painterResource(Res.drawable.ic_delete), true) {
         viewModel.showDialog(CampfireViewModel.DialogType.DeleteSong(song))

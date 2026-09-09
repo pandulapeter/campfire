@@ -11,6 +11,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportResult
+import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -430,7 +431,14 @@ class CampfireViewModel(
             _messages.send(Message.ImportFailed)
             return@launch
         }
-        if (files.isEmpty()) return@launch
+        import(files)
+    }
+
+    /** Files the system handed over: opened with Campfire, shared to it, or dropped onto it. */
+    fun importFiles(files: List<ImportedFile>) = viewModelScope.launch { import(files) }
+
+    private suspend fun import(files: List<ImportedFile>) {
+        if (files.isEmpty() || _isImporting.value) return
         _isImporting.update { true }
         try {
             _messages.send(Message.ImportFinished(importFiles.invoke(files)))
@@ -446,6 +454,10 @@ class CampfireViewModel(
         save(filePicker) { exportSongs(listOf(songFileName)) }
     }
 
+    fun shareSong(filePicker: FilePicker, songFileName: String) = viewModelScope.launch {
+        save(filePicker, isShare = true) { exportSongs(listOf(songFileName)) }
+    }
+
     fun exportSetlist(filePicker: FilePicker, setlistFileName: String) = viewModelScope.launch {
         save(filePicker) { exportSetlist.invoke(setlistFileName) }
     }
@@ -455,8 +467,8 @@ class CampfireViewModel(
     }
 
     /** Nothing to export and a picker that threw are the same thing to the user: the file did not come out. */
-    private suspend fun save(filePicker: FilePicker, export: suspend () -> ExportedFile?) = try {
-        export()?.let { filePicker.saveFile(it) } ?: _messages.send(Message.ExportFailed)
+    private suspend fun save(filePicker: FilePicker, isShare: Boolean = false, export: suspend () -> ExportedFile?) = try {
+        export()?.let { if (isShare) filePicker.shareFile(it) else filePicker.saveFile(it) } ?: _messages.send(Message.ExportFailed)
         Unit
     } catch (exception: Exception) {
         println("Could not export: ${exception.message}")

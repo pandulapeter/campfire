@@ -58,6 +58,9 @@ import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEvent
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.export_failed
 import com.pandulapeter.campfire.presentation.resources.import_failed
@@ -70,6 +73,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
+import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
@@ -83,18 +87,35 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * The root of the shared Compose UI: theme, adaptive navigation chrome, the Navigation 3 display and the dialogs.
  *
  * @param urlOpener Opens the given URL in the platform's browser.
+ * @param filesToImport Files the host handed over - opened with Campfire, shared to it, or dropped onto its window.
  */
 @Composable
 fun CampfireApp(
     viewModel: CampfireViewModel = koinViewModel(),
-    urlOpener: (String) -> Unit
+    urlOpener: (String) -> Unit,
+    filesToImport: Flow<List<ImportedFile>> = emptyFlow()
 ) {
+    LaunchedEffect(filesToImport) { filesToImport.collect(viewModel::importFiles) }
+    // A library the user can reach from outside the app (the desktop folder, the iOS Files app) can also change
+    // while the app is away, so it is read again whenever Campfire comes back to the front. One only the app can
+    // see - Android's private storage, the browser's origin private file system - cannot change behind its back,
+    // and re-reading every song on each window focus would be cost with nothing to show for it.
+    //
+    // The first resume is the one that follows the initial load, and is skipped.
+    if (libraryLocation != null) {
+        var hasResumedBefore by remember { mutableStateOf(false) }
+        LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+            if (hasResumedBefore) viewModel.refresh() else hasResumedBefore = true
+        }
+    }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     ApplyLanguagePreference(userPreferences?.language)
     CampfireTheme(

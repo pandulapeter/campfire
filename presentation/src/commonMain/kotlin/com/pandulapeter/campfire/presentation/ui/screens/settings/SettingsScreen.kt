@@ -43,6 +43,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_git_hub
 import com.pandulapeter.campfire.presentation.resources.settings_import
 import com.pandulapeter.campfire.presentation.resources.settings_library
 import com.pandulapeter.campfire.presentation.resources.settings_library_location
+import com.pandulapeter.campfire.presentation.resources.settings_library_location_files_app
 import com.pandulapeter.campfire.presentation.resources.settings_library_summary
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode_description
@@ -71,7 +72,8 @@ import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
-import com.pandulapeter.campfire.presentation.ui.platform.libraryLocationHint
+import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
+import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -126,13 +128,20 @@ internal fun SettingsScreen(
                     )
                 }
             }
-            libraryLocationHint?.let { hint ->
+            libraryLocation?.let { location ->
                 item(key = "library_location") {
                     ListItem(
                         modifier = Modifier.animateItem(),
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         headlineContent = { Text(stringResource(Res.string.settings_library_location)) },
-                        supportingContent = { Text(hint) }
+                        supportingContent = {
+                            Text(
+                                when (location) {
+                                    is LibraryLocation.Folder -> location.path
+                                    LibraryLocation.FilesApp -> stringResource(Res.string.settings_library_location_files_app)
+                                }
+                            )
+                        }
                     )
                 }
             }

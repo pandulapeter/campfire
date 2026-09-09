@@ -1,8 +1,10 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
+import androidx.core.content.FileProvider
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -56,7 +58,7 @@ private class AndroidFilePicker(private val context: Context) : FilePicker {
             continuation.invokeOnCancellation { pickContinuation = null }
             openLauncher?.launch(arrayOf(ANY_MIME_TYPE)) ?: continuation.resume(emptyList())
         }
-        return withContext(Dispatchers.IO) { uris.mapNotNull { it.read() } }
+        return withContext(Dispatchers.IO) { uris.mapNotNull { it.toImportedFile(context) } }
     }
 
     override suspend fun saveFile(file: ExportedFile): Boolean {
@@ -76,6 +78,32 @@ private class AndroidFilePicker(private val context: Context) : FilePicker {
         }
     }
 
+    override val canShare = true
+
+    /**
+     * The song is copied into the cache directory first: the library lives in the app's private storage, which no
+     * other app can read, and the provider declared in the manifest only exposes that one directory.
+     */
+    override suspend fun shareFile(file: ExportedFile): Boolean {
+        val uri = withContext(Dispatchers.IO) {
+            try {
+                val directory = java.io.File(context.cacheDir, SHARED_DIRECTORY).apply { mkdirs() }
+                val target = java.io.File(directory, file.name).apply { writeBytes(file.bytes) }
+                FileProvider.getUriForFile(context, "${context.packageName}.files", target)
+            } catch (exception: Exception) {
+                println("Could not prepare \"${file.name}\" for sharing: ${exception.message}")
+                null
+            }
+        } ?: return false
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = file.mimeType
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(Intent.createChooser(intent, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        return true
+    }
+
     fun onFilesPicked(uris: List<Uri>) {
         pickContinuation?.takeIf { it.isActive }?.resume(uris)
         pickContinuation = null
@@ -86,21 +114,25 @@ private class AndroidFilePicker(private val context: Context) : FilePicker {
         saveContinuation = null
     }
 
-    /** Null when the document cannot be read, so that one bad pick does not lose the files next to it. */
-    private fun Uri.read(): ImportedFile? = try {
-        context.contentResolver.openInputStream(this)?.use { ImportedFile(name = displayName(), bytes = it.readBytes()) }
-    } catch (exception: Exception) {
-        println("Could not read \"$this\": ${exception.message}")
-        null
-    }
-
-    /** The extension is what the import goes by, and only the display name carries it for a content URI. */
-    private fun Uri.displayName(): String = context.contentResolver
-        .query(this, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
-        ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
-        ?: lastPathSegment.orEmpty().substringAfterLast('/')
-
     private companion object {
         const val ANY_MIME_TYPE = "*/*"
+        const val SHARED_DIRECTORY = "shared"
     }
 }
+
+/**
+ * Reads a document the system handed over - picked, opened with Campfire, shared to it or dropped onto it. Null when
+ * it cannot be read, so that one bad file does not lose the ones next to it.
+ */
+fun Uri.toImportedFile(context: Context): ImportedFile? = try {
+    context.contentResolver.openInputStream(this)?.use { ImportedFile(name = displayName(context), bytes = it.readBytes()) }
+} catch (exception: Exception) {
+    println("Could not read \"$this\": ${exception.message}")
+    null
+}
+
+/** The extension is what the import goes by, and for a content URI only the display name carries it. */
+private fun Uri.displayName(context: Context): String = context.contentResolver
+    .query(this, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+    ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
+    ?: lastPathSegment.orEmpty().substringAfterLast('/')

@@ -8,6 +8,7 @@
     <string name="delete">Delete</string>
     <string name="create">Create</string>
     <string name="export">Export</string>
+    <string name="share">Share</string>
     <string name="edit">Edit</string>
     <string name="filters">Filters</string>
     <string name="retry">Retry</string>
@@ -68,6 +69,7 @@
     <string name="settings_library">Library</string>
     <string name="settings_library_summary">Songs: %1$d · Setlists: %2$d</string>
     <string name="settings_library_location">Location</string>
+    <string name="settings_library_location_files_app">Visible in the Files app under Campfire</string>
     <string name="settings_import">Import songs or zip archives…</string>
     <string name="settings_export_all">Export library as zip</string>
     <string name="settings_song_display">Song display</string>

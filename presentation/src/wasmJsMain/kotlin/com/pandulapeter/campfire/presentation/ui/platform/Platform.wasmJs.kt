@@ -5,7 +5,7 @@ package com.pandulapeter.campfire.presentation.ui.platform
 internal actual val isDesktopPlatform = !hasTouchScreen()
 
 // The Origin Private File System is not reachable from outside the page.
-internal actual val libraryLocationHint: String? = null
+internal actual val libraryLocation: LibraryLocation? = null
 
 /**
  * True if the browser reports any touchscreen. `maxTouchPoints` covers every current browser, `ontouchstart` is the

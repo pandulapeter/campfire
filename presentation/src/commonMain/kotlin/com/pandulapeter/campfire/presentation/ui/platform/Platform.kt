@@ -6,7 +6,17 @@ package com.pandulapeter.campfire.presentation.ui.platform
 internal expect val isDesktopPlatform: Boolean
 
 /**
- * Where the library's files can be found, shown by the settings screen. Null where there is nothing the user could
- * go and look at, which is what the app-private storage of Android and the browser's private file system are.
+ * Where the library's files can be found, or null where there is nothing the user could go and look at. It is a
+ * value rather than a string so that the wording that needs translating stays in the string resources, while a path
+ * (which does not) can be handed over as it is.
  */
-internal expect val libraryLocationHint: String?
+internal expect val libraryLocation: LibraryLocation?
+
+internal sealed interface LibraryLocation {
+
+    /** An absolute path, shown as it is. */
+    data class Folder(val path: String) : LibraryLocation
+
+    /** Somewhere only a sentence can describe, which the settings screen translates. */
+    data object FilesApp : LibraryLocation
+}

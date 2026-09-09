@@ -8,6 +8,7 @@
     <string name="delete">Törlés</string>
     <string name="create">Létrehozás</string>
     <string name="export">Exportálás</string>
+    <string name="share">Megosztás</string>
     <string name="edit">Szerkesztés</string>
     <string name="filters">Szűrők</string>
     <string name="retry">Újra</string>
@@ -68,6 +69,7 @@
     <string name="settings_library">Könyvtár</string>
     <string name="settings_library_summary">Dalok: %1$d · Listák: %2$d</string>
     <string name="settings_library_location">Hely</string>
+    <string name="settings_library_location_files_app">A Fájlok alkalmazásban a Campfire mappa alatt található</string>
     <string name="settings_import">Dalok vagy zip archívumok importálása…</string>
     <string name="settings_export_all">Könyvtár exportálása zipként</string>
     <string name="settings_song_display">Dalok megjelenítése</string>

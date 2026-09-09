@@ -15,18 +15,25 @@ import com.pandulapeter.campfire.presentation.presentationModule
 import com.pandulapeter.campfire.presentation.ui.CampfireDesktopApp
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.handleKeyEvent
+import com.pandulapeter.campfire.presentation.ui.platform.readAsImportedFiles
 import com.pandulapeter.campfire.resources.Res
 import com.pandulapeter.campfire.resources.app_icon
 import java.awt.Dimension
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.KoinApplication
 import org.koin.compose.viewmodel.koinViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.dsl.koinConfiguration
 
 private val dataModules
     get() = dataLocalSourceModule + dataRepositoryModule
 
-fun main() = application {
+/**
+ * @param args Paths handed over by the operating system, which is how "open with" reaches a desktop application: it
+ *   launches the app with the file as an argument.
+ */
+fun main(args: Array<String>) = application {
+    val filesToImport = remember { MutableStateFlow(args.toList().readAsImportedFiles()) }
     // The view model is created inside the window (which owns the ViewModelStore), but the key handler needs it here.
     val viewModel = remember { mutableStateOf<CampfireViewModel?>(null) }
     Window(
@@ -44,7 +51,10 @@ fun main() = application {
             ) {
                 val currentViewModel = koinViewModel<CampfireViewModel>()
                 SideEffect { viewModel.value = currentViewModel }
-                CampfireDesktopApp(viewModel = currentViewModel)
+                CampfireDesktopApp(
+                    viewModel = currentViewModel,
+                    filesToImport = filesToImport
+                )
             }
         }
     }

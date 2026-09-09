@@ -22,6 +22,12 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- The library lives in the documents directory; these two put it in the Files app, where the songs can be
+	     read, edited and copied out like the plain text files they are. -->
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -31,6 +37,80 @@
 	<dict/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
+	<!--
+	     The ChordPro types Campfire opens. ".cho" is the one it writes and the one it offers to own; the rest of the
+	     family is recognised too. Zip and plain text are deliberately absent: they belong to everything, and an app
+	     that registered for them would offer itself for every archive and note on the device.
+	-->
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>org.chordpro.cho</string>
+			<key>UTTypeDescription</key>
+			<string>ChordPro song</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.plain-text</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>cho</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>org.chordpro.chordpro</string>
+			<key>UTTypeDescription</key>
+			<string>ChordPro song</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.plain-text</string>
+			</array>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>chopro</string>
+					<string>chordpro</string>
+					<string>crd</string>
+					<string>chord</string>
+					<string>pro</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>ChordPro song</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>org.chordpro.cho</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>ChordPro song</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<!-- Alternate, not Default: these extensions are shared with other kinds of file. -->
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>org.chordpro.chordpro</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>

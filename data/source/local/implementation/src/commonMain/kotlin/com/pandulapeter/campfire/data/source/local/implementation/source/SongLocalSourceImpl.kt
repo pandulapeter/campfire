@@ -1,10 +1,10 @@
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
-import com.pandulapeter.campfire.data.source.local.implementation.SONG_EXTENSION
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toSong
 import com.pandulapeter.campfire.data.source.local.implementation.songFileName
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
@@ -25,7 +25,7 @@ internal class SongLocalSourceImpl(
      */
     override suspend fun loadSongs(): List<Song> = coroutineScope {
         fileStorage.list(StorageDirectory.SONGS)
-            .filter { it.name.endsWith(SONG_EXTENSION, ignoreCase = true) }
+            .filter { it.name.isSongFileName() }
             .map { async { it.readSong() } }
             .awaitAll()
             .filterNotNull()
@@ -34,6 +34,12 @@ internal class SongLocalSourceImpl(
     override suspend fun loadSong(fileName: String): Song? = fileStorage.list(StorageDirectory.SONGS)
         .firstOrNull { it.name == fileName }
         ?.readSong()
+
+    /**
+     * Campfire writes `.cho`, but a folder the user can also open in a file manager will hold whatever they put in
+     * it, and every ChordPro extension names the same thing.
+     */
+    private fun String.isSongFileName() = LibraryFiles.SONG_EXTENSIONS.any { endsWith(it, ignoreCase = true) }
 
     override suspend fun loadSongContent(fileName: String) = fileStorage.readText(StorageDirectory.SONGS, fileName)
         ?.let { SongContent(fileName = fileName, text = it) }

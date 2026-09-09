@@ -109,11 +109,12 @@ class ImportFilesUseCaseImpl internal constructor(
     }
 
     private companion object {
-        val SONG_EXTENSIONS = setOf("cho", "chordpro", "chopro", "crd", "pro", "txt")
+        /** The ChordPro family plus plain text, without the dots, which is how a file name is asked for its type. */
+        val SONG_EXTENSIONS = (LibraryFiles.SONG_EXTENSIONS + LibraryFiles.TEXT_EXTENSION).mapTo(mutableSetOf()) { it.removePrefix(".") }
 
         /** ".setlist.json" ends in this, and a plain ".json" is worth trying to parse as a setlist too. */
         const val SETLIST_EXTENSION = "json"
-        const val ARCHIVE_EXTENSION = ".zip"
+        val ARCHIVE_EXTENSION = LibraryFiles.ARCHIVE_EXTENSION
         const val BYTE_ORDER_MARK = "\uFEFF"
     }
 }

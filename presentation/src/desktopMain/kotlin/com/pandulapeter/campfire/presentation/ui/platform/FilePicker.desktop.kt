@@ -62,3 +62,18 @@ internal object DesktopFilePicker : FilePicker {
 
     private const val DIALOG_TITLE = "Campfire"
 }
+
+/**
+ * Reads whatever of the given paths can be read, which is how a file reaches the app without a dialog: as a command
+ * line argument from an "open with", or as a drop onto the window. Anything unreadable is left out, and anything the
+ * import does not recognise is reported by it as skipped.
+ */
+fun List<String>.readAsImportedFiles() = mapNotNull { path ->
+    val file = File(path)
+    try {
+        if (file.isFile) ImportedFile(name = file.name, bytes = file.readBytes()) else null
+    } catch (exception: Exception) {
+        println("Could not read \"$path\": ${exception.message}")
+        null
+    }
+}

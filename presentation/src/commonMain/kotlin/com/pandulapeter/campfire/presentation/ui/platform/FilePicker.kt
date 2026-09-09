@@ -18,6 +18,16 @@ interface FilePicker {
 
     /** Offers the file to be saved: a "save as" dialog, a share sheet or a download. False when nothing was saved. */
     suspend fun saveFile(file: ExportedFile): Boolean
+
+    /**
+     * Hands the file to whatever the platform offers to send it with. Where there is no such thing, saving it is the
+     * nearest equivalent and the default below does that, which is why [canShare] exists: a menu should not offer
+     * "Share" next to "Export" when the two would do the same thing.
+     */
+    suspend fun shareFile(file: ExportedFile): Boolean = saveFile(file)
+
+    /** Whether [shareFile] does something other than [saveFile]. */
+    val canShare: Boolean get() = false
 }
 
 val LocalFilePicker = staticCompositionLocalOf<FilePicker> { error("No FilePicker has been provided.") }

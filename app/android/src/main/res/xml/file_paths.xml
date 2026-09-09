@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The one directory a shared file is ever written to: a temporary copy of the song being shared. -->
+<paths>
+    <cache-path
+        name="shared"
+        path="shared/" />
+</paths>

@@ -2,6 +2,6 @@ package com.pandulapeter.campfire.presentation.ui.platform
 
 internal actual val isDesktopPlatform = false
 
-// TODO(step 10): once Info.plist exposes the documents directory, this becomes "Visible in the Files app under
-//  Campfire" - there is nothing to point at before that.
-internal actual val libraryLocationHint: String? = null
+// Info.plist declares UIFileSharingEnabled and LSSupportsOpeningDocumentsInPlace, so the documents directory the
+// library lives in shows up under "On My iPhone".
+internal actual val libraryLocation: LibraryLocation? = LibraryLocation.FilesApp

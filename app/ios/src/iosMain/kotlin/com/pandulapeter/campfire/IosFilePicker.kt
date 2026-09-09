@@ -13,6 +13,8 @@ import platform.Foundation.NSURL
 import platform.Foundation.create
 import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.writeToURL
+import platform.UIKit.UIActivityViewController
+import platform.UIKit.popoverPresentationController
 import platform.UIKit.UIDocumentPickerDelegateProtocol
 import platform.UIKit.UIDocumentPickerViewController
 import platform.UIKit.UIViewController
@@ -40,7 +42,7 @@ internal class IosFilePicker(
         // out in the picker. What is not a song is skipped by the import and reported afterwards.
         val controller = UIDocumentPickerViewController(forOpeningContentTypes = listOf(UTTypeData, UTTypeZIP), asCopy = true)
         controller.allowsMultipleSelection = true
-        present(controller) { urls -> continuation.resume(urls.mapNotNull { it.read() }) }
+        present(controller) { urls -> continuation.resume(urls.mapNotNull { it.readImportedFile() }) }
     }
 
     override suspend fun saveFile(file: ExportedFile): Boolean = suspendCancellableCoroutine { continuation ->
@@ -50,6 +52,22 @@ internal class IosFilePicker(
             continuation.resume(false)
         } else {
             present(UIDocumentPickerViewController(forExportingURLs = listOf(url))) { urls -> continuation.resume(urls.isNotEmpty()) }
+        }
+    }
+
+    override val canShare = true
+
+    override suspend fun shareFile(file: ExportedFile): Boolean = suspendCancellableCoroutine { continuation ->
+        val url = NSURL.fileURLWithPath(NSTemporaryDirectory() + file.name)
+        if (!file.bytes.toNSData().writeToURL(url, atomically = true)) {
+            continuation.resume(false)
+        } else {
+            val controller = UIActivityViewController(activityItems = listOf(url), applicationActivities = null)
+            // An iPad presents this as a popover, which needs something to point at; the whole view will do.
+            val host = viewController()
+            controller.popoverPresentationController?.sourceView = host.view
+            host.presentViewController(controller, animated = true, completion = null)
+            continuation.resume(true)
         }
     }
 
@@ -63,17 +81,24 @@ internal class IosFilePicker(
         viewController().presentViewController(controller, animated = true, completion = null)
     }
 
-    /** Null when the file cannot be read, so that one bad pick does not lose the files next to it. */
-    private fun NSURL.read(): ImportedFile? {
-        // The copies the picker hands over live in the app's own container, but the flag costs nothing and is what
-        // makes this work for a URL that is not a copy.
-        val isAccessible = startAccessingSecurityScopedResource()
-        return try {
-            NSData.dataWithContentsOfURL(this)?.let { ImportedFile(name = lastPathComponent.orEmpty(), bytes = it.toByteArray()) }
-        } finally {
-            if (isAccessible) {
-                stopAccessingSecurityScopedResource()
-            }
+}
+
+/**
+ * Null when the file cannot be read, so that one bad file does not lose the ones next to it.
+ *
+ * The copies the picker hands over live in the app's own container, but a URL that arrives from another app is
+ * security scoped, so the read happens inside the access it grants.
+ */
+internal fun NSURL.readImportedFile(): ImportedFile? {
+    val isAccessible = startAccessingSecurityScopedResource()
+    return try {
+        NSData.dataWithContentsOfURL(this)?.let { ImportedFile(name = lastPathComponent.orEmpty(), bytes = it.toByteArray()) }
+    } catch (exception: Exception) {
+        println("Could not read \"$this\": ${exception.message}")
+        null
+    } finally {
+        if (isAccessible) {
+            stopAccessingSecurityScopedResource()
         }
     }
 }

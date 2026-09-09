@@ -1,7 +1,16 @@
 package com.pandulapeter.campfire.presentation.ui
 
+import androidx.compose.foundation.draganddrop.dragAndDropTarget
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draganddrop.DragAndDropEvent
+import androidx.compose.ui.draganddrop.DragAndDropTarget
+import androidx.compose.ui.draganddrop.awtTransferable
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
@@ -9,8 +18,14 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import com.pandulapeter.campfire.presentation.ui.platform.DesktopFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.readAsImportedFiles
+import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.koin.compose.viewmodel.koinViewModel
 import java.awt.Desktop
+import java.awt.datatransfer.DataFlavor
+import java.io.File
 import java.net.URI
 
 /**
@@ -18,17 +33,43 @@ import java.net.URI
  * visible modal, pops the back stack when there is none, clears the Songs search query on the root screen if it's
  * not already empty, and closes the application otherwise.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CampfireDesktopApp(
-    viewModel: CampfireViewModel = koinViewModel()
+    viewModel: CampfireViewModel = koinViewModel(),
+    filesToImport: Flow<List<ImportedFile>> = emptyFlow()
 ) = CompositionLocalProvider(
     LocalFilePicker provides DesktopFilePicker
 ) {
-    CampfireApp(
-        viewModel = viewModel,
-        urlOpener = ::openUrl
-    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            // Files dropped anywhere on the window are imported, which is the shortest path there is from a folder
+            // of songs to a library.
+            .dragAndDropTarget(
+                shouldStartDragAndDrop = { it.awtTransferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor) },
+                target = remember {
+                    object : DragAndDropTarget {
+                        override fun onDrop(event: DragAndDropEvent): Boolean {
+                            val paths = (event.awtTransferable.getTransferData(DataFlavor.javaFileListFlavor) as? List<*>)
+                                .orEmpty()
+                                .filterIsInstance<File>()
+                                .map { it.absolutePath }
+                            viewModel.importFiles(paths.readAsImportedFiles())
+                            return true
+                        }
+                    }
+                }
+            )
+    ) {
+        CampfireApp(
+            viewModel = viewModel,
+            urlOpener = ::openUrl,
+            filesToImport = filesToImport
+        )
+    }
 }
+
 
 /**
  * To be wired into the window's key event handler. Returns true if the event was consumed.

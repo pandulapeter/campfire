@@ -30,7 +30,8 @@ fun CampfireViewController(): UIViewController {
     return ComposeUIViewController {
         CampfireIosApp(
             urlOpener = ::openUrl,
-            filePicker = filePicker
+            filePicker = filePicker,
+            filesToImport = filesToImport
         )
     }.also { controller = it }
 }
