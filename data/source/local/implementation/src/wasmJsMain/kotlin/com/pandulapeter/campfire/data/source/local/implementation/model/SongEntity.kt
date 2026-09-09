@@ -9,6 +9,5 @@ internal data class SongEntity(
     val title: String,
     val artist: String,
     val key: String,
-    val hasChords: Boolean,
-    val databaseUrl: String
+    val hasChords: Boolean
 )

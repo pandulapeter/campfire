@@ -9,7 +9,6 @@ plugins {
 dependencies {
     implementation(project(":data:repository:implementation"))
     implementation(project(":data:source:local:implementation"))
-    implementation(project(":data:source:remote:implementation"))
     implementation(project(":domain:implementation"))
     implementation(project(":presentation"))
     implementation(libs.compose.components.resources)

@@ -1,13 +1,11 @@
 package com.pandulapeter.campfire.data.source.local.implementation
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import com.pandulapeter.campfire.data.source.local.api.DatabaseLocalSource
 import com.pandulapeter.campfire.data.source.local.api.RawSongDetailsLocalSource
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 import com.pandulapeter.campfire.data.source.local.api.TranspositionLocalSource
 import com.pandulapeter.campfire.data.source.local.api.UserPreferencesLocalSource
-import com.pandulapeter.campfire.data.source.local.implementation.source.DatabaseLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementation.source.RawSongDetailsLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementation.source.SetlistLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementation.source.SongLocalSourceImpl
@@ -32,13 +30,11 @@ actual val dataLocalSourceModule: Module = module {
             .build()
     }
     single<FileStorage> { createFileStorage() }
-    factory { get<StorageManager>().getDatabaseDao() }
     factory { get<StorageManager>().getSetlistDao() }
     factory { get<StorageManager>().getSongsDao() }
     factory { get<StorageManager>().getRawSongDetailsDao() }
     factory { get<StorageManager>().getUserPreferencesDao() }
     factory { get<StorageManager>().getTranspositionDao() }
-    factory<DatabaseLocalSource> { DatabaseLocalSourceImpl(get()) }
     factory<SetlistLocalSource> { SetlistLocalSourceImpl(get()) }
     factory<SongLocalSource> { SongLocalSourceImpl(get()) }
     factory<RawSongDetailsLocalSource> { RawSongDetailsLocalSourceImpl(get()) }

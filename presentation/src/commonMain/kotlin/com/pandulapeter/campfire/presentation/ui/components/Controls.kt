@@ -129,7 +129,6 @@ internal fun SongsControls(
     contentPadding: PaddingValues = PaddingValues()
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-    val databases by viewModel.databases.collectAsStateWithLifecycle()
     Column(
         modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(contentPadding)
     ) {
@@ -150,13 +149,6 @@ internal fun SongsControls(
             isChecked = userPreferences?.shouldShowSongsWithoutChords == true,
             onCheckedChange = viewModel::setShouldShowSongsWithoutChords
         )
-        databases.filter { it.isEnabled }.forEach { database ->
-            CheckboxListItem(
-                title = database.name,
-                isChecked = userPreferences?.unselectedDatabaseUrls?.contains(database.url) == false,
-                onCheckedChange = { viewModel.setDatabaseSelected(database, it) }
-            )
-        }
     }
 }
 

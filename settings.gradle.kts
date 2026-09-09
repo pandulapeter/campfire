@@ -66,8 +66,6 @@ include(
     ":data:repository:implementation",
     ":data:source:local:api",
     ":data:source:local:implementation",
-    ":data:source:remote:api",
-    ":data:source:remote:implementation",
     ":domain:api",
     ":domain:implementation",
     ":presentation"

@@ -7,5 +7,6 @@ class LoadSongDetailsUseCaseImpl internal constructor(
     private val rawSongDetailsRepository: RawSongDetailsRepository
 ) : LoadSongDetailsUseCase {
 
-    override suspend fun invoke(url: String, isForceRefresh: Boolean) = rawSongDetailsRepository.loadRawSongDetails(url, isForceRefresh)
+    // TODO(step 05): isForceRefresh does nothing while the text can only come from local storage.
+    override suspend fun invoke(url: String, isForceRefresh: Boolean) = rawSongDetailsRepository.loadRawSongDetails(url)
 }

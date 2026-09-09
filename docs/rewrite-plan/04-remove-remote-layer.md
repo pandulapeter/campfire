@@ -83,4 +83,37 @@ Delete these files and everything that only exists for them:
 
 ## Execution notes
 
-_(filled in by the executing agent)_
+- **`failedSongUrls` was kept**, against the instruction in section 2. It is the only thing that drives the song
+  details error state (`SongDetailsPage(hasFailed = ...)` and its retry button), whose hint string
+  `song_details_no_data_hint` this same step keeps and merely rewords to "The file could not be read.". Removing the
+  state would have left that string unreachable and forced step 06 to reinvent it. `refreshFailedEvents` and the
+  `RefreshFailedSnackbar` *were* removed as instructed, and `error_refresh_failed` is gone.
+- **`SongEntity.databaseUrl` was dropped** (both the Room and the wasm entity), although section 3 said the entity
+  keeps whatever columns it has. The schema version goes 6 -> 7 with destructive fallback either way, so removing the
+  column costs nothing and it was the last `Database`-named thing left in the data layer. `SongLocalSource` therefore
+  became `loadSongs()` / `saveSongs(songs)` without the database url, and `Song.toEntity()` lost its parameter.
+- **The "downloaded" concept was removed one level deeper than listed**: `RawSongDetailsLocalSource.loadDownloadedSongUrls()`
+  and `RawSongDetailsDao.getAllUrls()` are gone too, since nothing reads them once `ScreenData.downloadedSongUrls` and
+  the song list's dimming (`SongListItem.isDownloaded`) are gone. The wasm `StorageManager` keeps its per-song url
+  bookkeeping, now private and renamed to `loadSavedSongUrls()`, because `saveRawSongDetails` still needs it.
+- **`fallbackToDestructiveMigration(dropAllTables = true)` was already present**, in `roomMain/Module.kt` rather than
+  in `StorageManagerBuilder.kt` where section 2 expected it. Nothing had to be added.
+- **KSP was not removed.** Section 4 only lists the networking dependencies, and Room still generates its
+  implementation through KSP; the README's "Deleted" list covers the end state after step 05 removes Room.
+- **`kotlin-js-store/wasm/yarn.lock` had to be regenerated** with `./gradlew kotlinWasmUpgradeYarnLock`. Dropping
+  `ktor-client-js` removes `ws@8.20.1` from the npm dependency set, and `:app:web:wasmJsBrowserDistribution` fails on
+  `kotlinWasmStoreYarnLock` ("Lock file was changed") until the lock file is updated.
+- `LoadScreenDataUseCase` and `LoadSongDetailsUseCase` keep their `isForceRefresh` parameters as no-ops, each marked
+  with a `// TODO(step 05)` comment.
+- `data/source/local/implementation/CLAUDE.md` is stale (it still describes database version 1, entities in
+  `commonMain` and no wasm target). It was already stale before this step, so it is left for step 11 along with the
+  rest of the documentation.
+
+### Verified
+
+- `./gradlew :app:android:assembleDebug :app:desktop:build :app:ios:linkDebugFrameworkIosSimulatorArm64 :app:web:wasmJsBrowserDistribution`
+  succeeds, as do `:chordpro:desktopTest` (41 tests) and `:data:source:local:implementation:desktopTest` (28 tests).
+- The desktop app launches (Koin resolves all 27 definitions, no exceptions), shows the three tabs, the empty Songs
+  list with the new hint, an empty Setlists tab, and a Settings screen that now starts at "Song display" with no
+  databases section. The refresh action completes without an error state.
+- `grep -rni "retrosheet\|ktor" --include='*.kt' --include='*.kts' .` and the `INTERNET` search return nothing.

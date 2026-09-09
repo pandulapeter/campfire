@@ -21,11 +21,9 @@ internal class UserPreferencesRepositoryImpl(
     companion object {
         private val defaultUserPreferences = UserPreferences(
             shouldShowSongsWithoutChords = false,
-            showOnlyDownloadedSongs = false,
             isLyricsOnlyModeEnabled = false,
             isHorizontalSectionFlowEnabled = false,
             fontScale = 1f,
-            unselectedDatabaseUrls = emptyList(),
             sortingMode = UserPreferences.SortingMode.BY_ARTIST,
             uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,
             language = UserPreferences.Language.SYSTEM_DEFAULT

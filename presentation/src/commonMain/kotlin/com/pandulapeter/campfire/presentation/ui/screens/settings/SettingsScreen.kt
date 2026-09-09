@@ -1,11 +1,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,22 +10,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -39,22 +27,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.ic_add
-import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_git_hub
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.ic_website
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_about
-import com.pandulapeter.campfire.presentation.resources.settings_active_databases
-import com.pandulapeter.campfire.presentation.resources.settings_add_new_database
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode_description
 import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow
 import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
-import com.pandulapeter.campfire.presentation.resources.settings_remove_database
 import com.pandulapeter.campfire.presentation.resources.settings_song_display
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_english
@@ -67,9 +50,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.resources.settings_website
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
-import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
@@ -97,7 +78,6 @@ internal fun SettingsScreen(
             title = { Text(stringResource(Res.string.settings)) }
         )
         val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-        val databases by viewModel.databases.collectAsStateWithLifecycle()
         val layoutDirection = LocalLayoutDirection.current
         val listState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
@@ -111,32 +91,6 @@ internal fun SettingsScreen(
                 bottom = contentPadding.calculateBottomPadding() + 16.dp
             )
         ) {
-            sectionHeader(
-                key = "header_databases",
-                listState = listState,
-                coroutineScope = coroutineScope
-            ) { stringResource(Res.string.settings_active_databases) }
-            items(
-                items = databases,
-                key = { "database_${it.url}" }
-            ) { database ->
-                DatabaseItem(
-                    modifier = Modifier.animateItem(),
-                    name = database.name,
-                    isEnabled = database.isEnabled,
-                    isRemovable = database.isAddedByUser,
-                    onEnabledChanged = { viewModel.setDatabaseEnabled(database, it) },
-                    onRemoved = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteDatabase(database)) }
-                )
-            }
-            item(key = "add_database") {
-                ActionListItem(
-                    modifier = Modifier.animateItem(),
-                    title = stringResource(Res.string.settings_add_new_database),
-                    icon = painterResource(Res.drawable.ic_add),
-                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewDatabase) }
-                )
-            }
             sectionHeader(
                 key = "header_song_display",
                 listState = listState,
@@ -251,70 +205,4 @@ private fun LazyListScope.sectionHeader(
         text = text(),
         onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } }
     )
-}
-
-@Composable
-private fun DatabaseItem(
-    modifier: Modifier = Modifier,
-    name: String,
-    isEnabled: Boolean,
-    isRemovable: Boolean,
-    onEnabledChanged: (Boolean) -> Unit,
-    onRemoved: () -> Unit
-) {
-    val dismissState = rememberSwipeToDismissBoxState()
-    val coroutineScope = rememberCoroutineScope()
-    LaunchedEffect(Unit) { dismissState.reset() }
-    SwipeToDismissBox(
-        modifier = modifier,
-        state = dismissState,
-        enableDismissFromStartToEnd = isRemovable,
-        enableDismissFromEndToStart = false,
-        gesturesEnabled = isRemovable,
-        onDismiss = {
-            // Removal is confirmed in a dialog, so the row must return to its resting position.
-            if (it == SwipeToDismissBoxValue.StartToEnd) {
-                onRemoved()
-                coroutineScope.launch { dismissState.reset() }
-            }
-        },
-        backgroundContent = {
-            AnimatedVisibility(visible = isRemovable) {
-                Box(
-                    modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.errorContainer).padding(horizontal = 24.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_delete),
-                        contentDescription = stringResource(Res.string.settings_remove_database),
-                        tint = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                }
-            }
-        }
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            CheckboxListItem(
-                modifier = Modifier.weight(1f),
-                title = name,
-                isChecked = isEnabled,
-                onCheckedChange = onEnabledChanged
-            )
-            AnimatedVisibility(visible = isRemovable) {
-                IconButton(
-                    modifier = Modifier.padding(end = 4.dp),
-                    onClick = onRemoved
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_delete),
-                        contentDescription = stringResource(Res.string.settings_remove_database),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-    }
 }

@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface SongRepository {
 
-    val songs: Flow<DataState<Map<String, List<Song>>>>
+    val songs: Flow<DataState<List<Song>>>
 
-    /** @return Whether every database ended up with songs. A failed silent refresh is reported here and nowhere else. */
-    suspend fun loadSongs(databaseUrls: List<String>, isForceRefresh: Boolean): Boolean
+    /** The saved songs, or null if they could not be read - see `BaseLocalDataRepository.loadDataIfNeeded`. */
+    suspend fun loadSongsIfNeeded(): List<Song>?
 }

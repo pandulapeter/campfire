@@ -12,8 +12,7 @@
 
     <!-- Errors -->
     <string name="error_no_data">Nothing could be loaded</string>
-    <string name="error_no_data_hint">Check your internet connection, then try again.</string>
-    <string name="error_refresh_failed">Couldn't refresh the songs.</string>
+    <string name="error_no_data_hint">The library could not be read.</string>
 
     <!-- Songs screen -->
     <string name="songs">Songs</string>
@@ -26,7 +25,7 @@
     <string name="songs_sorting_mode_by_artist">Artist</string>
     <string name="songs_sorting_mode_by_title">Title</string>
     <string name="songs_no_data">No songs to show</string>
-    <string name="songs_no_data_hint">Try changing the search query or the filters.</string>
+    <string name="songs_no_data_hint">Import songs or create a new one from the Settings screen.</string>
     <string name="songs_no_search_results">No matching songs</string>
     <string name="songs_no_search_results_hint">Nothing in your library matches this search.</string>
     <string name="songs_lyrics_only">Lyrics only</string>
@@ -45,15 +44,6 @@
 
     <!-- Settings screen -->
     <string name="settings">Settings</string>
-    <string name="settings_active_databases">Active databases</string>
-    <string name="settings_add_new_database">Add a new database</string>
-    <string name="settings_add_new_database_name">Database name</string>
-    <string name="settings_add_new_database_url">Database URL</string>
-    <string name="settings_add_new_database_url_error">Enter a valid http(s) URL</string>
-    <string name="settings_add_new_database_hint">More information</string>
-    <string name="settings_add">Add</string>
-    <string name="settings_remove_database">Remove database</string>
-    <string name="settings_remove_database_confirmation">Remove the \"%1$s\" database? Its songs will no longer be shown.</string>
     <string name="settings_song_display">Song display</string>
     <string name="settings_lyrics_only_mode">Lyrics only mode</string>
     <string name="settings_lyrics_only_mode_description">Hide the chords</string>
@@ -95,6 +85,6 @@
     <string name="song_details_section_solo">Solo</string>
     <string name="song_details_section_outro">Outro</string>
     <string name="song_details_no_data">This song could not be loaded</string>
-    <string name="song_details_no_data_hint">Check your internet connection, then try again.</string>
+    <string name="song_details_no_data_hint">The file could not be read.</string>
 
 </resources>

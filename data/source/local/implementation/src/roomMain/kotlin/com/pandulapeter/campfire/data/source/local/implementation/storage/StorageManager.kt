@@ -7,13 +7,11 @@ import androidx.room.RoomDatabaseConstructor
 import androidx.room.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
-import com.pandulapeter.campfire.data.source.local.implementation.model.DatabaseEntity
 import com.pandulapeter.campfire.data.source.local.implementation.model.RawSongDetailsEntity
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistEntity
 import com.pandulapeter.campfire.data.source.local.implementation.model.SongEntity
 import com.pandulapeter.campfire.data.source.local.implementation.model.TranspositionEntity
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesEntity
-import com.pandulapeter.campfire.data.source.local.implementation.storage.dao.DatabaseDao
 import com.pandulapeter.campfire.data.source.local.implementation.storage.dao.RawSongDetailsDao
 import com.pandulapeter.campfire.data.source.local.implementation.storage.dao.SetlistDao
 import com.pandulapeter.campfire.data.source.local.implementation.storage.dao.SongDao
@@ -22,20 +20,17 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.dao.Us
 
 @Database(
     entities = [
-        DatabaseEntity::class,
         SetlistEntity::class,
         SongEntity::class,
         RawSongDetailsEntity::class,
         UserPreferencesEntity::class,
         TranspositionEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @ConstructedBy(StorageManagerConstructor::class)
 internal abstract class StorageManager : RoomDatabase() {
-
-    abstract fun getDatabaseDao(): DatabaseDao
 
     abstract fun getSetlistDao(): SetlistDao
 

@@ -12,8 +12,7 @@
 
     <!-- Errors -->
     <string name="error_no_data">Nem sikerült betölteni az adatokat</string>
-    <string name="error_no_data_hint">Ellenőrizd az internetkapcsolatot, majd próbáld újra.</string>
-    <string name="error_refresh_failed">Nem sikerült frissíteni a dalokat.</string>
+    <string name="error_no_data_hint">A könyvtárat nem sikerült beolvasni.</string>
 
     <!-- Songs screen -->
     <string name="songs">Dalok</string>
@@ -26,7 +25,7 @@
     <string name="songs_sorting_mode_by_artist">Előadó</string>
     <string name="songs_sorting_mode_by_title">Cím</string>
     <string name="songs_no_data">Nincsenek dalok</string>
-    <string name="songs_no_data_hint">Próbáld módosítani a keresést vagy a szűrőket.</string>
+    <string name="songs_no_data_hint">Importálj dalokat, vagy hozz létre egy újat a Beállítások képernyőn.</string>
     <string name="songs_no_search_results">Nincs találat</string>
     <string name="songs_no_search_results_hint">Egyetlen dal sem felel meg a keresésnek.</string>
     <string name="songs_lyrics_only">Csak dalszöveg</string>
@@ -45,15 +44,6 @@
 
     <!-- Settings screen -->
     <string name="settings">Beállítások</string>
-    <string name="settings_active_databases">Aktív adatbázisok</string>
-    <string name="settings_add_new_database">Új adatbázis hozzáadása</string>
-    <string name="settings_add_new_database_name">Adatbázis neve</string>
-    <string name="settings_add_new_database_url">Adatbázis URL</string>
-    <string name="settings_add_new_database_url_error">Adj meg egy érvényes http(s) URL-t</string>
-    <string name="settings_add_new_database_hint">Több információ</string>
-    <string name="settings_add">Hozzáadás</string>
-    <string name="settings_remove_database">Adatbázis eltávolítása</string>
-    <string name="settings_remove_database_confirmation">Eltávolítod a(z) „%1$s” adatbázist? A dalai többé nem jelennek meg.</string>
     <string name="settings_song_display">Dalok megjelenítése</string>
     <string name="settings_lyrics_only_mode">Csak dalszöveg mód</string>
     <string name="settings_lyrics_only_mode_description">Akkordok elrejtése</string>
@@ -95,6 +85,6 @@
     <string name="song_details_section_solo">Szóló</string>
     <string name="song_details_section_outro">Outro</string>
     <string name="song_details_no_data">Ezt a dalt nem sikerült betölteni</string>
-    <string name="song_details_no_data_hint">Ellenőrizd az internetkapcsolatot, majd próbáld újra.</string>
+    <string name="song_details_no_data_hint">A fájlt nem sikerült beolvasni.</string>
 
 </resources>

@@ -9,7 +9,5 @@ data class ScreenData(
     val setlists: List<Setlist>,
     val songs: List<Song>,
     val userPreferences: UserPreferences,
-    /** Just the urls: the text of a song is read when it is opened, see `GetSongDetailsUseCase`. */
-    val downloadedSongUrls: Set<String>,
     val transpositions: Map<TranspositionKey, Int>
 )

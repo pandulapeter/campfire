@@ -11,12 +11,10 @@ internal data class SongEntity(
     @ColumnInfo(name = "title") val title: String,
     @ColumnInfo(name = "artist") val artist: String,
     @ColumnInfo(name = "key") val key: String,
-    @ColumnInfo(name = "hasChords") val hasChords: Boolean,
-    @ColumnInfo(name = DATABASE_URL) val databaseUrl: String
+    @ColumnInfo(name = "hasChords") val hasChords: Boolean
 ) {
 
     companion object {
         const val TABLE_NAME = "songs"
-        const val DATABASE_URL = "databaseUrl"
     }
 }

@@ -3,8 +3,6 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
-import com.pandulapeter.campfire.data.repository.api.DatabaseRepository
-import com.pandulapeter.campfire.data.repository.api.RawSongDetailsRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.TranspositionRepository
@@ -17,10 +15,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 
 class GetScreenDataUseCaseImpl internal constructor(
     private val normalizeText: NormalizeTextUseCase,
-    databaseRepository: DatabaseRepository,
     setlistRepository: SetlistRepository,
     songRepository: SongRepository,
-    rawSongDetailsRepository: RawSongDetailsRepository,
     userPreferencesRepository: UserPreferencesRepository,
     transpositionRepository: TranspositionRepository
 ) : GetScreenDataUseCase {
@@ -29,44 +25,25 @@ class GetScreenDataUseCaseImpl internal constructor(
 
     private var cache: ScreenData? = null
     private val screenDataFlow = combine(
-        combine(
-            databaseRepository.databases,
-            setlistRepository.setlists,
-            songRepository.songs,
-            ::Triple
-        ),
-        combine(
-            rawSongDetailsRepository.downloadedSongUrls,
-            userPreferencesRepository.userPreferences,
-            transpositionRepository.transpositions,
-            ::Triple
-        )
-    ) { (databasesDataState, setlistsDataState, songsDataState),
-        (downloadedSongUrlsDataState, userPreferencesDataState, transpositionsDataState) ->
+        setlistRepository.setlists,
+        songRepository.songs,
+        userPreferencesRepository.userPreferences,
+        transpositionRepository.transpositions
+    ) { setlistsDataState, songsDataState, userPreferencesDataState, transpositionsDataState ->
 
-        fun createScreenData() = databasesDataState.data?.let { databases ->
-            setlistsDataState.data?.sortedByDescending { it.priority }?.let { setlists ->
-                songsDataState.data?.let { songs ->
-                    downloadedSongUrlsDataState.data?.let { downloadedSongUrls ->
-                        userPreferencesDataState.data?.let { userPreferences ->
-                            transpositionsDataState.data?.let { transpositions ->
-                                val selectedDatabases = databases
-                                    .filter { it.isEnabled && it.url !in userPreferences.unselectedDatabaseUrls }
-                                    .sortedBy { it.priority }
-                                ScreenData(
-                                    setlists = setlists,
-                                    songs = selectedDatabases.flatMap { songs[it.url].orEmpty() }
-                                        .distinctBy { it.id }
-                                        .filterDownloaded(userPreferences, downloadedSongUrls)
-                                        .filterHasChords(userPreferences)
-                                        .sort(userPreferences),
-                                    userPreferences = userPreferences,
-                                    downloadedSongUrls = downloadedSongUrls,
-                                    transpositions = transpositions
-                                ).also {
-                                    cache = it
-                                }
-                            }
+        fun createScreenData() = setlistsDataState.data?.sortedByDescending { it.priority }?.let { setlists ->
+            songsDataState.data?.let { songs ->
+                userPreferencesDataState.data?.let { userPreferences ->
+                    transpositionsDataState.data?.let { transpositions ->
+                        ScreenData(
+                            setlists = setlists,
+                            songs = songs
+                                .filterHasChords(userPreferences)
+                                .sort(userPreferences),
+                            userPreferences = userPreferences,
+                            transpositions = transpositions
+                        ).also {
+                            cache = it
                         }
                     }
                 }
@@ -74,10 +51,8 @@ class GetScreenDataUseCaseImpl internal constructor(
         }
 
         val dataStates = arrayOf(
-            databasesDataState,
             setlistsDataState,
             songsDataState,
-            downloadedSongUrlsDataState,
             userPreferencesDataState,
             transpositionsDataState
         )
@@ -89,11 +64,6 @@ class GetScreenDataUseCaseImpl internal constructor(
             DataState.Idle(createScreenData() ?: cache ?: throw IllegalStateException("No data available while all data states are idle."))
         }
     }.distinctUntilChanged()
-
-    private fun List<Song>.filterDownloaded(
-        userPreferences: UserPreferences,
-        downloadedSongUrls: Set<String>
-    ) = if (userPreferences.showOnlyDownloadedSongs) filter { it.url in downloadedSongUrls } else this
 
     private fun List<Song>.filterHasChords(userPreferences: UserPreferences) = if (userPreferences.shouldShowSongsWithoutChords) this else filter { it.hasChords }
 

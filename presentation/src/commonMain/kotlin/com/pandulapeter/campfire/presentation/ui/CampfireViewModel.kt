@@ -8,33 +8,26 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.data.model.DataState
-import com.pandulapeter.campfire.data.model.domain.Database
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
-import com.pandulapeter.campfire.domain.api.useCases.GetDatabasesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SaveDatabasesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveTranspositionsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeRawSongDetailsUseCase
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -52,11 +45,9 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class, FlowPreview::class)
 class CampfireViewModel(
     getScreenData: GetScreenDataUseCase,
-    getDatabases: GetDatabasesUseCase,
     getSongDetails: GetSongDetailsUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
     private val loadSongDetails: LoadSongDetailsUseCase,
-    private val saveDatabases: SaveDatabasesUseCase,
     private val saveSetlists: SaveSetlistsUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
     private val saveTranspositions: SaveTranspositionsUseCase,
@@ -95,22 +86,8 @@ class CampfireViewModel(
     val isLoading = screenData.map { it is DataState.Loading }.asState(false)
     val userPreferences = screenData.map { it.data?.userPreferences }.asState(null)
 
-    /**
-     * Read from [GetDatabasesUseCase] rather than from [screenData], which only has data once every source has it,
-     * and started eagerly, so that the databases are in memory from app start. Their only subscribers are the
-     * Settings screen and the song list controls, and a flow that waited for them would hand a freshly opened screen
-     * an empty list and the real databases a frame later, animating every row in.
-     */
-    val databases = getDatabases().asEagerState(emptyList())
-
     val setlists = screenData.map { it.data?.setlists.orEmpty() }.asState(emptyList())
-    val downloadedSongUrls = screenData.map { it.data?.downloadedSongUrls.orEmpty() }.asState(emptySet())
-
-    /**
-     * The text of the songs opened so far. It deliberately does not travel in [screenData]: the song lists only need
-     * [downloadedSongUrls] to mark a song as downloaded, and putting the whole library's text there meant nothing
-     * could be shown until every downloaded song had been read back from storage.
-     */
+    /** The text of the songs opened so far, read one by one as they are opened rather than all at once. */
     val rawSongDetails = getSongDetails().map { it.data.orEmpty() }.asState(emptyMap())
 
     val transpositions = screenData.map { it.data?.transpositions.orEmpty() }.asState(emptyMap())
@@ -148,17 +125,9 @@ class CampfireViewModel(
         setlists.map { setlist -> SetlistWithSongs(setlist = setlist, songs = setlist.songIds.mapNotNull { songsById[it] }) }
     }.asState(emptyList())
 
-    /** The urls of the songs whose text could not be loaded and that have no saved copy to show instead. */
+    /** The urls of the songs whose text could not be read. */
     private val _failedSongUrls = MutableStateFlow(emptySet<String>())
     val failedSongUrls: StateFlow<Set<String>> = _failedSongUrls.asStateFlow()
-
-    /**
-     * Emitted when a refresh the user asked for has failed while there were still songs on screen. Every other
-     * failure is silent: a background refresh has cached data to fall back on, and a list that ended up with nothing
-     * says so itself, see [songsPlaceholder].
-     */
-    private val _refreshFailedEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val refreshFailedEvents: SharedFlow<Unit> = _refreshFailedEvents.asSharedFlow()
 
     /**
      * The text size multiplier of the song details screen. A pinch gesture changes it on every frame, so the latest
@@ -238,10 +207,7 @@ class CampfireViewModel(
     fun onQueryChanged(newQuery: String) = _query.update { newQuery }
 
     fun refresh() = viewModelScope.launch {
-        val isSuccessful = loadScreenData(true)
-        // A failure with nothing to fall back on is already on screen as the list's own error state, retry and all;
-        // the message is for the case where the songs behind it stay perfectly usable.
-        if (!isSuccessful && screenData.value.data?.songs?.isNotEmpty() == true) _refreshFailedEvents.emit(Unit)
+        loadScreenData(true)
     }
 
     fun loadSongDetails(song: Song) = viewModelScope.launch {
@@ -332,38 +298,7 @@ class CampfireViewModel(
         )
     }
 
-    // Databases
-
-    fun addDatabase(name: String, url: String) = viewModelScope.launch {
-        val currentDatabases = databases.value
-        saveDatabases(
-            listOf(
-                Database(
-                    url = url.trim(),
-                    name = name.trim(),
-                    isEnabled = true,
-                    priority = currentDatabases.size,
-                    isAddedByUser = true
-                )
-            ) + currentDatabases
-        )
-    }
-
-    fun setDatabaseEnabled(database: Database, isEnabled: Boolean) = viewModelScope.launch {
-        saveDatabases(databases.value.map { if (it.url == database.url) it.copy(isEnabled = isEnabled) else it })
-    }
-
-    fun removeDatabase(database: Database) = viewModelScope.launch {
-        saveDatabases(databases.value.filterNot { it.url == database.url })
-    }
-
     // User preferences
-
-    fun setDatabaseSelected(database: Database, isSelected: Boolean) = updateUserPreferences {
-        copy(
-            unselectedDatabaseUrls = (if (isSelected) unselectedDatabaseUrls - database.url else unselectedDatabaseUrls + database.url).distinct()
-        )
-    }
 
     fun setShouldShowSongsWithoutChords(value: Boolean) = updateUserPreferences { copy(shouldShowSongsWithoutChords = value) }
 
@@ -510,13 +445,11 @@ class CampfireViewModel(
 
     sealed interface DialogType {
         data object NewSetlist : DialogType
-        data object NewDatabase : DialogType
         data object SongsControls : DialogType
         data object SetlistsControls : DialogType
         data class SetlistPicker(val songId: String, val currentSetlistId: String?) : DialogType
         data class SongDisplayControls(val songId: String, val setlistId: String?) : DialogType
         data class DeleteSetlist(val setlist: Setlist) : DialogType
-        data class DeleteDatabase(val database: Database) : DialogType
     }
 
     companion object {

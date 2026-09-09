@@ -152,7 +152,6 @@ private fun SetlistList(
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
     // Read once, so that the branch below and the placeholder it renders can never disagree about it.
     val libraryPlaceholder = viewModel.libraryPlaceholder.collectAsStateWithLifecycle().value
-    val downloadedSongUrls by viewModel.downloadedSongUrls.collectAsStateWithLifecycle()
     val listState = rememberLazyGridState()
     val reorderableState = rememberReorderableLazyGridState(listState) { from, to ->
         val fromKey = SetlistItemKey(from.key as? String)
@@ -249,7 +248,6 @@ private fun SetlistList(
                                 SongListItem(
                                     modifier = Modifier.longPressDraggableHandle(),
                                     song = song,
-                                    isDownloaded = song.url in downloadedSongUrls,
                                     isBeingDragged = isBeingDragged,
                                     onClick = { viewModel.openSongInSetlist(setlistWithSongs, index) }
                                 )

@@ -5,11 +5,9 @@ import com.pandulapeter.campfire.data.source.local.implementation.model.UserPref
 
 internal fun UserPreferencesEntity.toModel() = UserPreferences(
     shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
-    showOnlyDownloadedSongs = showOnlyDownloadedSongs,
     isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled,
     isHorizontalSectionFlowEnabled = isHorizontalSectionFlowEnabled,
     fontScale = fontScale,
-    unselectedDatabaseUrls = unselectedDatabaseUrls.mapToList(),
     sortingMode = UserPreferences.SortingMode.values().firstOrNull { it.id == sortingMode } ?: UserPreferences.SortingMode.BY_ARTIST,
     uiMode = UserPreferences.UiMode.values().firstOrNull { it.id == uiMode } ?: UserPreferences.UiMode.SYSTEM_DEFAULT,
     language = UserPreferences.Language.values().firstOrNull { it.id == language } ?: UserPreferences.Language.SYSTEM_DEFAULT
@@ -17,11 +15,9 @@ internal fun UserPreferencesEntity.toModel() = UserPreferences(
 
 internal fun UserPreferences.toEntity() = UserPreferencesEntity(
     shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
-    showOnlyDownloadedSongs = showOnlyDownloadedSongs,
     isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled,
     isHorizontalSectionFlowEnabled = isHorizontalSectionFlowEnabled,
     fontScale = fontScale,
-    unselectedDatabaseUrls = unselectedDatabaseUrls.mapToString(),
     sortingMode = sortingMode.id,
     uiMode = uiMode.id,
     language = language.id

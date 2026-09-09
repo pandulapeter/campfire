@@ -21,10 +21,6 @@ kotlin-browser = "0.5.0" # https://github.com/Kotlin/kotlinx-browser/releases
 kotlin-coroutines = "1.11.0" # https://github.com/Kotlin/kotlinx.coroutines/releases
 kotlin-ksp = "2.3.11" # https://github.com/google/ksp/releases
 kotlin-serialization = "1.11.0" # https://github.com/Kotlin/kotlinx.serialization/releases
-ktor = "3.5.2" # https://github.com/ktorio/ktor/releases
-ktorfit = "2.7.5" # https://github.com/Foso/Ktorfit/releases
-softwork-csv = "0.0.20" # https://github.com/hfhbd/kotlinx-serialization-csv/releases
-theapache64-retrosheet = "3.0.3" # https://github.com/theapache64/retrosheet/releases
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
@@ -55,13 +51,6 @@ kotlin-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
 kotlin-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlin-coroutines" }
 kotlin-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
-ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
-ktor-client-contentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
-ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
-ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
-ktorfit = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", version.ref = "ktorfit" }
-softwork-csv = { module = "app.softwork:kotlinx-serialization-csv", version.ref = "softwork-csv" }
-theapache64-retrosheet = { module = "io.github.theapache64:retrosheet", version.ref = "theapache64-retrosheet" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "gradle" }
@@ -74,4 +63,3 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "kotlin-ksp" }
-ktorfit = { id = "de.jensklingenberg.ktorfit", version.ref = "ktorfit" }

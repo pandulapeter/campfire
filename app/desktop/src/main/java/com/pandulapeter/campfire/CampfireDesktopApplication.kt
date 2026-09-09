@@ -10,7 +10,6 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.pandulapeter.campfire.data.repository.dataRepositoryModule
 import com.pandulapeter.campfire.data.source.local.implementation.dataLocalSourceModule
-import com.pandulapeter.campfire.data.source.remote.implementation.dataRemoteSourceModule
 import com.pandulapeter.campfire.domain.implementation.domainModule
 import com.pandulapeter.campfire.presentation.presentationModule
 import com.pandulapeter.campfire.presentation.ui.CampfireDesktopApp
@@ -25,7 +24,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.dsl.koinConfiguration
 
 private val dataModules
-    get() = dataLocalSourceModule + dataRemoteSourceModule + dataRepositoryModule
+    get() = dataLocalSourceModule + dataRepositoryModule
 
 fun main() = application {
     // The view model is created inside the window (which owns the ViewModelStore), but the key handler needs it here.

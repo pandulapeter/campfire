@@ -12,12 +12,11 @@ internal fun SongEntity.toModel() = Song(
     hasChords = hasChords
 )
 
-internal fun Song.toEntity(databaseUrl: String) = SongEntity(
+internal fun Song.toEntity() = SongEntity(
     id = id,
     url = url,
     title = title,
     artist = artist,
     key = key,
-    hasChords = hasChords,
-    databaseUrl = databaseUrl
+    hasChords = hasChords
 )

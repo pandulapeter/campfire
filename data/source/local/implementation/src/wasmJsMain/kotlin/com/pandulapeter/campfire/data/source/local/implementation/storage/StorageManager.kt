@@ -1,6 +1,5 @@
 package com.pandulapeter.campfire.data.source.local.implementation.storage
 
-import com.pandulapeter.campfire.data.source.local.implementation.model.DatabaseEntity
 import com.pandulapeter.campfire.data.source.local.implementation.model.RawSongDetailsEntity
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistEntity
 import com.pandulapeter.campfire.data.source.local.implementation.model.SongEntity
@@ -19,11 +18,10 @@ import kotlinx.serialization.json.Json
  *
  * Decoding blocks the browser's only thread, so two things keep it off the critical path:
  *
- * - Every document is parsed at most once per session and kept in [documents] afterwards. Without it, loading the
- *   songs of N databases parsed the whole song document N times, and saving them parsed and re-encoded it N more.
- * - The text of the downloaded songs is *not* one document. A song list only needs to know which songs are
- *   downloaded, so the urls live in their own small document and each song's text gets a key of its own, read only
- *   when that song is opened.
+ * - Every document is parsed at most once per session and kept in [documents] afterwards, so repeated reads and
+ *   writes of the same table do not parse and re-encode it over and over.
+ * - The text of the saved songs is *not* one document: each song gets a key of its own, read only when that song
+ *   is opened.
  *
  * Nothing else writes to these keys while the app runs (a second tab would, exactly as a second process would with
  * Room), so the cache can be kept in sync by the writes going through here.
@@ -36,18 +34,14 @@ internal class StorageManager {
         migrateRawSongDetailsToOwnKeys()
     }
 
-    fun loadDatabases(): List<DatabaseEntity> = loadDocument(KEY_DATABASES) ?: emptyList()
-
-    fun saveDatabases(databases: List<DatabaseEntity>) = saveDocument(KEY_DATABASES, databases)
-
-    fun loadDownloadedSongUrls(): Set<String> = loadDocument<Set<String>>(KEY_RAW_SONG_DETAIL_URLS) ?: emptySet()
+    private fun loadSavedSongUrls(): Set<String> = loadDocument<Set<String>>(KEY_RAW_SONG_DETAIL_URLS) ?: emptySet()
 
     /** Not cached: the repository holds on to what it reads, so a second copy here would only double the memory. */
     fun loadRawSongDetails(url: String): RawSongDetailsEntity? = decode(KEY_RAW_SONG_DETAIL_PREFIX + url)
 
     fun saveRawSongDetails(rawSongDetails: RawSongDetailsEntity) {
         encode(KEY_RAW_SONG_DETAIL_PREFIX + rawSongDetails.url, rawSongDetails)
-        val urls = loadDownloadedSongUrls()
+        val urls = loadSavedSongUrls()
         if (rawSongDetails.url !in urls) {
             saveDocument(KEY_RAW_SONG_DETAIL_URLS, urls + rawSongDetails.url)
         }
@@ -70,7 +64,7 @@ internal class StorageManager {
     fun saveUserPreferences(userPreferences: UserPreferencesEntity) = saveDocument(KEY_USER_PREFERENCES, userPreferences)
 
     /**
-     * Earlier versions kept the text of every downloaded song in one document, which had to be parsed in full before
+     * Earlier versions kept the text of every saved song in one document, which had to be parsed in full before
      * the app could show anything. It is split into one key per song here, once, so that nothing is lost.
      */
     private fun migrateRawSongDetailsToOwnKeys() {
@@ -78,7 +72,7 @@ internal class StorageManager {
         try {
             val rawSongDetails = json.decodeFromString<List<RawSongDetailsEntity>>(legacyDocument)
             rawSongDetails.forEach { encode(KEY_RAW_SONG_DETAIL_PREFIX + it.url, it) }
-            saveDocument(KEY_RAW_SONG_DETAIL_URLS, loadDownloadedSongUrls() + rawSongDetails.map { it.url })
+            saveDocument(KEY_RAW_SONG_DETAIL_URLS, loadSavedSongUrls() + rawSongDetails.map { it.url })
         } catch (_: Exception) {
             // Written by a version with an incompatible schema, discarded like any other document that fails to parse.
         }
@@ -109,7 +103,6 @@ internal class StorageManager {
 
         // Namespaced because localStorage is shared by everything served from the same origin.
         const val KEY_PREFIX = "campfire."
-        const val KEY_DATABASES = "databases"
         const val KEY_RAW_SONG_DETAIL_URLS = "rawSongDetailUrls"
         const val KEY_RAW_SONG_DETAIL_PREFIX = "rawSongDetail."
         const val KEY_LEGACY_RAW_SONG_DETAILS = "rawSongDetails"

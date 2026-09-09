@@ -62,11 +62,9 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SongListItem(
     modifier: Modifier = Modifier,
     song: Song,
-    isDownloaded: Boolean,
     isBeingDragged: Boolean = false,
     onClick: () -> Unit
 ) {
-    val alpha by animateFloatAsState(if (isDownloaded) 1f else 0.6f, MaterialTheme.motionScheme.defaultEffectsSpec())
     // A progress value instead of an animated color, so that the row follows the color scheme immediately while it
     // is animating between the light and the dark theme (a color animation would chase it and trail behind).
     val dragProgress by animateFloatAsState(
@@ -75,7 +73,7 @@ internal fun SongListItem(
     )
     val containerColor = lerp(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceContainerHigh, dragProgress)
     ListItem(
-        modifier = modifier.clickable(onClick = onClick).alpha(alpha),
+        modifier = modifier.clickable(onClick = onClick),
         colors = ListItemDefaults.colors(containerColor = containerColor),
         headlineContent = {
             Row(

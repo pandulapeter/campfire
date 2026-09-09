@@ -10,8 +10,6 @@ internal class RawSongDetailsLocalSourceImpl(
     private val storageManager: StorageManager
 ) : RawSongDetailsLocalSource {
 
-    override suspend fun loadDownloadedSongUrls() = storageManager.loadDownloadedSongUrls()
-
     override suspend fun loadRawSongDetails(url: String) = storageManager.loadRawSongDetails(url)?.toModel()
 
     // Each song has a key of its own, like the url primary key of the Room table, so this replaces just that one song.

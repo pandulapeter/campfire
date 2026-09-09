@@ -8,11 +8,9 @@ import androidx.room.PrimaryKey
 internal data class UserPreferencesEntity(
     @PrimaryKey @ColumnInfo(name = "id") val id: String = TABLE_NAME,
     @ColumnInfo(name = "shouldShowSongsWithoutChords") val shouldShowSongsWithoutChords: Boolean,
-    @ColumnInfo(name = "showOnlyDownloadedSongs") val showOnlyDownloadedSongs: Boolean,
     @ColumnInfo(name = "isLyricsOnlyModeEnabled", defaultValue = "0") val isLyricsOnlyModeEnabled: Boolean,
     @ColumnInfo(name = "isHorizontalSectionFlowEnabled", defaultValue = "0") val isHorizontalSectionFlowEnabled: Boolean,
     @ColumnInfo(name = "fontScale", defaultValue = "1.0") val fontScale: Float,
-    @ColumnInfo(name = "unselectedDatabaseUrls") val unselectedDatabaseUrls: String,
     @ColumnInfo(name = "sortingMode") val sortingMode: String,
     @ColumnInfo(name = "uiMode") val uiMode: String,
     @ColumnInfo(name = "language") val language: String
