@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -42,6 +42,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.filters
 import com.pandulapeter.campfire.presentation.resources.ic_delete
+import com.pandulapeter.campfire.presentation.resources.ic_rename
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.setlists
@@ -50,6 +51,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_no_data
 import com.pandulapeter.campfire.presentation.resources.setlists_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
+import com.pandulapeter.campfire.presentation.resources.setlists_rename
 import com.pandulapeter.campfire.presentation.resources.setlists_reorder_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
@@ -58,6 +60,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
+import com.pandulapeter.campfire.presentation.ui.components.MissingSongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderAction
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongsControlsSidePanel
@@ -212,6 +215,11 @@ private fun SetlistList(
                         onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
                         action = {
                             SectionHeaderAction(
+                                icon = painterResource(Res.drawable.ic_rename),
+                                contentDescription = stringResource(Res.string.setlists_rename),
+                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.RenameSetlist(setlistWithSongs.setlist)) }
+                            )
+                            SectionHeaderAction(
                                 icon = painterResource(Res.drawable.ic_delete),
                                 contentDescription = stringResource(Res.string.setlists_delete_setlist),
                                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlistWithSongs.setlist)) }
@@ -219,7 +227,7 @@ private fun SetlistList(
                         }
                     )
                 }
-                if (setlistWithSongs.songs.isEmpty()) {
+                if (setlistWithSongs.entries.isEmpty()) {
                     item(
                         key = "hint_${setlistWithSongs.setlist.fileName}",
                         span = { GridItemSpan(maxLineSpan) }
@@ -232,29 +240,37 @@ private fun SetlistList(
                         )
                     }
                 }
-                itemsIndexed(
-                    items = setlistWithSongs.songs,
-                    key = { _, song -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = song.fileName).string.orEmpty() }
-                ) { index, song ->
-                    val key = SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = song.fileName)
+                items(
+                    items = setlistWithSongs.entries,
+                    key = { entry -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = entry.songFileName).string.orEmpty() }
+                ) { entry ->
+                    val key = SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = entry.songFileName)
                     ReorderableItem(
                         modifier = Modifier.animateItem(),
                         state = reorderableState,
                         key = key.string.orEmpty()
                     ) { isBeingDragged ->
                         DismissibleSongItem(
-                            onDismissed = { viewModel.removeSongFromSetlist(songFileName = song.fileName, setlistFileName = setlistWithSongs.setlist.fileName) }
+                            onDismissed = { viewModel.removeSongFromSetlist(songFileName = entry.songFileName, setlistFileName = setlistWithSongs.setlist.fileName) }
                         ) {
                             val elevation by animateDpAsState(if (isBeingDragged) 8.dp else 0.dp)
                             Surface(
                                 shadowElevation = elevation
                             ) {
-                                SongListItem(
-                                    modifier = Modifier.longPressDraggableHandle(),
-                                    song = song,
-                                    isBeingDragged = isBeingDragged,
-                                    onClick = { viewModel.openSongInSetlist(setlistWithSongs, index) }
-                                )
+                                when (entry) {
+                                    is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongListItem(
+                                        modifier = Modifier.longPressDraggableHandle(),
+                                        song = entry.song,
+                                        isBeingDragged = isBeingDragged,
+                                        onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) }
+                                    )
+
+                                    // Nothing to open, but it still takes part in the reordering and the swipe.
+                                    is CampfireViewModel.SetlistWithSongs.Entry.Missing -> MissingSongListItem(
+                                        modifier = Modifier.longPressDraggableHandle(),
+                                        songFileName = entry.songFileName
+                                    )
+                                }
                             }
                         }
                     }

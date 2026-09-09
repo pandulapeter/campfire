@@ -14,7 +14,9 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
+import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
+import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
@@ -46,6 +48,8 @@ class CampfireViewModel(
     getScreenData: GetScreenDataUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
     private val getSongContent: GetSongContentUseCase,
+    private val createSong: CreateSongUseCase,
+    private val deleteSong: DeleteSongUseCase,
     private val createSetlist: CreateSetlistUseCase,
     private val saveSetlist: SaveSetlistUseCase,
     private val deleteSetlist: DeleteSetlistUseCase,
@@ -114,6 +118,13 @@ class CampfireViewModel(
         )
     }.asState(Transpositions())
     val allSongs = screenData.map { it.data?.songs.orEmpty() }.asState(emptyList())
+
+    /**
+     * The file names of every song in the library, filters included. Eager for the same reason as [setlists]:
+     * [setlistsWithSongs] tells a hidden song from a missing one with it, and an empty set would turn every song the
+     * filters hide into a "file not found" row.
+     */
+    val songFileNames = screenData.map { it.data?.songFileNames.orEmpty() }.asEagerState(emptySet())
     val songGroups = combine(allSongs, query, userPreferences.map { it?.sortingMode }) { songs, query, sortingMode ->
         if (query.isBlank()) {
             songs.groupIntoSections(sortingMode ?: UserPreferences.SortingMode.BY_ARTIST)
@@ -130,21 +141,38 @@ class CampfireViewModel(
      * failed) here, so that a list without data never sits on a loading indicator that nothing will ever replace.
      */
     val songsPlaceholder = combine(screenData, songGroups) { screenData, songGroups ->
+        val data = screenData.data
         when {
             songGroups.isNotEmpty() -> null
-            screenData.data?.songs.isNullOrEmpty() -> screenData.emptyLibraryPlaceholder
+            // The library itself, not the filtered list: a library that only holds songs the filters hide is not an
+            // empty one, and offering to create a first song there would be answering a question nobody asked.
+            data == null || data.songFileNames.isEmpty() -> screenData.emptyLibraryPlaceholder
+            data.songs.isEmpty() -> Placeholder.ALL_SONGS_HIDDEN
             else -> Placeholder.NO_SEARCH_RESULTS
         }
     }.asState(Placeholder.LOADING)
 
     /** The same for the screens that show the library without the search query, such as the setlists. */
     val libraryPlaceholder = screenData
-        .map { if (it.data?.songs.isNullOrEmpty()) it.emptyLibraryPlaceholder else null }
+        .map { if (it.data?.songFileNames.isNullOrEmpty()) it.emptyLibraryPlaceholder else null }
         .asState(Placeholder.LOADING)
 
-    val setlistsWithSongs = combine(setlists, allSongs) { setlists, songs ->
+    val setlistsWithSongs = combine(setlists, allSongs, songFileNames) { setlists, songs, songFileNames ->
         val songsByFileName = songs.associateBy { it.fileName }
-        setlists.map { setlist -> SetlistWithSongs(setlist = setlist, songs = setlist.entries.mapNotNull { songsByFileName[it.songFileName] }) }
+        setlists.map { setlist ->
+            SetlistWithSongs(
+                setlist = setlist,
+                entries = setlist.entries.mapNotNull { entry ->
+                    val song = songsByFileName[entry.songFileName]
+                    when {
+                        song != null -> SetlistWithSongs.Entry.Present(song)
+                        // In the library but hidden by a filter: not shown, but not missing either.
+                        entry.songFileName in songFileNames -> null
+                        else -> SetlistWithSongs.Entry.Missing(entry.songFileName)
+                    }
+                }
+            )
+        }
     }.asState(emptyList())
 
     /** The file names of the songs whose text could not be read. */
@@ -204,11 +232,15 @@ class CampfireViewModel(
         CampfireDestination.SongDetails(songFileNames = listOf(song.fileName), setlistFileName = null, initialIndex = 0)
     )
 
-    fun openSongInSetlist(setlistWithSongs: SetlistWithSongs, index: Int) = openSongDetails(
+    /**
+     * The pager can only page through the songs that are actually there, so the index is taken from those rather
+     * than from the position of the row in the setlist, which also counts the entries whose file is missing.
+     */
+    fun openSongInSetlist(setlistWithSongs: SetlistWithSongs, song: Song) = openSongDetails(
         CampfireDestination.SongDetails(
             songFileNames = setlistWithSongs.songs.map { it.fileName },
             setlistFileName = setlistWithSongs.setlist.fileName,
-            initialIndex = index
+            initialIndex = setlistWithSongs.songs.indexOfFirst { it.fileName == song.fileName }.coerceAtLeast(0)
         )
     )
 
@@ -230,6 +262,20 @@ class CampfireViewModel(
 
     fun refresh() = viewModelScope.launch {
         loadScreenData(true)
+    }
+
+    /** Creates the file and opens it right away, which is where the editor will take over in step 09. */
+    fun createSong(title: String, artist: String) = viewModelScope.launch {
+        // TODO(step 09): open the editor on the new song instead of its (still empty) details.
+        openSong(createSong.invoke(title = title, artist = artist))
+    }
+
+    fun deleteSong(fileName: String) = viewModelScope.launch {
+        deleteSong.invoke(fileName)
+        // The song details screen would be left showing a file that is no longer there, so it is closed first.
+        (backStack.lastOrNull() as? CampfireDestination.SongDetails)?.let { destination ->
+            if (fileName in destination.songFileNames) navigateBack()
+        }
     }
 
     fun loadSongContent(song: Song) = viewModelScope.launch {
@@ -292,6 +338,10 @@ class CampfireViewModel(
                 saveSetlist(setlist.copy(entries = listOf(Setlist.Entry(songFileName = songFileName)) + setlist.entries))
             }
         }
+    }
+
+    fun renameSetlist(setlist: Setlist, title: String) = viewModelScope.launch {
+        saveSetlist(setlist.copy(title = title.trim()))
     }
 
     fun deleteSetlist(setlistFileName: String) = viewModelScope.launch {
@@ -430,6 +480,9 @@ class CampfireViewModel(
         LOADING,
         ERROR,
         NO_SONGS,
+
+        /** The library has songs, but every one of them is filtered out. */
+        ALL_SONGS_HIDDEN,
         NO_SEARCH_RESULTS
     }
 
@@ -475,18 +528,48 @@ class CampfireViewModel(
         }
     }
 
+    /**
+     * One setlist as a list shows it. An entry whose file is not in the library any more (deleted from outside the
+     * app) is kept as [Entry.Missing] rather than dropped, so that the user can see it and remove it; entries the
+     * filters hide are left out entirely.
+     */
     data class SetlistWithSongs(
         val setlist: Setlist,
-        val songs: List<Song>
-    )
+        val entries: List<Entry>
+    ) {
+
+        /** The songs that can actually be opened, which is what the pager of the song details screen gets. */
+        val songs get() = entries.mapNotNull { (it as? Entry.Present)?.song }
+
+        sealed interface Entry {
+
+            val songFileName: String
+
+            data class Present(val song: Song) : Entry {
+                override val songFileName get() = song.fileName
+            }
+
+            data class Missing(override val songFileName: String) : Entry
+        }
+    }
 
     sealed interface DialogType {
         data object NewSetlist : DialogType
+        data object NewSong : DialogType
         data object SongsControls : DialogType
         data object SetlistsControls : DialogType
         data class SetlistPicker(val songFileName: String, val currentSetlistFileName: String?) : DialogType
         data class SongDisplayControls(val songFileName: String, val setlistFileName: String?) : DialogType
         data class DeleteSetlist(val setlist: Setlist) : DialogType
+        data class RenameSetlist(val setlist: Setlist) : DialogType
+        /** The actions of one song, shown as a bottom sheet where there is no room for a dropdown menu. */
+        data class SongActions(
+            val song: Song,
+            val setlistFileName: String?,
+            /** False where the screen that opened the sheet offers it already. */
+            val shouldIncludeAddToSetlist: Boolean = true
+        ) : DialogType
+        data class DeleteSong(val song: Song) : DialogType
     }
 
     companion object {

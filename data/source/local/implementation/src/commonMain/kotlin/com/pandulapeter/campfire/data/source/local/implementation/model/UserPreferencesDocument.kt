@@ -8,7 +8,9 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 internal data class UserPreferencesDocument(
-    val shouldShowSongsWithoutChords: Boolean = false,
+    // On by default: a song created in the app starts out as a title and an artist, so hiding songs without chords
+    // would hide every new song right after it was made.
+    val shouldShowSongsWithoutChords: Boolean = true,
     val isLyricsOnlyModeEnabled: Boolean = false,
     val isHorizontalSectionFlowEnabled: Boolean = false,
     val fontScale: Float = 1f,

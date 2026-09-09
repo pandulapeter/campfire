@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -19,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
@@ -27,12 +30,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_git_hub
+import com.pandulapeter.campfire.presentation.resources.ic_import
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
+import com.pandulapeter.campfire.presentation.resources.ic_refresh
 import com.pandulapeter.campfire.presentation.resources.ic_website
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_about
+import com.pandulapeter.campfire.presentation.resources.settings_export_all
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub
+import com.pandulapeter.campfire.presentation.resources.settings_import
+import com.pandulapeter.campfire.presentation.resources.settings_library
+import com.pandulapeter.campfire.presentation.resources.settings_library_location
+import com.pandulapeter.campfire.presentation.resources.settings_library_summary
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode_description
 import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow
@@ -49,13 +60,16 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_system_default
 import com.pandulapeter.campfire.presentation.resources.settings_version
 import com.pandulapeter.campfire.presentation.resources.settings_website
+import com.pandulapeter.campfire.presentation.resources.songs_rescan
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
+import com.pandulapeter.campfire.presentation.ui.platform.libraryLocationHint
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -78,6 +92,9 @@ internal fun SettingsScreen(
             title = { Text(stringResource(Res.string.settings)) }
         )
         val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+        // The library, not the filtered list: the summary counts what is on disk.
+        val songFileNames by viewModel.songFileNames.collectAsStateWithLifecycle()
+        val setlists by viewModel.setlists.collectAsStateWithLifecycle()
         val layoutDirection = LocalLayoutDirection.current
         val listState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
@@ -91,6 +108,59 @@ internal fun SettingsScreen(
                 bottom = contentPadding.calculateBottomPadding() + 16.dp
             )
         ) {
+            sectionHeader(
+                key = "header_library",
+                listState = listState,
+                coroutineScope = coroutineScope
+            ) { stringResource(Res.string.settings_library) }
+            item(key = "library_summary") {
+                ListItem(
+                    modifier = Modifier.animateItem(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    headlineContent = { Text(stringResource(Res.string.settings_library_summary, songFileNames.size, setlists.size)) }
+                )
+            }
+            libraryLocationHint?.let { hint ->
+                item(key = "library_location") {
+                    ListItem(
+                        modifier = Modifier.animateItem(),
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        headlineContent = { Text(stringResource(Res.string.settings_library_location)) },
+                        supportingContent = { Text(hint) }
+                    )
+                }
+            }
+            item(key = "library_import") {
+                ActionListItem(
+                    modifier = Modifier.animateItem(),
+                    title = stringResource(Res.string.settings_import),
+                    icon = painterResource(Res.drawable.ic_import),
+                    // TODO(step 08): reading .cho files and zip archives through the platform's file picker.
+                    isEnabled = false,
+                    isEmphasized = false,
+                    onClick = {}
+                )
+            }
+            item(key = "library_export") {
+                ActionListItem(
+                    modifier = Modifier.animateItem(),
+                    title = stringResource(Res.string.settings_export_all),
+                    icon = painterResource(Res.drawable.ic_export),
+                    // TODO(step 08): writing the whole library out as a zip archive.
+                    isEnabled = false,
+                    isEmphasized = false,
+                    onClick = {}
+                )
+            }
+            item(key = "library_rescan") {
+                ActionListItem(
+                    modifier = Modifier.animateItem(),
+                    title = stringResource(Res.string.songs_rescan),
+                    icon = painterResource(Res.drawable.ic_refresh),
+                    isEmphasized = false,
+                    onClick = viewModel::refresh
+                )
+            }
             sectionHeader(
                 key = "header_song_display",
                 listState = listState,

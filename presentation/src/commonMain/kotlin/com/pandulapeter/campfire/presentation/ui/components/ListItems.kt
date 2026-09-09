@@ -1,10 +1,13 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,6 +23,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -34,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -48,22 +53,34 @@ import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.ic_open_in_new
 import com.pandulapeter.campfire.presentation.resources.ic_search
 import com.pandulapeter.campfire.presentation.resources.ic_songs
+import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.retry
+import com.pandulapeter.campfire.presentation.resources.setlists_missing_song
+import com.pandulapeter.campfire.presentation.resources.songs_all_hidden
+import com.pandulapeter.campfire.presentation.resources.songs_all_hidden_hint
+import com.pandulapeter.campfire.presentation.resources.songs_empty_hint
+import com.pandulapeter.campfire.presentation.resources.songs_empty_title
+import com.pandulapeter.campfire.presentation.resources.songs_import
 import com.pandulapeter.campfire.presentation.resources.songs_lyrics_only
-import com.pandulapeter.campfire.presentation.resources.songs_no_data
-import com.pandulapeter.campfire.presentation.resources.songs_no_data_hint
+import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+/**
+ * @param onLongClick Opens the song's actions where a dropdown menu would be out of place (touch platforms).
+ * @param actions The trailing content of the row, which on desktop is the overflow button and its menu.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class)
 @Composable
 internal fun SongListItem(
     modifier: Modifier = Modifier,
     song: Song,
     isBeingDragged: Boolean = false,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
+    actions: (@Composable () -> Unit)? = null
 ) {
     // A progress value instead of an animated color, so that the row follows the color scheme immediately while it
     // is animating between the light and the dark theme (a color animation would chase it and trail behind).
@@ -73,8 +90,9 @@ internal fun SongListItem(
     )
     val containerColor = lerp(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceContainerHigh, dragProgress)
     ListItem(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
         colors = ListItemDefaults.colors(containerColor = containerColor),
+        trailingContent = actions,
         headlineContent = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -99,15 +117,46 @@ internal fun SongListItem(
                 }
             }
         },
-        supportingContent = {
-            Text(
-                text = song.artist,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+        // Songs created in the app need no artist, and an empty second line would just make the row taller.
+        supportingContent = song.artist.takeIf { it.isNotBlank() }?.let { artist ->
+            {
+                Text(
+                    text = artist,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     )
 }
+
+/**
+ * A setlist entry whose file is no longer in the library: it cannot be opened, but it can still be removed, so it is
+ * shown greyed out rather than silently dropped - a setlist that quietly loses a song would look like the app lost it.
+ */
+@Composable
+internal fun MissingSongListItem(
+    modifier: Modifier = Modifier,
+    songFileName: String
+) = ListItem(
+    modifier = modifier.alpha(0.5f),
+    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+    headlineContent = {
+        Text(
+            text = songFileName,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    },
+    supportingContent = {
+        Text(
+            text = stringResource(Res.string.setlists_missing_song),
+            fontStyle = FontStyle.Italic,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+)
 
 /**
  * Header of a list section: a raised pill that floats above the items scrolling underneath it when used as a sticky
@@ -250,19 +299,29 @@ internal fun LinkListItem(
     }
 )
 
+/**
+ * @param isEmphasized Whether the row is an invitation to do something ("New setlist") rather than one entry of a
+ *   list of things that can be done, which is what the actions of a song or of the library are.
+ */
 @Composable
 internal fun ActionListItem(
     modifier: Modifier = Modifier,
     title: String,
     icon: Painter,
+    isEnabled: Boolean = true,
+    isEmphasized: Boolean = true,
     onClick: () -> Unit
 ) = ListItem(
-    modifier = modifier.clickable(onClick = onClick),
-    colors = ListItemDefaults.colors(
-        containerColor = Color.Transparent,
-        headlineColor = MaterialTheme.colorScheme.primary,
-        leadingIconColor = MaterialTheme.colorScheme.primary
-    ),
+    modifier = modifier.clickable(enabled = isEnabled, onClick = onClick).alpha(if (isEnabled) 1f else 0.5f),
+    colors = if (isEmphasized) {
+        ListItemDefaults.colors(
+            containerColor = Color.Transparent,
+            headlineColor = MaterialTheme.colorScheme.primary,
+            leadingIconColor = MaterialTheme.colorScheme.primary
+        )
+    } else {
+        ListItemDefaults.colors(containerColor = Color.Transparent)
+    },
     headlineContent = { Text(title) },
     leadingContent = { Icon(painter = icon, contentDescription = null) }
 )
@@ -272,12 +331,16 @@ internal fun ActionListItem(
  * that failed with nothing cached to fall back on, or an empty state. A list that has no data is always in one of
  * these, so a load that never arrives ends in something the user can act on rather than in an endless indicator.
  */
+/**
+ * @param onNewSong Null where creating a song is not this list's business, which hides the offer to create one.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun ListPlaceholder(
     modifier: Modifier = Modifier,
     placeholder: CampfireViewModel.Placeholder,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onNewSong: (() -> Unit)? = null
 ) = when (placeholder) {
     CampfireViewModel.Placeholder.LOADING -> Box(
         modifier = modifier.padding(32.dp),
@@ -298,8 +361,19 @@ internal fun ListPlaceholder(
     CampfireViewModel.Placeholder.NO_SONGS -> EmptyState(
         modifier = modifier,
         icon = painterResource(Res.drawable.ic_songs),
-        title = stringResource(Res.string.songs_no_data),
-        hint = stringResource(Res.string.songs_no_data_hint)
+        title = stringResource(Res.string.songs_empty_title),
+        hint = stringResource(Res.string.songs_empty_hint),
+        actionText = onNewSong?.let { stringResource(Res.string.songs_new_song) },
+        onAction = onNewSong,
+        // TODO(step 08): importing files and archives, which is what the button is here to do.
+        secondaryActionText = onNewSong?.let { stringResource(Res.string.songs_import) }
+    )
+
+    CampfireViewModel.Placeholder.ALL_SONGS_HIDDEN -> EmptyState(
+        modifier = modifier,
+        icon = painterResource(Res.drawable.ic_tune),
+        title = stringResource(Res.string.songs_all_hidden),
+        hint = stringResource(Res.string.songs_all_hidden_hint)
     )
 
     CampfireViewModel.Placeholder.NO_SEARCH_RESULTS -> EmptyState(
@@ -311,8 +385,11 @@ internal fun ListPlaceholder(
 }
 
 /**
- * @param actionText The label of the button under the hint. Without it (and [onAction]) the state is text only,
- *   which is what an empty list that is empty for a good reason gets: there is nothing to retry.
+ * @param actionText The label of the button under the hint. Without it the state is text only, which is what an empty
+ *   list that is empty for a good reason gets: there is nothing to retry.
+ * @param onAction Null next to a non-null [actionText] leaves the button visible but disabled, for an action that
+ *   the app will be able to offer but cannot yet.
+ * @param secondaryActionText The label of a second, outlined button next to the first one.
  */
 @Composable
 internal fun EmptyState(
@@ -322,7 +399,9 @@ internal fun EmptyState(
     /** Null when the title already says everything, e.g. for a song file that is simply still empty. */
     hint: String? = null,
     actionText: String? = null,
-    onAction: (() -> Unit)? = null
+    onAction: (() -> Unit)? = null,
+    secondaryActionText: String? = null,
+    onSecondaryAction: (() -> Unit)? = null
 ) = Column(
     modifier = modifier.padding(32.dp),
     horizontalAlignment = Alignment.CenterHorizontally
@@ -347,12 +426,30 @@ internal fun EmptyState(
             textAlign = TextAlign.Center
         )
     }
-    if (actionText != null && onAction != null) {
-        Button(
+    if (actionText != null || secondaryActionText != null) {
+        Row(
             modifier = Modifier.padding(top = 16.dp),
-            onClick = onAction
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(actionText)
+            if (actionText != null) {
+                Button(
+                    enabled = onAction != null,
+                    onClick = { onAction?.invoke() }
+                ) {
+                    Text(actionText)
+                }
+            }
+            if (actionText != null && secondaryActionText != null) {
+                Spacer(modifier = Modifier.size(8.dp))
+            }
+            if (secondaryActionText != null) {
+                OutlinedButton(
+                    enabled = onSecondaryAction != null,
+                    onClick = { onSecondaryAction?.invoke() }
+                ) {
+                    Text(secondaryActionText)
+                }
+            }
         }
     }
 }

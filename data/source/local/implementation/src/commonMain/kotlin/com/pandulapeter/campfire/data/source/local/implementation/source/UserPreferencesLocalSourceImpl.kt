@@ -14,13 +14,12 @@ internal class UserPreferencesLocalSourceImpl(
 ) : UserPreferencesLocalSource {
 
     /** A document that cannot be parsed is treated as no document at all, so the app starts on its defaults. */
-    override suspend fun loadUserPreferences(): UserPreferences? = try {
-        fileStorage.readText(StorageDirectory.PREFERENCES, FILE_NAME)
-            ?.let { json.decodeFromString<UserPreferencesDocument>(it).toModel() }
+    override suspend fun loadUserPreferences(): UserPreferences = try {
+        fileStorage.readText(StorageDirectory.PREFERENCES, FILE_NAME)?.let { json.decodeFromString<UserPreferencesDocument>(it) }
     } catch (exception: Exception) {
         println("Could not read the preferences: ${exception.message}")
         null
-    }
+    }.let { it ?: UserPreferencesDocument() }.toModel()
 
     override suspend fun saveUserPreferences(userPreferences: UserPreferences) = fileStorage.writeText(
         directory = StorageDirectory.PREFERENCES,

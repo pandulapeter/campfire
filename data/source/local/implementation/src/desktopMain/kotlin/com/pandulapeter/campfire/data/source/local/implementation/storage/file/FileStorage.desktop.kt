@@ -3,7 +3,12 @@ package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 import org.koin.core.scope.Scope
 import java.io.File
 
-/** The place each desktop operating system expects an application to keep the data it owns. */
+/**
+ * The place each desktop operating system expects an application to keep the data it owns.
+ *
+ * The settings screen shows the resulting path, and cannot see this module, so it derives it the same way; keep the
+ * two in step (`presentation/src/desktopMain/.../ui/platform/Platform.desktop.kt`).
+ */
 internal actual fun Scope.createFileStorage(): FileStorage = JvmFileStorage(desktopDataDirectory())
 
 private fun desktopDataDirectory(): File {

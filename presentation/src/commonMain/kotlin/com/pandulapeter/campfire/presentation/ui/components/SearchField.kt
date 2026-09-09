@@ -13,6 +13,7 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -30,11 +31,13 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SearchField(
     modifier: Modifier = Modifier,
     query: String,
-    onQueryChanged: (String) -> Unit
+    onQueryChanged: (String) -> Unit,
+    /** Reported so that the screen can get its floating action button out of the way while the user is typing. */
+    onFocusChanged: (Boolean) -> Unit = {}
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     SearchBarDefaults.InputField(
-        modifier = modifier,
+        modifier = modifier.onFocusChanged { onFocusChanged(it.isFocused) },
         query = query,
         onQueryChange = { onQueryChanged(it.replace("\n", "")) },
         onSearch = { keyboardController?.hide() },

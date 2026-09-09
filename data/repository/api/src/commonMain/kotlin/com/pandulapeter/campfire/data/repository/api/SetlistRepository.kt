@@ -11,6 +11,9 @@ interface SetlistRepository {
     /** The saved setlists, or null if they could not be read. */
     suspend fun loadSetlistsIfNeeded(): List<Setlist>?
 
+    /** Reads the setlists directory again, which is what a rescan and an import need. */
+    suspend fun rescan()
+
     /** Writes a new, empty setlist under a free file name and returns it. */
     suspend fun createSetlist(title: String, priority: Int): Setlist
 

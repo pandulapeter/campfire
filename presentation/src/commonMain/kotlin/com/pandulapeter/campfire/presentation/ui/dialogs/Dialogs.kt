@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,29 +17,41 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cancel
+import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.delete
 import com.pandulapeter.campfire.presentation.resources.ic_add
-import com.pandulapeter.campfire.presentation.resources.setlists_create
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist_confirmation
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist_title
+import com.pandulapeter.campfire.presentation.resources.setlists_rename
+import com.pandulapeter.campfire.presentation.resources.setlists_rename_title
 import com.pandulapeter.campfire.presentation.resources.song_details_add_to_setlist
+import com.pandulapeter.campfire.presentation.resources.songs_delete_song
+import com.pandulapeter.campfire.presentation.resources.songs_delete_song_confirmation
+import com.pandulapeter.campfire.presentation.resources.songs_new_song
+import com.pandulapeter.campfire.presentation.resources.songs_new_song_artist
+import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
+import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.SongsControls
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDisplayControls
 import kotlinx.coroutines.launch
@@ -55,10 +68,33 @@ internal fun CampfireDialogs(
 ) {
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
     when (val dialog = visibleDialog) {
-        CampfireViewModel.DialogType.NewSetlist -> NewSetlistDialog(
+        CampfireViewModel.DialogType.NewSetlist -> TextInputDialog(
+            title = stringResource(Res.string.setlists_new_setlist),
+            label = stringResource(Res.string.setlists_new_setlist_title),
+            confirmLabel = stringResource(Res.string.create),
             onDismiss = viewModel::dismissDialog,
-            onCreate = { title ->
+            onConfirm = { title ->
                 viewModel.createSetlist(title)
+                viewModel.dismissDialog()
+            }
+        )
+
+        is CampfireViewModel.DialogType.RenameSetlist -> TextInputDialog(
+            title = stringResource(Res.string.setlists_rename),
+            label = stringResource(Res.string.setlists_rename_title),
+            initialValue = dialog.setlist.title,
+            confirmLabel = stringResource(Res.string.setlists_rename),
+            onDismiss = viewModel::dismissDialog,
+            onConfirm = { title ->
+                viewModel.renameSetlist(dialog.setlist, title)
+                viewModel.dismissDialog()
+            }
+        )
+
+        CampfireViewModel.DialogType.NewSong -> NewSongDialog(
+            onDismiss = viewModel::dismissDialog,
+            onCreate = { title, artist ->
+                viewModel.createSong(title = title, artist = artist)
                 viewModel.dismissDialog()
             }
         )
@@ -88,6 +124,22 @@ internal fun CampfireDialogs(
                 dialog = dialog
             )
         }
+
+        is CampfireViewModel.DialogType.SongActions -> SongActionsSheet(
+            viewModel = viewModel,
+            dialog = dialog
+        )
+
+        is CampfireViewModel.DialogType.DeleteSong -> ConfirmationDialog(
+            title = stringResource(Res.string.songs_delete_song),
+            text = stringResource(Res.string.songs_delete_song_confirmation, dialog.song.title),
+            confirmLabel = stringResource(Res.string.delete),
+            onDismiss = viewModel::dismissDialog,
+            onConfirm = {
+                viewModel.deleteSong(dialog.song.fileName)
+                viewModel.dismissDialog()
+            }
+        )
 
         is CampfireViewModel.DialogType.DeleteSetlist -> ConfirmationDialog(
             title = stringResource(Res.string.setlists_delete_setlist),
@@ -126,37 +178,128 @@ private fun ConfirmationDialog(
     }
 )
 
+/**
+ * One required line of text and a confirm button that stays disabled until it has something in it. Creating and
+ * renaming a setlist are the same dialog with different labels.
+ */
 @Composable
-private fun NewSetlistDialog(
+private fun TextInputDialog(
+    title: String,
+    label: String,
+    initialValue: String = "",
+    confirmLabel: String,
     onDismiss: () -> Unit,
-    onCreate: (title: String) -> Unit
+    onConfirm: (value: String) -> Unit
 ) {
-    var title by rememberSaveable { mutableStateOf("") }
-    val isValid = title.isNotBlank()
+    var value by rememberSaveable { mutableStateOf(initialValue) }
+    val isValid = value.isNotBlank()
+    val focusRequester = remember { FocusRequester() }
+    // The dialog exists to take one line of text, so the caret is put in it instead of asking for one more tap.
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.setlists_new_setlist)) },
+        title = { Text(title) },
         text = {
             OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = title,
-                onValueChange = { title = it.replace("\n", "").take(MAX_SETLIST_TITLE_LENGTH) },
-                label = { Text(stringResource(Res.string.setlists_new_setlist_title)) },
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                value = value,
+                onValueChange = { value = it.replace("\n", "").take(MAX_TITLE_LENGTH) },
+                label = { Text(label) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { if (isValid) onCreate(title) })
+                keyboardActions = KeyboardActions(onDone = { if (isValid) onConfirm(value) })
             )
         },
         confirmButton = {
             TextButton(
                 enabled = isValid,
-                onClick = { onCreate(title) }
-            ) { Text(stringResource(Res.string.setlists_create)) }
+                onClick = { onConfirm(value) }
+            ) { Text(confirmLabel) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
         }
     )
+}
+
+/**
+ * The title and the artist of a song about to be created. Only the title is required: it is what the file is named
+ * after, and a song without a known artist is a normal thing to have.
+ */
+@Composable
+private fun NewSongDialog(
+    onDismiss: () -> Unit,
+    onCreate: (title: String, artist: String) -> Unit
+) {
+    var title by rememberSaveable { mutableStateOf("") }
+    var artist by rememberSaveable { mutableStateOf("") }
+    val isValid = title.isNotBlank()
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.songs_new_song)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                    value = title,
+                    onValueChange = { title = it.replace("\n", "").take(MAX_TITLE_LENGTH) },
+                    label = { Text(stringResource(Res.string.songs_new_song_title)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = artist,
+                    onValueChange = { artist = it.replace("\n", "").take(MAX_TITLE_LENGTH) },
+                    label = { Text(stringResource(Res.string.songs_new_song_artist)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { if (isValid) onCreate(title, artist) })
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = isValid,
+                onClick = { onCreate(title, artist) }
+            ) { Text(stringResource(Res.string.create)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
+        }
+    )
+}
+
+/**
+ * The actions of one song where there is no pointer to open a dropdown menu with, reached by long pressing the row.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SongActionsSheet(
+    viewModel: CampfireViewModel,
+    dialog: CampfireViewModel.DialogType.SongActions
+) = CampfireBottomSheet(onDismiss = viewModel::dismissDialog) { sheetState, _ ->
+    val coroutineScope = rememberCoroutineScope()
+    SettingsSectionTitle(text = dialog.song.title)
+    SongActions(
+        viewModel = viewModel,
+        song = dialog.song,
+        setlistFileName = dialog.setlistFileName,
+        shouldIncludeAddToSetlist = dialog.shouldIncludeAddToSetlist
+    ) { title, icon, isEnabled, onClick ->
+        ActionListItem(
+            title = title,
+            icon = icon,
+            isEnabled = isEnabled,
+            isEmphasized = false,
+            // The sheet gets out of the way before whatever the action opens lands on top of it.
+            onClick = { coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { onClick() } }
+        )
+    }
+    Spacer(modifier = Modifier.height(16.dp))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -223,4 +366,4 @@ private fun CampfireBottomSheet(
     content: @Composable () -> Unit
 ) = CampfireBottomSheet(onDismiss) { _, _ -> content() }
 
-private const val MAX_SETLIST_TITLE_LENGTH = 40
+private const val MAX_TITLE_LENGTH = 60

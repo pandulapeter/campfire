@@ -8,7 +8,7 @@ import com.pandulapeter.campfire.data.source.local.api.UserPreferencesLocalSourc
 internal class UserPreferencesRepositoryImpl(
     private val userPreferencesLocalSource: UserPreferencesLocalSource
 ) : BaseLocalDataRepository<UserPreferences>(
-    loadDataFromLocalSource = { userPreferencesLocalSource.loadUserPreferences() ?: defaultUserPreferences }
+    loadDataFromLocalSource = userPreferencesLocalSource::loadUserPreferences
 ), UserPreferencesRepository {
 
     override val userPreferences = dataState
@@ -17,18 +17,5 @@ internal class UserPreferencesRepositoryImpl(
 
     override suspend fun saveUserPreferences(userPreferences: UserPreferences) = writeData(userPreferences) {
         userPreferencesLocalSource.saveUserPreferences(it)
-    }
-
-    companion object {
-        private val defaultUserPreferences = UserPreferences(
-            shouldShowSongsWithoutChords = false,
-            isLyricsOnlyModeEnabled = false,
-            isHorizontalSectionFlowEnabled = false,
-            fontScale = 1f,
-            sortingMode = UserPreferences.SortingMode.BY_ARTIST,
-            uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,
-            language = UserPreferences.Language.SYSTEM_DEFAULT,
-            transpositions = emptyMap()
-        )
     }
 }

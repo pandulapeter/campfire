@@ -28,7 +28,7 @@ class LoadScreenDataUseCaseImpl internal constructor(
         with(scope) {
             listOf(
                 async { if (isRescan) songRepository.rescan() else songRepository.loadSongsIfNeeded() },
-                async { setlistRepository.loadSetlistsIfNeeded() },
+                async { if (isRescan) setlistRepository.rescan() else setlistRepository.loadSetlistsIfNeeded() },
                 async { userPreferencesRepository.loadUserPreferencesIfNeeded() }
             ).awaitAll()
         }

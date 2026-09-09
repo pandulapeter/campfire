@@ -4,9 +4,10 @@
     <string name="back">Vissza</string>
     <string name="close">Bezárás</string>
     <string name="cancel">Mégse</string>
-    <string name="refresh">Frissítés</string>
     <string name="remove">Eltávolítás</string>
     <string name="delete">Törlés</string>
+    <string name="create">Létrehozás</string>
+    <string name="export">Exportálás</string>
     <string name="filters">Szűrők</string>
     <string name="retry">Újra</string>
 
@@ -20,12 +21,23 @@
     <string name="songs_clear">Törlés</string>
     <string name="songs_sort_and_filter">Rendezés és szűrés</string>
     <string name="songs_unsorted_label">0 - 9</string>
+    <string name="songs_unknown_artist">Ismeretlen előadó</string>
     <string name="songs_show_without_chords">Akkord nélküli dalok mutatása</string>
     <string name="songs_sorting_mode">Rendezési mód</string>
     <string name="songs_sorting_mode_by_artist">Előadó</string>
     <string name="songs_sorting_mode_by_title">Cím</string>
-    <string name="songs_no_data">Nincsenek dalok</string>
-    <string name="songs_no_data_hint">Importálj dalokat, vagy hozz létre egy újat a Beállítások képernyőn.</string>
+    <string name="songs_empty_title">A könyvtárad üres</string>
+    <string name="songs_empty_hint">Hozz létre egy dalt, vagy importálj .cho fájlokat és zip archívumokat.</string>
+    <string name="songs_new_song">Új dal</string>
+    <string name="songs_new_song_title">Cím</string>
+    <string name="songs_new_song_artist">Előadó</string>
+    <string name="songs_import">Importálás</string>
+    <string name="songs_rescan">Könyvtár újraolvasása</string>
+    <string name="songs_actions">Műveletek</string>
+    <string name="songs_delete_song">Dal törlése</string>
+    <string name="songs_delete_song_confirmation">Törlöd a(z) „%1$s” dalt? A fájl törlődik a könyvtárból és minden listából.</string>
+    <string name="songs_all_hidden">Minden dal rejtve van</string>
+    <string name="songs_all_hidden_hint">A szűrők a teljes könyvtárat elrejtik.</string>
     <string name="songs_no_search_results">Nincs találat</string>
     <string name="songs_no_search_results_hint">Egyetlen dal sem felel meg a keresésnek.</string>
     <string name="songs_lyrics_only">Csak dalszöveg</string>
@@ -36,14 +48,21 @@
     <string name="setlists_no_data_hint">Hozz létre egy listát, majd adj hozzá dalokat a dal részletei képernyőről.</string>
     <string name="setlists_new_setlist">Új lista</string>
     <string name="setlists_new_setlist_title">Lista címe</string>
-    <string name="setlists_create">Létrehozás</string>
     <string name="setlists_remove_song">Dal eltávolítása</string>
+    <string name="setlists_rename">Átnevezés</string>
+    <string name="setlists_rename_title">Új cím</string>
+    <string name="setlists_missing_song">A fájl nem található</string>
     <string name="setlists_reorder_hint">Hosszan nyomva átrendezheted, elhúzva eltávolíthatod a dalokat.</string>
     <string name="setlists_delete_setlist">Lista törlése</string>
     <string name="setlists_delete_setlist_confirmation">Törlöd a(z) „%1$s” listát? A dalok a könyvtárban maradnak.</string>
 
     <!-- Settings screen -->
     <string name="settings">Beállítások</string>
+    <string name="settings_library">Könyvtár</string>
+    <string name="settings_library_summary">Dalok: %1$d · Listák: %2$d</string>
+    <string name="settings_library_location">Hely</string>
+    <string name="settings_import">Dalok vagy zip archívumok importálása…</string>
+    <string name="settings_export_all">Könyvtár exportálása zipként</string>
     <string name="settings_song_display">Dalok megjelenítése</string>
     <string name="settings_lyrics_only_mode">Csak dalszöveg mód</string>
     <string name="settings_lyrics_only_mode_description">Akkordok elrejtése</string>

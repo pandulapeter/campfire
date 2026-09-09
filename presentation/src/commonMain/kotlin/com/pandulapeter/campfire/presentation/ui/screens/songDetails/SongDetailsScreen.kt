@@ -55,6 +55,7 @@ import com.pandulapeter.campfire.presentation.resources.back
 import com.pandulapeter.campfire.presentation.resources.ic_back
 import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.ic_songs
+import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.ic_playlist_add
 import com.pandulapeter.campfire.presentation.resources.ic_previous
@@ -68,10 +69,13 @@ import com.pandulapeter.campfire.presentation.resources.song_details_no_data
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_song
 import com.pandulapeter.campfire.presentation.resources.song_details_song_position
+import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
+import com.pandulapeter.campfire.presentation.ui.components.SongActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
+import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -217,6 +221,34 @@ internal fun SongDetailsScreen(
                             painter = painterResource(Res.drawable.ic_tune),
                             contentDescription = stringResource(Res.string.song_details_display_options)
                         )
+                    }
+                }
+                // The same actions as the song list's context menu, minus the one the bar next to it already offers.
+                currentSong?.let { song ->
+                    if (isDesktopPlatform) {
+                        SongActionsMenu(
+                            viewModel = viewModel,
+                            song = song,
+                            setlistFileName = destination.setlistFileName,
+                            shouldIncludeAddToSetlist = false
+                        )
+                    } else {
+                        IconButton(
+                            onClick = {
+                                viewModel.showDialog(
+                                    CampfireViewModel.DialogType.SongActions(
+                                        song = song,
+                                        setlistFileName = destination.setlistFileName,
+                                        shouldIncludeAddToSetlist = false
+                                    )
+                                )
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.ic_more),
+                                contentDescription = stringResource(Res.string.songs_actions)
+                            )
+                        }
                     }
                 }
             }

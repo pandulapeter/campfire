@@ -1,8 +1,11 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -22,9 +25,12 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -46,10 +52,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_refresh
 import com.pandulapeter.campfire.presentation.resources.ic_tune
-import com.pandulapeter.campfire.presentation.resources.refresh
+import com.pandulapeter.campfire.presentation.resources.songs_new_song
+import com.pandulapeter.campfire.presentation.resources.songs_rescan
 import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter
+import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
@@ -60,6 +69,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.SearchField
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
+import com.pandulapeter.campfire.presentation.ui.components.SongActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongsControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
@@ -81,6 +91,9 @@ internal fun SongsScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val placeholder by viewModel.songsPlaceholder.collectAsStateWithLifecycle()
+    // The button would sit right where the suggestions and the keyboard go, and searching is not the moment to
+    // start writing a new song anyway.
+    var isSearchFieldFocused by rememberSaveable { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyGridState()
     val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
@@ -103,12 +116,13 @@ internal fun SongsScreen(
                     SearchField(
                         modifier = Modifier.fillMaxWidth(),
                         query = query,
-                        onQueryChanged = viewModel::onQueryChanged
+                        onQueryChanged = viewModel::onQueryChanged,
+                        onFocusChanged = { isSearchFieldFocused = it }
                     )
                 },
                 actions = {
                     if (isDesktopPlatform) {
-                        RefreshAction(
+                        RescanAction(
                             isLoading = isLoading,
                             onClick = viewModel::refresh
                         )
@@ -123,17 +137,29 @@ internal fun SongsScreen(
                     }
                 }
             )
-            SongList(
-                modifier = Modifier.fillMaxSize(),
-                viewModel = viewModel,
-                listState = listState,
-                placeholder = placeholder,
-                // While the list is empty its own placeholder is the loading indicator; two of them at once would
-                // only say the same thing twice.
-                isRefreshing = isLoading && placeholder == null,
-                columnCount = columnCount,
-                contentPadding = listContentPadding
-            )
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                SongList(
+                    modifier = Modifier.fillMaxSize(),
+                    viewModel = viewModel,
+                    listState = listState,
+                    placeholder = placeholder,
+                    // While the list is empty its own placeholder is the loading indicator; two of them at once would
+                    // only say the same thing twice.
+                    isRefreshing = isLoading && placeholder == null,
+                    columnCount = columnCount,
+                    contentPadding = listContentPadding
+                )
+                // Not shown next to the empty state, which offers the same thing as a button of its own already.
+                NewSongButton(
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                    isVisible = !isSearchFieldFocused && placeholder != CampfireViewModel.Placeholder.NO_SONGS,
+                    isExtended = settledWidth >= EXTENDED_FAB_MIN_WIDTH,
+                    contentPadding = listContentPadding,
+                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) }
+                )
+            }
         }
         SongsControlsSidePanel(
             isVisible = isSidePanelVisible,
@@ -144,9 +170,48 @@ internal fun SongsScreen(
     }
 }
 
+/**
+ * The button that creates a song, dealt in and out with the screen it belongs to (see the setlists screen for the
+ * same reasoning). Wide windows get the label next to the icon; on a phone it would take a third of the row.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun RefreshAction(
+private fun NewSongButton(
+    modifier: Modifier = Modifier,
+    isVisible: Boolean,
+    isExtended: Boolean,
+    contentPadding: PaddingValues,
+    onClick: () -> Unit
+) = AnimatedVisibility(
+    modifier = modifier.padding(
+        end = contentPadding.calculateEndPadding(LocalLayoutDirection.current) + FAB_MARGIN,
+        bottom = contentPadding.calculateBottomPadding() + FAB_MARGIN
+    ),
+    visible = isVisible,
+    enter = fadeIn() + scaleIn(),
+    exit = fadeOut() + scaleOut()
+) {
+    val label = stringResource(Res.string.songs_new_song)
+    val icon = @Composable {
+        Icon(
+            painter = painterResource(Res.drawable.ic_add),
+            contentDescription = if (isExtended) null else label
+        )
+    }
+    if (isExtended) {
+        ExtendedFloatingActionButton(
+            onClick = onClick,
+            icon = icon,
+            text = { Text(label) }
+        )
+    } else {
+        FloatingActionButton(onClick = onClick) { icon() }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun RescanAction(
     isLoading: Boolean,
     onClick: () -> Unit
 ) = AnimatedContent(
@@ -164,7 +229,7 @@ private fun RefreshAction(
         IconButton(onClick = onClick) {
             Icon(
                 painter = painterResource(Res.drawable.ic_refresh),
-                contentDescription = stringResource(Res.string.refresh)
+                contentDescription = stringResource(Res.string.songs_rescan)
             )
         }
     }
@@ -220,7 +285,7 @@ private fun SongList(
                 start = contentPadding.calculateStartPadding(layoutDirection),
                 top = SECTION_HEADER_GAP,
                 end = contentPadding.calculateEndPadding(layoutDirection),
-                bottom = contentPadding.calculateBottomPadding() + 8.dp
+                bottom = contentPadding.calculateBottomPadding() + FAB_CLEARANCE
             )
         ) {
             placeholder?.let {
@@ -231,7 +296,8 @@ private fun SongList(
                     ListPlaceholder(
                         modifier = Modifier.fillMaxWidth().animateItem(),
                         placeholder = it,
-                        onRetry = viewModel::refresh
+                        onRetry = viewModel::refresh,
+                        onNewSong = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) }
                     )
                 }
             }
@@ -241,7 +307,8 @@ private fun SongList(
                         SectionHeader(
                             modifier = Modifier.animateItem(),
                             text = when (header) {
-                                is CampfireViewModel.SongGroup.Header.Artist -> header.name
+                                // A song can be created without an artist, and an empty pill would look broken.
+                                is CampfireViewModel.SongGroup.Header.Artist -> header.name.ifBlank { stringResource(Res.string.songs_unknown_artist) }
                                 is CampfireViewModel.SongGroup.Header.Letter -> header.letter.toString()
                                 CampfireViewModel.SongGroup.Header.Symbols -> stringResource(Res.string.songs_unsorted_label)
                             },
@@ -259,6 +326,20 @@ private fun SongList(
                         onClick = {
                             keyboardController?.hide()
                             viewModel.openSong(song)
+                        },
+                        // A pointer opens the menu from the row's own button; touch has the long press instead.
+                        onLongClick = if (isDesktopPlatform) {
+                            null
+                        } else {
+                            {
+                                keyboardController?.hide()
+                                viewModel.showDialog(CampfireViewModel.DialogType.SongActions(song = song, setlistFileName = null))
+                            }
+                        },
+                        actions = if (isDesktopPlatform) {
+                            { SongActionsMenu(viewModel = viewModel, song = song, setlistFileName = null) }
+                        } else {
+                            null
                         }
                     )
                 }
@@ -316,3 +397,8 @@ private fun RefreshableContainer(
 }
 
 private const val SYMBOLS_LABEL = "#"
+
+/** From this width on the button has room for its label without crowding the list next to it. */
+private val EXTENDED_FAB_MIN_WIDTH = 600.dp
+private val FAB_CLEARANCE = 88.dp
+private val FAB_MARGIN = 16.dp

@@ -16,6 +16,10 @@ internal class SetlistRepositoryImpl(
 
     override suspend fun loadSetlistsIfNeeded() = loadDataIfNeeded()
 
+    override suspend fun rescan() {
+        reloadData()
+    }
+
     override suspend fun createSetlist(title: String, priority: Int): Setlist {
         val setlist = setlistLocalSource.createSetlist(title = title, priority = priority)
         updateData(setlists.first().data.orEmpty() + setlist)
