@@ -204,7 +204,7 @@ internal fun SettingsScreen(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_website),
                     icon = painterResource(Res.drawable.ic_website),
-                    onClick = { urlOpener("https://pandulapeter.github.io/") }
+                    onClick = { urlOpener("https://pandulapeter.com/") }
                 )
             }
             item(key = "github") {
@@ -220,7 +220,7 @@ internal fun SettingsScreen(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_privacy_policy),
                     icon = painterResource(Res.drawable.ic_privacy_policy),
-                    onClick = { urlOpener("https://pandulapeter.github.io/legal/privacy_policy-campfire.html") }
+                    onClick = { urlOpener("https://pandulapeter.com/legal/privacy_policy-campfire.html") }
                 )
             }
             item(key = "version") {

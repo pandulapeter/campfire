@@ -326,4 +326,4 @@ private fun String.isValidHttpUrl() = (startsWith("http://") || startsWith("http
 
 private const val MAX_SETLIST_TITLE_LENGTH = 40
 private const val MAX_DATABASE_NAME_LENGTH = 30
-private const val ADD_DATABASE_HELP_URL = "https://pandulapeter.github.io/campfire/documents/adding-new-databases.html"
+private const val ADD_DATABASE_HELP_URL = "https://pandulapeter.com/campfire/documents/adding-new-databases.html"
