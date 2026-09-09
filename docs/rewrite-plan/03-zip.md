@@ -111,4 +111,31 @@ comment length 0. Build into a growable `ByteArray` (a small `ByteArrayBuilder` 
 
 ## Execution notes
 
-_(filled in by the executing agent)_
+Implemented as specified. Files added under
+`data/source/local/implementation/src/commonMain/kotlin/.../zip/`: `ZipEntry.kt`, `ZipException.kt`, `ZipReader.kt`,
+`ZipWriter.kt`, `Inflater.kt`, `Crc32.kt`, `ByteArrayBuilder.kt`, `LittleEndian.kt`. Tests: `ZipRoundTripTest` and
+`ZipReaderTest` in `commonTest`, `InflaterTest` and `ZipReaderJvmTest` in `desktopTest`. The
+`commonTest.dependencies { implementation(kotlin("test")) }` block was added to this module's `build.gradle.kts`
+(step 02 had not added it yet).
+
+Small deviations, all deliberate:
+
+- `ZipEntry` overrides `equals` / `hashCode` (content based) instead of relying on the generated `data class` ones,
+  which compare the `ByteArray` by identity.
+- `Crc32` only exposes `of(bytes)`; the offset/length overload would have been dead code.
+- The `u8` / `u16` / `u32` helpers throw `ZipException` instead of `IndexOutOfBoundsException` when the requested
+  bytes fall outside the input, so every malformed archive surfaces as a `ZipException`.
+- The fixed distance code is built from 32 five-bit lengths (a complete code) rather than `puff.c`'s 30 (an
+  incomplete one it constructs without checking); symbols 30 and 31 are rejected when they are decoded.
+- Test method names are camelCase rather than backticked sentences, because `commonTest` is also compiled for the
+  Kotlin/Native and Kotlin/Wasm targets.
+- `ZipReaderTest`'s fixture is a hex string literal of a real archive produced by the system `zip -0` tool (a
+  directory entry plus two stored files) instead of a hand-typed byte literal.
+
+Verification: `:data:source:local:implementation:desktopTest` runs 18 tests green (10 common + 8 JVM-only) and
+`:data:source:local:implementation:build` is green, which also runs the 10 common tests on `iosSimulatorArm64` and
+`wasmJsBrowser`. Beyond the listed tests, `ZipReader` was checked byte-for-byte against an archive built by the
+system `zip` command (mixed STORED and DEFLATE entries, nested directories, a 400 KB incompressible file and a
+216 KB highly compressible one), and a `ZipWriter` archive passed `unzip -t` and Python's `zipfile` verification.
+Note that Info-ZIP's `unzip` mangles non-ASCII entry names on extraction because it ignores the UTF-8 flag; that is
+an `unzip` limitation, not a writer bug — the JVM and Python both read the names correctly.
