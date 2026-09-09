@@ -13,11 +13,14 @@ import com.pandulapeter.campfire.data.source.local.implementation.source.SongLoc
 import com.pandulapeter.campfire.data.source.local.implementation.source.TranspositionLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementation.source.UserPreferencesLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementation.storage.StorageManager
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.createFileStorage
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
 actual val dataLocalSourceModule: Module = module {
     single { StorageManager() }
+    single<FileStorage> { createFileStorage() }
     factory<DatabaseLocalSource> { DatabaseLocalSourceImpl(get()) }
     factory<SetlistLocalSource> { SetlistLocalSourceImpl(get()) }
     factory<SongLocalSource> { SongLocalSourceImpl(get()) }

@@ -15,6 +15,8 @@ import com.pandulapeter.campfire.data.source.local.implementation.source.Transpo
 import com.pandulapeter.campfire.data.source.local.implementation.source.UserPreferencesLocalSourceImpl
 import com.pandulapeter.campfire.data.source.local.implementation.storage.StorageManager
 import com.pandulapeter.campfire.data.source.local.implementation.storage.createStorageManagerBuilder
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.createFileStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import org.koin.core.module.Module
@@ -29,6 +31,7 @@ actual val dataLocalSourceModule: Module = module {
             .setQueryCoroutineContext(Dispatchers.IO)
             .build()
     }
+    single<FileStorage> { createFileStorage() }
     factory { get<StorageManager>().getDatabaseDao() }
     factory { get<StorageManager>().getSetlistDao() }
     factory { get<StorageManager>().getSongsDao() }

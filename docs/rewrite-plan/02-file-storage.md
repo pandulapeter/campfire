@@ -123,4 +123,23 @@ it).
 
 ## Execution notes
 
-_(filled in by the executing agent)_
+- **`build.gradle.kts` was touched** (unavoidable): `commonTest.dependencies { implementation(kotlin("test")) }` was added
+  so that the `desktopTest` of section 5 compiles. Step 03 expects exactly this line and adds it only if it is missing.
+- `StorageDirectory.pathSegments` (`listOf("library", "songs")` etc.) lives in `commonMain` and every `actual` joins it
+  its own way, so the layout of the table in section 3 is declared once.
+- **iOS text I/O goes through `NSData`**, not `NSString.stringWithContentsOfFile` /
+  `writeToFile(atomically:encoding:)`: those are deprecated, and routing `readText` / `writeText` through
+  `readBytes` / `writeBytes` plus `decodeToString()` / `encodeToByteArray()` keeps a single code path.
+  `NSData.writeToFile(atomically = true)` already gives the atomic write the JVM implementation emulates by hand.
+- **Web byte conversion** uses `ByteArray.toInt8Array()` / `Int8Array.toByteArray()` from `org.khronos.webgl`
+  (kotlinx-browser, already a `wasmJsMain` dependency) instead of a hand-written loop.
+- **Web "missing file"** is not handled by catching a `NotFoundError` `DOMException`: the `js(...)` helpers append
+  `.catch(function () { return null; })`, so `getFileHandle` resolves to `null` and `removeEntry` becomes a no-op.
+  The control characters separating the `listEntries` result are built with `String.fromCharCode` / `Char(0)` rather
+  than escapes, so no literal control byte ends up in the Kotlin source.
+- `list()` is sorted by name on every platform (the platform APIs give no order guarantee) and the JVM one hides the
+  `.tmp` files its atomic write leaves behind if the process dies mid-write.
+- The JVM `renameTo` has a `copyTo` fallback, because it fails on some Android storage and network shares.
+- Koin: `single<FileStorage> { createFileStorage() }` was added to both `roomMain/Module.kt` and `wasmJsMain/Module.kt`.
+- `./gradlew :data:source:local:implementation:build` is green (Android, desktop, both iOS targets, wasmJs) and the
+  10 tests of `JvmFileStorageTest` pass.

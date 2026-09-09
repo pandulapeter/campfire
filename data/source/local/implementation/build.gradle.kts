@@ -32,6 +32,9 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.kotlin.coroutines)
         }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
         wasmJsMain.dependencies {
             implementation(libs.kotlin.browser)
             implementation(libs.kotlin.serialization.json)
