@@ -95,4 +95,51 @@ you find a construct they miss.
 
 ## Execution notes
 
-_(filled in by the executing agent)_
+- **The metadata header is rendered by `SongLyrics` itself**, in a `Column` above the section layout, rather than by
+  the screen. Its measured height is subtracted from the `availableHeight` handed to `SongSectionsLayout`, so the
+  column count is still decided from the room the sections actually have. Without that the header's height would be
+  counted twice over and a song could pick one column too few.
+- **The empty-song state uses `song_details_empty` as its title, with no hint.** The step says to reuse the existing
+  "no data" placeholder with the new string as the hint, but that placeholder's title is "This song could not be
+  loaded", which contradicts a file that was read perfectly well and is simply empty. `EmptyState.hint` became
+  nullable (defaulting to null) so the one new string can stand on its own.
+- **The displayed key is read from the transposed model** (`renderedSong.metadata.key`) instead of calling
+  `ChordProTransposer.transposeChord` on the metadata key separately. `ChordProTransposer.transpose` already
+  transposes the key, and doing it that way keeps the sharp/flat choice consistent with the chords, which
+  `prefersFlats` decides from the whole song rather than from one chord.
+- **The view model exposes `renderSong(text, transposition)`**, a plain function, rather than the suspend
+  `getRenderedSong(fileName, setlistFileName)` with a cache the step sketches. The text is already in `songTexts`,
+  so the only thing left is parse + transpose, and the screen memoizes it with `remember(songText, transposition)`.
+  That satisfies "does not re-parse on every recomposition" without a second cache to invalidate. It also applies
+  the file's own `{transpose}` on top of the user's amount, as the step requires.
+- **`TranspositionControls` gained an optional `key` parameter**, so the sheet and the app-bar copy both show
+  "+2 · Bm". Each call site memoizes one parse to get the key; the pager has already parsed the song, but the two
+  are in different composables and the result is keyed on the text and the amount, so it is computed once per change
+  rather than per frame.
+- **Chords are measured per chord** rather than once for the whole line, since an annotation (`[*swell]`) uses the
+  lyrics colour in italics while a real chord uses the chord style.
+- **Grid lines are plain rows, not horizontally scrollable.** Only tabs scroll sideways, which is what the step
+  asks for; grids are short enough to wrap into the column width.
+- `TransposeChordProTextUseCase`, added in step 05 because that step's viewer still transposed raw text, is no
+  longer called by the UI. It is kept (implemented, Koin-wired, covered by the `:chordpro` tests) for step 09's
+  editor, which transposes the text in place.
+
+### Verified
+
+- All four platforms build; `:chordpro:desktopTest` (41) and `:data:source:local:implementation:desktopTest` (28)
+  pass, and the shared tests still run on iOS and in the browser.
+- Desktop, with all three fixtures in the library:
+  - `everything.cho`: metadata header shows title, artist, subtitle and `Key: Am · Capo 2 · 96 BPM · 3/4` (capo 0
+    is omitted elsewhere); all three comment styles render as plain, italic and boxed; `Verse 1` keeps its label and
+    `{start_of_bridge}` falls back to "Bridge"; the tab is monospaced with its columns intact and is not transposed;
+    the grid shows bars in the outline colour, beats as "·" and the trailing "(repeat)" as text; custom `intro`,
+    `solo` ("Guitar solo") and `outro` sections are labelled from the file; `{chorus}` repeats the chorus on its own
+    card; implicit paragraphs render without a header; `{column_break}` is ignored without incident.
+  - Lyrics-only mode: chords are dropped, the tab and grid sections disappear entirely, and the comments stay.
+  - `simple.cho` transposed by +1 from E: the header reads `Key: F` and the A chord becomes `Bb`, not `A#`.
+  - `legacy.cho`: the Campfire 3 `{c: ...}` headings become labelled sections, `{t:}` / `{st:}` fill the title and
+    subtitle, and the chorus lands on its card - it looks the way it did in 3.x.
+  - Sticky section headers, two-column balancing and the chorus cards all still behave.
+- The macOS window manager again refused the app keyboard focus, and mid-run the synthetic scroll events stopped
+  landing too, so navigation went through a temporary `LaunchedEffect` driver in the desktop `main` (removed
+  afterwards) and the whole song was brought on screen at once by setting the font scale to 0.5 instead of scrolling.

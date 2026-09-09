@@ -77,13 +77,15 @@
     <string name="song_details_text_size_increase">Increase text size</string>
     <string name="song_details_text_size_decrease">Decrease text size</string>
     <string name="song_details_text_size_reset">Reset text size</string>
-    <string name="song_details_section_intro">Intro</string>
-    <string name="song_details_section_verse">Verse</string>
-    <string name="song_details_section_pre_chorus">Pre-Chorus</string>
     <string name="song_details_section_chorus">Chorus</string>
     <string name="song_details_section_bridge">Bridge</string>
-    <string name="song_details_section_solo">Solo</string>
-    <string name="song_details_section_outro">Outro</string>
+    <string name="song_details_section_tab">Tab</string>
+    <string name="song_details_section_grid">Grid</string>
+    <string name="song_details_key">Key: %1$s</string>
+    <string name="song_details_capo">Capo %1$d</string>
+    <string name="song_details_tempo">%1$s BPM</string>
+    <string name="song_details_time">%1$s</string>
+    <string name="song_details_empty">This file has no content yet.</string>
     <string name="song_details_no_data">This song could not be loaded</string>
     <string name="song_details_no_data_hint">The file could not be read.</string>
 

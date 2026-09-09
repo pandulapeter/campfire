@@ -32,6 +32,8 @@ kotlin {
             kotlin.srcDir(generateVersionFile)
             dependencies {
                 implementation(project(":domain:api"))
+                // The composables render the ChordPro model directly; parsing and transposing go through use cases.
+                implementation(project(":chordpro"))
                 implementation(libs.androidx.lifecycle.runtime.compose)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.androidx.navigation3.ui)

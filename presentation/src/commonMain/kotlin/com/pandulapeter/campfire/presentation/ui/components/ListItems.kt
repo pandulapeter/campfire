@@ -319,7 +319,8 @@ internal fun EmptyState(
     modifier: Modifier = Modifier,
     icon: Painter,
     title: String,
-    hint: String,
+    /** Null when the title already says everything, e.g. for a song file that is simply still empty. */
+    hint: String? = null,
     actionText: String? = null,
     onAction: (() -> Unit)? = null
 ) = Column(
@@ -337,13 +338,15 @@ internal fun EmptyState(
         style = MaterialTheme.typography.titleMedium,
         textAlign = TextAlign.Center
     )
-    Text(
-        modifier = Modifier.padding(top = 4.dp),
-        text = hint,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center
-    )
+    if (hint != null) {
+        Text(
+            modifier = Modifier.padding(top = 4.dp),
+            text = hint,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+    }
     if (actionText != null && onAction != null) {
         Button(
             modifier = Modifier.padding(top = 16.dp),

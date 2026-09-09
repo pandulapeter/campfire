@@ -47,12 +47,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
 import com.pandulapeter.campfire.presentation.resources.ic_back
 import com.pandulapeter.campfire.presentation.resources.ic_error
+import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_next
 import com.pandulapeter.campfire.presentation.resources.ic_playlist_add
 import com.pandulapeter.campfire.presentation.resources.ic_previous
@@ -61,6 +63,7 @@ import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.song_details_add_to_setlist
 import com.pandulapeter.campfire.presentation.resources.song_details_display_options
 import com.pandulapeter.campfire.presentation.resources.song_details_next_song
+import com.pandulapeter.campfire.presentation.resources.song_details_empty
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data
 import com.pandulapeter.campfire.presentation.resources.song_details_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.song_details_previous_song
@@ -117,6 +120,11 @@ internal fun SongDetailsScreen(
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
     val isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true
     val currentTransposition = currentSong?.let { transpositions[it.fileName, destination.setlistFileName] } ?: 0
+    val currentSongText = currentSong?.let { songTexts[it.fileName] }
+    // Memoized on the text and the amount: the app bar only needs the resulting key, not the whole parsed song.
+    val currentKey = remember(currentSongText, currentTransposition) {
+        currentSongText?.let { viewModel.renderSong(it, currentTransposition).metadata.key }
+    }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val coroutineScope = rememberCoroutineScope()
@@ -171,6 +179,7 @@ internal fun SongDetailsScreen(
                             modifier = Modifier.padding(end = INLINE_CONTROL_SPACING),
                             isCompact = true,
                             transposition = currentTransposition,
+                            key = currentKey,
                             onTranspositionChanged = { transposition ->
                                 currentSong?.let { viewModel.setTransposition(it.fileName, destination.setlistFileName, transposition) }
                             }
@@ -247,7 +256,7 @@ internal fun SongDetailsScreen(
                 isHorizontalFlow = isHorizontalFlow,
                 settledWidth = settledWidth,
                 contentPadding = pageContentPadding,
-                transpose = viewModel::transpose,
+                renderSong = viewModel::renderSong,
                 onRetry = { viewModel.loadSongContent(song) }
             )
         }
@@ -362,7 +371,7 @@ private fun SongDetailsPage(
     isHorizontalFlow: Boolean,
     settledWidth: Dp,
     contentPadding: PaddingValues,
-    transpose: (text: String, transposition: Int) -> String,
+    renderSong: (text: String, transposition: Int) -> ChordProSong,
     onRetry: () -> Unit
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
@@ -389,8 +398,20 @@ private fun SongDetailsPage(
         }
     } else {
         val layoutDirection = LocalLayoutDirection.current
-        val transposedRawData = remember(songText, transposition, shouldShowChords) {
-            if (shouldShowChords && song.hasChords) transpose(songText, transposition) else songText
+        // Keyed on the text and the transposition, so a long song is not parsed again on every recomposition.
+        val renderedSong = remember(songText, transposition) { renderSong(songText, transposition) }
+        if (renderedSong.blocks.isEmpty()) {
+            // The file exists and could be read, it just has nothing in it yet - a newly created song, typically.
+            Box(
+                modifier = Modifier.fillMaxSize().padding(contentPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                EmptyState(
+                    icon = painterResource(Res.drawable.ic_songs),
+                    title = stringResource(Res.string.song_details_empty)
+                )
+            }
+            return@AnimatedContent
         }
         val topPadding = 8.dp
         val bottomPadding = contentPadding.calculateBottomPadding() + 32.dp
@@ -411,7 +432,7 @@ private fun SongDetailsPage(
                         top = topPadding,
                         bottom = bottomPadding
                     ),
-                rawData = transposedRawData,
+                song = renderedSong,
                 availableHeight = maxHeight - topPadding - bottomPadding,
                 // The pages fill the screen, so whatever the screen is still missing this layout is missing too.
                 extraWidth = (settledWidth - maxWidth).coerceAtLeast(0.dp),

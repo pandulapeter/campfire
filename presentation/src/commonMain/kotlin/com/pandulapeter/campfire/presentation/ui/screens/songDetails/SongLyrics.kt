@@ -3,10 +3,14 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateBounds
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.LocalTextStyle
@@ -35,21 +39,30 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.zIndex
+import com.pandulapeter.campfire.chordpro.model.ChordProBlock
+import com.pandulapeter.campfire.chordpro.model.ChordProLine
+import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.model.CommentStyle
+import com.pandulapeter.campfire.chordpro.model.GridToken
+import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.song_details_capo
+import com.pandulapeter.campfire.presentation.resources.song_details_key
 import com.pandulapeter.campfire.presentation.resources.song_details_section_bridge
 import com.pandulapeter.campfire.presentation.resources.song_details_section_chorus
-import com.pandulapeter.campfire.presentation.resources.song_details_section_intro
-import com.pandulapeter.campfire.presentation.resources.song_details_section_outro
-import com.pandulapeter.campfire.presentation.resources.song_details_section_pre_chorus
-import com.pandulapeter.campfire.presentation.resources.song_details_section_solo
-import com.pandulapeter.campfire.presentation.resources.song_details_section_verse
+import com.pandulapeter.campfire.presentation.resources.song_details_section_grid
+import com.pandulapeter.campfire.presentation.resources.song_details_section_tab
+import com.pandulapeter.campfire.presentation.resources.song_details_tempo
+import com.pandulapeter.campfire.presentation.resources.song_details_time
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
@@ -85,7 +98,7 @@ import kotlin.math.max
 @Composable
 internal fun SongLyrics(
     modifier: Modifier = Modifier,
-    rawData: String,
+    song: ChordProSong,
     availableHeight: Dp = Dp.Unspecified,
     extraWidth: Dp = 0.dp,
     shouldShowChords: Boolean = true,
@@ -94,9 +107,14 @@ internal fun SongLyrics(
     scrollState: ScrollState,
     topInset: Dp
 ) {
-    val sections = remember(rawData, shouldShowChords) {
-        parseSongLines(rawData).let { if (shouldShowChords) it else it.withoutChords() }.groupIntoSections()
-    }
+    // The fallback labels of the environments that have one; everything else is named by the file itself.
+    val defaultLabels = DefaultSectionLabels(
+        chorus = stringResource(Res.string.song_details_section_chorus),
+        bridge = stringResource(Res.string.song_details_section_bridge),
+        tab = stringResource(Res.string.song_details_section_tab),
+        grid = stringResource(Res.string.song_details_section_grid)
+    )
+    val sections = remember(song, shouldShowChords, defaultLabels) { song.toRenderSections(shouldShowChords, defaultLabels) }
     // Where the sections ended up, published by the layout so that their headers can stick to the top of the screen.
     val sectionBounds = remember(sections) { List(sections.size) { SectionBounds() } }
     val density = LocalDensity.current
@@ -110,64 +128,177 @@ internal fun SongLyrics(
         color = MaterialTheme.colorScheme.primary,
         fontWeight = FontWeight.Bold
     )
-    LookaheadScope {
-        SongSectionsLayout(
-            modifier = modifier,
-            minColumnWidth = MIN_COLUMN_WIDTH * fontScale,
-            maxColumnWidth = MAX_COLUMN_WIDTH * fontScale,
-            columnGap = COLUMN_GAP,
-            sectionGap = SECTION_GAP,
-            rowGap = ROW_GAP,
-            availableHeight = availableHeight,
-            extraWidth = extraWidth,
-            sectionCount = sections.size,
-            isHorizontalFlow = isHorizontalFlow,
-            sectionBounds = sectionBounds
-        ) {
-            sections.forEachIndexed { index, section ->
-                val bounds = sectionBounds[index]
-                val sectionModifier = if (extraWidth > 0.dp) Modifier else Modifier.animateBounds(this@LookaheadScope)
-                if (section.header?.section == SongSection.CHORUS) {
-                    Surface(
-                        modifier = sectionModifier,
-                        shape = MaterialTheme.shapes.large,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        shadowElevation = CARD_ELEVATION
-                    ) {
-                        SongSectionContent(
-                            modifier = Modifier.padding(CARD_PADDING),
-                            section = section,
-                            isOnCard = true,
-                            headerStyle = headerStyle,
-                            lyricsStyle = lyricsStyle,
-                            chordStyle = chordStyle
+    // Annotations ([*text]) sit in the chord row but are not chords, so they borrow the lyrics' colour.
+    val annotationStyle = lyricsStyle.copy(
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontStyle = FontStyle.Italic
+    )
+    // The metadata header scrolls with the song, so the columns below it have that much less room to fit into.
+    var headerHeight by remember { mutableIntStateOf(0) }
+    val headerHeightDp = with(density) { headerHeight.toDp() }
+    Column(modifier = modifier) {
+        SongMetadataHeader(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = CARD_PADDING)
+                .layout { measurable, constraints ->
+                    val placeable = measurable.measure(constraints)
+                    if (placeable.height != headerHeight) headerHeight = placeable.height
+                    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                },
+            song = song,
+            fontScale = fontScale
+        )
+        LookaheadScope {
+            SongSectionsLayout(
+                minColumnWidth = MIN_COLUMN_WIDTH * fontScale,
+                maxColumnWidth = MAX_COLUMN_WIDTH * fontScale,
+                columnGap = COLUMN_GAP,
+                sectionGap = SECTION_GAP,
+                rowGap = ROW_GAP,
+                availableHeight = if (availableHeight.isSpecified) (availableHeight - headerHeightDp).coerceAtLeast(0.dp) else availableHeight,
+                extraWidth = extraWidth,
+                sectionCount = sections.size,
+                isHorizontalFlow = isHorizontalFlow,
+                sectionBounds = sectionBounds
+            ) {
+                sections.forEachIndexed { index, section ->
+                    val bounds = sectionBounds[index]
+                    val sectionModifier = if (extraWidth > 0.dp) Modifier else Modifier.animateBounds(this@LookaheadScope)
+                    when (section) {
+                        is RenderSection.Comment -> SongComment(
+                            modifier = sectionModifier.padding(horizontal = CARD_PADDING),
+                            comment = section,
+                            fontScale = fontScale
                         )
+
+                        is RenderSection.Lines -> if (section.isOnCard) {
+                            Surface(
+                                modifier = sectionModifier,
+                                shape = MaterialTheme.shapes.large,
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                shadowElevation = CARD_ELEVATION
+                            ) {
+                                SongSectionContent(
+                                    modifier = Modifier.padding(CARD_PADDING),
+                                    section = section,
+                                    isOnCard = true,
+                                    headerStyle = headerStyle,
+                                    lyricsStyle = lyricsStyle,
+                                    chordStyle = chordStyle,
+                                    annotationStyle = annotationStyle
+                                )
+                            }
+                        } else {
+                            // The same horizontal padding as inside a card, so that every section's text starts at the
+                            // same x position whether it is carded or not.
+                            SongSectionContent(
+                                modifier = sectionModifier.padding(horizontal = CARD_PADDING),
+                                section = section,
+                                isOnCard = false,
+                                headerStyle = headerStyle,
+                                lyricsStyle = lyricsStyle,
+                                chordStyle = chordStyle,
+                                annotationStyle = annotationStyle,
+                                // How far the top of the section has scrolled off the screen, at most as far down as
+                                // the section itself reaches, so that the header leaves with it instead of hanging around.
+                                headerOffset = { height ->
+                                    (scrollState.value + stickyInsetPx - topInsetPx - bounds.top)
+                                        .coerceIn(0, (bounds.height - height).coerceAtLeast(0))
+                                },
+                                // Scrolls the section's first line just below the top of the screen, where it starts out.
+                                onHeaderClick = { coroutineScope.launch { scrollState.animateScrollTo(bounds.top) } }
+                            )
+                        }
                     }
-                } else {
-                    // The same horizontal padding as inside a card, so that every section's text starts at the
-                    // same x position whether it is carded or not.
-                    SongSectionContent(
-                        modifier = sectionModifier.padding(horizontal = CARD_PADDING),
-                        section = section,
-                        isOnCard = false,
-                        headerStyle = headerStyle,
-                        lyricsStyle = lyricsStyle,
-                        chordStyle = chordStyle,
-                        // How far the top of the section has scrolled off the screen, at most as far down as the
-                        // section itself reaches, so that the header leaves with it instead of hanging around.
-                        headerOffset = { headerHeight ->
-                            (scrollState.value + stickyInsetPx - topInsetPx - bounds.top)
-                                .coerceIn(0, (bounds.height - headerHeight).coerceAtLeast(0))
-                        },
-                        // Scrolls the section's first line just below the top of the screen, where it starts out.
-                        onHeaderClick = { coroutineScope.launch { scrollState.animateScrollTo(bounds.top) } }
-                    )
                 }
+                // The dividers between the rows of the horizontal flow. At most one fewer than there are sections is
+                // ever placed, the rest stay unmeasured.
+                repeat((sections.size - 1).coerceAtLeast(0)) { HorizontalDivider() }
             }
-            // The dividers between the rows of the horizontal flow. At most one fewer than there are sections is
-            // ever placed, the rest stay unmeasured.
-            repeat((sections.size - 1).coerceAtLeast(0)) { HorizontalDivider() }
         }
+    }
+}
+
+/**
+ * The title, artist and the metadata worth seeing while playing, above the song and scrolling with it. The app bar
+ * shows the title too, but it is the only thing there, and the key and capo belong next to the chords.
+ */
+@Composable
+private fun SongMetadataHeader(
+    modifier: Modifier = Modifier,
+    song: ChordProSong,
+    fontScale: Float
+) = Column(modifier = modifier.padding(bottom = SECTION_GAP)) {
+    val metadata = song.metadata
+    metadata.title?.takeIf { it.isNotBlank() }?.let { title ->
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineSmall.scaled(fontScale),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+    metadata.artist?.takeIf { it.isNotBlank() }?.let { artist ->
+        Text(
+            text = artist,
+            style = MaterialTheme.typography.bodyLarge.scaled(fontScale),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+    // Only when it says something the artist line does not already say.
+    metadata.subtitle?.takeIf { it.isNotBlank() && it != metadata.artist }?.let { subtitle ->
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyLarge.scaled(fontScale),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+    val chips = listOfNotNull(
+        metadata.key?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_key, it) },
+        metadata.capo?.takeIf { it != 0 }?.let { stringResource(Res.string.song_details_capo, it) },
+        metadata.tempo?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_tempo, it) },
+        metadata.time?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_time, it) }
+    )
+    if (chips.isNotEmpty()) {
+        Text(
+            modifier = Modifier.padding(top = 4.dp),
+            text = chips.joinToString("  $CHIP_SEPARATOR  "),
+            style = MaterialTheme.typography.labelLarge.scaled(fontScale),
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+/** A `{comment}` line. Its own layout section, so that it can sit between two columns freely. */
+@Composable
+private fun SongComment(
+    modifier: Modifier = Modifier,
+    comment: RenderSection.Comment,
+    fontScale: Float
+) {
+    val style = MaterialTheme.typography.bodyMedium.scaled(fontScale).let {
+        if (comment.style == CommentStyle.ITALIC) it.copy(fontStyle = FontStyle.Italic) else it
+    }
+    val text = @Composable { boxModifier: Modifier ->
+        Text(
+            modifier = boxModifier,
+            text = comment.text,
+            style = style,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+    if (comment.style == CommentStyle.BOX) {
+        text(
+            modifier
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = MaterialTheme.shapes.small
+                )
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+        )
+    } else {
+        text(modifier)
     }
 }
 
@@ -183,11 +314,12 @@ internal fun SongLyrics(
 @Composable
 private fun SongSectionContent(
     modifier: Modifier = Modifier,
-    section: LyricsSection,
+    section: RenderSection.Lines,
     isOnCard: Boolean,
     headerStyle: TextStyle,
     lyricsStyle: TextStyle,
     chordStyle: TextStyle,
+    annotationStyle: TextStyle,
     headerOffset: (headerHeight: Int) -> Int = { 0 },
     onHeaderClick: () -> Unit = {}
 ) = Column(
@@ -197,7 +329,7 @@ private fun SongSectionContent(
         if (isOnCard) {
             Text(
                 modifier = Modifier.fillMaxWidth().padding(bottom = HEADER_GAP),
-                text = header.title(),
+                text = header,
                 style = headerStyle,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -223,7 +355,7 @@ private fun SongSectionContent(
                 ) {
                     Text(
                         modifier = Modifier.padding(horizontal = HEADER_HORIZONTAL_PADDING, vertical = HEADER_VERTICAL_PADDING),
-                        text = header.title(),
+                        text = header,
                         style = headerStyle,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -231,21 +363,82 @@ private fun SongSectionContent(
             }
         }
     }
-    section.lines.forEach { line ->
-        if (line.chords.isEmpty()) {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = line.lyrics,
-                style = lyricsStyle,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        } else {
-            SongLineWithChords(
-                line = line,
-                lyricsStyle = lyricsStyle,
-                chordStyle = chordStyle
-            )
+    if (section.isTab) {
+        // Tablature only makes sense with its columns intact, so it never wraps and scrolls sideways instead.
+        Column(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+            section.lines.forEach { line ->
+                Text(
+                    text = (line as? ChordProLine.Tab)?.text.orEmpty(),
+                    style = lyricsStyle.copy(fontFamily = FontFamily.Monospace),
+                    softWrap = false,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
+    } else {
+        section.lines.forEach { line ->
+            when (line) {
+                is ChordProLine.Lyrics -> if (line.chords.isEmpty()) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = line.text,
+                        style = lyricsStyle,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                } else {
+                    SongLineWithChords(
+                        line = line,
+                        lyricsStyle = lyricsStyle,
+                        chordStyle = chordStyle,
+                        annotationStyle = annotationStyle
+                    )
+                }
+
+                is ChordProLine.Grid -> SongGridLine(
+                    line = line,
+                    lyricsStyle = lyricsStyle,
+                    chordStyle = chordStyle
+                )
+
+                // Only reachable through a malformed section; tabs are rendered by the branch above.
+                is ChordProLine.Tab -> Text(
+                    text = line.text,
+                    style = lyricsStyle.copy(fontFamily = FontFamily.Monospace),
+                    softWrap = false,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                ChordProLine.Blank -> Text(
+                    text = "",
+                    style = lyricsStyle
+                )
+            }
+        }
+    }
+}
+
+/** One `{start_of_grid}` line: bars, chords, beats and repeats laid out in a row, as a chord chart. */
+@Composable
+private fun SongGridLine(
+    line: ChordProLine.Grid,
+    lyricsStyle: TextStyle,
+    chordStyle: TextStyle
+) = Row(modifier = Modifier.fillMaxWidth()) {
+    line.tokens.forEach { token ->
+        val (text, style) = when (token) {
+            is GridToken.Bar -> token.text to lyricsStyle.copy(color = MaterialTheme.colorScheme.outline)
+            is GridToken.Chord -> token.name to chordStyle
+            GridToken.Beat -> BEAT_SYMBOL to lyricsStyle.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+            is GridToken.Repeat -> token.text to lyricsStyle.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+            is GridToken.Text -> token.text to lyricsStyle
+        }
+        Text(
+            modifier = Modifier.padding(end = GRID_TOKEN_GAP),
+            text = text,
+            style = style,
+            softWrap = false,
+            color = style.color
+        )
     }
 }
 
@@ -511,63 +704,110 @@ private fun List<Int>.flowIntoRows(columnCount: Int, sectionGap: Int, rowGap: In
     return SongArrangement(columns = columns, tops = tops, height = rowTop - rowGap, dividerTops = dividerTops)
 }
 
-/**
- * A section of the song: an optional header followed by the lines that belong to it.
- */
-private data class LyricsSection(
-    val header: SongLine.SectionHeader?,
-    val lines: List<SongLine.Lyrics>
+/** The fallback names of the environments that have one. Everything else is named by the file itself. */
+private data class DefaultSectionLabels(
+    val chorus: String,
+    val bridge: String,
+    val tab: String,
+    val grid: String
 )
 
-private fun List<SongLine>.groupIntoSections(): List<LyricsSection> {
-    val sections = mutableListOf<LyricsSection>()
-    var header: SongLine.SectionHeader? = null
-    var lines = mutableListOf<SongLine.Lyrics>()
-    fun flush() {
-        if (header != null || lines.any { it.lyrics.isNotBlank() || it.chords.isNotEmpty() }) {
-            sections += LyricsSection(header, lines.dropLastWhile { it.lyrics.isBlank() && it.chords.isEmpty() })
-        }
-        header = null
-        lines = mutableListOf()
-    }
-    forEach { line ->
-        when (line) {
-            is SongLine.SectionHeader -> {
-                flush()
-                header = line
+/** One unit the column layout places. Sections are never split, so this is also the granularity of the balancing. */
+private sealed interface RenderSection {
+
+    /** A titled block of lines: an environment, an implicit paragraph, or a repeated chorus. */
+    data class Lines(
+        val header: String?,
+        val lines: List<ChordProLine>,
+        /** Choruses (and their recalls) are drawn on a raised card so that they stand out. */
+        val isOnCard: Boolean,
+        val isTab: Boolean
+    ) : RenderSection
+
+    data class Comment(
+        val text: String,
+        val style: CommentStyle
+    ) : RenderSection
+}
+
+/**
+ * Flattens the parsed song into the sections the layout places.
+ *
+ * A `{chorus}` recall repeats the most recent chorus, so the choruses are remembered as they go by. In lyrics-only
+ * mode the chords go away with the sections that consist of nothing else: tabs and grids say nothing without them,
+ * and a line that was only chords would leave a blank behind.
+ */
+private fun ChordProSong.toRenderSections(
+    shouldShowChords: Boolean,
+    defaultLabels: DefaultSectionLabels
+): List<RenderSection> {
+    val sections = mutableListOf<RenderSection>()
+    var lastChorus: ChordProBlock.Section? = null
+    blocks.forEach { block ->
+        when (block) {
+            is ChordProBlock.Break -> Unit // The column layout makes its own breaks.
+
+            is ChordProBlock.Comment -> sections += RenderSection.Comment(text = block.text, style = block.style)
+
+            is ChordProBlock.ChorusRecall -> {
+                val chorus = lastChorus
+                sections += RenderSection.Lines(
+                    header = block.label ?: chorus?.label ?: defaultLabels.chorus,
+                    lines = chorus?.lines?.prepareForDisplay(shouldShowChords).orEmpty(),
+                    isOnCard = true,
+                    isTab = false
+                )
             }
 
-            is SongLine.Lyrics -> lines += line
+            is ChordProBlock.Section -> {
+                if (block.type == SectionType.Chorus) lastChorus = block
+                if (!shouldShowChords && (block.type == SectionType.Tab || block.type == SectionType.Grid)) return@forEach
+                val lines = block.lines.prepareForDisplay(shouldShowChords)
+                val header = block.header(defaultLabels)
+                // A section that ended up with nothing to show is dropped, unless its header still says something.
+                if (lines.isNotEmpty() || header != null) {
+                    sections += RenderSection.Lines(
+                        header = header,
+                        lines = lines,
+                        isOnCard = block.type == SectionType.Chorus,
+                        isTab = block.type == SectionType.Tab
+                    )
+                }
+            }
         }
     }
-    flush()
     return sections
 }
 
-private fun List<SongLine>.withoutChords() = mapNotNull { line ->
-    when (line) {
-        is SongLine.SectionHeader -> line
-        is SongLine.Lyrics -> when {
-            line.chords.isEmpty() -> line
-            line.lyrics.isBlank() -> null
-            else -> line.copy(chords = emptyList())
-        }
-    }
+private fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): String? = label ?: when (val sectionType = type) {
+    SectionType.Chorus -> defaultLabels.chorus
+    SectionType.Bridge -> defaultLabels.bridge
+    SectionType.Tab -> defaultLabels.tab
+    SectionType.Grid -> defaultLabels.grid
+    // "pre-chorus" reads as "Pre-chorus": the file's own wording, only capitalised.
+    is SectionType.Custom -> sectionType.name.replaceFirstChar { it.uppercaseChar() }
+    SectionType.Verse -> null
+    SectionType.Paragraph -> null
 }
 
-@Composable
-private fun SongLine.SectionHeader.title(): String {
-    val localizedName = when (section) {
-        SongSection.INTRO -> stringResource(Res.string.song_details_section_intro)
-        SongSection.VERSE -> stringResource(Res.string.song_details_section_verse)
-        SongSection.PRE_CHORUS -> stringResource(Res.string.song_details_section_pre_chorus)
-        SongSection.CHORUS -> stringResource(Res.string.song_details_section_chorus)
-        SongSection.BRIDGE -> stringResource(Res.string.song_details_section_bridge)
-        SongSection.SOLO -> stringResource(Res.string.song_details_section_solo)
-        SongSection.OUTRO -> stringResource(Res.string.song_details_section_outro)
-        null -> name
+/**
+ * Drops the chords when they are not wanted, along with the lines that were nothing but chords, and trims the blank
+ * lines off the end so that a section does not carry empty space into the column layout.
+ */
+private fun List<ChordProLine>.prepareForDisplay(shouldShowChords: Boolean): List<ChordProLine> = let { lines ->
+    if (shouldShowChords) lines else lines.mapNotNull { line ->
+        when (line) {
+            is ChordProLine.Lyrics -> if (line.text.isBlank()) null else line.copy(chords = emptyList())
+            else -> line
+        }
     }
-    return if (suffix.isEmpty()) localizedName else "$localizedName $suffix"
+}.dropLastWhile { it.isBlank() }
+
+private fun ChordProLine.isBlank() = when (this) {
+    ChordProLine.Blank -> true
+    is ChordProLine.Lyrics -> text.isBlank() && chords.isEmpty()
+    is ChordProLine.Tab -> text.isBlank()
+    is ChordProLine.Grid -> tokens.isEmpty()
 }
 
 /**
@@ -578,14 +818,15 @@ private fun SongLine.SectionHeader.title(): String {
  */
 @Composable
 private fun SongLineWithChords(
-    line: SongLine.Lyrics,
+    line: ChordProLine.Lyrics,
     lyricsStyle: TextStyle,
-    chordStyle: TextStyle
+    chordStyle: TextStyle,
+    annotationStyle: TextStyle
 ) {
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
-    val chordLayouts = remember(line, chordStyle, textMeasurer) {
-        line.chords.map { textMeasurer.measure(AnnotatedString(it.name), chordStyle) }
+    val chordLayouts = remember(line, chordStyle, annotationStyle, textMeasurer) {
+        line.chords.map { textMeasurer.measure(AnnotatedString(it.name), if (it.isAnnotation) annotationStyle else chordStyle) }
     }
     val paddedLine = remember(line, lyricsStyle, chordLayouts, textMeasurer, density) {
         line.padLyricsToFitChords(
@@ -599,7 +840,7 @@ private fun SongLineWithChords(
     }
     val chordLineHeight = chordLayouts.maxOf { it.size.height }
     // Lines without any lyrics (e.g. an intro) only need to be as tall as the chords themselves.
-    val lineHeight = with(density) { (if (line.lyrics.isBlank()) chordLineHeight else chordLineHeight + lyricsLineHeight).toSp() }
+    val lineHeight = with(density) { (if (line.text.isBlank()) chordLineHeight else chordLineHeight + lyricsLineHeight).toSp() }
     var lyricsLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
     Text(
         modifier = Modifier
@@ -627,7 +868,7 @@ private fun SongLineWithChords(
                     previousChordEnd = x + chordLayout.size.width + gap
                 }
             },
-        text = paddedLine.lyrics,
+        text = paddedLine.text,
         style = lyricsStyle.copy(
             lineHeight = lineHeight,
             lineHeightStyle = LineHeightStyle(
@@ -644,15 +885,15 @@ private fun SongLineWithChords(
  * Returns a copy of the line where every piece of lyrics that sits under a chord is at least as wide as the chord
  * (plus [gap]), by appending non-breaking spaces to it. Chord positions are updated to point into the padded lyrics.
  */
-private fun SongLine.Lyrics.padLyricsToFitChords(
+private fun ChordProLine.Lyrics.padLyricsToFitChords(
     chordWidths: List<Float>,
     gap: Float,
     measureWidth: (String) -> Float
-): SongLine.Lyrics {
+): ChordProLine.Lyrics {
     val paddingWidth = measureWidth(PADDING.toString())
-    val paddedLyrics = StringBuilder(lyrics.substring(0, chords.first().position))
+    val paddedLyrics = StringBuilder(text.substring(0, chords.first().position))
     val paddedChords = chords.mapIndexed { index, chord ->
-        val fragment = lyrics.substring(chord.position, chords.getOrNull(index + 1)?.position ?: lyrics.length)
+        val fragment = text.substring(chord.position, chords.getOrNull(index + 1)?.position ?: text.length)
         val paddedChord = chord.copy(position = paddedLyrics.length)
         paddedLyrics.append(fragment)
         val missingWidth = chordWidths[index] + gap - measureWidth(fragment)
@@ -661,79 +902,11 @@ private fun SongLine.Lyrics.padLyricsToFitChords(
         }
         paddedChord
     }
-    return SongLine.Lyrics(lyrics = paddedLyrics.toString(), chords = paddedChords)
+    return ChordProLine.Lyrics(text = paddedLyrics.toString(), chords = paddedChords)
 }
 
-internal sealed class SongLine {
-
-    /**
-     * A "{c: Chorus 2}" style section marker, split into the [name] of the section ("Chorus"), the [section] it was
-     * recognized as (null for unknown names) and whatever followed the name ("2").
-     */
-    data class SectionHeader(
-        val name: String,
-        val suffix: String,
-        val section: SongSection?
-    ) : SongLine()
-
-    data class Lyrics(
-        val lyrics: String,
-        val chords: List<Chord>
-    ) : SongLine() {
-
-        data class Chord(
-            val position: Int, // Index of the character in [lyrics] the chord is placed above.
-            val name: String
-        )
-    }
-}
-
-internal enum class SongSection(val rawName: String) {
-    INTRO("Intro"),
-    VERSE("Verse"),
-    PRE_CHORUS("Pre-Chorus"),
-    CHORUS("Chorus"),
-    BRIDGE("Bridge"),
-    SOLO("Solo"),
-    OUTRO("Outro")
-}
-
-/**
- * Splits the raw song data into lines. Section markers (e.g. "{c: Verse 1}") become [SongLine.SectionHeader]s, every
- * other line becomes [SongLine.Lyrics] with the inline chord markers (e.g. "[Am]") removed from the lyrics and their
- * positions remembered.
- */
-internal fun parseSongLines(rawData: String): List<SongLine> = rawData.lines().map { rawLine ->
-    sectionHeaderRegex.matchEntire(rawLine.trim())?.let { match -> parseSectionHeader(match.groupValues[1].trim()) } ?: parseLyrics(rawLine)
-}
-
-private fun parseSectionHeader(title: String): SongLine.SectionHeader {
-    val name = title.substringBefore(' ')
-    return SongLine.SectionHeader(
-        name = name,
-        suffix = title.substringAfter(' ', missingDelimiterValue = "").trim(),
-        section = SongSection.entries.firstOrNull { it.rawName.equals(name, ignoreCase = true) }
-    )
-}
-
-private fun parseLyrics(rawLine: String): SongLine.Lyrics {
-    val lyrics = StringBuilder()
-    val chords = mutableListOf<SongLine.Lyrics.Chord>()
-    var consumedUntil = 0
-    chordRegex.findAll(rawLine).forEach { match ->
-        lyrics.append(rawLine, consumedUntil, match.range.first)
-        match.groupValues[1].trim().takeIf { it.isNotEmpty() }?.let { chordName ->
-            chords += SongLine.Lyrics.Chord(position = lyrics.length, name = chordName)
-        }
-        consumedUntil = match.range.last + 1
-    }
-    lyrics.append(rawLine, consumedUntil, rawLine.length)
-    return SongLine.Lyrics(lyrics = lyrics.toString(), chords = chords)
-}
-
-private val sectionHeaderRegex = Regex("\\{c:(.*)\\}")
-private val chordRegex = Regex("\\[(.*?)\\]")
 private val CHORD_GAP = 4.dp
+private val GRID_TOKEN_GAP = 6.dp
 private val CARD_PADDING = 12.dp
 private val CARD_ELEVATION = 1.dp
 private val HEADER_GAP = 8.dp
@@ -748,3 +921,5 @@ private val ROW_GAP = 40.dp
 private const val HOLE_PENALTY = 1L shl 40 // Larger than any height, so that a hole always costs more than height does.
 private const val LINE_HEIGHT_SAMPLE = "X"
 private const val PADDING = '\u00A0' // Non-breaking space, so that the padding never gets trimmed or wrapped.
+private const val BEAT_SYMBOL = "\u00B7"
+private const val CHIP_SEPARATOR = "\u00B7"

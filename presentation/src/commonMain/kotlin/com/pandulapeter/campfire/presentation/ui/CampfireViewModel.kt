@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -18,9 +19,10 @@ import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
-import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
+import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -49,7 +51,8 @@ class CampfireViewModel(
     private val deleteSetlist: DeleteSetlistUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
     private val normalizeText: NormalizeTextUseCase,
-    private val transposeChordProText: TransposeChordProTextUseCase
+    private val parseChordPro: ParseChordProUseCase,
+    private val transposeChordPro: TransposeChordProUseCase
 ) : ViewModel() {
 
     /**
@@ -240,7 +243,16 @@ class CampfireViewModel(
         }
     }
 
-    fun transpose(text: String, transposition: Int) = transposeChordProText(text, transposition)
+    /**
+     * Parses a song file and applies both the file's own `{transpose}` and the transposition the user picked, which
+     * is what the viewer renders. Call it from a `remember` keyed on the text and the transposition: parsing a long
+     * song on every recomposition would be wasteful.
+     */
+    fun renderSong(text: String, transposition: Int): ChordProSong {
+        val parsed = parseChordPro(text)
+        val semitones = parsed.metadata.transpose + transposition
+        return if (semitones == 0) parsed else transposeChordPro(parsed, semitones)
+    }
 
     /** A song opened from a setlist transposes inside that setlist; one opened from the library, in the preferences. */
     fun setTransposition(songFileName: String, setlistFileName: String?, transposition: Int) = viewModelScope.launch {

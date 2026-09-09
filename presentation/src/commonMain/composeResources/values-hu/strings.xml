@@ -77,13 +77,15 @@
     <string name="song_details_text_size_increase">Szöveg nagyítása</string>
     <string name="song_details_text_size_decrease">Szöveg kicsinyítése</string>
     <string name="song_details_text_size_reset">Szövegméret visszaállítása</string>
-    <string name="song_details_section_intro">Intro</string>
-    <string name="song_details_section_verse">Versszak</string>
-    <string name="song_details_section_pre_chorus">Elő-refrén</string>
     <string name="song_details_section_chorus">Refrén</string>
     <string name="song_details_section_bridge">Átvezetés</string>
-    <string name="song_details_section_solo">Szóló</string>
-    <string name="song_details_section_outro">Outro</string>
+    <string name="song_details_section_tab">Tab</string>
+    <string name="song_details_section_grid">Rács</string>
+    <string name="song_details_key">Hangnem: %1$s</string>
+    <string name="song_details_capo">Capo %1$d</string>
+    <string name="song_details_tempo">%1$s BPM</string>
+    <string name="song_details_time">%1$s</string>
+    <string name="song_details_empty">Ez a fájl még üres.</string>
     <string name="song_details_no_data">Ezt a dalt nem sikerült betölteni</string>
     <string name="song_details_no_data_hint">A fájlt nem sikerült beolvasni.</string>
 

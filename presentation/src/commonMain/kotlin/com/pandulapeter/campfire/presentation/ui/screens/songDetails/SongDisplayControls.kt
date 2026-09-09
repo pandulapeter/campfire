@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -70,7 +71,14 @@ internal fun SongDisplayControls(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
+    val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
     val song = allSongs.firstOrNull { it.fileName == dialog.songFileName }
+    val songTransposition = song?.let { transpositions[it.fileName, dialog.setlistFileName] } ?: 0
+    val songText = song?.let { songTexts[it.fileName] }
+    // Memoized: the key comes from the parsed song, which is not worth re-deriving on every recomposition.
+    val transposedKey = remember(songText, songTransposition) {
+        songText?.let { viewModel.renderSong(it, songTransposition).metadata.key }
+    }
     Column {
         SettingsSectionTitle(text = stringResource(Res.string.song_details_display_options))
         if (song?.hasChords == true && userPreferences?.isLyricsOnlyModeEnabled != true) {
@@ -79,7 +87,8 @@ internal fun SongDisplayControls(
                 headlineContent = { Text(stringResource(Res.string.song_details_transposition)) },
                 trailingContent = {
                     TranspositionControls(
-                        transposition = transpositions[song.fileName, dialog.setlistFileName],
+                        transposition = songTransposition,
+                        key = transposedKey,
                         onTranspositionChanged = { viewModel.setTransposition(song.fileName, dialog.setlistFileName, it) }
                     )
                 }
@@ -105,11 +114,14 @@ internal fun TranspositionControls(
     modifier: Modifier = Modifier,
     isCompact: Boolean = false,
     transposition: Int,
+    /** The key the song sounds in after transposing, shown next to the amount when the file declares one. */
+    key: String? = null,
     onTranspositionChanged: (Int) -> Unit
 ) = Stepper(
     modifier = modifier,
     isCompact = isCompact,
-    value = if (transposition > 0) "+$transposition" else transposition.toString(),
+    value = (if (transposition > 0) "+$transposition" else transposition.toString())
+        .let { if (key.isNullOrBlank()) it else "$it $KEY_SEPARATOR $key" },
     isDefault = transposition == 0,
     decreaseIcon = painterResource(Res.drawable.ic_subtract),
     decreaseLabel = stringResource(Res.string.song_details_transpose_down),
@@ -280,3 +292,5 @@ private val COMPACT_BUTTON_WIDTH = 36.dp
 private val VALUE_MIN_WIDTH = 44.dp
 private val DEFAULT_ICON_SIZE = 24.dp
 private val COMPACT_ICON_SIZE = 20.dp
+
+private const val KEY_SEPARATOR = "\u00B7"
