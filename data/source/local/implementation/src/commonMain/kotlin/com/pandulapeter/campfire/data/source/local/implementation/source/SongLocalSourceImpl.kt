@@ -49,7 +49,7 @@ internal class SongLocalSourceImpl(
     override suspend fun createSong(title: String, artist: String, text: String): Song {
         val fileName = fileStorage.uniqueName(StorageDirectory.SONGS, songFileName(title = title, artist = artist))
         fileStorage.writeText(StorageDirectory.SONGS, fileName, text)
-        return loadSong(fileName) ?: throw IllegalStateException("The song \"\" disappeared right after it was written.")
+        return loadSong(fileName) ?: throw IllegalStateException("The song \"$fileName\" disappeared right after it was written.")
     }
 
     override suspend fun importSong(desiredFileName: String?, text: String): Song {
@@ -60,8 +60,6 @@ internal class SongLocalSourceImpl(
     }
 
     override suspend fun deleteSong(fileName: String) = fileStorage.delete(StorageDirectory.SONGS, fileName)
-
-    override suspend fun renameSong(from: String, to: String) = fileStorage.rename(StorageDirectory.SONGS, from, to)
 
     override suspend fun exists(fileName: String) = fileStorage.exists(StorageDirectory.SONGS, fileName)
 

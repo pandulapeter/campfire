@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -28,7 +27,6 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -271,19 +269,6 @@ internal fun CheckboxListItem(
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
     leadingContent = { Checkbox(checked = isChecked, enabled = isEnabled, onCheckedChange = null) }
-)
-
-@Composable
-internal fun RadioButtonListItem(
-    modifier: Modifier = Modifier,
-    title: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) = ListItem(
-    modifier = modifier.selectable(selected = isSelected, role = Role.RadioButton, onClick = onClick),
-    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-    headlineContent = { Text(title) },
-    leadingContent = { RadioButton(selected = isSelected, onClick = null) }
 )
 
 @Composable

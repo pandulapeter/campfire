@@ -70,22 +70,6 @@ private class OpfsFileStorage : FileStorage {
         Unit
     }
 
-    /** OPFS only has `move()` in Chromium, so the file is copied and the old one removed instead. */
-    override suspend fun rename(directory: StorageDirectory, from: String, to: String) = withContext(Dispatchers.Default) {
-        requireValidFileName(from)
-        requireValidFileName(to)
-        val handle = directoryHandle(directory)
-        val bytes = getFileHandle(handle, from, create = false).await()?.let { readFileBytes(it).await()?.toByteArray() }
-            ?: throw IllegalStateException("\"$from\" does not exist.")
-        if (getFileHandle(handle, to, create = false).await() != null) {
-            throw IllegalStateException("\"$to\" already exists.")
-        }
-        val target = getFileHandle(handle, to, create = true).await() ?: throw IllegalStateException("Could not create \"$to\".")
-        writeFileBytes(target, bytes.toInt8Array()).await()
-        removeEntry(handle, from).await()
-        Unit
-    }
-
     private suspend fun requireFileHandle(directory: StorageDirectory, name: String) =
         fileHandle(directory, name, create = true) ?: throw IllegalStateException("Could not create \"$name\".")
 

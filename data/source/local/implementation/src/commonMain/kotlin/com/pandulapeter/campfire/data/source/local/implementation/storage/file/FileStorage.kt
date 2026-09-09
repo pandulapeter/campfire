@@ -48,9 +48,6 @@ interface FileStorage {
 
     /** Does nothing if the file does not exist. */
     suspend fun delete(directory: StorageDirectory, name: String)
-
-    /** Fails if [to] already exists or [from] does not. */
-    suspend fun rename(directory: StorageDirectory, from: String, to: String)
 }
 
 internal expect fun Scope.createFileStorage(): FileStorage

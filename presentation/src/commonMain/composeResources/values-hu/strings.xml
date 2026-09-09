@@ -2,9 +2,7 @@
 
     <!-- Shared -->
     <string name="back">Vissza</string>
-    <string name="close">Bezárás</string>
     <string name="cancel">Mégse</string>
-    <string name="remove">Eltávolítás</string>
     <string name="delete">Törlés</string>
     <string name="create">Létrehozás</string>
     <string name="export">Exportálás</string>

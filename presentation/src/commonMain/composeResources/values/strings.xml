@@ -2,9 +2,7 @@
 
     <!-- Shared -->
     <string name="back">Back</string>
-    <string name="close">Close</string>
     <string name="cancel">Cancel</string>
-    <string name="remove">Remove</string>
     <string name="delete">Delete</string>
     <string name="create">Create</string>
     <string name="export">Export</string>

@@ -31,7 +31,5 @@ interface SongLocalSource {
 
     suspend fun deleteSong(fileName: String)
 
-    suspend fun renameSong(from: String, to: String)
-
     suspend fun exists(fileName: String): Boolean
 }

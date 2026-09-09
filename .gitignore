@@ -14,12 +14,5 @@ build/
 # Xcode
 **/xcuserdata/
 
-# Room / SQLite databases
-*.db
-*.db-shm
-*.db-wal
-*.db.lck
-*.db.lock
-
 # macOS
 .DS_Store

@@ -58,7 +58,9 @@ class ImportFilesUseCaseImpl internal constructor(
                 // after what is in them, since the file they came from named none of them.
                 val song = songRepository.importSong(
                     desiredFileName = if (parts.size == 1) file.name.substringBeforeLast('.') + LibraryFiles.SONG_EXTENSION else null,
-                    text = part
+                    // The splitter trims the blank lines between the songs of a collection; the newline a text file
+                    // ends with is not one of those, and without it an exported library does not import back byte for byte.
+                    text = part + "\n"
                 )
                 importedSongFileNames += song.fileName
                 if (parts.size == 1) {

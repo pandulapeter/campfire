@@ -1,51 +1,102 @@
 # Campfire
 
-Kotlin Multiplatform app (Android + iOS + JVM desktop + wasmJs web) for browsing song lyrics/chords. Compose UI is shared between all platforms. Data comes from Google Sheets (song lists, via Retrosheet) and GitHub-hosted text files (song details).
+Kotlin Multiplatform app (Android + iOS + JVM desktop + wasmJs web) for viewing and editing song lyrics and chords.
+Compose UI is shared between all platforms. **There is no network access at all**: the app owns a library folder of
+plain [ChordPro](https://www.chordpro.org) files on every platform, which the user fills by writing songs in the
+built-in editor or by importing files and zip archives.
 
 ## Architecture
 
-Strict `api` / `implementation` module split at every layer. Only `:app:*` modules see implementations; everything else depends on `api` modules and gets wiring via Koin.
+Strict `api` / `implementation` module split at every layer. Only `:app:*` modules see implementations; everything else
+depends on `api` modules and gets wiring via Koin.
 
 ```
-app:android / app:desktop / app:ios / app:web   entry points, Koin startup, platform chrome (app:ios also holds the Xcode project,
-                                             app:web the index.html)
-  presentation                               CampfireViewModel, Navigation 3 back stack, Material 3 theme + every screen, string resources;
-                                             the thin platform shells (system bars, URL opening, desktop key handling) are its platform source sets
+app:android / app:desktop / app:ios / app:web   entry points, Koin startup, platform chrome, "open with" and share
+                                             intents (app:ios also holds the Xcode project, app:web the index.html)
+  presentation                               CampfireViewModel, Navigation 3 back stack, Material 3 theme + every screen
+                                             (Songs, Setlists, Settings, SongDetails, SongEditor), string resources; the
+                                             platform shells (system bars, file pickers, drag and drop, URL opening,
+                                             desktop key handling) are its platform source sets
   domain:api / :implementation               use cases (single-method interfaces)
     data:repository:api / :implementation
-      data:source:local:api  -> :implementation   (Room everywhere but web, which uses localStorage; see Web below)
-      data:source:remote:api -> :implementation   (Ktor + Ktorfit + Retrosheet + kotlinx.serialization; see Web below)
+      data:source:local:api  -> :implementation   files on Android/desktop/iOS, OPFS on web (see Web below);
+                                                  also holds the pure-Kotlin zip reader/writer
         data:model                           domain models, shared by everything
+  chordpro                                   dependency-free ChordPro model, parser, serializer, transposer and
+                                             highlighter. Depends on nothing; used by :data:source:local:implementation
+                                             (metadata for the song list), :domain:api and :presentation
 ```
 
-Data flow: `LocalSource`/`RemoteSource` -> `Repository` (emits `DataState<T>`, local-first then remote) -> use cases (`GetScreenDataUseCase` combines all repos into one `ScreenData` flow) -> `CampfireViewModel` (a lifecycle `ViewModel` exposing `StateFlow`s and the Navigation 3 back stack) -> screens (`collectAsStateWithLifecycle`).
+Data flow: `FileStorage` (one flat directory per kind of file) -> `LocalSource` (files in, models out) -> `Repository`
+(emits `DataState<T>`, reads once and caches) -> use cases (`GetScreenDataUseCase` combines the song and setlist
+repositories into one `ScreenData` flow) -> `CampfireViewModel` (a lifecycle `ViewModel` exposing `StateFlow`s and the
+Navigation 3 back stack) -> screens (`collectAsStateWithLifecycle`).
+
+The library layout, inside the app-private data directory of each platform:
+
+```
+library/songs/*.cho                  one song per file; the file name is the song's identity
+library/setlists/*.setlist.json      one setlist per file, exported together with the songs
+preferences/preferences.json         everything in UserPreferences; outside library/, so it is never exported
+```
 
 ## Conventions
 
-- Library modules apply the convention plugins from `gradle/build-logic` (`campfire-library`, or `campfire-compose-library` when they contain Compose). These configure the Android, `desktop` (JVM), `iosArm64`, `iosSimulatorArm64` and `wasmJs` (browser) targets and derive the Android namespace from the Gradle path. Sources live in `src/commonMain/kotlin`; platform code goes in `androidMain` / `desktopMain` / `iosMain` / `wasmJsMain` via `expect`/`actual`.
-- Shared code must stay JVM-free: no `java.*`, `KoinJavaComponent`, or JVM-only libraries. Use `kotlin.uuid.Uuid`, `androidx.compose.ui.text.intl.Locale`, `KoinPlatform.getKoin()`, and `import kotlinx.coroutines.IO` for `Dispatchers.IO`.
-- UI strings live in `presentation/src/commonMain/composeResources/values[-hu]/strings.xml`. Read them with `com.pandulapeter.campfire.presentation.localization.stringResource(Res.string.x)` (generated by the `com.hyperether.localization` plugin, switchable at runtime via `currentLanguage`), never with the `org.jetbrains.compose.resources` variant, which ignores the in-app language. Add every new string to both files; formatted strings must always be called with their arguments.
-- The UI is Material 3 Expressive (`org.jetbrains.compose.material3:material3`, versioned separately from Compose Multiplatform in `jetbrains-compose-material3`); don't add `androidx.compose.material` (M2) back.
-- `:app:android` is a plain Android module, `:app:desktop` a plain JVM one, `:app:ios` Kotlin/Native-only and `:app:web` Kotlin/Wasm-only; every other module (`:presentation` included) is a multiplatform library.
-- Every module's Koin wiring lives in a top-level `Module.kt` exposing one `val xxxModule = module { ... }`. New bindings go there.
+- Library modules apply the convention plugins from `gradle/build-logic` (`campfire-library`, or
+  `campfire-compose-library` when they contain Compose). These configure the Android, `desktop` (JVM), `iosArm64`,
+  `iosSimulatorArm64` and `wasmJs` (browser) targets and derive the Android namespace from the Gradle path. Sources live
+  in `src/commonMain/kotlin`; platform code goes in `androidMain` / `desktopMain` / `iosMain` / `wasmJsMain` via
+  `expect`/`actual`.
+- Shared code must stay JVM-free: no `java.*`, `KoinJavaComponent`, or JVM-only libraries. Use `kotlin.uuid.Uuid`,
+  `androidx.compose.ui.text.intl.Locale`, `KoinPlatform.getKoin()`, and `import kotlinx.coroutines.IO` for
+  `Dispatchers.IO`.
+- UI strings live in `presentation/src/commonMain/composeResources/values[-hu]/strings.xml`. Read them with
+  `com.pandulapeter.campfire.presentation.localization.stringResource(Res.string.x)` (generated by the
+  `com.hyperether.localization` plugin, switchable at runtime via `currentLanguage`), never with the
+  `org.jetbrains.compose.resources` variant, which ignores the in-app language. Add every new string to both files;
+  formatted strings must always be called with their arguments.
+- The UI is Material 3 Expressive (`org.jetbrains.compose.material3:material3`, versioned separately from Compose
+  Multiplatform in `jetbrains-compose-material3`); don't add `androidx.compose.material` (M2) back.
+- `:app:android` is a plain Android module, `:app:desktop` a plain JVM one, `:app:ios` Kotlin/Native-only and `:app:web`
+  Kotlin/Wasm-only; every other module (`:presentation` and `:chordpro` included) is a multiplatform library.
+- Every module's Koin wiring lives in a top-level `Module.kt` exposing one `val xxxModule = module { ... }`. New
+  bindings go there. `:chordpro` has none: it is a set of stateless objects, reached through use cases.
 - Implementation classes are `internal` and named `<Interface>Impl`. Use cases are `operator fun invoke`.
-- Repositories extend `BaseLocalDataRepository` (local only) or `BaseLocalRemoteDataRepository` (local + remote cache).
-- Layer boundaries are crossed via mappers (`mapper/` packages), never by leaking entity/response types.
-- Only pure logic is tested: `commonTest` unit tests in `:chordpro` and in `:data:source:local:implementation`, run on the
-  desktop target with `./gradlew :chordpro:desktopTest :data:source:local:implementation:desktopTest`. The UI is untested.
+- Repositories extend `BaseLocalDataRepository`, which holds the cached `DataState` and the read-once logic.
+- Layer boundaries are crossed via mappers (`mapper/` packages), never by leaking document/entity types.
+- The file name is a song's (and a setlist's) identity. Nothing is ever overwritten implicitly: a new or imported file
+  that collides gets a ` (2)`, ` (3)`… suffix (`FileNames.kt`).
+- Only pure logic is tested: `commonTest` unit tests in `:chordpro` and in `:data:source:local:implementation` (zip and
+  the JVM file storage), run on the desktop target with
+  `./gradlew :chordpro:desktopTest :data:source:local:implementation:desktopTest`. The UI is untested.
+- `docs/rewrite-plan/` is the historical record of the 3.x -> 4.0 rewrite: one document per step, each ending with what
+  actually happened and what was verified. It describes how the app got here, not how it works now — this file and the
+  per-module `CLAUDE.md` files do that.
 
 ## Build
 
-- Versions in `gradle/libs.versions.toml` (including `android-compileSdk` / `android-minSdk`); app version and Android signing constants are set as **system properties** in the root `build.gradle.kts` and read via `System.getProperty(...)` in `:app:android` / `:app:desktop`. The iOS version lives in the Xcode project.
+- Versions in `gradle/libs.versions.toml` (including `android-compileSdk` / `android-minSdk`); app version and Android
+  signing constants are set as **system properties** in the root `build.gradle.kts` and read via `System.getProperty(...)`
+  in `:app:android` / `:app:desktop`. The iOS version lives in the Xcode project.
 - `./gradlew :app:android:assembleDebug` — Android APK
 - `./gradlew :app:desktop:run` — desktop app; `:app:desktop:packageDistributionForCurrentOS` for installers
-- `./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64` — compile/link check of the iOS framework; run the app from Xcode (`app/ios/iosApp/iosApp.xcodeproj`) or with `xcodebuild -project app/ios/iosApp/iosApp.xcodeproj -target iosApp -sdk iphonesimulator -arch arm64 SYMROOT=<dir> OBJROOT=<dir> build`, then `xcrun simctl install/launch`.
-- `./gradlew :app:web:wasmJsBrowserDevelopmentRun` — web app on a dev server; `:app:web:wasmJsBrowserDistribution` writes the deployable site to `app/web/build/dist/wasmJs/productionExecutable`.
+- `./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64` — compile/link check of the iOS framework; run the app from
+  Xcode (`app/ios/iosApp/iosApp.xcodeproj`) or with
+  `xcodebuild -project app/ios/iosApp/iosApp.xcodeproj -target iosApp -sdk iphonesimulator -arch arm64 SYMROOT=<dir> OBJROOT=<dir> build`,
+  then `xcrun simctl install/launch`.
+- `./gradlew :app:web:wasmJsBrowserDevelopmentRun` — web app on a dev server; `:app:web:wasmJsBrowserDistribution` writes
+  the deployable site to `app/web/build/dist/wasmJs/productionExecutable`.
 
 ## Web
 
-Neither Room nor Retrosheet works on wasmJs, so `:data:source:local:implementation` and `:data:source:remote:implementation` each declare a custom hierarchy template (`applyHierarchyTemplate`) with an intermediate `roomMain` / `retrosheetMain` source set holding the implementation the other three platforms share, and a `wasmJsMain` one with a web-specific replacement. Both expose `dataLocalSourceModule` / `dataRemoteSourceModule` as an `expect val` in `commonMain` with one `actual` per group.
+The web build differs from the other three in one place only: where the files are. `FileStorage` has a `wasmJsMain`
+actual backed by the **Origin Private File System**, so the library is a real directory tree in the browser's own
+storage, private to the origin and invisible in the user's downloads.
 
-- Local storage: Room has no wasmJs artifact. The web build keeps one JSON document per table in `localStorage`, with its own `@Serializable` entities and mappers mirroring the Room ones.
-- Remote: Retrosheet's Ktorfit converter makes the Kotlin/Wasm compiler emit a binary browsers reject (`struct.set` type error in `$convertCOROUTINE$`), so the web build requests the same `gviz` CSV export itself and decodes it with the same CSV format. Retrosheet still has to be a `commonMain` dependency because the Ktorfit KSP plugin only generates `createSongService()` for `commonMain` and `SongService` carries Retrosheet's `@Read`; dead-code elimination keeps the broken converter out of the wasm binary as long as nothing on the web path references it.
-- `settings.gradle.kts` uses `RepositoriesMode.PREFER_SETTINGS` rather than `FAIL_ON_PROJECT_REPOS` because the Kotlin/Wasm tooling adds the Node.js, Yarn and Binaryen download repositories to the root project; those are declared in settings instead.
+- OPFS, the file input and the download link are reached through `js(...)` blocks rather than through typed wrappers:
+  one crossing of the Kotlin/Wasm boundary per operation is far cheaper than one per element, and several of these APIs
+  have no binding. A Kotlin lambda cannot be passed into a `js(...)` block, so callbacks (file drops) come back as
+  promises instead.
+- `settings.gradle.kts` uses `RepositoriesMode.PREFER_SETTINGS` rather than `FAIL_ON_PROJECT_REPOS` because the
+  Kotlin/Wasm tooling adds the Node.js, Yarn and Binaryen download repositories to the root project; those are declared
+  in settings instead.

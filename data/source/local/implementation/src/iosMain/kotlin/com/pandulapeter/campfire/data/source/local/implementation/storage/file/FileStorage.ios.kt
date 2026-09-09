@@ -93,20 +93,6 @@ private class IosFileStorage : FileStorage {
         }
     }
 
-    override suspend fun rename(directory: StorageDirectory, from: String, to: String) = withContext(Dispatchers.IO) {
-        val sourcePath = filePath(directory, from)
-        val targetPath = filePath(directory, to)
-        if (!fileManager.fileExistsAtPath(sourcePath)) {
-            throw IllegalStateException("\"$from\" does not exist.")
-        }
-        if (fileManager.fileExistsAtPath(targetPath)) {
-            throw IllegalStateException("\"$to\" already exists.")
-        }
-        if (!fileManager.moveItemAtPath(sourcePath, targetPath, null)) {
-            throw IllegalStateException("Could not rename \"$from\" to \"$to\".")
-        }
-    }
-
     private fun readData(directory: StorageDirectory, name: String): NSData? = filePath(directory, name)
         .let { if (fileManager.fileExistsAtPath(it)) NSData.dataWithContentsOfFile(it) else null }
 

@@ -76,25 +76,6 @@ class JvmFileStorageTest {
     }
 
     @Test
-    fun `renames a file`() = runBlocking {
-        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "content")
-
-        fileStorage.rename(StorageDirectory.SONGS, "a.cho", "b.cho")
-
-        assertFalse(fileStorage.exists(StorageDirectory.SONGS, "a.cho"))
-        assertEquals("content", fileStorage.readText(StorageDirectory.SONGS, "b.cho"))
-    }
-
-    @Test
-    fun `refuses to rename onto an existing file`() = runBlocking {
-        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "a")
-        fileStorage.writeText(StorageDirectory.SONGS, "b.cho", "b")
-
-        assertFailsWith<IllegalStateException> { fileStorage.rename(StorageDirectory.SONGS, "a.cho", "b.cho") }
-        assertEquals("b", fileStorage.readText(StorageDirectory.SONGS, "b.cho"))
-    }
-
-    @Test
     fun `deletes a file and ignores a missing one`() = runBlocking {
         fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "content")
 

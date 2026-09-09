@@ -10,8 +10,8 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
 }
 
-"VERSION_NAME" set "3.0.1"
-"VERSION_CODE" set 26
+"VERSION_NAME" set "4.0.0"
+"VERSION_CODE" set 27
 "KEY_ALIAS" set "androiddebugkey"
 "KEY_PASSWORD" set "android"
 "STORE_FILE" set "internal.keystore"

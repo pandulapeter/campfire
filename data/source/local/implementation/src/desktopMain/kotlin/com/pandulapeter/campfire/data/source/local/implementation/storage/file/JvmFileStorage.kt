@@ -57,20 +57,6 @@ internal class JvmFileStorage(private val root: File) : FileStorage {
         }
     }
 
-    override suspend fun rename(directory: StorageDirectory, from: String, to: String) = withContext(Dispatchers.IO) {
-        val source = file(directory, from)
-        val target = file(directory, to)
-        if (!source.isFile) {
-            throw IllegalStateException("\"$from\" does not exist.")
-        }
-        if (target.exists()) {
-            throw IllegalStateException("\"$to\" already exists.")
-        }
-        if (!source.renameTo(target)) {
-            throw IllegalStateException("Could not rename \"$from\" to \"$to\".")
-        }
-    }
-
     private fun writeAtomically(directory: StorageDirectory, name: String, write: (File) -> Unit) {
         val target = file(directory, name)
         val temporaryFile = File(target.parentFile, name + TEMPORARY_FILE_SUFFIX)
