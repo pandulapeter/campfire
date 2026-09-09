@@ -63,6 +63,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
+import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
@@ -75,6 +76,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SongsControlsSidePan
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
+import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.launch
@@ -91,6 +93,7 @@ internal fun SongsScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val placeholder by viewModel.songsPlaceholder.collectAsStateWithLifecycle()
+    val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
     // The button would sit right where the suggestions and the keyboard go, and searching is not the moment to
     // start writing a new song anyway.
     var isSearchFieldFocused by rememberSaveable { mutableStateOf(false) }
@@ -137,6 +140,7 @@ internal fun SongsScreen(
                     }
                 }
             )
+            ImportProgress(isImporting = isImporting)
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -248,6 +252,7 @@ private fun SongList(
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val filePicker = LocalFilePicker.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val layoutDirection = LocalLayoutDirection.current
     val coroutineScope = rememberCoroutineScope()
@@ -296,7 +301,8 @@ private fun SongList(
                         modifier = Modifier.fillMaxWidth().animateItem(),
                         placeholder = it,
                         onRetry = viewModel::refresh,
-                        onNewSong = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) }
+                        onNewSong = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) },
+                        onImport = { viewModel.importFiles(filePicker) }
                     )
                 }
             }

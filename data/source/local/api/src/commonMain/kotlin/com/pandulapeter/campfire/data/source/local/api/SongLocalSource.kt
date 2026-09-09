@@ -23,6 +23,12 @@ interface SongLocalSource {
      */
     suspend fun createSong(title: String, artist: String, text: String): Song
 
+    /**
+     * Writes [text] under a free file name and returns the song it became: [desiredFileName] when the import has an
+     * original name worth keeping, otherwise one derived from the title and artist in the text itself.
+     */
+    suspend fun importSong(desiredFileName: String?, text: String): Song
+
     suspend fun deleteSong(fileName: String)
 
     suspend fun renameSong(from: String, to: String)

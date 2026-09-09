@@ -124,4 +124,66 @@ hu "Az exportálás nem sikerült"), `setlists_export`, and the enabled `songs_i
 
 ## Execution notes
 
-_(filled in by the executing agent)_
+- **Zip handling reaches the use cases through an `ArchiveRepository`, not `ArchiveLocalSource` directly.** Section 1
+  has the use case using the local source, but `:domain:implementation` only depends on `:data:repository:api`; a
+  fifteen line pass-through repository was cheaper than breaking that. `pack` also takes a `Map<String, ByteArray>`
+  rather than a list of `ImportedFile`s: "imported file" is the wrong word for something on its way out, and a map
+  cannot name the same entry twice.
+- **The export use cases return an `ExportedFile` (name, MIME type, bytes) rather than raw bytes.** Section 4 wants a
+  lone song to leave as a `.cho` and everything else as a zip, which is a decision about the content and belongs
+  where the content is; the platform's save dialog then only has to take the bytes. `ExportedFile.TEXT_MIME_TYPE`
+  and `ZIP_MIME_TYPE` live next to it, which is also what the Android launchers are keyed on.
+- **Naming a song stays in the storage layer.** `SongLocalSource.importSong(desiredFileName, text)` takes a *null*
+  desired name for the parts of a file that held several songs and derives one from the metadata in the text itself,
+  so the import rules never have to know how "Artist - Title.cho" is spelled. `SETLIST_EXTENSION` and
+  `SONG_EXTENSION` moved to `LibraryFiles` in `:data:model` for the same reason: the import and export rules and the
+  storage layer have to agree about them, and now there is one definition rather than two.
+- **A setlist is parsed by the layer that writes them** (`SetlistRepository.parseSetlist`), since the document shape
+  is a storage detail. It hands back a setlist carrying the file name it *would like* to have, and `importSetlist`
+  turns that into a free one - so the collision rule stays in one place for songs and setlists alike.
+- **`SongContentRepository.loadSongContent` gained a `shouldCache` flag.** Its cache is unbounded and exporting the
+  library reads every song exactly once; without the flag a single export would leave the whole library in memory.
+- **The desktop dialog is shown on the AWT event thread**, not on `Dispatchers.IO` as section 3 suggests. Both were
+  tested and both block until the dialog is dismissed, but showing a modal AWT dialog is the event thread's job and
+  relying on the macOS behaviour of the other case is not worth the saving. The reads and writes stay on IO.
+- **The snackbar queues its messages instead of collecting them straight into the host.** The text of "imported 3
+  songs" can only be built inside a composition (string resources are composable), so the message is parked in a
+  `mutableStateListOf` first; that also makes two identical results in a row two separate snackbars.
+- **`import_result` reads "Imported %1$d songs and %2$d setlists · %3$d skipped".** The string tables have no
+  plurals, so the wording avoids needing them, the same way step 07's library summary does.
+- The progress bar is shown by the two screens an import can be started from (Songs and Settings) rather than by the
+  app shell, because the shell has no app bar of its own to put it under.
+- Web drag and drop was left to step 10, as section 4 allows.
+
+### Verified
+
+- All four platforms build; `:chordpro:desktopTest` (41) and `:data:source:local:implementation:desktopTest` (28)
+  pass.
+- **The import and export rules, driven end to end on desktop** through a stand-in picker (a temporary
+  `LaunchedEffect` in `app/desktop`'s `main`, removed afterwards; the file matches `HEAD`), starting from an empty
+  library:
+  - Three loose `.cho` files land as three songs. The same three again become ` (2)` copies, and a zip of the same
+    three becomes ` (3)` copies - nothing is ever overwritten.
+  - A `.txt` holding two songs separated by `{new_song}` becomes `Splitter - First Of Two.cho` and
+    `Splitter - Second Of Two.cho`, each named from its own metadata.
+  - A `.png` is skipped and reported: the snackbar reads "Imported 0 songs and 0 setlists · 1 skipped".
+  - Exporting one song writes a file byte for byte identical to the one in the library (`cmp` clean, 544 bytes).
+  - Exporting a setlist writes a zip holding the setlist document and both of its songs; `unzip -t` is clean and the
+    document inside still carries `"transposition": 3`.
+  - Exporting the library writes `campfire-library.zip` with every song under `songs/` and every setlist under
+    `setlists/`; `unzip -t` is clean. Wiping the library and importing that archive back restores all eleven songs,
+    the setlist, and the per-setlist transposition.
+- **Desktop, the real dialog**: the app bar action opens the native macOS panel, the coroutine stays suspended for as
+  long as it is up, and dismissing it with Escape returns an empty list and imports nothing.
+- **Android** (emulator): "Import" opens `com.android.documentsui.picker.PickActivity`; picking `simple.cho` out of
+  it (which the system lists as a "BIN file", which is why the picker has to accept `*/*`) imports it as "Campfire
+  Song"; "Export library as zip" opens the system save sheet pre-filled with `campfire-library.zip`, and saving it
+  writes an archive `unzip -t` accepts, holding `songs/simple.cho`.
+- **Web** (Chrome, dev server): the picker's own `<input>` is created with the right `accept` list and, fed three
+  files, imports two songs out of a `{new_song}` text file plus one `.cho` and skips a `.png` - the snackbar reads
+  "Imported 3 songs and 0 setlists · 1 skipped" and the files are in the OPFS. Exporting the library produces a real
+  `application/zip` blob named `campfire-library.zip` holding the three songs under `songs/`.
+- **iOS is the gap.** The framework links, the app launches with the picker wired in and shows the enabled "Import"
+  button, and the compiler checks `UIDocumentPickerDelegateProtocol` conformance for us, but the picker itself was
+  never opened: driving the simulator needs it to be the frontmost application, which this machine would not grant.
+  Presenting the document picker and reading what it hands back are unverified on iOS.

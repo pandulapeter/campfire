@@ -9,6 +9,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.ExportedFile
+import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
@@ -17,9 +19,13 @@ import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
@@ -27,7 +33,9 @@ import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
+import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,6 +46,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -52,6 +61,10 @@ class CampfireViewModel(
     private val getSongContent: GetSongContentUseCase,
     private val createSong: CreateSongUseCase,
     private val deleteSong: DeleteSongUseCase,
+    private val importFiles: ImportFilesUseCase,
+    private val exportSongs: ExportSongsUseCase,
+    private val exportSetlist: ExportSetlistUseCase,
+    private val exportLibrary: ExportLibraryUseCase,
     private val createSetlist: CreateSetlistUseCase,
     private val saveSetlist: SaveSetlistUseCase,
     private val deleteSetlist: DeleteSetlistUseCase,
@@ -212,6 +225,17 @@ class CampfireViewModel(
         pendingFontScale ?: userPreferences?.fontScale ?: DEFAULT_FONT_SCALE
     }.asEagerState(DEFAULT_FONT_SCALE)
 
+    /** True while an import is running, which the screens that can start one show as a progress bar. */
+    private val _isImporting = MutableStateFlow(false)
+    val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
+
+    /**
+     * One-shot notifications for the snackbar. A channel rather than a state, so that two identical results in a row
+     * are two messages and a message that has been shown is not shown again when the screen is recreated.
+     */
+    private val _messages = Channel<Message>(Channel.BUFFERED)
+    val messages = _messages.receiveAsFlow()
+
     // Dialogs
     private val _visibleDialog = MutableStateFlow<DialogType?>(null)
     val visibleDialog: StateFlow<DialogType?> = _visibleDialog.asStateFlow()
@@ -344,6 +368,54 @@ class CampfireViewModel(
                 )
             }
         }
+    }
+
+    // Import and export
+
+    /**
+     * The picker is handed in by the composable that has it, but the work runs here: picking a file takes as long as
+     * the user takes, and the bottom sheet or menu the action was started from is gone well before that.
+     */
+    fun importFiles(filePicker: FilePicker) = viewModelScope.launch {
+        if (_isImporting.value) return@launch
+        val files = try {
+            filePicker.pickFiles()
+        } catch (exception: Exception) {
+            println("Could not pick the files to import: ${exception.message}")
+            _messages.send(Message.ImportFailed)
+            return@launch
+        }
+        if (files.isEmpty()) return@launch
+        _isImporting.update { true }
+        try {
+            _messages.send(Message.ImportFinished(importFiles.invoke(files)))
+        } catch (exception: Exception) {
+            println("Could not import the files: ${exception.message}")
+            _messages.send(Message.ImportFailed)
+        } finally {
+            _isImporting.update { false }
+        }
+    }
+
+    fun exportSong(filePicker: FilePicker, songFileName: String) = viewModelScope.launch {
+        save(filePicker) { exportSongs(listOf(songFileName)) }
+    }
+
+    fun exportSetlist(filePicker: FilePicker, setlistFileName: String) = viewModelScope.launch {
+        save(filePicker) { exportSetlist.invoke(setlistFileName) }
+    }
+
+    fun exportLibrary(filePicker: FilePicker) = viewModelScope.launch {
+        save(filePicker) { exportLibrary.invoke() }
+    }
+
+    /** Nothing to export and a picker that threw are the same thing to the user: the file did not come out. */
+    private suspend fun save(filePicker: FilePicker, export: suspend () -> ExportedFile?) = try {
+        export()?.let { filePicker.saveFile(it) } ?: _messages.send(Message.ExportFailed)
+        Unit
+    } catch (exception: Exception) {
+        println("Could not export: ${exception.message}")
+        _messages.send(Message.ExportFailed)
     }
 
     // Setlists
@@ -494,6 +566,13 @@ class CampfireViewModel(
 
     /** The upper case, accent-free first character of the text if it is a letter. */
     private fun String.initialLetter() = normalizeText(take(1)).firstOrNull()?.takeIf { it.isLetter() }?.uppercaseChar()
+
+    /** Something that has happened and is worth one line of text at the bottom of the screen. */
+    sealed interface Message {
+        data class ImportFinished(val result: ImportResult) : Message
+        data object ImportFailed : Message
+        data object ExportFailed : Message
+    }
 
     /** What a list without content has in its place. */
     enum class Placeholder {

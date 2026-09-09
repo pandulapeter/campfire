@@ -15,5 +15,17 @@ interface SetlistLocalSource {
 
     suspend fun saveSetlist(setlist: Setlist)
 
+    /**
+     * Parses an exported `*.setlist.json` document. The result carries the file name it would like to have, derived
+     * from its title, which [importSetlist] turns into a free one. Null when the document is not a setlist.
+     */
+    suspend fun parseSetlist(document: String): Setlist?
+
+    /** Writes [setlist] under a free file name based on the one it carries, and returns it under that name. */
+    suspend fun importSetlist(setlist: Setlist): Setlist
+
+    /** The setlist file exactly as it is stored, so that exporting it changes nothing. Null if it is missing. */
+    suspend fun loadSetlistDocument(fileName: String): String?
+
     suspend fun deleteSetlist(fileName: String)
 }

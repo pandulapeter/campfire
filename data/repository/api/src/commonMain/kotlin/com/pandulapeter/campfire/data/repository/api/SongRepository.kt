@@ -21,5 +21,11 @@ interface SongRepository {
     /** Writes [text] under a free file name derived from the title and artist, and returns the song it became. */
     suspend fun createSong(title: String, artist: String, text: String): Song
 
+    /**
+     * Writes an imported song under a free name based on [desiredFileName] and returns it. The cached list is left
+     * alone: an import writes many files at once and ends with a single [rescan].
+     */
+    suspend fun importSong(desiredFileName: String?, text: String): Song
+
     suspend fun deleteSong(fileName: String)
 }

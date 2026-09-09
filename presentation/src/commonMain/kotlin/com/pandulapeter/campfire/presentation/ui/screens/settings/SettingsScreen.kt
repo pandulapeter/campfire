@@ -64,11 +64,13 @@ import com.pandulapeter.campfire.presentation.resources.songs_rescan
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
+import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocationHint
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.CoroutineScope
@@ -84,6 +86,8 @@ internal fun SettingsScreen(
     urlOpener: (String) -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
+    val filePicker = LocalFilePicker.current
     Column(
         modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
     ) {
@@ -91,6 +95,7 @@ internal fun SettingsScreen(
             scrollBehavior = scrollBehavior,
             title = { Text(stringResource(Res.string.settings)) }
         )
+        ImportProgress(isImporting = isImporting)
         val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
         // Null until the library has been read, so that the row fades in with real counts instead of showing zeroes.
         val librarySummary by viewModel.librarySummary.collectAsStateWithLifecycle()
@@ -136,10 +141,9 @@ internal fun SettingsScreen(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_import),
                     icon = painterResource(Res.drawable.ic_import),
-                    // TODO(step 08): reading .cho files and zip archives through the platform's file picker.
-                    isEnabled = false,
+                    isEnabled = !isImporting,
                     isEmphasized = false,
-                    onClick = {}
+                    onClick = { viewModel.importFiles(filePicker) }
                 )
             }
             item(key = "library_export") {
@@ -147,10 +151,8 @@ internal fun SettingsScreen(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_export_all),
                     icon = painterResource(Res.drawable.ic_export),
-                    // TODO(step 08): writing the whole library out as a zip archive.
-                    isEnabled = false,
                     isEmphasized = false,
-                    onClick = {}
+                    onClick = { viewModel.exportLibrary(filePicker) }
                 )
             }
             item(key = "library_rescan") {

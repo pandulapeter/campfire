@@ -8,8 +8,13 @@ import com.pandulapeter.campfire.data.model.domain.SongContent
  */
 interface SongContentRepository {
 
-    /** Null if the file does not exist or could not be read. */
-    suspend fun loadSongContent(fileName: String): SongContent?
+    /**
+     * Null if the file does not exist or could not be read.
+     *
+     * @param shouldCache False for a bulk read such as an export, which walks the whole library once and would
+     *   otherwise leave all of it in memory.
+     */
+    suspend fun loadSongContent(fileName: String, shouldCache: Boolean = true): SongContent?
 
     /** Drops the cached text of one song, or of every song when [fileName] is null. */
     suspend fun invalidate(fileName: String? = null)

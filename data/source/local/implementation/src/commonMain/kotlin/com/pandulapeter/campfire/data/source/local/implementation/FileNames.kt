@@ -1,10 +1,11 @@
 package com.pandulapeter.campfire.data.source.local.implementation
 
+import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 
-internal const val SONG_EXTENSION = ".cho"
-internal const val SETLIST_EXTENSION = ".setlist.json"
+internal const val SONG_EXTENSION = LibraryFiles.SONG_EXTENSION
+internal const val SETLIST_EXTENSION = LibraryFiles.SETLIST_EXTENSION
 
 /**
  * Turns arbitrary user text into something every platform accepts as a file name: the characters Windows and the

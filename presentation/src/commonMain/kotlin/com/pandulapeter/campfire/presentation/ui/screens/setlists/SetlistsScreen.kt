@@ -42,12 +42,14 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.filters
 import com.pandulapeter.campfire.presentation.resources.ic_delete
+import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_rename
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
+import com.pandulapeter.campfire.presentation.resources.setlists_export
 import com.pandulapeter.campfire.presentation.resources.setlists_rename
 import com.pandulapeter.campfire.presentation.resources.setlists_reorder_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
@@ -63,6 +65,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SongsControlsSidePan
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
+import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -166,6 +169,7 @@ private fun SetlistList(
         }
     }
     val layoutDirection = LocalLayoutDirection.current
+    val filePicker = LocalFilePicker.current
     val coroutineScope = rememberCoroutineScope()
     LazyVerticalGrid(
         columns = ListColumns(columnCount),
@@ -206,6 +210,11 @@ private fun SetlistList(
                                 icon = painterResource(Res.drawable.ic_rename),
                                 contentDescription = stringResource(Res.string.setlists_rename),
                                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.RenameSetlist(setlistWithSongs.setlist)) }
+                            )
+                            SectionHeaderAction(
+                                icon = painterResource(Res.drawable.ic_export),
+                                contentDescription = stringResource(Res.string.setlists_export),
+                                onClick = { viewModel.exportSetlist(filePicker, setlistWithSongs.setlist.fileName) }
                             )
                             SectionHeaderAction(
                                 icon = painterResource(Res.drawable.ic_delete),

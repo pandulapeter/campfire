@@ -32,11 +32,16 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,6 +59,9 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEvent
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.export_failed
+import com.pandulapeter.campfire.presentation.resources.import_failed
+import com.pandulapeter.campfire.presentation.resources.import_result
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.ic_songs
@@ -221,6 +229,54 @@ private fun CampfireContent(
         viewModel = viewModel,
         urlOpener = urlOpener
     )
+    Messages(
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .padding(bottom = navigationBarHeight + systemBars.calculateBottomPadding()),
+        viewModel = viewModel
+    )
+}
+
+/**
+ * The one line of text the app has to say after something it was asked to do has finished. It sits above the
+ * navigation chrome rather than inside a screen, because the screen an import was started from is often not the one
+ * the user is looking at when it ends.
+ */
+@Composable
+private fun Messages(
+    modifier: Modifier = Modifier,
+    viewModel: CampfireViewModel
+) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    // Queued rather than collected straight into the snackbar: the text of a message can only be built in a
+    // composition (string resources are composable), and two identical results in a row are still two messages.
+    val queue = remember { mutableStateListOf<CampfireViewModel.Message>() }
+    LaunchedEffect(viewModel) { viewModel.messages.collect { queue += it } }
+    val current: CampfireViewModel.Message? = queue.firstOrNull()
+    val text = when (current) {
+        is CampfireViewModel.Message.ImportFinished -> stringResource(
+            Res.string.import_result,
+            current.result.importedSongFileNames.size,
+            current.result.importedSetlistFileNames.size,
+            current.result.skippedFileNames.size
+        )
+
+        CampfireViewModel.Message.ImportFailed -> stringResource(Res.string.import_failed)
+        CampfireViewModel.Message.ExportFailed -> stringResource(Res.string.export_failed)
+        null -> null
+    }
+    LaunchedEffect(current) {
+        if (text != null) {
+            snackbarHostState.showSnackbar(text)
+            queue.removeFirstOrNull()
+        }
+    }
+    SnackbarHost(
+        modifier = modifier,
+        hostState = snackbarHostState
+    ) { data ->
+        Snackbar(snackbarData = data)
+    }
 }
 
 /**

@@ -42,6 +42,22 @@ internal class SetlistLocalSourceImpl(
         text = json.encodeToString(setlist.toDocument())
     )
 
+    /** The file name is derived from the title rather than kept, so that an exported setlist keeps its identity. */
+    override suspend fun parseSetlist(document: String): Setlist? = try {
+        json.decodeFromString<SetlistDocument>(document)
+            .takeIf { it.title.isNotBlank() }
+            ?.let { it.toModel(setlistFileName(it.title)) }
+    } catch (exception: Exception) {
+        println("Could not parse an imported setlist: ${exception.message}")
+        null
+    }
+
+    override suspend fun importSetlist(setlist: Setlist): Setlist = setlist
+        .copy(fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, setlist.fileName))
+        .also { saveSetlist(it) }
+
+    override suspend fun loadSetlistDocument(fileName: String) = fileStorage.readText(StorageDirectory.SETLISTS, fileName)
+
     override suspend fun deleteSetlist(fileName: String) = fileStorage.delete(StorageDirectory.SETLISTS, fileName)
 
     private companion object {

@@ -32,6 +32,12 @@ internal class SetlistRepositoryImpl(
         updateData(current.filterNot { it.fileName == setlist.fileName } + setlist)
     }
 
+    override suspend fun parseSetlist(document: String) = setlistLocalSource.parseSetlist(document)
+
+    override suspend fun importSetlist(setlist: Setlist) = setlistLocalSource.importSetlist(setlist)
+
+    override suspend fun loadSetlistDocument(fileName: String) = setlistLocalSource.loadSetlistDocument(fileName)
+
     override suspend fun deleteSetlist(fileName: String) {
         setlistLocalSource.deleteSetlist(fileName)
         updateData(setlists.first().data.orEmpty().filterNot { it.fileName == fileName })

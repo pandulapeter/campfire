@@ -342,7 +342,7 @@ internal fun ActionListItem(
  * All of these share one slot in their list, so they cross fade into each other rather than being swapped in a
  * single frame: the load that ends in an empty library is one continuous thing to look at, not two.
  *
- * @param onNewSong Null where creating a song is not this list's business, which hides the offer to create one.
+ * @param onNewSong Null where filling the library is not this list's business, which hides both of its offers to.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -350,7 +350,8 @@ internal fun ListPlaceholder(
     modifier: Modifier = Modifier,
     placeholder: CampfireViewModel.Placeholder,
     onRetry: () -> Unit,
-    onNewSong: (() -> Unit)? = null
+    onNewSong: (() -> Unit)? = null,
+    onImport: (() -> Unit)? = null
 ) = AnimatedContent(
     modifier = modifier,
     targetState = placeholder,
@@ -378,8 +379,8 @@ internal fun ListPlaceholder(
             hint = stringResource(Res.string.songs_empty_hint),
             actionText = onNewSong?.let { stringResource(Res.string.songs_new_song) },
             onAction = onNewSong,
-            // TODO(step 08): importing files and archives, which is what the button is here to do.
-            secondaryActionText = onNewSong?.let { stringResource(Res.string.songs_import) }
+            secondaryActionText = onNewSong?.let { stringResource(Res.string.songs_import) },
+            onSecondaryAction = onImport
         )
 
         CampfireViewModel.Placeholder.NO_SETLISTS -> EmptyState(

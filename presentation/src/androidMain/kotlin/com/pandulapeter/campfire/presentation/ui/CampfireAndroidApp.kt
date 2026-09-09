@@ -6,9 +6,12 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.LocalActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.rememberAndroidFilePicker
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -32,8 +35,12 @@ fun CampfireAndroidApp(
             navigationBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
         )
     }
-    CampfireApp(
-        viewModel = viewModel,
-        urlOpener = { urlOpener(it, isDarkTheme) }
-    )
+    CompositionLocalProvider(
+        LocalFilePicker provides rememberAndroidFilePicker()
+    ) {
+        CampfireApp(
+            viewModel = viewModel,
+            urlOpener = { urlOpener(it, isDarkTheme) }
+        )
+    }
 }

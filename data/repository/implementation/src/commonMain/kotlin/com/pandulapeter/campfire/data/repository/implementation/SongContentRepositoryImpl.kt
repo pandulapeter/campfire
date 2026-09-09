@@ -13,9 +13,9 @@ internal class SongContentRepositoryImpl(
     private val cache = mutableMapOf<String, SongContent>()
     private val mutex = Mutex()
 
-    override suspend fun loadSongContent(fileName: String): SongContent? = mutex.withLock {
+    override suspend fun loadSongContent(fileName: String, shouldCache: Boolean): SongContent? = mutex.withLock {
         cache[fileName] ?: try {
-            songLocalSource.loadSongContent(fileName)?.also { cache[fileName] = it }
+            songLocalSource.loadSongContent(fileName)?.also { if (shouldCache) cache[fileName] = it }
         } catch (exception: Exception) {
             println("Could not read the song \"$fileName\": ${exception.message}")
             null

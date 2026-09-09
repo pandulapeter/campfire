@@ -11,6 +11,11 @@
     <string name="filters">Szűrők</string>
     <string name="retry">Újra</string>
 
+    <!-- Import and export -->
+    <string name="import_result">%1$d dal és %2$d lista importálva · %3$d kihagyva</string>
+    <string name="import_failed">Az importálás nem sikerült</string>
+    <string name="export_failed">Az exportálás nem sikerült</string>
+
     <!-- Errors -->
     <string name="error_no_data">Nem sikerült betölteni az adatokat</string>
     <string name="error_no_data_hint">A könyvtárat nem sikerült beolvasni.</string>
@@ -50,6 +55,7 @@
     <string name="setlists_new_setlist_title">Lista címe</string>
     <string name="setlists_remove_song">Dal eltávolítása</string>
     <string name="setlists_rename">Átnevezés</string>
+    <string name="setlists_export">Lista exportálása</string>
     <string name="setlists_rename_title">Új cím</string>
     <string name="setlists_missing_song">A fájl nem található</string>
     <string name="setlists_reorder_hint">Hosszan nyomva átrendezheted, elhúzva eltávolíthatod a dalokat.</string>

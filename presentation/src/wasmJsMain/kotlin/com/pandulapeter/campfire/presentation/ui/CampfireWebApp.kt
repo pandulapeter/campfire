@@ -1,6 +1,9 @@
 package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.WebFilePicker
 import kotlinx.browser.window
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -10,7 +13,11 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun CampfireWebApp(
     viewModel: CampfireViewModel = koinViewModel()
-) = CampfireApp(
-    viewModel = viewModel,
-    urlOpener = { url -> window.open(url, "_blank") }
-)
+) = CompositionLocalProvider(
+    LocalFilePicker provides WebFilePicker
+) {
+    CampfireApp(
+        viewModel = viewModel,
+        urlOpener = { url -> window.open(url, "_blank") }
+    )
+}

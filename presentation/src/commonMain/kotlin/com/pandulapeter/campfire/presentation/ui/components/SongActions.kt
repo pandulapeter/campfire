@@ -24,6 +24,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_playlist_add
 import com.pandulapeter.campfire.presentation.resources.song_details_add_to_setlist
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -44,6 +45,7 @@ internal fun SongActions(
     shouldIncludeAddToSetlist: Boolean = true,
     item: @Composable (title: String, icon: Painter, isEnabled: Boolean, onClick: () -> Unit) -> Unit
 ) {
+    val filePicker = LocalFilePicker.current
     // TODO(step 09): an "Edit" action opening the editor belongs at the top of this list.
     if (shouldIncludeAddToSetlist) {
         item(
@@ -56,8 +58,9 @@ internal fun SongActions(
             )
         }
     }
-    // TODO(step 08): writing the song out as a .cho file through the platform's file picker.
-    item(stringResource(Res.string.export), painterResource(Res.drawable.ic_export), false) {}
+    item(stringResource(Res.string.export), painterResource(Res.drawable.ic_export), true) {
+        viewModel.exportSong(filePicker, song.fileName)
+    }
     item(stringResource(Res.string.delete), painterResource(Res.drawable.ic_delete), true) {
         viewModel.showDialog(CampfireViewModel.DialogType.DeleteSong(song))
     }

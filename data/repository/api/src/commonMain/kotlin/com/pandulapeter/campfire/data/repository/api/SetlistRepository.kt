@@ -20,5 +20,14 @@ interface SetlistRepository {
     /** Creates the file or overwrites it, and updates that one entry of the cached list. */
     suspend fun saveSetlist(setlist: Setlist)
 
+    /** See `SetlistLocalSource.parseSetlist`. */
+    suspend fun parseSetlist(document: String): Setlist?
+
+    /** Writes an imported setlist under a free file name and returns it. Ends with a [rescan], like an imported song. */
+    suspend fun importSetlist(setlist: Setlist): Setlist
+
+    /** The stored document of one setlist, for exporting it unchanged. Null if it is missing. */
+    suspend fun loadSetlistDocument(fileName: String): String?
+
     suspend fun deleteSetlist(fileName: String)
 }

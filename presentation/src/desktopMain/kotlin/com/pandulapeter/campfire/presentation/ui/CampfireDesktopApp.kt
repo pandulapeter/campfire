@@ -1,11 +1,14 @@
 package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import com.pandulapeter.campfire.presentation.ui.platform.DesktopFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import org.koin.compose.viewmodel.koinViewModel
 import java.awt.Desktop
 import java.net.URI
@@ -18,10 +21,14 @@ import java.net.URI
 @Composable
 fun CampfireDesktopApp(
     viewModel: CampfireViewModel = koinViewModel()
-) = CampfireApp(
-    viewModel = viewModel,
-    urlOpener = ::openUrl
-)
+) = CompositionLocalProvider(
+    LocalFilePicker provides DesktopFilePicker
+) {
+    CampfireApp(
+        viewModel = viewModel,
+        urlOpener = ::openUrl
+    )
+}
 
 /**
  * To be wired into the window's key event handler. Returns true if the event was consumed.

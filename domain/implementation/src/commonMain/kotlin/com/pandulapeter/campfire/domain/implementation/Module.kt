@@ -4,9 +4,13 @@ import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
@@ -19,9 +23,13 @@ import com.pandulapeter.campfire.domain.implementation.useCases.CreateSetlistUse
 import com.pandulapeter.campfire.domain.implementation.useCases.CreateSongUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.DeleteSetlistUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.DeleteSongUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.ExportLibraryUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.ExportSetlistUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.ExportSongsUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.GetScreenDataUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.GetSongContentUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.GetUserPreferencesUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.ImportFilesUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.LoadScreenDataUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.NormalizeTextUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.ParseChordProUseCaseImpl
@@ -37,9 +45,13 @@ val domainModule = module {
     factory<CreateSongUseCase> { CreateSongUseCaseImpl(get()) }
     factory<DeleteSetlistUseCase> { DeleteSetlistUseCaseImpl(get()) }
     factory<DeleteSongUseCase> { DeleteSongUseCaseImpl(get(), get(), get()) }
+    factory<ExportLibraryUseCase> { ExportLibraryUseCaseImpl(get(), get(), get(), get()) }
+    factory<ExportSetlistUseCase> { ExportSetlistUseCaseImpl(get(), get(), get()) }
+    factory<ExportSongsUseCase> { ExportSongsUseCaseImpl(get(), get()) }
     factory<GetScreenDataUseCase> { GetScreenDataUseCaseImpl(get(), get(), get(), get()) }
     factory<GetSongContentUseCase> { GetSongContentUseCaseImpl(get()) }
     factory<GetUserPreferencesUseCase> { GetUserPreferencesUseCaseImpl(get()) }
+    factory<ImportFilesUseCase> { ImportFilesUseCaseImpl(get(), get(), get()) }
     factory<LoadScreenDataUseCase> { LoadScreenDataUseCaseImpl(get(), get(), get()) }
     factory<NormalizeTextUseCase> { NormalizeTextUseCaseImpl() }
     factory<ParseChordProUseCase> { ParseChordProUseCaseImpl() }

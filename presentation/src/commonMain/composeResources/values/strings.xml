@@ -11,6 +11,11 @@
     <string name="filters">Filters</string>
     <string name="retry">Retry</string>
 
+    <!-- Import and export -->
+    <string name="import_result">Imported %1$d songs and %2$d setlists · %3$d skipped</string>
+    <string name="import_failed">Import failed</string>
+    <string name="export_failed">Export failed</string>
+
     <!-- Errors -->
     <string name="error_no_data">Nothing could be loaded</string>
     <string name="error_no_data_hint">The library could not be read.</string>
@@ -50,6 +55,7 @@
     <string name="setlists_new_setlist_title">Setlist title</string>
     <string name="setlists_remove_song">Remove song</string>
     <string name="setlists_rename">Rename</string>
+    <string name="setlists_export">Export setlist</string>
     <string name="setlists_rename_title">New title</string>
     <string name="setlists_missing_song">File not found</string>
     <string name="setlists_reorder_hint">Long press a song to reorder, swipe to remove.</string>

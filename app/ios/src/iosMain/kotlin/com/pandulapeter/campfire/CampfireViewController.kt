@@ -24,11 +24,15 @@ private val koinApplication by lazy {
 @Suppress("unused", "FunctionName")
 fun CampfireViewController(): UIViewController {
     koinApplication
+    // The picker needs something to present itself from, which is the controller being created here.
+    var controller: UIViewController? = null
+    val filePicker = IosFilePicker { requireNotNull(controller) }
     return ComposeUIViewController {
         CampfireIosApp(
-            urlOpener = ::openUrl
+            urlOpener = ::openUrl,
+            filePicker = filePicker
         )
-    }
+    }.also { controller = it }
 }
 
 private fun openUrl(url: String) {
