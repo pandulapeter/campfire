@@ -5,7 +5,6 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
-import com.pandulapeter.campfire.data.repository.api.TranspositionRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
@@ -17,8 +16,7 @@ class GetScreenDataUseCaseImpl internal constructor(
     private val normalizeText: NormalizeTextUseCase,
     setlistRepository: SetlistRepository,
     songRepository: SongRepository,
-    userPreferencesRepository: UserPreferencesRepository,
-    transpositionRepository: TranspositionRepository
+    userPreferencesRepository: UserPreferencesRepository
 ) : GetScreenDataUseCase {
 
     override operator fun invoke() = screenDataFlow
@@ -27,35 +25,26 @@ class GetScreenDataUseCaseImpl internal constructor(
     private val screenDataFlow = combine(
         setlistRepository.setlists,
         songRepository.songs,
-        userPreferencesRepository.userPreferences,
-        transpositionRepository.transpositions
-    ) { setlistsDataState, songsDataState, userPreferencesDataState, transpositionsDataState ->
+        userPreferencesRepository.userPreferences
+    ) { setlistsDataState, songsDataState, userPreferencesDataState ->
 
         fun createScreenData() = setlistsDataState.data?.sortedByDescending { it.priority }?.let { setlists ->
             songsDataState.data?.let { songs ->
                 userPreferencesDataState.data?.let { userPreferences ->
-                    transpositionsDataState.data?.let { transpositions ->
-                        ScreenData(
-                            setlists = setlists,
-                            songs = songs
-                                .filterHasChords(userPreferences)
-                                .sort(userPreferences),
-                            userPreferences = userPreferences,
-                            transpositions = transpositions
-                        ).also {
-                            cache = it
-                        }
+                    ScreenData(
+                        setlists = setlists,
+                        songs = songs
+                            .filterHasChords(userPreferences)
+                            .sort(userPreferences),
+                        userPreferences = userPreferences
+                    ).also {
+                        cache = it
                     }
                 }
             }
         }
 
-        val dataStates = arrayOf(
-            setlistsDataState,
-            songsDataState,
-            userPreferencesDataState,
-            transpositionsDataState
-        )
+        val dataStates = arrayOf(setlistsDataState, songsDataState, userPreferencesDataState)
         if (dataStates.any { it is DataState.Failure }) {
             DataState.Failure(createScreenData() ?: cache)
         } else if (dataStates.any { it is DataState.Loading }) {

@@ -37,7 +37,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
@@ -71,7 +70,7 @@ internal fun SongDisplayControls(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
-    val song = allSongs.firstOrNull { it.id == dialog.songId }
+    val song = allSongs.firstOrNull { it.fileName == dialog.songFileName }
     Column {
         SettingsSectionTitle(text = stringResource(Res.string.song_details_display_options))
         if (song?.hasChords == true && userPreferences?.isLyricsOnlyModeEnabled != true) {
@@ -80,8 +79,8 @@ internal fun SongDisplayControls(
                 headlineContent = { Text(stringResource(Res.string.song_details_transposition)) },
                 trailingContent = {
                     TranspositionControls(
-                        transposition = transpositions[TranspositionKey(song.id, dialog.setlistId)] ?: 0,
-                        onTranspositionChanged = { viewModel.setTransposition(song.id, dialog.setlistId, it) }
+                        transposition = transpositions[song.fileName, dialog.setlistFileName],
+                        onTranspositionChanged = { viewModel.setTransposition(song.fileName, dialog.setlistFileName, it) }
                     )
                 }
             )

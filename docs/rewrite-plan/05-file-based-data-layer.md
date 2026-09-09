@@ -217,4 +217,52 @@ is steps 06–09:
 
 ## Execution notes
 
-_(filled in by the executing agent)_
+- **File naming lives in the storage layer, not in the use cases.** `FileNames.kt` is `internal` to
+  `:data:source:local:implementation`, so a use case cannot build a unique name itself. `SongLocalSource` therefore
+  gained `createSong(title, artist, text): Song` and `SetlistLocalSource` gained `createSetlist(title, priority)`,
+  each picking a free name via `uniqueName` and returning what it wrote; `CreateSongUseCase` only decides the
+  content. `SongRepository` / `SetlistRepository` expose the same two calls.
+- **`CreateSetlistUseCase` was added**, which the step's table does not list. Creating a setlist needs a unique file
+  name for exactly the reason above, so it could not stay in the view model.
+- **`TransposeChordProTextUseCase` was added.** Step 06 still renders raw text through the old `SongLyrics` parser,
+  so the viewer needs text-to-text transposition (`ChordProTransposer.transposeText`), not the model-to-model
+  `TransposeChordProUseCase`. The two model-level use cases the table asks for (`ParseChordProUseCase`,
+  `TransposeChordProUseCase`) are implemented and Koin-wired but nothing calls them until step 06.
+- **`BaseLocalDataRepository` was reshaped further than the step describes.** It asks for a `protected updateData`,
+  which is there, but the whole-list `saveDataToLocalSource` constructor parameter was also dropped: songs and
+  setlists are one file each now, so only the preferences are still written as a whole. The base therefore takes just
+  a loader and offers `loadDataIfNeeded()`, `reloadData()` (for `rescan()`), `updateData(data)` and
+  `writeData(data, persist)`. A re-read now keeps the previous data visible while it runs, so a refresh no longer
+  blanks the list.
+- **Transpositions are looked up through a small value type** (`CampfireViewModel.Transpositions`) with
+  `get(songFileName, setlistFileName)`, instead of the deleted `TranspositionKey` map. It folds the two places a
+  transposition can live (the setlist entry, the preferences) into one lookup that cannot mix them up.
+- **`setlists` and `userPreferences` are now eager states.** Both are read by write paths (adding a song to a
+  setlist, transposing, `updateUserPreferences`), and a `WhileSubscribed` state with no subscriber holds its initial
+  value, so those writes silently did nothing whenever no screen happened to be subscribed. This was found while
+  verifying: `createSetlist` appeared to succeed but produced no setlist. `screenData` is already collected eagerly,
+  so neither change costs an extra subscription. Every call site happened to have a subscriber before, so this was
+  latent rather than user-visible, but it made the write paths correct by construction.
+- `SongLocalSource.loadSong(fileName)` was added, as the step anticipates, so that saving one song does not rescan
+  the library.
+- **kotlinx.serialization omits default values**, so a setlist at priority 0 has no `"priority"` key and an
+  untouched preference has no entry. Every document field is defaulted, so these read back correctly; it just means
+  the files only carry what differs from the defaults.
+- `data/model/CLAUDE.md` and `data/source/local/implementation/CLAUDE.md` still describe the Room/Database world.
+  They were already stale before this step, so they are left for step 11 with the rest of the documentation.
+
+### Verified
+
+- All four platforms build; `:chordpro:desktopTest` (41 tests) and `:data:source:local:implementation:desktopTest`
+  (28 tests) pass, and the module's common tests also run on iOS and in the browser.
+- `grep -rn "androidx.room\|Room\.\|localStorage"` over `.kt`/`.kts` returns nothing, as does a search for `ksp`.
+- Desktop, with two `.cho` files copied into `~/Library/Application Support/Campfire/library/songs`: both are listed
+  with the title, artist and key read from their directives, grouped by artist. Koin starts 23 definitions with no
+  failure.
+- Transposition and setlists were driven through the real view model (a temporary `LaunchedEffect` in the desktop
+  `main`, removed afterwards) and survive a restart. The library transposition lands in `preferences.json` and the
+  setlist one inside `Friday gig.setlist.json`, both pretty printed and in the documented shape; after a restart the
+  same song reads back as +3 from the library and -2 from inside the setlist.
+- The macOS window manager would not give the app keyboard focus during this session, so `osascript` clicks could not
+  be used; the in-app driver replaced them (see [[desktop-target-verification]] in the session notes for both
+  techniques).

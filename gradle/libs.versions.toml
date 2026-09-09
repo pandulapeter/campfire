@@ -6,8 +6,6 @@ androidx-appCompat = "1.8.0" # https://developer.android.com/jetpack/androidx/re
 androidx-browser = "1.10.0" # https://developer.android.com/jetpack/androidx/releases/browser
 androidx-lifecycle = "2.11.0" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.androidx.lifecycle)
 androidx-navigation3 = "1.1.1" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.androidx.navigation3)
-androidx-room = "2.8.4" # https://developer.android.com/jetpack/androidx/releases/room
-androidx-sqlite = "2.7.0" # https://developer.android.com/jetpack/androidx/releases/sqlite
 compose-reorderable = "3.1.0" # https://github.com/Calvin-LL/Reorderable/releases
 google-material = "1.14.0" # https://github.com/material-components/material-components-android/releases
 gradle = "9.4.0" # https://developer.android.com/studio/releases/gradle-plugin
@@ -19,7 +17,6 @@ koin = "4.2.2" # https://github.com/InsertKoinIO/koin/tags
 kotlin = "2.4.10" # https://kotlinlang.org/docs/releases.html#release-details
 kotlin-browser = "0.5.0" # https://github.com/Kotlin/kotlinx-browser/releases
 kotlin-coroutines = "1.11.0" # https://github.com/Kotlin/kotlinx.coroutines/releases
-kotlin-ksp = "2.3.11" # https://github.com/google/ksp/releases
 kotlin-serialization = "1.11.0" # https://github.com/Kotlin/kotlinx.serialization/releases
 
 [libraries]
@@ -29,9 +26,6 @@ androidx-browser = { module = "androidx.browser:browser", version.ref = "android
 androidx-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 androidx-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "androidx-navigation3" }
-androidx-room-codegen = { module = "androidx.room:room-compiler", version.ref = "androidx-room" }
-androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidx-room" }
-androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidx-sqlite" }
 compose-animation = { module = "org.jetbrains.compose.animation:animation", version.ref = "jetbrains-compose" }
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "jetbrains-compose" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "jetbrains-compose" }
@@ -62,4 +56,3 @@ hyperether-localization = { id = "com.hyperether.localization", version.ref = "h
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "kotlin-ksp" }

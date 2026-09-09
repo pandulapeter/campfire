@@ -10,18 +10,17 @@ import androidx.lifecycle.viewModelScope
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
+import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
+import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
-import com.pandulapeter.campfire.domain.api.useCases.GetSongDetailsUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
-import com.pandulapeter.campfire.domain.api.useCases.LoadSongDetailsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistsUseCase
-import com.pandulapeter.campfire.domain.api.useCases.SaveTranspositionsUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
-import com.pandulapeter.campfire.domain.api.useCases.TransposeRawSongDetailsUseCase
+import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
@@ -39,20 +38,18 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
 import kotlin.math.floor
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class, FlowPreview::class)
+@OptIn(FlowPreview::class)
 class CampfireViewModel(
     getScreenData: GetScreenDataUseCase,
-    getSongDetails: GetSongDetailsUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
-    private val loadSongDetails: LoadSongDetailsUseCase,
-    private val saveSetlists: SaveSetlistsUseCase,
+    private val getSongContent: GetSongContentUseCase,
+    private val createSetlist: CreateSetlistUseCase,
+    private val saveSetlist: SaveSetlistUseCase,
+    private val deleteSetlist: DeleteSetlistUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
-    private val saveTranspositions: SaveTranspositionsUseCase,
     private val normalizeText: NormalizeTextUseCase,
-    private val transposeRawSongDetails: TransposeRawSongDetailsUseCase
+    private val transposeChordProText: TransposeChordProTextUseCase
 ) : ViewModel() {
 
     /**
@@ -84,13 +81,35 @@ class CampfireViewModel(
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
     val isLoading = screenData.map { it is DataState.Loading }.asState(false)
-    val userPreferences = screenData.map { it.data?.userPreferences }.asState(null)
+    /**
+     * Eager for the same reason as [setlists]: `updateUserPreferences` and `setTransposition` build the preferences
+     * they save out of this value, and a null one (which is what a state with no subscriber holds) would silently
+     * drop the change.
+     */
+    val userPreferences = screenData.map { it.data?.userPreferences }.asEagerState(null)
 
-    val setlists = screenData.map { it.data?.setlists.orEmpty() }.asState(emptyList())
-    /** The text of the songs opened so far, read one by one as they are opened rather than all at once. */
-    val rawSongDetails = getSongDetails().map { it.data.orEmpty() }.asState(emptyMap())
+    /**
+     * Eager, unlike most of the states here: the write paths below (adding a song to a setlist, transposing inside
+     * one) read this list to build the setlist they save, so it has to be current even when no screen showing
+     * setlists happens to be subscribed. [screenData] is already collected eagerly, so this costs nothing extra.
+     */
+    val setlists = screenData.map { it.data?.setlists.orEmpty() }.asEagerState(emptyList())
+    /** The text of the songs opened so far, by file name, read one file at a time as they are opened. */
+    private val _songTexts = MutableStateFlow(emptyMap<String, String>())
+    val songTexts: StateFlow<Map<String, String>> = _songTexts.asStateFlow()
 
-    val transpositions = screenData.map { it.data?.transpositions.orEmpty() }.asState(emptyMap())
+    /**
+     * Where a song's transposition is kept depends on how it was opened, so both places are folded into one lookup:
+     * a song opened from a setlist reads the setlist's entry, one opened from the library reads the preferences.
+     */
+    val transpositions = combine(userPreferences, setlists) { userPreferences, setlists ->
+        Transpositions(
+            library = userPreferences?.transpositions.orEmpty(),
+            bySetlist = setlists.associate { setlist ->
+                setlist.fileName to setlist.entries.filter { it.transposition != 0 }.associate { it.songFileName to it.transposition }
+            }
+        )
+    }.asState(Transpositions())
     val allSongs = screenData.map { it.data?.songs.orEmpty() }.asState(emptyList())
     val songGroups = combine(allSongs, query, userPreferences.map { it?.sortingMode }) { songs, query, sortingMode ->
         if (query.isBlank()) {
@@ -121,13 +140,13 @@ class CampfireViewModel(
         .asState(Placeholder.LOADING)
 
     val setlistsWithSongs = combine(setlists, allSongs) { setlists, songs ->
-        val songsById = songs.associateBy { it.id }
-        setlists.map { setlist -> SetlistWithSongs(setlist = setlist, songs = setlist.songIds.mapNotNull { songsById[it] }) }
+        val songsByFileName = songs.associateBy { it.fileName }
+        setlists.map { setlist -> SetlistWithSongs(setlist = setlist, songs = setlist.entries.mapNotNull { songsByFileName[it.songFileName] }) }
     }.asState(emptyList())
 
-    /** The urls of the songs whose text could not be read. */
-    private val _failedSongUrls = MutableStateFlow(emptySet<String>())
-    val failedSongUrls: StateFlow<Set<String>> = _failedSongUrls.asStateFlow()
+    /** The file names of the songs whose text could not be read. */
+    private val _failedSongFileNames = MutableStateFlow(emptySet<String>())
+    val failedSongFileNames: StateFlow<Set<String>> = _failedSongFileNames.asStateFlow()
 
     /**
      * The text size multiplier of the song details screen. A pinch gesture changes it on every frame, so the latest
@@ -179,13 +198,13 @@ class CampfireViewModel(
     }
 
     fun openSong(song: Song) = openSongDetails(
-        CampfireDestination.SongDetails(songIds = listOf(song.id), setlistId = null, initialIndex = 0)
+        CampfireDestination.SongDetails(songFileNames = listOf(song.fileName), setlistFileName = null, initialIndex = 0)
     )
 
     fun openSongInSetlist(setlistWithSongs: SetlistWithSongs, index: Int) = openSongDetails(
         CampfireDestination.SongDetails(
-            songIds = setlistWithSongs.songs.map { it.id },
-            setlistId = setlistWithSongs.setlist.id,
+            songFileNames = setlistWithSongs.songs.map { it.fileName },
+            setlistFileName = setlistWithSongs.setlist.fileName,
             initialIndex = index
         )
     )
@@ -210,92 +229,82 @@ class CampfireViewModel(
         loadScreenData(true)
     }
 
-    fun loadSongDetails(song: Song) = viewModelScope.launch {
+    fun loadSongContent(song: Song) = viewModelScope.launch {
         // Cleared first, so that a retry shows the loading state again instead of staying on the error.
-        _failedSongUrls.update { it - song.url }
-        if (!loadSongDetails(song.url, false)) _failedSongUrls.update { it + song.url }
+        _failedSongFileNames.update { it - song.fileName }
+        val content = getSongContent(song.fileName)
+        if (content == null) {
+            _failedSongFileNames.update { it + song.fileName }
+        } else {
+            _songTexts.update { it + (content.fileName to content.text) }
+        }
     }
 
-    fun transpose(rawData: String, transposition: Int) = transposeRawSongDetails(rawData, transposition)
+    fun transpose(text: String, transposition: Int) = transposeChordProText(text, transposition)
 
-    fun setTransposition(songId: String, setlistId: String?, transposition: Int) = viewModelScope.launch {
-        saveTranspositions(
-            transpositions.value.toMutableMap().apply {
-                val key = TranspositionKey(songId = songId, setlistId = setlistId)
-                val clampedTransposition = transposition.coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION)
-                if (clampedTransposition == 0) remove(key) else put(key, clampedTransposition)
+    /** A song opened from a setlist transposes inside that setlist; one opened from the library, in the preferences. */
+    fun setTransposition(songFileName: String, setlistFileName: String?, transposition: Int) = viewModelScope.launch {
+        val clamped = transposition.coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION)
+        if (setlistFileName == null) {
+            userPreferences.value?.let { preferences ->
+                saveUserPreferences(
+                    preferences.copy(
+                        transpositions = if (clamped == 0) {
+                            preferences.transpositions - songFileName
+                        } else {
+                            preferences.transpositions + (songFileName to clamped)
+                        }
+                    )
+                )
             }
-        )
+        } else {
+            setlists.value.firstOrNull { it.fileName == setlistFileName }?.let { setlist ->
+                saveSetlist(
+                    setlist.copy(
+                        entries = setlist.entries.map { if (it.songFileName == songFileName) it.copy(transposition = clamped) else it }
+                    )
+                )
+            }
+        }
     }
 
     // Setlists
 
     fun createSetlist(title: String) = viewModelScope.launch {
-        val currentSetlists = setlists.value
-        saveSetlists(
-            listOf(
-                Setlist(
-                    id = Uuid.random().toString(),
-                    title = title.trim(),
-                    songIds = emptyList(),
-                    priority = currentSetlists.size
+        createSetlist.invoke(title)
+    }
+
+    fun addSongToSetlist(songFileName: String, setlistFileName: String) = viewModelScope.launch {
+        setlists.value.firstOrNull { it.fileName == setlistFileName }?.let { setlist ->
+            if (setlist.entries.none { it.songFileName == songFileName }) {
+                saveSetlist(setlist.copy(entries = listOf(Setlist.Entry(songFileName = songFileName)) + setlist.entries))
+            }
+        }
+    }
+
+    fun deleteSetlist(setlistFileName: String) = viewModelScope.launch {
+        deleteSetlist.invoke(setlistFileName)
+    }
+
+    /** The transposition of the song travels in the entry, so removing it takes the transposition with it. */
+    fun removeSongFromSetlist(songFileName: String, setlistFileName: String) = viewModelScope.launch {
+        setlists.value.firstOrNull { it.fileName == setlistFileName }?.let { setlist ->
+            saveSetlist(setlist.copy(entries = setlist.entries.filterNot { it.songFileName == songFileName }))
+        }
+    }
+
+    fun moveSongInSetlist(setlistFileName: String, fromSongFileName: String, toSongFileName: String) = viewModelScope.launch {
+        setlists.value.firstOrNull { it.fileName == setlistFileName }?.let { setlist ->
+            saveSetlist(
+                setlist.copy(
+                    entries = setlist.entries.toMutableList().apply {
+                        val toIndex = indexOfFirst { it.songFileName == toSongFileName }
+                        val fromIndex = indexOfFirst { it.songFileName == fromSongFileName }
+                        if (toIndex >= 0 && fromIndex >= 0) add(toIndex, removeAt(fromIndex))
+                    }
                 )
-            ) + currentSetlists
-        )
-    }
-
-    fun addSongToSetlist(songId: String, setlistId: String) = viewModelScope.launch {
-        saveSetlists(
-            setlists.value.map { setlist ->
-                if (setlist.id == setlistId) setlist.copy(songIds = (listOf(songId) + setlist.songIds).distinct()) else setlist
-            }
-        )
-    }
-
-    fun deleteSetlist(setlistId: String) = viewModelScope.launch {
-        val updatedSetlists = setlists.value
-            .filterNot { it.id == setlistId }
-            .sortedBy { it.priority }
-            .mapIndexed { index, setlist -> setlist.copy(priority = index) }
-        saveSetlists(updatedSetlists)
-        removeOrphanedTranspositions(updatedSetlists)
-    }
-
-    fun removeSongFromSetlist(songId: String, setlistId: String) = viewModelScope.launch {
-        val updatedSetlists = setlists.value.map { setlist ->
-            if (setlist.id == setlistId) setlist.copy(songIds = setlist.songIds.filterNot { it == songId }) else setlist
+            )
         }
-        saveSetlists(updatedSetlists)
-        removeOrphanedTranspositions(updatedSetlists)
-    }
-
-    // Transpositions of the main song list are kept forever, the rest only live as long as the song stays in the setlist.
-    private suspend fun removeOrphanedTranspositions(setlists: List<Setlist>) {
-        val transpositions = transpositions.value
-        val remainingTranspositions = transpositions.filterKeys { key ->
-            key.setlistId == null || setlists.any { it.id == key.setlistId && key.songId in it.songIds }
-        }
-        if (remainingTranspositions.size != transpositions.size) {
-            saveTranspositions(remainingTranspositions)
-        }
-    }
-
-    fun moveSongInSetlist(setlistId: String, fromSongId: String, toSongId: String) = viewModelScope.launch {
-        saveSetlists(
-            setlists.value.map { setlist ->
-                if (setlist.id == setlistId) {
-                    setlist.copy(
-                        songIds = setlist.songIds.toMutableList().apply {
-                            val toIndex = indexOf(toSongId)
-                            val fromIndex = indexOf(fromSongId)
-                            if (toIndex >= 0 && fromIndex >= 0) add(toIndex, removeAt(fromIndex))
-                        }
-                    )
-                } else {
-                    setlist
-                }
-            }
-        )
     }
 
     // User preferences
@@ -438,6 +447,22 @@ class CampfireViewModel(
         }
     }
 
+    /**
+     * The transposition of every song the UI can currently show, from both places one can be stored. Looked up by
+     * how the song was opened rather than by a composite key, so callers cannot accidentally mix the two up.
+     */
+    data class Transpositions(
+        private val library: Map<String, Int> = emptyMap(),
+        private val bySetlist: Map<String, Map<String, Int>> = emptyMap()
+    ) {
+
+        operator fun get(songFileName: String, setlistFileName: String?): Int = if (setlistFileName == null) {
+            library[songFileName] ?: 0
+        } else {
+            bySetlist[setlistFileName]?.get(songFileName) ?: 0
+        }
+    }
+
     data class SetlistWithSongs(
         val setlist: Setlist,
         val songs: List<Song>
@@ -447,8 +472,8 @@ class CampfireViewModel(
         data object NewSetlist : DialogType
         data object SongsControls : DialogType
         data object SetlistsControls : DialogType
-        data class SetlistPicker(val songId: String, val currentSetlistId: String?) : DialogType
-        data class SongDisplayControls(val songId: String, val setlistId: String?) : DialogType
+        data class SetlistPicker(val songFileName: String, val currentSetlistFileName: String?) : DialogType
+        data class SongDisplayControls(val songFileName: String, val setlistFileName: String?) : DialogType
         data class DeleteSetlist(val setlist: Setlist) : DialogType
     }
 

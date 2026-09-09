@@ -1,0 +1,29 @@
+package com.pandulapeter.campfire.data.repository.implementation
+
+import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.repository.api.SongContentRepository
+import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
+internal class SongContentRepositoryImpl(
+    private val songLocalSource: SongLocalSource
+) : SongContentRepository {
+
+    private val cache = mutableMapOf<String, SongContent>()
+    private val mutex = Mutex()
+
+    override suspend fun loadSongContent(fileName: String): SongContent? = mutex.withLock {
+        cache[fileName] ?: try {
+            songLocalSource.loadSongContent(fileName)?.also { cache[fileName] = it }
+        } catch (exception: Exception) {
+            println("Could not read the song \"$fileName\": ${exception.message}")
+            null
+        }
+    }
+
+    override suspend fun invalidate(fileName: String?) = mutex.withLock {
+        if (fileName == null) cache.clear() else cache.remove(fileName)
+        Unit
+    }
+}

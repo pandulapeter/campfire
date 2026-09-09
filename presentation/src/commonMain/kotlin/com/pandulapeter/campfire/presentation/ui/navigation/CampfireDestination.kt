@@ -43,15 +43,15 @@ sealed interface CampfireDestination : NavKey {
     }
 
     /**
-     * Full screen pager of the given songs. When opened from a setlist, [setlistId] is set so that transpositions are
-     * stored per setlist.
+     * Full screen pager of the given songs, identified by their file names. When opened from a setlist,
+     * [setlistFileName] is set so that transpositions are stored in that setlist rather than in the preferences.
      */
     data class SongDetails(
-        val songIds: List<String>,
-        val setlistId: String?,
+        val songFileNames: List<String>,
+        val setlistFileName: String?,
         val initialIndex: Int
     ) : CampfireDestination {
 
-        override val contentKey get() = "songDetails|$setlistId|$initialIndex|${songIds.joinToString(separator = ",")}"
+        override val contentKey get() = "songDetails|$setlistFileName|$initialIndex|${songFileNames.joinToString(separator = ",")}"
     }
 }

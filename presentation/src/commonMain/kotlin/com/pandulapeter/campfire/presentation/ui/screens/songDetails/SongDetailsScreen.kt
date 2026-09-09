@@ -47,9 +47,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pandulapeter.campfire.data.model.domain.RawSongDetails
 import com.pandulapeter.campfire.data.model.domain.Song
-import com.pandulapeter.campfire.data.model.domain.TranspositionKey
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
@@ -103,27 +101,27 @@ internal fun SongDetailsScreen(
 ) {
     val allSongs by viewModel.allSongs.collectAsStateWithLifecycle()
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
-    val rawSongDetails by viewModel.rawSongDetails.collectAsStateWithLifecycle()
-    val failedSongUrls by viewModel.failedSongUrls.collectAsStateWithLifecycle()
+    val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
+    val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
     val songs = remember(destination, allSongs) {
-        val songsById = allSongs.associateBy { it.id }
-        destination.songIds.mapNotNull { songsById[it] }
+        val songsByFileName = allSongs.associateBy { it.fileName }
+        destination.songFileNames.mapNotNull { songsByFileName[it] }
     }
     val pagerState = rememberPagerState(initialPage = destination.initialIndex.coerceIn(0, maxOf(0, songs.lastIndex))) { songs.size }
     val currentSong = songs.getOrNull(pagerState.currentPage)
     val canPage = songs.size > 1
-    val setlistTitle = destination.setlistId?.let { setlistId -> setlists.firstOrNull { it.id == setlistId }?.title }
+    val setlistTitle = destination.setlistFileName?.let { fileName -> setlists.firstOrNull { it.fileName == fileName }?.title }
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
     val isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true
-    val currentTransposition = currentSong?.let { transpositions[TranspositionKey(it.id, destination.setlistId)] } ?: 0
+    val currentTransposition = currentSong?.let { transpositions[it.fileName, destination.setlistFileName] } ?: 0
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(currentSong?.url) { currentSong?.let(viewModel::loadSongDetails) }
+    LaunchedEffect(currentSong?.fileName) { currentSong?.let(viewModel::loadSongContent) }
     // Every page scrolls on its own, so the app bar's notion of "content scrolled underneath" restarts per page.
     LaunchedEffect(pagerState.currentPage) { scrollBehavior.state.contentOffset = 0f }
 
@@ -165,7 +163,7 @@ internal fun SongDetailsScreen(
             actions = {
                 if (windowSize.usesInlineSongControls) {
                     AnimatedVisibility(
-                        visible = shouldShowChords && currentSong?.hasChords == true && currentSong.url in rawSongDetails,
+                        visible = shouldShowChords && currentSong?.hasChords == true && currentSong.fileName in songTexts,
                         enter = fadeIn() + scaleIn(),
                         exit = fadeOut() + scaleOut()
                     ) {
@@ -174,7 +172,7 @@ internal fun SongDetailsScreen(
                             isCompact = true,
                             transposition = currentTransposition,
                             onTranspositionChanged = { transposition ->
-                                currentSong?.let { viewModel.setTransposition(it.id, destination.setlistId, transposition) }
+                                currentSong?.let { viewModel.setTransposition(it.fileName, destination.setlistFileName, transposition) }
                             }
                         )
                     }
@@ -189,7 +187,7 @@ internal fun SongDetailsScreen(
                 IconButton(
                     onClick = {
                         currentSong?.let {
-                            viewModel.showDialog(CampfireViewModel.DialogType.SetlistPicker(songId = it.id, currentSetlistId = destination.setlistId))
+                            viewModel.showDialog(CampfireViewModel.DialogType.SetlistPicker(songFileName = it.fileName, currentSetlistFileName = destination.setlistFileName))
                         }
                     }
                 ) {
@@ -202,7 +200,7 @@ internal fun SongDetailsScreen(
                     IconButton(
                         onClick = {
                             currentSong?.let {
-                                viewModel.showDialog(CampfireViewModel.DialogType.SongDisplayControls(songId = it.id, setlistId = destination.setlistId))
+                                viewModel.showDialog(CampfireViewModel.DialogType.SongDisplayControls(songFileName = it.fileName, setlistFileName = destination.setlistFileName))
                             }
                         }
                     ) {
@@ -235,22 +233,22 @@ internal fun SongDetailsScreen(
                     onFontScaleChanged = viewModel::setFontScale
                 ),
             state = pagerState,
-            key = { songs[it].id },
+            key = { songs[it].fileName },
             beyondViewportPageCount = 1
         ) { page ->
             val song = songs[page]
             SongDetailsPage(
                 song = song,
-                rawSongDetails = rawSongDetails[song.url],
-                hasFailed = song.url in failedSongUrls,
-                transposition = transpositions[TranspositionKey(song.id, destination.setlistId)] ?: 0,
+                text = songTexts[song.fileName],
+                hasFailed = song.fileName in failedSongFileNames,
+                transposition = transpositions[song.fileName, destination.setlistFileName],
                 shouldShowChords = shouldShowChords,
                 fontScale = fontScale,
                 isHorizontalFlow = isHorizontalFlow,
                 settledWidth = settledWidth,
                 contentPadding = pageContentPadding,
                 transpose = viewModel::transpose,
-                onRetry = { viewModel.loadSongDetails(song) }
+                onRetry = { viewModel.loadSongContent(song) }
             )
         }
         if (canPage) {
@@ -348,14 +346,15 @@ private fun SongPagerControls(
 }
 
 /**
- * @param hasFailed Whether the text of this song could not be fetched and there is no saved copy to show instead.
- *   The page then offers a retry rather than a loading indicator that has nothing left to wait for.
+ * @param text The ChordPro text of the song, null while it is still being read.
+ * @param hasFailed Whether the file could not be read. The page then offers a retry rather than a loading indicator
+ *   that has nothing left to wait for.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SongDetailsPage(
     song: Song,
-    rawSongDetails: RawSongDetails?,
+    text: String?,
     hasFailed: Boolean,
     transposition: Int,
     shouldShowChords: Boolean,
@@ -363,15 +362,15 @@ private fun SongDetailsPage(
     isHorizontalFlow: Boolean,
     settledWidth: Dp,
     contentPadding: PaddingValues,
-    transpose: (rawData: String, transposition: Int) -> String,
+    transpose: (text: String, transposition: Int) -> String,
     onRetry: () -> Unit
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
-    targetState = rawSongDetails,
+    targetState = text,
     transitionSpec = { fadeIn() togetherWith fadeOut() },
     contentKey = { it != null }
-) { details ->
-    if (details == null) {
+) { songText ->
+    if (songText == null) {
         Box(
             modifier = Modifier.fillMaxSize().padding(contentPadding),
             contentAlignment = Alignment.Center
@@ -390,8 +389,8 @@ private fun SongDetailsPage(
         }
     } else {
         val layoutDirection = LocalLayoutDirection.current
-        val transposedRawData = remember(details.rawData, transposition, shouldShowChords) {
-            if (shouldShowChords && song.hasChords) transpose(details.rawData, transposition) else details.rawData
+        val transposedRawData = remember(songText, transposition, shouldShowChords) {
+            if (shouldShowChords && song.hasChords) transpose(songText, transposition) else songText
         }
         val topPadding = 8.dp
         val bottomPadding = contentPadding.calculateBottomPadding() + 32.dp

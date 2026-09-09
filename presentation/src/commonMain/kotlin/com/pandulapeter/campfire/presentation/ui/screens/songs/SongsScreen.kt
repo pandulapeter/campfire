@@ -251,7 +251,7 @@ private fun SongList(
                 }
                 items(
                     items = group.songs,
-                    key = { "song_${it.id}" }
+                    key = { "song_${it.fileName}" }
                 ) { song ->
                     SongListItem(
                         modifier = Modifier.animateItem(),

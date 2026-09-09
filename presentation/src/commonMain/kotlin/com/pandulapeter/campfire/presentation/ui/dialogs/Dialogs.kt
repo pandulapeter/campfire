@@ -95,7 +95,7 @@ internal fun CampfireDialogs(
             confirmLabel = stringResource(Res.string.delete),
             onDismiss = viewModel::dismissDialog,
             onConfirm = {
-                viewModel.deleteSetlist(dialog.setlist.id)
+                viewModel.deleteSetlist(dialog.setlist.fileName)
                 viewModel.dismissDialog()
             }
         )
@@ -172,13 +172,13 @@ private fun SetlistPickerSheet(
         setlists.forEach { setlist ->
             CheckboxListItem(
                 title = setlist.title,
-                isEnabled = dialog.currentSetlistId != setlist.id,
-                isChecked = dialog.songId in setlist.songIds,
+                isEnabled = dialog.currentSetlistFileName != setlist.fileName,
+                isChecked = setlist.entries.any { it.songFileName == dialog.songFileName },
                 onCheckedChange = { isChecked ->
                     if (isChecked) {
-                        viewModel.addSongToSetlist(songId = dialog.songId, setlistId = setlist.id)
+                        viewModel.addSongToSetlist(songFileName = dialog.songFileName, setlistFileName = setlist.fileName)
                     } else {
-                        viewModel.removeSongFromSetlist(songId = dialog.songId, setlistId = setlist.id)
+                        viewModel.removeSongFromSetlist(songFileName = dialog.songFileName, setlistFileName = setlist.fileName)
                     }
                 }
             )

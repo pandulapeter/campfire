@@ -7,7 +7,9 @@ data class UserPreferences(
     val fontScale: Float, // Multiplier applied to the text size of the song details screen, 1 being the default.
     val sortingMode: SortingMode,
     val uiMode: UiMode,
-    val language: Language
+    val language: Language,
+    /** Song file name to semitones, for songs opened from the library rather than from a setlist. */
+    val transpositions: Map<String, Int>
 ) {
 
     enum class SortingMode(val id: String) {

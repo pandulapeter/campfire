@@ -157,8 +157,12 @@ private fun SetlistList(
         val fromKey = SetlistItemKey(from.key as? String)
         val toKey = SetlistItemKey(to.key as? String)
         // Songs can only be reordered within their own setlist.
-        if (fromKey.setlistId != null && fromKey.setlistId == toKey.setlistId && fromKey.songId != null && toKey.songId != null) {
-            viewModel.moveSongInSetlist(setlistId = fromKey.setlistId, fromSongId = fromKey.songId, toSongId = toKey.songId)
+        if (fromKey.setlistFileName != null && fromKey.setlistFileName == toKey.setlistFileName && fromKey.songFileName != null && toKey.songFileName != null) {
+            viewModel.moveSongInSetlist(
+                setlistFileName = fromKey.setlistFileName,
+                fromSongFileName = fromKey.songFileName,
+                toSongFileName = toKey.songFileName
+            )
         }
     }
     val layoutDirection = LocalLayoutDirection.current
@@ -201,7 +205,7 @@ private fun SetlistList(
             }
 
             else -> setlistsWithSongs.forEach { setlistWithSongs ->
-                stickyHeader(key = "setlist_${setlistWithSongs.setlist.id}") { headerIndex ->
+                stickyHeader(key = "setlist_${setlistWithSongs.setlist.fileName}") { headerIndex ->
                     SectionHeader(
                         modifier = Modifier.animateItem(),
                         text = setlistWithSongs.setlist.title,
@@ -217,7 +221,7 @@ private fun SetlistList(
                 }
                 if (setlistWithSongs.songs.isEmpty()) {
                     item(
-                        key = "hint_${setlistWithSongs.setlist.id}",
+                        key = "hint_${setlistWithSongs.setlist.fileName}",
                         span = { GridItemSpan(maxLineSpan) }
                     ) {
                         Text(
@@ -230,16 +234,16 @@ private fun SetlistList(
                 }
                 itemsIndexed(
                     items = setlistWithSongs.songs,
-                    key = { _, song -> SetlistItemKey(setlistId = setlistWithSongs.setlist.id, songId = song.id).string.orEmpty() }
+                    key = { _, song -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = song.fileName).string.orEmpty() }
                 ) { index, song ->
-                    val key = SetlistItemKey(setlistId = setlistWithSongs.setlist.id, songId = song.id)
+                    val key = SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = song.fileName)
                     ReorderableItem(
                         modifier = Modifier.animateItem(),
                         state = reorderableState,
                         key = key.string.orEmpty()
                     ) { isBeingDragged ->
                         DismissibleSongItem(
-                            onDismissed = { viewModel.removeSongFromSetlist(songId = song.id, setlistId = setlistWithSongs.setlist.id) }
+                            onDismissed = { viewModel.removeSongFromSetlist(songFileName = song.fileName, setlistFileName = setlistWithSongs.setlist.fileName) }
                         ) {
                             val elevation by animateDpAsState(if (isBeingDragged) 8.dp else 0.dp)
                             Surface(
@@ -293,17 +297,19 @@ private fun DismissibleSongItem(
 /**
  * The lazy list key of a song inside a setlist, encoded as a string so that the list can save it.
  */
+/** The grid key of one song inside one setlist, since a song can appear in several of them. */
 private class SetlistItemKey(val string: String?) {
 
-    constructor(setlistId: String, songId: String) : this("$setlistId$TOKEN$songId")
+    constructor(setlistFileName: String, songFileName: String) : this("$setlistFileName$TOKEN$songFileName")
 
     private val parts = string?.split(TOKEN)?.takeIf { it.size == 2 }
 
-    val setlistId: String? = parts?.first()
+    val setlistFileName: String? = parts?.first()
 
-    val songId: String? = parts?.last()
+    val songFileName: String? = parts?.last()
 
     companion object {
+        // Contains a character sanitizeFileName() rejects, so it can never occur inside a file name.
         private const val TOKEN = "#*#"
     }
 }

@@ -6,17 +6,18 @@ import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDa
 import com.pandulapeter.campfire.data.source.local.api.UserPreferencesLocalSource
 
 internal class UserPreferencesRepositoryImpl(
-    userPreferencesLocalSource: UserPreferencesLocalSource
+    private val userPreferencesLocalSource: UserPreferencesLocalSource
 ) : BaseLocalDataRepository<UserPreferences>(
-    loadDataFromLocalSource = { userPreferencesLocalSource.loadUserPreferences() ?: defaultUserPreferences },
-    saveDataToLocalSource = userPreferencesLocalSource::saveUserPreferences
+    loadDataFromLocalSource = { userPreferencesLocalSource.loadUserPreferences() ?: defaultUserPreferences }
 ), UserPreferencesRepository {
 
     override val userPreferences = dataState
 
     override suspend fun loadUserPreferencesIfNeeded() = loadDataIfNeeded()
 
-    override suspend fun saveUserPreferences(userPreferences: UserPreferences) = saveData(userPreferences)
+    override suspend fun saveUserPreferences(userPreferences: UserPreferences) = writeData(userPreferences) {
+        userPreferencesLocalSource.saveUserPreferences(it)
+    }
 
     companion object {
         private val defaultUserPreferences = UserPreferences(
@@ -26,7 +27,8 @@ internal class UserPreferencesRepositoryImpl(
             fontScale = 1f,
             sortingMode = UserPreferences.SortingMode.BY_ARTIST,
             uiMode = UserPreferences.UiMode.SYSTEM_DEFAULT,
-            language = UserPreferences.Language.SYSTEM_DEFAULT
+            language = UserPreferences.Language.SYSTEM_DEFAULT,
+            transpositions = emptyMap()
         )
     }
 }

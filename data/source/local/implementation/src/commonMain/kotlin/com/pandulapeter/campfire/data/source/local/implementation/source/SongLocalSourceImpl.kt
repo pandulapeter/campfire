@@ -1,0 +1,63 @@
+package com.pandulapeter.campfire.data.source.local.implementation.source
+
+import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.SongContent
+import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
+import com.pandulapeter.campfire.data.source.local.implementation.SONG_EXTENSION
+import com.pandulapeter.campfire.data.source.local.implementation.mapper.toSong
+import com.pandulapeter.campfire.data.source.local.implementation.songFileName
+import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
+import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StoredFileInfo
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+
+internal class SongLocalSourceImpl(
+    private val fileStorage: FileStorage
+) : SongLocalSource {
+
+    /**
+     * Reading and parsing every file is the slowest thing the app does at start, so the files are read in parallel.
+     * One unreadable file must not empty the whole list, so a failure skips that song instead of propagating.
+     */
+    override suspend fun loadSongs(): List<Song> = coroutineScope {
+        fileStorage.list(StorageDirectory.SONGS)
+            .filter { it.name.endsWith(SONG_EXTENSION, ignoreCase = true) }
+            .map { async { it.readSong() } }
+            .awaitAll()
+            .filterNotNull()
+    }
+
+    override suspend fun loadSong(fileName: String): Song? = fileStorage.list(StorageDirectory.SONGS)
+        .firstOrNull { it.name == fileName }
+        ?.readSong()
+
+    override suspend fun loadSongContent(fileName: String) = fileStorage.readText(StorageDirectory.SONGS, fileName)
+        ?.let { SongContent(fileName = fileName, text = it) }
+
+    override suspend fun saveSongContent(content: SongContent) = fileStorage.writeText(StorageDirectory.SONGS, content.fileName, content.text)
+
+    override suspend fun createSong(title: String, artist: String, text: String): Song {
+        val fileName = fileStorage.uniqueName(StorageDirectory.SONGS, songFileName(title = title, artist = artist))
+        fileStorage.writeText(StorageDirectory.SONGS, fileName, text)
+        return loadSong(fileName) ?: throw IllegalStateException("The song \"\" disappeared right after it was written.")
+    }
+
+    override suspend fun deleteSong(fileName: String) = fileStorage.delete(StorageDirectory.SONGS, fileName)
+
+    override suspend fun renameSong(from: String, to: String) = fileStorage.rename(StorageDirectory.SONGS, from, to)
+
+    override suspend fun exists(fileName: String) = fileStorage.exists(StorageDirectory.SONGS, fileName)
+
+    private suspend fun StoredFileInfo.readSong(): Song? = try {
+        fileStorage.readText(StorageDirectory.SONGS, name)?.let { text ->
+            toSong(metadata = ChordProParser.parseMetadata(text), hasChords = ChordProParser.hasChords(text))
+        }
+    } catch (exception: Exception) {
+        println("Could not read the song \"$name\": ${exception.message}")
+        null
+    }
+}
