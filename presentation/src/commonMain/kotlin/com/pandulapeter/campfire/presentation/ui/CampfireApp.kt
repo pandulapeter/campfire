@@ -62,6 +62,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.export_failed
 import com.pandulapeter.campfire.presentation.resources.import_failed
 import com.pandulapeter.campfire.presentation.resources.import_result
+import com.pandulapeter.campfire.presentation.resources.song_editor_save_failed
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.ic_songs
@@ -74,6 +75,7 @@ import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.screens.setlists.SetlistsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.settings.SettingsScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDetailsScreen
+import com.pandulapeter.campfire.presentation.ui.screens.songEditor.SongEditorScreen
 import com.pandulapeter.campfire.presentation.ui.screens.songs.SongsScreen
 import com.pandulapeter.campfire.presentation.ui.theme.ApplyLanguagePreference
 import com.pandulapeter.campfire.presentation.ui.theme.CampfireTheme
@@ -208,7 +210,19 @@ private fun CampfireContent(
                         )
                     }
                 }
-                // The only screen that covers the chrome, so it is the only one laid out edge to edge.
+                // These two cover the chrome, so they are the only ones laid out edge to edge.
+                entry<CampfireDestination.SongEditor>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
+                    ReportNavigationTransition(viewModel)
+                    ScreenSurface {
+                        SongEditorScreen(
+                            viewModel = viewModel,
+                            destination = destination,
+                            windowSize = windowSize,
+                            contentPadding = songDetailsContentPadding,
+                            onBack = viewModel::navigateBack
+                        )
+                    }
+                }
                 entry<CampfireDestination.SongDetails>(metadata = navigationMetadata, clazzContentKey = { it.contentKey }) { destination ->
                     ReportNavigationTransition(viewModel)
                     ScreenSurface {
@@ -263,6 +277,7 @@ private fun Messages(
 
         CampfireViewModel.Message.ImportFailed -> stringResource(Res.string.import_failed)
         CampfireViewModel.Message.ExportFailed -> stringResource(Res.string.export_failed)
+        CampfireViewModel.Message.SaveFailed -> stringResource(Res.string.song_editor_save_failed)
         null -> null
     }
     LaunchedEffect(current) {

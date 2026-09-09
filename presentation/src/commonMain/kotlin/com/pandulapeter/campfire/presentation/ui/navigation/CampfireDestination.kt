@@ -54,4 +54,19 @@ sealed interface CampfireDestination : NavKey {
 
         override val contentKey get() = "songDetails|$setlistFileName|$initialIndex|${songFileNames.joinToString(separator = ",")}"
     }
+
+    /**
+     * The raw text of one song, opened over whatever was showing.
+     *
+     * @param shouldStartInsideFirstSection Where the caret goes: a song that has just been created opens inside the
+     *   empty verse its template ends with, an existing one at the top of its text.
+     */
+    data class SongEditor(
+        val fileName: String,
+        val shouldStartInsideFirstSection: Boolean = false
+    ) : CampfireDestination {
+
+        // The flag is deliberately not part of this: it says how to open the editor, not which editor it is.
+        override val contentKey get() = "songEditor|$fileName"
+    }
 }

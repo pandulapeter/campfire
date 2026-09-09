@@ -16,8 +16,10 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.delete
+import com.pandulapeter.campfire.presentation.resources.edit
 import com.pandulapeter.campfire.presentation.resources.export
 import com.pandulapeter.campfire.presentation.resources.ic_delete
+import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_playlist_add
@@ -46,7 +48,9 @@ internal fun SongActions(
     item: @Composable (title: String, icon: Painter, isEnabled: Boolean, onClick: () -> Unit) -> Unit
 ) {
     val filePicker = LocalFilePicker.current
-    // TODO(step 09): an "Edit" action opening the editor belongs at the top of this list.
+    item(stringResource(Res.string.edit), painterResource(Res.drawable.ic_edit), true) {
+        viewModel.openEditor(song.fileName)
+    }
     if (shouldIncludeAddToSetlist) {
         item(
             stringResource(Res.string.song_details_add_to_setlist),

@@ -12,6 +12,7 @@ import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportResult
 import com.pandulapeter.campfire.data.model.domain.Setlist
+import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
@@ -30,11 +31,14 @@ import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,6 +54,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -68,10 +73,12 @@ class CampfireViewModel(
     private val createSetlist: CreateSetlistUseCase,
     private val saveSetlist: SaveSetlistUseCase,
     private val deleteSetlist: DeleteSetlistUseCase,
+    private val saveSongContent: SaveSongContentUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
     private val normalizeText: NormalizeTextUseCase,
     private val parseChordPro: ParseChordProUseCase,
-    private val transposeChordPro: TransposeChordProUseCase
+    private val transposeChordPro: TransposeChordProUseCase,
+    private val transposeChordProText: TransposeChordProTextUseCase
 ) : ViewModel() {
 
     /**
@@ -229,6 +236,10 @@ class CampfireViewModel(
     private val _isImporting = MutableStateFlow(false)
     val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
 
+    /** True while the editor's text is being written, which it shows in place of its "Saved" label. */
+    private val _isSavingSong = MutableStateFlow(false)
+    val isSavingSong: StateFlow<Boolean> = _isSavingSong.asStateFlow()
+
     /**
      * One-shot notifications for the snackbar. A channel rather than a state, so that two identical results in a row
      * are two messages and a message that has been shown is not shown again when the screen is recreated.
@@ -308,26 +319,54 @@ class CampfireViewModel(
         loadScreenData(true)
     }
 
-    /** Creates the file and opens it right away, which is where the editor will take over in step 09. */
+    /** Creates the file and opens it in the editor, which is the only useful thing to do with an empty song. */
     fun createSong(title: String, artist: String) = viewModelScope.launch {
-        // TODO(step 09): open the editor on the new song instead of its (still empty) details.
-        openSong(createSong.invoke(title = title, artist = artist))
+        openEditor(fileName = createSong.invoke(title = title, artist = artist).fileName, shouldStartInsideFirstSection = true)
     }
 
     fun deleteSong(fileName: String) = viewModelScope.launch {
         deleteSong.invoke(fileName)
-        // The song details screen would be left showing a file that is no longer there, so it is closed first.
-        (backStack.lastOrNull() as? CampfireDestination.SongDetails)?.let { destination ->
-            if (fileName in destination.songFileNames) navigateBack()
+        // A screen showing the file that has just gone is closed first, or it would sit there on nothing. The editor
+        // goes before the details screen underneath it, so both have to be checked rather than only the top one.
+        while (backStack.lastOrNull().let { it is CampfireDestination.SongEditor && it.fileName == fileName || it is CampfireDestination.SongDetails && fileName in it.songFileNames }) {
+            navigateBack()
+        }
+        _songTexts.update { it - fileName }
+    }
+
+    // The editor
+
+    fun openEditor(fileName: String, shouldStartInsideFirstSection: Boolean = false) {
+        if (backStack.lastOrNull() !is CampfireDestination.SongEditor) {
+            updateBackStack { add(CampfireDestination.SongEditor(fileName = fileName, shouldStartInsideFirstSection = shouldStartInsideFirstSection)) }
         }
     }
 
-    fun loadSongContent(song: Song) = viewModelScope.launch {
+    /**
+     * Writes the edited text and keeps the copy the viewer renders from in step. Runs on [NonCancellable] because
+     * the last save of an editing session happens as the screen is going away, which cancels its scope.
+     */
+    fun saveSongContent(fileName: String, text: String) = viewModelScope.launch {
+        _isSavingSong.update { true }
+        try {
+            withContext(NonCancellable) {
+                saveSongContent.invoke(SongContent(fileName = fileName, text = text))
+                _songTexts.update { it + (fileName to text) }
+            }
+        } catch (exception: Exception) {
+            println("Could not save the song \"$fileName\": ${exception.message}")
+            _messages.send(Message.SaveFailed)
+        } finally {
+            _isSavingSong.update { false }
+        }
+    }
+
+    fun loadSongContent(fileName: String) = viewModelScope.launch {
         // Cleared first, so that a retry shows the loading state again instead of staying on the error.
-        _failedSongFileNames.update { it - song.fileName }
-        val content = getSongContent(song.fileName)
+        _failedSongFileNames.update { it - fileName }
+        val content = getSongContent(fileName)
         if (content == null) {
-            _failedSongFileNames.update { it + song.fileName }
+            _failedSongFileNames.update { it + fileName }
         } else {
             _songTexts.update { it + (content.fileName to content.text) }
         }
@@ -343,6 +382,12 @@ class CampfireViewModel(
         val semitones = parsed.metadata.transpose + transposition
         return if (semitones == 0) parsed else transposeChordPro(parsed, semitones)
     }
+
+    /**
+     * Transposes the chords of a document in place, leaving everything else exactly as it was. Unlike the viewer's
+     * transposition this rewrites the file: it is what the editor's "transpose text" does.
+     */
+    fun transposeText(text: String, semitones: Int) = transposeChordProText(text, semitones)
 
     /** A song opened from a setlist transposes inside that setlist; one opened from the library, in the preferences. */
     fun setTransposition(songFileName: String, setlistFileName: String?, transposition: Int) = viewModelScope.launch {
@@ -572,6 +617,7 @@ class CampfireViewModel(
         data class ImportFinished(val result: ImportResult) : Message
         data object ImportFailed : Message
         data object ExportFailed : Message
+        data object SaveFailed : Message
     }
 
     /** What a list without content has in its place. */

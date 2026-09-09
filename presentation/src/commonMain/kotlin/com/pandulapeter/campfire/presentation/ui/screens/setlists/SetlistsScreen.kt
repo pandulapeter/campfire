@@ -43,7 +43,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.filters
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_export
-import com.pandulapeter.campfire.presentation.resources.ic_rename
+import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
@@ -207,7 +207,7 @@ private fun SetlistList(
                         onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
                         action = {
                             SectionHeaderAction(
-                                icon = painterResource(Res.drawable.ic_rename),
+                                icon = painterResource(Res.drawable.ic_edit),
                                 contentDescription = stringResource(Res.string.setlists_rename),
                                 onClick = { viewModel.showDialog(CampfireViewModel.DialogType.RenameSetlist(setlistWithSongs.setlist)) }
                             )

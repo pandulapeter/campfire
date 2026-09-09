@@ -133,7 +133,7 @@ internal fun SongDetailsScreen(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(currentSong?.fileName) { currentSong?.let(viewModel::loadSongContent) }
+    LaunchedEffect(currentSong?.fileName) { currentSong?.fileName?.let(viewModel::loadSongContent) }
     // Every page scrolls on its own, so the app bar's notion of "content scrolled underneath" restarts per page.
     LaunchedEffect(pagerState.currentPage) { scrollBehavior.state.contentOffset = 0f }
 
@@ -299,7 +299,7 @@ internal fun SongDetailsScreen(
                     settledWidth = settledWidth,
                     contentPadding = pageContentPadding,
                     renderSong = viewModel::renderSong,
-                    onRetry = { viewModel.loadSongContent(song) }
+                    onRetry = { viewModel.loadSongContent(song.fileName) }
                 )
             }
         }

@@ -8,6 +8,7 @@
     <string name="delete">Törlés</string>
     <string name="create">Létrehozás</string>
     <string name="export">Exportálás</string>
+    <string name="edit">Szerkesztés</string>
     <string name="filters">Szűrők</string>
     <string name="retry">Újra</string>
 
@@ -87,6 +88,24 @@
     <string name="settings_git_hub">GitHub oldal</string>
     <string name="settings_privacy_policy">Adatvédelmi nyilatkozat</string>
     <string name="settings_version">%1$s verzió</string>
+
+    <!-- Song editor screen -->
+    <string name="song_editor_preview">Előnézet</string>
+    <string name="song_editor_undo">Visszavonás</string>
+    <string name="song_editor_redo">Újra</string>
+    <string name="song_editor_insert_chord">Akkord beszúrása</string>
+    <string name="song_editor_insert_section">Szakasz beszúrása</string>
+    <string name="song_editor_insert_comment">Megjegyzés beszúrása</string>
+    <string name="song_editor_section_verse">Versszak</string>
+    <string name="song_editor_section_chorus">Refrén</string>
+    <string name="song_editor_section_bridge">Bridge</string>
+    <string name="song_editor_section_tab">Tab</string>
+    <string name="song_editor_section_grid">Rács</string>
+    <string name="song_editor_transpose_text_up">Szöveg transzponálása fel</string>
+    <string name="song_editor_transpose_text_down">Szöveg transzponálása le</string>
+    <string name="song_editor_saved">Mentve</string>
+    <string name="song_editor_saving">Mentés\u2026</string>
+    <string name="song_editor_save_failed">A dalt nem sikerült menteni</string>
 
     <!-- Song details screen -->
     <string name="song_details_previous_song">Előző dal</string>
