@@ -43,19 +43,15 @@ import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.filters
 import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_rename
-import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
-import com.pandulapeter.campfire.presentation.resources.setlists_no_data
-import com.pandulapeter.campfire.presentation.resources.setlists_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.setlists_remove_song
 import com.pandulapeter.campfire.presentation.resources.setlists_rename
 import com.pandulapeter.campfire.presentation.resources.setlists_reorder_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
-import com.pandulapeter.campfire.presentation.ui.components.EmptyState
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
@@ -153,7 +149,8 @@ private fun SetlistList(
     contentPadding: PaddingValues
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
-    // Read once, so that the branch below and the placeholder it renders can never disagree about it.
+    // Read once each, so that the branches below and the placeholders they render can never disagree about them.
+    val setlistsPlaceholder = viewModel.setlistsPlaceholder.collectAsStateWithLifecycle().value
     val libraryPlaceholder = viewModel.libraryPlaceholder.collectAsStateWithLifecycle().value
     val listState = rememberLazyGridState()
     val reorderableState = rememberReorderableLazyGridState(listState) { from, to ->
@@ -181,28 +178,19 @@ private fun SetlistList(
             bottom = contentPadding.calculateBottomPadding() + FAB_CLEARANCE
         )
     ) {
+        // The setlists come first: they are what this screen is about. The library only speaks up once there are
+        // setlists to fill, since without it the rows of every setlist would be missing rather than the setlists
+        // themselves. Both go through the same slot, so that "still loading" turning out to be "you have no
+        // setlists" cross fades instead of being swapped in a single frame.
+        val placeholder = setlistsPlaceholder ?: libraryPlaceholder
         when {
-            setlistsWithSongs.isEmpty() -> item(
-                key = "empty",
-                span = { GridItemSpan(maxLineSpan) }
-            ) {
-                EmptyState(
-                    modifier = Modifier.fillMaxWidth().animateItem(),
-                    icon = painterResource(Res.drawable.ic_setlists),
-                    title = stringResource(Res.string.setlists_no_data),
-                    hint = stringResource(Res.string.setlists_no_data_hint)
-                )
-            }
-
-            // The setlists are saved locally, but the songs in them come from the library: without it, the rows of
-            // every setlist would be missing rather than the setlists themselves.
-            libraryPlaceholder != null -> item(
+            placeholder != null -> item(
                 key = "placeholder",
                 span = { GridItemSpan(maxLineSpan) }
             ) {
                 ListPlaceholder(
                     modifier = Modifier.fillMaxWidth().animateItem(),
-                    placeholder = libraryPlaceholder,
+                    placeholder = placeholder,
                     onRetry = viewModel::refresh
                 )
             }

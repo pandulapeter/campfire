@@ -6,6 +6,7 @@ import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
@@ -20,6 +21,7 @@ import com.pandulapeter.campfire.domain.implementation.useCases.DeleteSetlistUse
 import com.pandulapeter.campfire.domain.implementation.useCases.DeleteSongUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.GetScreenDataUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.GetSongContentUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.GetUserPreferencesUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.LoadScreenDataUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.NormalizeTextUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.ParseChordProUseCaseImpl
@@ -37,6 +39,7 @@ val domainModule = module {
     factory<DeleteSongUseCase> { DeleteSongUseCaseImpl(get(), get(), get()) }
     factory<GetScreenDataUseCase> { GetScreenDataUseCaseImpl(get(), get(), get(), get()) }
     factory<GetSongContentUseCase> { GetSongContentUseCaseImpl(get()) }
+    factory<GetUserPreferencesUseCase> { GetUserPreferencesUseCaseImpl(get()) }
     factory<LoadScreenDataUseCase> { LoadScreenDataUseCaseImpl(get(), get(), get()) }
     factory<NormalizeTextUseCase> { NormalizeTextUseCaseImpl() }
     factory<ParseChordProUseCase> { ParseChordProUseCaseImpl() }

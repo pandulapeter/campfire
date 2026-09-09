@@ -265,32 +265,43 @@ internal fun SongDetailsScreen(
         } else {
             contentPadding
         }
-        HorizontalPager(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .fontScaleGestures(
-                    fontScale = { currentFontScale },
-                    onFontScaleChanged = viewModel::setFontScale
-                ),
-            state = pagerState,
-            key = { songs[it].fileName },
-            beyondViewportPageCount = 1
-        ) { page ->
-            val song = songs[page]
-            SongDetailsPage(
-                song = song,
-                text = songTexts[song.fileName],
-                hasFailed = song.fileName in failedSongFileNames,
-                transposition = transpositions[song.fileName, destination.setlistFileName],
-                shouldShowChords = shouldShowChords,
-                fontScale = fontScale,
-                isHorizontalFlow = isHorizontalFlow,
-                settledWidth = settledWidth,
-                contentPadding = pageContentPadding,
-                renderSong = viewModel::renderSong,
-                onRetry = { viewModel.loadSongContent(song) }
-            )
+        if (songs.isEmpty()) {
+            // The library has not been read yet, so there is nothing to page through; a pager with no pages would
+            // leave the screen blank under an app bar with no title in it.
+            Box(
+                modifier = Modifier.weight(1f).fillMaxWidth().padding(contentPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                ContainedLoadingIndicator()
+            }
+        } else {
+            HorizontalPager(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .fontScaleGestures(
+                        fontScale = { currentFontScale },
+                        onFontScaleChanged = viewModel::setFontScale
+                    ),
+                state = pagerState,
+                key = { songs[it].fileName },
+                beyondViewportPageCount = 1
+            ) { page ->
+                val song = songs[page]
+                SongDetailsPage(
+                    song = song,
+                    text = songTexts[song.fileName],
+                    hasFailed = song.fileName in failedSongFileNames,
+                    transposition = transpositions[song.fileName, destination.setlistFileName],
+                    shouldShowChords = shouldShowChords,
+                    fontScale = fontScale,
+                    isHorizontalFlow = isHorizontalFlow,
+                    settledWidth = settledWidth,
+                    contentPadding = pageContentPadding,
+                    renderSong = viewModel::renderSong,
+                    onRetry = { viewModel.loadSongContent(song) }
+                )
+            }
         }
         if (canPage) {
             SongPagerControls(

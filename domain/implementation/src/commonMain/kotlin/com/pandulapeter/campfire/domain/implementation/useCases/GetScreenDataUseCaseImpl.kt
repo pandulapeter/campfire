@@ -36,8 +36,7 @@ class GetScreenDataUseCaseImpl internal constructor(
                         songs = songs
                             .filterHasChords(userPreferences)
                             .sort(userPreferences),
-                        songFileNames = songs.mapTo(mutableSetOf()) { it.fileName },
-                        userPreferences = userPreferences
+                        songFileNames = songs.mapTo(mutableSetOf()) { it.fileName }
                     ).also {
                         cache = it
                     }

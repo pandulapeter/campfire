@@ -92,9 +92,8 @@ internal fun SettingsScreen(
             title = { Text(stringResource(Res.string.settings)) }
         )
         val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
-        // The library, not the filtered list: the summary counts what is on disk.
-        val songFileNames by viewModel.songFileNames.collectAsStateWithLifecycle()
-        val setlists by viewModel.setlists.collectAsStateWithLifecycle()
+        // Null until the library has been read, so that the row fades in with real counts instead of showing zeroes.
+        val librarySummary by viewModel.librarySummary.collectAsStateWithLifecycle()
         val layoutDirection = LocalLayoutDirection.current
         val listState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
@@ -113,12 +112,14 @@ internal fun SettingsScreen(
                 listState = listState,
                 coroutineScope = coroutineScope
             ) { stringResource(Res.string.settings_library) }
-            item(key = "library_summary") {
-                ListItem(
-                    modifier = Modifier.animateItem(),
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(Res.string.settings_library_summary, songFileNames.size, setlists.size)) }
-                )
+            librarySummary?.let { summary ->
+                item(key = "library_summary") {
+                    ListItem(
+                        modifier = Modifier.animateItem(),
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        headlineContent = { Text(stringResource(Res.string.settings_library_summary, summary.songCount, summary.setlistCount)) }
+                    )
+                }
             }
             libraryLocationHint?.let { hint ->
                 item(key = "library_location") {

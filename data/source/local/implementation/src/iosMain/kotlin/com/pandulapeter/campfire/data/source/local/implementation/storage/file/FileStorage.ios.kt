@@ -44,8 +44,11 @@ private class IosFileStorage : FileStorage {
 
     override suspend fun list(directory: StorageDirectory) = withContext(Dispatchers.IO) {
         val directoryPath = directoryPath(directory)
-        fileManager.contentsOfDirectoryAtPath(directoryPath, null).orEmpty()
-            .filterIsInstance<String>()
+        // Null means the directory could not be listed. If it is there all the same, that is a failure to report
+        // rather than an empty library, see the JVM implementation.
+        val entries = fileManager.contentsOfDirectoryAtPath(directoryPath, null)
+            ?: if (fileManager.fileExistsAtPath(directoryPath)) throw IllegalStateException("Could not read \"$directoryPath\".") else emptyList<Any?>()
+        entries.filterIsInstance<String>()
             .mapNotNull { name ->
                 val attributes = fileManager.attributesOfItemAtPath("$directoryPath/$name", null)
                 if (attributes == null || attributes[NSFileType] == NSFileTypeDirectory) {

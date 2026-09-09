@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
@@ -46,6 +47,7 @@ import kotlin.math.floor
 @OptIn(FlowPreview::class)
 class CampfireViewModel(
     getScreenData: GetScreenDataUseCase,
+    getUserPreferences: GetUserPreferencesUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
     private val getSongContent: GetSongContentUseCase,
     private val createSong: CreateSongUseCase,
@@ -87,13 +89,17 @@ class CampfireViewModel(
     // Data
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
-    val isLoading = screenData.map { it is DataState.Loading }.asState(false)
+    val isLoading = screenData.map { it is DataState.Loading }.asState(true)
     /**
+     * Read straight from its own repository rather than out of [screenData], which only has anything once every
+     * source has been read: the theme and the language come from here, and waiting for a scan of the whole song
+     * library would leave the app in the system's theme and language for as long as that takes.
+     *
      * Eager for the same reason as [setlists]: `updateUserPreferences` and `setTransposition` build the preferences
      * they save out of this value, and a null one (which is what a state with no subscriber holds) would silently
      * drop the change.
      */
-    val userPreferences = screenData.map { it.data?.userPreferences }.asEagerState(null)
+    val userPreferences = getUserPreferences().map { it.data }.asEagerState(null)
 
     /**
      * Eager, unlike most of the states here: the write paths below (adding a song to a setlist, transposing inside
@@ -124,7 +130,12 @@ class CampfireViewModel(
      * [setlistsWithSongs] tells a hidden song from a missing one with it, and an empty set would turn every song the
      * filters hide into a "file not found" row.
      */
-    val songFileNames = screenData.map { it.data?.songFileNames.orEmpty() }.asEagerState(emptySet())
+    private val songFileNames = screenData.map { it.data?.songFileNames.orEmpty() }.asEagerState(emptySet())
+
+    /** Null until the library has actually been read, so that the settings screen never flashes a count of zero. */
+    val librarySummary = screenData
+        .map { state -> state.data?.let { LibrarySummary(songCount = it.songFileNames.size, setlistCount = it.setlists.size) } }
+        .asState(null)
     val songGroups = combine(allSongs, query, userPreferences.map { it?.sortingMode }) { songs, query, sortingMode ->
         if (query.isBlank()) {
             songs.groupIntoSections(sortingMode ?: UserPreferences.SortingMode.BY_ARTIST)
@@ -146,7 +157,7 @@ class CampfireViewModel(
             songGroups.isNotEmpty() -> null
             // The library itself, not the filtered list: a library that only holds songs the filters hide is not an
             // empty one, and offering to create a first song there would be answering a question nobody asked.
-            data == null || data.songFileNames.isEmpty() -> screenData.emptyLibraryPlaceholder
+            data == null || data.songFileNames.isEmpty() -> screenData.emptyPlaceholder(Placeholder.NO_SONGS)
             data.songs.isEmpty() -> Placeholder.ALL_SONGS_HIDDEN
             else -> Placeholder.NO_SEARCH_RESULTS
         }
@@ -154,7 +165,7 @@ class CampfireViewModel(
 
     /** The same for the screens that show the library without the search query, such as the setlists. */
     val libraryPlaceholder = screenData
-        .map { if (it.data?.songFileNames.isNullOrEmpty()) it.emptyLibraryPlaceholder else null }
+        .map { if (it.data?.songFileNames.isNullOrEmpty()) it.emptyPlaceholder(Placeholder.NO_SONGS) else null }
         .asState(Placeholder.LOADING)
 
     val setlistsWithSongs = combine(setlists, allSongs, songFileNames) { setlists, songs, songFileNames ->
@@ -174,6 +185,15 @@ class CampfireViewModel(
             )
         }
     }.asState(emptyList())
+
+    /**
+     * What the setlists screen shows instead of setlists, null while it has some. Same reasoning as
+     * [songsPlaceholder]: without it a load in progress is indistinguishable from a user who has no setlists, and
+     * the screen claims there are none for as long as reading the library takes.
+     */
+    val setlistsPlaceholder = combine(screenData, setlistsWithSongs) { screenData, setlistsWithSongs ->
+        if (setlistsWithSongs.isEmpty()) screenData.emptyPlaceholder(Placeholder.NO_SETLISTS) else null
+    }.asState(Placeholder.LOADING)
 
     /** The file names of the songs whose text could not be read. */
     private val _failedSongFileNames = MutableStateFlow(emptySet<String>())
@@ -480,19 +500,29 @@ class CampfireViewModel(
         LOADING,
         ERROR,
         NO_SONGS,
+        NO_SETLISTS,
 
         /** The library has songs, but every one of them is filtered out. */
         ALL_SONGS_HIDDEN,
         NO_SEARCH_RESULTS
     }
 
-    /** A library with no songs in it is only an error once the load that would have filled it has actually failed. */
-    private val DataState<ScreenData>.emptyLibraryPlaceholder
-        get() = when (this) {
-            is DataState.Loading -> Placeholder.LOADING
-            is DataState.Failure -> Placeholder.ERROR
-            is DataState.Idle -> Placeholder.NO_SONGS
-        }
+    /**
+     * What an empty list has in its place: it is only an error once the load that would have filled it has actually
+     * failed, and only [whenEmpty] once a load has finished - until then it is still loading, and saying anything
+     * else would have the screen answer a question it cannot answer yet.
+     */
+    private fun DataState<ScreenData>.emptyPlaceholder(whenEmpty: Placeholder) = when (this) {
+        is DataState.Loading -> Placeholder.LOADING
+        is DataState.Failure -> Placeholder.ERROR
+        is DataState.Idle -> whenEmpty
+    }
+
+    /** The counts the settings screen shows for the library, only once there is a library to count. */
+    data class LibrarySummary(
+        val songCount: Int,
+        val setlistCount: Int
+    )
 
     private class MatchingSong(
         val song: Song,

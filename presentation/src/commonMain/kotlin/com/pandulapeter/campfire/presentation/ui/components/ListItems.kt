@@ -1,6 +1,10 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -54,8 +58,11 @@ import com.pandulapeter.campfire.presentation.resources.ic_open_in_new
 import com.pandulapeter.campfire.presentation.resources.ic_search
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_tune
+import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.setlists_missing_song
+import com.pandulapeter.campfire.presentation.resources.setlists_no_data
+import com.pandulapeter.campfire.presentation.resources.setlists_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.songs_all_hidden
 import com.pandulapeter.campfire.presentation.resources.songs_all_hidden_hint
 import com.pandulapeter.campfire.presentation.resources.songs_empty_hint
@@ -332,6 +339,9 @@ internal fun ActionListItem(
  * these, so a load that never arrives ends in something the user can act on rather than in an endless indicator.
  */
 /**
+ * All of these share one slot in their list, so they cross fade into each other rather than being swapped in a
+ * single frame: the load that ends in an empty library is one continuous thing to look at, not two.
+ *
  * @param onNewSong Null where creating a song is not this list's business, which hides the offer to create one.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -341,47 +351,55 @@ internal fun ListPlaceholder(
     placeholder: CampfireViewModel.Placeholder,
     onRetry: () -> Unit,
     onNewSong: (() -> Unit)? = null
-) = when (placeholder) {
-    CampfireViewModel.Placeholder.LOADING -> Box(
-        modifier = modifier.padding(32.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        ContainedLoadingIndicator()
+) = AnimatedContent(
+    modifier = modifier,
+    targetState = placeholder,
+    transitionSpec = { fadeIn() togetherWith fadeOut() }
+) { currentPlaceholder ->
+    when (currentPlaceholder) {
+        CampfireViewModel.Placeholder.LOADING -> Box(
+            modifier = Modifier.fillMaxWidth().padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            ContainedLoadingIndicator()
+        }
+
+        CampfireViewModel.Placeholder.ERROR -> EmptyState(
+            icon = painterResource(Res.drawable.ic_error),
+            title = stringResource(Res.string.error_no_data),
+            hint = stringResource(Res.string.error_no_data_hint),
+            actionText = stringResource(Res.string.retry),
+            onAction = onRetry
+        )
+
+        CampfireViewModel.Placeholder.NO_SONGS -> EmptyState(
+            icon = painterResource(Res.drawable.ic_songs),
+            title = stringResource(Res.string.songs_empty_title),
+            hint = stringResource(Res.string.songs_empty_hint),
+            actionText = onNewSong?.let { stringResource(Res.string.songs_new_song) },
+            onAction = onNewSong,
+            // TODO(step 08): importing files and archives, which is what the button is here to do.
+            secondaryActionText = onNewSong?.let { stringResource(Res.string.songs_import) }
+        )
+
+        CampfireViewModel.Placeholder.NO_SETLISTS -> EmptyState(
+            icon = painterResource(Res.drawable.ic_setlists),
+            title = stringResource(Res.string.setlists_no_data),
+            hint = stringResource(Res.string.setlists_no_data_hint)
+        )
+
+        CampfireViewModel.Placeholder.ALL_SONGS_HIDDEN -> EmptyState(
+            icon = painterResource(Res.drawable.ic_tune),
+            title = stringResource(Res.string.songs_all_hidden),
+            hint = stringResource(Res.string.songs_all_hidden_hint)
+        )
+
+        CampfireViewModel.Placeholder.NO_SEARCH_RESULTS -> EmptyState(
+            icon = painterResource(Res.drawable.ic_search),
+            title = stringResource(Res.string.songs_no_search_results),
+            hint = stringResource(Res.string.songs_no_search_results_hint)
+        )
     }
-
-    CampfireViewModel.Placeholder.ERROR -> EmptyState(
-        modifier = modifier,
-        icon = painterResource(Res.drawable.ic_error),
-        title = stringResource(Res.string.error_no_data),
-        hint = stringResource(Res.string.error_no_data_hint),
-        actionText = stringResource(Res.string.retry),
-        onAction = onRetry
-    )
-
-    CampfireViewModel.Placeholder.NO_SONGS -> EmptyState(
-        modifier = modifier,
-        icon = painterResource(Res.drawable.ic_songs),
-        title = stringResource(Res.string.songs_empty_title),
-        hint = stringResource(Res.string.songs_empty_hint),
-        actionText = onNewSong?.let { stringResource(Res.string.songs_new_song) },
-        onAction = onNewSong,
-        // TODO(step 08): importing files and archives, which is what the button is here to do.
-        secondaryActionText = onNewSong?.let { stringResource(Res.string.songs_import) }
-    )
-
-    CampfireViewModel.Placeholder.ALL_SONGS_HIDDEN -> EmptyState(
-        modifier = modifier,
-        icon = painterResource(Res.drawable.ic_tune),
-        title = stringResource(Res.string.songs_all_hidden),
-        hint = stringResource(Res.string.songs_all_hidden_hint)
-    )
-
-    CampfireViewModel.Placeholder.NO_SEARCH_RESULTS -> EmptyState(
-        modifier = modifier,
-        icon = painterResource(Res.drawable.ic_search),
-        title = stringResource(Res.string.songs_no_search_results),
-        hint = stringResource(Res.string.songs_no_search_results_hint)
-    )
 }
 
 /**
@@ -403,7 +421,8 @@ internal fun EmptyState(
     secondaryActionText: String? = null,
     onSecondaryAction: (() -> Unit)? = null
 ) = Column(
-    modifier = modifier.padding(32.dp),
+    // Always the full width, so that the text is centered on the list rather than on itself.
+    modifier = modifier.fillMaxWidth().padding(32.dp),
     horizontalAlignment = Alignment.CenterHorizontally
 ) {
     Icon(

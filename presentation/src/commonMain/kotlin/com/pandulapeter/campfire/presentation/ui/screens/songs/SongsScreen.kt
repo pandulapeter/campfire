@@ -151,10 +151,9 @@ internal fun SongsScreen(
                     columnCount = columnCount,
                     contentPadding = listContentPadding
                 )
-                // Not shown next to the empty state, which offers the same thing as a button of its own already.
                 NewSongButton(
                     modifier = Modifier.align(Alignment.BottomEnd),
-                    isVisible = !isSearchFieldFocused && placeholder != CampfireViewModel.Placeholder.NO_SONGS,
+                    isVisible = !isSearchFieldFocused && placeholder.allowsCreatingSongs,
                     isExtended = settledWidth >= EXTENDED_FAB_MIN_WIDTH,
                     contentPadding = listContentPadding,
                     onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) }
@@ -395,6 +394,23 @@ private fun RefreshableContainer(
         content = content
     )
 }
+
+/**
+ * Whether the button that creates a song belongs on screen. It waits for the library to have been read rather than
+ * appearing over the loading indicator and shrinking away again a moment later, and it stays away from the empty
+ * state and the error, both of which offer their own action for the same thing.
+ */
+private val CampfireViewModel.Placeholder?.allowsCreatingSongs
+    get() = when (this) {
+        null,
+        CampfireViewModel.Placeholder.ALL_SONGS_HIDDEN,
+        CampfireViewModel.Placeholder.NO_SEARCH_RESULTS -> true
+
+        CampfireViewModel.Placeholder.LOADING,
+        CampfireViewModel.Placeholder.ERROR,
+        CampfireViewModel.Placeholder.NO_SONGS,
+        CampfireViewModel.Placeholder.NO_SETLISTS -> false
+    }
 
 private const val SYMBOLS_LABEL = "#"
 

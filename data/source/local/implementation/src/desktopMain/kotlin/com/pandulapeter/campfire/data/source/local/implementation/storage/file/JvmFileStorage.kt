@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 
 /**
  * The [FileStorage] of every JVM based platform, on top of [java.io.File]. The root is chosen by the `actual` factory
@@ -18,8 +19,13 @@ import java.io.File
 internal class JvmFileStorage(private val root: File) : FileStorage {
 
     override suspend fun list(directory: StorageDirectory) = withContext(Dispatchers.IO) {
-        directoryFile(directory).listFiles().orEmpty()
-            .filter { it.isFile && !it.name.endsWith(TEMPORARY_FILE_SUFFIX) }
+        val directoryFile = directoryFile(directory)
+        // A directory that could not be created is not there yet, which is the same as being empty. One that is
+        // there but cannot be listed is a failure and has to be reported as one: passing it off as an empty library
+        // would invite the user to create songs in a folder the app cannot read.
+        val files = directoryFile.listFiles()
+            ?: if (directoryFile.isDirectory) throw IOException("Could not read \"${directoryFile.absolutePath}\".") else emptyArray()
+        files.filter { it.isFile && !it.name.endsWith(TEMPORARY_FILE_SUFFIX) }
             .map { StoredFileInfo(name = it.name, size = it.length(), lastModified = it.lastModified()) }
             .sortedBy { it.name }
     }
