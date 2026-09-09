@@ -249,4 +249,28 @@ Write at least these, one `@Test` each, with small inline fixtures:
 
 ## Execution notes
 
-_(filled in by the executing agent: deviations, surprises, follow-ups)_
+Done as specified; 41 tests in `commonTest`, all green on `./gradlew :chordpro:desktopTest`, and `./gradlew :chordpro:build`
+compiles (and runs the tests on) every target. All three files in `samples/` parse into exactly the structure this
+document describes and survive `parse(serialize(parse(x))) == parse(x)`.
+
+Points where the spec left a choice open, and what was decided:
+
+- **Comments and breaks inside an open section.** `Comment` and `Break` are top-level blocks, so they cannot live inside
+  a `Section`. When one appears while a section is open and already has lines, the section is flushed as a block, the
+  comment/break is emitted, and a new section with the same type and label is opened for the rest. When the open section
+  is still empty the block is simply emitted first (the section is appended later, which keeps the order right). This is
+  round-trip stable: serializing and re-parsing yields the same block list.
+- **Blank lines inside `tab` / `grid` environments** become `ChordProLine.Blank`, not `Tab("")` / `Grid(emptyList())`, so
+  that rule 6 (drop trailing blanks) applies uniformly. Non-blank tab lines are still kept verbatim.
+- **Grid lines without any bar token** classify every token normally instead of turning the whole line into `Text`
+  ("anything after the last bar token" is read as "only when there is a bar token").
+- **`{key: …}` in `transposeText`** is rewritten as a canonical `{key: X}` (leading/trailing whitespace of the line is
+  kept). `MatchGroup.range` is JVM/JS-only and not available in `commonMain`, so the value's exact offsets inside an
+  oddly spaced directive such as `{ key : E }` are not preserved. Every other line keeps its formatting exactly.
+- **`prefersFlats` and enharmonic keys.** The transposed key is spelled with flats and looked up in the two sets from the
+  spec, so the F#/Gb tie resolves to flats (`Gb` is in the list). `B` wins over `Cb` and `C#m` over `Dbm` for free, since
+  the flat spellings of those pitch classes are `B` and `Db`, which are not in the sets.
+- **Selector suffixes** (`{title-guitar}`) are detected only for names whose prefix before the last `-` is a directive the
+  parser knows. Everything else unknown is ignored anyway, so this only matters to keep `{x_foo-guitar}` out of `custom`.
+- **`custom` keys** keep the `x_` prefix (`{x_custom: kept}` → `custom["x_custom"]`), which is what makes them round-trip
+  through the serializer's `{meta: x_custom kept}`.

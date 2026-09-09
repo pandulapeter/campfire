@@ -31,7 +31,8 @@ Data flow: `LocalSource`/`RemoteSource` -> `Repository` (emits `DataState<T>`, l
 - Implementation classes are `internal` and named `<Interface>Impl`. Use cases are `operator fun invoke`.
 - Repositories extend `BaseLocalDataRepository` (local only) or `BaseLocalRemoteDataRepository` (local + remote cache).
 - Layer boundaries are crossed via mappers (`mapper/` packages), never by leaking entity/response types.
-- No tests exist in this repo.
+- Only pure logic is tested: `commonTest` unit tests in `:chordpro` and in `:data:source:local:implementation`, run on the
+  desktop target with `./gradlew :chordpro:desktopTest :data:source:local:implementation:desktopTest`. The UI is untested.
 
 ## Build
 

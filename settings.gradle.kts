@@ -60,6 +60,7 @@ include(
     ":app:desktop",
     ":app:ios",
     ":app:web",
+    ":chordpro",
     ":data:model",
     ":data:repository:api",
     ":data:repository:implementation",

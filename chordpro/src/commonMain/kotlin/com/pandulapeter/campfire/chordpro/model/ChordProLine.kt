@@ -1,0 +1,39 @@
+package com.pandulapeter.campfire.chordpro.model
+
+/**
+ * One line inside a [ChordProBlock.Section].
+ */
+sealed interface ChordProLine {
+
+    /** A lyrics line: text with chords anchored at character offsets. */
+    data class Lyrics(val text: String, val chords: List<Chord>) : ChordProLine {
+
+        data class Chord(
+            val position: Int, // offset into text where the chord sits
+            val name: String, // "Am7", "N.C.", ...
+            val isAnnotation: Boolean // [*text] annotations: shown like a chord, never transposed
+        )
+    }
+
+    /** One line inside {start_of_tab}: monospaced, never transposed, never reflowed. */
+    data class Tab(val text: String) : ChordProLine
+
+    /** One line inside {start_of_grid}: tokens separated by whitespace. */
+    data class Grid(val tokens: List<GridToken>) : ChordProLine
+
+    /** An empty line inside an environment. */
+    data object Blank : ChordProLine
+}
+
+sealed interface GridToken {
+
+    data class Bar(val text: String) : GridToken // "|", "||", "|:", ":|", "|."
+
+    data class Chord(val name: String) : GridToken
+
+    data object Beat : GridToken // "."
+
+    data class Repeat(val text: String) : GridToken // "%" (repeat previous cell), "%%"
+
+    data class Text(val text: String) : GridToken // anything else, e.g. a comment after the last bar
+}
