@@ -18,10 +18,12 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -50,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.Dp
@@ -101,9 +104,14 @@ internal fun SongsScreen(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val placeholder by viewModel.songsPlaceholder.collectAsStateWithLifecycle()
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
+    val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
     // The button would sit right where the suggestions and the keyboard go, and searching is not the moment to
-    // start writing a new song anyway.
-    var isSearchFieldFocused by rememberSaveable { mutableStateOf(false) }
+    // start writing a new song anyway. What hides it is the keyboard itself rather than the search field's focus:
+    // dismissing the keyboard leaves the caret in the field, so a button hidden on focus alone never came back -
+    // and on the platforms that have no software keyboard it should never go away in the first place. A keyboard
+    // a dialog raised for its own text field is not this screen's, and the button behind the dialog's scrim is in
+    // nobody's way, so that one leaves it alone - as it already does on the setlists screen.
+    val isKeyboardCoveringTheList = visibleDialog == null && WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyGridState()
     val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
@@ -126,8 +134,7 @@ internal fun SongsScreen(
                     SearchField(
                         modifier = Modifier.fillMaxWidth(),
                         query = query,
-                        onQueryChanged = viewModel::onQueryChanged,
-                        onFocusChanged = { isSearchFieldFocused = it }
+                        onQueryChanged = viewModel::onQueryChanged
                     )
                 },
                 actions = {
@@ -164,7 +171,7 @@ internal fun SongsScreen(
                 )
                 CampfireFloatingActionButton(
                     modifier = Modifier.align(Alignment.BottomEnd),
-                    isVisible = !isSearchFieldFocused && placeholder.allowsCreatingSongs,
+                    isVisible = !isKeyboardCoveringTheList && placeholder.allowsCreatingSongs,
                     settledWidth = settledWidth,
                     contentPadding = listContentPadding,
                     icon = painterResource(Res.drawable.ic_add),

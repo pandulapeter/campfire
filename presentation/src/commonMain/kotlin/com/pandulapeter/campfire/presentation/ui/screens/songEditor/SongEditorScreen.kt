@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
@@ -376,7 +375,8 @@ private fun ChordProTextField(
                     false
                 }
             }
-            .imePadding()
+            // The keyboard is already in the content padding this screen was handed, see CampfireApp; applying the
+            // inset a second time here shrank the field to a couple of lines as soon as the keyboard came up.
             .padding(
                 start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
                 end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
