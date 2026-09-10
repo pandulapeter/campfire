@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
@@ -84,9 +85,10 @@ internal fun SongDisplayControls(
     val song = allSongs.firstOrNull { it.fileName == dialog.songFileName }
     val songTransposition = song?.let { transpositions[it.fileName, dialog.setlistFileName] } ?: 0
     val songText = song?.let { songTexts[it.fileName] }
+    val accidentals = userPreferences?.accidentals ?: UserPreferences.Accidentals.ORIGINAL
     // Memoized: the key comes from the parsed song, which is not worth re-deriving on every recomposition.
-    val transposedKey = remember(songText, songTransposition) {
-        songText?.let { viewModel.renderSong(it, songTransposition).metadata.key }
+    val transposedKey = remember(songText, songTransposition, accidentals) {
+        songText?.let { viewModel.renderSong(it, songTransposition, accidentals).metadata.key }
     }
     Column {
         SettingsSectionTitle(text = stringResource(Res.string.song_details_display_options))

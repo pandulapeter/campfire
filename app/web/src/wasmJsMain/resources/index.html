@@ -12,41 +12,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
+    <!-- The two schemes of the app, so the browser chrome matches the splash screen and then the app itself. -->
+    <meta name="theme-color" content="#FFF8F5" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#19120D" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="Song lyrics and chords, in a library of plain ChordPro files that stays yours.">
     <title>Campfire</title>
-    <link rel="icon" type="image/png" href="appIcon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <style>
+        /* The palette is the one CampfireColorSchemes generates, so the splash screen and the first
+           composed frame paint the same background and the handover is invisible. */
+        :root {
+            color-scheme: light dark;
+            --background: #FFF8F5;
+            --on-background: #211A15;
+            --track: #F4DFD1;
+            --indicator: #8B5000;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #19120D;
+                --on-background: #EFE0D7;
+                --track: #52443B;
+                --indicator: #FFB77C;
+            }
+        }
+
         html, body {
             width: 100%;
             height: 100%;
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: #000000;
+            background-color: var(--background);
         }
 
-        /* Shown until the Compose canvas takes over, which needs the .wasm binary to be downloaded first. */
-        #loader {
-            position: absolute;
-            top: 50%;
-            left: 50%;
+        /* The Compose canvas replaces the contents of this element, so it must be a container of its
+           own rather than <body>: the splash screen is a sibling that outlives the handover. */
+        #app {
+            width: 100%;
+            height: 100%;
+        }
+
+        #splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            background-color: var(--background);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            transition: opacity 300ms ease-out;
+        }
+
+        #splash.is-done {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #splash-icon {
             width: 96px;
             height: 96px;
-            margin: -48px 0 0 -48px;
-            background-image: url("appIcon.png");
+            background-image: url("icon-192.png");
             background-size: contain;
             background-repeat: no-repeat;
-            animation: pulse 1.6s ease-in-out infinite;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 1; }
+        #splash-name {
+            color: var(--on-background);
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+        }
+
+        #splash-track {
+            width: 200px;
+            max-width: 60vw;
+            height: 4px;
+            border-radius: 2px;
+            background-color: var(--track);
+            overflow: hidden;
+        }
+
+        #splash-bar {
+            width: 100%;
+            height: 100%;
+            border-radius: 2px;
+            background-color: var(--indicator);
+            transform: scaleX(0);
+            transform-origin: left center;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #splash {
+                transition: none;
+            }
         }
     </style>
 </head>
 <body>
-<div id="loader"></div>
+<div id="app"></div>
+<div id="splash">
+    <div id="splash-icon"></div>
+    <div id="splash-name">Campfire</div>
+    <div id="splash-track" role="progressbar" aria-label="Campfire" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div id="splash-bar"></div>
+    </div>
+</div>
+<script type="application/javascript">
+    (function () {
+        'use strict';
+
+        // Written by the build (see build.gradle.kts): how many .wasm binaries this distribution has
+        // and what they weigh together, uncompressed. They are the only part of a cold start worth
+        // measuring - about 96% of it - and the only part that arrives through fetch(), which is what
+        // can be watched from here; campfire.js is loaded by a <script> tag, which reports nothing.
+        //
+        // It stays null on the development server, where there is no distribution to describe, and the
+        // bar falls back to the sizes the server advertises.
+        var BUILD = /*{{BUILD}}*/null;
+
+        var splash = document.getElementById('splash');
+        var track = document.getElementById('splash-track');
+        var bar = document.getElementById('splash-bar');
+
+        var expected = BUILD ? BUILD.binaryBytes : 0;
+        var binaries = BUILD ? BUILD.binaryCount : 0;
+        var received = 0;
+        var completed = 0;
+        var pending = 0;
+        var startedAt = 0;
+        var isReady = false;
+        var shown = 0;
+
+        // Downloading is the part whose length is known; compiling and instantiating the module is
+        // not. So the download owns the first 92% of the bar and the rest is a decay that approaches
+        // but never reaches the end, until the first composed frame reports back.
+        var DOWNLOAD_SHARE = 0.92;
+
+        function isStarting() {
+            return binaries > 0 ? completed >= binaries : (completed > 0 && pending === 0);
+        }
+
+        function target() {
+            if (isReady) {
+                return 1;
+            }
+            if (isStarting()) {
+                if (!startedAt) {
+                    startedAt = Date.now();
+                }
+                return DOWNLOAD_SHARE + 0.07 * (1 - Math.exp((startedAt - Date.now()) / 2500));
+            }
+            return expected > 0 ? Math.min(1, received / expected) * DOWNLOAD_SHARE : 0;
+        }
+
+        var isDrawScheduled = false;
+
+        function draw() {
+            isDrawScheduled = false;
+            // Eased rather than snapped to the target: the byte counts arrive in bursts of whatever
+            // size the network hands over, and following those exactly makes the bar stutter. Never
+            // backwards either - a target that drops (a download that turned out to be longer than
+            // the server said) is a correction the bar waits out rather than shows.
+            shown = Math.max(shown, shown + (target() - shown) * 0.15);
+            bar.style.transform = 'scaleX(' + shown.toFixed(4) + ')';
+            // Nothing on the screen says how far along it is, so the bar has to say it out loud.
+            track.setAttribute('aria-valuenow', String(Math.round(shown * 100)));
+            if (isReady && shown > 0.999) {
+                splash.classList.add('is-done');
+                setTimeout(function () {
+                    if (splash.parentNode) {
+                        splash.parentNode.removeChild(splash);
+                    }
+                }, 300);
+                return;
+            }
+            schedule();
+        }
+
+        function schedule() {
+            if (!isDrawScheduled) {
+                isDrawScheduled = true;
+                requestAnimationFrame(draw);
+            }
+        }
+
+        /**
+         * Counts the bytes of the .wasm downloads by handing their body back as a stream that is read
+         * through. The headers are carried over to the replacement response, so it still says
+         * application/wasm and WebAssembly.instantiateStreaming keeps compiling as it downloads.
+         */
+        var nativeFetch = window.fetch;
+        window.fetch = function (input, init) {
+            var url = typeof input === 'string' ? input : (input && input.url) || '';
+            var response = nativeFetch.apply(this, arguments);
+            if (!/\.wasm([?#]|$)/.test(url)) {
+                return response;
+            }
+            pending++;
+            return response.then(function (result) {
+                if (!result.ok || !result.body) {
+                    pending--;
+                    completed++;
+                    return result;
+                }
+                if (!BUILD) {
+                    // No manifest: the server's own answer is the only estimate there is. It is the
+                    // size on the wire, so it is short of the truth whenever the server compresses -
+                    // hence the clamp in target().
+                    expected += parseInt(result.headers.get('content-length'), 10) || 0;
+                }
+                var reader = result.body.getReader();
+                var stream = new ReadableStream({
+                    pull: function (controller) {
+                        return reader.read().then(function (chunk) {
+                            if (chunk.done) {
+                                pending--;
+                                completed++;
+                                controller.close();
+                            } else {
+                                received += chunk.value.byteLength;
+                                controller.enqueue(chunk.value);
+                            }
+                            schedule();
+                        });
+                    },
+                    cancel: function (reason) {
+                        pending--;
+                        return reader.cancel(reason);
+                    }
+                });
+                return new Response(stream, {
+                    status: result.status,
+                    statusText: result.statusText,
+                    headers: result.headers
+                });
+            }, function (error) {
+                pending--;
+                throw error;
+            });
+        };
+
+        /**
+         * Called from Kotlin once the first frames are on the canvas. Everything below the splash
+         * screen is already painted by then, so the fade reveals the app rather than an empty page.
+         */
+        window.campfireReady = function () {
+            window.fetch = nativeFetch;
+            isReady = true;
+            schedule();
+        };
+
+        schedule();
+    })();
+</script>
 <script type="application/javascript" src="campfire.js"></script>
 </body>
 </html>

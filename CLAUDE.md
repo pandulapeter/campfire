@@ -154,10 +154,17 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
 
 ## Web
 
-The web build differs from the other three in one place only: where the files are. `FileStorage` has a `wasmJsMain`
-actual backed by the **Origin Private File System**, so the library is a real directory tree in the browser's own
-storage, private to the origin and invisible in the user's downloads.
+The web build differs from the other three in where the files are. `FileStorage` has a `wasmJsMain` actual backed by
+the **Origin Private File System**, so the library is a real directory tree in the browser's own storage, private to
+the origin and invisible in the user's downloads. It is also the only build that has to be downloaded before it can
+start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
 
+- The loading screen has a determinate progress bar, fed by a `fetch` wrapper that counts the bytes of the binaries
+  against the total the build wrote into the page. It is a page and not an installable app on purpose: there is no
+  web app manifest and no service worker, because every platform that should have an installable Campfire has a
+  native build.
+- `finishWebDistribution` (in `app/web/build.gradle.kts`) finalizes `wasmJsBrowserDistribution`: it writes that total
+  into `index.html`, and precompresses everything worth compressing.
 - OPFS, the file input and the download link are reached through `js(...)` blocks rather than through typed wrappers:
   one crossing of the Kotlin/Wasm boundary per operation is far cheaper than one per element, and several of these APIs
   have no binding. A Kotlin lambda cannot be passed into a `js(...)` block, so callbacks (file drops) come back as

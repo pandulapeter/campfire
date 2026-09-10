@@ -69,6 +69,36 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a forced spelling overrides the one the song asks for`() {
+        val song = ChordProParser.parse("{key: E}\n\n[E]a [A]b") // E -> F, a flat key.
+
+        assertEquals(listOf("F", "Bb"), ChordProTransposer.transpose(song, 1).chordNames())
+        assertEquals(listOf("F", "Bb"), ChordProTransposer.transpose(song, 1, preferFlats = true).chordNames())
+        assertEquals(listOf("F", "A#"), ChordProTransposer.transpose(song, 1, preferFlats = false).chordNames())
+    }
+
+    @Test
+    fun `a forced spelling respells a song that is not transposed at all`() {
+        val song = ChordProParser.parse("{key: Eb}\n\n[Eb]a [Bb]b")
+
+        assertSame(song, ChordProTransposer.transpose(song, 0))
+        assertEquals(listOf("Eb", "Bb"), ChordProTransposer.transpose(song, 0, preferFlats = true).chordNames())
+        assertEquals(listOf("D#", "A#"), ChordProTransposer.transpose(song, 0, preferFlats = false).chordNames())
+        assertEquals("D#", ChordProTransposer.transpose(song, 0, preferFlats = false).metadata.key)
+    }
+
+    @Test
+    fun `a forced spelling rewrites the text of a song that is not transposed at all`() {
+        val text = "{key: Eb}\n\n[Eb]a [Bb/Db]b\n\n{sog}\n| Eb . | Bb . |\n{eog}"
+
+        assertSame(text, ChordProTransposer.transposeText(text, 0))
+        assertEquals(
+            "{key: D#}\n\n[D#]a [A#/C#]b\n\n{sog}\n| D# . | A# . |\n{eog}",
+            ChordProTransposer.transposeText(text, 0, preferFlats = false)
+        )
+    }
+
+    @Test
     fun `transposing by an octave keeps every chord name`() {
         val song = ChordProParser.parse("{key: Am}\n\n[Am]a [F]b [C]c [G]d\n\n{sog}\n| Am . | G . |\n{eog}")
 

@@ -76,6 +76,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
@@ -213,6 +214,7 @@ private fun LoadedSongEditor(
     var isPreviewVisible by rememberSaveable { mutableStateOf(false) }
     val hasSideBySidePreview = windowSize == WindowSize.EXPANDED
     val fontScale = userPreferences?.fontScale ?: CampfireViewModel.DEFAULT_FONT_SCALE
+    val accidentals = userPreferences?.accidentals ?: UserPreferences.Accidentals.ORIGINAL
 
     Column(
         modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -261,6 +263,7 @@ private fun LoadedSongEditor(
                     viewModel = viewModel,
                     fileName = destination.fileName,
                     textFieldState = textFieldState,
+                    accidentals = accidentals,
                     onExport = { viewModel.exportSong(filePicker, destination.fileName) }
                 )
             }
@@ -300,6 +303,7 @@ private fun LoadedSongEditor(
                 shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true,
                 fontScale = fontScale,
                 isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true,
+                accidentals = accidentals,
                 contentPadding = PaddingValues(
                     start = if (hasSideBySidePreview) 0.dp else contentPadding.calculateStartPadding(layoutDirection),
                     end = contentPadding.calculateEndPadding(layoutDirection),
@@ -395,6 +399,7 @@ private fun SongPreview(
     shouldShowChords: Boolean,
     fontScale: Float,
     isHorizontalFlow: Boolean,
+    accidentals: UserPreferences.Accidentals,
     contentPadding: PaddingValues
 ) {
     var previewedText by remember(textFieldState) { mutableStateOf(textFieldState.text.toString()) }
@@ -404,7 +409,7 @@ private fun SongPreview(
             .debounce(PREVIEW_DELAY_MILLIS)
             .collect { previewedText = it }
     }
-    val song = remember(previewedText, transposition) { viewModel.renderSong(previewedText, transposition) }
+    val song = remember(previewedText, transposition, accidentals) { viewModel.renderSong(previewedText, transposition, accidentals) }
     val layoutDirection = LocalLayoutDirection.current
     val scrollState = rememberScrollState()
     val topPadding = 8.dp
@@ -436,6 +441,7 @@ private fun EditorMenu(
     viewModel: CampfireViewModel,
     fileName: String,
     textFieldState: TextFieldState,
+    accidentals: UserPreferences.Accidentals,
     onExport: () -> Unit
 ) {
     var isExpanded by remember { mutableStateOf(false) }
@@ -483,14 +489,14 @@ private fun EditorMenu(
                 icon = Res.drawable.ic_add
             ) {
                 isExpanded = false
-                textFieldState.replaceAll(viewModel.transposeText(textFieldState.text.toString(), 1))
+                textFieldState.replaceAll(viewModel.transposeText(textFieldState.text.toString(), 1, accidentals))
             }
             EditorMenuItem(
                 title = stringResource(Res.string.song_editor_transpose_text_down),
                 icon = Res.drawable.ic_subtract
             ) {
                 isExpanded = false
-                textFieldState.replaceAll(viewModel.transposeText(textFieldState.text.toString(), -1))
+                textFieldState.replaceAll(viewModel.transposeText(textFieldState.text.toString(), -1, accidentals))
             }
             EditorMenuItem(
                 title = stringResource(Res.string.export),

@@ -21,6 +21,16 @@ internal expect val isDesktopPlatform: Boolean
  */
 internal expect val libraryLocation: LibraryLocation?
 
+/**
+ * Whether the settings screen may offer a link that asks for money, which depends on where the build comes from.
+ *
+ * The App Store forbids pointing at any way of paying the developer other than an in-app purchase (guideline 3.1.1),
+ * and a tip is such a payment, so the iOS build has no such link. Play's billing is only required for purchases of
+ * digital content, which a donation that buys nothing is not, and the desktop installers and the web build answer to
+ * no store at all.
+ */
+internal expect val canAskForDonations: Boolean
+
 internal sealed interface LibraryLocation {
 
     /** An absolute path, shown as it is. */

@@ -22,6 +22,9 @@ internal actual val isDesktopPlatform = true
  */
 internal actual val libraryLocation: LibraryLocation? = LibraryLocation.Folder(File(desktopDataDirectory(), LIBRARY_DIRECTORY).absolutePath)
 
+// The installers are handed out by the project itself, with no store's rules to follow.
+internal actual val canAskForDonations = true
+
 private fun desktopDataDirectory(): File {
     val userHome = File(System.getProperty("user.home").orEmpty())
     val operatingSystem = System.getProperty("os.name").orEmpty().lowercase()

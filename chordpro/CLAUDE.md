@@ -30,7 +30,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
 - `ChordProSplitter` — splits a file that holds several songs at `{new_song}` / `{ns}`.
 - `ChordProTransposer` — moves chords by semitones, on the model (the viewer) or directly on the text keeping every
   byte of formatting (the editor's transpose action). Chooses sharps or flats from the song's key, follows the bass
-  note after `/`, understands German `H`, and leaves annotations alone.
+  note after `/`, understands German `H`, and leaves annotations alone. A caller that knows better passes
+  `preferFlats` and gets that spelling instead, which is what the accidentals preference does; forced that way it is
+  worth running for no semitones at all, so only `semitones == 0` *and* no forced spelling short-circuits.
 - `ChordProTabTransposer` — the same move inside a `{start_of_tab}` environment, where it means the fret numbers and
   not the notes: the tuning stays what it was. A tab environment is transposed as a whole, so that a transposition
   that would take a fret off the fingerboard moves all of it by octaves instead of producing an unplayable number,

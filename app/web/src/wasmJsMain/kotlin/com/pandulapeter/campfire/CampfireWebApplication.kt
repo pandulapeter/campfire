@@ -9,6 +9,9 @@
  */
 package com.pandulapeter.campfire
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
 import com.pandulapeter.campfire.data.repository.dataRepositoryModule
@@ -23,11 +26,30 @@ import org.koin.dsl.koinConfiguration
 private val dataModules
     get() = dataLocalSourceModule + dataRemoteSourceModule + dataRepositoryModule
 
+// Compose empties the element it is given, so it gets one of its own: the loading screen next to it in
+// index.html has to outlive the handover, and it is this app that decides when that is (see below).
 @OptIn(ExperimentalComposeUiApi::class)
-fun main() = ComposeViewport {
+fun main() = ComposeViewport(viewportContainerId = "app") {
     KoinApplication(
         koinConfiguration { modules(dataModules + domainModule + presentationModule) }
     ) {
         CampfireWebApp()
+        DismissLoadingScreen()
     }
+}
+
+/**
+ * Tells index.html that the app is on the canvas, which is what fades its loading screen out and
+ * finishes its progress bar. Waiting for the composition is not enough, because `withFrameNanos`
+ * resumes while the frame it belongs to is still being assembled - so the frame after it is the first
+ * one that is certainly drawn, and the fade uncovers the app rather than an empty page.
+ */
+@Composable
+private fun DismissLoadingScreen() = LaunchedEffect(Unit) {
+    repeat(2) { withFrameNanos { } }
+    reportAppReady()
+}
+
+private fun reportAppReady() {
+    js("window.campfireReady && window.campfireReady()")
 }

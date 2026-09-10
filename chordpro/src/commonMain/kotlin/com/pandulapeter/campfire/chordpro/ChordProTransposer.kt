@@ -25,11 +25,20 @@ object ChordProTransposer {
         .split(BASS_NOTE_SEPARATOR, limit = 2)
         .joinToString(BASS_NOTE_SEPARATOR) { transposeNote(it, semitones, preferFlats) }
 
-    /** Transposes every chord in the model (lyrics chords, grid chords, tabs; never annotations) and the key. */
-    fun transpose(song: ChordProSong, semitones: Int): ChordProSong {
-        if (semitones == 0) return song
-        val preferFlats = prefersFlats(song, semitones)
-        return song.copy(
+    /**
+     * Transposes every chord in the model (lyrics chords, grid chords, tabs; never annotations) and the key.
+     *
+     * @param preferFlats Forces the spelling of the accidentals; null leaves it to [prefersFlats], which is what the
+     *   song itself asks for. Forced, it is worth doing even for no semitones at all: respelling the chords of a song
+     *   that is not transposed is exactly what a reader who always wants flats (or sharps) is asking for.
+     */
+    fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean? = null): ChordProSong {
+        if (semitones == 0 && preferFlats == null) return song
+        return transpose(song, semitones, preferFlats ?: prefersFlats(song, semitones))
+    }
+
+    private fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean): ChordProSong =
+        song.copy(
             metadata = song.metadata.copy(
                 key = song.metadata.key?.let { transposeChord(it, semitones, preferFlats) }
             ),
@@ -41,12 +50,18 @@ object ChordProTransposer {
                 }
             }
         )
+
+    /**
+     * Transposes raw ChordPro text in place, keeping all formatting. Used by the editor's transpose action.
+     *
+     * @param preferFlats The same as in [transpose].
+     */
+    fun transposeText(text: String, semitones: Int, preferFlats: Boolean? = null): String {
+        if (semitones == 0 && preferFlats == null) return text
+        return transposeText(text, semitones, preferFlats ?: prefersFlats(ChordProParser.parse(text), semitones))
     }
 
-    /** Transposes raw ChordPro text in place, keeping all formatting. Used by the editor's transpose action. */
-    fun transposeText(text: String, semitones: Int): String {
-        if (semitones == 0) return text
-        val preferFlats = prefersFlats(ChordProParser.parse(text), semitones)
+    private fun transposeText(text: String, semitones: Int, preferFlats: Boolean): String {
         val lines = ChordProSyntax.splitLines(text).toMutableList()
         val tabLineIndices = mutableListOf<Int>() // The tab environment being collected: it is transposed as a whole.
         var environment: String? = null

@@ -19,6 +19,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -254,12 +255,20 @@ internal fun SectionHeaderAction(
     )
 }
 
+/**
+ * Title of a group of controls: the label above a [SegmentedChoice] or a set of switches, in the same color as a
+ * [SectionHeader] pill but without the pill, since it names a part of a section rather than a section.
+ *
+ * [contentPadding] defaults to the gaps a sheet or a side panel wants, where the groups are the whole content; a
+ * list that has a rhythm of its own passes its own gaps instead.
+ */
 @Composable
 internal fun SettingsSectionTitle(
     modifier: Modifier = Modifier,
-    text: String
+    text: String,
+    contentPadding: PaddingValues = PaddingValues(start = LIST_ITEM_KEYLINE, end = LIST_ITEM_KEYLINE, top = 24.dp, bottom = 8.dp)
 ) = Text(
-    modifier = modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp),
+    modifier = modifier.fillMaxWidth().padding(contentPadding),
     text = text,
     style = MaterialTheme.typography.titleSmall,
     color = MaterialTheme.colorScheme.primary

@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.back
@@ -132,11 +133,12 @@ internal fun SongDetailsScreen(
     val setlistTitle = destination.setlistFileName?.let { fileName -> setlists.firstOrNull { it.fileName == fileName }?.title }
     val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
     val isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true
+    val accidentals = userPreferences?.accidentals ?: UserPreferences.Accidentals.ORIGINAL
     val currentTransposition = currentSong?.let { transpositions[it.fileName, destination.setlistFileName] } ?: 0
     val currentSongText = currentSong?.let { songTexts[it.fileName] }
     // Memoized on the text and the amount: the app bar only needs the resulting key, not the whole parsed song.
-    val currentKey = remember(currentSongText, currentTransposition) {
-        currentSongText?.let { viewModel.renderSong(it, currentTransposition).metadata.key }
+    val currentKey = remember(currentSongText, currentTransposition, accidentals) {
+        currentSongText?.let { viewModel.renderSong(it, currentTransposition, accidentals).metadata.key }
     }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
@@ -305,6 +307,7 @@ internal fun SongDetailsScreen(
                     shouldShowChords = shouldShowChords,
                     fontScale = fontScale,
                     isHorizontalFlow = isHorizontalFlow,
+                    accidentals = accidentals,
                     settledWidth = settledWidth,
                     contentPadding = pageContentPadding,
                     renderSong = viewModel::renderSong,
@@ -421,9 +424,10 @@ private fun SongDetailsPage(
     shouldShowChords: Boolean,
     fontScale: Float,
     isHorizontalFlow: Boolean,
+    accidentals: UserPreferences.Accidentals,
     settledWidth: Dp,
     contentPadding: PaddingValues,
-    renderSong: (text: String, transposition: Int) -> ChordProSong,
+    renderSong: (text: String, transposition: Int, accidentals: UserPreferences.Accidentals) -> ChordProSong,
     onRetry: () -> Unit
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
@@ -450,8 +454,8 @@ private fun SongDetailsPage(
         }
     } else {
         val layoutDirection = LocalLayoutDirection.current
-        // Keyed on the text and the transposition, so a long song is not parsed again on every recomposition.
-        val renderedSong = remember(songText, transposition) { renderSong(songText, transposition) }
+        // Keyed on everything that changes the result, so a long song is not parsed again on every recomposition.
+        val renderedSong = remember(songText, transposition, accidentals) { renderSong(songText, transposition, accidentals) }
         if (renderedSong.blocks.isEmpty()) {
             // The file exists and could be read, it just has nothing in it yet - a newly created song, typically.
             Box(

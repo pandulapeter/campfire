@@ -10,8 +10,14 @@
 package com.pandulapeter.campfire.domain.api.useCases
 
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 
 interface TransposeChordProUseCase {
 
-    operator fun invoke(song: ChordProSong, semitones: Int): ChordProSong
+    /**
+     * @param accidentals Which spelling the chords are written with, from the user's preferences. Anything but
+     *   [UserPreferences.Accidentals.ORIGINAL] is worth applying even for no semitones at all: it is a preference
+     *   about how a song reads, not about what transposing does to it.
+     */
+    operator fun invoke(song: ChordProSong, semitones: Int, accidentals: UserPreferences.Accidentals): ChordProSong
 }

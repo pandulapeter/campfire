@@ -9,8 +9,15 @@
  */
 package com.pandulapeter.campfire.domain.api.useCases
 
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
+
 interface TransposeChordProTextUseCase {
 
-    /** Transposes the chords of a ChordPro document in place, leaving the rest of the text exactly as it was. */
-    operator fun invoke(text: String, semitones: Int): String
+    /**
+     * Transposes the chords of a ChordPro document in place, leaving the rest of the text exactly as it was.
+     *
+     * @param accidentals The same as in [TransposeChordProUseCase]. This one writes the file, so the spelling the
+     *   user reads in is also the spelling that ends up on disk.
+     */
+    operator fun invoke(text: String, semitones: Int, accidentals: UserPreferences.Accidentals): String
 }

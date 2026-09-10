@@ -9,6 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -30,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -40,6 +42,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_coffee
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_git_hub
 import com.pandulapeter.campfire.presentation.resources.ic_import
@@ -48,6 +51,12 @@ import com.pandulapeter.campfire.presentation.resources.ic_refresh
 import com.pandulapeter.campfire.presentation.resources.ic_website
 import com.pandulapeter.campfire.presentation.resources.settings
 import com.pandulapeter.campfire.presentation.resources.settings_about
+import com.pandulapeter.campfire.presentation.resources.settings_accidentals
+import com.pandulapeter.campfire.presentation.resources.settings_accidentals_description
+import com.pandulapeter.campfire.presentation.resources.settings_accidentals_flats
+import com.pandulapeter.campfire.presentation.resources.settings_accidentals_original
+import com.pandulapeter.campfire.presentation.resources.settings_accidentals_sharps
+import com.pandulapeter.campfire.presentation.resources.settings_created_by
 import com.pandulapeter.campfire.presentation.resources.settings_export_all
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub
 import com.pandulapeter.campfire.presentation.resources.settings_import
@@ -61,9 +70,11 @@ import com.pandulapeter.campfire.presentation.resources.settings_horizontal_sect
 import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.settings_song_display
+import com.pandulapeter.campfire.presentation.resources.settings_support
 import com.pandulapeter.campfire.presentation.resources.settings_sync
 import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_message
 import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_title
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_english
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_hungarian
@@ -83,9 +94,11 @@ import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
+import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -227,39 +240,58 @@ internal fun SettingsScreen(
                     onCheckedChange = viewModel::setHorizontalSectionFlowEnabled
                 )
             }
-            sectionHeader(
-                key = "header_theme",
-                listState = listState,
-                coroutineScope = coroutineScope
-            ) { stringResource(Res.string.settings_user_interface_theme) }
-            item(key = "theme") {
-                SegmentedChoice(
-                    modifier = Modifier.animateItem(),
-                    options = listOf(
-                        UserPreferences.UiMode.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_theme_system_default),
-                        UserPreferences.UiMode.LIGHT to stringResource(Res.string.settings_user_interface_theme_light),
-                        UserPreferences.UiMode.DARK to stringResource(Res.string.settings_user_interface_theme_dark)
-                    ),
-                    selected = userPreferences?.uiMode,
-                    onSelected = viewModel::setUiMode
-                )
+            item(key = "accidentals") {
+                Subsection(
+                    modifier = Modifier.animateItem().padding(vertical = SUBSECTION_GAP),
+                    title = stringResource(Res.string.settings_accidentals),
+                    description = stringResource(Res.string.settings_accidentals_description)
+                ) {
+                    SegmentedChoice(
+                        options = listOf(
+                            UserPreferences.Accidentals.ORIGINAL to stringResource(Res.string.settings_accidentals_original),
+                            UserPreferences.Accidentals.FLATS to stringResource(Res.string.settings_accidentals_flats),
+                            UserPreferences.Accidentals.SHARPS to stringResource(Res.string.settings_accidentals_sharps)
+                        ),
+                        selected = userPreferences?.accidentals,
+                        onSelected = viewModel::setAccidentals
+                    )
+                }
             }
             sectionHeader(
-                key = "header_language",
+                key = "header_user_interface",
                 listState = listState,
                 coroutineScope = coroutineScope
-            ) { stringResource(Res.string.settings_user_interface_language) }
-            item(key = "language") {
-                SegmentedChoice(
-                    modifier = Modifier.animateItem(),
-                    options = listOf(
-                        UserPreferences.Language.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_language_system_default),
-                        UserPreferences.Language.ENGLISH to stringResource(Res.string.settings_user_interface_language_english),
-                        UserPreferences.Language.HUNGARIAN to stringResource(Res.string.settings_user_interface_language_hungarian)
-                    ),
-                    selected = userPreferences?.language,
-                    onSelected = viewModel::setLanguage
-                )
+            ) { stringResource(Res.string.settings_user_interface) }
+            // One item, so that the gaps between the subsections are set once, next to each other, rather than by
+            // each subsection padding itself and every pair of them then adding up to twice the gap.
+            item(key = "user_interface") {
+                Column(
+                    modifier = Modifier.animateItem().padding(vertical = SUBSECTION_GAP),
+                    verticalArrangement = Arrangement.spacedBy(SUBSECTION_GAP)
+                ) {
+                    Subsection(title = stringResource(Res.string.settings_user_interface_theme)) {
+                        SegmentedChoice(
+                            options = listOf(
+                                UserPreferences.UiMode.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_theme_system_default),
+                                UserPreferences.UiMode.LIGHT to stringResource(Res.string.settings_user_interface_theme_light),
+                                UserPreferences.UiMode.DARK to stringResource(Res.string.settings_user_interface_theme_dark)
+                            ),
+                            selected = userPreferences?.uiMode,
+                            onSelected = viewModel::setUiMode
+                        )
+                    }
+                    Subsection(title = stringResource(Res.string.settings_user_interface_language)) {
+                        SegmentedChoice(
+                            options = listOf(
+                                UserPreferences.Language.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_language_system_default),
+                                UserPreferences.Language.ENGLISH to stringResource(Res.string.settings_user_interface_language_english),
+                                UserPreferences.Language.HUNGARIAN to stringResource(Res.string.settings_user_interface_language_hungarian)
+                            ),
+                            selected = userPreferences?.language,
+                            onSelected = viewModel::setLanguage
+                        )
+                    }
+                }
             }
             sectionHeader(
                 key = "header_about",
@@ -290,14 +322,35 @@ internal fun SettingsScreen(
                     onClick = { urlOpener("https://pandulapeter.com/legal/privacy_policy-campfire.html") }
                 )
             }
-            item(key = "version") {
-                Text(
+            if (canAskForDonations) {
+                item(key = "donate") {
+                    LinkListItem(
+                        modifier = Modifier.animateItem(),
+                        title = stringResource(Res.string.settings_support),
+                        icon = painterResource(Res.drawable.ic_coffee),
+                        onClick = { urlOpener("https://buymeacoffee.com/pandulapeter") }
+                    )
+                }
+            }
+            item(key = "footer") {
+                Column(
                     modifier = Modifier.animateItem().fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
-                    text = stringResource(Res.string.settings_version, CAMPFIRE_VERSION_NAME),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(Res.string.settings_created_by),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        modifier = Modifier.padding(top = 4.dp),
+                        text = stringResource(Res.string.settings_version, CAMPFIRE_VERSION_NAME),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }
@@ -319,3 +372,45 @@ private fun LazyListScope.sectionHeader(
         onClick = { coroutineScope.launch { listState.animateScrollToKey(key) } }
     )
 }
+
+/**
+ * A named group of controls inside a section: the title and the control it names. The title is close enough to its
+ * control ([SUBSECTION_TITLE_GAP]) to read as its label rather than as another group; the gaps to everything around
+ * it are [SUBSECTION_GAP], set by the caller.
+ *
+ * @param description What a [SwitchListItem]'s supporting text says for a switch: there for a group whose title is
+ *   not the whole story, left out where the options speak for themselves.
+ */
+@Composable
+private fun Subsection(
+    modifier: Modifier = Modifier,
+    title: String,
+    description: String? = null,
+    content: @Composable () -> Unit
+) = Column(modifier = modifier) {
+    SettingsSectionTitle(
+        text = title,
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = SUBSECTION_TITLE_GAP)
+    )
+    description?.let {
+        Text(
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = SUBSECTION_DESCRIPTION_GAP),
+            text = it,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+    content()
+}
+
+/**
+ * The gap between two [Subsection]s, and between a [Subsection] and the section header pill above or below it, which
+ * adds up with the pill's own [SECTION_HEADER_GAP] to about the distance a pill keeps from a [ListItem] row.
+ */
+private val SUBSECTION_GAP = 12.dp
+
+/** The gap between a [Subsection]'s title and its control, small enough that the two read as one thing. */
+private val SUBSECTION_TITLE_GAP = 4.dp
+
+/** The gap below a [Subsection]'s description, which stands between the title and the control rather than beside them. */
+private val SUBSECTION_DESCRIPTION_GAP = 8.dp

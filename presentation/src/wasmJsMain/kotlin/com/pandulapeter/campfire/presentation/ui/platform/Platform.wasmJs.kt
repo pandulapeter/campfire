@@ -16,6 +16,9 @@ internal actual val isDesktopPlatform = !hasTouchScreen()
 // The Origin Private File System is not reachable from outside the page.
 internal actual val libraryLocation: LibraryLocation? = null
 
+// The page is served by the project itself, with no store's rules to follow.
+internal actual val canAskForDonations = true
+
 /**
  * True if the browser reports any touchscreen. `maxTouchPoints` covers every current browser, `ontouchstart` is the
  * fallback for older ones.

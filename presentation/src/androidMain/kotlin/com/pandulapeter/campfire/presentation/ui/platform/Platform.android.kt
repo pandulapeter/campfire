@@ -13,3 +13,6 @@ internal actual val isDesktopPlatform = false
 
 // The files live in the app's private storage, which no file manager will show.
 internal actual val libraryLocation: LibraryLocation? = null
+
+// A donation buys nothing in the app, so it is not a purchase of digital content and Play's billing does not apply.
+internal actual val canAskForDonations = true

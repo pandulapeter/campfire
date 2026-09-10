@@ -10,9 +10,12 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.chordpro.ChordProTransposer
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
+import com.pandulapeter.campfire.domain.implementation.mapper.toPreferFlats
 
 class TransposeChordProTextUseCaseImpl internal constructor() : TransposeChordProTextUseCase {
 
-    override operator fun invoke(text: String, semitones: Int) = ChordProTransposer.transposeText(text, semitones)
+    override operator fun invoke(text: String, semitones: Int, accidentals: UserPreferences.Accidentals) =
+        ChordProTransposer.transposeText(text, semitones, accidentals.toPreferFlats())
 }

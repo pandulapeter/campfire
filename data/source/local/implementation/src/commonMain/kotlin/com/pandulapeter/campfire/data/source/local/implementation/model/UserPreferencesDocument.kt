@@ -28,5 +28,6 @@ internal data class UserPreferencesDocument(
     val sortingMode: String = "",
     val uiMode: String = "",
     val language: String = "",
+    val accidentals: String = "",
     val transpositions: Map<String, Int> = emptyMap()
 )

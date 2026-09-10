@@ -23,7 +23,8 @@ paths, or a verb for pure transforms (`NormalizeText`, `ParseChordPro`, `Transpo
 - `GetUserPreferencesUseCase` is separate from `ScreenData` on purpose: the theme and the language must reach the UI
   before the library has been scanned, and folding them into the aggregate would make the whole app wait for the songs.
 - `TransposeChordProUseCase` transposes the parsed model (what the viewer shows), `TransposeChordProTextUseCase` the raw
-  text (what the editor's transpose action rewrites).
+  text (what the editor's transpose action rewrites). Both take `UserPreferences.Accidentals` as well as the semitones,
+  because how a black key is spelled is the reader's preference and not a property of the move.
 
 Sync adds `GetSyncStateUseCase`, `GetSyncProvidersUseCase`, `ConnectSyncProviderUseCase`,
 `DisconnectSyncProviderUseCase`, `RestoreSyncUseCase` and `SynchronizeLibraryUseCase`. `GetSyncStateUseCase` is

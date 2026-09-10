@@ -419,21 +419,27 @@ class CampfireViewModel(
     }
 
     /**
-     * Parses a song file and applies both the file's own `{transpose}` and the transposition the user picked, which
-     * is what the viewer renders. Call it from a `remember` keyed on the text and the transposition: parsing a long
-     * song on every recomposition would be wasteful.
+     * Parses a song file and applies the file's own `{transpose}`, the transposition the user picked and the spelling
+     * of the accidentals they prefer, which is what the viewer renders. Call it from a `remember` keyed on all three:
+     * parsing a long song on every recomposition would be wasteful.
      */
-    fun renderSong(text: String, transposition: Int): ChordProSong {
+    fun renderSong(text: String, transposition: Int, accidentals: UserPreferences.Accidentals): ChordProSong {
         val parsed = parseChordPro(text)
         val semitones = parsed.metadata.transpose + transposition
-        return if (semitones == 0) parsed else transposeChordPro(parsed, semitones)
+        // A preferred spelling still respells a song nobody transposed, so only the two together mean there is nothing to do.
+        return if (semitones == 0 && accidentals == UserPreferences.Accidentals.ORIGINAL) {
+            parsed
+        } else {
+            transposeChordPro(parsed, semitones, accidentals)
+        }
     }
 
     /**
      * Transposes the chords of a document in place, leaving everything else exactly as it was. Unlike the viewer's
      * transposition this rewrites the file: it is what the editor's "transpose text" does.
      */
-    fun transposeText(text: String, semitones: Int) = transposeChordProText(text, semitones)
+    fun transposeText(text: String, semitones: Int, accidentals: UserPreferences.Accidentals) =
+        transposeChordProText(text, semitones, accidentals)
 
     /** A song opened from a setlist transposes inside that setlist; one opened from the library, in the preferences. */
     fun setTransposition(songFileName: String, setlistFileName: String?, transposition: Int) = viewModelScope.launch {
@@ -589,6 +595,8 @@ class CampfireViewModel(
     fun setUiMode(value: UserPreferences.UiMode) = updateUserPreferences { copy(uiMode = value) }
 
     fun setLanguage(value: UserPreferences.Language) = updateUserPreferences { copy(language = value) }
+
+    fun setAccidentals(value: UserPreferences.Accidentals) = updateUserPreferences { copy(accidentals = value) }
 
     private fun updateUserPreferences(update: UserPreferences.() -> UserPreferences) = userPreferences.value?.let { userPreferences ->
         viewModelScope.launch { saveUserPreferences(userPreferences.update()) }

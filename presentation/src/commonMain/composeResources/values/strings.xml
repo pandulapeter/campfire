@@ -80,10 +80,16 @@
     <string name="settings_import">Import songs or zip archives…</string>
     <string name="settings_export_all">Export library as zip</string>
     <string name="settings_song_display">Song display</string>
-    <string name="settings_lyrics_only_mode">Lyrics only mode</string>
-    <string name="settings_lyrics_only_mode_description">Hide the chords</string>
-    <string name="settings_horizontal_section_flow">Horizontal section flow</string>
-    <string name="settings_horizontal_section_flow_description">Read the sections across the columns, then downwards, so that scrolling never goes back up</string>
+    <string name="settings_lyrics_only_mode">Lyrics only</string>
+    <string name="settings_lyrics_only_mode_description">Hide every chord and show the words on their own</string>
+    <string name="settings_horizontal_section_flow">Read across the columns</string>
+    <string name="settings_horizontal_section_flow_description">Where a song is wide enough for several columns, the sections carry on to the right instead of downwards, so scrolling never goes back up</string>
+    <string name="settings_accidentals">Accidentals</string>
+    <string name="settings_accidentals_description">Whether a chord on a black key is written as a flat (B♭) or as a sharp (A♯). Left as written, Campfire picks whichever fits the key of the song.</string>
+    <string name="settings_accidentals_original">As written</string>
+    <string name="settings_accidentals_flats">Flats (♭)</string>
+    <string name="settings_accidentals_sharps">Sharps (♯)</string>
+    <string name="settings_user_interface">User interface</string>
     <string name="settings_user_interface_theme">Theme</string>
     <string name="settings_user_interface_theme_system_default">System</string>
     <string name="settings_user_interface_theme_dark">Dark</string>
@@ -96,7 +102,9 @@
     <string name="settings_website">Website</string>
     <string name="settings_git_hub">GitHub page</string>
     <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="settings_support">Buy me a coffee</string>
     <string name="settings_version">Version %1$s</string>
+    <string name="settings_created_by">Created by Péter Pandula</string>
 
     <!-- Song editor screen -->
     <string name="song_editor_preview">Preview</string>

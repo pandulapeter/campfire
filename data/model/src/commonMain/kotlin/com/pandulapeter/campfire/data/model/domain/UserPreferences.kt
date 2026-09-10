@@ -17,6 +17,7 @@ data class UserPreferences(
     val sortingMode: SortingMode,
     val uiMode: UiMode,
     val language: Language,
+    val accidentals: Accidentals, // How the notes between the white keys are spelled when a song is displayed.
     /** Song file name to semitones, for songs opened from the library rather than from a setlist. */
     val transpositions: Map<String, Int>
 ) {
@@ -30,6 +31,17 @@ data class UserPreferences(
         LIGHT("light"),
         DARK("dark"),
         SYSTEM_DEFAULT("system_default")
+    }
+
+    /**
+     * The spelling of the black keys the viewer writes. [ORIGINAL] leaves it to the song — its key, or the accidentals
+     * its chords are already written with — which is what a reader who never thought about it wants; the other two
+     * are for the one who always reads the same one, and hold even for a song that is not transposed at all.
+     */
+    enum class Accidentals(val id: String) {
+        ORIGINAL("original"),
+        FLATS("flats"),
+        SHARPS("sharps")
     }
 
     enum class Language(val id: String) {
