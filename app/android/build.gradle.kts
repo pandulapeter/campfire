@@ -35,7 +35,7 @@ android {
         applicationId = "com.pandulapeter.campfire"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = targetSdkVersion
-        versionCode = project.property("campfire.versionCode").toString().toInt()
+        versionCode = project.property("campfire.android.versionCode").toString().toInt()
         versionName = project.property("campfire.versionName").toString()
     }
     buildFeatures.compose = true

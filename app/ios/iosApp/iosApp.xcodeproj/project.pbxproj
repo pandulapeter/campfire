@@ -101,6 +101,7 @@
 				7555FF77242A565900829871 /* Sources */,
 				B92378962B6B1156000C7307 /* Frameworks */,
 				7555FF79242A565900829871 /* Resources */,
+				A5786ACC05B3A85784A4B7DD /* Set version from gradle.properties */,
 			);
 			buildRules = (
 			);
@@ -180,6 +181,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/../../..\"\n./gradlew :app:ios:embedAndSignAppleFrameworkForXcode\n";
+		};
+		A5786ACC05B3A85784A4B7DD /* Set version from gradle.properties */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Set version from gradle.properties";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\n\nPROPERTIES_FILE=\"$SRCROOT/../../../gradle.properties\"\nBUILT_PLIST=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n\nif [ ! -f \"$PROPERTIES_FILE\" ]; then\n  echo \"error: gradle.properties not found at $PROPERTIES_FILE\"\n  exit 1\nfi\n\nread_property() {\n  sed -n \"s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p\" \"$PROPERTIES_FILE\" | tail -n 1 | tr -d \"[:space:]\"\n}\n\nVERSION_NAME=$(read_property \"campfire\\.versionName\")\nBUILD_NUMBER=$(read_property \"campfire\\.ios\\.buildNumber\")\n\nif [ -z \"$VERSION_NAME\" ]; then\n  echo \"error: campfire.versionName is missing from gradle.properties\"\n  exit 1\nfi\n\nif [ -z \"$BUILD_NUMBER\" ]; then\n  echo \"error: campfire.ios.buildNumber is missing from gradle.properties\"\n  exit 1\nfi\n\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString $VERSION_NAME\" \"$BUILT_PLIST\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD_NUMBER\" \"$BUILT_PLIST\"\n\necho \"note: version set from gradle.properties: $VERSION_NAME ($BUILD_NUMBER)\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -324,7 +344,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = N45A6ZHDGY;
 				ENABLE_PREVIEWS = YES;
@@ -340,7 +359,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pandulapeter.campfire;
 				PRODUCT_NAME = "${APP_NAME}";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -359,7 +377,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 27;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = N45A6ZHDGY;
 				ENABLE_PREVIEWS = YES;
@@ -375,7 +392,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pandulapeter.campfire;
 				PRODUCT_NAME = "${APP_NAME}";
 				PROVISIONING_PROFILE_SPECIFIER = "";
