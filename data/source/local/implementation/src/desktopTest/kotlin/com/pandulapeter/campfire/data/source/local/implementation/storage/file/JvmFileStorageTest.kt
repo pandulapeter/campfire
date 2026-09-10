@@ -50,6 +50,14 @@ class JvmFileStorageTest {
     }
 
     @Test
+    fun `reports one file the way the listing does`() = runBlocking {
+        fileStorage.writeText(StorageDirectory.SONGS, "a.cho", "{title: A}")
+
+        assertEquals(fileStorage.list(StorageDirectory.SONGS).single(), fileStorage.info(StorageDirectory.SONGS, "a.cho"))
+        assertNull(fileStorage.info(StorageDirectory.SONGS, "missing.cho"))
+    }
+
+    @Test
     fun `keeps the directories apart`() = runBlocking {
         fileStorage.writeText(StorageDirectory.SONGS, "shared.txt", "song")
         fileStorage.writeText(StorageDirectory.SETLISTS, "shared.txt", "setlist")

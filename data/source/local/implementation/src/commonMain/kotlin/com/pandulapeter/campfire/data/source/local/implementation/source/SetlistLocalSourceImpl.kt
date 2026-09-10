@@ -19,6 +19,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.setlistFileNam
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 
 internal class SetlistLocalSourceImpl(
@@ -31,6 +32,8 @@ internal class SetlistLocalSourceImpl(
             try {
                 fileStorage.readText(StorageDirectory.SETLISTS, file.name)
                     ?.let { json.decodeFromString<SetlistDocument>(it).toModel(file.name) }
+            } catch (exception: CancellationException) {
+                throw exception
             } catch (exception: Exception) {
                 // Left on disk rather than deleted: a setlist the user hand-edited into invalid JSON is theirs to fix.
                 println("Could not read the setlist \"${file.name}\": ${exception.message}")

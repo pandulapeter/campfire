@@ -39,6 +39,10 @@ internal class JvmFileStorage(private val root: File) : FileStorage {
             .sortedBy { it.name }
     }
 
+    override suspend fun info(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
+        file(directory, name).let { if (it.isFile) StoredFileInfo(name = it.name, size = it.length(), lastModified = it.lastModified()) else null }
+    }
+
     override suspend fun exists(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
         file(directory, name).isFile
     }

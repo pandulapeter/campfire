@@ -58,23 +58,27 @@ private class IosFileStorage : FileStorage {
         val entries = fileManager.contentsOfDirectoryAtPath(directoryPath, null)
             ?: if (fileManager.fileExistsAtPath(directoryPath)) throw IllegalStateException("Could not read \"$directoryPath\".") else emptyList<Any?>()
         entries.filterIsInstance<String>()
-            .mapNotNull { name ->
-                val attributes = fileManager.attributesOfItemAtPath("$directoryPath/$name", null)
-                if (attributes == null || attributes[NSFileType] == NSFileTypeDirectory) {
-                    null
-                } else {
-                    StoredFileInfo(
-                        name = name,
-                        size = (attributes[NSFileSize] as? NSNumber)?.longLongValue ?: 0L,
-                        lastModified = ((attributes[NSFileModificationDate] as? NSDate)?.timeIntervalSince1970 ?: 0.0).times(1000).toLong()
-                    )
-                }
-            }
+            .mapNotNull { name -> info(path = "$directoryPath/$name", name = name) }
             .sortedBy { it.name }
+    }
+
+    override suspend fun info(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
+        info(path = filePath(directory, name), name = name)
     }
 
     override suspend fun exists(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {
         fileManager.fileExistsAtPath(filePath(directory, name))
+    }
+
+    /** Null for a directory and for anything that is not there. */
+    private fun info(path: String, name: String): StoredFileInfo? {
+        val attributes = fileManager.attributesOfItemAtPath(path, null)
+        if (attributes == null || attributes[NSFileType] == NSFileTypeDirectory) return null
+        return StoredFileInfo(
+            name = name,
+            size = (attributes[NSFileSize] as? NSNumber)?.longLongValue ?: 0L,
+            lastModified = ((attributes[NSFileModificationDate] as? NSDate)?.timeIntervalSince1970 ?: 0.0).times(1000).toLong()
+        )
     }
 
     override suspend fun readText(directory: StorageDirectory, name: String) = withContext(Dispatchers.IO) {

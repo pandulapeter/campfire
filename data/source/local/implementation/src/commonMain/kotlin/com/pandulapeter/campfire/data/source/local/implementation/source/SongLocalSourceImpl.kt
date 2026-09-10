@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StoredFileInfo
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -40,9 +41,7 @@ internal class SongLocalSourceImpl(
             .filterNotNull()
     }
 
-    override suspend fun loadSong(fileName: String): Song? = fileStorage.list(StorageDirectory.SONGS)
-        .firstOrNull { it.name == fileName }
-        ?.readSong()
+    override suspend fun loadSong(fileName: String): Song? = fileStorage.info(StorageDirectory.SONGS, fileName)?.readSong()
 
     /**
      * Campfire writes `.cho`, but a folder the user can also open in a file manager will hold whatever they put in
@@ -76,6 +75,9 @@ internal class SongLocalSourceImpl(
         fileStorage.readText(StorageDirectory.SONGS, name)?.let { text ->
             toSong(metadata = ChordProParser.parseMetadata(text), hasChords = ChordProParser.hasChords(text))
         }
+    } catch (exception: CancellationException) {
+        // A library scan that was cancelled is not a library of unreadable songs.
+        throw exception
     } catch (exception: Exception) {
         println("Could not read the song \"$name\": ${exception.message}")
         null

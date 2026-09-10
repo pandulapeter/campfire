@@ -13,6 +13,8 @@ package com.pandulapeter.campfire.data.source.local.implementation.storage.file
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.await
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.khronos.webgl.Int8Array
 import org.khronos.webgl.toByteArray
@@ -51,6 +53,18 @@ private class OpfsFileStorage : FileStorage {
             .sortedBy { it.name }
     }
 
+    override suspend fun info(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
+        fileHandle(directory, name, create = false)?.let { handle ->
+            fileInfo(handle).await()?.toString()?.split(FIELD_SEPARATOR)?.takeIf { it.size == 2 }?.let { fields ->
+                StoredFileInfo(
+                    name = name,
+                    size = fields[0].toDoubleOrNull()?.toLong() ?: 0L,
+                    lastModified = fields[1].toDoubleOrNull()?.toLong() ?: 0L
+                )
+            }
+        }
+    }
+
     override suspend fun exists(directory: StorageDirectory, name: String) = withContext(Dispatchers.Default) {
         fileHandle(directory, name, create = false) != null
     }
@@ -87,15 +101,26 @@ private class OpfsFileStorage : FileStorage {
         return getFileHandle(directoryHandle(directory), name, create).await()
     }
 
-    private suspend fun directoryHandle(directory: StorageDirectory): JsAny {
-        if (!isOpfsAvailable()) {
-            throw IllegalStateException(OPFS_UNAVAILABLE)
+    /**
+     * The three directory handles, resolved once. Walking down from the root is three promises, and doing that for
+     * every one of the reads of a library scan (which already run in parallel) tripled the number of calls into
+     * OPFS. Nothing outside the page can remove a directory from the origin private file system, so a handle that
+     * was resolved once stays valid.
+     */
+    private val directoryHandles = mutableMapOf<StorageDirectory, JsAny>()
+    private val directoryHandlesMutex = Mutex()
+
+    private suspend fun directoryHandle(directory: StorageDirectory): JsAny = directoryHandles[directory] ?: directoryHandlesMutex.withLock {
+        directoryHandles.getOrPut(directory) {
+            if (!isOpfsAvailable()) {
+                throw IllegalStateException(OPFS_UNAVAILABLE)
+            }
+            var handle = opfsRoot().await() ?: throw IllegalStateException(OPFS_UNAVAILABLE)
+            directory.pathSegments.forEach { segment ->
+                handle = getDirectoryHandle(handle, segment).await() ?: throw IllegalStateException(OPFS_UNAVAILABLE)
+            }
+            handle
         }
-        var handle = opfsRoot().await() ?: throw IllegalStateException(OPFS_UNAVAILABLE)
-        directory.pathSegments.forEach { segment ->
-            handle = getDirectoryHandle(handle, segment).await() ?: throw IllegalStateException(OPFS_UNAVAILABLE)
-        }
-        return handle
     }
 
     private companion object {
@@ -134,6 +159,10 @@ private fun listEntries(directory: JsAny): Promise<JsString?> = js(
         return entries.join(String.fromCharCode(1));
     })()"""
 )
+
+/** The size and the last modification time of one file, separated by the same control character `listEntries` uses. */
+private fun fileInfo(handle: JsAny): Promise<JsString?> =
+    js("handle.getFile().then(function (file) { return file.size + String.fromCharCode(0) + file.lastModified; })")
 
 private fun readFileText(handle: JsAny): Promise<JsString?> = js("handle.getFile().then(function (file) { return file.text(); })")
 

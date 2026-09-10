@@ -23,7 +23,14 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.pandulapeter.campfire.CampfireActivity
 import com.pandulapeter.campfire.R
+import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.koin.mp.KoinPlatform
 
 /**
@@ -39,7 +46,26 @@ import org.koin.mp.KoinPlatform
  */
 class CampfireSyncService : Service() {
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var latestSyncState: SyncState = SyncState.Disconnected
+    private var isInForeground = false
+
     override fun onBind(intent: Intent?): IBinder? = null
+
+    /**
+     * The end of the run is watched from here as well as reported by the activity: the activity that started this
+     * service is the very thing that may be gone by the time the run ends, and nothing else would take the
+     * notification down again. It would say "syncing" for as long as the process lived.
+     */
+    override fun onCreate() {
+        super.onCreate()
+        scope.launch {
+            KoinPlatform.getKoin().get<GetSyncStateUseCase>().invoke().collect { state ->
+                latestSyncState = state
+                stopIfNothingIsRunning()
+            }
+        }
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
@@ -56,6 +82,9 @@ class CampfireSyncService : Service() {
                     notification,
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0
                 )
+                isInForeground = true
+                // The run may have ended between the intent being sent and its arrival here.
+                stopIfNothingIsRunning()
             }
         }
         // Not sticky: a run that the system killed the process of is over, and restarting the service without the
@@ -63,7 +92,23 @@ class CampfireSyncService : Service() {
         return START_NOT_STICKY
     }
 
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
+    }
+
+    /**
+     * Only once the service is in the foreground: stopping before then would leave the system waiting for the
+     * `startForeground` that `startForegroundService` promised it, which it treats as a crash of the app.
+     */
+    private fun stopIfNothingIsRunning() {
+        if (isInForeground && (latestSyncState as? SyncState.Connected)?.progress == null) {
+            stop()
+        }
+    }
+
     private fun stop() {
+        isInForeground = false
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         stopSelf()
     }

@@ -39,6 +39,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.CancellationException
 import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -147,8 +148,16 @@ internal class DropboxSyncProvider(
                 displayName = account.name.displayName.ifEmpty { account.email },
                 email = account.email.takeIf { it.isNotEmpty() }
             )
-        } catch (exception: SyncNetworkException) {
-            // Offline is not "not connected": the stored name is what the app knew last time, and it is still true.
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: SyncAuthorizationException) {
+            // Refused or revoked, which is the one answer that means the credentials are no longer good for anything.
+            println("Dropbox no longer accepts the stored credentials: ${exception.message}")
+            null
+        } catch (exception: Exception) {
+            // Offline, or an answer that could not be read, is not "not connected": the stored name is what the app
+            // knew last time, and it is still true.
+            println("Could not read the Dropbox account: ${exception.message}")
             credentials.displayName.takeIf { it.isNotEmpty() }?.let {
                 SyncAccount(providerId = id, displayName = it, email = credentials.email.takeIf(String::isNotEmpty))
             }
@@ -360,6 +369,11 @@ internal class DropboxSyncProvider(
             }
         }
         if (!response.status.isSuccess()) {
+            // Being told to wait, or the service having trouble of its own, says nothing about the credentials, and
+            // reporting it as a refusal would send the user off to connect an account that is perfectly fine.
+            if (response.status == HttpStatusCode.TooManyRequests || response.status.value >= 500) {
+                throw SyncNetworkException("Dropbox is busy: ${response.status.value}")
+            }
             throw SyncAuthorizationException("Dropbox refused the authorization: ${response.status.value} ${response.errorSummary()}")
         }
         return json.decodeFromString(response.bodyAsText())

@@ -13,11 +13,9 @@ import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.UserPreferencesRepository
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 class LoadScreenDataUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
@@ -25,16 +23,14 @@ class LoadScreenDataUseCaseImpl internal constructor(
     private val userPreferencesRepository: UserPreferencesRepository
 ) : LoadScreenDataUseCase {
 
-    private val scope = object : CoroutineScope {
-        override val coroutineContext = SupervisorJob() + Dispatchers.Default
-    }
-
     /**
      * Every source is loaded even if another one has already failed, so that one broken part of the screen does not
-     * keep the rest of it empty; each repository reports its own failure through its `DataState`.
+     * keep the rest of it empty: the repositories never throw for a failed read, each reports its own failure through
+     * its `DataState`. The three run side by side in the caller's own scope, so a caller that goes away takes the
+     * reads with it rather than leaving them running in a scope nothing ever cancels.
      */
     override suspend operator fun invoke(isRescan: Boolean) {
-        with(scope) {
+        coroutineScope {
             listOf(
                 async { if (isRescan) songRepository.rescan() else songRepository.loadSongsIfNeeded() },
                 async { if (isRescan) setlistRepository.rescan() else setlistRepository.loadSetlistsIfNeeded() },

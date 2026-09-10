@@ -15,7 +15,6 @@ import com.pandulapeter.campfire.data.repository.api.SongContentRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDataRepository
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
-import kotlinx.coroutines.flow.first
 
 internal class SongRepositoryImpl(
     private val songLocalSource: SongLocalSource,
@@ -41,13 +40,12 @@ internal class SongRepositoryImpl(
         songLocalSource.saveSongContent(content)
         songContentRepository.invalidate(content.fileName)
         val updated = songLocalSource.loadSong(content.fileName) ?: return
-        val current = songs.first().data.orEmpty()
-        updateData(current.filterNot { it.fileName == updated.fileName } + updated)
+        updateData { current -> current.orEmpty().filterNot { it.fileName == updated.fileName } + updated }
     }
 
     override suspend fun createSong(title: String, artist: String, text: String): Song {
         val song = songLocalSource.createSong(title = title, artist = artist, text = text)
-        updateData(songs.first().data.orEmpty() + song)
+        updateData { current -> current.orEmpty() + song }
         return song
     }
 
@@ -56,6 +54,6 @@ internal class SongRepositoryImpl(
     override suspend fun deleteSong(fileName: String) {
         songLocalSource.deleteSong(fileName)
         songContentRepository.invalidate(fileName)
-        updateData(songs.first().data.orEmpty().filterNot { it.fileName == fileName })
+        updateData { current -> current.orEmpty().filterNot { it.fileName == fileName } }
     }
 }

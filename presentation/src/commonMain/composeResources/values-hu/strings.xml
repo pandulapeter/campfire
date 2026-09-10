@@ -28,6 +28,7 @@
     <!-- Errors -->
     <string name="error_no_data">Nem sikerült betölteni az adatokat</string>
     <string name="error_no_data_hint">A könyvtárat nem sikerült beolvasni.</string>
+    <string name="error_operation_failed">Hiba történt</string>
 
     <!-- Songs screen -->
     <string name="songs">Dalok</string>

@@ -32,6 +32,7 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
+import kotlinx.coroutines.cancelAndJoin
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CancellationException
@@ -102,7 +103,16 @@ internal class SyncRepositoryImpl(
             _syncState.update { SyncState.Disconnected }
             return disconnectedResult
         }
-        val account = connected.loadAccount()
+        val account = try {
+            connected.loadAccount()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            // Start up must never end in an exception because of a service: the library is what the app is for,
+            // and sync is a thing it does on the side.
+            println("Could not restore the ${connected.id} connection: ${exception.message}")
+            null
+        }
         if (account == null) {
             // The credentials are there but the service will not say who they belong to, which only happens once
             // they have been revoked. Nothing is deleted here: the user is told, and disconnecting is their call.
@@ -160,6 +170,10 @@ internal class SyncRepositoryImpl(
     }
 
     override suspend fun disconnect() {
+        // A run that is still going would carry on against an account that is gone, fail, and report that failure
+        // onto an account the user just disconnected.
+        syncJob?.cancelAndJoin()
+        syncJob = null
         providers.forEach { provider ->
             if (provider.isConnected()) {
                 try {
@@ -206,7 +220,7 @@ internal class SyncRepositoryImpl(
                     provider = provider,
                     document = document,
                     accountId = accountIdOf(connected.account),
-                    onProgress = { progress -> _syncState.update { (it as? SyncState.Connected ?: connected).copy(progress = progress) } }
+                    onProgress = { progress -> updateConnected { it.copy(progress = progress) } }
                 )
                 val syncedAt = Clock.System.now().toEpochMilliseconds()
                 saveIndex(result.index.copy(lastSyncedAt = syncedAt))
@@ -215,8 +229,8 @@ internal class SyncRepositoryImpl(
                 if (result.summary.hasChanges) {
                     rescanLibrary()
                 }
-                _syncState.update {
-                    connected.copy(
+                updateConnected {
+                    it.copy(
                         progress = null,
                         lastSyncedAt = syncedAt,
                         lastOutcome = SyncOutcome.Success(result.summary)
@@ -229,17 +243,26 @@ internal class SyncRepositoryImpl(
                     clearRunInProgress()
                     rescanLibrary()
                 }
-                _syncState.update { connected.copy(progress = null, lastOutcome = SyncOutcome.Interrupted) }
+                updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Interrupted) }
                 throw exception
             } catch (exception: Exception) {
                 println("The sync run failed: ${exception.message}")
                 clearRunInProgress()
-                _syncState.update { connected.copy(progress = null, lastOutcome = SyncOutcome.Failure(exception.toFailureReason())) }
+                updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(exception.toFailureReason())) }
             }
         }
     }
 
     private suspend fun clearRunInProgress() = saveIndex(loadIndex().copy(isRunInProgress = false))
+
+    /**
+     * Changes the state only while it is still [SyncState.Connected]. A run reports how it went when it ends, and if
+     * the account was disconnected in the meantime that report has nothing to attach itself to: rebuilding the
+     * connected state from what the run remembers would put the account back on screen.
+     */
+    private inline fun updateConnected(transform: (SyncState.Connected) -> SyncState) = _syncState.update {
+        if (it is SyncState.Connected) transform(it) else it
+    }
 
     private suspend fun rescanLibrary() {
         songRepository.rescan()
@@ -311,14 +334,14 @@ internal class SyncRepositoryImpl(
 
     private suspend fun loadIndex() = try {
         syncStateLocalSource.loadSyncIndex()?.let { json.decodeFromString<SyncIndexDocument>(it) } ?: SyncIndexDocument()
+    } catch (exception: CancellationException) {
+        throw exception
     } catch (exception: Exception) {
         println("Could not read the sync index: ${exception.message}")
         SyncIndexDocument()
     }
 
     private suspend fun saveIndex(document: SyncIndexDocument) = syncStateLocalSource.saveSyncIndex(json.encodeToString(document))
-
-    private suspend fun lastSyncedAt() = loadIndex().lastSyncedAt.takeIf { it > 0 }
 
     private companion object {
         val disconnectedResult = SyncRepository.RestoreResult(isConnected = false, didReturnFromAuthorization = false)

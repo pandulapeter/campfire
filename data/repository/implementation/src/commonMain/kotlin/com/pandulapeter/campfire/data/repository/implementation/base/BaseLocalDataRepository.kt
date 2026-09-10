@@ -10,8 +10,10 @@
 package com.pandulapeter.campfire.data.repository.implementation.base
 
 import com.pandulapeter.campfire.data.model.DataState
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -41,10 +43,13 @@ internal abstract class BaseLocalDataRepository<T>(
     /** Reads the local source again even if there already is data, which is what a refresh does. */
     protected suspend fun reloadData(): T? = mutex.withLock { read() }
 
-    /** Replaces the cached data without writing anything, for changes that persisted themselves file by file. */
-    protected fun updateData(data: T) {
-        _dataState.value = DataState.Idle(data)
-    }
+    /**
+     * Replaces the cached data without writing anything, for changes that persisted themselves file by file. The
+     * transform is applied to the state as it is at that moment, so two changes that land at once (a save in the
+     * editor and the rescan a sync run finished with) build on each other instead of the later one overwriting the
+     * earlier. [DataState.data] is null while nothing has been read yet.
+     */
+    protected fun updateData(transform: (T?) -> T) = _dataState.update { DataState.Idle(transform(it.data)) }
 
     /** Publishes [data], then persists it as a whole. */
     protected suspend fun writeData(data: T, persist: suspend (T) -> Unit) = _dataState.run {
@@ -52,6 +57,8 @@ internal abstract class BaseLocalDataRepository<T>(
         value = try {
             persist(data)
             DataState.Idle(data)
+        } catch (exception: CancellationException) {
+            throw exception
         } catch (exception: Exception) {
             println(exception.message)
             // The change is kept in memory even though it could not be written: undoing it under the user would be
@@ -65,6 +72,11 @@ internal abstract class BaseLocalDataRepository<T>(
         value = DataState.Loading(value.data)
         try {
             loadDataFromLocalSource().also { value = DataState.Idle(it) }
+        } catch (exception: CancellationException) {
+            // A read the caller gave up on is not a read that failed: the data on screen stays what it was, and the
+            // next caller reads again.
+            value = DataState.Idle(value.data ?: throw exception)
+            throw exception
         } catch (exception: Exception) {
             println(exception.message)
             value = DataState.Failure(value.data)

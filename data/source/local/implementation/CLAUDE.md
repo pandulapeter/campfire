@@ -13,7 +13,9 @@ File-backed multiplatform implementation of `:data:source:local:api`, on all fou
 (`dataLocalSourceModule`).
 
 - **`storage/file/FileStorage.kt`** is the only thing that differs per platform: flat file access inside the app's own
-  data directory, addressed as `(StorageDirectory, file name)` — no paths, no sub-directories. `expect fun
+  data directory, addressed as `(StorageDirectory, file name)` — no paths, no sub-directories. `info` is what `list`
+  would say about one file, so that saving a song (or writing one file of an import) does not list the directory
+  — on OPFS a listing opens every file for its size and date, which made an import quadratic. `expect fun
   Scope.createFileStorage()` has four actuals: `JvmFileStorage` over `java.io.File` (shared between `androidMain` and
   `desktopMain`, one copy each because they are separate source sets), `IosFileStorage` over `NSFileManager` and
   `OpfsFileStorage` over the browser's Origin Private File System. Everything above this line is `commonMain`.
@@ -21,7 +23,11 @@ File-backed multiplatform implementation of `:data:source:local:api`, on all fou
     other so that the library exports as one archive, and the preferences sit outside it so that they do not.
   - Text is UTF-8 both ways, and a byte order mark is stripped while reading, because editors on Windows write one.
   - Writes are atomic on the three platforms that can be (a temporary file moved over the target on the JVM, `atomically`
-    on iOS), so a crash in the middle of a save cannot truncate a song. OPFS has no such primitive.
+    on iOS), so a crash in the middle of a save cannot truncate a song. OPFS has no such primitive. The OPFS storage
+    resolves the three directory handles once and keeps them: walking down from the root is three promises, and
+    nothing outside the page can remove a directory from the origin private file system.
+  - Every `catch (Exception)` around a read rethrows `CancellationException` first: a scan that was cancelled is not
+    a library of unreadable songs.
   - iOS splits the two: the library goes to the documents directory, where the Files app can reach it, and the
     preferences to application support, where it cannot.
 - **`FileNames.kt`** owns everything about what a file is called: sanitising user text into a name every platform

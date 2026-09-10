@@ -343,8 +343,16 @@ private fun SongActionsSheet(
             icon = icon,
             isEnabled = isEnabled,
             isEmphasized = false,
-            // The sheet gets out of the way before whatever the action opens lands on top of it.
-            onClick = { coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { onClick() } }
+            // The sheet gets out of the way before whatever the action opens lands on top of it. Hiding the sheet
+            // by hand does not count as dismissing it, so the dialog state is cleared here too: left as it was, an
+            // action that opens no dialog of its own (editing, exporting) would leave the invisible sheet's modal
+            // layer over the screen, swallowing the next tap.
+            onClick = {
+                coroutineScope.launch { sheetState.hide() }.invokeOnCompletion {
+                    viewModel.dismissDialog()
+                    onClick()
+                }
+            }
         )
     }
     Spacer(modifier = Modifier.height(16.dp))

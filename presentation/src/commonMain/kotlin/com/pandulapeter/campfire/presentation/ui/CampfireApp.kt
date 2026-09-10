@@ -72,6 +72,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.error_operation_failed
 import com.pandulapeter.campfire.presentation.resources.export_failed
 import com.pandulapeter.campfire.presentation.resources.import_failed
 import com.pandulapeter.campfire.presentation.resources.import_result
@@ -302,10 +303,16 @@ private fun Messages(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     // Queued rather than collected straight into the snackbar: the text of a message can only be built in a
-    // composition (string resources are composable), and two identical results in a row are still two messages.
-    val queue = remember { mutableStateListOf<CampfireViewModel.Message>() }
-    LaunchedEffect(viewModel) { viewModel.messages.collect { queue += it } }
-    val current: CampfireViewModel.Message? = queue.firstOrNull()
+    // composition (string resources are composable), and two identical results in a row are still two messages -
+    // which is what the numbering is for. Two failed exports are the same object, and an effect keyed on the message
+    // alone would not restart for the second one: it would sit at the head of the queue forever, unshown, with
+    // everything after it stuck behind it.
+    val queue = remember { mutableStateListOf<IndexedValue<CampfireViewModel.Message>>() }
+    LaunchedEffect(viewModel) {
+        var count = 0
+        viewModel.messages.collect { queue += IndexedValue(count++, it) }
+    }
+    val current: CampfireViewModel.Message? = queue.firstOrNull()?.value
     val text = when (current) {
         is CampfireViewModel.Message.ImportFinished -> stringResource(
             Res.string.import_result,
@@ -317,9 +324,10 @@ private fun Messages(
         CampfireViewModel.Message.ImportFailed -> stringResource(Res.string.import_failed)
         CampfireViewModel.Message.ExportFailed -> stringResource(Res.string.export_failed)
         CampfireViewModel.Message.SaveFailed -> stringResource(Res.string.song_editor_save_failed)
+        CampfireViewModel.Message.OperationFailed -> stringResource(Res.string.error_operation_failed)
         null -> null
     }
-    LaunchedEffect(current) {
+    LaunchedEffect(queue.firstOrNull()?.index) {
         if (text != null) {
             snackbarHostState.showSnackbar(text)
             queue.removeFirstOrNull()
@@ -562,5 +570,17 @@ private fun SyncNotificationEffect(viewModel: CampfireViewModel) {
             progress = it
         )
     }
-    LaunchedEffect(notification) { syncNotifier.onSyncNotificationChanged(notification) }
+    // "Nothing to show" is only ever said after something was shown from here. Said on the first frame of every
+    // composition, it would reach the Android shell as "stop the service" whenever the app was opened onto a run
+    // that was already going in the background, and the service takes that as the user's request to stop the run.
+    var hasShownNotification by remember { mutableStateOf(false) }
+    LaunchedEffect(notification) {
+        if (notification != null) {
+            hasShownNotification = true
+            syncNotifier.onSyncNotificationChanged(notification)
+        } else if (hasShownNotification) {
+            hasShownNotification = false
+            syncNotifier.onSyncNotificationChanged(null)
+        }
+    }
 }

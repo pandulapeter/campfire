@@ -58,6 +58,7 @@ import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCas
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -154,8 +155,12 @@ class CampfireViewModel(
     /**
      * Read straight from its own repository, like the preferences and for the same reason: sync runs on its own
      * schedule, and a settings screen must not wait for a scan of the library to say whether an account is on.
+     *
+     * Eager, because its first value is acted on: the Android shell stops the sync service when it sees no run, and
+     * a state that started out as "disconnected" for the one frame before the real value arrived would stop a run
+     * that was going perfectly well in the background whenever the app was opened onto it.
      */
-    val syncState = getSyncState().asState(SyncState.Disconnected)
+    val syncState = getSyncState().asEagerState(SyncState.Disconnected)
 
     /** Fixed for the life of the build, so it is a value rather than a flow. Empty means sync is not configured. */
     val syncProviders: List<SyncProviderId> = getSyncProviders()
@@ -197,8 +202,21 @@ class CampfireViewModel(
                 setlist.fileName to setlist.entries.filter { it.transposition != 0 }.associate { it.songFileName to it.transposition }
             }
         )
-    }.asState(Transpositions())
-    val allSongs = screenData.map { it.data?.songs.orEmpty() }.asState(emptyList())
+    }.asEagerState(Transpositions())
+
+    /**
+     * Eager, like [setlists]: the song details screen picks the page it opens on from this list, and a list that was
+     * still empty on its first frame would open every setlist on its first song.
+     */
+    val allSongs = screenData.map { it.data?.songs.orEmpty() }.asEagerState(emptyList())
+
+    /**
+     * Every song with its title and artist normalized for searching and grouping, done once per library rather than
+     * once per keystroke: the search runs over the whole list on every character typed.
+     */
+    private val searchableSongs = allSongs.map { songs ->
+        songs.map { SearchableSong(song = it, title = normalizeText(it.title), artist = normalizeText(it.artist)) }
+    }
 
     /**
      * The file names of every song in the library, filters included. Eager for the same reason as [setlists]:
@@ -218,7 +236,9 @@ class CampfireViewModel(
     val librarySummary = screenData
         .map { state -> state.data?.let { LibrarySummary(songCount = it.songFileNames.size, setlistCount = it.setlists.size) } }
         .asEagerState(null)
-    val songGroups = combine(allSongs, query, userPreferences.map { it?.sortingMode }) { songs, query, sortingMode ->
+    // Distinct on the sorting mode alone, or every other change to the preferences (a transposition, the text size
+    // settling after a pinch) would have the whole library grouped again for nothing.
+    val songGroups = combine(searchableSongs, query, userPreferences.map { it?.sortingMode }.distinctUntilChanged()) { songs, query, sortingMode ->
         if (query.isBlank()) {
             songs.groupIntoSections(sortingMode ?: UserPreferences.SortingMode.BY_ARTIST)
         } else {
@@ -320,8 +340,15 @@ class CampfireViewModel(
         viewModelScope.launch {
             // On the web the consent page replaces the app, so this start up is the second half of a tap on
             // Settings: whether it ended up connected or not, that is the screen the answer is on.
-            if (restoreSync()) {
-                selectTopLevelDestination(CampfireDestination.Settings)
+            try {
+                if (restoreSync()) {
+                    selectTopLevelDestination(CampfireDestination.Settings)
+                }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                // Sync is something the app does on the side: nothing about it may keep the library from appearing.
+                println("Could not restore the sync connection: ${exception.message}")
             }
         }
         viewModelScope.launch {
@@ -404,11 +431,11 @@ class CampfireViewModel(
     }
 
     /** Creates the file and opens it in the editor, which is the only useful thing to do with an empty song. */
-    fun createSong(title: String, artist: String) = viewModelScope.launch {
+    fun createSong(title: String, artist: String) = launchLibraryChange {
         openEditor(fileName = createSong.invoke(title = title, artist = artist).fileName, shouldStartInsideFirstSection = true)
     }
 
-    fun deleteSong(fileName: String) = viewModelScope.launch {
+    fun deleteSong(fileName: String) = launchLibraryChange {
         deleteSong.invoke(fileName)
         // Nobody is asked to save a file that has just been deleted, so the draft goes before the screens holding it.
         _editorDraft.update { null }
@@ -461,6 +488,8 @@ class CampfireViewModel(
                 saveSongContent.invoke(SongContent(fileName = fileName, text = text))
                 _songTexts.update { it + (fileName to text) }
             }
+        } catch (exception: CancellationException) {
+            throw exception
         } catch (exception: Exception) {
             println("Could not save the song \"$fileName\": ${exception.message}")
             _messages.send(Message.SaveFailed)
@@ -506,7 +535,7 @@ class CampfireViewModel(
         transposeChordProText(text, semitones, accidentals)
 
     /** A song opened from a setlist transposes inside that setlist; one opened from the library, in the preferences. */
-    fun setTransposition(songFileName: String, setlistFileName: String?, transposition: Int) = viewModelScope.launch {
+    fun setTransposition(songFileName: String, setlistFileName: String?, transposition: Int) = launchLibraryChange {
         val clamped = transposition.coerceIn(MIN_TRANSPOSITION, MAX_TRANSPOSITION)
         if (setlistFileName == null) {
             userPreferences.value?.let { preferences ->
@@ -541,6 +570,8 @@ class CampfireViewModel(
         if (_isImporting.value) return@launch
         val files = try {
             filePicker.pickFiles()
+        } catch (exception: CancellationException) {
+            throw exception
         } catch (exception: Exception) {
             println("Could not pick the files to import: ${exception.message}")
             _messages.send(Message.ImportFailed)
@@ -557,6 +588,8 @@ class CampfireViewModel(
         _isImporting.update { true }
         try {
             _messages.send(Message.ImportFinished(importFiles.invoke(files)))
+        } catch (exception: CancellationException) {
+            throw exception
         } catch (exception: Exception) {
             println("Could not import the files: ${exception.message}")
             _messages.send(Message.ImportFailed)
@@ -585,6 +618,8 @@ class CampfireViewModel(
     private suspend fun save(filePicker: FilePicker, isShare: Boolean = false, export: suspend () -> ExportedFile?) = try {
         export()?.let { if (isShare) filePicker.shareFile(it) else filePicker.saveFile(it) } ?: _messages.send(Message.ExportFailed)
         Unit
+    } catch (exception: CancellationException) {
+        throw exception
     } catch (exception: Exception) {
         println("Could not export: ${exception.message}")
         _messages.send(Message.ExportFailed)
@@ -592,11 +627,11 @@ class CampfireViewModel(
 
     // Setlists
 
-    fun createSetlist(title: String) = viewModelScope.launch {
+    fun createSetlist(title: String) = launchLibraryChange {
         createSetlist.invoke(title)
     }
 
-    fun addSongToSetlist(songFileName: String, setlistFileName: String) = viewModelScope.launch {
+    fun addSongToSetlist(songFileName: String, setlistFileName: String) = launchLibraryChange {
         setlists.value.firstOrNull { it.fileName == setlistFileName }?.let { setlist ->
             if (setlist.entries.none { it.songFileName == songFileName }) {
                 saveSetlist(setlist.copy(entries = listOf(Setlist.Entry(songFileName = songFileName)) + setlist.entries))
@@ -604,22 +639,22 @@ class CampfireViewModel(
         }
     }
 
-    fun renameSetlist(setlist: Setlist, title: String) = viewModelScope.launch {
+    fun renameSetlist(setlist: Setlist, title: String) = launchLibraryChange {
         saveSetlist(setlist.copy(title = title.trim()))
     }
 
-    fun deleteSetlist(setlistFileName: String) = viewModelScope.launch {
+    fun deleteSetlist(setlistFileName: String) = launchLibraryChange {
         deleteSetlist.invoke(setlistFileName)
     }
 
     /** The transposition of the song travels in the entry, so removing it takes the transposition with it. */
-    fun removeSongFromSetlist(songFileName: String, setlistFileName: String) = viewModelScope.launch {
+    fun removeSongFromSetlist(songFileName: String, setlistFileName: String) = launchLibraryChange {
         setlists.value.firstOrNull { it.fileName == setlistFileName }?.let { setlist ->
             saveSetlist(setlist.copy(entries = setlist.entries.filterNot { it.songFileName == songFileName }))
         }
     }
 
-    fun moveSongInSetlist(setlistFileName: String, fromSongFileName: String, toSongFileName: String) = viewModelScope.launch {
+    fun moveSongInSetlist(setlistFileName: String, fromSongFileName: String, toSongFileName: String) = launchLibraryChange {
         setlists.value.firstOrNull { it.fileName == setlistFileName }?.let { setlist ->
             saveSetlist(
                 setlist.copy(
@@ -691,7 +726,7 @@ class CampfireViewModel(
         syncConnectionJob = null
     }
 
-    fun disconnectSyncProvider() = viewModelScope.launch {
+    fun disconnectSyncProvider() = launchLibraryChange {
         disconnectSyncProvider.invoke()
     }
 
@@ -712,6 +747,22 @@ class CampfireViewModel(
 
     // Helpers
 
+    /**
+     * [viewModelScope.launch] for the intents that write to the library. A write that fails throws out of the
+     * repository, and an exception nobody catches in a launched coroutine takes the whole app down on Android: here
+     * it becomes one line at the bottom of the screen instead, and the library stays what it was.
+     */
+    private fun launchLibraryChange(block: suspend () -> Unit) = viewModelScope.launch {
+        try {
+            block()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            println("The change could not be written: ${exception.message}")
+            _messages.send(Message.OperationFailed)
+        }
+    }
+
     private fun <T> Flow<T>.asState(initialValue: T) = distinctUntilChanged().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
@@ -726,20 +777,18 @@ class CampfireViewModel(
     )
 
     /**
-     * Runs on every keystroke over the whole library, so each song is normalized once and the ranking is decided
-     * before sorting - a comparator's selector runs on every comparison, not once per song.
+     * Runs on every keystroke over the whole library, so the songs come pre-normalized ([searchableSongs]) and the
+     * ranking is decided before sorting - a comparator's selector runs on every comparison, not once per song.
      */
-    private fun List<Song>.filterAndRank(query: String): List<Song> {
+    private fun List<SearchableSong>.filterAndRank(query: String): List<Song> {
         val normalizedQuery = normalizeText(query)
         return mapNotNull { song ->
-            val title = normalizeText(song.title)
-            val artist = normalizeText(song.artist)
             // Both sides are already lower case, so these don't have to pay for a case insensitive comparison.
-            if (title.contains(normalizedQuery) || artist.contains(normalizedQuery)) {
+            if (song.title.contains(normalizedQuery) || song.artist.contains(normalizedQuery)) {
                 MatchingSong(
-                    song = song,
-                    doesTitleStartWithQuery = title.startsWith(normalizedQuery),
-                    doesArtistStartWithQuery = artist.startsWith(normalizedQuery)
+                    song = song.song,
+                    doesTitleStartWithQuery = song.title.startsWith(normalizedQuery),
+                    doesArtistStartWithQuery = song.artist.startsWith(normalizedQuery)
                 )
             } else {
                 null
@@ -751,33 +800,33 @@ class CampfireViewModel(
 
     /**
      * The songs arrive sorted, so a song joins the previous group whenever it has the same key. Comparing the keys
-     * rather than the headers keeps this to one normalization per song.
+     * rather than the headers keeps this to one comparison per song.
      */
-    private fun List<Song>.groupIntoSections(sortingMode: UserPreferences.SortingMode): List<SongGroup> {
+    private fun List<SearchableSong>.groupIntoSections(sortingMode: UserPreferences.SortingMode): List<SongGroup> {
         val groups = mutableListOf<Pair<SongGroup.Header, MutableList<Song>>>()
         var lastKey: String? = null
         forEach { song ->
             val key = when (sortingMode) {
-                UserPreferences.SortingMode.BY_ARTIST -> normalizeText(song.artist)
+                UserPreferences.SortingMode.BY_ARTIST -> song.artist
                 UserPreferences.SortingMode.BY_TITLE -> song.title.initialLetter()?.toString().orEmpty()
             }
             val lastGroup = groups.lastOrNull()
             if (lastGroup != null && key == lastKey) {
-                lastGroup.second += song
+                lastGroup.second += song.song
             } else {
                 val header = when (sortingMode) {
-                    UserPreferences.SortingMode.BY_ARTIST -> SongGroup.Header.Artist(name = song.artist, initial = song.artist.initialLetter())
+                    UserPreferences.SortingMode.BY_ARTIST -> SongGroup.Header.Artist(name = song.song.artist, initial = song.artist.initialLetter())
                     UserPreferences.SortingMode.BY_TITLE -> key.firstOrNull()?.let { SongGroup.Header.Letter(it) } ?: SongGroup.Header.Symbols
                 }
-                groups += header to mutableListOf(song)
+                groups += header to mutableListOf(song.song)
                 lastKey = key
             }
         }
         return groups.map { (header, songs) -> SongGroup(header, songs) }
     }
 
-    /** The upper case, accent-free first character of the text if it is a letter. */
-    private fun String.initialLetter() = normalizeText(take(1)).firstOrNull()?.takeIf { it.isLetter() }?.uppercaseChar()
+    /** The upper case first character of an already normalized (lower case, accent-free) text if it is a letter. */
+    private fun String.initialLetter() = firstOrNull()?.takeIf { it.isLetter() }?.uppercaseChar()
 
     /** Something that has happened and is worth one line of text at the bottom of the screen. */
     sealed interface Message {
@@ -785,6 +834,9 @@ class CampfireViewModel(
         data object ImportFailed : Message
         data object ExportFailed : Message
         data object SaveFailed : Message
+
+        /** A change to the library (a new setlist, a deleted song, a moved entry) that could not be written. */
+        data object OperationFailed : Message
     }
 
     /** What a list without content has in its place. */
@@ -820,6 +872,13 @@ class CampfireViewModel(
         val song: Song,
         val doesTitleStartWithQuery: Boolean,
         val doesArtistStartWithQuery: Boolean
+    )
+
+    /** A song with the normalized title and artist the search and the grouping compare. */
+    private class SearchableSong(
+        val song: Song,
+        val title: String,
+        val artist: String
     )
 
     data class SongGroup(

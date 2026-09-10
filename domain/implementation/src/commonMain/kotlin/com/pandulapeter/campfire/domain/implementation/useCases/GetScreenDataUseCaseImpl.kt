@@ -20,6 +20,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 class GetScreenDataUseCaseImpl internal constructor(
     private val normalizeText: NormalizeTextUseCase,
@@ -34,17 +35,20 @@ class GetScreenDataUseCaseImpl internal constructor(
     private val screenDataFlow = combine(
         setlistRepository.setlists,
         songRepository.songs,
-        userPreferencesRepository.userPreferences
-    ) { setlistsDataState, songsDataState, userPreferencesDataState ->
+        // Only the two preferences the list is built from: a preference that changes on every step of a transposition
+        // (or on every frame of a pinch, once the debounce lets it through) must not have the whole library filtered
+        // and sorted again for it.
+        userPreferencesRepository.userPreferences.map { state -> state.mapData { it.toListPreferences() } }.distinctUntilChanged()
+    ) { setlistsDataState, songsDataState, listPreferencesDataState ->
 
         fun createScreenData() = setlistsDataState.data?.sortedByDescending { it.priority }?.let { setlists ->
             songsDataState.data?.let { songs ->
-                userPreferencesDataState.data?.let { userPreferences ->
+                listPreferencesDataState.data?.let { listPreferences ->
                     ScreenData(
                         setlists = setlists,
                         songs = songs
-                            .filterHasChords(userPreferences)
-                            .sort(userPreferences),
+                            .filterHasChords(listPreferences)
+                            .sort(listPreferences),
                         songFileNames = songs.mapTo(mutableSetOf()) { it.fileName }
                     ).also {
                         cache = it
@@ -53,7 +57,7 @@ class GetScreenDataUseCaseImpl internal constructor(
             }
         }
 
-        val dataStates = arrayOf(setlistsDataState, songsDataState, userPreferencesDataState)
+        val dataStates = arrayOf(setlistsDataState, songsDataState, listPreferencesDataState)
         if (dataStates.any { it is DataState.Failure }) {
             DataState.Failure(createScreenData() ?: cache)
         } else if (dataStates.any { it is DataState.Loading }) {
@@ -63,14 +67,14 @@ class GetScreenDataUseCaseImpl internal constructor(
         }
     }.distinctUntilChanged()
 
-    private fun List<Song>.filterHasChords(userPreferences: UserPreferences) = if (userPreferences.shouldShowSongsWithoutChords) this else filter { it.hasChords }
+    private fun List<Song>.filterHasChords(listPreferences: ListPreferences) = if (listPreferences.shouldShowSongsWithoutChords) this else filter { it.hasChords }
 
     /**
      * The selector of a comparator runs on every comparison, so sorting this way used to normalize each title and
      * artist a logarithmic number of times over. The keys are computed once per song here instead.
      */
-    private fun List<Song>.sort(userPreferences: UserPreferences): List<Song> {
-        val comparator = when (userPreferences.sortingMode) {
+    private fun List<Song>.sort(listPreferences: ListPreferences): List<Song> {
+        val comparator = when (listPreferences.sortingMode) {
             UserPreferences.SortingMode.BY_ARTIST -> compareBy<SortableSong>({ it.artist }, { it.title })
             UserPreferences.SortingMode.BY_TITLE -> compareBy<SortableSong>({ it.title }, { it.artist })
         }
@@ -84,4 +88,21 @@ class GetScreenDataUseCaseImpl internal constructor(
         val artist: String,
         val title: String
     )
+
+    /** The part of the preferences the song list depends on. */
+    private data class ListPreferences(
+        val shouldShowSongsWithoutChords: Boolean,
+        val sortingMode: UserPreferences.SortingMode
+    )
+
+    private fun UserPreferences.toListPreferences() = ListPreferences(
+        shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
+        sortingMode = sortingMode
+    )
+
+    private fun <T, R> DataState<T>.mapData(transform: (T) -> R): DataState<R> = when (this) {
+        is DataState.Idle -> DataState.Idle(transform(data))
+        is DataState.Loading -> DataState.Loading(data?.let(transform))
+        is DataState.Failure -> DataState.Failure(data?.let(transform))
+    }
 }

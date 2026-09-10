@@ -25,8 +25,9 @@ internal fun sanitizeFileName(raw: String): String {
     val replaced = raw.map { if (it in FORBIDDEN_CHARACTERS || it.isISOControl()) ' ' else it }.joinToString("")
     // Trailing dots are legal on POSIX but are silently dropped by Windows, which would change the name behind the
     // user's back and break the "the file name is the identity" rule.
-    val collapsed = replaced.split(' ', '\t', '\n').filter { it.isNotEmpty() }.joinToString(" ").trimEnd('.').trim()
-    return if (collapsed.isEmpty()) "Untitled" else collapsed.take(MAX_BASE_NAME_LENGTH)
+    // Capped first: cutting a capped name afterwards could leave exactly the trailing dot or space that was trimmed.
+    val collapsed = replaced.split(' ', '\t', '\n').filter { it.isNotEmpty() }.joinToString(" ").take(MAX_BASE_NAME_LENGTH).trimEnd('.').trim()
+    return collapsed.ifEmpty { "Untitled" }
 }
 
 internal fun songFileName(title: String, artist: String): String {

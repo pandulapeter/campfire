@@ -13,7 +13,6 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDataRepository
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
-import kotlinx.coroutines.flow.first
 
 internal class SetlistRepositoryImpl(
     private val setlistLocalSource: SetlistLocalSource
@@ -31,14 +30,13 @@ internal class SetlistRepositoryImpl(
 
     override suspend fun createSetlist(title: String, priority: Int): Setlist {
         val setlist = setlistLocalSource.createSetlist(title = title, priority = priority)
-        updateData(setlists.first().data.orEmpty() + setlist)
+        updateData { current -> current.orEmpty() + setlist }
         return setlist
     }
 
     override suspend fun saveSetlist(setlist: Setlist) {
         setlistLocalSource.saveSetlist(setlist)
-        val current = setlists.first().data.orEmpty()
-        updateData(current.filterNot { it.fileName == setlist.fileName } + setlist)
+        updateData { current -> current.orEmpty().filterNot { it.fileName == setlist.fileName } + setlist }
     }
 
     override suspend fun parseSetlist(document: String) = setlistLocalSource.parseSetlist(document)
@@ -49,6 +47,6 @@ internal class SetlistRepositoryImpl(
 
     override suspend fun deleteSetlist(fileName: String) {
         setlistLocalSource.deleteSetlist(fileName)
-        updateData(setlists.first().data.orEmpty().filterNot { it.fileName == fileName })
+        updateData { current -> current.orEmpty().filterNot { it.fileName == fileName } }
     }
 }

@@ -17,6 +17,7 @@ import com.pandulapeter.campfire.data.repository.api.ArchiveRepository
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
+import kotlinx.coroutines.CancellationException
 
 class ImportFilesUseCaseImpl internal constructor(
     private val archiveRepository: ArchiveRepository,
@@ -43,6 +44,8 @@ class ImportFilesUseCaseImpl internal constructor(
             if (file.name.endsWith(ARCHIVE_EXTENSION, ignoreCase = true)) {
                 try {
                     archiveRepository.unpack(file.bytes).forEach(::sort)
+                } catch (exception: CancellationException) {
+                    throw exception
                 } catch (exception: Exception) {
                     println("Could not unpack \"${file.name}\": ${exception.message}")
                     skippedFileNames += file.name

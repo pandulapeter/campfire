@@ -20,12 +20,16 @@ data already on screen in the `Loading` state, so a refresh never blanks the lis
 `Failure(previous data)` rather than an empty list.
 
 Writing is deliberately **not** part of that shape. Songs and setlists are one file each, so a change writes that file
-and updates the one cached entry (`updateData`); only the preferences are persisted as a whole (`writeData`). A
+and updates the one cached entry (`updateData`, which takes a transform of the current list and applies it atomically,
+so a save landing during a rescan cannot overwrite what the rescan found); only the preferences are persisted as a
+whole (`writeData`). A cancelled read is not a failed one: it is rethrown and leaves the cached data as it was. A
 `rescan()` — the refresh action, and the last step of every import — is the only thing that walks the directory again.
 
 - `SongContentRepositoryImpl` is not a `BaseLocalDataRepository`: it is a keyed in-memory cache of song *texts*, so
   paging through a setlist re-reads nothing. Bulk readers (the library export) pass `shouldCache = false` so that
-  walking the whole library does not leave all of it in memory. The editor invalidates one entry after a save.
+  walking the whole library does not leave all of it in memory. The editor invalidates one entry after a save. The
+  lock only guards the map, never a read: a read that started before an invalidation is told so by a generation
+  counter and does not put the text it read back into the cache.
 - `ArchiveRepositoryImpl` is a pass-through to the zip code in the local source implementation; it exists so the domain
   layer can reach it without depending on a local source.
 - `sync/` is where local and remote meet, which is why it is in a repository rather than in either source.
@@ -40,4 +44,7 @@ and updates the one cached entry (`updateData`); only the preferences are persis
   one after another: every one of them is a request, and serialising them made a first sync as slow as the round
   trip times added up. `SyncRepositoryImpl` owns an application-lifetime scope, so a run outlives the screen and
   (on Android) the activity that started it, and it is what tells the song and setlist repositories to rescan
-  afterwards — the use case cannot, now that it returns before the run does.
+  afterwards — the use case cannot, now that it returns before the run does. Disconnecting cancels a run that is
+  still going and waits for it, and a run only ever writes its outcome into a state that is still `Connected`: a
+  run that outlived the account it ran against must not bring that account back on screen. `restore` never throws
+  for a service that refuses the stored credentials — the app starts disconnected and says so.

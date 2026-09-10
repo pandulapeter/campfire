@@ -41,6 +41,13 @@ interface FileStorage {
 
     suspend fun list(directory: StorageDirectory): List<StoredFileInfo>
 
+    /**
+     * What [list] would report about one file, or null if it does not exist. Saving a song needs the metadata of that
+     * one file, and listing the whole directory for it made every save (and every file of an import) cost as much as
+     * a rescan.
+     */
+    suspend fun info(directory: StorageDirectory, name: String): StoredFileInfo?
+
     suspend fun exists(directory: StorageDirectory, name: String): Boolean
 
     /** Null if the file does not exist. */

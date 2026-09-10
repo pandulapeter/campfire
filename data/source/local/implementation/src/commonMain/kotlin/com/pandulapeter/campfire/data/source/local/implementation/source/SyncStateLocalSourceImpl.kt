@@ -12,6 +12,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.source
 import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
+import kotlinx.coroutines.CancellationException
 
 internal class SyncStateLocalSourceImpl(
     private val fileStorage: FileStorage
@@ -28,6 +29,8 @@ internal class SyncStateLocalSourceImpl(
     /** A document that cannot be read is treated as one that is not there: sync then starts from nothing. */
     private suspend fun read(name: String) = try {
         fileStorage.readText(StorageDirectory.PREFERENCES, name)
+    } catch (exception: CancellationException) {
+        throw exception
     } catch (exception: Exception) {
         println("Could not read \"$name\": ${exception.message}")
         null

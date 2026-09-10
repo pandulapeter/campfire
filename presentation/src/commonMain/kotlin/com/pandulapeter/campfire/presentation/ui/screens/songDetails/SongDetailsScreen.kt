@@ -44,9 +44,12 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -128,6 +131,16 @@ internal fun SongDetailsScreen(
         destination.songFileNames.mapNotNull { songsByFileName[it] }
     }
     val pagerState = rememberPagerState(initialPage = destination.initialIndex.coerceIn(0, maxOf(0, songs.lastIndex))) { songs.size }
+    // The initial page is only read when the pager is created. If the library had not been read by then, the pager
+    // was created with no pages and its first page is page zero: the song that was tapped is scrolled to once the
+    // songs are there, exactly once.
+    var isInitialPageSettled by rememberSaveable { mutableStateOf(songs.isNotEmpty()) }
+    LaunchedEffect(songs.size) {
+        if (!isInitialPageSettled && songs.isNotEmpty()) {
+            isInitialPageSettled = true
+            pagerState.scrollToPage(destination.initialIndex.coerceIn(0, songs.lastIndex))
+        }
+    }
     val currentSong = songs.getOrNull(pagerState.currentPage)
     val canPage = songs.size > 1
     val setlistTitle = destination.setlistFileName?.let { fileName -> setlists.firstOrNull { it.fileName == fileName }?.title }
@@ -145,6 +158,13 @@ internal fun SongDetailsScreen(
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(currentSong?.fileName) { currentSong?.fileName?.let(viewModel::loadSongContent) }
+    // The pages next to the current one are composed ahead of time (beyondViewportPageCount), so their text is read
+    // ahead of time too: a swipe then lands on lyrics rather than on a loading indicator.
+    LaunchedEffect(pagerState.currentPage, songs) {
+        listOfNotNull(songs.getOrNull(pagerState.currentPage - 1), songs.getOrNull(pagerState.currentPage + 1))
+            .filter { it.fileName !in songTexts && it.fileName !in failedSongFileNames }
+            .forEach { viewModel.loadSongContent(it.fileName) }
+    }
     // Every page scrolls on its own, so the app bar's notion of "content scrolled underneath" restarts per page.
     LaunchedEffect(pagerState.currentPage) { scrollBehavior.state.contentOffset = 0f }
 
