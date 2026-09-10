@@ -79,7 +79,7 @@ class CampfireActivity : AppCompatActivity() {
     private fun onSyncNotificationChanged(notification: com.pandulapeter.campfire.presentation.ui.platform.SyncNotification?) {
         try {
             if (notification == null) {
-                startService(CampfireSyncService.stopIntent(this))
+                startService(CampfireSyncService.dismissIntent(this))
             } else {
                 ContextCompat.startForegroundService(
                     this,
@@ -87,7 +87,8 @@ class CampfireActivity : AppCompatActivity() {
                         context = this,
                         channelName = notification.channelName,
                         title = notification.title,
-                        body = notification.body,
+                        preparingBody = notification.preparingBody,
+                        progressBodyFormat = notification.progressBodyFormat,
                         stopLabel = notification.stopLabel,
                         completed = notification.progress.completed,
                         total = notification.progress.total

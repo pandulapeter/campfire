@@ -180,7 +180,7 @@
     <string name="settings_sync_failed_unknown">A szinkronizálás nem fejeződött be.</string>
 
     <string name="settings_sync_cancel">Szinkronizálás leállítása</string>
-    <string name="settings_sync_progress">Szinkronizálás: %1$d / %2$d…</string>
+    <string name="settings_sync_progress">Szinkronizálás: {completed} / {total}…</string>
     <string name="settings_sync_preparing">Változások keresése…</string>
     <string name="settings_sync_interrupted">Az előző szinkronizálás félbeszakadt. Ami addig átkerült, az megmaradt.</string>
     <string name="settings_sync_notification_channel">Szinkronizálás</string>

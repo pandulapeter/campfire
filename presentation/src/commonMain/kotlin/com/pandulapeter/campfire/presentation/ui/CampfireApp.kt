@@ -90,6 +90,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
@@ -556,16 +557,19 @@ private fun SyncNotificationEffect(viewModel: CampfireViewModel) {
     val title = stringResource(Res.string.settings_sync_notification_title)
     val stopLabel = stringResource(Res.string.settings_sync_cancel)
     val preparing = stringResource(Res.string.settings_sync_preparing)
+    val progressBodyFormat = stringResource(Res.string.settings_sync_progress)
     val body = if (progress == null || progress.isPreparing) {
         preparing
     } else {
-        stringResource(Res.string.settings_sync_progress, progress.completed, progress.total)
+        progressBodyFormat.withSyncCounts(progress.completed, progress.total)
     }
     val notification = progress?.let {
         SyncNotification(
             channelName = channelName,
             title = title,
             body = body,
+            preparingBody = preparing,
+            progressBodyFormat = progressBodyFormat,
             stopLabel = stopLabel,
             progress = it
         )

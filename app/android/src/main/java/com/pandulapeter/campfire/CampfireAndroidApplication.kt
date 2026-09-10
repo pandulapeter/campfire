@@ -15,6 +15,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.dataLocalSourc
 import com.pandulapeter.campfire.data.source.remote.implementation.dataRemoteSourceModule
 import com.pandulapeter.campfire.domain.implementation.domainModule
 import com.pandulapeter.campfire.presentation.presentationModule
+import com.pandulapeter.campfire.sync.CampfireSyncService
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -29,5 +30,8 @@ class CampfireAndroidApplication : Application() {
             androidContext(this@CampfireAndroidApplication)
             modules(dataModules + domainModule + presentationModule)
         }
+        // A run whose process never came back left its notification behind, and this is the first moment anything
+        // of Campfire's is running again to take it down. See CampfireSyncService.clearStaleNotification.
+        CampfireSyncService.clearStaleNotification(this)
     }
 }

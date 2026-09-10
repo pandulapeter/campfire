@@ -34,16 +34,40 @@ fun interface SyncNotifier {
  * the user picked is only visible to the UI - a notification built from Android resources would follow the system's
  * language instead, and would be in the wrong one for anybody who changed it in the app.
  *
+ * [body] is what to show right now and is enough on its own for a platform that only ever shows what it is handed.
+ * [preparingBody] and [progressBodyFormat] are the same sentence taken apart, for a platform whose notification
+ * outlives the UI that resolved these strings: on Android the run and its notification carry on after the app is
+ * swiped away, and from that point there is no composition left to send a new [body] as the count goes up. Handing
+ * the service the pieces lets it keep the text moving on its own, still in the language chosen in the app.
+ *
  * @param body What the run is doing right now, which changes as it goes.
+ * @param preparingBody What to say before there is anything to count.
+ * @param progressBodyFormat The sentence to put the two counts into, filled in with [withSyncCounts].
  * @param stopLabel The label of the action that stops it, where the platform can offer one.
  */
 data class SyncNotification(
     val channelName: String,
     val title: String,
     val body: String,
+    val preparingBody: String,
+    val progressBodyFormat: String,
     val stopLabel: String,
     val progress: SyncProgress
 )
+
+/**
+ * Puts the two counts into the sentence that carries them.
+ *
+ * The placeholders are plain text rather than the localization plugin's `%1$d`, because this substitution has to
+ * happen in two places the plugin cannot reach: it only formats inside a composable, and the Android sync service
+ * renders the same sentence long after the composition that resolved it is gone (see `SyncNotification`). Keeping
+ * the sentence itself in one place per language is worth more here than the plugin's formatting.
+ */
+fun String.withSyncCounts(completed: Int, total: Int) = replace(COMPLETED_PLACEHOLDER, completed.toString())
+    .replace(TOTAL_PLACEHOLDER, total.toString())
+
+private const val COMPLETED_PLACEHOLDER = "{completed}"
+private const val TOTAL_PLACEHOLDER = "{total}"
 
 /** No-op by default, which is exactly right for the desktop and the web. */
 val LocalSyncNotifier = staticCompositionLocalOf { SyncNotifier { } }

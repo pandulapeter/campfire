@@ -89,6 +89,9 @@ internal class SyncRepositoryImpl(
     /** One run at a time: two of them over the same files would each undo half of what the other did. */
     private val mutex = Mutex()
 
+    private var liveRescanJob: Job? = null
+    private var lastLiveRescanAt = 0L
+
     override suspend fun restore(): SyncRepository.RestoreResult {
         // A consent page the app was sent away to, answered while it was not running - the web's ordinary case, and
         // checked first because it decides what the stored credentials are about to become.
@@ -205,22 +208,32 @@ internal class SyncRepositoryImpl(
         syncJob = null
     }
 
+    /**
+     * The whole of a run, including the two index writes that open it: everything from the moment the progress is
+     * put on screen has to be inside the try, because the only way off any other path is with the progress still
+     * showing and no way left to stop or restart it. Stopping a run during those opening writes did exactly that.
+     */
     private suspend fun runSynchronization() {
-        if (mutex.isLocked) return
+        // No check for the lock being taken: a run asked for while the previous one is still clearing up waits for
+        // it rather than being dropped, which is what "stop, then start again" looks like from the settings screen.
+        // Two runs at once are prevented by syncJob in synchronize().
         mutex.withLock {
             val provider = providers.firstOrNull { it.isConnected() } ?: return@withLock
             val connected = _syncState.value as? SyncState.Connected ?: return@withLock
             _syncState.update { connected.copy(progress = SyncProgress(), lastOutcome = null) }
-            val document = loadIndex()
-            // Written before anything moves, so that a run the app never comes back from is still recognisable as
-            // interrupted next time - iOS suspending the app mid sync looks exactly like being killed.
-            saveIndex(document.copy(isRunInProgress = true))
             try {
+                val document = loadIndex()
+                // Written before anything moves, so that a run the app never comes back from is still recognisable
+                // as interrupted next time - iOS suspending the app mid sync looks exactly like being killed.
+                saveIndex(document.copy(isRunInProgress = true))
                 val result = engine.synchronize(
                     provider = provider,
                     document = document,
                     accountId = accountIdOf(connected.account),
-                    onProgress = { progress -> updateConnected { it.copy(progress = progress) } }
+                    onProgress = { progress ->
+                        updateConnected { it.copy(progress = progress) }
+                        scheduleLiveRescan()
+                    }
                 )
                 val syncedAt = Clock.System.now().toEpochMilliseconds()
                 saveIndex(result.index.copy(lastSyncedAt = syncedAt))
@@ -249,8 +262,29 @@ internal class SyncRepositoryImpl(
                 println("The sync run failed: ${exception.message}")
                 clearRunInProgress()
                 updateConnected { it.copy(progress = null, lastOutcome = SyncOutcome.Failure(exception.toFailureReason())) }
+            } finally {
+                // The one thing that has to be true on every way out, including any added later: no progress means
+                // the settings screen offers to start a run again instead of offering to stop one that is over.
+                updateConnected { if (it.progress == null) it else it.copy(progress = null) }
             }
         }
+    }
+
+    /**
+     * Keeps the library counts moving while a run is going.
+     *
+     * Sync writes files behind the two repositories' backs, so nothing reads them again until something says to -
+     * and until this, that was only the rescan at the end of a run, which left the counters still until it finished.
+     * Throttled because a rescan is a read of the whole library and there is no per file way into the cache: one per
+     * file would re-read everything a few hundred times over a single run. The exact numbers still come from the
+     * run's own rescan when it ends; this only keeps them moving on the way there.
+     */
+    private fun scheduleLiveRescan() {
+        if (liveRescanJob?.isActive == true) return
+        val now = Clock.System.now().toEpochMilliseconds()
+        if (now - lastLiveRescanAt < LIVE_RESCAN_INTERVAL_MS) return
+        lastLiveRescanAt = now
+        liveRescanJob = scope.launch { rescanLibrary() }
     }
 
     private suspend fun clearRunInProgress() = saveIndex(loadIndex().copy(isRunInProgress = false))
@@ -344,6 +378,9 @@ internal class SyncRepositoryImpl(
     private suspend fun saveIndex(document: SyncIndexDocument) = syncStateLocalSource.saveSyncIndex(json.encodeToString(document))
 
     private companion object {
+        /** Often enough that the counters visibly move, rarely enough that the reading costs less than the syncing. */
+        const val LIVE_RESCAN_INTERVAL_MS = 1000L
+
         val disconnectedResult = SyncRepository.RestoreResult(isConnected = false, didReturnFromAuthorization = false)
         val json = Json {
             ignoreUnknownKeys = true

@@ -20,8 +20,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.SyncNotificationPermissionEffect
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.rememberAndroidFilePicker
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
@@ -47,6 +49,10 @@ fun CampfireAndroidApp(
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
+    // The permission the foreground service's notification needs, asked for here because the shell is what knows
+    // that this platform has one to ask for at all.
+    val syncState by viewModel.syncState.collectAsStateWithLifecycle()
+    SyncNotificationPermissionEffect(isSyncConnected = syncState is SyncState.Connected)
     val activity = LocalActivity.current as? ComponentActivity
     LaunchedEffect(activity, isDarkTheme) {
         activity?.enableEdgeToEdge(

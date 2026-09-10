@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
  This file is part of Campfire.
  Copyright (c) Pandula Péter 2017-2026.
  https://github.com/pandulapeter/campfire
@@ -22,7 +21,9 @@
       turn means a notification. The notification permission is only ever asked for when sync is switched on; a
       refusal costs the notification, not the sync.
     -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
+        tools:ignore="ForegroundServicesPolicy" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -59,8 +60,10 @@
             -->
             <intent-filter android:label="@string/campfire">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="content" />
                 <data android:scheme="file" />
                 <data android:host="*" />
@@ -80,8 +83,10 @@
             -->
             <intent-filter android:label="@string/campfire">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
                     android:host="oauth"
                     android:scheme="campfire" />
@@ -94,6 +99,7 @@
             <intent-filter android:label="@string/campfire">
                 <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.SEND_MULTIPLE" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
@@ -103,11 +109,16 @@
         <!--
           Keeps the process alive for as long as a sync run lasts, and shows the run. It does no syncing of its own,
           see CampfireSyncService.
+
+          stopWithTask is false, which is also the default, but stated because it is the whole point of the service:
+          swiping Campfire away is not a request to abandon a sync half way through a library, so the run and its
+          notification carry on without the activity and the notification keeps counting up on its own.
         -->
         <service
             android:name=".sync.CampfireSyncService"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="dataSync"
+            android:stopWithTask="false" />
 
         <!-- Lets a shared song leave the app's private storage as a content URI, see CampfireActivity.shareFile. -->
         <provider

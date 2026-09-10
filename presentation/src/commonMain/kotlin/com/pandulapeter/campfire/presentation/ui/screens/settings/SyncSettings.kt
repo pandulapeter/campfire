@@ -62,6 +62,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_unavailabl
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
+import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
@@ -232,7 +233,7 @@ private fun SyncProgressIndicator(
 private fun SyncProgress.text() = if (isPreparing) {
     stringResource(Res.string.settings_sync_preparing)
 } else {
-    stringResource(Res.string.settings_sync_progress, completed, total)
+    stringResource(Res.string.settings_sync_progress).withSyncCounts(completed, total)
 }
 
 /**
