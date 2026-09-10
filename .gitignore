@@ -24,3 +24,6 @@ build/
 
 # macOS
 .DS_Store
+
+# Release notes scratch files
+/.release-notes/

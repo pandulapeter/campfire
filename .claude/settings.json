@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in *.kt|*.kts|*strings.xml) jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",additionalContext:\"Campfire code-style skill applies to this file (.claude/skills/code-style/SKILL.md): MPL-2.0 header on every new file; comments carry the why, never the what, as full-sentence prose; KDoc (/** */) for declarations, // only inside function bodies; always use trailing commas on multi-line lists; modifier: Modifier = Modifier is the first Composable parameter; commonMain stays JVM-free and every expect needs all four actuals; UI strings live in both values/ and values-hu/ strings.xml and are read with the localization stringResource; delete whatever your change leaves unused; keep the module CLAUDE.md in sync; never commit unless asked.\"}}' ;; esac",
+            "statusMessage": "Loading code-style conventions"
+          }
+        ]
+      }
+    ]
+  }
+}
