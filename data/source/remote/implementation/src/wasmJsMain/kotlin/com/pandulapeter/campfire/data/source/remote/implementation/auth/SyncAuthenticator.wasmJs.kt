@@ -7,11 +7,14 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
+@file:OptIn(ExperimentalWasmJsInterop::class)
+
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import org.koin.core.scope.Scope
+import kotlin.js.ExperimentalWasmJsInterop
 
 internal actual fun Scope.createSyncAuthenticator(): SyncAuthenticator = WebSyncAuthenticator()
 

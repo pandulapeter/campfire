@@ -13,7 +13,7 @@ plugins {
 }
 
 // The app version is declared in gradle.properties; this makes it visible to the shared UI.
-val generateVersionFile by tasks.registering {
+val generateVersionFile = tasks.register("generateVersionFile") {
     val versionName = project.property("campfire.versionName").toString()
     val outputDirectory = layout.buildDirectory.dir("generated/version/kotlin")
     inputs.property("versionName", versionName)

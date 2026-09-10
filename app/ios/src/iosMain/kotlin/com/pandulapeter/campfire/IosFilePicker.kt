@@ -12,6 +12,7 @@ package com.pandulapeter.campfire
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
+import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
@@ -129,7 +130,7 @@ private fun NSData.toByteArray() = ByteArray(length.toInt()).also { bytes ->
     }
 }
 
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(BetaInteropApi::class, ExperimentalForeignApi::class)
 private fun ByteArray.toNSData() = if (isEmpty()) {
     NSData()
 } else {

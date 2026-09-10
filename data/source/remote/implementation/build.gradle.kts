@@ -20,7 +20,7 @@ plugins {
  * It therefore defaults to empty in gradle.properties and is overridden from local.properties, which is never
  * committed. An empty key registers no provider at all, and the settings screen says so.
  */
-val generateSyncConfiguration by tasks.registering {
+val generateSyncConfiguration = tasks.register("generateSyncConfiguration") {
     val appKey = project.property("campfire.dropbox.appKey").toString()
     val outputDirectory = layout.buildDirectory.dir("generated/sync/kotlin")
     inputs.property("appKey", appKey)

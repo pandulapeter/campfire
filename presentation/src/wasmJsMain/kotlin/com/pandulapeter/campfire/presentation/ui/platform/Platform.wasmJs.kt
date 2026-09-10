@@ -7,7 +7,11 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
+@file:OptIn(ExperimentalWasmJsInterop::class)
+
 package com.pandulapeter.campfire.presentation.ui.platform
+
+import kotlin.js.ExperimentalWasmJsInterop
 
 // The page can be open on a phone just as well as on a computer, so the input method decides: with a touchscreen the
 // touch treatment is used (pull to refresh, an auto-hiding scrollbar), without one the desktop treatment is.

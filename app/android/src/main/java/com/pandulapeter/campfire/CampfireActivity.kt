@@ -19,6 +19,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
@@ -122,7 +123,7 @@ class CampfireActivity : AppCompatActivity() {
         CustomTabsIntent.Builder()
             .setColorScheme(if (isDarkTheme) CustomTabsIntent.COLOR_SCHEME_DARK else CustomTabsIntent.COLOR_SCHEME_LIGHT)
             .build()
-            .launchUrl(this, Uri.parse(url))
+            .launchUrl(this, url.toUri())
     } catch (exception: ActivityNotFoundException) {
         Toast.makeText(this, exception.message, Toast.LENGTH_SHORT).show()
     }

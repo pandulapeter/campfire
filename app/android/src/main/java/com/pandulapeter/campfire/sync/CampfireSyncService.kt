@@ -154,7 +154,6 @@ class CampfireSyncService : Service() {
 
     /** Low importance: this is something to be able to look at, not something to be interrupted by. */
     private fun createChannel(channelName: String) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(
             NotificationChannel(CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_LOW).apply {

@@ -80,7 +80,7 @@ val shouldPrecompress = project.property("campfire.web.precompress").toString().
  * The page is written from its source rather than edited in place, so running this over the same
  * distribution twice produces the same distribution.
  */
-val finishWebDistribution by tasks.registering {
+val finishWebDistribution = tasks.register("finishWebDistribution") {
     description = "Fills in the build manifest of the web distribution and precompresses it."
     val root = distributionDirectory
     val templates = resourceDirectory

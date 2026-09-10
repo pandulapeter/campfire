@@ -7,6 +7,8 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
+@file:OptIn(ExperimentalWasmJsInterop::class)
+
 package com.pandulapeter.campfire
 
 import androidx.compose.runtime.Composable
@@ -22,6 +24,7 @@ import com.pandulapeter.campfire.presentation.presentationModule
 import com.pandulapeter.campfire.presentation.ui.CampfireWebApp
 import org.koin.compose.KoinApplication
 import org.koin.dsl.koinConfiguration
+import kotlin.js.ExperimentalWasmJsInterop
 
 private val dataModules
     get() = dataLocalSourceModule + dataRemoteSourceModule + dataRepositoryModule
