@@ -160,7 +160,7 @@ internal fun LazyListScope.syncSettings(
                     title = stringResource(Res.string.settings_sync_disconnect),
                     icon = painterResource(Res.drawable.ic_cloud_off),
                     isEmphasized = false,
-                    onClick = viewModel::disconnectSyncProvider
+                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DisconnectSync(syncState.account.displayName)) }
                 )
             }
         }

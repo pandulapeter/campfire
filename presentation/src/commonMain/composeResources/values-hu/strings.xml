@@ -166,6 +166,7 @@
     <string name="settings_sync_connecting">Várakozás a böngészőre…</string>
     <string name="settings_sync_connected_as">Csatlakozva: %1$s</string>
     <string name="settings_sync_disconnect">Leválasztás</string>
+    <string name="settings_sync_disconnect_confirmation">Leválasztod a következő fiókot: %1$s? A Campfire elfelejti a fiókot, és nem szinkronizál tovább. Sem a könyvtárból, sem a felhőmappából nem törlődik semmi.</string>
     <string name="settings_sync_now">Szinkronizálás most</string>
     <string name="settings_sync_syncing">Szinkronizálás…</string>
     <string name="settings_sync_never">Még nem volt szinkronizálva</string>

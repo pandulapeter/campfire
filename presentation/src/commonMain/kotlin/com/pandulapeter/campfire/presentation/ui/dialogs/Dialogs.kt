@@ -52,6 +52,8 @@ import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist_title
 import com.pandulapeter.campfire.presentation.resources.setlists_rename
 import com.pandulapeter.campfire.presentation.resources.setlists_rename_title
+import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
+import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
 import com.pandulapeter.campfire.presentation.resources.song_details_add_to_setlist
 import com.pandulapeter.campfire.presentation.resources.song_editor_discard
 import com.pandulapeter.campfire.presentation.resources.song_editor_save
@@ -163,6 +165,17 @@ internal fun CampfireDialogs(
             onDismiss = viewModel::dismissDialog,
             onConfirm = {
                 viewModel.deleteSetlist(dialog.setlist.fileName)
+                viewModel.dismissDialog()
+            }
+        )
+
+        is CampfireViewModel.DialogType.DisconnectSync -> ConfirmationDialog(
+            title = stringResource(Res.string.settings_sync_disconnect),
+            text = stringResource(Res.string.settings_sync_disconnect_confirmation, dialog.accountName),
+            confirmLabel = stringResource(Res.string.settings_sync_disconnect),
+            onDismiss = viewModel::dismissDialog,
+            onConfirm = {
+                viewModel.disconnectSyncProvider()
                 viewModel.dismissDialog()
             }
         )

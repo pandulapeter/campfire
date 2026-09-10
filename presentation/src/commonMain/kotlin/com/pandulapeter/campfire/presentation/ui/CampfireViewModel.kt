@@ -951,6 +951,11 @@ class CampfireViewModel(
             val shouldIncludeAddToSetlist: Boolean = true
         ) : DialogType
         data class DeleteSong(val song: Song) : DialogType
+        /**
+         * Asked before the connected account is forgotten. Nothing is deleted either way, but reconnecting means
+         * going through the consent page again, which is not something to end up in by mistapping a list row.
+         */
+        data class DisconnectSync(val accountName: String) : DialogType
         /** Asked before the editor is left with something in it that has not been written yet, see [navigateBack]. */
         data object UnsavedChanges : DialogType
     }

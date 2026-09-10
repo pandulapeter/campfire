@@ -166,6 +166,7 @@
     <string name="settings_sync_connecting">Waiting for the browser…</string>
     <string name="settings_sync_connected_as">Connected as %1$s</string>
     <string name="settings_sync_disconnect">Disconnect</string>
+    <string name="settings_sync_disconnect_confirmation">Disconnect %1$s? Campfire forgets the account and stops syncing. Nothing is removed from the library or from the cloud folder.</string>
     <string name="settings_sync_now">Sync now</string>
     <string name="settings_sync_syncing">Syncing…</string>
     <string name="settings_sync_never">Not synced yet</string>

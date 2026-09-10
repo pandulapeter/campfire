@@ -280,13 +280,16 @@ internal fun SwitchListItem(
     title: String,
     description: String? = null,
     isChecked: Boolean,
+    isEnabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit
 ) = ListItem(
-    modifier = modifier.toggleable(value = isChecked, role = Role.Switch, onValueChange = onCheckedChange),
+    modifier = modifier
+        .toggleable(value = isChecked, enabled = isEnabled, role = Role.Switch, onValueChange = onCheckedChange)
+        .alpha(if (isEnabled) 1f else 0.5f),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
     supportingContent = description?.let { { Text(it) } },
-    trailingContent = { Switch(checked = isChecked, onCheckedChange = null) }
+    trailingContent = { Switch(checked = isChecked, enabled = isEnabled, onCheckedChange = null) }
 )
 
 @Composable

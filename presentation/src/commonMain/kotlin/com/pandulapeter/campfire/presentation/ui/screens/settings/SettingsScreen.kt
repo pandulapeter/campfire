@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -242,12 +243,17 @@ internal fun SettingsScreen(
                     onCheckedChange = viewModel::setHorizontalSectionFlowEnabled
                 )
             }
+            // Both of these only decide how a chord is written, so lyrics only mode leaves them with nothing to
+            // say. They stay in the list rather than disappearing from it: what they are set to is still what the
+            // chords will look like as soon as they are shown again.
+            val isChordSpellingEnabled = userPreferences?.isLyricsOnlyModeEnabled != true
             item(key = "german_notation") {
                 SwitchListItem(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_german_notation),
                     description = stringResource(Res.string.settings_german_notation_description),
                     isChecked = userPreferences?.chordSpelling?.isGermanNotationEnabled == true,
+                    isEnabled = isChordSpellingEnabled,
                     onCheckedChange = viewModel::setGermanNotationEnabled
                 )
             }
@@ -255,7 +261,8 @@ internal fun SettingsScreen(
                 Subsection(
                     modifier = Modifier.animateItem().padding(vertical = SUBSECTION_GAP),
                     title = stringResource(Res.string.settings_accidentals),
-                    description = stringResource(Res.string.settings_accidentals_description)
+                    description = stringResource(Res.string.settings_accidentals_description),
+                    isEnabled = isChordSpellingEnabled
                 ) {
                     SegmentedChoice(
                         options = listOf(
@@ -264,6 +271,7 @@ internal fun SettingsScreen(
                             UserPreferences.Accidentals.SHARPS to stringResource(Res.string.settings_accidentals_sharps)
                         ),
                         selected = userPreferences?.chordSpelling?.accidentals,
+                        isEnabled = isChordSpellingEnabled,
                         onSelected = viewModel::setAccidentals
                     )
                 }
@@ -391,21 +399,26 @@ private fun LazyListScope.sectionHeader(
  *
  * @param description What a [SwitchListItem]'s supporting text says for a switch: there for a group whose title is
  *   not the whole story, left out where the options speak for themselves.
+ * @param isEnabled Dims the title and the description the way a disabled row is dimmed; the control inside is left
+ *   to disable itself, so that it is dimmed once rather than twice.
  */
 @Composable
 private fun Subsection(
     modifier: Modifier = Modifier,
     title: String,
     description: String? = null,
+    isEnabled: Boolean = true,
     content: @Composable () -> Unit
 ) = Column(modifier = modifier) {
+    val labelAlpha = if (isEnabled) 1f else 0.5f
     SettingsSectionTitle(
+        modifier = Modifier.alpha(labelAlpha),
         text = title,
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = SUBSECTION_TITLE_GAP)
     )
     description?.let {
         Text(
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = SUBSECTION_DESCRIPTION_GAP),
+            modifier = Modifier.alpha(labelAlpha).padding(start = 16.dp, end = 16.dp, bottom = SUBSECTION_DESCRIPTION_GAP),
             text = it,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
