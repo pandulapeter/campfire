@@ -10,11 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -34,8 +31,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
@@ -70,7 +65,9 @@ import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter
 import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.CampfireFloatingActionButton
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.FAB_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
@@ -165,11 +162,13 @@ internal fun SongsScreen(
                     columnCount = columnCount,
                     contentPadding = listContentPadding
                 )
-                NewSongButton(
+                CampfireFloatingActionButton(
                     modifier = Modifier.align(Alignment.BottomEnd),
                     isVisible = !isSearchFieldFocused && placeholder.allowsCreatingSongs,
-                    isExtended = settledWidth >= EXTENDED_FAB_MIN_WIDTH,
+                    settledWidth = settledWidth,
                     contentPadding = listContentPadding,
+                    icon = painterResource(Res.drawable.ic_add),
+                    label = stringResource(Res.string.songs_new_song),
                     onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) }
                 )
             }
@@ -180,45 +179,6 @@ internal fun SongsScreen(
             shouldIncludeSorting = true,
             contentPadding = contentPadding
         )
-    }
-}
-
-/**
- * The button that creates a song, dealt in and out with the screen it belongs to (see the setlists screen for the
- * same reasoning). Wide windows get the label next to the icon; on a phone it would take a third of the row.
- */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun NewSongButton(
-    modifier: Modifier = Modifier,
-    isVisible: Boolean,
-    isExtended: Boolean,
-    contentPadding: PaddingValues,
-    onClick: () -> Unit
-) = AnimatedVisibility(
-    modifier = modifier.padding(
-        end = contentPadding.calculateEndPadding(LocalLayoutDirection.current) + FAB_MARGIN,
-        bottom = contentPadding.calculateBottomPadding() + FAB_MARGIN
-    ),
-    visible = isVisible,
-    enter = fadeIn() + scaleIn(),
-    exit = fadeOut() + scaleOut()
-) {
-    val label = stringResource(Res.string.songs_new_song)
-    val icon = @Composable {
-        Icon(
-            painter = painterResource(Res.drawable.ic_add),
-            contentDescription = if (isExtended) null else label
-        )
-    }
-    if (isExtended) {
-        ExtendedFloatingActionButton(
-            onClick = onClick,
-            icon = icon,
-            text = { Text(label) }
-        )
-    } else {
-        FloatingActionButton(onClick = onClick) { icon() }
     }
 }
 
@@ -433,8 +393,3 @@ private val CampfireViewModel.Placeholder?.allowsCreatingSongs
     }
 
 private const val SYMBOLS_LABEL = "#"
-
-/** From this width on the button has room for its label without crowding the list next to it. */
-private val EXTENDED_FAB_MIN_WIDTH = 600.dp
-private val FAB_CLEARANCE = 88.dp
-private val FAB_MARGIN = 16.dp

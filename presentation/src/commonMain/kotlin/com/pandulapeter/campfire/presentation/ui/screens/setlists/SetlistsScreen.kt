@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,7 +61,9 @@ import com.pandulapeter.campfire.presentation.resources.setlists_export
 import com.pandulapeter.campfire.presentation.resources.setlists_rename
 import com.pandulapeter.campfire.presentation.resources.setlists_reorder_hint
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.CampfireFloatingActionButton
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.FAB_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
@@ -127,22 +128,14 @@ internal fun SetlistsScreen(
                     columnCount = columnCount,
                     contentPadding = listContentPadding
                 )
-                // The button belongs to this screen rather than to the app's chrome, so that it is dealt in and out
-                // with the screen it acts on instead of animating on its own while the screen slides.
-                FloatingActionButton(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(
-                            end = listContentPadding.calculateEndPadding(LocalLayoutDirection.current) + FAB_MARGIN,
-                            bottom = listContentPadding.calculateBottomPadding() + FAB_MARGIN
-                        ),
+                CampfireFloatingActionButton(
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                    settledWidth = settledWidth,
+                    contentPadding = listContentPadding,
+                    icon = painterResource(Res.drawable.ic_add),
+                    label = stringResource(Res.string.setlists_new_setlist),
                     onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) }
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_add),
-                        contentDescription = stringResource(Res.string.setlists_new_setlist)
-                    )
-                }
+                )
             }
         }
         SongsControlsSidePanel(
@@ -340,6 +333,3 @@ private class SetlistItemKey(val string: String?) {
         private const val TOKEN = "#*#"
     }
 }
-
-private val FAB_CLEARANCE = 88.dp
-private val FAB_MARGIN = 16.dp
