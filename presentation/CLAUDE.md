@@ -1,3 +1,12 @@
+<!--
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+-->
 # :presentation
 
 The entire UI: all Compose components, plus the thin per-platform shells the `:app:*` modules call into. A single Kotlin Multiplatform module (`campfire-compose-library`) — `commonMain` must stay free of JVM-only APIs (`java.*`, `KoinJavaComponent`); use `kotlin.uuid.Uuid`, `androidx.compose.ui.text.intl.Locale` and `KoinPlatform.getKoin()` instead (`desktopMain` may use `java.*`). Depends on `:domain:api` and `:chordpro` (the song model it renders) — never on repositories or local sources. Koin wiring in `Module.kt` (`presentationModule`) — `CampfireViewModel` via an explicit `viewModel { }` with named arguments (Koin's reified `viewModelOf` overloads stop at twenty-two parameters, and the constructor is past that), obtained in Compose with `koinViewModel()`.

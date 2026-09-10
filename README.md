@@ -1,3 +1,12 @@
+<!--
+ * This file is part of Campfire.
+ * Copyright (c) Pandula Péter 2017-2026.
+ * https://github.com/pandulapeter/campfire
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ * If a copy of the MPL was not distributed with this file, You can obtain one at
+ * https://mozilla.org/MPL/2.0/.
+-->
 # Campfire
 *A lightweight ChordPro viewer and editor.*
 
@@ -104,4 +113,14 @@ Sync needs a Dropbox app key at build time. A build made without one simply does
 See [CLAUDE.md](CLAUDE.md) for the architecture and the per-platform build commands.
 
 ### License
-This software is licensed under GNU GPL 3.0. Any derivative works must follow the same open-source license.
+
+Copyright (c) Pandula Péter 2017-2026. This software is licensed under the
+[Mozilla Public License 2.0](LICENSE).
+
+The MPL is a file-level copyleft license, which means you are welcome to reuse any part of Campfire — the ChordPro
+parser, the sync engine, a single screen — in your own project, open source or not. If you modify one of the files in
+this repository, that file has to stay under the MPL and its source has to be available; anything new you write
+alongside it is yours, under whatever license you choose.
+
+The name *Campfire*, the app icon and the other branding assets are **not** covered by the license and remain the
+author's. The MPL grants no trademark rights (section 2.3), so a fork has to ship under a name and an icon of its own.
