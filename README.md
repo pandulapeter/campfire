@@ -19,7 +19,8 @@ It works **offline**, and there is no account to make and no server of mine anyw
 device, and they are yours. The one thing that ever touches the network is sync, and only after you have connected a
 cloud folder **you** own — see below.
 
-- **Write and edit** songs in a built-in editor with ChordPro syntax highlighting, a live preview and autosave.
+- **Write and edit** songs in a built-in editor with ChordPro syntax highlighting and a live preview. Nothing is written until
+  you save it, and leaving with unsaved changes asks first.
 - **Import** `.cho` files (and `.chopro`, `.chordpro`, `.crd`, `.chord`, `.pro`, `.txt`) or whole `.zip` archives of
   them; **export** a single song, a setlist, or the entire library as a zip. Nothing is ever overwritten: a name that
   collides gets a ` (2)` suffix.

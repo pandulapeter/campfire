@@ -171,6 +171,22 @@ class CampfireViewModel(
     val songTexts: StateFlow<Map<String, String>> = _songTexts.asStateFlow()
 
     /**
+     * What the open editor currently has in it, reported by the screen as it is typed but never written until the
+     * user asks for it. The text itself still lives in the field's own state; this copy exists so that leaving the
+     * screen can be stopped ([navigateBack]) and the save finished from the confirmation dialog without the screen
+     * that holds the field being there any more. Null whenever no editor is open.
+     */
+    private val _editorDraft = MutableStateFlow<SongContent?>(null)
+
+    /**
+     * True while the editor's text differs from what is on disk. Eager, like [setlists] and for the same reason:
+     * [navigateBack] reads it, and it has to be current whether or not anything happens to be subscribed.
+     */
+    val hasUnsavedEditorChanges = combine(_editorDraft, _songTexts) { draft, songTexts ->
+        draft != null && draft.text != songTexts[draft.fileName]
+    }.asEagerState(false)
+
+    /**
      * Where a song's transposition is kept depends on how it was opened, so both places are folded into one lookup:
      * a song opened from a setlist reads the setlist's entry, one opened from the library reads the preferences.
      */
@@ -353,7 +369,20 @@ class CampfireViewModel(
         }
     }
 
+    /**
+     * Every way out of a screen ends up here - the app bar's button, the system's back gesture and the desktop
+     * window's Escape key - which is why this is where the editor's unsaved text is caught: nothing the user typed
+     * is thrown away without being asked about it first.
+     */
     fun navigateBack() {
+        if (hasUnsavedEditorChanges.value && backStack.lastOrNull() is CampfireDestination.SongEditor) {
+            showDialog(DialogType.UnsavedChanges)
+        } else {
+            popBackStack()
+        }
+    }
+
+    private fun popBackStack() {
         if (backStack.size > 1) {
             updateBackStack { removeAt(lastIndex) }
         }
@@ -374,10 +403,12 @@ class CampfireViewModel(
 
     fun deleteSong(fileName: String) = viewModelScope.launch {
         deleteSong.invoke(fileName)
+        // Nobody is asked to save a file that has just been deleted, so the draft goes before the screens holding it.
+        _editorDraft.update { null }
         // A screen showing the file that has just gone is closed first, or it would sit there on nothing. The editor
         // goes before the details screen underneath it, so both have to be checked rather than only the top one.
         while (backStack.lastOrNull().let { it is CampfireDestination.SongEditor && it.fileName == fileName || it is CampfireDestination.SongDetails && fileName in it.songFileNames }) {
-            navigateBack()
+            popBackStack()
         }
         _songTexts.update { it - fileName }
     }
@@ -390,9 +421,31 @@ class CampfireViewModel(
         }
     }
 
+    /** Reported by the editor on every change, see [_editorDraft]. Nothing is written here. */
+    fun onEditorTextChanged(fileName: String, text: String) = _editorDraft.update { SongContent(fileName = fileName, text = text) }
+
+    /** Reported by the editor once it is gone, whatever became of the text it had. */
+    fun onEditorClosed() = _editorDraft.update { null }
+
+    /** The "Save" answer of the unsaved changes dialog. The write outlives this screen, see [saveSongContent]. */
+    fun saveEditorChangesAndLeave() {
+        _editorDraft.value?.let { saveSongContent(fileName = it.fileName, text = it.text) }
+        leaveEditor()
+    }
+
+    /** The "Discard" answer of the unsaved changes dialog, and the only way typed text is ever thrown away. */
+    fun leaveEditorWithoutSaving() = leaveEditor()
+
+    private fun leaveEditor() {
+        // The draft goes first: with it still there, popping the editor would only ask the same question again.
+        _editorDraft.update { null }
+        dismissDialog()
+        popBackStack()
+    }
+
     /**
      * Writes the edited text and keeps the copy the viewer renders from in step. Runs on [NonCancellable] because
-     * the last save of an editing session happens as the screen is going away, which cancels its scope.
+     * the last save of an editing session can be started as the screen is going away, which cancels its scope.
      */
     fun saveSongContent(fileName: String, text: String) = viewModelScope.launch {
         _isSavingSong.update { true }
@@ -832,6 +885,8 @@ class CampfireViewModel(
             val shouldIncludeAddToSetlist: Boolean = true
         ) : DialogType
         data class DeleteSong(val song: Song) : DialogType
+        /** Asked before the editor is left with something in it that has not been written yet, see [navigateBack]. */
+        data object UnsavedChanges : DialogType
     }
 
     companion object {

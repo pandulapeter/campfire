@@ -122,8 +122,13 @@
     <string name="song_editor_section_grid">Rács</string>
     <string name="song_editor_transpose_text_up">Szöveg transzponálása fel</string>
     <string name="song_editor_transpose_text_down">Szöveg transzponálása le</string>
+    <string name="song_editor_save">Mentés</string>
     <string name="song_editor_saved">Mentve</string>
     <string name="song_editor_saving">Mentés…</string>
+    <string name="song_editor_unsaved">Mentetlen</string>
+    <string name="song_editor_unsaved_changes">Nem mentett módosítások</string>
+    <string name="song_editor_unsaved_changes_confirmation">Szeretnéd menteni, amit írtál, mielőtt kilépsz a szerkesztőből?</string>
+    <string name="song_editor_discard">Elvetés</string>
     <string name="song_editor_save_failed">A dalt nem sikerült menteni</string>
 
     <!-- Song details screen -->

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -51,6 +52,10 @@ import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist_tit
 import com.pandulapeter.campfire.presentation.resources.setlists_rename
 import com.pandulapeter.campfire.presentation.resources.setlists_rename_title
 import com.pandulapeter.campfire.presentation.resources.song_details_add_to_setlist
+import com.pandulapeter.campfire.presentation.resources.song_editor_discard
+import com.pandulapeter.campfire.presentation.resources.song_editor_save
+import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes
+import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song
 import com.pandulapeter.campfire.presentation.resources.songs_delete_song_confirmation
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
@@ -161,9 +166,43 @@ internal fun CampfireDialogs(
             }
         )
 
+        CampfireViewModel.DialogType.UnsavedChanges -> UnsavedChangesDialog(
+            onCancel = viewModel::dismissDialog,
+            onDiscard = viewModel::leaveEditorWithoutSaving,
+            onSave = viewModel::saveEditorChangesAndLeave
+        )
+
         null -> Unit
     }
 }
+
+/**
+ * Asked when the editor is left with text in it that has not been written yet. Three answers rather than the usual
+ * two: the editor only ever writes when it is told to, so throwing what was typed away has to be asked for just as
+ * explicitly as keeping it, and staying in the editor has to be possible without picking either.
+ */
+@Composable
+private fun UnsavedChangesDialog(
+    onCancel: () -> Unit,
+    onDiscard: () -> Unit,
+    onSave: () -> Unit
+) = AlertDialog(
+    onDismissRequest = onCancel,
+    title = { Text(stringResource(Res.string.song_editor_unsaved_changes)) },
+    text = { Text(stringResource(Res.string.song_editor_unsaved_changes_confirmation)) },
+    confirmButton = {
+        TextButton(onClick = onSave) { Text(stringResource(Res.string.song_editor_save)) }
+    },
+    dismissButton = {
+        Row {
+            TextButton(onClick = onCancel) { Text(stringResource(Res.string.cancel)) }
+            TextButton(
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                onClick = onDiscard
+            ) { Text(stringResource(Res.string.song_editor_discard)) }
+        }
+    }
+)
 
 @Composable
 private fun ConfirmationDialog(

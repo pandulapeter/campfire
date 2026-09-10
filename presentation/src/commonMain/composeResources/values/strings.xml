@@ -122,8 +122,13 @@
     <string name="song_editor_section_grid">Grid</string>
     <string name="song_editor_transpose_text_up">Transpose text up</string>
     <string name="song_editor_transpose_text_down">Transpose text down</string>
+    <string name="song_editor_save">Save</string>
     <string name="song_editor_saved">Saved</string>
     <string name="song_editor_saving">Saving…</string>
+    <string name="song_editor_unsaved">Unsaved</string>
+    <string name="song_editor_unsaved_changes">Unsaved changes</string>
+    <string name="song_editor_unsaved_changes_confirmation">Would you like to save what you have written before leaving the editor?</string>
+    <string name="song_editor_discard">Discard</string>
     <string name="song_editor_save_failed">Could not save the song</string>
 
     <!-- Song details screen -->

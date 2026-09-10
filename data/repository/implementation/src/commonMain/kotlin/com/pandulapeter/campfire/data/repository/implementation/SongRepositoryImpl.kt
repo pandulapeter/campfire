@@ -35,7 +35,7 @@ internal class SongRepositoryImpl(
 
     /**
      * Only the changed file is re-read: parsing the whole library again to pick up one edited title would make every
-     * keystroke in the editor (which autosaves) cost a full rescan.
+     * save in the editor cost a full rescan.
      */
     override suspend fun saveSong(content: SongContent) {
         songLocalSource.saveSongContent(content)

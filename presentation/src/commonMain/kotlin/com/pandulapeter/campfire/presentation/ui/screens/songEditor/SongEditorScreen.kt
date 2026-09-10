@@ -46,12 +46,10 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -71,8 +69,6 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.ChordProParser
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
@@ -89,6 +85,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_redo
+import com.pandulapeter.campfire.presentation.resources.ic_save
 import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.ic_undo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chord
@@ -96,6 +93,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_comme
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_section
 import com.pandulapeter.campfire.presentation.resources.song_editor_preview
 import com.pandulapeter.campfire.presentation.resources.song_editor_redo
+import com.pandulapeter.campfire.presentation.resources.song_editor_save
 import com.pandulapeter.campfire.presentation.resources.song_editor_saved
 import com.pandulapeter.campfire.presentation.resources.song_editor_saving
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_bridge
@@ -106,6 +104,7 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_section_vers
 import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_down
 import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_up
 import com.pandulapeter.campfire.presentation.resources.song_editor_undo
+import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
@@ -124,8 +123,10 @@ import org.jetbrains.compose.resources.painterResource
  * ones one at a time.
  *
  * The text lives in a [TextFieldState] here rather than in the view model: it is the field's own state, undo history
- * included, and it is saved across configuration changes and process death with the field's own saver. The view
- * model only ever receives finished text to write.
+ * included, and it is saved across configuration changes and process death with the field's own saver. Nothing is
+ * ever written on its own: the file changes when the user saves it, and leaving with something unsaved asks first
+ * (see [CampfireViewModel.navigateBack]). What the screen does report as it is typed is the text itself, which is
+ * what lets that question be answered - and the save be finished - after the screen is gone.
  */
 @Composable
 internal fun SongEditorScreen(
@@ -190,9 +191,7 @@ private fun LoadedSongEditor(
             }
         )
     }
-    // What was last handed over to be written, which is what "Saved" is measured against.
-    val savedText = remember(destination.fileName) { mutableStateOf(initialText) }
-    AutoSave(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState, savedText = savedText)
+    ReportDraft(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState)
 
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
@@ -208,8 +207,13 @@ private fun LoadedSongEditor(
                 ?: destination.fileName.removeSuffix(LibraryFiles.SONG_EXTENSION)
         }
     }
-    val hasUnsavedChanges by remember(textFieldState, savedText) {
-        derivedStateOf { textFieldState.text.toString() != savedText.value }
+    val hasUnsavedChanges by viewModel.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
+    // The one way the file is ever written, reached from the app bar's button and from Ctrl / Cmd + S alike.
+    val onSaveRequested = {
+        if (hasUnsavedChanges) {
+            viewModel.saveSongContent(destination.fileName, textFieldState.text.toString())
+        }
+        Unit
     }
     var isPreviewVisible by rememberSaveable { mutableStateOf(false) }
     val hasSideBySidePreview = windowSize == WindowSize.EXPANDED
@@ -259,6 +263,15 @@ private fun LoadedSongEditor(
                         contentDescription = stringResource(Res.string.song_editor_redo)
                     )
                 }
+                IconButton(
+                    enabled = hasUnsavedChanges && !isSaving,
+                    onClick = onSaveRequested
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_save),
+                        contentDescription = stringResource(Res.string.song_editor_save)
+                    )
+                }
                 EditorMenu(
                     viewModel = viewModel,
                     fileName = destination.fileName,
@@ -285,7 +298,7 @@ private fun LoadedSongEditor(
                 modifier = paneModifier,
                 textFieldState = textFieldState,
                 fontScale = fontScale,
-                onSaveRequested = { viewModel.saveSongContent(destination.fileName, textFieldState.text.toString()) },
+                onSaveRequested = onSaveRequested,
                 contentPadding = PaddingValues(
                     start = contentPadding.calculateStartPadding(layoutDirection),
                     // Next to the preview the divider is the end of this pane, not the window.
@@ -353,8 +366,8 @@ private fun ChordProTextField(
     val layoutDirection = LocalLayoutDirection.current
     BasicTextField(
         modifier = modifier
-            // The autosave writes a second after the typing stops; this is for the hand that reaches for it anyway.
-            // It lives on the field rather than in the window's key handler, which has no way to reach this text.
+            // The same save as the app bar's button, for the hand that reaches for the keyboard instead. It lives on
+            // the field rather than in the window's key handler, which has no way to reach this text.
             .onPreviewKeyEvent { keyEvent ->
                 if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.S && (keyEvent.isCtrlPressed || keyEvent.isMetaPressed)) {
                     onSaveRequested()
@@ -561,10 +574,12 @@ private fun SaveLabel(
 ) {
     val saving = stringResource(Res.string.song_editor_saving)
     val saved = stringResource(Res.string.song_editor_saved)
+    // Its own short label rather than the dialog's "Unsaved changes": there is very little room next to a song title.
+    val unsaved = stringResource(Res.string.song_editor_unsaved)
     AnimatedContent(
         targetState = when {
             isSaving -> saving
-            hasUnsavedChanges -> ""
+            hasUnsavedChanges -> unsaved
             else -> saved
         },
         transitionSpec = { fadeIn() togetherWith fadeOut() }
@@ -573,42 +588,28 @@ private fun SaveLabel(
             text = label,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
 
 /**
- * Writes the text a second after the typing stops, and once more on the way out. A file the user can also open in a
- * text editor is not the place for a save button.
+ * Keeps the view model's copy of the text in step with the field, without writing any of it. It is what tells the
+ * app there is something unsaved here, and what it saves if the user asks for it on the way out - by which time
+ * this screen, and the field with it, may already be gone.
  */
-@OptIn(FlowPreview::class)
 @Composable
-private fun AutoSave(
+private fun ReportDraft(
     viewModel: CampfireViewModel,
     fileName: String,
-    textFieldState: TextFieldState,
-    savedText: MutableState<String>
+    textFieldState: TextFieldState
 ) {
-    fun saveIfChanged() {
-        val text = textFieldState.text.toString()
-        if (text != savedText.value) {
-            savedText.value = text
-            viewModel.saveSongContent(fileName, text)
-        }
-    }
-
     LaunchedEffect(textFieldState, fileName) {
-        snapshotFlow { textFieldState.text.toString() }
-            .distinctUntilChanged()
-            .debounce(AUTOSAVE_DELAY_MILLIS)
-            .collect { saveIfChanged() }
+        snapshotFlow { textFieldState.text.toString() }.collect { viewModel.onEditorTextChanged(fileName, it) }
     }
-    // The screen can go away between two keystrokes, and the last second of typing must not go with it. Both of
-    // these write on the view model's scope, which outlives the screen, see CampfireViewModel.saveSongContent.
-    val currentSave by rememberUpdatedState(::saveIfChanged)
-    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { currentSave() }
-    DisposableEffect(fileName) { onDispose { currentSave() } }
+    // Whatever became of the text - saved, discarded, or the song deleted - there is no draft once the editor is gone.
+    DisposableEffect(fileName) { onDispose { viewModel.onEditorClosed() } }
 }
 
 /**
@@ -657,4 +658,3 @@ private fun String.caretInsideFirstSection(): Int {
 
 private const val SECTION_START = "{start_of_"
 private const val PREVIEW_DELAY_MILLIS = 150L
-private const val AUTOSAVE_DELAY_MILLIS = 1_000L
