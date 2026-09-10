@@ -36,6 +36,9 @@ version = versionName
 compose.desktop {
     application {
         mainClass = "com.pandulapeter.campfire.CampfireDesktopApplicationKt"
+        buildTypes.release.proguard {
+            configurationFiles.from(project.file("proguard-rules.pro"))
+        }
         // Package with the toolchain JDK rather than the JVM running Gradle, which may lack jpackage.
         javaHome = javaToolchains.launcherFor {
             languageVersion = JavaLanguageVersion.of(libs.versions.jvmTarget.get().toInt())
