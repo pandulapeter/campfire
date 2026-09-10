@@ -19,6 +19,10 @@ redirect URIs character for character, which is why the desktop port is fixed.
   with the expected revision, so a write that would clobber another device's change is refused by the service rather
   than prevented by hope; `autorename` is off, because a name Dropbox invented would be a song nobody asked for.
   Deletes carry `parent_rev` for the same reason, and "already gone" counts as success.
+- Every call is retried while Dropbox answers 429 or 5xx, waiting what `Retry-After` asks for plus a little jitter
+  (several transfers are in flight at once and would otherwise all come back together and be limited again). A first
+  sync of a whole library *will* be rate limited; treating that as a failure would mean a library that can never
+  finish its first sync.
 - `dropbox/DropboxModels` — the parts of the API's answers that are read. Everything defaulted, unknown keys
   ignored: a field added on the other side must never turn into a parse failure the user sees as a broken sync.
 - OAuth is **PKCE with no client secret**, which is what lets this work with no server of Campfire's own. Tokens are

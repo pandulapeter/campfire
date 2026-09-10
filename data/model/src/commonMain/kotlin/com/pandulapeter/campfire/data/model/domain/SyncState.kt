@@ -29,11 +29,30 @@ sealed interface SyncState {
 
     data class Connected(
         val account: SyncAccount,
-        val isSyncing: Boolean,
-        /** Milliseconds since the epoch, null until the first run finishes. */
+        /** Non-null while a run is going, and what the progress indicator is driven from. */
+        val progress: SyncProgress?,
+        /** Milliseconds since the epoch of the last run that *finished*, null until one has. */
         val lastSyncedAt: Long?,
         val lastOutcome: SyncOutcome?
-    ) : SyncState
+    ) : SyncState {
+
+        val isSyncing get() = progress != null
+    }
+}
+
+/**
+ * How far along a run is. [total] is the number of files the plan turned out to need, which is only known once the
+ * library and the remote folder have both been listed - so a run starts [isPreparing] with nothing to count yet.
+ */
+data class SyncProgress(
+    val completed: Int = 0,
+    val total: Int = 0
+) {
+
+    val isPreparing get() = total == 0
+
+    /** Null while preparing, so the indicator can spin rather than sit at zero. */
+    val fraction: Float? get() = if (total == 0) null else (completed.toFloat() / total).coerceIn(0f, 1f)
 }
 
 sealed interface SyncOutcome {
@@ -41,6 +60,13 @@ sealed interface SyncOutcome {
     data class Success(val summary: SyncSummary) : SyncOutcome
 
     data class Failure(val reason: SyncFailureReason) : SyncOutcome
+
+    /**
+     * The run did not finish and did not fail either: the user stopped it, or the app was closed or suspended out
+     * from under it. Told apart from a failure because there is nothing wrong to report and nothing to fix - what
+     * was transferred stayed transferred, and the next run carries on from there.
+     */
+    data object Interrupted : SyncOutcome
 }
 
 /**

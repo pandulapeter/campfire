@@ -1,5 +1,6 @@
 package com.pandulapeter.campfire.domain.implementation
 
+import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
@@ -25,6 +26,7 @@ import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
+import com.pandulapeter.campfire.domain.implementation.useCases.CancelSynchronizationUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.ConnectSyncProviderUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.CreateSetlistUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.CreateSongUseCaseImpl
@@ -53,6 +55,7 @@ import com.pandulapeter.campfire.domain.implementation.useCases.TransposeChordPr
 import org.koin.dsl.module
 
 val domainModule = module {
+    factory<CancelSynchronizationUseCase> { CancelSynchronizationUseCaseImpl(get()) }
     factory<ConnectSyncProviderUseCase> { ConnectSyncProviderUseCaseImpl(get(), get()) }
     factory<CreateSetlistUseCase> { CreateSetlistUseCaseImpl(get()) }
     factory<CreateSongUseCase> { CreateSongUseCaseImpl(get()) }
@@ -75,7 +78,7 @@ val domainModule = module {
     factory<SaveSetlistUseCase> { SaveSetlistUseCaseImpl(get()) }
     factory<SaveSongContentUseCase> { SaveSongContentUseCaseImpl(get()) }
     factory<SaveUserPreferencesUseCase> { SaveUserPreferencesUseCaseImpl(get()) }
-    factory<SynchronizeLibraryUseCase> { SynchronizeLibraryUseCaseImpl(get(), get(), get()) }
+    factory<SynchronizeLibraryUseCase> { SynchronizeLibraryUseCaseImpl(get()) }
     factory<TransposeChordProTextUseCase> { TransposeChordProTextUseCaseImpl() }
     factory<TransposeChordProUseCase> { TransposeChordProUseCaseImpl() }
 }

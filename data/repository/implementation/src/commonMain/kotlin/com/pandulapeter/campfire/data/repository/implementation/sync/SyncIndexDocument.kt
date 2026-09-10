@@ -15,6 +15,11 @@ internal data class SyncIndexDocument(
     val accountId: String = "",
     /** Milliseconds since the epoch, 0 when no run has finished yet. */
     val lastSyncedAt: Long = 0,
+    /**
+     * Written true when a run starts and false when one finishes, so that a run the app never came back from -
+     * killed, swiped away, suspended by iOS - is still recognisable as interrupted the next time it starts.
+     */
+    val isRunInProgress: Boolean = false,
     /** Keyed by `songs/Artist - Title.cho`, see [SyncKey.path]. */
     val entries: Map<String, Entry> = emptyMap()
 ) {
@@ -40,6 +45,7 @@ internal data class SyncIndexDocument(
             providerId = providerId,
             accountId = accountId,
             lastSyncedAt = lastSyncedAt,
+            isRunInProgress = false,
             entries = index.entries.associate { (key, entry) ->
                 key.path to Entry(localHash = entry.localHash, remoteRevision = entry.remoteRevision)
             }

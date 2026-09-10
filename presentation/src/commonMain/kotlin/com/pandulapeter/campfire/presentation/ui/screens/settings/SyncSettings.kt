@@ -2,20 +2,24 @@
 
 package com.pandulapeter.campfire.presentation.ui.screens.settings
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
+import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -25,6 +29,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_cloud_off
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_sync
 import com.pandulapeter.campfire.presentation.resources.cancel
+import com.pandulapeter.campfire.presentation.resources.settings_sync_cancel
 import com.pandulapeter.campfire.presentation.resources.settings_sync_conflicts
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dropbox
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connected_as
@@ -35,17 +40,22 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_aut
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_network
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_storage
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_unknown
+import com.pandulapeter.campfire.presentation.resources.settings_sync_interrupted
 import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced_days
 import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced_hours
 import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced_minutes
 import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced_moments_ago
 import com.pandulapeter.campfire.presentation.resources.settings_sync_never
 import com.pandulapeter.campfire.presentation.resources.settings_sync_now
+import com.pandulapeter.campfire.presentation.resources.settings_sync_preparing
+import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
+import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_message
+import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_title
 import com.pandulapeter.campfire.presentation.resources.settings_sync_result
-import com.pandulapeter.campfire.presentation.resources.settings_sync_syncing
 import com.pandulapeter.campfire.presentation.resources.settings_sync_unavailable
 import com.pandulapeter.campfire.presentation.resources.settings_sync_up_to_date
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -60,7 +70,8 @@ import org.jetbrains.compose.resources.painterResource
  */
 internal fun LazyListScope.syncSettings(
     viewModel: CampfireViewModel,
-    syncState: SyncState
+    syncState: SyncState,
+    completionPage: AuthorizationCompletionPage
 ) {
     if (viewModel.syncProviders.isEmpty()) {
         item(key = "sync_unavailable") {
@@ -78,7 +89,7 @@ internal fun LazyListScope.syncSettings(
                 title = stringResource(Res.string.settings_sync_connect_dropbox),
                 icon = painterResource(Res.drawable.ic_cloud),
                 isEnabled = viewModel.syncProviders.contains(SyncProviderId.DROPBOX),
-                onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX) }
+                onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) }
             )
         }
 
@@ -112,15 +123,29 @@ internal fun LazyListScope.syncSettings(
                     supportingContent = { Text(syncState.statusText()) }
                 )
             }
+            syncState.progress?.let { progress ->
+                item(key = "sync_progress") {
+                    SyncProgressIndicator(modifier = Modifier.animateItem(), progress = progress)
+                }
+            }
             item(key = "sync_now") {
-                ActionListItem(
-                    modifier = Modifier.animateItem(),
-                    title = stringResource(Res.string.settings_sync_now),
-                    icon = painterResource(Res.drawable.ic_sync),
-                    isEnabled = !syncState.isSyncing,
-                    isEmphasized = false,
-                    onClick = viewModel::synchronizeLibrary
-                )
+                if (syncState.isSyncing) {
+                    ActionListItem(
+                        modifier = Modifier.animateItem(),
+                        title = stringResource(Res.string.settings_sync_cancel),
+                        icon = painterResource(Res.drawable.ic_clear),
+                        isEmphasized = false,
+                        onClick = viewModel::cancelSynchronization
+                    )
+                } else {
+                    ActionListItem(
+                        modifier = Modifier.animateItem(),
+                        title = stringResource(Res.string.settings_sync_now),
+                        icon = painterResource(Res.drawable.ic_sync),
+                        isEmphasized = false,
+                        onClick = viewModel::synchronizeLibrary
+                    )
+                }
             }
             item(key = "sync_disconnect") {
                 ActionListItem(
@@ -140,9 +165,9 @@ internal fun LazyListScope.syncSettings(
  * until something replaces it, rather than going past in a snackbar the user may not have been looking at.
  */
 @Composable
-private fun SyncState.Connected.statusText(): String = when {
-    isSyncing -> stringResource(Res.string.settings_sync_syncing)
-    else -> when (val outcome = lastOutcome) {
+private fun SyncState.Connected.statusText(): String = when (val current = progress) {
+    null -> when (val outcome = lastOutcome) {
+        SyncOutcome.Interrupted -> stringResource(Res.string.settings_sync_interrupted)
         is SyncOutcome.Failure -> stringResource(
             when (outcome.reason) {
                 SyncFailureReason.NETWORK -> Res.string.settings_sync_failed_network
@@ -170,6 +195,45 @@ private fun SyncState.Connected.statusText(): String = when {
 
         null -> lastSyncedText(lastSyncedAt)
     }
+
+    // While a run is going, what it is doing is on the progress row just below; repeating it here would say the
+    // same thing twice, so this line keeps answering the question the progress row does not: when it last finished.
+    else -> lastSyncedText(lastSyncedAt)
+}
+
+/**
+ * Determinate as soon as there is anything to count, and indeterminate before that: the number of files a run has
+ * to move is only known once both sides have been listed, and a bar sitting at zero for that whole time reads as a
+ * sync that is stuck rather than one that is still looking.
+ */
+@Composable
+private fun SyncProgressIndicator(
+    modifier: Modifier = Modifier,
+    progress: SyncProgress
+) = Column(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+    Text(
+        text = progress.text(),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    val fraction = progress.fraction
+    if (fraction == null) {
+        LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+    } else {
+        // Animated, or a run that finishes several files between frames would make the bar jump.
+        val animatedFraction by animateFloatAsState(targetValue = fraction, label = "syncProgress")
+        LinearProgressIndicator(
+            progress = { animatedFraction },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+        )
+    }
+}
+
+@Composable
+private fun SyncProgress.text() = if (isPreparing) {
+    stringResource(Res.string.settings_sync_preparing)
+} else {
+    stringResource(Res.string.settings_sync_progress, completed, total)
 }
 
 /**

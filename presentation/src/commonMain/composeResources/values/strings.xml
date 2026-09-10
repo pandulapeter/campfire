@@ -156,4 +156,12 @@
     <string name="settings_sync_failed_storage">The library could not be read or written.</string>
     <string name="settings_sync_failed_unknown">The sync did not finish.</string>
 
+    <string name="settings_sync_cancel">Stop syncing</string>
+    <string name="settings_sync_progress">Syncing %1$d of %2$d…</string>
+    <string name="settings_sync_preparing">Looking for changes…</string>
+    <string name="settings_sync_interrupted">The last sync was stopped before it finished. Whatever had already been transferred was kept.</string>
+    <string name="settings_sync_notification_channel">Sync</string>
+    <string name="settings_sync_notification_title">Syncing the library</string>
+    <string name="settings_sync_redirect_page_title">Campfire is connected</string>
+    <string name="settings_sync_redirect_page_message">You can close this tab and go back to the app.</string>
 </resources>

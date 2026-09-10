@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
+import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import java.io.PrintWriter
 import java.net.ConnectException
 import java.net.Socket
@@ -39,7 +40,7 @@ class DesktopSyncAuthenticatorTest {
     fun `cancelling the authorization releases the port`() = runBlocking {
         val authenticator = DesktopSyncAuthenticator { }
         authenticator.prepareRedirectUri()
-        val authorization = async { authenticator.authorize("https://example.com/authorize") }
+        val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         // Long enough for `accept` to actually be blocking, which is the state the cancellation has to reach.
         delay(300)
         assertTrue(isPortOpen(), "The socket should still be listening while the authorization waits.")
@@ -58,14 +59,17 @@ class DesktopSyncAuthenticatorTest {
     fun `a redirect delivered to the socket is returned`() = runBlocking {
         val authenticator = DesktopSyncAuthenticator { }
         authenticator.prepareRedirectUri()
-        val authorization = async { authenticator.authorize("https://example.com/authorize") }
+        val authorization = async { authenticator.authorize("https://example.com/authorize", COMPLETION_PAGE) }
         delay(300)
         Socket("127.0.0.1", 53682).use { socket ->
             PrintWriter(socket.getOutputStream(), true).apply {
                 print("GET /?code=abc123&state=deadbeef HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n")
                 flush()
             }
-            socket.getInputStream().readBytes()
+            socket.getInputStream().readBytes().decodeToString()
+        }.let { response ->
+            assertTrue(response.contains("A Campfire csatlakozott"), "The page does not carry the title it was given.")
+            assertTrue(response.contains("Bezárhatod"), "The page does not carry the message it was given.")
         }
         val outcome = withTimeout(5_000) { authorization.await() }
         assertEquals(
@@ -85,7 +89,7 @@ class DesktopSyncAuthenticatorTest {
     /** Only needed by the test that never starts an authorization, since [DesktopSyncAuthenticator.authorize] closes its own socket. */
     private suspend fun DesktopSyncAuthenticator.close() {
         val authorization = kotlinx.coroutines.CoroutineScope(kotlin.coroutines.EmptyCoroutineContext)
-            .async { authorize("https://example.com/authorize") }
+            .async { authorize("https://example.com/authorize", COMPLETION_PAGE) }
         delay(100)
         authorization.cancel()
         withTimeout(5_000) {
@@ -93,5 +97,13 @@ class DesktopSyncAuthenticatorTest {
                 delay(50)
             }
         }
+    }
+
+    private companion object {
+        /** In Hungarian on purpose: the page is rendered from what it is handed, not from anything built in. */
+        val COMPLETION_PAGE = AuthorizationCompletionPage(
+            title = "A Campfire csatlakozott",
+            message = "Bezárhatod ezt a lapot, és visszatérhetsz az alkalmazásba."
+        )
     }
 }

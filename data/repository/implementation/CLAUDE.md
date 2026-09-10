@@ -26,4 +26,9 @@ and updates the one cached entry (`updateData`); only the preferences are persis
   is written so that an interrupted run leaves the library usable: the index is only told about a file once that
   file has actually moved, so anything half done simply looks unsynced next time. A failure on one file does not end
   a run; only the two failures that make every further call pointless (the credentials refused, the service
-  unreachable) do.
+  unreachable) do — and a `CancellationException` is caught *first* and rethrown, since a stopped run is not a few
+  hundred files that failed. Operations run `CONCURRENT_TRANSFERS` at a time within each ordering group rather than
+  one after another: every one of them is a request, and serialising them made a first sync as slow as the round
+  trip times added up. `SyncRepositoryImpl` owns an application-lifetime scope, so a run outlives the screen and
+  (on Android) the activity that started it, and it is what tells the song and setlist repositories to rescan
+  afterwards — the use case cannot, now that it returns before the run does.

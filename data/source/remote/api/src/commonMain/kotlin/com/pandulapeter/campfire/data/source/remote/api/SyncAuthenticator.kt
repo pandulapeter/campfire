@@ -1,5 +1,7 @@
 package com.pandulapeter.campfire.data.source.remote.api
 
+import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
+
 /**
  * How a platform gets the user through the service's consent page and back.
  *
@@ -20,8 +22,13 @@ interface SyncAuthenticator {
      */
     suspend fun prepareRedirectUri(): String?
 
-    /** Opens [authorizationUrl] and waits for the service to send the user back, where the platform can wait. */
-    suspend fun authorize(authorizationUrl: String): AuthorizationOutcome
+    /**
+     * Opens [authorizationUrl] and waits for the service to send the user back, where the platform can wait.
+     *
+     * @param completionPage What to tell the user once the service has redirected. Only the desktop shows anything:
+     *   it answers the browser itself and has to put words on that page. Everywhere else the browser closes.
+     */
+    suspend fun authorize(authorizationUrl: String, completionPage: AuthorizationCompletionPage): AuthorizationOutcome
 
     /**
      * A redirect this platform received while the app was not running, consumed exactly once. Only the web ever

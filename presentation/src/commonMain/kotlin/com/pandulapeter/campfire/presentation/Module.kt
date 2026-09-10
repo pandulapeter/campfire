@@ -28,6 +28,7 @@ val presentationModule = module {
             saveUserPreferences = get(),
             connectSyncProvider = get(),
             disconnectSyncProvider = get(),
+            cancelSynchronization = get(),
             restoreSync = get(),
             synchronizeLibrary = get(),
             normalizeText = get(),

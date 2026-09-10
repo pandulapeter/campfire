@@ -9,11 +9,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
 import com.pandulapeter.campfire.data.source.remote.implementation.auth.onSyncRedirectReceived
 import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
+import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
+import com.pandulapeter.campfire.sync.CampfireSyncService
 import com.pandulapeter.campfire.presentation.ui.platform.toImportedFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -33,7 +36,8 @@ class CampfireActivity : AppCompatActivity() {
         setContent {
             CampfireAndroidApp(
                 urlOpener = ::openUrl,
-                filesToImport = filesToImport.receiveAsFlow()
+                filesToImport = filesToImport.receiveAsFlow(),
+                syncNotifier = ::onSyncNotificationChanged
             )
         }
         handle(intent)
@@ -55,6 +59,35 @@ class CampfireActivity : AppCompatActivity() {
             onSyncRedirectReceived(data.toString())
         } else {
             importFrom(intent)
+        }
+    }
+
+    /**
+     * Starts and stops the service that keeps a sync run alive once the user has left the app. Building the
+     * notification is the service's job; what arrives here is only whether there is one and what it should say.
+     */
+    private fun onSyncNotificationChanged(notification: com.pandulapeter.campfire.presentation.ui.platform.SyncNotification?) {
+        try {
+            if (notification == null) {
+                startService(CampfireSyncService.stopIntent(this))
+            } else {
+                ContextCompat.startForegroundService(
+                    this,
+                    CampfireSyncService.intent(
+                        context = this,
+                        channelName = notification.channelName,
+                        title = notification.title,
+                        body = notification.body,
+                        stopLabel = notification.stopLabel,
+                        completed = notification.progress.completed,
+                        total = notification.progress.total
+                    )
+                )
+            }
+        } catch (exception: Exception) {
+            // A notification that cannot be shown must never take the sync down with it: the run carries on, it
+            // just stops surviving the app being left.
+            println("Could not update the sync service: ${exception.message}")
         }
     }
 

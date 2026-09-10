@@ -19,6 +19,6 @@ val dataRepositoryModule = module {
     single<SetlistRepository> { SetlistRepositoryImpl(get()) }
     single<SongContentRepository> { SongContentRepositoryImpl(get()) }
     single<SongRepository> { SongRepositoryImpl(get(), get()) }
-    single<SyncRepository> { SyncRepositoryImpl(get(), get(), get(), get(), get()) }
+    single<SyncRepository> { SyncRepositoryImpl(get(), get(), get(), get(), get(), get(), get()) }
     single<UserPreferencesRepository> { UserPreferencesRepositoryImpl(get()) }
 }

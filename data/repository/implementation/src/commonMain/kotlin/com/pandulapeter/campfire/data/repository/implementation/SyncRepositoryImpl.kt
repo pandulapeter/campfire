@@ -5,8 +5,11 @@ package com.pandulapeter.campfire.data.repository.implementation
 import com.pandulapeter.campfire.data.model.domain.SyncAccount
 import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
 import com.pandulapeter.campfire.data.model.domain.SyncOutcome
+import com.pandulapeter.campfire.data.model.domain.SyncProgress
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.repository.api.SetlistRepository
+import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
 import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
@@ -17,12 +20,18 @@ import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
 import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
 import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
+import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
 import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -43,6 +52,14 @@ internal class SyncRepositoryImpl(
     private val authenticator: SyncAuthenticator,
     private val pendingAuthorizationStore: PendingAuthorizationStore,
     private val syncStateLocalSource: SyncStateLocalSource,
+    /**
+     * Sync writes song and setlist files behind these two repositories' backs, so it is the one thing that has to
+     * tell them to read the library again. It used to be the use case's job, back when a run finished before the
+     * caller did; now that a run outlives whoever started it, this is the only place that reliably still exists
+     * when it ends.
+     */
+    private val songRepository: SongRepository,
+    private val setlistRepository: SetlistRepository,
     libraryFileLocalSource: LibraryFileLocalSource
 ) : SyncRepository {
 
@@ -51,30 +68,55 @@ internal class SyncRepositoryImpl(
     override val syncState = _syncState.asStateFlow()
     override val availableProviders = providers.map { it.id }
 
+    /**
+     * A run belongs to the app, not to whatever screen started it. This repository is a singleton, so a sync
+     * carries on while the user moves around the app, and on Android it survives the activity being destroyed -
+     * which is what lets a foreground service keep it going after the app has been left.
+     */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var syncJob: Job? = null
+
     /** One run at a time: two of them over the same files would each undo half of what the other did. */
     private val mutex = Mutex()
 
-    override suspend fun restore(): Boolean {
+    override suspend fun restore(): SyncRepository.RestoreResult {
         // A consent page the app was sent away to, answered while it was not running - the web's ordinary case, and
         // checked first because it decides what the stored credentials are about to become.
-        authenticator.consumePendingRedirect()?.let { return completePendingAuthorization(it) }
+        authenticator.consumePendingRedirect()?.let { redirectUri ->
+            return SyncRepository.RestoreResult(
+                isConnected = completePendingAuthorization(redirectUri),
+                didReturnFromAuthorization = true
+            )
+        }
         val connected = providers.firstOrNull { it.isConnected() }
         if (connected == null) {
             _syncState.update { SyncState.Disconnected }
-            return false
+            return disconnectedResult
         }
         val account = connected.loadAccount()
         if (account == null) {
             // The credentials are there but the service will not say who they belong to, which only happens once
             // they have been revoked. Nothing is deleted here: the user is told, and disconnecting is their call.
             _syncState.update { SyncState.Disconnected }
-            return false
+            return disconnectedResult
         }
-        _syncState.update { SyncState.Connected(account = account, isSyncing = false, lastSyncedAt = lastSyncedAt(), lastOutcome = null) }
-        return true
+        val document = loadIndex()
+        _syncState.update {
+            SyncState.Connected(
+                account = account,
+                progress = null,
+                lastSyncedAt = document.lastSyncedAt.takeIf { at -> at > 0 },
+                // A run that was still marked as going when the app started is one the app never came back from.
+                lastOutcome = if (document.isRunInProgress) SyncOutcome.Interrupted else null
+            )
+        }
+        if (document.isRunInProgress) {
+            saveIndex(document.copy(isRunInProgress = false))
+        }
+        return SyncRepository.RestoreResult(isConnected = true, didReturnFromAuthorization = false)
     }
 
-    override suspend fun connect(providerId: SyncProviderId): Boolean {
+    override suspend fun connect(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage): Boolean {
         val provider = providers.firstOrNull { it.id == providerId } ?: return false
         _syncState.update { SyncState.Connecting(providerId) }
         return try {
@@ -83,7 +125,7 @@ internal class SyncRepositoryImpl(
             // Written down before the browser is opened: on the web the app stops existing at the next line, and
             // the verifier still has to be there when it starts again.
             pendingAuthorizationStore.savePendingAuthorization(providerId, request)
-            when (val outcome = authenticator.authorize(request.authorizationUrl)) {
+            when (val outcome = authenticator.authorize(request.authorizationUrl, completionPage)) {
                 is SyncAuthenticator.AuthorizationOutcome.Received -> completePendingAuthorization(outcome.redirectUri)
                 // The app is on its way to the consent page; whatever it says arrives at the next start up.
                 SyncAuthenticator.AuthorizationOutcome.Redirected -> false
@@ -124,37 +166,75 @@ internal class SyncRepositoryImpl(
         _syncState.update { SyncState.Disconnected }
     }
 
-    override suspend fun synchronize(): SyncOutcome? {
-        if (mutex.isLocked) return null
-        return mutex.withLock {
-            val provider = providers.firstOrNull { it.isConnected() } ?: return@withLock null
-            val connected = _syncState.value as? SyncState.Connected ?: return@withLock null
-            _syncState.update { connected.copy(isSyncing = true) }
-            val outcome = try {
-                val document = loadIndex()
+    /**
+     * Starts a run and returns; what it is doing and how it ended arrive through [syncState]. Fire and forget
+     * because the run outlives whoever asked for it - the screen that started it may be gone long before it
+     * finishes, and on Android the activity may be too.
+     */
+    override fun synchronize() {
+        if (syncJob?.isActive == true) return
+        syncJob = scope.launch { runSynchronization() }
+    }
+
+    /** Stops a run where it is. What has already moved stays moved, and the next run picks up from there. */
+    override fun cancelSynchronization() {
+        syncJob?.cancel()
+        syncJob = null
+    }
+
+    private suspend fun runSynchronization() {
+        if (mutex.isLocked) return
+        mutex.withLock {
+            val provider = providers.firstOrNull { it.isConnected() } ?: return@withLock
+            val connected = _syncState.value as? SyncState.Connected ?: return@withLock
+            _syncState.update { connected.copy(progress = SyncProgress(), lastOutcome = null) }
+            val document = loadIndex()
+            // Written before anything moves, so that a run the app never comes back from is still recognisable as
+            // interrupted next time - iOS suspending the app mid sync looks exactly like being killed.
+            saveIndex(document.copy(isRunInProgress = true))
+            try {
                 val result = engine.synchronize(
                     provider = provider,
                     document = document,
-                    accountId = accountIdOf(connected.account)
+                    accountId = accountIdOf(connected.account),
+                    onProgress = { progress -> _syncState.update { (it as? SyncState.Connected ?: connected).copy(progress = progress) } }
                 )
                 val syncedAt = Clock.System.now().toEpochMilliseconds()
                 saveIndex(result.index.copy(lastSyncedAt = syncedAt))
+                // Only when something actually moved: most runs find nothing to do, and re-reading the whole
+                // library every time the app is opened would cost more than the sync itself.
+                if (result.summary.hasChanges) {
+                    rescanLibrary()
+                }
                 _syncState.update {
                     connected.copy(
-                        isSyncing = false,
+                        progress = null,
                         lastSyncedAt = syncedAt,
                         lastOutcome = SyncOutcome.Success(result.summary)
                     )
                 }
-                SyncOutcome.Success(result.summary)
+            } catch (exception: CancellationException) {
+                // Stopped rather than broken: nothing is wrong and nothing needs fixing, so this is its own outcome.
+                // Whatever did move before the stop is on disk, so the lists still have to be told about it.
+                withContext(NonCancellable) {
+                    clearRunInProgress()
+                    rescanLibrary()
+                }
+                _syncState.update { connected.copy(progress = null, lastOutcome = SyncOutcome.Interrupted) }
+                throw exception
             } catch (exception: Exception) {
-                val failure = SyncOutcome.Failure(exception.toFailureReason())
                 println("The sync run failed: ${exception.message}")
-                _syncState.update { connected.copy(isSyncing = false, lastOutcome = failure) }
-                failure
+                clearRunInProgress()
+                _syncState.update { connected.copy(progress = null, lastOutcome = SyncOutcome.Failure(exception.toFailureReason())) }
             }
-            outcome
         }
+    }
+
+    private suspend fun clearRunInProgress() = saveIndex(loadIndex().copy(isRunInProgress = false))
+
+    private suspend fun rescanLibrary() {
+        songRepository.rescan()
+        setlistRepository.rescan()
     }
 
     /**
@@ -191,7 +271,7 @@ internal class SyncRepositoryImpl(
                     saveIndex(SyncIndexDocument())
                 }
                 _syncState.update {
-                    SyncState.Connected(account = account, isSyncing = false, lastSyncedAt = null, lastOutcome = null)
+                    SyncState.Connected(account = account, progress = null, lastSyncedAt = null, lastOutcome = null)
                 }
                 true
             } catch (exception: Exception) {
@@ -232,6 +312,7 @@ internal class SyncRepositoryImpl(
     private suspend fun lastSyncedAt() = loadIndex().lastSyncedAt.takeIf { it > 0 }
 
     private companion object {
+        val disconnectedResult = SyncRepository.RestoreResult(isConnected = false, didReturnFromAuthorization = false)
         val json = Json {
             ignoreUnknownKeys = true
             prettyPrint = true

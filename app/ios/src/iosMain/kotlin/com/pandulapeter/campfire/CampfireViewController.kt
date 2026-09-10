@@ -27,12 +27,14 @@ fun CampfireViewController(): UIViewController {
     koinApplication
     // The picker needs something to present itself from, which is the controller being created here.
     var controller: UIViewController? = null
+    val syncNotifier = IosSyncNotifier()
     val filePicker = IosFilePicker { requireNotNull(controller) }
     return ComposeUIViewController {
         CampfireIosApp(
             urlOpener = ::openUrl,
             filePicker = filePicker,
-            filesToImport = filesToImport
+            filesToImport = filesToImport,
+            syncNotifier = syncNotifier
         )
     }.also { controller = it }
 }

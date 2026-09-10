@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
+import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import org.koin.core.scope.Scope
 
 internal actual fun Scope.createSyncAuthenticator(): SyncAuthenticator = WebSyncAuthenticator()
@@ -16,7 +17,11 @@ internal class WebSyncAuthenticator : SyncAuthenticator {
     /** The page itself, without any query or fragment: the exact string registered with the provider. */
     override suspend fun prepareRedirectUri() = currentPageUrl()
 
-    override suspend fun authorize(authorizationUrl: String): SyncAuthenticator.AuthorizationOutcome {
+    /** The page is ignored: the service redirects back to the app itself, which is the page. */
+    override suspend fun authorize(
+        authorizationUrl: String,
+        completionPage: AuthorizationCompletionPage
+    ): SyncAuthenticator.AuthorizationOutcome {
         navigateTo(authorizationUrl)
         return SyncAuthenticator.AuthorizationOutcome.Redirected
     }

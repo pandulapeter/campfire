@@ -8,6 +8,15 @@
     -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!--
+      A sync run has to survive the user leaving the app, which on Android means a foreground service, which in
+      turn means a notification. The notification permission is only ever asked for when sync is switched on; a
+      refusal costs the notification, not the sync.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".CampfireAndroidApplication"
         android:allowBackup="false"
@@ -81,6 +90,15 @@
             </intent-filter>
 
         </activity>
+
+        <!--
+          Keeps the process alive for as long as a sync run lasts, and shows the run. It does no syncing of its own,
+          see CampfireSyncService.
+        -->
+        <service
+            android:name=".sync.CampfireSyncService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
         <!-- Lets a shared song leave the app's private storage as a content URI, see CampfireActivity.shareFile. -->
         <provider

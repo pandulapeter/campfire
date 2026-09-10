@@ -22,6 +22,9 @@ Sync is the one place the web platform forced a design: asking for consent navig
 written to OPFS before the app leaves, and the answer is read out of the query string at the next start (and taken
 out of the address bar as it is read, so a reload cannot replay a spent code). The redirect URI is the page's own
 URL, which has to be registered with the service — a deployment served from a different address needs its own entry.
+Nothing about which screen the user was on survives that trip, because the navigation state is in memory and never in
+the URL: `restore` reports that this start up came back from a consent page (whatever the service answered) and
+`CampfireViewModel` opens Settings, which is the screen the user pressed the button on.
 
 The web build has no file associations and no "open with": browsers cannot register those without a service worker.
 Files reach it through the picker (a hidden `<input type="file">`) or by being dropped on the page.

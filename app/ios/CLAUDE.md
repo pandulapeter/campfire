@@ -11,6 +11,8 @@ iOS entry point. A Kotlin/Native module that produces the static `ComposeApp` fr
 
 `Info.plist` carries the document integration: `UIFileSharingEnabled` and `LSSupportsOpeningDocumentsInPlace` put the library under "On My iPhone → Campfire" in the Files app (the library is in the documents directory; the preferences are not, so they stay out of the user's way). `UTImportedTypeDeclarations` declares the ChordPro types and `CFBundleDocumentTypes` claims them — `.cho` with `LSHandlerRank` `Default`, the rest of the family `Alternate`, since those extensions are shared with other kinds of file. Zip and plain text are deliberately absent. Keep the list in step with `LibraryFiles.SONG_EXTENSIONS`.
 
+`IosSyncNotifier.kt` holds a `beginBackgroundTask` and posts a local notification while a sync run lasts, handed to `CampfireIosApp` as its `SyncNotifier`. iOS is stricter than Android here: a background task buys tens of seconds, not minutes, so a large library is suspended mid run — which is the case the index's "a run was going" marker exists for, and the next start reports it as interrupted and carries on. The notification is informational (iOS has no progress bar in one, and no button without a registered category), so stopping a run is done in the app.
+
 Because the Files app can change the library behind the app's back, `CampfireApp` rescans on resume here (see `libraryLocation` in `:presentation`).
 
 Build and run from Xcode (or `xcodebuild -project app/ios/iosApp/iosApp.xcodeproj -target iosApp -sdk iphonesimulator -arch arm64 SYMROOT=<dir> OBJROOT=<dir> build`); `./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64` only checks that the Kotlin side compiles and links.

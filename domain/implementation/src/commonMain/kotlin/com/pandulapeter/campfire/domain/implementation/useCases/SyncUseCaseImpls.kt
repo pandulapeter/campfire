@@ -1,10 +1,11 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
-import com.pandulapeter.campfire.data.model.domain.SyncOutcome
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
 import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.data.repository.api.SyncRepository
+import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DisconnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSyncProvidersUseCase
@@ -35,8 +36,8 @@ class ConnectSyncProviderUseCaseImpl internal constructor(
      * A first run follows straight away. Connecting an account and then facing a library that is still empty would
      * leave the user to work out that something else is expected of them.
      */
-    override suspend operator fun invoke(providerId: SyncProviderId): Boolean {
-        if (!syncRepository.connect(providerId)) return false
+    override suspend operator fun invoke(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage): Boolean {
+        if (!syncRepository.connect(providerId, completionPage)) return false
         synchronizeLibrary()
         return true
     }
@@ -54,32 +55,25 @@ class RestoreSyncUseCaseImpl internal constructor(
     private val synchronizeLibrary: SynchronizeLibraryUseCase
 ) : RestoreSyncUseCase {
 
-    override suspend operator fun invoke() {
-        if (syncRepository.restore()) {
+    override suspend operator fun invoke(): Boolean {
+        val result = syncRepository.restore()
+        if (result.isConnected) {
             synchronizeLibrary()
         }
+        return result.didReturnFromAuthorization
     }
 }
 
 class SynchronizeLibraryUseCaseImpl internal constructor(
-    private val syncRepository: SyncRepository,
-    private val songRepository: SongRepository,
-    private val setlistRepository: SetlistRepository
+    private val syncRepository: SyncRepository
 ) : SynchronizeLibraryUseCase {
 
-    /**
-     * The rescan is the same one an import ends with, and for the same reason: sync writes files behind the cached
-     * lists' back, so the lists have to be read again before the screens can be right.
-     *
-     * Only when something actually moved. Most runs find nothing to do, and re-reading the whole library each time
-     * the user opens the app would cost more than the sync itself.
-     */
-    override suspend operator fun invoke(): SyncOutcome? {
-        val outcome = syncRepository.synchronize()
-        if (outcome is SyncOutcome.Success && outcome.summary.hasChanges) {
-            songRepository.rescan()
-            setlistRepository.rescan()
-        }
-        return outcome
-    }
+    override operator fun invoke() = syncRepository.synchronize()
+}
+
+class CancelSynchronizationUseCaseImpl internal constructor(
+    private val syncRepository: SyncRepository
+) : CancelSynchronizationUseCase {
+
+    override operator fun invoke() = syncRepository.cancelSynchronization()
 }

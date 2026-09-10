@@ -127,6 +127,17 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
 - `SyncPlanner` is a pure function of (local hashes, remote listing, the index of what the last run saw) and is the
   part that is tested. Content decides what changed, never a clock: the platforms disagree about modification times
   and the web has none. An edit always beats a deletion.
+- A run belongs to the **app**, not to the screen that started it: `SyncRepository` is a singleton with its own
+  scope, so a run carries on while the user moves around or leaves. Android keeps the process alive with a
+  foreground service and iOS with a background task, both driven by `SyncNotifier`, which each app shell provides
+  the way it provides `FilePicker`. The strings are resolved in the UI so the notification follows the language
+  chosen *in the app*, not the system's.
+- `SyncEngine` runs the plan a few files at a time rather than one after another (which made a first sync one round
+  trip per file), and retries when the service asks it to slow down — being rate limited is the expected answer to a
+  first sync of a whole library, not a reason to give up on it.
+- The index carries an "a run was going" marker, written before anything moves and cleared when it finishes, so a
+  run the app never came back from — killed, swiped away, suspended by iOS — is reported as interrupted next time
+  rather than silently forgotten.
 - A file changed on both sides is never merged: the local one keeps the name and the incoming one lands next to it
   as ` (2)`, exactly as a colliding import does.
 - Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four

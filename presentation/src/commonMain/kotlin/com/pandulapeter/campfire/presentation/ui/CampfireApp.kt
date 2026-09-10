@@ -61,6 +61,7 @@ import androidx.navigationevent.NavigationEvent
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.export_failed
 import com.pandulapeter.campfire.presentation.resources.import_failed
@@ -71,8 +72,15 @@ import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.setlists
 import com.pandulapeter.campfire.presentation.resources.settings
+import com.pandulapeter.campfire.presentation.resources.settings_sync_cancel
+import com.pandulapeter.campfire.presentation.resources.settings_sync_notification_channel
+import com.pandulapeter.campfire.presentation.resources.settings_sync_notification_title
+import com.pandulapeter.campfire.presentation.resources.settings_sync_preparing
+import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
 import com.pandulapeter.campfire.presentation.resources.songs
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
+import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
@@ -104,6 +112,7 @@ fun CampfireApp(
     filesToImport: Flow<List<ImportedFile>> = emptyFlow()
 ) {
     LaunchedEffect(filesToImport) { filesToImport.collect(viewModel::importFiles) }
+    SyncNotificationEffect(viewModel)
     // A library the user can reach from outside the app (the desktop folder, the iOS Files app) can also change
     // while the app is away, so it is read again whenever Campfire comes back to the front. One only the app can
     // see - Android's private storage, the browser's origin private file system - cannot change behind its back,
@@ -511,3 +520,38 @@ private const val NAVIGATION_GENERATION_METADATA_KEY = "navigationGeneration"
 private const val TAB_TRANSITION_DURATION = 300
 private const val TAB_SLIDE_FRACTION = 12
 private const val PREDICTIVE_BACK_DURATION = 350
+
+/**
+ * Tells the platform shell what a running sync should look like while the app is not in front of the user, and that
+ * there is nothing to show the moment it ends.
+ *
+ * Here rather than on the settings screen because a run outlives the screen that started it: the user is free to go
+ * back to their songs, or leave the app entirely, and the notification has to follow the run rather than the screen.
+ * The strings are resolved here too, so that the notification is in the language chosen inside the app rather than
+ * the system's.
+ */
+@Composable
+private fun SyncNotificationEffect(viewModel: CampfireViewModel) {
+    val syncNotifier = LocalSyncNotifier.current
+    val syncState by viewModel.syncState.collectAsStateWithLifecycle()
+    val progress = (syncState as? SyncState.Connected)?.progress
+    val channelName = stringResource(Res.string.settings_sync_notification_channel)
+    val title = stringResource(Res.string.settings_sync_notification_title)
+    val stopLabel = stringResource(Res.string.settings_sync_cancel)
+    val preparing = stringResource(Res.string.settings_sync_preparing)
+    val body = if (progress == null || progress.isPreparing) {
+        preparing
+    } else {
+        stringResource(Res.string.settings_sync_progress, progress.completed, progress.total)
+    }
+    val notification = progress?.let {
+        SyncNotification(
+            channelName = channelName,
+            title = title,
+            body = body,
+            stopLabel = stopLabel,
+            progress = it
+        )
+    }
+    LaunchedEffect(notification) { syncNotifier.onSyncNotificationChanged(notification) }
+}

@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
+import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import java.awt.Desktop
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -45,7 +46,10 @@ internal class DesktopSyncAuthenticator(
         "http://$LOOPBACK_ADDRESS:$PORT"
     }
 
-    override suspend fun authorize(authorizationUrl: String): SyncAuthenticator.AuthorizationOutcome = coroutineScope {
+    override suspend fun authorize(
+        authorizationUrl: String,
+        completionPage: AuthorizationCompletionPage
+    ): SyncAuthenticator.AuthorizationOutcome = coroutineScope {
         val socket = serverSocket ?: return@coroutineScope SyncAuthenticator.AuthorizationOutcome.Cancelled(
             "The authorization was not prepared."
         )
@@ -68,7 +72,7 @@ internal class DesktopSyncAuthenticator(
                 val requestLine = socket.accept().use { connection ->
                     val line = BufferedReader(InputStreamReader(connection.getInputStream())).readLine().orEmpty()
                     connection.getOutputStream().apply {
-                        write(RESPONSE.encodeToByteArray())
+                        write(completionPage.toResponse().encodeToByteArray())
                         flush()
                     }
                     line
@@ -106,15 +110,6 @@ internal class DesktopSyncAuthenticator(
         const val PORT = 53682
         const val TIMEOUT_MILLIS = 5 * 60 * 1000
 
-        val RESPONSE = buildString {
-            append("HTTP/1.1 200 OK\r\n")
-            append("Content-Type: text/html; charset=utf-8\r\n")
-            append("Connection: close\r\n\r\n")
-            append("<!doctype html><html><head><meta charset=\"utf-8\"><title>Campfire</title></head>")
-            append("<body style=\"font-family: sans-serif; text-align: center; padding-top: 64px\">")
-            append("<h2>Campfire is connected</h2><p>You can close this tab and go back to the app.</p>")
-            append("</body></html>")
-        }
     }
 }
 
@@ -132,3 +127,30 @@ private fun openInSystemBrowser(url: String) {
         ProcessBuilder(*command).start()
     }
 }
+
+/**
+ * The page the browser is answered with, in the language the app is in. Everything the user reads is escaped and
+ * the page carries no scripts and no links: it exists to say one sentence and be closed.
+ */
+private fun AuthorizationCompletionPage.toResponse() = buildString {
+    val body = buildString {
+        append("<!doctype html><html><head><meta charset=\"utf-8\">")
+        append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">")
+        append("<title>").append(title.escapedForHtml()).append("</title></head>")
+        append("<body style=\"font-family: system-ui, sans-serif; text-align: center; padding: 64px 24px; color: #201a17\">")
+        append("<h2>").append(title.escapedForHtml()).append("</h2>")
+        append("<p>").append(message.escapedForHtml()).append("</p>")
+        append("</body></html>")
+    }
+    append("HTTP/1.1 200 OK\r\n")
+    append("Content-Type: text/html; charset=utf-8\r\n")
+    // The length has to be in bytes rather than characters, or a translated page is truncated in the browser.
+    append("Content-Length: ").append(body.encodeToByteArray().size).append("\r\n")
+    append("Connection: close\r\n\r\n")
+    append(body)
+}
+
+private fun String.escapedForHtml() = replace("&", "&amp;")
+    .replace("<", "&lt;")
+    .replace(">", "&gt;")
+    .replace("\"", "&quot;")

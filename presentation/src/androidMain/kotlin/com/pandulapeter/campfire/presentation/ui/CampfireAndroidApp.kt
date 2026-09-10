@@ -12,6 +12,8 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.rememberAndroidFilePicker
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import kotlinx.coroutines.flow.Flow
@@ -24,12 +26,15 @@ import org.koin.compose.viewmodel.koinViewModel
  *
  * @param urlOpener Opens the given URL, styled for the given theme.
  * @param filesToImport Files from an "open with" or a share, read by the activity that received the intent.
+ * @param syncNotifier Starts and stops the foreground service a running sync needs, which lives in the application
+ *   module because that is where the manifest is.
  */
 @Composable
 fun CampfireAndroidApp(
     viewModel: CampfireViewModel = koinViewModel(),
     urlOpener: (url: String, isDarkTheme: Boolean) -> Unit,
-    filesToImport: Flow<List<ImportedFile>> = emptyFlow()
+    filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
+    syncNotifier: SyncNotifier = SyncNotifier { }
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
@@ -41,7 +46,8 @@ fun CampfireAndroidApp(
         )
     }
     CompositionLocalProvider(
-        LocalFilePicker provides rememberAndroidFilePicker()
+        LocalFilePicker provides rememberAndroidFilePicker(),
+        LocalSyncNotifier provides syncNotifier
     ) {
         CampfireApp(
             viewModel = viewModel,

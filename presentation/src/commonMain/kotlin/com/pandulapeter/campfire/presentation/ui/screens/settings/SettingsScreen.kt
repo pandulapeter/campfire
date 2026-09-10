@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_export
@@ -52,6 +53,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_horizontal_sect
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.settings_song_display
 import com.pandulapeter.campfire.presentation.resources.settings_sync
+import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_message
+import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_title
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_english
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_hungarian
@@ -106,6 +109,12 @@ internal fun SettingsScreen(
         val layoutDirection = LocalLayoutDirection.current
         val listState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
+        // Resolved out here rather than in the data layer, which can see neither the translations nor the language
+        // the user picked, and out of the list because a lazy list's scope is not a composable one.
+        val completionPage = AuthorizationCompletionPage(
+            title = stringResource(Res.string.settings_sync_redirect_page_title),
+            message = stringResource(Res.string.settings_sync_redirect_page_message)
+        )
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = listState,
@@ -182,7 +191,8 @@ internal fun SettingsScreen(
             ) { stringResource(Res.string.settings_sync) }
             syncSettings(
                 viewModel = viewModel,
-                syncState = syncState
+                syncState = syncState,
+                completionPage = completionPage
             )
             sectionHeader(
                 key = "header_song_display",

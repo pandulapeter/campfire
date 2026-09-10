@@ -16,9 +16,11 @@ import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
+import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
@@ -89,6 +91,7 @@ class CampfireViewModel(
     private val saveUserPreferences: SaveUserPreferencesUseCase,
     private val connectSyncProvider: ConnectSyncProviderUseCase,
     private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
+    private val cancelSynchronization: CancelSynchronizationUseCase,
     private val restoreSync: RestoreSyncUseCase,
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
     private val normalizeText: NormalizeTextUseCase,
@@ -280,7 +283,13 @@ class CampfireViewModel(
         viewModelScope.launch { loadScreenData(false) }
         // Picks a connected account back up, finishes a consent the app was closed in the middle of, and runs a
         // first sync. Its own coroutine, so that a slow network never holds up the library appearing on screen.
-        viewModelScope.launch { restoreSync() }
+        viewModelScope.launch {
+            // On the web the consent page replaces the app, so this start up is the second half of a tap on
+            // Settings: whether it ended up connected or not, that is the screen the answer is on.
+            if (restoreSync()) {
+                selectTopLevelDestination(CampfireDestination.Settings)
+            }
+        }
         viewModelScope.launch {
             pendingFontScale.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { fontScale ->
                 userPreferences.value?.let { saveUserPreferences(it.copy(fontScale = fontScale)) }
@@ -584,9 +593,13 @@ class CampfireViewModel(
      */
     private var syncConnectionJob: Job? = null
 
-    fun connectSyncProvider(providerId: SyncProviderId) {
+    /**
+     * @param completionPage The words the desktop's redirect page shows, resolved by the screen because that is
+     *   where the translations and the language the user picked are, see `AuthorizationCompletionPage`.
+     */
+    fun connectSyncProvider(providerId: SyncProviderId, completionPage: AuthorizationCompletionPage) {
         if (syncConnectionJob?.isActive == true) return
-        syncConnectionJob = viewModelScope.launch { connectSyncProvider.invoke(providerId) }
+        syncConnectionJob = viewModelScope.launch { connectSyncProvider.invoke(providerId, completionPage) }
     }
 
     /** Gives up on an authorization that is waiting, which is the way out of a browser the user closed. */
@@ -599,10 +612,14 @@ class CampfireViewModel(
         disconnectSyncProvider.invoke()
     }
 
-    /** The repository refuses a second run while one is going, so a second tap costs nothing. */
-    fun synchronizeLibrary() = viewModelScope.launch {
-        synchronizeLibrary.invoke()
-    }
+    /**
+     * Not launched in [viewModelScope]: a run belongs to the app rather than to this screen, and carries on while
+     * the user moves around it or leaves it entirely. The repository refuses a second run while one is going, so a
+     * second tap costs nothing.
+     */
+    fun synchronizeLibrary() = synchronizeLibrary.invoke()
+
+    fun cancelSynchronization() = cancelSynchronization.invoke()
 
     // Dialogs
 

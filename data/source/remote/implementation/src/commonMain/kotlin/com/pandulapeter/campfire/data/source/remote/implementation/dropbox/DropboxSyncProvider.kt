@@ -30,8 +30,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 
 /**
@@ -160,10 +162,9 @@ internal class DropboxSyncProvider(
     }
 
     override suspend fun download(kind: LibraryFileKind, name: String): ByteArray {
-        val token = accessToken()
-        val response = transport {
+        val response = request {
             httpClient.post(DOWNLOAD_URL) {
-                header("Authorization", "Bearer $token")
+                header("Authorization", "Bearer ${accessToken()}")
                 header("Dropbox-API-Arg", """{"path":${remotePath(kind, name).toAsciiJsonString()}}""")
             }
         }
@@ -186,10 +187,9 @@ internal class DropboxSyncProvider(
         } else {
             """{".tag":"update","update":${expectedRevision.toAsciiJsonString()}}"""
         }
-        val token = accessToken()
-        val response = transport {
+        val response = request {
             httpClient.post(UPLOAD_URL) {
-                header("Authorization", "Bearer $token")
+                header("Authorization", "Bearer ${accessToken()}")
                 header(
                     "Dropbox-API-Arg",
                     """{"path":${remotePath(kind, name).toAsciiJsonString()},"mode":$mode,"autorename":false,"mute":true}"""
@@ -247,10 +247,9 @@ internal class DropboxSyncProvider(
 
     /** A Dropbox "RPC" call: JSON in, JSON out, everything above the transport reported in the body. */
     private suspend fun rpc(url: String, body: String?): String {
-        val token = accessToken()
-        val response = transport {
+        val response = request {
             httpClient.post(url) {
-                header("Authorization", "Bearer $token")
+                header("Authorization", "Bearer ${accessToken()}")
                 if (body != null) {
                     contentType(ContentType.Application.Json)
                     setBody(body)
@@ -259,6 +258,34 @@ internal class DropboxSyncProvider(
         }
         response.ensureSuccessful()
         return transport { response.bodyAsText() }
+    }
+
+    /**
+     * One call, retried while Dropbox asks it to slow down.
+     *
+     * A first sync of a whole library is a few hundred calls in quick succession, so being rate limited is the
+     * expected answer rather than an exceptional one - and giving up on the run because of it would mean a library
+     * that can never finish its first sync. Dropbox says how long to wait in `Retry-After`; the jitter is there
+     * because several transfers are in flight at once and would otherwise all come back at the same moment and be
+     * limited again together.
+     */
+    private suspend fun request(block: suspend () -> HttpResponse): HttpResponse {
+        var attempt = 0
+        while (true) {
+            val response = transport { block() }
+            val retryAfterMillis = response.retryAfterMillis()
+            if (retryAfterMillis == null || attempt >= MAXIMUM_RETRIES) return response
+            attempt++
+            delay(retryAfterMillis + Random.nextLong(RETRY_JITTER_MILLIS))
+        }
+    }
+
+    /** Null when the answer is one to act on rather than to wait out. */
+    private fun HttpResponse.retryAfterMillis(): Long? = when {
+        status == HttpStatusCode.TooManyRequests || status.value >= 500 ->
+            (headers["Retry-After"]?.toLongOrNull() ?: DEFAULT_RETRY_SECONDS) * 1000L
+
+        else -> null
     }
 
     /**
@@ -345,6 +372,12 @@ internal class DropboxSyncProvider(
 
         /** Tokens are renewed slightly early, so that one does not expire between the check and the request. */
         const val EXPIRY_MARGIN_MILLIS = 60_000L
+
+        const val MAXIMUM_RETRIES = 5
+
+        /** What to wait when Dropbox asks to slow down without saying for how long. */
+        const val DEFAULT_RETRY_SECONDS = 2L
+        const val RETRY_JITTER_MILLIS = 500L
 
         val json = Json { ignoreUnknownKeys = true }
     }

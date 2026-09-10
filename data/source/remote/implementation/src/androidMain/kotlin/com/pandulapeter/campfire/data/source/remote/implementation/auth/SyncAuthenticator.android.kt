@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
+import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
@@ -36,7 +37,8 @@ internal class AndroidSyncAuthenticator(
 
     override suspend fun prepareRedirectUri() = "$REDIRECT_SCHEME://$REDIRECT_HOST"
 
-    override suspend fun authorize(authorizationUrl: String): SyncAuthenticator.AuthorizationOutcome = coroutineScope {
+    /** The page is ignored: the browser closes itself, so nothing of Campfire's is ever rendered in it. */
+    override suspend fun authorize(authorizationUrl: String, completionPage: AuthorizationCompletionPage): SyncAuthenticator.AuthorizationOutcome = coroutineScope {
         discardStaleRedirects()
         val application = context as? Application
         val hasReturned = CompletableDeferred<Unit>()

@@ -3,6 +3,7 @@
 package com.pandulapeter.campfire.data.source.remote.implementation.auth
 
 import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
+import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -41,7 +42,8 @@ internal class IosSyncAuthenticator : SyncAuthenticator {
      * The session has to be created and started on the main thread, and the completion handler comes back on it.
      * Cancelling the coroutine (the "Cancel" row in Settings) dismisses the sheet through `invokeOnCancellation`.
      */
-    override suspend fun authorize(authorizationUrl: String): SyncAuthenticator.AuthorizationOutcome =
+    /** The page is ignored: the browser closes itself, so nothing of Campfire's is ever rendered in it. */
+    override suspend fun authorize(authorizationUrl: String, completionPage: AuthorizationCompletionPage): SyncAuthenticator.AuthorizationOutcome =
         withContext(Dispatchers.Main) {
             suspendCancellableCoroutine { continuation ->
                 val url = NSURL.URLWithString(authorizationUrl)

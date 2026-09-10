@@ -5,6 +5,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
+import com.pandulapeter.campfire.presentation.ui.platform.SyncNotifier
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import org.koin.compose.viewmodel.koinViewModel
@@ -16,15 +18,19 @@ import org.koin.compose.viewmodel.koinViewModel
  * @param filePicker The document picker. Handed in for the same reason as [urlOpener]: both are UIKit, which this
  *   module stays free of.
  * @param filesToImport Files opened with Campfire or shared to it, which reach the app module through `onOpenURL`.
+ * @param syncNotifier Holds a background task and shows the notification while a sync run lasts. UIKit again, so it
+ *   comes from the app module too.
  */
 @Composable
 fun CampfireIosApp(
     viewModel: CampfireViewModel = koinViewModel(),
     urlOpener: (String) -> Unit,
     filePicker: FilePicker,
-    filesToImport: Flow<List<ImportedFile>> = emptyFlow()
+    filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
+    syncNotifier: SyncNotifier = SyncNotifier { }
 ) = CompositionLocalProvider(
-    LocalFilePicker provides filePicker
+    LocalFilePicker provides filePicker,
+    LocalSyncNotifier provides syncNotifier
 ) {
     CampfireApp(
         viewModel = viewModel,
