@@ -207,10 +207,17 @@ class CampfireViewModel(
      */
     private val songFileNames = screenData.map { it.data?.songFileNames.orEmpty() }.asEagerState(emptySet())
 
-    /** Null until the library has actually been read, so that the settings screen never flashes a count of zero. */
+    /**
+     * Null until the library has actually been read, so that the settings screen never flashes a count of zero.
+     *
+     * Eager, like [setlists] and for a reason of its own: a state that starts collecting when the settings screen
+     * subscribes to it hands that screen its initial value first and the real one a frame later, which inserts the
+     * summary row while the screen is still animating in - the screen arrives in two pieces instead of one.
+     * [screenData] is already collected eagerly, so this costs nothing extra.
+     */
     val librarySummary = screenData
         .map { state -> state.data?.let { LibrarySummary(songCount = it.songFileNames.size, setlistCount = it.setlists.size) } }
-        .asState(null)
+        .asEagerState(null)
     val songGroups = combine(allSongs, query, userPreferences.map { it?.sortingMode }) { songs, query, sortingMode ->
         if (query.isBlank()) {
             songs.groupIntoSections(sortingMode ?: UserPreferences.SortingMode.BY_ARTIST)
