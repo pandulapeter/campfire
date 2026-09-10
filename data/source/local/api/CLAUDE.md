@@ -10,6 +10,14 @@ platform types.
 - `UserPreferencesLocalSource` — one document; `loadUserPreferences()` never returns null, because a missing or
   unreadable document means the defaults, which are defined once next to the document itself.
 - `ArchiveLocalSource` — zip pack and unpack, over bytes.
+- `LibraryFileLocalSource` — the library as *bytes*, which is what sync moves around. Deliberately does not look
+  inside the files at all, so a song Campfire cannot parse still travels between devices unchanged.
+  `writeLibraryFileToFreeName` is how an incoming copy of a file that changed on both sides lands next to the local
+  one, under the same ` (2)` rule as a colliding import.
+- `SyncStateLocalSource` — the two documents sync remembers between runs, kept next to the preferences and so outside
+  `library/`: neither is the user's data and an export must not carry them. Both are **opaque strings** here — what
+  is in them belongs to the layers that write them (the credentials to the remote source, the index to the
+  repository), and the storage layer has no business knowing either shape.
 
 **File naming is the storage layer's business.** Callers hand over a title, an artist and some text; the source decides
 what the file is called, sanitises it for every platform's rules and suffixes it until the name is free. That is why

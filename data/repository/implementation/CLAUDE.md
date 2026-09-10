@@ -1,7 +1,7 @@
 # :data:repository:implementation
 
-Implements `:data:repository:api` on top of `:data:source:local:api`. Koin wiring in `Module.kt`
-(`dataRepositoryModule`), all repositories as `single`.
+Implements `:data:repository:api` on top of `:data:source:local:api` and — for sync alone —
+`:data:source:remote:api`. Koin wiring in `Module.kt` (`dataRepositoryModule`), all repositories as `single`.
 
 `base/BaseLocalDataRepository<T>` holds all the caching logic — new repositories should extend it rather than
 reimplement state handling. It owns a `MutableStateFlow<DataState<T>>` that starts as `Loading(null)` (nothing has been
@@ -19,3 +19,11 @@ and updates the one cached entry (`updateData`); only the preferences are persis
   walking the whole library does not leave all of it in memory. The editor invalidates one entry after a save.
 - `ArchiveRepositoryImpl` is a pass-through to the zip code in the local source implementation; it exists so the domain
   layer can reach it without depending on a local source.
+- `sync/` is where local and remote meet, which is why it is in a repository rather than in either source.
+  `SyncPlanner` is a **pure function** of (local hashes, remote listing, the index of what the last run saw) and is
+  the one part of sync worth testing — `commonTest` covers every way a file can differ between two devices,
+  including the ones that would otherwise only show up as a song someone lost. `SyncEngine` carries the plan out and
+  is written so that an interrupted run leaves the library usable: the index is only told about a file once that
+  file has actually moved, so anything half done simply looks unsynced next time. A failure on one file does not end
+  a run; only the two failures that make every further call pointless (the credentials refused, the service
+  unreachable) do.

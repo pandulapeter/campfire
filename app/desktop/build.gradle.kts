@@ -9,6 +9,7 @@ plugins {
 dependencies {
     implementation(project(":data:repository:implementation"))
     implementation(project(":data:source:local:implementation"))
+    implementation(project(":data:source:remote:implementation"))
     implementation(project(":domain:implementation"))
     implementation(project(":presentation"))
     implementation(libs.compose.components.resources)
@@ -19,7 +20,7 @@ dependencies {
     runtimeOnly(libs.kotlin.coroutines.swing) // Provides Dispatchers.Main for viewModelScope.
 }
 
-val versionName = System.getProperty("VERSION_NAME").orEmpty()
+val versionName = project.property("campfire.versionName").toString()
 group = "com.pandulapeter.campfire"
 version = versionName
 

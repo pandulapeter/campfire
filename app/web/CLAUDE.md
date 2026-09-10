@@ -4,7 +4,7 @@ Kotlin/Wasm entry point. A `wasmJs` browser target only — the one module that 
 direction.
 
 - `CampfireWebApplication.kt` — `main()` starts Koin through the `KoinApplication` composable
-  (`dataLocalSourceModule + dataRepositoryModule + domainModule + presentationModule`) inside a `ComposeViewport` and
+  (`dataLocalSourceModule + dataRemoteSourceModule + dataRepositoryModule + domainModule + presentationModule`) inside a `ComposeViewport` and
   hosts `CampfireWebApp`. Add new Koin modules here.
 - `src/wasmJsMain/resources/index.html` — the page itself. It shows a pulsing app icon until the Compose canvas takes
   over, because the `.wasm` binary is tens of megabytes and an empty black page for that long looks broken. The
@@ -16,6 +16,12 @@ or `localhost` — a distribution served from `file://` will start and then fail
 
 - `./gradlew :app:web:wasmJsBrowserDevelopmentRun` — dev server on `localhost` (prints the port).
 - `./gradlew :app:web:wasmJsBrowserDistribution` — the deployable site in `build/dist/wasmJs/productionExecutable`.
+
+Sync is the one place the web platform forced a design: asking for consent navigates *away* from the running app, so
+`WebSyncAuthenticator.authorize` reports `Redirected` rather than returning a redirect URI, the PKCE verifier is
+written to OPFS before the app leaves, and the answer is read out of the query string at the next start (and taken
+out of the address bar as it is read, so a reload cannot replay a spent code). The redirect URI is the page's own
+URL, which has to be registered with the service — a deployment served from a different address needs its own entry.
 
 The web build has no file associations and no "open with": browsers cannot register those without a service worker.
 Files reach it through the picker (a hidden `<input type="file">`) or by being dropped on the page.

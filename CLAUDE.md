@@ -1,9 +1,11 @@
 # Campfire
 
 Kotlin Multiplatform app (Android + iOS + JVM desktop + wasmJs web) for viewing and editing song lyrics and chords.
-Compose UI is shared between all platforms. **There is no network access at all**: the app owns a library folder of
-plain [ChordPro](https://www.chordpro.org) files on every platform, which the user fills by writing songs in the
-built-in editor or by importing files and zip archives.
+Compose UI is shared between all platforms. The app owns a library folder of plain
+[ChordPro](https://www.chordpro.org) files on every platform, which the user fills by writing songs in the built-in
+editor or by importing files and zip archives. **The only thing that ever reaches the network is sync**, which is off
+until the user connects a cloud folder of their own in Settings, and which still involves no server of Campfire's own
+— see the Sync section below.
 
 ## Architecture
 
@@ -21,6 +23,8 @@ app:android / app:desktop / app:ios / app:web   entry points, Koin startup, plat
     data:repository:api / :implementation
       data:source:local:api  -> :implementation   files on Android/desktop/iOS, OPFS on web (see Web below);
                                                   also holds the pure-Kotlin zip reader/writer
+      data:source:remote:api -> :implementation   the sync contracts and the Dropbox provider; the only module in
+                                                  the project that makes a network call (see Sync below)
         data:model                           domain models, shared by everything
   chordpro                                   dependency-free ChordPro model, parser, serializer, transposer and
                                              highlighter. Depends on nothing; used by :data:source:local:implementation
@@ -38,6 +42,8 @@ The library layout, inside the app-private data directory of each platform:
 library/songs/*.cho                  one song per file; the file name is the song's identity
 library/setlists/*.setlist.json      one setlist per file, exported together with the songs
 preferences/preferences.json         everything in UserPreferences; outside library/, so it is never exported
+preferences/sync-credentials.json    the connected account's tokens, and an unfinished authorization
+preferences/sync-index.json          what the last successful sync run saw
 ```
 
 ## Conventions
@@ -66,18 +72,41 @@ preferences/preferences.json         everything in UserPreferences; outside libr
 - Layer boundaries are crossed via mappers (`mapper/` packages), never by leaking document/entity types.
 - The file name is a song's (and a setlist's) identity. Nothing is ever overwritten implicitly: a new or imported file
   that collides gets a ` (2)`, ` (3)`… suffix (`FileNames.kt`).
-- Only pure logic is tested: `commonTest` unit tests in `:chordpro` and in `:data:source:local:implementation` (zip and
-  the JVM file storage), run on the desktop target with
-  `./gradlew :chordpro:desktopTest :data:source:local:implementation:desktopTest`. The UI is untested.
-- `docs/rewrite-plan/` is the historical record of the 3.x -> 4.0 rewrite: one document per step, each ending with what
-  actually happened and what was verified. It describes how the app got here, not how it works now — this file and the
-  per-module `CLAUDE.md` files do that.
+- Only pure logic is tested: `commonTest` unit tests in `:chordpro`, `:data:source:local:implementation` (zip and the
+  JVM file storage), `:data:source:remote:*` (hashing, encoders, the OAuth authorization URL) and
+  `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run), run on
+  the desktop target with
+  `./gradlew :chordpro:desktopTest :data:source:local:implementation:desktopTest :data:source:remote:api:desktopTest :data:source:remote:implementation:desktopTest :data:repository:implementation:desktopTest`.
+  The UI is untested.
 
 ## Build
 
-- Versions in `gradle/libs.versions.toml` (including `android-compileSdk` / `android-minSdk`); app version and Android
-  signing constants are set as **system properties** in the root `build.gradle.kts` and read via `System.getProperty(...)`
-  in `:app:android` / `:app:desktop`. The iOS version lives in the Xcode project.
+- Dependency versions in `gradle/libs.versions.toml` (including `android-compileSdk` / `android-minSdk`). The iOS
+  version lives in the Xcode project.
+- **Everything configurable is a `campfire.*` Gradle property**, declared with a default in `gradle.properties` and
+  read with `project.property("campfire.x")`: the app version and version code, the Android release signing values,
+  and the Dropbox app key. `property` rather than `findProperty`, so a typo fails the build instead of writing the
+  string "null" into an APK. Inside a `tasks.registering { }` block it has to be `project.property(...)`, or the
+  lookup goes to the task.
+- **`local.properties` overrides any of them, and is never committed.** `settings.gradle.kts` loads it and writes each
+  entry onto every project before it is configured, so no build file knows the mechanism exists — they all just read
+  a property. That is the whole secret story: nothing private is in the repository, and a fresh clone still builds
+  every variant, because the checked-in defaults point at the debug keystore committed next to them and at an empty
+  sync key. A release built that way is installable but not publishable, and Settings says sync is not configured.
+  To sign for real, or to build with sync, add the keys to `local.properties`:
+
+  ```properties
+  campfire.android.keyAlias=...
+  campfire.android.keyPassword=...
+  campfire.android.keystoreFile=release.keystore   # relative to app/android, or an absolute path
+  campfire.android.keystorePassword=...
+  campfire.dropbox.appKey=...
+  ```
+
+  CI has no `local.properties`, so it passes the same names with `-Pcampfire.android.keyAlias=…` or writes the file
+  from its own secret store; the latter keeps the values out of the process list.
+- The `campfire-library` convention plugin sets each module's `archivesName` from its Gradle path, because a klib
+  carries the name of the artifact it is built into and half the modules here are called `api` or `implementation`.
 - `./gradlew :app:android:assembleDebug` — Android APK
 - `./gradlew :app:desktop:run` — desktop app; `:app:desktop:packageDistributionForCurrentOS` for installers
 - `./gradlew :app:ios:linkDebugFrameworkIosSimulatorArm64` — compile/link check of the iOS framework; run the app from
@@ -86,6 +115,22 @@ preferences/preferences.json         everything in UserPreferences; outside libr
   then `xcrun simctl install/launch`.
 - `./gradlew :app:web:wasmJsBrowserDevelopmentRun` — web app on a dev server; `:app:web:wasmJsBrowserDistribution` writes
   the deployable site to `app/web/build/dist/wasmJs/productionExecutable`.
+
+## Sync
+
+Off until the user connects a cloud folder in Settings, and built so that Dropbox is the first provider rather than
+the only possible one. The per-module `CLAUDE.md` files carry the detail; the short version:
+
+- `SyncProvider` sees one flat remote folder addressed by `(kind, name)`, the same shape the library has. Revisions
+  are **opaque strings** the engine never parses, and a service's content hash stays in the provider — which is what
+  keeps Drive's file ids and MD5s out of the engine when it arrives.
+- `SyncPlanner` is a pure function of (local hashes, remote listing, the index of what the last run saw) and is the
+  part that is tested. Content decides what changed, never a clock: the platforms disagree about modification times
+  and the web has none. An edit always beats a deletion.
+- A file changed on both sides is never merged: the local one keeps the name and the incoming one lands next to it
+  as ` (2)`, exactly as a colliding import does.
+- Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
+  platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.
 
 ## Web
 

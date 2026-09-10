@@ -3,6 +3,7 @@ package com.pandulapeter.campfire
 import androidx.compose.ui.window.ComposeUIViewController
 import com.pandulapeter.campfire.data.repository.dataRepositoryModule
 import com.pandulapeter.campfire.data.source.local.implementation.dataLocalSourceModule
+import com.pandulapeter.campfire.data.source.remote.implementation.dataRemoteSourceModule
 import com.pandulapeter.campfire.domain.implementation.domainModule
 import com.pandulapeter.campfire.presentation.presentationModule
 import com.pandulapeter.campfire.presentation.ui.CampfireIosApp
@@ -12,7 +13,7 @@ import platform.UIKit.UIApplication
 import platform.UIKit.UIViewController
 
 private val dataModules
-    get() = dataLocalSourceModule + dataRepositoryModule
+    get() = dataLocalSourceModule + dataRemoteSourceModule + dataRepositoryModule
 
 private val koinApplication by lazy {
     startKoin { modules(dataModules + domainModule + presentationModule) }

@@ -3,9 +3,9 @@ plugins {
     alias(libs.plugins.hyperether.localization)
 }
 
-// The app version is a system property set by the root build file; this makes it visible to the shared UI.
+// The app version is declared in gradle.properties; this makes it visible to the shared UI.
 val generateVersionFile by tasks.registering {
-    val versionName = System.getProperty("VERSION_NAME").orEmpty()
+    val versionName = project.property("campfire.versionName").toString()
     val outputDirectory = layout.buildDirectory.dir("generated/version/kotlin")
     inputs.property("versionName", versionName)
     outputs.dir(outputDirectory)

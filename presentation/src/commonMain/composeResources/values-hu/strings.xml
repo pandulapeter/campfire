@@ -104,7 +104,7 @@
     <string name="song_editor_transpose_text_up">Szöveg transzponálása fel</string>
     <string name="song_editor_transpose_text_down">Szöveg transzponálása le</string>
     <string name="song_editor_saved">Mentve</string>
-    <string name="song_editor_saving">Mentés\u2026</string>
+    <string name="song_editor_saving">Mentés…</string>
     <string name="song_editor_save_failed">A dalt nem sikerült menteni</string>
 
     <!-- Song details screen -->
@@ -132,5 +132,28 @@
     <string name="song_details_empty">Ez a fájl még üres.</string>
     <string name="song_details_no_data">Ezt a dalt nem sikerült betölteni</string>
     <string name="song_details_no_data_hint">A fájlt nem sikerült beolvasni.</string>
+
+    <!-- Settings screen: sync -->
+    <string name="settings_sync">Szinkronizálás</string>
+    <string name="settings_sync_unavailable">Ez a Campfire build szinkronizálási azonosítók nélkül készült, így nincs mihez csatlakozni.</string>
+    <string name="settings_sync_description">Tartsd azonosan a könyvtárat minden eszközön egy saját felhőmappán keresztül. A Campfire-nek nincs szervere: a fájlok közvetlenül az eszközeid és a saját tárhelyed között mozognak.</string>
+    <string name="settings_sync_connect_dropbox">Dropbox csatlakoztatása</string>
+    <string name="settings_sync_connecting">Várakozás a böngészőre…</string>
+    <string name="settings_sync_connected_as">Csatlakozva: %1$s</string>
+    <string name="settings_sync_disconnect">Leválasztás</string>
+    <string name="settings_sync_now">Szinkronizálás most</string>
+    <string name="settings_sync_syncing">Szinkronizálás…</string>
+    <string name="settings_sync_never">Még nem volt szinkronizálva</string>
+    <string name="settings_sync_last_synced_moments_ago">Szinkronizálva az imént</string>
+    <string name="settings_sync_last_synced_minutes">Szinkronizálva %1$d perce</string>
+    <string name="settings_sync_last_synced_hours">Szinkronizálva %1$d órája</string>
+    <string name="settings_sync_last_synced_days">Szinkronizálva %1$d napja</string>
+    <string name="settings_sync_up_to_date">Már minden naprakész volt</string>
+    <string name="settings_sync_result">Érkezett: %1$d, elküldve: %2$d, törölve: %3$d</string>
+    <string name="settings_sync_conflicts">Két helyen is módosult dal mindkét változata megmaradt: %1$s</string>
+    <string name="settings_sync_failed_network">A szolgáltatás nem érhető el. A Campfire legközelebb újra megpróbálja.</string>
+    <string name="settings_sync_failed_authorization">A kapcsolatot elutasították. Csatlakoztasd újra a fiókot.</string>
+    <string name="settings_sync_failed_storage">A könyvtárat nem sikerült olvasni vagy írni.</string>
+    <string name="settings_sync_failed_unknown">A szinkronizálás nem fejeződött be.</string>
 
 </resources>

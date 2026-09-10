@@ -9,12 +9,3 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.kotlin.serialization) apply false
 }
-
-"VERSION_NAME" set "4.0.0"
-"VERSION_CODE" set 27
-"KEY_ALIAS" set "androiddebugkey"
-"KEY_PASSWORD" set "android"
-"STORE_FILE" set "internal.keystore"
-"STORE_PASSWORD" set "android"
-
-infix fun String.set(value: Any) = System.setProperty(this, value.toString())

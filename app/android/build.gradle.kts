@@ -8,6 +8,7 @@ plugins {
 dependencies {
     implementation(project(":data:repository:implementation"))
     implementation(project(":data:source:local:implementation"))
+    implementation(project(":data:source:remote:implementation"))
     implementation(project(":domain:implementation"))
     implementation(project(":presentation"))
     implementation(libs.androidx.activity.compose)
@@ -25,24 +26,29 @@ android {
         applicationId = "com.pandulapeter.campfire"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = targetSdkVersion
-        versionCode = System.getProperty("VERSION_CODE").toInt()
-        versionName = System.getProperty("VERSION_NAME")
+        versionCode = project.property("campfire.versionCode").toString().toInt()
+        versionName = project.property("campfire.versionName").toString()
     }
     buildFeatures.compose = true
     val internalSigningConfig = "internal"
     val releaseSigningConfig = "release"
     signingConfigs {
+        // Deliberately literal: this is the standard Android debug keystore, committed next to this file, and there
+        // is nothing about it worth hiding.
         create(internalSigningConfig) {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
             storeFile = file("internal.keystore")
             storePassword = "android"
         }
+        // Defaulted in gradle.properties to that same debug keystore, so a fresh clone can build a release variant
+        // and get something installable. A real key belongs in local.properties, which is never committed and
+        // overrides these - see the Build section of CLAUDE.md.
         create(releaseSigningConfig) {
-            keyAlias = System.getProperty("KEY_ALIAS")
-            keyPassword = System.getProperty("KEY_PASSWORD")
-            storeFile = file(System.getProperty("STORE_FILE"))
-            storePassword = System.getProperty("STORE_PASSWORD")
+            keyAlias = project.property("campfire.android.keyAlias").toString()
+            keyPassword = project.property("campfire.android.keyPassword").toString()
+            storeFile = file(project.property("campfire.android.keystoreFile").toString())
+            storePassword = project.property("campfire.android.keystorePassword").toString()
         }
     }
     buildTypes {

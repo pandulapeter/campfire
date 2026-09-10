@@ -51,6 +51,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_horizontal_sect
 import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.settings_song_display
+import com.pandulapeter.campfire.presentation.resources.settings_sync
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_english
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_hungarian
@@ -99,6 +100,7 @@ internal fun SettingsScreen(
         )
         ImportProgress(isImporting = isImporting)
         val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+        val syncState by viewModel.syncState.collectAsStateWithLifecycle()
         // Null until the library has been read, so that the row fades in with real counts instead of showing zeroes.
         val librarySummary by viewModel.librarySummary.collectAsStateWithLifecycle()
         val layoutDirection = LocalLayoutDirection.current
@@ -173,6 +175,15 @@ internal fun SettingsScreen(
                     onClick = viewModel::refresh
                 )
             }
+            sectionHeader(
+                key = "header_sync",
+                listState = listState,
+                coroutineScope = coroutineScope
+            ) { stringResource(Res.string.settings_sync) }
+            syncSettings(
+                viewModel = viewModel,
+                syncState = syncState
+            )
             sectionHeader(
                 key = "header_song_display",
                 listState = listState,

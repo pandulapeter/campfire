@@ -75,8 +75,7 @@ Setlists are small JSON files (`<name>.setlist.json`) stored next to the songs, 
 
 ### Building
 
-See [CLAUDE.md](CLAUDE.md) for the architecture and the per-platform build commands, and `docs/rewrite-plan/` for how
-the 4.0 rewrite was carried out, step by step.
+See [CLAUDE.md](CLAUDE.md) for the architecture and the per-platform build commands.
 
 ### License
 This software is licensed under GNU GPL 3.0. Any derivative works must follow the same open-source license.

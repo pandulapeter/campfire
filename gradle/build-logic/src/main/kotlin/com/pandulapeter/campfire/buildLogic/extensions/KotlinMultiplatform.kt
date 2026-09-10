@@ -2,6 +2,7 @@ package com.pandulapeter.campfire.buildLogic.extensions
 
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import org.gradle.api.Project
+import org.gradle.api.plugins.BasePluginExtension
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.configure
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
@@ -14,24 +15,32 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 @OptIn(ExperimentalWasmDsl::class)
 internal fun Project.configureKotlinMultiplatform(
     extension: KotlinMultiplatformExtension
-) = extension.apply {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(libs.version("jvmTarget").toInt()))
+) {
+    // A klib carries the name of the artifact it is built into, which is the name of the Gradle project by default -
+    // and several modules here are called "api" or "implementation". Derived from the whole path instead, so that no
+    // two of them claim the same identity and the klib loader has nothing to disambiguate.
+    extensions.configure<BasePluginExtension> {
+        archivesName.set(path.removePrefix(":").replace(":", "-"))
     }
-    extension.configure<KotlinMultiplatformAndroidLibraryTarget> {
-        namespace = "com.pandulapeter.campfire" + path.replace(":", ".").replace("-", "_")
-        minSdk = libs.version("android-minSdk").toInt()
-        compileSdk = libs.version("android-compileSdk").toInt()
-        packaging {
-            resources {
-                excludes += "/META-INF/{AL2.0,LGPL2.1}"
+    extension.apply {
+        jvmToolchain {
+            languageVersion.set(JavaLanguageVersion.of(libs.version("jvmTarget").toInt()))
+        }
+        extension.configure<KotlinMultiplatformAndroidLibraryTarget> {
+            namespace = "com.pandulapeter.campfire" + path.replace(":", ".").replace("-", "_")
+            minSdk = libs.version("android-minSdk").toInt()
+            compileSdk = libs.version("android-compileSdk").toInt()
+            packaging {
+                resources {
+                    excludes += "/META-INF/{AL2.0,LGPL2.1}"
+                }
             }
         }
-    }
-    jvm("desktop")
-    iosArm64()
-    iosSimulatorArm64()
-    wasmJs {
-        browser()
+        jvm("desktop")
+        iosArm64()
+        iosSimulatorArm64()
+        wasmJs {
+            browser()
+        }
     }
 }

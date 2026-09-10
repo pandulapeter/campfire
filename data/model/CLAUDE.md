@@ -9,3 +9,9 @@ Pure Kotlin domain models with no dependencies. Every other module depends on th
 These types are the layer-crossing currency: stored documents and file bytes are mapped to/from them and never leak past their own module.
 
 Song and setlist identity is the **file name**, extension included — not a generated id. Two songs with the same title are two files with different names, and a rename in the library folder is a different song as far as the app is concerned.
+
+`LibraryFile` / `LibraryFileKind` describe the library as sync sees it — a name in one of the two folders, plus what
+the file system could tell about it. `SyncState` and the types around it (`SyncProviderId`, `SyncAccount`,
+`SyncOutcome`, `SyncSummary`, `SyncFailureReason`) are everything the UI needs to know about sync; `SyncState.Connected`
+carries the outcome of the last run rather than a message of its own, so a failure stays on screen until something
+replaces it instead of flashing past in a snackbar.

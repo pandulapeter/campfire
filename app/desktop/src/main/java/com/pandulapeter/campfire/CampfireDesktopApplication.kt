@@ -10,6 +10,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.pandulapeter.campfire.data.repository.dataRepositoryModule
 import com.pandulapeter.campfire.data.source.local.implementation.dataLocalSourceModule
+import com.pandulapeter.campfire.data.source.remote.implementation.dataRemoteSourceModule
 import com.pandulapeter.campfire.domain.implementation.domainModule
 import com.pandulapeter.campfire.presentation.presentationModule
 import com.pandulapeter.campfire.presentation.ui.CampfireDesktopApp
@@ -26,7 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.dsl.koinConfiguration
 
 private val dataModules
-    get() = dataLocalSourceModule + dataRepositoryModule
+    get() = dataLocalSourceModule + dataRemoteSourceModule + dataRepositoryModule
 
 /**
  * @param args Paths handed over by the operating system, which is how "open with" reaches a desktop application: it

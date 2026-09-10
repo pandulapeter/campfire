@@ -1,0 +1,241 @@
+@file:OptIn(ExperimentalTime::class)
+
+package com.pandulapeter.campfire.data.repository.implementation
+
+import com.pandulapeter.campfire.data.model.domain.SyncAccount
+import com.pandulapeter.campfire.data.model.domain.SyncFailureReason
+import com.pandulapeter.campfire.data.model.domain.SyncOutcome
+import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.repository.api.SyncRepository
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncEngine
+import com.pandulapeter.campfire.data.repository.implementation.sync.SyncIndexDocument
+import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
+import com.pandulapeter.campfire.data.source.local.api.SyncStateLocalSource
+import com.pandulapeter.campfire.data.source.remote.api.PendingAuthorizationStore
+import com.pandulapeter.campfire.data.source.remote.api.SyncAuthenticator
+import com.pandulapeter.campfire.data.source.remote.api.SyncAuthorizationException
+import com.pandulapeter.campfire.data.source.remote.api.SyncNetworkException
+import com.pandulapeter.campfire.data.source.remote.api.SyncProvider
+import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizationResponse
+import com.pandulapeter.campfire.data.source.remote.api.model.redirectParameters
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+
+/**
+ * The state machine around [SyncEngine], and the only thing above the data layer that knows a service is involved
+ * at all: the screens see a [SyncState], and which provider produced it is a detail of this file.
+ *
+ * @param providers Every provider the build has. One is connected at a time - two would mean two remote folders
+ *   with a claim on the same file names, and no answer to which of them a rename in one of them means.
+ */
+internal class SyncRepositoryImpl(
+    private val providers: List<SyncProvider>,
+    private val authenticator: SyncAuthenticator,
+    private val pendingAuthorizationStore: PendingAuthorizationStore,
+    private val syncStateLocalSource: SyncStateLocalSource,
+    libraryFileLocalSource: LibraryFileLocalSource
+) : SyncRepository {
+
+    private val engine = SyncEngine(libraryFileLocalSource)
+    private val _syncState = MutableStateFlow<SyncState>(SyncState.Disconnected)
+    override val syncState = _syncState.asStateFlow()
+    override val availableProviders = providers.map { it.id }
+
+    /** One run at a time: two of them over the same files would each undo half of what the other did. */
+    private val mutex = Mutex()
+
+    override suspend fun restore(): Boolean {
+        // A consent page the app was sent away to, answered while it was not running - the web's ordinary case, and
+        // checked first because it decides what the stored credentials are about to become.
+        authenticator.consumePendingRedirect()?.let { return completePendingAuthorization(it) }
+        val connected = providers.firstOrNull { it.isConnected() }
+        if (connected == null) {
+            _syncState.update { SyncState.Disconnected }
+            return false
+        }
+        val account = connected.loadAccount()
+        if (account == null) {
+            // The credentials are there but the service will not say who they belong to, which only happens once
+            // they have been revoked. Nothing is deleted here: the user is told, and disconnecting is their call.
+            _syncState.update { SyncState.Disconnected }
+            return false
+        }
+        _syncState.update { SyncState.Connected(account = account, isSyncing = false, lastSyncedAt = lastSyncedAt(), lastOutcome = null) }
+        return true
+    }
+
+    override suspend fun connect(providerId: SyncProviderId): Boolean {
+        val provider = providers.firstOrNull { it.id == providerId } ?: return false
+        _syncState.update { SyncState.Connecting(providerId) }
+        return try {
+            val redirectUri = authenticator.prepareRedirectUri()
+            val request = provider.buildAuthorizationRequest(redirectUri)
+            // Written down before the browser is opened: on the web the app stops existing at the next line, and
+            // the verifier still has to be there when it starts again.
+            pendingAuthorizationStore.savePendingAuthorization(providerId, request)
+            when (val outcome = authenticator.authorize(request.authorizationUrl)) {
+                is SyncAuthenticator.AuthorizationOutcome.Received -> completePendingAuthorization(outcome.redirectUri)
+                // The app is on its way to the consent page; whatever it says arrives at the next start up.
+                SyncAuthenticator.AuthorizationOutcome.Redirected -> false
+                is SyncAuthenticator.AuthorizationOutcome.Cancelled -> {
+                    println("The authorization was cancelled: ${outcome.message}")
+                    pendingAuthorizationStore.clearPendingAuthorization()
+                    _syncState.update { SyncState.Disconnected }
+                    false
+                }
+            }
+        } catch (exception: CancellationException) {
+            // The user gave up, which the UI offers while an authorization is waiting. The clean up still has to
+            // happen, so it runs outside the cancellation before the exception carries on unswallowed.
+            withContext(NonCancellable) { pendingAuthorizationStore.clearPendingAuthorization() }
+            _syncState.update { SyncState.Disconnected }
+            throw exception
+        } catch (exception: Exception) {
+            println("Could not connect to $providerId: ${exception.message}")
+            pendingAuthorizationStore.clearPendingAuthorization()
+            _syncState.update { SyncState.Disconnected }
+            false
+        }
+    }
+
+    override suspend fun disconnect() {
+        providers.forEach { provider ->
+            if (provider.isConnected()) {
+                try {
+                    provider.disconnect()
+                } catch (exception: Exception) {
+                    println("Could not disconnect from ${provider.id}: ${exception.message}")
+                }
+            }
+        }
+        // The index describes a remote folder this device is no longer looking at. Kept, and it would read that
+        // folder's every file as a deletion the next time something connects.
+        syncStateLocalSource.saveSyncIndex(null)
+        _syncState.update { SyncState.Disconnected }
+    }
+
+    override suspend fun synchronize(): SyncOutcome? {
+        if (mutex.isLocked) return null
+        return mutex.withLock {
+            val provider = providers.firstOrNull { it.isConnected() } ?: return@withLock null
+            val connected = _syncState.value as? SyncState.Connected ?: return@withLock null
+            _syncState.update { connected.copy(isSyncing = true) }
+            val outcome = try {
+                val document = loadIndex()
+                val result = engine.synchronize(
+                    provider = provider,
+                    document = document,
+                    accountId = accountIdOf(connected.account)
+                )
+                val syncedAt = Clock.System.now().toEpochMilliseconds()
+                saveIndex(result.index.copy(lastSyncedAt = syncedAt))
+                _syncState.update {
+                    connected.copy(
+                        isSyncing = false,
+                        lastSyncedAt = syncedAt,
+                        lastOutcome = SyncOutcome.Success(result.summary)
+                    )
+                }
+                SyncOutcome.Success(result.summary)
+            } catch (exception: Exception) {
+                val failure = SyncOutcome.Failure(exception.toFailureReason())
+                println("The sync run failed: ${exception.message}")
+                _syncState.update { connected.copy(isSyncing = false, lastOutcome = failure) }
+                failure
+            }
+            outcome
+        }
+    }
+
+    /**
+     * Turns a redirect into a connection. Shared by the platforms that come back to a running app and the one that
+     * comes back to a new one, so that both take exactly the same path through the token exchange.
+     */
+    private suspend fun completePendingAuthorization(redirectUri: String): Boolean {
+        val pending = pendingAuthorizationStore.loadPendingAuthorization()
+        if (pending == null) {
+            println("A redirect arrived that no authorization was waiting for.")
+            _syncState.update { SyncState.Disconnected }
+            return false
+        }
+        pendingAuthorizationStore.clearPendingAuthorization()
+        val provider = providers.firstOrNull { it.id == pending.providerId }
+        val parameters = redirectParameters(redirectUri)
+        val code = parameters["code"]
+        val state = parameters["state"]
+        return when {
+            provider == null -> fail("The redirect names a provider this build does not have.")
+            code == null -> fail("The service refused the authorization: ${parameters["error"].orEmpty()}")
+            // The value the app generated has to come back untouched, or this redirect was not asked for by it.
+            state != pending.state -> fail("The redirect does not belong to the authorization that was started.")
+            else -> try {
+                val account = provider.completeAuthorization(
+                    response = RemoteAuthorizationResponse(code = code, state = state),
+                    verifier = pending.verifier,
+                    redirectUri = pending.redirectUri
+                )
+                // The account decides which remote folder the index describes, so one written for a different
+                // account is worthless rather than merely stale.
+                val document = loadIndex()
+                if (document.accountId != accountIdOf(account)) {
+                    saveIndex(SyncIndexDocument())
+                }
+                _syncState.update {
+                    SyncState.Connected(account = account, isSyncing = false, lastSyncedAt = null, lastOutcome = null)
+                }
+                true
+            } catch (exception: Exception) {
+                fail("The authorization could not be completed: ${exception.message}")
+            }
+        }
+    }
+
+    private fun fail(message: String): Boolean {
+        println(message)
+        _syncState.update { SyncState.Disconnected }
+        return false
+    }
+
+    /**
+     * Who the account is, as far as the index is concerned. The display name is what every provider can offer, and
+     * comparing it only has to answer "is this the same account as last time".
+     */
+    private fun accountIdOf(account: SyncAccount) = "${account.providerId.id}:${account.email ?: account.displayName}"
+
+    private fun Throwable.toFailureReason() = when (this) {
+        is SyncAuthorizationException -> SyncFailureReason.AUTHORIZATION
+        is SyncNetworkException -> SyncFailureReason.NETWORK
+        else -> SyncFailureReason.UNKNOWN
+    }
+
+    // Documents
+
+    private suspend fun loadIndex() = try {
+        syncStateLocalSource.loadSyncIndex()?.let { json.decodeFromString<SyncIndexDocument>(it) } ?: SyncIndexDocument()
+    } catch (exception: Exception) {
+        println("Could not read the sync index: ${exception.message}")
+        SyncIndexDocument()
+    }
+
+    private suspend fun saveIndex(document: SyncIndexDocument) = syncStateLocalSource.saveSyncIndex(json.encodeToString(document))
+
+    private suspend fun lastSyncedAt() = loadIndex().lastSyncedAt.takeIf { it > 0 }
+
+    private companion object {
+        val json = Json {
+            ignoreUnknownKeys = true
+            prettyPrint = true
+            encodeDefaults = true
+        }
+    }
+}

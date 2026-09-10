@@ -15,3 +15,8 @@ paths, or a verb for pure transforms (`NormalizeText`, `ParseChordPro`, `Transpo
   before the library has been scanned, and folding them into the aggregate would make the whole app wait for the songs.
 - `TransposeChordProUseCase` transposes the parsed model (what the viewer shows), `TransposeChordProTextUseCase` the raw
   text (what the editor's transpose action rewrites).
+
+Sync adds `GetSyncStateUseCase`, `GetSyncProvidersUseCase`, `ConnectSyncProviderUseCase`,
+`DisconnectSyncProviderUseCase`, `RestoreSyncUseCase` and `SynchronizeLibraryUseCase`. `GetSyncStateUseCase` is
+separate from `GetScreenDataUseCase` for the same reason the preferences are: a settings screen must not wait for a
+scan of the whole library to say whether an account is connected.

@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.lifecycle.lifecycleScope
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
+import com.pandulapeter.campfire.data.source.remote.implementation.auth.onSyncRedirectReceived
 import com.pandulapeter.campfire.presentation.ui.CampfireAndroidApp
 import com.pandulapeter.campfire.presentation.ui.platform.toImportedFile
 import kotlinx.coroutines.Dispatchers
@@ -34,13 +36,26 @@ class CampfireActivity : AppCompatActivity() {
                 filesToImport = filesToImport.receiveAsFlow()
             )
         }
-        importFrom(intent)
+        handle(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        importFrom(intent)
+        handle(intent)
+    }
+
+    /**
+     * The two things the system can hand this activity: a file to open, and the answer to a sync authorization the
+     * app sent the user to the browser for.
+     */
+    private fun handle(intent: Intent?) {
+        val data = intent?.data
+        if (intent?.action == Intent.ACTION_VIEW && data != null && isSyncRedirect(data.toString())) {
+            onSyncRedirectReceived(data.toString())
+        } else {
+            importFrom(intent)
+        }
     }
 
     /** The URIs an "open with" or a share carries, whichever of the three shapes the intent uses. */

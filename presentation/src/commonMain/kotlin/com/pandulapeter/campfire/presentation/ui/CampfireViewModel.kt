@@ -15,30 +15,39 @@ import com.pandulapeter.campfire.data.model.domain.ImportedFile
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.SyncProviderId
+import com.pandulapeter.campfire.data.model.domain.SyncState
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
+import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
+import com.pandulapeter.campfire.domain.api.useCases.DisconnectSyncProviderUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetSongContentUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetSyncProvidersUseCase
+import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
+import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -63,6 +72,8 @@ import kotlin.math.floor
 class CampfireViewModel(
     getScreenData: GetScreenDataUseCase,
     getUserPreferences: GetUserPreferencesUseCase,
+    getSyncState: GetSyncStateUseCase,
+    getSyncProviders: GetSyncProvidersUseCase,
     private val loadScreenData: LoadScreenDataUseCase,
     private val getSongContent: GetSongContentUseCase,
     private val createSong: CreateSongUseCase,
@@ -76,6 +87,10 @@ class CampfireViewModel(
     private val deleteSetlist: DeleteSetlistUseCase,
     private val saveSongContent: SaveSongContentUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
+    private val connectSyncProvider: ConnectSyncProviderUseCase,
+    private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
+    private val restoreSync: RestoreSyncUseCase,
+    private val synchronizeLibrary: SynchronizeLibraryUseCase,
     private val normalizeText: NormalizeTextUseCase,
     private val parseChordPro: ParseChordProUseCase,
     private val transposeChordPro: TransposeChordProUseCase,
@@ -121,6 +136,15 @@ class CampfireViewModel(
      * drop the change.
      */
     val userPreferences = getUserPreferences().map { it.data }.asEagerState(null)
+
+    /**
+     * Read straight from its own repository, like the preferences and for the same reason: sync runs on its own
+     * schedule, and a settings screen must not wait for a scan of the library to say whether an account is on.
+     */
+    val syncState = getSyncState().asState(SyncState.Disconnected)
+
+    /** Fixed for the life of the build, so it is a value rather than a flow. Empty means sync is not configured. */
+    val syncProviders: List<SyncProviderId> = getSyncProviders()
 
     /**
      * Eager, unlike most of the states here: the write paths below (adding a song to a setlist, transposing inside
@@ -254,6 +278,9 @@ class CampfireViewModel(
 
     init {
         viewModelScope.launch { loadScreenData(false) }
+        // Picks a connected account back up, finishes a consent the app was closed in the middle of, and runs a
+        // first sync. Its own coroutine, so that a slow network never holds up the library appearing on screen.
+        viewModelScope.launch { restoreSync() }
         viewModelScope.launch {
             pendingFontScale.filterNotNull().debounce(FONT_SCALE_SAVE_DELAY_MILLIS).collect { fontScale ->
                 userPreferences.value?.let { saveUserPreferences(it.copy(fontScale = fontScale)) }
@@ -547,6 +574,34 @@ class CampfireViewModel(
 
     private fun updateUserPreferences(update: UserPreferences.() -> UserPreferences) = userPreferences.value?.let { userPreferences ->
         viewModelScope.launch { saveUserPreferences(userPreferences.update()) }
+    }
+
+    // Sync
+
+    /**
+     * Kept so that it can be cancelled: an authorization waits on a browser that may never come back, and the
+     * cancellation is what closes the sheet on iOS and releases the desktop's socket.
+     */
+    private var syncConnectionJob: Job? = null
+
+    fun connectSyncProvider(providerId: SyncProviderId) {
+        if (syncConnectionJob?.isActive == true) return
+        syncConnectionJob = viewModelScope.launch { connectSyncProvider.invoke(providerId) }
+    }
+
+    /** Gives up on an authorization that is waiting, which is the way out of a browser the user closed. */
+    fun cancelSyncConnection() {
+        syncConnectionJob?.cancel()
+        syncConnectionJob = null
+    }
+
+    fun disconnectSyncProvider() = viewModelScope.launch {
+        disconnectSyncProvider.invoke()
+    }
+
+    /** The repository refuses a second run while one is going, so a second tap costs nothing. */
+    fun synchronizeLibrary() = viewModelScope.launch {
+        synchronizeLibrary.invoke()
     }
 
     // Dialogs

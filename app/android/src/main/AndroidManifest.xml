@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!--
+      The one thing Campfire ever reaches the network for: the cloud folder the user connected in Settings. Nothing
+      else in the app talks to anything, and sync is off until the user turns it on.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".CampfireAndroidApplication"
         android:allowBackup="false"
@@ -47,6 +53,20 @@
                 <data android:pathPattern=".*\\.crd" />
                 <data android:pathPattern=".*\\.chord" />
                 <data android:pathPattern=".*\\.pro" />
+            </intent-filter>
+
+            <!--
+              Coming back from the sync service's consent page. The scheme is the one every platform registers,
+              see REDIRECT_SCHEME in :data:source:remote:implementation. The activity is singleTask, so this lands
+              in onNewIntent of the running app rather than in a second instance.
+            -->
+            <intent-filter android:label="@string/campfire">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="oauth"
+                    android:scheme="campfire" />
             </intent-filter>
 
             <!--

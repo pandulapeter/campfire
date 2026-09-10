@@ -54,6 +54,22 @@ dependencyResolutionManagement {
     }
 }
 
+/**
+ * `local.properties` is never committed, so it is where real signing credentials and API keys belong. Loading it
+ * here, and letting it overwrite the matching Gradle property on every project, means the build files only ever read
+ * an ordinary property and never learn that an override mechanism exists.
+ *
+ * Anything not overridden falls back to the default declared in `gradle.properties`, which is what lets a fresh
+ * clone build every variant without being handed a single secret.
+ */
+val localProperties = java.util.Properties()
+java.io.File(settingsDir, "local.properties").let { file ->
+    if (file.exists()) file.inputStream().use(localProperties::load)
+}
+gradle.beforeProject {
+    localProperties.forEach { name, value -> extensions.extraProperties.set(name.toString(), value) }
+}
+
 rootProject.name = "Campfire"
 include(
     ":app:android",
@@ -66,6 +82,8 @@ include(
     ":data:repository:implementation",
     ":data:source:local:api",
     ":data:source:local:implementation",
+    ":data:source:remote:api",
+    ":data:source:remote:implementation",
     ":domain:api",
     ":domain:implementation",
     ":presentation"

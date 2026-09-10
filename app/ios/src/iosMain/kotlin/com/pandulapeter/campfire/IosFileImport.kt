@@ -1,6 +1,7 @@
 package com.pandulapeter.campfire
 
 import com.pandulapeter.campfire.data.model.domain.ImportedFile
+import com.pandulapeter.campfire.data.source.remote.implementation.auth.isSyncRedirect
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import platform.Foundation.NSURL
@@ -14,8 +15,17 @@ private val pendingImports = Channel<List<ImportedFile>>(Channel.BUFFERED)
 
 internal val filesToImport = pendingImports.receiveAsFlow()
 
-/** Called from Swift when a file is opened with Campfire. */
+/**
+ * Called from Swift for every URL iOS hands the app, which in practice means a file opened with Campfire.
+ *
+ * A sync redirect is answered by the `ASWebAuthenticationSession` itself and never reaches this, but one is
+ * recognised and ignored anyway: read as a song it would fail, and the user would be told a file could not be
+ * imported that they never tried to import.
+ */
 @Suppress("unused")
-fun importFile(url: NSURL) {
-    url.readImportedFile()?.let { pendingImports.trySend(listOf(it)) }
+fun openUrl(url: NSURL) {
+    val absoluteString = url.absoluteString.orEmpty()
+    if (!isSyncRedirect(absoluteString)) {
+        url.readImportedFile()?.let { pendingImports.trySend(listOf(it)) }
+    }
 }

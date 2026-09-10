@@ -1,0 +1,48 @@
+package com.pandulapeter.campfire.data.repository.implementation.sync
+
+import kotlinx.serialization.Serializable
+
+/**
+ * The on-disk shape of `sync-index.json`: what the last successful run saw, which is the only reason the next one
+ * can tell a file that was deleted from one that has not arrived yet.
+ *
+ * [accountId] is part of it because an index describes one remote folder. Connecting a different account leaves it
+ * meaningless, and acting on it would read that account's absent files as deletions of this one's songs.
+ */
+@Serializable
+internal data class SyncIndexDocument(
+    val providerId: String = "",
+    val accountId: String = "",
+    /** Milliseconds since the epoch, 0 when no run has finished yet. */
+    val lastSyncedAt: Long = 0,
+    /** Keyed by `songs/Artist - Title.cho`, see [SyncKey.path]. */
+    val entries: Map<String, Entry> = emptyMap()
+) {
+
+    @Serializable
+    data class Entry(
+        val localHash: String = "",
+        val remoteRevision: String = ""
+    )
+
+    fun toIndex(): Map<SyncKey, SyncIndexEntry> = entries.mapNotNull { (path, entry) ->
+        SyncKey.fromPath(path)?.let { it to SyncIndexEntry(localHash = entry.localHash, remoteRevision = entry.remoteRevision) }
+    }.toMap()
+
+    companion object {
+
+        fun of(
+            providerId: String,
+            accountId: String,
+            lastSyncedAt: Long,
+            index: Map<SyncKey, SyncIndexEntry>
+        ) = SyncIndexDocument(
+            providerId = providerId,
+            accountId = accountId,
+            lastSyncedAt = lastSyncedAt,
+            entries = index.entries.associate { (key, entry) ->
+                key.path to Entry(localHash = entry.localHash, remoteRevision = entry.remoteRevision)
+            }
+        )
+    }
+}

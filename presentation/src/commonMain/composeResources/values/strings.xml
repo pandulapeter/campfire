@@ -104,7 +104,7 @@
     <string name="song_editor_transpose_text_up">Transpose text up</string>
     <string name="song_editor_transpose_text_down">Transpose text down</string>
     <string name="song_editor_saved">Saved</string>
-    <string name="song_editor_saving">Saving\u2026</string>
+    <string name="song_editor_saving">Saving…</string>
     <string name="song_editor_save_failed">Could not save the song</string>
 
     <!-- Song details screen -->
@@ -132,5 +132,28 @@
     <string name="song_details_empty">This file has no content yet.</string>
     <string name="song_details_no_data">This song could not be loaded</string>
     <string name="song_details_no_data_hint">The file could not be read.</string>
+
+    <!-- Settings screen: sync -->
+    <string name="settings_sync">Sync</string>
+    <string name="settings_sync_unavailable">This build of Campfire was made without sync credentials, so there is nothing to connect to.</string>
+    <string name="settings_sync_description">Keep the library the same on every device through a cloud folder you own. Campfire has no server: the files go straight between your devices and your own storage.</string>
+    <string name="settings_sync_connect_dropbox">Connect Dropbox</string>
+    <string name="settings_sync_connecting">Waiting for the browser…</string>
+    <string name="settings_sync_connected_as">Connected as %1$s</string>
+    <string name="settings_sync_disconnect">Disconnect</string>
+    <string name="settings_sync_now">Sync now</string>
+    <string name="settings_sync_syncing">Syncing…</string>
+    <string name="settings_sync_never">Not synced yet</string>
+    <string name="settings_sync_last_synced_moments_ago">Synced a moment ago</string>
+    <string name="settings_sync_last_synced_minutes">Synced %1$d minutes ago</string>
+    <string name="settings_sync_last_synced_hours">Synced %1$d hours ago</string>
+    <string name="settings_sync_last_synced_days">Synced %1$d days ago</string>
+    <string name="settings_sync_up_to_date">Everything was already up to date</string>
+    <string name="settings_sync_result">Received %1$d, sent %2$d, removed %3$d</string>
+    <string name="settings_sync_conflicts">Kept both versions of a song that changed in two places: %1$s</string>
+    <string name="settings_sync_failed_network">Could not reach the service. Campfire will try again next time.</string>
+    <string name="settings_sync_failed_authorization">The connection was refused. Connect the account again.</string>
+    <string name="settings_sync_failed_storage">The library could not be read or written.</string>
+    <string name="settings_sync_failed_unknown">The sync did not finish.</string>
 
 </resources>
