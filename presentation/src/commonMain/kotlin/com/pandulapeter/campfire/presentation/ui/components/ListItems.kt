@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -173,9 +175,9 @@ internal fun MissingSongListItem(
 )
 
 /**
- * Header of a list section: a raised pill that floats above the items scrolling underneath it when used as a sticky
- * header. Clicking it scrolls the list back to the first item of its own section, which is the header itself: the
- * index the list hands to the content of a sticky header is the global index of that item.
+ * Header of a list section: a raised pill that scrolls with the items of its section, like any other item of the
+ * list. Clicking it scrolls the list back to the start of its own section, which is the header itself (see
+ * [animateScrollToKey]).
  *
  * The pill hangs into the keyline of the items below it, so that its text and their text start at the same x
  * position (see [LIST_ITEM_KEYLINE]).
@@ -216,6 +218,20 @@ internal fun SectionHeader(
             }
         }
     }
+}
+
+/**
+ * Scrolls the item with the given [key] to the top of the list. The section headers are ordinary items, so they do
+ * not know their own index; they do know their key, and the list knows where the item with that key is as long as it
+ * is on the screen, which it is whenever it can be clicked.
+ */
+internal suspend fun LazyListState.animateScrollToKey(key: Any) {
+    layoutInfo.visibleItemsInfo.firstOrNull { it.key == key }?.let { animateScrollToItem(it.index) }
+}
+
+/** The [LazyGridState] counterpart of the [LazyListState.animateScrollToKey] above. */
+internal suspend fun LazyGridState.animateScrollToKey(key: Any) {
+    layoutInfo.visibleItemsInfo.firstOrNull { it.key == key }?.let { animateScrollToItem(it.index) }
 }
 
 /**

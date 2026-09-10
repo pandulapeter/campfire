@@ -30,7 +30,15 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
 - `ChordProSplitter` — splits a file that holds several songs at `{new_song}` / `{ns}`.
 - `ChordProTransposer` — moves chords by semitones, on the model (the viewer) or directly on the text keeping every
   byte of formatting (the editor's transpose action). Chooses sharps or flats from the song's key, follows the bass
-  note after `/`, understands German `H`, and leaves tabs and annotations alone.
+  note after `/`, understands German `H`, and leaves annotations alone.
+- `ChordProTabTransposer` — the same move inside a `{start_of_tab}` environment, where it means the fret numbers and
+  not the notes: the tuning stays what it was. A tab environment is transposed as a whole, so that a transposition
+  that would take a fret off the fingerboard moves all of it by octaves instead of producing an unplayable number,
+  and a tab that fits in no octave (one spanning more than 24 frets) is left alone rather than half moved. Only lines
+  that look like tablature are touched that way; a line above them holding nothing but chord names gets those
+  transposed, and anything else in the environment (`Tuning: D A D G A D`, a note to the player) is left byte for
+  byte. Fret numbers are not all the same width, so the dashes around them are absorbed or padded to keep the columns
+  lining up; where there is no dash to take (inside a `0h1p0` group) the line grows by a character instead.
 - `ChordProHighlighter` — the typed spans an editor wants to colour (directive name, directive value, chord,
   annotation, comment). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
   place; only what those look like on screen is the caller's business.

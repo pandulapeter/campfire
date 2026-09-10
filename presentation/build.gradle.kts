@@ -58,6 +58,8 @@ kotlin {
                 implementation(libs.koin.core)
                 implementation(libs.koin.core.viewmodel)
                 implementation(libs.kotlin.coroutines)
+                // The one place the shared UI needs a calendar: the local date and time of the last sync.
+                implementation(libs.kotlin.datetime)
             }
         }
         androidMain.dependencies {

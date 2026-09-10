@@ -43,6 +43,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_conflicts
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connect_dropbox
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connected_as
 import com.pandulapeter.campfire.presentation.resources.settings_sync_connecting
+import com.pandulapeter.campfire.presentation.resources.settings_sync_date_time
 import com.pandulapeter.campfire.presentation.resources.settings_sync_description
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_authorization
@@ -50,24 +51,21 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_net
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_storage
 import com.pandulapeter.campfire.presentation.resources.settings_sync_failed_unknown
 import com.pandulapeter.campfire.presentation.resources.settings_sync_interrupted
-import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced_days
-import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced_hours
-import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced_minutes
-import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced_moments_ago
+import com.pandulapeter.campfire.presentation.resources.settings_sync_last_synced
 import com.pandulapeter.campfire.presentation.resources.settings_sync_never
 import com.pandulapeter.campfire.presentation.resources.settings_sync_now
 import com.pandulapeter.campfire.presentation.resources.settings_sync_preparing
 import com.pandulapeter.campfire.presentation.resources.settings_sync_progress
 import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_message
 import com.pandulapeter.campfire.presentation.resources.settings_sync_redirect_page_title
-import com.pandulapeter.campfire.presentation.resources.settings_sync_result
 import com.pandulapeter.campfire.presentation.resources.settings_sync_unavailable
-import com.pandulapeter.campfire.presentation.resources.settings_sync_up_to_date
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
-import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -186,20 +184,12 @@ private fun SyncState.Connected.statusText(): String = when (val current = progr
             }
         )
 
-        is SyncOutcome.Success -> when {
-            outcome.summary.conflicts.isNotEmpty() -> stringResource(
-                Res.string.settings_sync_conflicts,
-                outcome.summary.conflicts.joinToString()
-            )
-
-            outcome.summary.hasChanges -> stringResource(
-                Res.string.settings_sync_result,
-                outcome.summary.downloaded,
-                outcome.summary.uploaded,
-                outcome.summary.deletedLocally + outcome.summary.deletedRemotely
-            )
-
-            else -> stringResource(Res.string.settings_sync_up_to_date)
+        // What a successful run moved is not something the user has to be told: the library is simply the same on
+        // both sides now. The one thing only the app knows is that it did finish, and when.
+        is SyncOutcome.Success -> if (outcome.summary.conflicts.isEmpty()) {
+            lastSyncedText(lastSyncedAt)
+        } else {
+            stringResource(Res.string.settings_sync_conflicts, outcome.summary.conflicts.joinToString())
         }
 
         null -> lastSyncedText(lastSyncedAt)
@@ -246,20 +236,28 @@ private fun SyncProgress.text() = if (isPreparing) {
 }
 
 /**
- * Coarse on purpose: sync is not something the user times, so "a moment ago" and "3 hours ago" say everything a
- * clock time would, in a form that needs no date formatting on four platforms.
+ * An exact local date and time rather than "3 hours ago": this line is the answer to "did my library get where I
+ * think it did", and a run that happened at a moment the user remembers answers that better than an elapsed time.
+ * The order of the parts is a string resource, so each language puts them where it puts them.
  */
 @Composable
 private fun lastSyncedText(lastSyncedAt: Long?): String {
     if (lastSyncedAt == null) return stringResource(Res.string.settings_sync_never)
-    val elapsedMinutes = ((Clock.System.now().toEpochMilliseconds() - lastSyncedAt) / 60_000L).coerceAtLeast(0)
-    return when {
-        elapsedMinutes < 1 -> stringResource(Res.string.settings_sync_last_synced_moments_ago)
-        elapsedMinutes < 60 -> stringResource(Res.string.settings_sync_last_synced_minutes, elapsedMinutes.toInt())
-        elapsedMinutes < 60 * 24 -> stringResource(Res.string.settings_sync_last_synced_hours, (elapsedMinutes / 60).toInt())
-        else -> stringResource(Res.string.settings_sync_last_synced_days, (elapsedMinutes / (60 * 24)).toInt())
-    }
+    val local = Instant.fromEpochMilliseconds(lastSyncedAt).toLocalDateTime(TimeZone.currentSystemDefault())
+    return stringResource(
+        Res.string.settings_sync_last_synced,
+        stringResource(
+            Res.string.settings_sync_date_time,
+            local.year.toString(),
+            (local.month.ordinal + 1).padded(),
+            local.day.padded(),
+            local.hour.padded(),
+            local.minute.padded()
+        )
+    )
 }
+
+private fun Int.padded() = toString().padStart(length = 2, padChar = '0')
 
 @Composable
 private fun SyncMessage(

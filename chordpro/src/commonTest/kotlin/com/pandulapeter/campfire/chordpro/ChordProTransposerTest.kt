@@ -85,7 +85,7 @@ class ChordProTransposerTest {
     }
 
     @Test
-    fun `transposing text leaves comments tabs and annotations alone and updates the key`() {
+    fun `transposing text leaves comments and annotations alone and updates the key`() {
         val text = """
             # a note with [Am] inside
             {key: E}
@@ -122,6 +122,64 @@ class ChordProTransposerTest {
         )
     }
 
+    @Test
+    fun `transposing text moves the frets of a tab and the chord names above it`() {
+        val text = """
+            {key: E}
+
+            {start_of_tab}
+            Riff 1 (play twice)
+            Tuning: E A D G B E
+              E        A
+            e|--0--3--5--|
+            B|--1--x--12-|
+            {end_of_tab}
+        """.trimIndent()
+
+        assertEquals(
+            """
+            {key: F}
+
+            {start_of_tab}
+            Riff 1 (play twice)
+            Tuning: E A D G B E
+              F        Bb
+            e|--1--4--6--|
+            B|--2--x--13-|
+            {end_of_tab}
+            """.trimIndent(),
+            ChordProTransposer.transposeText(text, 1)
+        )
+    }
+
+    @Test
+    fun `a fret number of a different width keeps the columns of the tab`() {
+        val widening = "{sot}\ne|--0--3--5--|\ne|--10-12----|\n{eot}"
+        val narrowing = "{sot}\ne|--3--5--|\ne|--10-12----|\n{eot}"
+
+        assertEquals("{sot}\ne|--9--12-14-|\ne|--19-21----|\n{eot}", ChordProTransposer.transposeText(widening, 9))
+        assertEquals("{sot}\ne|--1--3--|\ne|--8--10----|\n{eot}", ChordProTransposer.transposeText(narrowing, -2))
+    }
+
+    @Test
+    fun `a tab that would fall off the fingerboard moves by an octave instead`() {
+        assertEquals("{sot}\ne|--10-13-15-|\n{eot}", ChordProTransposer.transposeText("{sot}\ne|--0--3--5--|\n{eot}", -2))
+    }
+
+    @Test
+    fun `a tab that fits in no octave is left alone`() {
+        val text = "{sot}\ne|--0--24-|\n{eot}"
+
+        assertEquals(text, ChordProTransposer.transposeText(text, 2))
+    }
+
+    @Test
+    fun `transposing the model moves the frets of a tab section`() {
+        val song = ChordProTransposer.transpose(ChordProParser.parse("{key: Am}\n\n{sot}\n  Am\ne|--0--3--|\n{eot}"), 2)
+
+        assertEquals(listOf("  Bm", "e|--2--5--|"), song.tabLines())
+    }
+
     private fun ChordProSong.lines() = blocks.filterIsInstance<ChordProBlock.Section>().flatMap { it.lines }
 
     private fun ChordProSong.chordNames() = lines().flatMap { line ->
@@ -131,6 +189,8 @@ class ChordProTransposerTest {
             else -> emptyList()
         }
     }
+
+    private fun ChordProSong.tabLines() = lines().filterIsInstance<ChordProLine.Tab>().map { it.text }
 
     private fun ChordProSong.annotationNames() = lines()
         .filterIsInstance<ChordProLine.Lyrics>()

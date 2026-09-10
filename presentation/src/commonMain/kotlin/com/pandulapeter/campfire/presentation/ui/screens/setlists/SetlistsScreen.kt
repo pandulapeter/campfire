@@ -71,6 +71,7 @@ import com.pandulapeter.campfire.presentation.ui.components.MissingSongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeaderAction
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongsControlsSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
@@ -209,11 +210,15 @@ private fun SetlistList(
             }
 
             else -> setlistsWithSongs.forEach { setlistWithSongs ->
-                stickyHeader(key = "setlist_${setlistWithSongs.setlist.fileName}") { headerIndex ->
+                val headerKey = "setlist_${setlistWithSongs.setlist.fileName}"
+                item(
+                    key = headerKey,
+                    span = { GridItemSpan(maxLineSpan) }
+                ) {
                     SectionHeader(
                         modifier = Modifier.animateItem(),
                         text = setlistWithSongs.setlist.title,
-                        onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } },
+                        onClick = { coroutineScope.launch { listState.animateScrollToKey(headerKey) } },
                         action = {
                             SectionHeaderAction(
                                 icon = painterResource(Res.drawable.ic_edit),

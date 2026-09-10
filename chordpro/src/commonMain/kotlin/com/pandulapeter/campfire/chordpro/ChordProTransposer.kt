@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.GridToken
+import com.pandulapeter.campfire.chordpro.model.SectionType
 
 /**
  * Moves chords up or down by a number of semitones, either on the model or directly on the raw text.
@@ -24,7 +25,7 @@ object ChordProTransposer {
         .split(BASS_NOTE_SEPARATOR, limit = 2)
         .joinToString(BASS_NOTE_SEPARATOR) { transposeNote(it, semitones, preferFlats) }
 
-    /** Transposes every chord in the model (lyrics chords, grid chords; never tabs or annotations) and the key. */
+    /** Transposes every chord in the model (lyrics chords, grid chords, tabs; never annotations) and the key. */
     fun transpose(song: ChordProSong, semitones: Int): ChordProSong {
         if (semitones == 0) return song
         val preferFlats = prefersFlats(song, semitones)
@@ -33,10 +34,10 @@ object ChordProTransposer {
                 key = song.metadata.key?.let { transposeChord(it, semitones, preferFlats) }
             ),
             blocks = song.blocks.map { block ->
-                if (block is ChordProBlock.Section) {
-                    block.copy(lines = block.lines.map { line -> transposeLine(line, semitones, preferFlats) })
-                } else {
-                    block
+                when {
+                    block !is ChordProBlock.Section -> block
+                    block.type == SectionType.Tab -> block.copy(lines = transposeTabLines(block.lines, semitones, preferFlats))
+                    else -> block.copy(lines = block.lines.map { line -> transposeLine(line, semitones, preferFlats) })
                 }
             }
         )
@@ -46,31 +47,35 @@ object ChordProTransposer {
     fun transposeText(text: String, semitones: Int): String {
         if (semitones == 0) return text
         val preferFlats = prefersFlats(ChordProParser.parse(text), semitones)
+        val lines = ChordProSyntax.splitLines(text).toMutableList()
+        val tabLineIndices = mutableListOf<Int>() // The tab environment being collected: it is transposed as a whole.
         var environment: String? = null
-        return ChordProSyntax.splitLines(text).joinToString("\n") { rawLine ->
+        lines.forEachIndexed { index, rawLine ->
             val trimmedLine = rawLine.trim()
             val directive = if (trimmedLine.startsWith(SOURCE_COMMENT)) null else ChordProSyntax.matchDirective(trimmedLine)
             when {
-                trimmedLine.startsWith(SOURCE_COMMENT) -> rawLine
-                directive != null -> {
-                    if (ChordProSyntax.hasSelectorSuffix(directive.name)) {
-                        rawLine
-                    } else {
-                        ChordProSyntax.startOfEnvironment(directive.name)?.let { environment = it.lowercase() }
-                        ChordProSyntax.endOfEnvironment(directive.name)?.let { environment = null }
-                        if (directive.name == KEY) {
-                            transposeKeyLine(rawLine, trimmedLine, directive.value, semitones, preferFlats)
-                        } else {
-                            rawLine
-                        }
+                trimmedLine.startsWith(SOURCE_COMMENT) -> Unit
+                directive != null -> if (!ChordProSyntax.hasSelectorSuffix(directive.name)) {
+                    ChordProSyntax.startOfEnvironment(directive.name)?.let {
+                        lines.transposeTab(tabLineIndices, semitones, preferFlats)
+                        environment = it.lowercase()
+                    }
+                    ChordProSyntax.endOfEnvironment(directive.name)?.let {
+                        lines.transposeTab(tabLineIndices, semitones, preferFlats)
+                        environment = null
+                    }
+                    if (directive.name == KEY) {
+                        lines[index] = transposeKeyLine(rawLine, trimmedLine, directive.value, semitones, preferFlats)
                     }
                 }
 
-                environment == TAB -> rawLine
-                environment == GRID -> transposeGridLine(rawLine, trimmedLine, semitones, preferFlats)
-                else -> transposeLyricsLine(rawLine, semitones, preferFlats)
+                environment == TAB -> tabLineIndices += index
+                environment == GRID -> lines[index] = transposeGridLine(rawLine, trimmedLine, semitones, preferFlats)
+                else -> lines[index] = transposeLyricsLine(rawLine, semitones, preferFlats)
             }
         }
+        lines.transposeTab(tabLineIndices, semitones, preferFlats) // An environment the file never closes.
+        return lines.joinToString("\n")
     }
 
     /** Whether flats should be preferred when writing the chords of this song after the given transposition. */
@@ -110,6 +115,24 @@ object ChordProTransposer {
             }
         }
 
+    /** The lines of a tab section: [ChordProLine.Tab] holds them raw, so they are transposed as raw text. */
+    private fun transposeTabLines(lines: List<ChordProLine>, semitones: Int, preferFlats: Boolean): List<ChordProLine> {
+        val transposed = ChordProTabTransposer.transpose(
+            lines = lines.map { line -> (line as? ChordProLine.Tab)?.text.orEmpty() },
+            semitones = semitones,
+            preferFlats = preferFlats
+        )
+        return lines.mapIndexed { index, line -> if (line is ChordProLine.Tab) ChordProLine.Tab(transposed[index]) else line }
+    }
+
+    /** Transposes the collected lines of one tab environment in place and starts collecting the next one. */
+    private fun MutableList<String>.transposeTab(indices: MutableList<Int>, semitones: Int, preferFlats: Boolean) {
+        if (indices.isEmpty()) return
+        val transposed = ChordProTabTransposer.transpose(indices.map { this[it] }, semitones, preferFlats)
+        indices.forEachIndexed { index, lineIndex -> this[lineIndex] = transposed[index] }
+        indices.clear()
+    }
+
     private fun transposeLine(line: ChordProLine, semitones: Int, preferFlats: Boolean) = when (line) {
         is ChordProLine.Lyrics -> line.copy(
             chords = line.chords.map { chord ->
@@ -134,7 +157,7 @@ object ChordProTransposer {
         return (if (preferFlats) flatNames else sharpNames)[transposedNoteIndex] + part.substring(suffixStartIndex)
     }
 
-    private fun transposeLyricsLine(rawLine: String, semitones: Int, preferFlats: Boolean) =
+    internal fun transposeLyricsLine(rawLine: String, semitones: Int, preferFlats: Boolean) =
         ChordProSyntax.chordRegex.replace(rawLine) { match ->
             val content = match.groupValues[1].trim()
             if (content.isEmpty() || content.startsWith(ANNOTATION_MARKER)) {

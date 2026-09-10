@@ -153,12 +153,9 @@
     <string name="settings_sync_now">Sync now</string>
     <string name="settings_sync_syncing">Syncing…</string>
     <string name="settings_sync_never">Not synced yet</string>
-    <string name="settings_sync_last_synced_moments_ago">Synced a moment ago</string>
-    <string name="settings_sync_last_synced_minutes">Synced %1$d minutes ago</string>
-    <string name="settings_sync_last_synced_hours">Synced %1$d hours ago</string>
-    <string name="settings_sync_last_synced_days">Synced %1$d days ago</string>
-    <string name="settings_sync_up_to_date">Everything was already up to date</string>
-    <string name="settings_sync_result">Received %1$d, sent %2$d, removed %3$d</string>
+    <string name="settings_sync_last_synced">Last synced successfully on %1$s</string>
+    <!-- The order of the date and time parts of the line above: year, month, day, hour, minute, each already padded. -->
+    <string name="settings_sync_date_time">%1$s-%2$s-%3$s at %4$s:%5$s</string>
     <string name="settings_sync_conflicts">Kept both versions of a song that changed in two places: %1$s</string>
     <string name="settings_sync_failed_network">Could not reach the service. Campfire will try again next time.</string>
     <string name="settings_sync_failed_authorization">The connection was refused. Connect the account again.</string>

@@ -425,8 +425,7 @@ private fun SongPreview(
             shouldShowChords = shouldShowChords,
             fontScale = fontScale,
             isHorizontalFlow = isHorizontalFlow,
-            scrollState = scrollState,
-            topInset = topPadding
+            scrollState = scrollState
         )
     }
 }

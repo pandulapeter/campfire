@@ -252,8 +252,7 @@ private fun LazyGridState.scrollMetrics(): ScrollMetrics? {
     if (!canScrollForward && !canScrollBackward) return null
     val info = layoutInfo
     val firstIndex = firstVisibleItemIndex
-    // A pinned sticky header is listed among the visible items but sits out of order, so it must not skew the estimate.
-    val visibleItems = info.visibleItemsInfo.filter { it.index >= firstIndex }.distinctBy { it.index }
+    val visibleItems = info.visibleItemsInfo
     if (visibleItems.isEmpty() || info.totalItemsCount == 0) return null
     val first = visibleItems.first()
     val last = visibleItems.last()

@@ -24,7 +24,7 @@ sealed interface ChordProLine {
         )
     }
 
-    /** One line inside {start_of_tab}: monospaced, never transposed, never reflowed. */
+    /** One line inside {start_of_tab}: monospaced, never reflowed; transposed on the frets, not on the notes. */
     data class Tab(val text: String) : ChordProLine
 
     /** One line inside {start_of_grid}: tokens separated by whitespace. */

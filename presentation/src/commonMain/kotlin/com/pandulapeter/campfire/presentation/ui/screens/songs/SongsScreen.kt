@@ -82,6 +82,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
 import com.pandulapeter.campfire.presentation.ui.components.SongsControlsSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
@@ -317,7 +318,11 @@ private fun SongList(
             }
             songGroups.forEach { group ->
                 group.header?.let { header ->
-                    stickyHeader(key = "header_$header") { headerIndex ->
+                    val key = "header_$header"
+                    item(
+                        key = key,
+                        span = { GridItemSpan(maxLineSpan) }
+                    ) {
                         SectionHeader(
                             modifier = Modifier.animateItem(),
                             text = when (header) {
@@ -326,7 +331,7 @@ private fun SongList(
                                 is CampfireViewModel.SongGroup.Header.Letter -> header.letter.toString()
                                 CampfireViewModel.SongGroup.Header.Symbols -> stringResource(Res.string.songs_unsorted_label)
                             },
-                            onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } }
+                            onClick = { coroutineScope.launch { listState.animateScrollToKey(key) } }
                         )
                     }
                 }

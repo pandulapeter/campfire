@@ -467,7 +467,7 @@ private fun SongDetailsPage(
         }
         val topPadding = 8.dp
         val bottomPadding = contentPadding.calculateBottomPadding() + 32.dp
-        // Shared with the lyrics, whose section headers stick to the top of it while they are scrolled through.
+        // Shared with the lyrics, whose section headers scroll back to their own section when they are clicked.
         val scrollState = rememberScrollState()
         // The lyrics scroll, so they need to be told from the outside how much room there is for them without
         // scrolling: that is what decides how many columns they are flowed into.
@@ -491,8 +491,7 @@ private fun SongDetailsPage(
                 shouldShowChords = shouldShowChords,
                 fontScale = fontScale,
                 isHorizontalFlow = isHorizontalFlow,
-                scrollState = scrollState,
-                topInset = topPadding
+                scrollState = scrollState
             )
         }
     }

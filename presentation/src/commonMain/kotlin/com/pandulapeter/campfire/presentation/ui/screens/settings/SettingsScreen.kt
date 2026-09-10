@@ -84,6 +84,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
+import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
@@ -303,18 +304,18 @@ internal fun SettingsScreen(
 }
 
 /**
- * A sticky section header of the settings list. The same pill as the section headers of the song lists, so that the
- * three main screens look and behave the same way: clicking it scrolls back to the start of its own section.
+ * A section header of the settings list. The same pill as the section headers of the song lists, so that the three
+ * main screens look and behave the same way: clicking it scrolls back to the start of its own section.
  */
 private fun LazyListScope.sectionHeader(
     key: String,
     listState: LazyListState,
     coroutineScope: CoroutineScope,
     text: @Composable () -> String
-) = stickyHeader(key = key) { headerIndex ->
+) = item(key = key) {
     SectionHeader(
         modifier = Modifier.animateItem(),
         text = text(),
-        onClick = { coroutineScope.launch { listState.animateScrollToItem(headerIndex) } }
+        onClick = { coroutineScope.launch { listState.animateScrollToKey(key) } }
     )
 }
