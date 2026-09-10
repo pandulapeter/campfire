@@ -32,9 +32,21 @@ internal object ChordProTabTransposer {
         val frets = lines.filterIndexed { index, _ -> isStaffLine[index] }.flatMap(::fretNumbers)
         val shift = semitones + (octaveOffset(frets, semitones) ?: return lines)
         return lines.mapIndexed { index, line ->
-            if (isStaffLine[index]) transposeStaffLine(line, shift) else transposeChordLine(line, semitones, preferFlats)
+            if (isStaffLine[index]) {
+                transposeStaffLine(line, shift)
+            } else {
+                rewriteChordLine(line) { name -> ChordProTransposer.transposeChord(name, semitones, preferFlats) }
+            }
         }
     }
+
+    /**
+     * Rewrites the chord names of the lines of one tab environment with [rename], leaving the tablature untouched:
+     * nothing moves on the fingerboard, only the names above it are spelled differently. It is how a notation the
+     * viewer prefers reaches a tab, where transposing would mean the frets instead.
+     */
+    fun rewriteChordNames(lines: List<String>, rename: (String) -> String) =
+        lines.map { line -> if (isStaffLine(line)) line else rewriteChordLine(line, rename) }
 
     /**
      * A tablature line: enough dashes to be a staff, and made mostly of the characters a staff is made of. The letters
@@ -102,20 +114,20 @@ internal object ChordProTabTransposer {
         )
     }
 
-    /** Transposes a line of the environment that is not tablature, but only if every word on it is a chord. */
-    private fun transposeChordLine(line: String, semitones: Int, preferFlats: Boolean): String {
+    /** Rewrites a line of the environment that is not tablature, but only if every word on it is a chord. */
+    private fun rewriteChordLine(line: String, rename: (String) -> String): String {
         val trimmedLine = line.trim()
         if (trimmedLine.isEmpty() || trimmedLine.startsWith(SOURCE_COMMENT) || ChordProSyntax.matchDirective(trimmedLine) != null) return line
-        if (ChordProSyntax.chordRegex.containsMatchIn(line)) return ChordProTransposer.transposeLyricsLine(line, semitones, preferFlats)
+        if (ChordProSyntax.chordRegex.containsMatchIn(line)) return ChordProTransposer.rewriteLyricsLineChords(line, rename)
         val replacements = mutableListOf<Pair<IntRange, String>>()
         wordRegex.findAll(line).forEach { match ->
             val word = match.value
             val isParenthesized = word.length > 2 && word.startsWith('(') && word.endsWith(')')
             val name = if (isParenthesized) word.substring(1, word.length - 1) else word
             when {
-                chordNameRegex.matches(name) -> {
-                    val transposedName = ChordProTransposer.transposeChord(name, semitones, preferFlats)
-                    replacements += match.range to if (isParenthesized) "($transposedName)" else transposedName
+                ChordProSyntax.chordNameRegex.matches(name) -> {
+                    val renamedName = rename(name)
+                    replacements += match.range to if (isParenthesized) "($renamedName)" else renamedName
                 }
 
                 isMarker(word) -> Unit
@@ -177,7 +189,4 @@ internal object ChordProTabTransposer {
     private val wordRegex = Regex("\\S+")
     private val dashesRegex = Regex("-+")
     private val repeatCountRegex = Regex("\\(?[xX]\\d+\\)?")
-    private val chordNameRegex = Regex(
-        "[A-H][#b♯♭]?(?:maj|min|dim|aug|sus|add|m|M|\\+|°|ø)?[0-9]*(?:(?:maj|min|dim|aug|sus|add|[#b♯♭])[0-9]*)*(?:/[A-H][#b♯♭]?)?"
-    )
 }

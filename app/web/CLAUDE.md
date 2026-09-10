@@ -48,10 +48,12 @@ or `localhost` — a distribution served from `file://` will start and then fail
   with the token still in it: that is the development server, where the bar falls back to the sizes the server
   advertises. The page is written from its source rather than edited in place, so running the task twice over the
   same distribution produces the same distribution.
-- It writes a `.gz` (and a `.br`, if the `brotli` command line tool is installed) next to everything worth
-  compressing, for hosts that serve those: 16 MB of distribution is 5.5 MB gzipped and 4.2 MB with brotli. Set
-  `campfire.web.precompress=false` to skip it — it costs about half a minute — and note that a host that does not
-  serve the precompressed copies simply ignores them.
+- With `campfire.web.precompress=true` it writes a `.gz` (and a `.br`, if the `brotli` command line tool is
+  installed) next to everything worth compressing. **It is off**, because the deployment is GitHub Pages, which has
+  no content negotiation for precompressed files and would never serve them — it gzips on the fly instead, `.wasm`
+  included, at the same ratio the task would have achieved (16 MB of distribution goes over the wire as 5.5 MB).
+  Turning it on is for a host that was configured to look for the copies, and is the only way to get the 4.2 MB
+  brotli would give, since GitHub Pages does not offer brotli at all.
 - The production webpack has `sourceMaps = false`: the map was 1.5 MB, three times the bundle it describes, and it
   was deployed with every distribution for nobody. The development server keeps its own, which is what makes the
   debugger show Kotlin.

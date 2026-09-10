@@ -84,6 +84,8 @@
     <string name="settings_lyrics_only_mode_description">Az akkordok elrejtése, hogy csak a szöveg maradjon</string>
     <string name="settings_horizontal_section_flow">Olvasás az oszlopokon át</string>
     <string name="settings_horizontal_section_flow_description">Ahol egy dal több oszlopban is kifér, a szakaszok jobbra folytatódnak és nem lefelé, így görgetés közben sosem kell visszalapozni</string>
+    <string name="settings_german_notation">Német hangjelölés</string>
+    <string name="settings_german_notation_description">A B hangot H-ként, a B♭-t pedig B-ként írja, ahogy a közép-európai és skandináv akkordfüzetekben szokás. Csak a megjelenítés változik: a dalok fájljai a saját írásmódjukat tartják meg.</string>
     <string name="settings_accidentals">Módosítójelek</string>
     <string name="settings_accidentals_description">A fekete billentyűkre eső akkordok bével (B♭) vagy kereszttel (A♯) legyenek-e írva. Az eredeti beállítás mellett a Campfire a dal hangneméhez illőt választja.</string>
     <string name="settings_accidentals_original">Eredeti</string>

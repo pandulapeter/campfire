@@ -20,7 +20,10 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     sortingMode = UserPreferences.SortingMode.entries.firstOrNull { it.id == sortingMode } ?: UserPreferences.SortingMode.BY_ARTIST,
     uiMode = UserPreferences.UiMode.entries.firstOrNull { it.id == uiMode } ?: UserPreferences.UiMode.SYSTEM_DEFAULT,
     language = UserPreferences.Language.entries.firstOrNull { it.id == language } ?: UserPreferences.Language.SYSTEM_DEFAULT,
-    accidentals = UserPreferences.Accidentals.entries.firstOrNull { it.id == accidentals } ?: UserPreferences.Accidentals.ORIGINAL,
+    chordSpelling = UserPreferences.ChordSpelling(
+        accidentals = UserPreferences.Accidentals.entries.firstOrNull { it.id == accidentals } ?: UserPreferences.Accidentals.ORIGINAL,
+        isGermanNotationEnabled = isGermanNotationEnabled
+    ),
     transpositions = transpositions
 )
 
@@ -32,6 +35,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     sortingMode = sortingMode.id,
     uiMode = uiMode.id,
     language = language.id,
-    accidentals = accidentals.id,
+    accidentals = chordSpelling.accidentals.id,
+    isGermanNotationEnabled = chordSpelling.isGermanNotationEnabled,
     transpositions = transpositions
 )

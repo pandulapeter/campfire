@@ -214,7 +214,7 @@ private fun LoadedSongEditor(
     var isPreviewVisible by rememberSaveable { mutableStateOf(false) }
     val hasSideBySidePreview = windowSize == WindowSize.EXPANDED
     val fontScale = userPreferences?.fontScale ?: CampfireViewModel.DEFAULT_FONT_SCALE
-    val accidentals = userPreferences?.accidentals ?: UserPreferences.Accidentals.ORIGINAL
+    val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
 
     Column(
         modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -263,7 +263,7 @@ private fun LoadedSongEditor(
                     viewModel = viewModel,
                     fileName = destination.fileName,
                     textFieldState = textFieldState,
-                    accidentals = accidentals,
+                    accidentals = chordSpelling.accidentals,
                     onExport = { viewModel.exportSong(filePicker, destination.fileName) }
                 )
             }
@@ -303,7 +303,7 @@ private fun LoadedSongEditor(
                 shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true,
                 fontScale = fontScale,
                 isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true,
-                accidentals = accidentals,
+                chordSpelling = chordSpelling,
                 contentPadding = PaddingValues(
                     start = if (hasSideBySidePreview) 0.dp else contentPadding.calculateStartPadding(layoutDirection),
                     end = contentPadding.calculateEndPadding(layoutDirection),
@@ -399,7 +399,7 @@ private fun SongPreview(
     shouldShowChords: Boolean,
     fontScale: Float,
     isHorizontalFlow: Boolean,
-    accidentals: UserPreferences.Accidentals,
+    chordSpelling: UserPreferences.ChordSpelling,
     contentPadding: PaddingValues
 ) {
     var previewedText by remember(textFieldState) { mutableStateOf(textFieldState.text.toString()) }
@@ -409,7 +409,7 @@ private fun SongPreview(
             .debounce(PREVIEW_DELAY_MILLIS)
             .collect { previewedText = it }
     }
-    val song = remember(previewedText, transposition, accidentals) { viewModel.renderSong(previewedText, transposition, accidentals) }
+    val song = remember(previewedText, transposition, chordSpelling) { viewModel.renderSong(previewedText, transposition, chordSpelling) }
     val layoutDirection = LocalLayoutDirection.current
     val scrollState = rememberScrollState()
     val topPadding = 8.dp
@@ -435,7 +435,13 @@ private fun SongPreview(
     }
 }
 
-/** Everything that rewrites the text or acts on the song, behind one overflow button. */
+/**
+ * Everything that rewrites the text or acts on the song, behind one overflow button.
+ *
+ * @param accidentals The spelling the transposition writes. Only the accidentals, and not the whole
+ *   [UserPreferences.ChordSpelling]: this one rewrites the file, and a file is always written in the app's own
+ *   notation, whatever the viewer prefers to read.
+ */
 @Composable
 private fun EditorMenu(
     viewModel: CampfireViewModel,

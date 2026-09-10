@@ -31,6 +31,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProNotationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
@@ -106,7 +107,8 @@ class CampfireViewModel(
     private val normalizeText: NormalizeTextUseCase,
     private val parseChordPro: ParseChordProUseCase,
     private val transposeChordPro: TransposeChordProUseCase,
-    private val transposeChordProText: TransposeChordProTextUseCase
+    private val transposeChordProText: TransposeChordProTextUseCase,
+    private val convertChordProNotation: ConvertChordProNotationUseCase
 ) : ViewModel() {
 
     /**
@@ -420,18 +422,20 @@ class CampfireViewModel(
 
     /**
      * Parses a song file and applies the file's own `{transpose}`, the transposition the user picked and the spelling
-     * of the accidentals they prefer, which is what the viewer renders. Call it from a `remember` keyed on all three:
-     * parsing a long song on every recomposition would be wasteful.
+     * they prefer, which is what the viewer renders. Call it from a `remember` keyed on all three: parsing a long song
+     * on every recomposition would be wasteful.
      */
-    fun renderSong(text: String, transposition: Int, accidentals: UserPreferences.Accidentals): ChordProSong {
+    fun renderSong(text: String, transposition: Int, spelling: UserPreferences.ChordSpelling): ChordProSong {
         val parsed = parseChordPro(text)
         val semitones = parsed.metadata.transpose + transposition
         // A preferred spelling still respells a song nobody transposed, so only the two together mean there is nothing to do.
-        return if (semitones == 0 && accidentals == UserPreferences.Accidentals.ORIGINAL) {
+        val transposed = if (semitones == 0 && spelling.accidentals == UserPreferences.Accidentals.ORIGINAL) {
             parsed
         } else {
-            transposeChordPro(parsed, semitones, accidentals)
+            transposeChordPro(parsed, semitones, spelling.accidentals)
         }
+        // Last, and on the model only: the file, and the editor's transposition below, stay in the app's own notation.
+        return convertChordProNotation(transposed, spelling)
     }
 
     /**
@@ -596,7 +600,9 @@ class CampfireViewModel(
 
     fun setLanguage(value: UserPreferences.Language) = updateUserPreferences { copy(language = value) }
 
-    fun setAccidentals(value: UserPreferences.Accidentals) = updateUserPreferences { copy(accidentals = value) }
+    fun setAccidentals(value: UserPreferences.Accidentals) = updateUserPreferences { copy(chordSpelling = chordSpelling.copy(accidentals = value)) }
+
+    fun setGermanNotationEnabled(value: Boolean) = updateUserPreferences { copy(chordSpelling = chordSpelling.copy(isGermanNotationEnabled = value)) }
 
     private fun updateUserPreferences(update: UserPreferences.() -> UserPreferences) = userPreferences.value?.let { userPreferences ->
         viewModelScope.launch { saveUserPreferences(userPreferences.update()) }

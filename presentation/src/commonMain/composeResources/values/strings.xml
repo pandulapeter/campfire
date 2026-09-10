@@ -84,6 +84,8 @@
     <string name="settings_lyrics_only_mode_description">Hide every chord and show the words on their own</string>
     <string name="settings_horizontal_section_flow">Read across the columns</string>
     <string name="settings_horizontal_section_flow_description">Where a song is wide enough for several columns, the sections carry on to the right instead of downwards, so scrolling never goes back up</string>
+    <string name="settings_german_notation">German notation</string>
+    <string name="settings_german_notation_description">Writes the note called B as H, and the one called B♭ as B, the way chord charts do in Central Europe and Scandinavia. Only what you read changes: the song files keep their own spelling.</string>
     <string name="settings_accidentals">Accidentals</string>
     <string name="settings_accidentals_description">Whether a chord on a black key is written as a flat (B♭) or as a sharp (A♯). Left as written, Campfire picks whichever fits the key of the song.</string>
     <string name="settings_accidentals_original">As written</string>

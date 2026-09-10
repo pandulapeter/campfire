@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.domain.implementation
 
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ConnectSyncProviderUseCase
+import com.pandulapeter.campfire.domain.api.useCases.ConvertChordProNotationUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 import com.pandulapeter.campfire.domain.api.useCases.DeleteSetlistUseCase
@@ -37,6 +38,7 @@ import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCas
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
 import com.pandulapeter.campfire.domain.implementation.useCases.CancelSynchronizationUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.ConnectSyncProviderUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.ConvertChordProNotationUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.CreateSetlistUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.CreateSongUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.DeleteSetlistUseCaseImpl
@@ -66,6 +68,7 @@ import org.koin.dsl.module
 val domainModule = module {
     factory<CancelSynchronizationUseCase> { CancelSynchronizationUseCaseImpl(get()) }
     factory<ConnectSyncProviderUseCase> { ConnectSyncProviderUseCaseImpl(get(), get()) }
+    factory<ConvertChordProNotationUseCase> { ConvertChordProNotationUseCaseImpl() }
     factory<CreateSetlistUseCase> { CreateSetlistUseCaseImpl(get()) }
     factory<CreateSongUseCase> { CreateSongUseCaseImpl(get()) }
     factory<DeleteSetlistUseCase> { DeleteSetlistUseCaseImpl(get()) }

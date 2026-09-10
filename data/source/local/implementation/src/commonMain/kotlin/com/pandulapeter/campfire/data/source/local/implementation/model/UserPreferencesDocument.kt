@@ -29,5 +29,6 @@ internal data class UserPreferencesDocument(
     val uiMode: String = "",
     val language: String = "",
     val accidentals: String = "",
+    val isGermanNotationEnabled: Boolean = false,
     val transpositions: Map<String, Int> = emptyMap()
 )

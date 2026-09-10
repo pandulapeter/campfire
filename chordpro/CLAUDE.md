@@ -17,9 +17,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `ChordProLine` (`Lyrics` with positioned chords and annotations, `Tab`, `Grid`, `Blank`) and `ChordProMetadata`.
   Nothing here knows about Compose, colours or measurements: the model says what a thing *is*, the viewer decides what
   it looks like.
-- `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, long/short directive names, the
-  `start_of_` / `end_of_` prefixes, `label="…"` attributes). Every other object here goes through it, so the dialect is
-  defined once.
+- `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, `chordNameRegex` for "is this whole
+  word a chord and not a word that starts with a letter", long/short directive names, the `start_of_` / `end_of_`
+  prefixes, `label="…"` attributes). Every other object here goes through it, so the dialect is defined once.
 - `ChordProParser` — `parse` (the whole song), `parseMetadata` (directive lines only, cheap enough to run over every
   file in the library at startup) and `hasChords`. Total: it never throws and never rejects a document, because the
   file on disk is the user's and half of it may be under the caret. Unknown directives are ignored; `{define}`, fonts,
@@ -32,7 +32,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   byte of formatting (the editor's transpose action). Chooses sharps or flats from the song's key, follows the bass
   note after `/`, understands German `H`, and leaves annotations alone. A caller that knows better passes
   `preferFlats` and gets that spelling instead, which is what the accidentals preference does; forced that way it is
-  worth running for no semitones at all, so only `semitones == 0` *and* no forced spelling short-circuits.
+  worth running for no semitones at all, so only `semitones == 0` *and* no forced spelling short-circuits. Its walk
+  over the model is `rewriteChords`, which takes the rename as a function so that `ChordProNotation` can reuse it;
+  the two differ only in what a tab is, a fingerboard to one and a page of chord names to the other.
 - `ChordProTabTransposer` — the same move inside a `{start_of_tab}` environment, where it means the fret numbers and
   not the notes: the tuning stays what it was. A tab environment is transposed as a whole, so that a transposition
   that would take a fret off the fingerboard moves all of it by octaves instead of producing an unplayable number,
@@ -40,7 +42,17 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   that look like tablature are touched that way; a line above them holding nothing but chord names gets those
   transposed, and anything else in the environment (`Tuning: D A D G A D`, a note to the player) is left byte for
   byte. Fret numbers are not all the same width, so the dashes around them are absorbed or padded to keep the columns
-  lining up; where there is no dash to take (inside a `0h1p0` group) the line grows by a character instead.
+  lining up; where there is no dash to take (inside a `0h1p0` group) the line grows by a character instead. The same
+  column bookkeeping serves `rewriteChordNames`, which only respells those chord names — `Bb` is a character wider
+  than the `B` it becomes in German notation, and the staff underneath still has to line up.
+- `ChordProNotation` — German notation, and the one thing in here that is about how a song is *read* rather than what
+  it *is*: the note written `B` becomes `H`, the one written `Bb` becomes `B`, and nothing else moves — not the other
+  letters, not the `#` and `b` signs, not the quality. (The classical German names spell every accidental out as
+  `Cis` or `Es`; chord charts in those countries stop at the two letters, and so does this — a German chord chart
+  writes `B` for what an English one calls `Bb`, but never `Ais`.) It runs after the
+  transposition, never before, because the transposition works in the notation the file is written in. Nothing that
+  goes back to disk passes through it: `ChordProTransposer.transposeText`, the editor's action, has no counterpart
+  here on purpose.
 - `ChordProHighlighter` — the typed spans an editor wants to colour (directive name, directive value, chord,
   annotation, comment). It lives here rather than in the UI so that what counts as a chord is decided in exactly one
   place; only what those look like on screen is the caller's business.

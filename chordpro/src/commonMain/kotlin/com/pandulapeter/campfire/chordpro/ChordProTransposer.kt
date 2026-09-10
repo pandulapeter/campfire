@@ -37,19 +37,34 @@ object ChordProTransposer {
         return transpose(song, semitones, preferFlats ?: prefersFlats(song, semitones))
     }
 
-    private fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean): ChordProSong =
-        song.copy(
-            metadata = song.metadata.copy(
-                key = song.metadata.key?.let { transposeChord(it, semitones, preferFlats) }
-            ),
-            blocks = song.blocks.map { block ->
-                when {
-                    block !is ChordProBlock.Section -> block
-                    block.type == SectionType.Tab -> block.copy(lines = transposeTabLines(block.lines, semitones, preferFlats))
-                    else -> block.copy(lines = block.lines.map { line -> transposeLine(line, semitones, preferFlats) })
-                }
+    private fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean) = rewriteChords(
+        song = song,
+        rewriteTabLines = { lines -> ChordProTabTransposer.transpose(lines, semitones, preferFlats) },
+        rename = { name -> transposeChord(name, semitones, preferFlats) }
+    )
+
+    /**
+     * Applies [rename] to every chord of a song — its key, the chords over its lyrics and the chords of its grids,
+     * never an annotation — and hands the raw lines of each tab environment to [rewriteTabLines].
+     *
+     * Both the transposition and [ChordProNotation] are written in terms of it, and they differ in exactly one thing:
+     * what a tab is. To the transposition it is a fingerboard, so the frets move; to a notation it is a page, so only
+     * the chord names above the staff are rewritten.
+     */
+    internal fun rewriteChords(
+        song: ChordProSong,
+        rewriteTabLines: (List<String>) -> List<String>,
+        rename: (String) -> String
+    ): ChordProSong = song.copy(
+        metadata = song.metadata.copy(key = song.metadata.key?.let(rename)),
+        blocks = song.blocks.map { block ->
+            when {
+                block !is ChordProBlock.Section -> block
+                block.type == SectionType.Tab -> block.copy(lines = rewriteTab(block.lines, rewriteTabLines))
+                else -> block.copy(lines = block.lines.map { line -> rewriteLine(line, rename) })
             }
-        )
+        }
+    )
 
     /**
      * Transposes raw ChordPro text in place, keeping all formatting. Used by the editor's transpose action.
@@ -130,14 +145,10 @@ object ChordProTransposer {
             }
         }
 
-    /** The lines of a tab section: [ChordProLine.Tab] holds them raw, so they are transposed as raw text. */
-    private fun transposeTabLines(lines: List<ChordProLine>, semitones: Int, preferFlats: Boolean): List<ChordProLine> {
-        val transposed = ChordProTabTransposer.transpose(
-            lines = lines.map { line -> (line as? ChordProLine.Tab)?.text.orEmpty() },
-            semitones = semitones,
-            preferFlats = preferFlats
-        )
-        return lines.mapIndexed { index, line -> if (line is ChordProLine.Tab) ChordProLine.Tab(transposed[index]) else line }
+    /** The lines of a tab section: [ChordProLine.Tab] holds them raw, so they are rewritten as raw text. */
+    private fun rewriteTab(lines: List<ChordProLine>, rewriteTabLines: (List<String>) -> List<String>): List<ChordProLine> {
+        val rewritten = rewriteTabLines(lines.map { line -> (line as? ChordProLine.Tab)?.text.orEmpty() })
+        return lines.mapIndexed { index, line -> if (line is ChordProLine.Tab) ChordProLine.Tab(rewritten[index]) else line }
     }
 
     /** Transposes the collected lines of one tab environment in place and starts collecting the next one. */
@@ -148,16 +159,16 @@ object ChordProTransposer {
         indices.clear()
     }
 
-    private fun transposeLine(line: ChordProLine, semitones: Int, preferFlats: Boolean) = when (line) {
+    private fun rewriteLine(line: ChordProLine, rename: (String) -> String) = when (line) {
         is ChordProLine.Lyrics -> line.copy(
             chords = line.chords.map { chord ->
-                if (chord.isAnnotation) chord else chord.copy(name = transposeChord(chord.name, semitones, preferFlats))
+                if (chord.isAnnotation) chord else chord.copy(name = rename(chord.name))
             }
         )
 
         is ChordProLine.Grid -> line.copy(
             tokens = line.tokens.map { token ->
-                if (token is GridToken.Chord) GridToken.Chord(transposeChord(token.name, semitones, preferFlats)) else token
+                if (token is GridToken.Chord) GridToken.Chord(rename(token.name)) else token
             }
         )
 
@@ -173,12 +184,16 @@ object ChordProTransposer {
     }
 
     internal fun transposeLyricsLine(rawLine: String, semitones: Int, preferFlats: Boolean) =
+        rewriteLyricsLineChords(rawLine) { name -> transposeChord(name, semitones, preferFlats) }
+
+    /** Applies [rename] to every `[chord]` of a raw line, leaving the annotations, the empty brackets and the text. */
+    internal fun rewriteLyricsLineChords(rawLine: String, rename: (String) -> String) =
         ChordProSyntax.chordRegex.replace(rawLine) { match ->
             val content = match.groupValues[1].trim()
             if (content.isEmpty() || content.startsWith(ANNOTATION_MARKER)) {
                 match.value
             } else {
-                "[${transposeChord(content, semitones, preferFlats)}]"
+                "[${rename(content)}]"
             }
         }
 

@@ -28,8 +28,9 @@ The ones that carry real logic:
 - `ExportLibraryUseCaseImpl` / `ExportSongsUseCaseImpl` / `ExportSetlistUseCaseImpl` — decide what leaves as what: a
   single song is the `.cho` file as it is on disk, everything else is a zip. The user's transposition is never baked in.
 - `CreateSongUseCaseImpl` — writes the new-song template (`{title}`, `{artist}`, `{key}` and an empty verse).
-- `TransposeChordProUseCaseImpl` / `TransposeChordProTextUseCaseImpl` / `ParseChordProUseCaseImpl` — thin wrappers over
-  `:chordpro`, so the presentation layer never calls the parser directly. `mapper/AccidentalsMappers.kt` is the whole
-  of the translation: `:chordpro` depends on nothing and so knows no preferences, and takes the spelling as the
-  nullable `preferFlats` the preference maps onto.
+- `TransposeChordProUseCaseImpl` / `TransposeChordProTextUseCaseImpl` / `ParseChordProUseCaseImpl` /
+  `ConvertChordProNotationUseCaseImpl` — thin wrappers over `:chordpro`, so the presentation layer never calls the
+  parser directly. `mapper/AccidentalsMappers.kt` is the whole of the translation: `:chordpro` depends on nothing and
+  so knows no preferences, and takes the spelling as the nullable `preferFlats` the preference maps onto. The notation
+  one needs no mapper — the preference is a flag, and `ChordProNotation` either runs or does not.
 - `NormalizeTextUseCaseImpl` — accent-insensitive, case-insensitive text for sorting and searching.

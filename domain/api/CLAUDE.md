@@ -15,7 +15,8 @@ the parser itself.
 
 Conventions: one interface per use case, a single `operator fun invoke(...)`, named `Get*` (observe a flow or read one
 value), `Load*` (trigger a read), `Save*` / `Create*` / `Delete*` (change something), `Import*` / `Export*` for the file
-paths, or a verb for pure transforms (`NormalizeText`, `ParseChordPro`, `TransposeChordPro`, `TransposeChordProText`).
+paths, or a verb for pure transforms (`NormalizeText`, `ParseChordPro`, `TransposeChordPro`, `TransposeChordProText`,
+`ConvertChordProNotation`).
 
 - `ScreenData` bundles what the song and setlist screens need in one object: the setlists, the songs filtered and sorted
   the way the preferences ask for, and `songFileNames` — every song in the library including the ones a filter is
@@ -25,6 +26,10 @@ paths, or a verb for pure transforms (`NormalizeText`, `ParseChordPro`, `Transpo
 - `TransposeChordProUseCase` transposes the parsed model (what the viewer shows), `TransposeChordProTextUseCase` the raw
   text (what the editor's transpose action rewrites). Both take `UserPreferences.Accidentals` as well as the semitones,
   because how a black key is spelled is the reader's preference and not a property of the move.
+- `ConvertChordProNotationUseCase` is the last step of rendering: it writes the transposed model in German notation
+  when `UserPreferences.ChordSpelling` asks for it, and hands the song back untouched when it does not. There is no
+  text-level counterpart on purpose — that one rewrites the file, and a file is always written in the app's own
+  notation, which is why the two halves of `ChordSpelling` do not travel together everywhere.
 
 Sync adds `GetSyncStateUseCase`, `GetSyncProvidersUseCase`, `ConnectSyncProviderUseCase`,
 `DisconnectSyncProviderUseCase`, `RestoreSyncUseCase` and `SynchronizeLibraryUseCase`. `GetSyncStateUseCase` is

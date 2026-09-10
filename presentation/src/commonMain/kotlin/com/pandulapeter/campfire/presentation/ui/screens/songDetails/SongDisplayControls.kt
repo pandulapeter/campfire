@@ -85,10 +85,10 @@ internal fun SongDisplayControls(
     val song = allSongs.firstOrNull { it.fileName == dialog.songFileName }
     val songTransposition = song?.let { transpositions[it.fileName, dialog.setlistFileName] } ?: 0
     val songText = song?.let { songTexts[it.fileName] }
-    val accidentals = userPreferences?.accidentals ?: UserPreferences.Accidentals.ORIGINAL
+    val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     // Memoized: the key comes from the parsed song, which is not worth re-deriving on every recomposition.
-    val transposedKey = remember(songText, songTransposition, accidentals) {
-        songText?.let { viewModel.renderSong(it, songTransposition, accidentals).metadata.key }
+    val transposedKey = remember(songText, songTransposition, chordSpelling) {
+        songText?.let { viewModel.renderSong(it, songTransposition, chordSpelling).metadata.key }
     }
     Column {
         SettingsSectionTitle(text = stringResource(Res.string.song_details_display_options))

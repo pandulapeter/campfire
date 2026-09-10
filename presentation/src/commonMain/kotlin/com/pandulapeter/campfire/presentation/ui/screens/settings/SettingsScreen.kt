@@ -56,6 +56,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_accidentals_des
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_flats
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_original
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_sharps
+import com.pandulapeter.campfire.presentation.resources.settings_german_notation
+import com.pandulapeter.campfire.presentation.resources.settings_german_notation_description
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
 import com.pandulapeter.campfire.presentation.resources.settings_export_all
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub
@@ -240,6 +242,15 @@ internal fun SettingsScreen(
                     onCheckedChange = viewModel::setHorizontalSectionFlowEnabled
                 )
             }
+            item(key = "german_notation") {
+                SwitchListItem(
+                    modifier = Modifier.animateItem(),
+                    title = stringResource(Res.string.settings_german_notation),
+                    description = stringResource(Res.string.settings_german_notation_description),
+                    isChecked = userPreferences?.chordSpelling?.isGermanNotationEnabled == true,
+                    onCheckedChange = viewModel::setGermanNotationEnabled
+                )
+            }
             item(key = "accidentals") {
                 Subsection(
                     modifier = Modifier.animateItem().padding(vertical = SUBSECTION_GAP),
@@ -252,7 +263,7 @@ internal fun SettingsScreen(
                             UserPreferences.Accidentals.FLATS to stringResource(Res.string.settings_accidentals_flats),
                             UserPreferences.Accidentals.SHARPS to stringResource(Res.string.settings_accidentals_sharps)
                         ),
-                        selected = userPreferences?.accidentals,
+                        selected = userPreferences?.chordSpelling?.accidentals,
                         onSelected = viewModel::setAccidentals
                     )
                 }

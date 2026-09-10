@@ -12,12 +12,24 @@ package com.pandulapeter.campfire.chordpro
 import com.pandulapeter.campfire.chordpro.model.GridToken
 
 /**
- * The low level syntax rules shared by [ChordProParser], [ChordProSerializer] and [ChordProTransposer].
+ * The low level syntax rules shared by [ChordProParser], [ChordProSerializer], [ChordProTransposer] and
+ * [ChordProNotation].
  */
 internal object ChordProSyntax {
 
     val directiveRegex = Regex("^\\{\\s*([\\w-]+)\\s*(?::\\s*(.*?))?\\s*\\}$")
     val chordRegex = Regex("\\[(.*?)]")
+
+    /**
+     * A whole word that is a chord name: a note (German `H` included), an optional accidental, a quality, extensions
+     * and a bass note. It is the answer to "is this a chord and not a word that happens to start with a letter", which
+     * is what a row of chord names above a tab and [ChordProNotation] both need; the transposer does not use it,
+     * because there the brackets or the grid have already said that a chord is what this is.
+     */
+    val chordNameRegex = Regex(
+        "[A-H][#b♯♭]?(?:maj|min|dim|aug|sus|add|m|M|\\+|°|ø)?[0-9]*(?:(?:maj|min|dim|aug|sus|add|[#b♯♭])[0-9]*)*(?:/[A-H][#b♯♭]?)?"
+    )
+
     private val labelAttributeRegex = Regex("label\\s*=\\s*\"([^\"]*)\"")
     private val whitespaceRegex = Regex("\\s+")
 

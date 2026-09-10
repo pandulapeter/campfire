@@ -17,7 +17,7 @@ data class UserPreferences(
     val sortingMode: SortingMode,
     val uiMode: UiMode,
     val language: Language,
-    val accidentals: Accidentals, // How the notes between the white keys are spelled when a song is displayed.
+    val chordSpelling: ChordSpelling, // How the chords of a song are written when it is displayed.
     /** Song file name to semitones, for songs opened from the library rather than from a setlist. */
     val transpositions: Map<String, Int>
 ) {
@@ -31,6 +31,28 @@ data class UserPreferences(
         LIGHT("light"),
         DARK("dark"),
         SYSTEM_DEFAULT("system_default")
+    }
+
+    /**
+     * How a chord is written on screen, and only there: neither half of this ever reaches a file. The library, and
+     * everything that is synced, exported or opened in the editor, stays in the one notation the app writes.
+     *
+     * They are one value because the viewer needs them as one: it re-parses a song whenever the spelling changes, and
+     * two separate flags would mean two things to keep in step at every call site.
+     */
+    data class ChordSpelling(
+        val accidentals: Accidentals,
+        /**
+         * German notation, where the note written `B` here is written `H`, and the one written `Bb` here is written
+         * `B`. It is what a reader in Central Europe or Scandinavia grew up with, and it is applied after the
+         * accidentals, on the result they produce.
+         */
+        val isGermanNotationEnabled: Boolean
+    ) {
+
+        companion object {
+            val Default = ChordSpelling(accidentals = Accidentals.ORIGINAL, isGermanNotationEnabled = false)
+        }
     }
 
     /**
