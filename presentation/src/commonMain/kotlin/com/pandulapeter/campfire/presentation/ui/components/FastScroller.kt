@@ -280,6 +280,13 @@ private class ScrollMetrics(
     val maxScrollOffset: Float,
 )
 
+/**
+ * What a row of the list this scroller runs down keeps its own controls away from the end edge by. The thumb's touch
+ * target is wide enough to be caught by a finger that is not looking, which is most of the way across the overflow
+ * button sitting at the end of every row, and the one of the two that can move is the button.
+ */
+internal val FAST_SCROLLER_CLEARANCE = 16.dp
+
 private val TOUCH_TARGET_WIDTH = 48.dp
 private val TOUCH_SLACK = 8.dp
 private val THUMB_WIDTH = 6.dp

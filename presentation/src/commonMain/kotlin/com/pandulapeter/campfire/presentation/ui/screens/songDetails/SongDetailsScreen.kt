@@ -11,11 +11,15 @@ package com.pandulapeter.campfire.presentation.ui.screens.songDetails
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -43,6 +47,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -103,6 +108,8 @@ import org.jetbrains.compose.resources.painterResource
  * When there is more than one song to page through, a [SongPagerControls] bar under the lyrics offers the same
  * paging as the swipe gesture, along with the name of the setlist and the position of the current song in it.
  *
+ * The arrow keys do both without either gesture, see [songKeyboardShortcuts].
+ *
  * @param settledWidth The width this screen has once the navigation chrome has finished animating. While a
  * navigation transition is running the screen is still as narrow as the rail next to it leaves it, and laying the
  * lyrics out for that would flow them into fewer columns for the duration of the transition, only to reflow them
@@ -159,6 +166,9 @@ internal fun SongDetailsScreen(
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val coroutineScope = rememberCoroutineScope()
+    // The arrow keys scroll the song the reader is looking at, and the pages each scroll on their own, so the one
+    // that is current hands its state up here for them to drive.
+    var currentPageScrollState by remember { mutableStateOf<ScrollState?>(null) }
 
     LaunchedEffect(currentSong?.fileName) { currentSong?.fileName?.let(viewModel::loadSongContent) }
     // The pages next to the current one are composed ahead of time (beyondViewportPageCount), so their text is read
@@ -172,7 +182,23 @@ internal fun SongDetailsScreen(
     LaunchedEffect(pagerState.currentPage) { scrollBehavior.state.contentOffset = 0f }
 
     Column(
-        modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
+        modifier = modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .songKeyboardShortcuts(
+                onScrollUp = { currentPageScrollState?.let { coroutineScope.launch { it.scrollByKeyStep(-1f) } } },
+                onScrollDown = { currentPageScrollState?.let { coroutineScope.launch { it.scrollByKeyStep(1f) } } },
+                onPreviousSong = if (canPage && pagerState.currentPage > 0) {
+                    { coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) } }
+                } else {
+                    null
+                },
+                onNextSong = if (canPage && pagerState.currentPage < songs.lastIndex) {
+                    { coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) } }
+                } else {
+                    null
+                },
+            )
     ) {
         CampfireTopAppBar(
             scrollBehavior = scrollBehavior,
@@ -329,8 +355,11 @@ internal fun SongDetailsScreen(
                 beyondViewportPageCount = 1,
             ) { page ->
                 val song = songs[page]
+                val scrollState = rememberScrollState()
+                if (page == pagerState.currentPage) SideEffect { currentPageScrollState = scrollState }
                 SongDetailsPage(
                     song = song,
+                    scrollState = scrollState,
                     text = songTexts[song.fileName],
                     hasFailed = song.fileName in failedSongFileNames,
                     transposition = transpositions[song.fileName, destination.setlistFileName],
@@ -454,11 +483,14 @@ private fun SongPagerControls(
  * @param text The ChordPro text of the song, null while it is still being read.
  * @param hasFailed Whether the file could not be read. The page then offers a retry rather than a loading indicator
  *   that has nothing left to wait for.
+ * @param scrollState Owned by the pager rather than by the page, so that the arrow keys can reach the scroll of the
+ *   song being read, and so that a page keeps where it was left while its text is loaded again.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SongDetailsPage(
     song: Song,
+    scrollState: ScrollState,
     text: String?,
     hasFailed: Boolean,
     transposition: Int,
@@ -515,8 +547,6 @@ private fun SongDetailsPage(
         }
         val topPadding = 8.dp
         val bottomPadding = contentPadding.calculateBottomPadding() + 32.dp
-        // Shared with the lyrics, whose section headers scroll back to their own section when they are clicked.
-        val scrollState = rememberScrollState()
         // The lyrics scroll, so they need to be told from the outside how much room there is for them without
         // scrolling: that is what decides how many columns they are flowed into.
         BoxWithConstraints(
@@ -548,6 +578,20 @@ private fun SongDetailsPage(
     }
 }
 
+/**
+ * One press of an arrow key, in the direction it was pressed (-1 for up, 1 for down). The step is a fraction of what
+ * is on screen rather than a fixed distance, so it means the same thing on a phone and on a full screen window, and
+ * it is animated over roughly the interval a held key repeats at: a single press then reads as one smooth nudge,
+ * while a held one keeps restarting an animation that is still moving and scrolls at a steady pace instead of
+ * stuttering between steps.
+ */
+private suspend fun ScrollState.scrollByKeyStep(direction: Float) = animateScrollBy(
+    value = viewportSize * KEY_SCROLL_STEP_FRACTION * direction,
+    animationSpec = tween(durationMillis = KEY_SCROLL_STEP_DURATION, easing = LinearEasing),
+)
+
 private const val LABEL_SEPARATOR = "·"
 private val PAGER_CONTROLS_HEIGHT = 48.dp
 private val INLINE_CONTROL_SPACING = 8.dp
+private const val KEY_SCROLL_STEP_FRACTION = 0.1f // Of the height of the scrolling viewport.
+private const val KEY_SCROLL_STEP_DURATION = 120

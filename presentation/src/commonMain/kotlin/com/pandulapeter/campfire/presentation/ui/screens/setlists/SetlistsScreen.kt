@@ -301,7 +301,11 @@ private fun SetlistList(
                     ReorderableItem(
                         state = reorderableState,
                         key = key.string.orEmpty(),
-                        animateItemModifier = listItemAnimation(listState, hasLoadedLibrary),
+                        animateItemModifier = listItemAnimation(
+                            listState = listState,
+                            isEnabled = hasLoadedLibrary,
+                            isRearranging = draggedSetlist != null,
+                        ),
                     ) { isBeingDragged ->
                         val elevation by animateDpAsState(if (isBeingDragged) 8.dp else 0.dp)
                         Surface(
@@ -318,12 +322,14 @@ private fun SetlistList(
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        DragHandle(modifier = Modifier.draggableHandle(onDragStopped = onDragStopped))
                                         SetlistEntryActionsMenu(
                                             viewModel = viewModel,
                                             entry = entry,
                                             setlistFileName = setlistWithSongs.setlist.fileName,
                                         )
+                                        // The grip goes last, on the edge the finger travels down while the rows are
+                                        // being put in order.
+                                        DragHandle(modifier = Modifier.draggableHandle(onDragStopped = onDragStopped))
                                     }
                                 }
                             }

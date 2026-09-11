@@ -58,6 +58,7 @@ import com.pandulapeter.campfire.presentation.ui.components.CampfireFloatingActi
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.FAB_CLEARANCE
+import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
@@ -297,8 +298,18 @@ private fun SongList(
                                 viewModel.showDialog(CampfireViewModel.DialogType.SongActions(song = song, lockedSetlistFileName = null))
                             }
                         },
+                        // The overflow button keeps its distance from the end edge here and nowhere else, because
+                        // this is the one list the fast scroller runs down: a thumb dragged without looking is
+                        // caught by a target far wider than the thumb itself, and the button was inside it.
                         actions = if (isDesktopPlatform && !isPerformanceModeEnabled) {
-                            { SongActionsMenu(viewModel = viewModel, song = song, lockedSetlistFileName = null) }
+                            {
+                                SongActionsMenu(
+                                    modifier = Modifier.padding(end = FAST_SCROLLER_CLEARANCE),
+                                    viewModel = viewModel,
+                                    song = song,
+                                    lockedSetlistFileName = null,
+                                )
+                            }
                         } else {
                             null
                         },

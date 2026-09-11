@@ -65,7 +65,18 @@ internal fun rememberHasLoadedLibrary(isLoading: Boolean): Boolean {
 internal fun LazyItemScope.listItemAnimation(listState: ScrollableState, isEnabled: Boolean = true) =
     if (isEnabled && !listState.isScrollInProgress) Modifier.animateItem() else Modifier
 
-/** The [listItemAnimation] of an item of the song or setlist grid. */
+/**
+ * The [listItemAnimation] of an item of the song or setlist grid.
+ *
+ * @param isRearranging True while a drag is rearranging the list, which is the one case the reasoning above does not
+ *   cover: a list being dragged in scrolls itself once the dragged row reaches an edge, and the rows it travels past
+ *   have to go on sliding out of its way while it does. That is a change of the contents and a scroll at the same
+ *   time, so here the scroll is not taken as a reason to stop narrating the change - without it the rows either side
+ *   of the finger snap into their new places for exactly as long as the list keeps scrolling.
+ */
 @Composable
-internal fun LazyGridItemScope.listItemAnimation(listState: ScrollableState, isEnabled: Boolean = true) =
-    if (isEnabled && !listState.isScrollInProgress) Modifier.animateItem() else Modifier
+internal fun LazyGridItemScope.listItemAnimation(
+    listState: ScrollableState,
+    isEnabled: Boolean = true,
+    isRearranging: Boolean = false,
+) = if (isEnabled && (isRearranging || !listState.isScrollInProgress)) Modifier.animateItem() else Modifier

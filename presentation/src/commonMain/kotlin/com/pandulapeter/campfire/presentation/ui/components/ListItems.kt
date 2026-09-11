@@ -10,9 +10,12 @@
 package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -23,6 +26,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -48,6 +52,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -150,7 +157,7 @@ internal fun SongListItem(
         modifier = modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
         colors = ListItemDefaults.colors(containerColor = containerColor),
         leadingContent = index?.let { { ListItemIndex(index = it) } },
-        trailingContent = actions,
+        trailingContent = actions?.let { { ListItemActions(content = it) } },
         headlineContent = {
             Text(
                 text = song.title,
@@ -179,24 +186,37 @@ internal fun SongListItem(
                                     overflow = TextOverflow.Ellipsis,
                                 )
                             }
-                            if (note != null) {
-                                // The dot separates the note from the artist, so a song that names no artist starts
-                                // the line with the note itself rather than with a separator before nothing. Neither
-                                // it nor the note carries padding of its own: the glyph is a 4dp dot in the middle
-                                // of a 24dp icon, so the box it sits in is the gap already, and the same gap on
-                                // both sides of it - anything added here is added to one side only.
-                                if (song.artist.isNotBlank()) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.ic_dot),
-                                        contentDescription = null,
-                                    )
+                            // The note changes under the reader: a transposition renames the key, and lyrics only
+                            // mode takes the place away altogether. So it is crossfaded where it stands and the line
+                            // closes up around it, rather than the row being redrawn around the change.
+                            AnimatedContent(
+                                targetState = note,
+                                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            ) { currentNote ->
+                                if (currentNote != null) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        // The dot separates the note from the artist, so a song that names no artist
+                                        // starts the line with the note itself rather than with a separator before
+                                        // nothing. Neither it nor the note carries padding of its own: the glyph is a
+                                        // 4dp dot in the middle of a 24dp icon, so the box it sits in is the gap
+                                        // already, and the same gap on both sides of it - anything added here is
+                                        // added to one side only.
+                                        if (song.artist.isNotBlank()) {
+                                            Icon(
+                                                painter = painterResource(Res.drawable.ic_dot),
+                                                contentDescription = null,
+                                            )
+                                        }
+                                        Text(
+                                            modifier = Modifier.semantics { contentDescription = currentNote.description },
+                                            text = currentNote.text,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = currentNote.color,
+                                        )
+                                    }
                                 }
-                                Text(
-                                    modifier = Modifier.semantics { contentDescription = note.description },
-                                    text = note.text,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = note.color,
-                                )
                             }
                         }
                     }
@@ -241,7 +261,7 @@ internal fun MissingSongListItem(
     modifier = modifier.alpha(0.5f),
     colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
     leadingContent = { ListItemIndex(index = index) },
-    trailingContent = actions,
+    trailingContent = actions?.let { { ListItemActions(content = it) } },
     headlineContent = {
         Text(
             text = songFileName,
@@ -258,6 +278,25 @@ internal fun MissingSongListItem(
         )
     },
 )
+
+/**
+ * Whatever a row carries at its end - the overflow button, and on the setlists screen the drag handle after it.
+ * `ListItem` insets its trailing slot further from the edge than `TopAppBar` insets its actions, so the last control
+ * of a row and the last control of the bar above it sit on two keylines a few dp apart; this closes that gap, and
+ * every row of every list is drawn through here so the one keyline holds down the whole screen.
+ *
+ * An offset rather than a smaller padding: the inset belongs to Material's own layout, and moving what is drawn
+ * leaves the width the row reserved for it exactly as it was.
+ */
+@Composable
+private fun ListItemActions(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) = Box(
+    modifier = modifier.offset(x = LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT),
+) {
+    content()
+}
 
 /**
  * The place of a song inside a setlist, counted from one because it is read by whoever is playing the set rather
@@ -278,16 +317,16 @@ private fun ListItemIndex(
 )
 
 /**
- * The grip that says a row can be dragged somewhere else. It is an icon inside a plain box rather than an
- * [IconButton], because it is never pressed on its own: the caller is the one that puts the reorderable drag
- * modifier on it, and a button's ripple would promise a tap that does nothing. The box is what makes it big enough
- * to catch a finger, so the drag modifier has to go on [modifier] rather than on the icon.
+ * The grip that says a row can be dragged somewhere else, and the last thing on a row that has one. It is an icon
+ * inside a plain box rather than an [IconButton], because it is never pressed on its own: the caller is the one that
+ * puts the reorderable drag modifier on it, and a button's ripple would promise a tap that does nothing. The box is
+ * what makes it big enough to catch a finger, so the drag modifier has to go on [modifier] rather than on the icon.
  */
 @Composable
 internal fun DragHandle(
     modifier: Modifier = Modifier,
 ) = Box(
-    modifier = modifier.size(DRAG_HANDLE_SIZE),
+    modifier = modifier.size(width = DRAG_HANDLE_WIDTH, height = DRAG_HANDLE_HEIGHT),
     contentAlignment = Alignment.Center,
 ) {
     Icon(
@@ -330,19 +369,30 @@ internal fun SectionHeader(
             shadowElevation = 2.dp,
         ) {
             Row(
+                modifier = Modifier.padding(start = SECTION_HEADER_PADDING),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (icon != null) {
-                    Icon(
-                        modifier = Modifier.padding(start = SECTION_HEADER_PADDING).size(16.dp),
-                        painter = icon,
-                        contentDescription = iconContentDescription,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                // The painter is kept after it has been taken away, so that the mark has something to draw while it
+                // fades: a setlist is archived from the menu at the other end of this very pill, and the answer to
+                // that has to be seen happening rather than found already done.
+                var lastIcon by remember { mutableStateOf(icon) }
+                icon?.let { lastIcon = it }
+                AnimatedVisibility(
+                    visible = icon != null,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally(),
+                ) {
+                    lastIcon?.let { painter ->
+                        Icon(
+                            modifier = Modifier.padding(end = 6.dp).size(16.dp),
+                            painter = painter,
+                            contentDescription = iconContentDescription,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
                 Text(
                     modifier = Modifier.padding(
-                        start = if (icon == null) SECTION_HEADER_PADDING else 6.dp,
                         end = if (action == null) SECTION_HEADER_PADDING else 4.dp,
                         top = 6.dp,
                         bottom = 6.dp,
@@ -661,16 +711,28 @@ internal fun EmptyState(
 private val LIST_ITEM_KEYLINE = 16.dp
 
 /**
+ * How far a row's trailing controls are moved towards the end edge to reach the keyline the app bar's actions sit
+ * on: `ListItem` insets its trailing slot by 16dp and `TopAppBar` its actions by 4dp, and with both controls 48dp
+ * wide the difference between the two keylines is the whole of it. See [ListItemActions].
+ */
+private val LIST_ITEM_TRAILING_KEYLINE_ADJUSTMENT = 4.dp
+
+/**
  * The width a [ListItemIndex] is laid out over: two digits and the gap they keep from the title, since a setlist
  * long enough to need three has other problems.
  */
 private val LIST_ITEM_INDEX_WIDTH = 24.dp
 
 /**
- * The touch target of a [DragHandle], which matches the `IconButton` it stands next to so that the two controls at
- * the end of a row are the same size.
+ * The touch target of a [DragHandle]. It is narrower than the `IconButton` it stands next to, which is what lets the
+ * overflow button sit close to the end of the row instead of a hand's width away from it: the handle is not a button,
+ * so the width it gives up is empty space around an icon rather than anything that can be pressed, and the drag it
+ * offers is on the row's own long press as well.
  */
-private val DRAG_HANDLE_SIZE = 48.dp
+private val DRAG_HANDLE_WIDTH = 32.dp
+
+/** The height of a [DragHandle], which is a full touch target since it is the one thing on the row that is dragged. */
+private val DRAG_HANDLE_HEIGHT = 48.dp
 
 /**
  * The padding between the edge of a [SectionHeader] pill and its text.

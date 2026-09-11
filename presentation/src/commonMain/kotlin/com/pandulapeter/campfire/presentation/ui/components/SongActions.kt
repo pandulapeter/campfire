@@ -15,6 +15,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.Song
@@ -108,13 +109,20 @@ internal fun SongActions(
  *
  * Separate from [SongActionsMenu] because not every row that wants a menu has a song behind it: a setlist entry
  * whose file has gone missing still has the one action of being taken out of the setlist.
+ *
+ * [modifier] goes on the button rather than on the menu, which hangs from wherever the button ends up: the song list
+ * is what uses it, to keep the button clear of the fast scroller running down the same edge (`FAST_SCROLLER_CLEARANCE`).
  */
 @Composable
 internal fun ActionsMenu(
+    modifier: Modifier = Modifier,
     content: @Composable (dismiss: () -> Unit) -> Unit,
 ) = OverflowMenu(
     button = { open ->
-        IconButton(onClick = open) {
+        IconButton(
+            modifier = modifier,
+            onClick = open,
+        ) {
             Icon(
                 painter = painterResource(Res.drawable.ic_more),
                 contentDescription = stringResource(Res.string.songs_actions),
@@ -145,11 +153,12 @@ internal fun ActionsMenuItem(
  */
 @Composable
 internal fun SongActionsMenu(
+    modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     song: Song,
     lockedSetlistFileName: String?,
     shouldIncludeSetlistAssignments: Boolean = true,
-) = ActionsMenu { dismiss ->
+) = ActionsMenu(modifier = modifier) { dismiss ->
     SongActions(
         viewModel = viewModel,
         song = song,
