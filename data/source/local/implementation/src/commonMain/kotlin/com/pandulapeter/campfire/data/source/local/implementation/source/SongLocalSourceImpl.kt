@@ -15,6 +15,8 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
 import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toSong
+import com.pandulapeter.campfire.data.source.local.implementation.isNamed
+import com.pandulapeter.campfire.data.source.local.implementation.knownExtension
 import com.pandulapeter.campfire.data.source.local.implementation.songFileName
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
@@ -75,6 +77,19 @@ internal class SongLocalSourceImpl(
         val name = if (shouldReplace) fileName else fileStorage.uniqueName(StorageDirectory.SONGS, fileName)
         fileStorage.writeText(StorageDirectory.SONGS, name, text)
         return loadSong(name) ?: throw IllegalStateException("The song \"$name\" disappeared right after it was written.")
+    }
+
+    override suspend fun renameSong(song: Song): Song? {
+        val extension = song.fileName.knownExtension()
+        val desired = songFileName(title = song.title, artist = song.artist, extension = extension)
+        if (song.fileName.isNamed(desired)) return null
+        val text = fileStorage.readText(StorageDirectory.SONGS, song.fileName) ?: return null
+        val fileName = fileStorage.uniqueName(StorageDirectory.SONGS, desired)
+        // Written before the old one is removed, so that a rename that fails halfway leaves the song twice over
+        // rather than not at all.
+        fileStorage.writeText(StorageDirectory.SONGS, fileName, text)
+        fileStorage.delete(StorageDirectory.SONGS, song.fileName)
+        return loadSong(fileName)
     }
 
     override suspend fun deleteSong(fileName: String) = fileStorage.delete(StorageDirectory.SONGS, fileName)

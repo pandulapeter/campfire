@@ -48,4 +48,52 @@ object LibraryFiles {
      * to know about it.
      */
     const val ARTIST_TITLE_SEPARATOR = " - "
+
+    /**
+     * The same piece of structure inside a normalized name, which has no spaces around it to hold it apart from the
+     * words: `tukorfurogep-arviz`. Each half is normalized on its own and the dash is put back between them, so the
+     * name still says where the artist ends instead of reading as one run of underscored words.
+     */
+    const val NORMALIZED_ARTIST_TITLE_SEPARATOR = "-"
+
+    /**
+     * The longest a name may be before its extension. Long enough for any title somebody actually writes, short
+     * enough to survive the path limits of every file system the library can end up on.
+     */
+    const val MAX_NAME_LENGTH = 120
+
+    /**
+     * [base] reduced to what every file system, shell and cloud service agrees about: lowercase unaccented words
+     * joined with underscores, capped at [MAX_NAME_LENGTH] and never empty. The extension is the caller's to add.
+     *
+     * Two names are built this way, which is why the rule is vocabulary rather than either caller's own business.
+     * One is the name a file leaves the app under, where whatever is on the other side reads it instead of Campfire
+     * — a shell that needs every space escaped, a service that lowercases a name behind one's back, a file system
+     * that cannot store an "ő". The other is the file name of a setlist: a song is titled by its file name wherever
+     * the file itself does not say (which is why a song keeps the user's own text, accents and capitals included),
+     * while a setlist carries its title inside the document and is free to be named for the systems it travels
+     * through instead.
+     */
+    fun normalizedName(base: String): String {
+        // A character no accent table knows (a Cyrillic or CJK title) becomes a separator like punctuation does,
+        // which is the one case where nothing is left of the name and the fallback has to stand in for it.
+        val words = base.lowercase().map { character ->
+            when (val folded = character.withoutAccent()) {
+                // The three letters that are two letters once they are spelled out, which is the one thing the
+                // accent table cannot say: everything in it folds to a single character.
+                'ß' -> "ss"
+                'æ' -> "ae"
+                'œ' -> "oe"
+                else -> if (folded in 'a'..'z' || folded in '0'..'9') folded.toString() else NAME_SEPARATOR
+            }
+        }.joinToString(separator = "").split(NAME_SEPARATOR).filter { it.isNotEmpty() }
+        // Trimmed after the cap rather than before it, since cutting mid-word leaves a trailing separator behind.
+        return words.joinToString(NAME_SEPARATOR).take(MAX_NAME_LENGTH).trim(NAME_SEPARATOR_CHARACTER).ifEmpty { FALLBACK_NAME }
+    }
+
+    /** What a [normalizedName] is made of, and what a collision suffix is joined to it with. */
+    const val NAME_SEPARATOR = "_"
+
+    private const val NAME_SEPARATOR_CHARACTER = '_'
+    private const val FALLBACK_NAME = "untitled"
 }

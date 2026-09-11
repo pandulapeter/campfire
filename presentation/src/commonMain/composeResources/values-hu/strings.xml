@@ -66,6 +66,8 @@
     <string name="songs_import">Importálás</string>
     <string name="songs_rescan">Könyvtár újraolvasása</string>
     <string name="songs_actions">Műveletek</string>
+    <string name="songs_setlist_assignments">Listákhoz rendelés</string>
+    <string name="songs_update_file_name">Fájlnév frissítése</string>
     <string name="songs_delete_song">Dal törlése</string>
     <string name="songs_delete_song_confirmation">Törlöd a(z) „%1$s” dalt? A fájl törlődik a könyvtárból és minden listából.</string>
     <string name="songs_all_hidden">Minden dal rejtve van</string>
@@ -73,6 +75,7 @@
     <string name="songs_no_search_results">Nincs találat</string>
     <string name="songs_no_search_results_hint">Egyetlen dal sem felel meg a keresésnek.</string>
     <string name="songs_lyrics_only">Csak dalszöveg</string>
+    <string name="songs_key">Hangnem: %1$s</string>
     <string name="songs_tags">Címkék</string>
     <string name="songs_tags_show_all">Mind a(z) %1$d megjelenítése</string>
     <string name="songs_tags_show_less">Kevesebb</string>
@@ -90,14 +93,28 @@
     <string name="setlists_no_data_hint">Hozz létre egy listát, majd adj hozzá dalokat a dal részletei képernyőről.</string>
     <string name="setlists_new_setlist">Új lista</string>
     <string name="setlists_new_setlist_title">Lista címe</string>
-    <string name="setlists_remove_song">Dal eltávolítása</string>
+    <string name="setlists_remove_song">Eltávolítás a listáról</string>
+    <string name="setlists_reorder">Átrendezés</string>
+    <string name="setlists_actions">Műveletek</string>
     <string name="setlists_rename">Átnevezés</string>
+    <string name="setlists_duplicate">Megkettőzés</string>
+    <string name="setlists_duplicate_title">%1$s (másolat)</string>
+    <string name="setlists_archive">Archiválás</string>
+    <string name="setlists_unarchive">Kivétel az archívumból</string>
+    <string name="setlists_archived">Archivált</string>
     <string name="setlists_export">Lista exportálása</string>
     <string name="setlists_rename_title">Új cím</string>
     <string name="setlists_missing_song">A fájl nem található</string>
-    <string name="setlists_reorder_hint">Hosszan nyomva átrendezheted, elhúzva eltávolíthatod a dalokat.</string>
+    <string name="setlists_reorder_hint">A fogantyúnál fogva átrendezheted, a menüjéből eltávolíthatod a dalokat.</string>
     <string name="setlists_delete_setlist">Lista törlése</string>
     <string name="setlists_delete_setlist_confirmation">Törlöd a(z) „%1$s” listát? A dalok a könyvtárban maradnak.</string>
+    <string name="setlists_sort_and_filter">Rendezés és szűrés</string>
+    <string name="setlists_sorting_mode">Rendezési mód</string>
+    <string name="setlists_sorting_mode_newest_first">Legújabb</string>
+    <string name="setlists_sorting_mode_by_title">Cím</string>
+    <string name="setlists_show_archived">Archivált listák mutatása</string>
+    <string name="setlists_all_hidden">Minden lista archiválva van</string>
+    <string name="setlists_all_hidden_hint">Kapcsold be az „Archivált listák mutatása” opciót, hogy lásd őket.</string>
 
     <!-- Settings screen -->
     <string name="settings">Beállítások</string>
@@ -199,7 +216,6 @@
     <string name="song_details_previous_song">Előző dal</string>
     <string name="song_details_next_song">Következő dal</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
-    <string name="song_details_add_to_setlist">Hozzáadás listához</string>
     <string name="song_details_transpose_up">Transzponálás felfelé</string>
     <string name="song_details_transpose_down">Transzponálás lefelé</string>
     <string name="song_details_transpose_reset">Transzponálás visszaállítása</string>

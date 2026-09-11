@@ -19,6 +19,7 @@ import kotlinx.serialization.Serializable
 internal data class SetlistDocument(
     val title: String = "",
     val priority: Int = 0,
+    val isArchived: Boolean = false,
     val songs: List<SetlistSongDocument> = emptyList(),
 )
 

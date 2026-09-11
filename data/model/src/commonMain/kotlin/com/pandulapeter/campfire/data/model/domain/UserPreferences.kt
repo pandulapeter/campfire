@@ -18,10 +18,16 @@ data class UserPreferences(
      */
     val isPerformanceModeEnabled: Boolean,
     val shouldShowSongsWithoutChords: Boolean,
+    /**
+     * Whether the setlists screen shows the setlists that have been archived ([Setlist.isArchived]) as well as the
+     * ones still in use. Off by default, which is the whole point of archiving one.
+     */
+    val shouldShowArchivedSetlists: Boolean,
     val isLyricsOnlyModeEnabled: Boolean,
     val isHorizontalSectionFlowEnabled: Boolean, // Whether the song sections are read across the columns (then downwards) instead of column by column.
     val fontScale: Float, // Multiplier applied to the text size of the song details screen, 1 being the default.
     val sortingMode: SortingMode,
+    val setlistSortingMode: SetlistSortingMode,
     val uiMode: UiMode,
     val themeColor: ThemeColor,
     val language: Language,
@@ -53,6 +59,16 @@ data class UserPreferences(
     enum class SortingMode(val id: String) {
         BY_TITLE("by_title"),
         BY_ARTIST("by_artist"),
+    }
+
+    /**
+     * The order the setlists screen lists the setlists in. [NEWEST_FIRST] is [Setlist.priority], which is the order
+     * they were created in; an archived setlist comes after every other one whichever of these is picked, since it
+     * is only on the screen at all because the user asked to see what has been put away.
+     */
+    enum class SetlistSortingMode(val id: String) {
+        NEWEST_FIRST("newest_first"),
+        BY_TITLE("by_title"),
     }
 
     enum class UiMode(val id: String) {

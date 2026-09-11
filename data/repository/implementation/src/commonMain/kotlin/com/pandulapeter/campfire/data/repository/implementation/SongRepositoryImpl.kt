@@ -55,6 +55,15 @@ internal class SongRepositoryImpl(
     override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) =
         songLocalSource.importSong(fileName = fileName, text = text, shouldReplace = shouldReplace)
 
+    override suspend fun renameSong(song: Song): Song? {
+        val renamed = songLocalSource.renameSong(song) ?: return null
+        songContentRepository.invalidate(song.fileName)
+        updateData { current ->
+            current.orEmpty().filterNot { it.fileName == song.fileName || it.fileName == renamed.fileName } + renamed
+        }
+        return renamed
+    }
+
     override suspend fun deleteSong(fileName: String) {
         songLocalSource.deleteSong(fileName)
         songContentRepository.invalidate(fileName)

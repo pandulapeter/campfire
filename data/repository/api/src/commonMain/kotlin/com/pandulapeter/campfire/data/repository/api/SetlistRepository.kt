@@ -29,6 +29,12 @@ interface SetlistRepository {
     /** Creates the file or overwrites it, and updates that one entry of the cached list. */
     suspend fun saveSetlist(setlist: Setlist)
 
+    /**
+     * See `SetlistLocalSource.renameSetlist`: saves the setlist under a new title and moves its file to match, so
+     * the setlist that comes back may have a different `fileName` than the one that went in.
+     */
+    suspend fun renameSetlist(setlist: Setlist, title: String): Setlist
+
     /** See `SetlistLocalSource.parseSetlist`. */
     suspend fun parseSetlist(document: String): Setlist?
 

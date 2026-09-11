@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.selection.selectable
@@ -54,6 +55,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -64,7 +67,9 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.error_no_data
 import com.pandulapeter.campfire.presentation.resources.error_no_data_hint
+import com.pandulapeter.campfire.presentation.resources.ic_archive
 import com.pandulapeter.campfire.presentation.resources.ic_dot
+import com.pandulapeter.campfire.presentation.resources.ic_drag_handle
 import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.ic_open_in_new
 import com.pandulapeter.campfire.presentation.resources.ic_search
@@ -72,7 +77,10 @@ import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.retry
+import com.pandulapeter.campfire.presentation.resources.setlists_all_hidden
+import com.pandulapeter.campfire.presentation.resources.setlists_all_hidden_hint
 import com.pandulapeter.campfire.presentation.resources.setlists_missing_song
+import com.pandulapeter.campfire.presentation.resources.setlists_reorder
 import com.pandulapeter.campfire.presentation.resources.setlists_no_data
 import com.pandulapeter.campfire.presentation.resources.setlists_no_data_hint
 import com.pandulapeter.campfire.presentation.resources.songs_all_hidden
@@ -80,6 +88,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_all_hidden_hint
 import com.pandulapeter.campfire.presentation.resources.songs_empty_hint
 import com.pandulapeter.campfire.presentation.resources.songs_empty_title
 import com.pandulapeter.campfire.presentation.resources.songs_import
+import com.pandulapeter.campfire.presentation.resources.songs_key
 import com.pandulapeter.campfire.presentation.resources.songs_lyrics_only
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
 import com.pandulapeter.campfire.presentation.resources.songs_no_search_results
@@ -88,6 +97,13 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import org.jetbrains.compose.resources.painterResource
 
 /**
+ * @param index The song's place in the setlist it is listed in, drawn in front of the row by [ListItemIndex]. Null
+ *   on the screens where a song is not in an order of anyone's making and a number would only claim it was.
+ * @param key The key the song sounds in where it is listed, which is a different key in every setlist that
+ *   transposes it (`CampfireViewModel.renderKey`), drawn next to the artist. Null for a file that declares none.
+ * @param shouldShowChords False under lyrics only mode, where the row says nothing about chords at all: not the
+ *   key, and not the "Lyrics only" marker either, which only tells this song from the others while the others are
+ *   showing chords.
  * @param onLongClick Opens the song's actions where a dropdown menu would be out of place (touch platforms).
  * @param actions The trailing content of the row, which on desktop is the overflow button and its menu.
  */
@@ -96,6 +112,9 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SongListItem(
     modifier: Modifier = Modifier,
     song: Song,
+    index: Int? = null,
+    key: String? = null,
+    shouldShowChords: Boolean = true,
     isBeingDragged: Boolean = false,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
@@ -108,52 +127,82 @@ internal fun SongListItem(
         MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
     val containerColor = lerp(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceContainerHigh, dragProgress)
+    // Worked out before the row is laid out rather than inside it, because it is also one of the things that decide
+    // whether the row has a second line at all: a song written in the app carries no artist, no language and no tag,
+    // and its key is then the only thing there is to put under the title.
+    val note = when {
+        !shouldShowChords -> null
+
+        !song.hasChords -> SongListItemNote(
+            text = stringResource(Res.string.songs_lyrics_only),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        !key.isNullOrBlank() -> SongListItemNote(
+            text = key,
+            color = MaterialTheme.colorScheme.primary,
+            description = stringResource(Res.string.songs_key, key),
+        )
+
+        else -> null
+    }
     ListItem(
         modifier = modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
         colors = ListItemDefaults.colors(containerColor = containerColor),
+        leadingContent = index?.let { { ListItemIndex(index = it) } },
         trailingContent = actions,
         headlineContent = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    modifier = Modifier.weight(1f, fill = false),
-                    text = song.title,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (!song.hasChords) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_dot),
-                        contentDescription = null,
-                    )
-                    Text(
-                        modifier = Modifier.padding(start = 8.dp),
-                        text = stringResource(Res.string.songs_lyrics_only),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
+            Text(
+                text = song.title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         },
-        // Songs created in the app need no artist, and an empty second line would just make the row taller. The
-        // languages and tags sit under the artist rather than next to the title, because a row of them is as long as
-        // somebody chose to make it and the title is the one thing on the row that must never be pushed out of sight.
-        supportingContent = if (song.artist.isBlank() && song.languages.isEmpty() && song.tags.isEmpty()) {
+        // Songs written in the app need no artist, and an empty second line would just make the row taller. Nothing
+        // here shares the title's line: a title is the longest thing on the row and the one that must never be
+        // pushed out of sight, while the artist is short enough to leave the key room next to it. The languages and
+        // tags go under both, since a row of those is as long as somebody chose to make it.
+        supportingContent = if (song.artist.isBlank() && note == null && song.languages.isEmpty() && song.tags.isEmpty()) {
             null
         } else {
             {
                 Column {
-                    if (song.artist.isNotBlank()) {
-                        Text(
-                            text = song.artist,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                    if (song.artist.isNotBlank() || note != null) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (song.artist.isNotBlank()) {
+                                Text(
+                                    modifier = Modifier.weight(1f, fill = false),
+                                    text = song.artist,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                            if (note != null) {
+                                // The dot separates the note from the artist, so a song that names no artist starts
+                                // the line with the note itself rather than with a separator before nothing. Neither
+                                // it nor the note carries padding of its own: the glyph is a 4dp dot in the middle
+                                // of a 24dp icon, so the box it sits in is the gap already, and the same gap on
+                                // both sides of it - anything added here is added to one side only.
+                                if (song.artist.isNotBlank()) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.ic_dot),
+                                        contentDescription = null,
+                                    )
+                                }
+                                Text(
+                                    modifier = Modifier.semantics { contentDescription = note.description },
+                                    text = note.text,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = note.color,
+                                )
+                            }
+                        }
                     }
                     if (song.languages.isNotEmpty() || song.tags.isNotEmpty()) {
                         SongLabels(
-                            modifier = Modifier.padding(top = if (song.artist.isBlank()) 0.dp else 4.dp),
+                            modifier = Modifier.padding(top = if (song.artist.isBlank() && note == null) 0.dp else 4.dp),
                             languages = song.languages,
                             tags = song.tags,
                         )
@@ -165,16 +214,34 @@ internal fun SongListItem(
 }
 
 /**
+ * The one thing a song row says about chords, next to the artist: the key the song sounds in where it is listed,
+ * drawn in the accent color the song details header keeps for what is played, or that the file has no chords at all.
+ * Never both, since the viewer names no key for a song there is nothing to play and a row that named one would be
+ * contradicting the screen it opens.
+ *
+ * @param description What the note is read out as, since a key is two letters that say nothing on their own.
+ */
+private data class SongListItemNote(
+    val text: String,
+    val color: Color,
+    val description: String = text,
+)
+
+/**
  * A setlist entry whose file is no longer in the library: it cannot be opened, but it can still be removed, so it is
  * shown greyed out rather than silently dropped - a setlist that quietly loses a song would look like the app lost it.
  */
 @Composable
 internal fun MissingSongListItem(
     modifier: Modifier = Modifier,
+    index: Int,
     songFileName: String,
+    actions: (@Composable () -> Unit)? = null,
 ) = ListItem(
     modifier = modifier.alpha(0.5f),
     colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+    leadingContent = { ListItemIndex(index = index) },
+    trailingContent = actions,
     headlineContent = {
         Text(
             text = songFileName,
@@ -193,17 +260,61 @@ internal fun MissingSongListItem(
 )
 
 /**
+ * The place of a song inside a setlist, counted from one because it is read by whoever is playing the set rather
+ * than by the code that orders it. Laid out over a fixed width instead of around the number, so that the titles of a
+ * setlist stay on a single keyline however far its numbering has run and a drag that renumbers the rows it passes
+ * does not shift them sideways underneath the finger.
+ */
+@Composable
+private fun ListItemIndex(
+    modifier: Modifier = Modifier,
+    index: Int,
+) = Text(
+    modifier = modifier.widthIn(min = LIST_ITEM_INDEX_WIDTH),
+    text = (index + 1).toString(),
+    style = MaterialTheme.typography.labelLarge,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    textAlign = TextAlign.End,
+)
+
+/**
+ * The grip that says a row can be dragged somewhere else. It is an icon inside a plain box rather than an
+ * [IconButton], because it is never pressed on its own: the caller is the one that puts the reorderable drag
+ * modifier on it, and a button's ripple would promise a tap that does nothing. The box is what makes it big enough
+ * to catch a finger, so the drag modifier has to go on [modifier] rather than on the icon.
+ */
+@Composable
+internal fun DragHandle(
+    modifier: Modifier = Modifier,
+) = Box(
+    modifier = modifier.size(DRAG_HANDLE_SIZE),
+    contentAlignment = Alignment.Center,
+) {
+    Icon(
+        painter = painterResource(Res.drawable.ic_drag_handle),
+        contentDescription = stringResource(Res.string.setlists_reorder),
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+/**
  * Header of a list section: a raised pill that scrolls with the items of its section, like any other item of the
  * list. Clicking it scrolls the list back to the start of its own section, which is the header itself (see
  * [animateScrollToKey]).
  *
  * The pill hangs into the keyline of the items below it, so that its text and their text start at the same x
  * position (see [LIST_ITEM_KEYLINE]).
+ *
+ * @param icon Drawn before the text, for a section that is something as well as being named - an archived setlist,
+ *   which is on the screen at all only because the user asked for it and has to be recognizable among the rest.
+ * @param iconContentDescription What the icon says, since there is nothing else on the pill that says it.
  */
 @Composable
 internal fun SectionHeader(
     modifier: Modifier = Modifier,
     text: String,
+    icon: Painter? = null,
+    iconContentDescription: String? = null,
     onClick: () -> Unit,
     action: (@Composable () -> Unit)? = null,
 ) = Box(
@@ -221,9 +332,17 @@ internal fun SectionHeader(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                if (icon != null) {
+                    Icon(
+                        modifier = Modifier.padding(start = SECTION_HEADER_PADDING).size(16.dp),
+                        painter = icon,
+                        contentDescription = iconContentDescription,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 Text(
                     modifier = Modifier.padding(
-                        start = SECTION_HEADER_PADDING,
+                        start = if (icon == null) SECTION_HEADER_PADDING else 6.dp,
                         end = if (action == null) SECTION_HEADER_PADDING else 4.dp,
                         top = 6.dp,
                         bottom = 6.dp,
@@ -445,6 +564,12 @@ internal fun ListPlaceholder(
             hint = stringResource(Res.string.setlists_no_data_hint),
         )
 
+        CampfireViewModel.Placeholder.ALL_SETLISTS_HIDDEN -> EmptyState(
+            icon = painterResource(Res.drawable.ic_archive),
+            title = stringResource(Res.string.setlists_all_hidden),
+            hint = stringResource(Res.string.setlists_all_hidden_hint),
+        )
+
         CampfireViewModel.Placeholder.ALL_SONGS_HIDDEN -> EmptyState(
             icon = painterResource(Res.drawable.ic_tune),
             title = stringResource(Res.string.songs_all_hidden),
@@ -534,6 +659,18 @@ internal fun EmptyState(
  * The x position the text of a [ListItem] starts at, which the pills of the sticky headers line up with.
  */
 private val LIST_ITEM_KEYLINE = 16.dp
+
+/**
+ * The width a [ListItemIndex] is laid out over: two digits and the gap they keep from the title, since a setlist
+ * long enough to need three has other problems.
+ */
+private val LIST_ITEM_INDEX_WIDTH = 24.dp
+
+/**
+ * The touch target of a [DragHandle], which matches the `IconButton` it stands next to so that the two controls at
+ * the end of a row are the same size.
+ */
+private val DRAG_HANDLE_SIZE = 48.dp
 
 /**
  * The padding between the edge of a [SectionHeader] pill and its text.

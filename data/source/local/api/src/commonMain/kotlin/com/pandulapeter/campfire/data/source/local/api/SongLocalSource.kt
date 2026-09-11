@@ -52,6 +52,15 @@ interface SongLocalSource {
      */
     suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song
 
+    /**
+     * Moves the song's file to the name its own metadata gives it and returns it under that name, or null when the
+     * file could not be read or is already named that way ([Song.canUpdateFileName] is what asks beforehand).
+     *
+     * Only the file moves. Everything that refers to the song by its old name - the setlists holding it, the saved
+     * transposition - is the caller's to follow, the same way a deletion is.
+     */
+    suspend fun renameSong(song: Song): Song?
+
     suspend fun deleteSong(fileName: String)
 
     suspend fun exists(fileName: String): Boolean

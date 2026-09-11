@@ -61,6 +61,10 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.filters
 import com.pandulapeter.campfire.presentation.resources.ic_check
+import com.pandulapeter.campfire.presentation.resources.setlists_show_archived
+import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode
+import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_by_title
+import com.pandulapeter.campfire.presentation.resources.setlists_sorting_mode_newest_first
 import com.pandulapeter.campfire.presentation.resources.songs_languages
 import com.pandulapeter.campfire.presentation.resources.songs_languages_clear
 import com.pandulapeter.campfire.presentation.resources.songs_show_without_chords
@@ -79,9 +83,9 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * Whether the [SongsControlsSidePanel] fits into a screen of the given width: the song list comes first, so the panel
- * only gets its space when at least [SIDE_PANEL_MIN_COLUMN_COUNT] columns of songs remain next to it. On narrower
- * screens the same controls are shown in a bottom sheet instead.
+ * Whether the [ControlsSidePanel] fits into a screen of the given width: the list comes first, so the panel only gets
+ * its space when at least [SIDE_PANEL_MIN_COLUMN_COUNT] columns of songs remain next to it. On narrower screens the
+ * same controls are shown in a bottom sheet instead.
  */
 internal fun hasRoomForSidePanel(screenWidth: Dp) = columnCountForWidth(screenWidth - SIDE_PANEL_WIDTH) >= SIDE_PANEL_MIN_COLUMN_COUNT
 
@@ -107,16 +111,18 @@ internal fun songListColumnCount(
 }
 
 /**
- * [SongsControls] in a panel that spans the full height of the screen next to its app bar and content, shown on
- * screens that are wide enough for it, see [hasRoomForSidePanel].
+ * A screen's controls ([SongsControls], [SetlistsControls]) in a panel that spans the full height of the screen next
+ * to its app bar and content, shown on screens that are wide enough for it, see [hasRoomForSidePanel].
+ *
+ * @param content The controls themselves, handed the modifier that gives the panel its size and its background, and
+ *   the insets the panel is responsible for.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun SongsControlsSidePanel(
+internal fun ControlsSidePanel(
     isVisible: Boolean,
-    viewModel: CampfireViewModel,
-    shouldIncludeSorting: Boolean,
     contentPadding: PaddingValues,
+    content: @Composable (modifier: Modifier, contentPadding: PaddingValues) -> Unit,
 ) = AnimatedVisibility(
     visible = isVisible,
     enter = expandHorizontally() + fadeIn(),
@@ -125,11 +131,9 @@ internal fun SongsControlsSidePanel(
     val endPadding = contentPadding.calculateEndPadding(LocalLayoutDirection.current)
     Row {
         VerticalDivider()
-        SongsControls(
-            modifier = Modifier.width(SIDE_PANEL_WIDTH + endPadding).fillMaxHeight().background(MaterialTheme.colorScheme.surfaceContainerLow),
-            viewModel = viewModel,
-            shouldIncludeSorting = shouldIncludeSorting,
-            contentPadding = PaddingValues(
+        content(
+            Modifier.width(SIDE_PANEL_WIDTH + endPadding).fillMaxHeight().background(MaterialTheme.colorScheme.surfaceContainerLow),
+            PaddingValues(
                 // The panel sits next to the app bar instead of below it, so it handles the top inset on its own.
                 top = TopAppBarDefaults.windowInsets.only(WindowInsetsSides.Top).asPaddingValues().calculateTopPadding(),
                 end = endPadding,
@@ -140,8 +144,8 @@ internal fun SongsControlsSidePanel(
 }
 
 /**
- * The padding of the content shown next to a [SongsControlsSidePanel]: while the panel is visible, the end inset
- * belongs to the panel.
+ * The padding of the content shown next to a [ControlsSidePanel]: while the panel is visible, the end inset belongs
+ * to the panel.
  */
 @Composable
 internal fun PaddingValues.besideSidePanel(isSidePanelVisible: Boolean): PaddingValues {
@@ -155,6 +159,41 @@ internal fun PaddingValues.besideSidePanel(isSidePanelVisible: Boolean): Padding
 }
 
 /**
+ * Sorting and filter controls of the setlists screen, shown in a side panel on wide enough screens and in a bottom
+ * sheet otherwise, exactly as [SongsControls] is. They are a screen apart and deliberately not the same controls:
+ * the song filters narrow a view of the library, while a setlist is a list somebody wrote down and shows what it
+ * holds either way. What is left to ask here is the order the setlists come in, and whether the ones that have been
+ * put away are among them.
+ */
+@Composable
+internal fun SetlistsControls(
+    modifier: Modifier = Modifier,
+    viewModel: CampfireViewModel,
+    contentPadding: PaddingValues = PaddingValues(),
+) {
+    val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    Column(
+        modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(contentPadding)
+    ) {
+        SettingsSectionTitle(text = stringResource(Res.string.setlists_sorting_mode))
+        SegmentedChoice(
+            options = listOf(
+                UserPreferences.SetlistSortingMode.NEWEST_FIRST to stringResource(Res.string.setlists_sorting_mode_newest_first),
+                UserPreferences.SetlistSortingMode.BY_TITLE to stringResource(Res.string.setlists_sorting_mode_by_title),
+            ),
+            selected = userPreferences?.setlistSortingMode,
+            onSelected = viewModel::setSetlistSortingMode,
+        )
+        SettingsSectionTitle(text = stringResource(Res.string.filters))
+        CheckboxListItem(
+            title = stringResource(Res.string.setlists_show_archived),
+            isChecked = userPreferences?.shouldShowArchivedSetlists == true,
+            onCheckedChange = viewModel::setShouldShowArchivedSetlists,
+        )
+    }
+}
+
+/**
  * Sorting and filter controls of the song list, shown in a side panel on wide enough screens and in a bottom sheet
  * otherwise.
  */
@@ -162,7 +201,6 @@ internal fun PaddingValues.besideSidePanel(isSidePanelVisible: Boolean): Padding
 internal fun SongsControls(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
-    shouldIncludeSorting: Boolean,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -171,17 +209,15 @@ internal fun SongsControls(
     Column(
         modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(contentPadding)
     ) {
-        if (shouldIncludeSorting) {
-            SettingsSectionTitle(text = stringResource(Res.string.songs_sorting_mode))
-            SegmentedChoice(
-                options = listOf(
-                    UserPreferences.SortingMode.BY_ARTIST to stringResource(Res.string.songs_sorting_mode_by_artist),
-                    UserPreferences.SortingMode.BY_TITLE to stringResource(Res.string.songs_sorting_mode_by_title),
-                ),
-                selected = userPreferences?.sortingMode,
-                onSelected = viewModel::setSortingMode,
-            )
-        }
+        SettingsSectionTitle(text = stringResource(Res.string.songs_sorting_mode))
+        SegmentedChoice(
+            options = listOf(
+                UserPreferences.SortingMode.BY_ARTIST to stringResource(Res.string.songs_sorting_mode_by_artist),
+                UserPreferences.SortingMode.BY_TITLE to stringResource(Res.string.songs_sorting_mode_by_title),
+            ),
+            selected = userPreferences?.sortingMode,
+            onSelected = viewModel::setSortingMode,
+        )
         SettingsSectionTitle(text = stringResource(Res.string.filters))
         CheckboxListItem(
             title = stringResource(Res.string.songs_show_without_chords),

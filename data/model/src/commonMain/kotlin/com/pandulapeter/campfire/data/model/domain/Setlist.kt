@@ -19,6 +19,12 @@ data class Setlist(
     val title: String,
     /** Higher first, so that the newest setlist is on top. */
     val priority: Int,
+    /**
+     * Whether the setlist has been put away: it is left out of the setlists screen and of the picker that adds a
+     * song to one, until the user asks for the archived ones as well. It lives in the file rather than in the
+     * preferences, so that a setlist that was retired on one device is retired on every other one it syncs to.
+     */
+    val isArchived: Boolean,
     val entries: List<Entry>,
 ) {
 

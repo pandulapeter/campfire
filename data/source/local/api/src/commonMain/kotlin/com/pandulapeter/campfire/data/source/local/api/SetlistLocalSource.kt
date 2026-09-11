@@ -25,6 +25,15 @@ interface SetlistLocalSource {
     suspend fun saveSetlist(setlist: Setlist)
 
     /**
+     * Saves the setlist under [title] and moves its file to the name that title gives it, returning the setlist as
+     * it now is. The file name is the identity of a setlist, so this is a different thing from [saveSetlist]: the
+     * caller ends up with a setlist whose `fileName` may have changed.
+     *
+     * Nothing inside the library points at a setlist by name, so there is nothing to follow the move.
+     */
+    suspend fun renameSetlist(setlist: Setlist, title: String): Setlist
+
+    /**
      * Parses an exported `*.setlist.json` document. The result carries the file name it would like to have, derived
      * from its title, which [importSetlist] turns into a free one. Null when the document is not a setlist.
      */

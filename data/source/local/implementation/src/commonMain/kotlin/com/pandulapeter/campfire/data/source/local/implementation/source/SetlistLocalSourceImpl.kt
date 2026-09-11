@@ -15,6 +15,8 @@ import com.pandulapeter.campfire.data.source.local.implementation.SETLIST_EXTENS
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toDocument
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toModel
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocument
+import com.pandulapeter.campfire.data.source.local.implementation.isNamed
+import com.pandulapeter.campfire.data.source.local.implementation.setlistCollisionSuffix
 import com.pandulapeter.campfire.data.source.local.implementation.setlistFileName
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
@@ -42,8 +44,8 @@ internal class SetlistLocalSourceImpl(
         }
 
     override suspend fun createSetlist(title: String, priority: Int): Setlist {
-        val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, setlistFileName(title))
-        val setlist = Setlist(fileName = fileName, title = title, priority = priority, entries = emptyList())
+        val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, setlistFileName(title), ::setlistCollisionSuffix)
+        val setlist = Setlist(fileName = fileName, title = title, priority = priority, isArchived = false, entries = emptyList())
         saveSetlist(setlist)
         return setlist
     }
@@ -53,6 +55,23 @@ internal class SetlistLocalSourceImpl(
         name = setlist.fileName,
         text = json.encodeToString(setlist.toDocument()),
     )
+
+    override suspend fun renameSetlist(setlist: Setlist, title: String): Setlist {
+        val renamed = setlist.copy(title = title)
+        val desired = setlistFileName(title)
+        // A title that normalizes to the name the file already has (a change of capitals, or of the punctuation the
+        // name never carried) moves nothing: the file is where it belongs, and the copy would only be its own.
+        if (setlist.fileName.isNamed(desired)) {
+            saveSetlist(renamed)
+            return renamed
+        }
+        val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, desired, ::setlistCollisionSuffix)
+        // Written before the old one is removed, as a song's rename is, and for the same reason.
+        val moved = renamed.copy(fileName = fileName)
+        saveSetlist(moved)
+        fileStorage.delete(StorageDirectory.SETLISTS, setlist.fileName)
+        return moved
+    }
 
     /** The file name is derived from the title rather than kept, so that an exported setlist keeps its identity. */
     override suspend fun parseSetlist(document: String): Setlist? = try {
@@ -65,7 +84,13 @@ internal class SetlistLocalSourceImpl(
     }
 
     override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean): Setlist = setlist
-        .copy(fileName = if (shouldReplace) setlist.fileName else fileStorage.uniqueName(StorageDirectory.SETLISTS, setlist.fileName))
+        .copy(
+            fileName = if (shouldReplace) {
+                setlist.fileName
+            } else {
+                fileStorage.uniqueName(StorageDirectory.SETLISTS, setlist.fileName, ::setlistCollisionSuffix)
+            },
+        )
         .also { saveSetlist(it) }
 
     override suspend fun loadSetlistDocument(fileName: String) = fileStorage.readText(StorageDirectory.SETLISTS, fileName)

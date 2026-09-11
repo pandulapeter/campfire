@@ -105,7 +105,8 @@ class PrepareImportUseCaseImpl internal constructor(
 
     /**
      * A setlist is compared by what is in it rather than by its stored document, which carries a priority this
-     * import assigns itself and would therefore never match. The entries are held against the names they arrived
+     * import assigns itself and would therefore never match. Whether it is archived does count, since that is the
+     * user's own answer about the setlist and travels with the file the way its title does. The entries are held against the names they arrived
      * with: a song that had to be renamed is followed when the plan is applied, and a setlist pointing at one is a
      * different setlist anyway.
      */
@@ -131,7 +132,7 @@ class PrepareImportUseCaseImpl internal constructor(
         }
     }
 
-    private fun Setlist.holdsTheSameAs(other: Setlist) = title == other.title && entries == other.entries
+    private fun Setlist.holdsTheSameAs(other: Setlist) = title == other.title && isArchived == other.isArchived && entries == other.entries
 
     /** Null when the bytes are not UTF-8 text, which is the one thing every file the app accepts has to be. */
     private fun ImportedFile.text() = try {

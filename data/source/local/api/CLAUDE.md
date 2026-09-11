@@ -13,9 +13,10 @@ Local persistence interfaces, one per kind of file. Plain suspend functions over
 platform types.
 
 - `SongLocalSource` — the `.cho` files: scan the folder into `Song` metadata, read and write one song's text, create or
-  import one under a free file name, delete.
+  import one under a free file name, rename one to the name its own metadata gives it, delete.
 - `SetlistLocalSource` — the same for `*.setlist.json`, plus parsing an exported document and reading one back
-  unchanged for export.
+  unchanged for export. `renameSetlist` is a save that moves the file as well, since a setlist's name is derived from
+  the title it has just been given.
 - `UserPreferencesLocalSource` — one document; `loadUserPreferences()` never returns null, because a missing or
   unreadable document means the defaults, which are defined once next to the document itself.
 - `ArchiveLocalSource` — zip pack and unpack, over bytes.
@@ -29,7 +30,8 @@ platform types.
   repository), and the storage layer has no business knowing either shape.
 
 **File naming is the storage layer's business.** Callers hand over a title, an artist and some text; the source decides
-what the file is called, sanitises it for every platform's rules and suffixes it until the name is free. That is why
+what the file is called, normalizes it to what every file system, shell and service agrees about and suffixes it until
+the name is free. That is why
 `createSong` and `importSong` return the `Song` they became rather than taking a file name. `importFileName` is the naming rule on its own, with nothing read or written, so that an import can work out what it would collide with before it collides with it; `importSong` and `importSetlist` take `shouldReplace`, which is the one way either of them writes over a name that is taken.
 
 There is one implementation (`:implementation`), multiplatform, with the platform difference pushed down into

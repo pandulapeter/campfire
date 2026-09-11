@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.ExportedFile
@@ -55,6 +56,8 @@ import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
+import com.pandulapeter.campfire.domain.api.useCases.RenameSetlistUseCase
+import com.pandulapeter.campfire.domain.api.useCases.RenameSongFileUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
@@ -109,6 +112,8 @@ class CampfireViewModel(
     private val exportLibrary: ExportLibraryUseCase,
     private val createSetlist: CreateSetlistUseCase,
     private val saveSetlist: SaveSetlistUseCase,
+    private val renameSetlist: RenameSetlistUseCase,
+    private val renameSongFile: RenameSongFileUseCase,
     private val deleteSetlist: DeleteSetlistUseCase,
     private val saveSongContent: SaveSongContentUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
@@ -224,6 +229,16 @@ class CampfireViewModel(
      * setlists happens to be subscribed. [screenData] is already collected eagerly, so this costs nothing extra.
      */
     val setlists = screenData.map { it.data?.setlists.orEmpty() }.asEagerState(emptyList())
+
+    /**
+     * The file names of every song that is in at least one setlist, which is what decides whether the "add to
+     * setlist" action is drawn as a filled star or an outlined one. Worked out once per change to the setlists
+     * rather than per song shown, since every row of the song list asks the same question.
+     */
+    val songFileNamesInSetlists = setlists
+        .map { setlists -> setlists.flatMapTo(mutableSetOf()) { setlist -> setlist.entries.map { it.songFileName } } }
+        .asState(emptySet())
+
     /** The text of the songs opened so far, by file name, read one file at a time as they are opened. */
     private val _songTexts = MutableStateFlow(emptyMap<String, String>())
     val songTexts: StateFlow<Map<String, String>> = _songTexts.asStateFlow()
@@ -262,10 +277,17 @@ class CampfireViewModel(
     }.asEagerState(Transpositions())
 
     /**
+     * The whole library, whatever the filters hide, which is what everything that looks a song up by its file name
+     * reads: a setlist lists what somebody wrote down rather than what the song list is currently narrowed to, and
+     * the details screen it opens has to find every one of those songs.
+     *
      * Eager, like [setlists]: the song details screen picks the page it opens on from this list, and a list that was
      * still empty on its first frame would open every setlist on its first song.
      */
-    val allSongs = screenData.map { it.data?.songs.orEmpty() }.asEagerState(emptyList())
+    val allSongs = screenData.map { it.data?.unfilteredSongs.orEmpty() }.asEagerState(emptyList())
+
+    /** The library as the song list shows it: filtered and sorted the way the preferences ask for. */
+    private val filteredSongs = screenData.map { it.data?.songs.orEmpty() }
 
     /**
      * Every tag the library uses, most used first, as both the filter controls and the suggestions of the tag
@@ -283,16 +305,9 @@ class CampfireViewModel(
      * Every song with its title and artist normalized for searching and grouping, done once per library rather than
      * once per keystroke: the search runs over the whole list on every character typed.
      */
-    private val searchableSongs = allSongs.map { songs ->
+    private val searchableSongs = filteredSongs.map { songs ->
         songs.map { SearchableSong(song = it, title = normalizeText(it.title), artist = normalizeText(it.artist)) }
     }
-
-    /**
-     * The file names of every song in the library, filters included. Eager for the same reason as [setlists]:
-     * [setlistsWithSongs] tells a hidden song from a missing one with it, and an empty set would turn every song the
-     * filters hide into a "file not found" row.
-     */
-    private val songFileNames = screenData.map { it.data?.songFileNames.orEmpty() }.asEagerState(emptySet())
 
     /**
      * Null until the library has actually been read, so that the settings screen never flashes a count of zero.
@@ -303,7 +318,7 @@ class CampfireViewModel(
      * [screenData] is already collected eagerly, so this costs nothing extra.
      */
     val librarySummary = screenData
-        .map { state -> state.data?.let { LibrarySummary(songCount = it.songFileNames.size, setlistCount = it.setlists.size) } }
+        .map { state -> state.data?.let { LibrarySummary(songCount = it.unfilteredSongs.size, setlistCount = it.setlists.size) } }
         .asEagerState(null)
     // Distinct on the sorting mode alone, or every other change to the preferences (a transposition, the text size
     // settling after a pinch) would have the whole library grouped again for nothing.
@@ -328,7 +343,7 @@ class CampfireViewModel(
             songGroups.isNotEmpty() -> null
             // The library itself, not the filtered list: a library that only holds songs the filters hide is not an
             // empty one, and offering to create a first song there would be answering a question nobody asked.
-            data == null || data.songFileNames.isEmpty() -> screenData.emptyPlaceholder(Placeholder.NO_SONGS)
+            data == null || data.unfilteredSongs.isEmpty() -> screenData.emptyPlaceholder(Placeholder.NO_SONGS)
             data.songs.isEmpty() -> Placeholder.ALL_SONGS_HIDDEN
             else -> Placeholder.NO_SEARCH_RESULTS
         }
@@ -336,21 +351,26 @@ class CampfireViewModel(
 
     /** The same for the screens that show the library without the search query, such as the setlists. */
     val libraryPlaceholder = screenData
-        .map { if (it.data?.songFileNames.isNullOrEmpty()) it.emptyPlaceholder(Placeholder.NO_SONGS) else null }
+        .map { if (it.data?.unfilteredSongs.isNullOrEmpty()) it.emptyPlaceholder(Placeholder.NO_SONGS) else null }
         .asState(Placeholder.LOADING)
 
-    val setlistsWithSongs = combine(setlists, allSongs, songFileNames) { setlists, songs, songFileNames ->
+    private val shouldShowArchivedSetlists = userPreferences.map { it?.shouldShowArchivedSetlists == true }.distinctUntilChanged()
+
+    /**
+     * The setlists as the screen lists them, with every song they name: the song filters are about the song list and
+     * a setlist is answerable to nobody but whoever wrote it down, so a setlist shows what it holds whether or not
+     * the library screen next door is narrowed to something else. The archived ones are the one thing left out, and
+     * only until the user asks for them, see [UserPreferences.shouldShowArchivedSetlists].
+     */
+    val setlistsWithSongs = combine(setlists, allSongs, shouldShowArchivedSetlists) { setlists, songs, shouldShowArchivedSetlists ->
         val songsByFileName = songs.associateBy { it.fileName }
-        setlists.map { setlist ->
+        setlists.filter { shouldShowArchivedSetlists || !it.isArchived }.map { setlist ->
             SetlistWithSongs(
                 setlist = setlist,
-                entries = setlist.entries.mapNotNull { entry ->
-                    val song = songsByFileName[entry.songFileName]
-                    when {
-                        song != null -> SetlistWithSongs.Entry.Present(song)
-                        // In the library but hidden by a filter: not shown, but not missing either.
-                        entry.songFileName in songFileNames -> null
-                        else -> SetlistWithSongs.Entry.Missing(entry.songFileName)
+                entries = setlist.entries.mapIndexed { index, entry ->
+                    when (val song = songsByFileName[entry.songFileName]) {
+                        null -> SetlistWithSongs.Entry.Missing(index = index, songFileName = entry.songFileName)
+                        else -> SetlistWithSongs.Entry.Present(index = index, song = song)
                     }
                 },
             )
@@ -360,10 +380,16 @@ class CampfireViewModel(
     /**
      * What the setlists screen shows instead of setlists, null while it has some. Same reasoning as
      * [songsPlaceholder]: without it a load in progress is indistinguishable from a user who has no setlists, and
-     * the screen claims there are none for as long as reading the library takes.
+     * the screen claims there are none for as long as reading the library takes. A library whose every setlist is
+     * archived is told apart from one with no setlists at all for the same reason the song list tells its two empty
+     * states apart: the first one is answered by the filter above the list rather than by making a setlist.
      */
     val setlistsPlaceholder = combine(screenData, setlistsWithSongs) { screenData, setlistsWithSongs ->
-        if (setlistsWithSongs.isEmpty()) screenData.emptyPlaceholder(Placeholder.NO_SETLISTS) else null
+        when {
+            setlistsWithSongs.isNotEmpty() -> null
+            screenData.data?.setlists.isNullOrEmpty() -> screenData.emptyPlaceholder(Placeholder.NO_SETLISTS)
+            else -> Placeholder.ALL_SETLISTS_HIDDEN
+        }
     }.asState(Placeholder.LOADING)
 
     /** The file names of the songs whose text could not be read. */
@@ -511,6 +537,35 @@ class CampfireViewModel(
         openEditor(fileName = createSong.invoke(title = title, artist = artist).fileName, shouldStartInsideFirstSection = true)
     }
 
+    /**
+     * Renames the song's file to the one its own metadata gives it, offered by the song's menu wherever the two have
+     * drifted apart (`Song.canUpdateFileName`). The use case follows the references that are on disk - the setlists
+     * holding the song, its saved transposition - and what is left here is the two places the old name lives in
+     * memory: the text read from the file, and the screens that were opened on it.
+     */
+    fun updateSongFileName(song: Song) = launchLibraryChange {
+        val fileName = renameSongFile(song) ?: return@launchLibraryChange
+        _songTexts.update { texts -> texts[song.fileName]?.let { texts - song.fileName + (fileName to it) } ?: texts }
+        // The details screen is named after the songs it pages through, so the entry showing this one is rewritten
+        // rather than popped: the action can be taken from that screen, and a song that has just been renamed is
+        // still the song being read.
+        backStack.forEachIndexed { index, destination ->
+            when {
+                destination is CampfireDestination.SongDetails && song.fileName in destination.songFileNames -> {
+                    backStack[index] = destination.copy(
+                        songFileNames = destination.songFileNames.map { if (it == song.fileName) fileName else it },
+                        // The page the reader is on, so that a rename leaves them looking at the song they renamed.
+                        initialIndex = destination.songFileNames.indexOf(song.fileName),
+                    )
+                }
+
+                destination is CampfireDestination.SongEditor && destination.fileName == song.fileName -> {
+                    backStack[index] = destination.copy(fileName = fileName)
+                }
+            }
+        }
+    }
+
     fun deleteSong(fileName: String) = launchLibraryChange {
         deleteSong.invoke(fileName)
         // Nobody is asked to save a file that has just been deleted, so the draft goes before the screens holding it.
@@ -633,6 +688,21 @@ class CampfireViewModel(
         }
         // Last, and on the model only: the file, and the editor's transposition below, stay in the app's own notation.
         return convertChordProNotation(transposed, spelling)
+    }
+
+    /**
+     * The key a song sounds in once everything that moves it has been applied: the file's own `{transpose}`, the
+     * transposition the reader picked for it and the spelling they read chords in. Null for a file that declares
+     * no `{key}`, which the lists then say nothing about.
+     *
+     * It is what [renderSong] arrives at, worked out without the song's text: the library's metadata is read at
+     * startup and its lyrics are not, so a list that had to parse a file to name its key would be reading the whole
+     * library a second time to fill in one line of each row. Both use cases rewrite the key of whatever song they
+     * are handed, so what they are handed here is a song that is nothing but that key.
+     */
+    fun renderKey(song: Song, transposition: Int, spelling: UserPreferences.ChordSpelling) = song.key?.let { key ->
+        val keyOnly = ChordProSong(metadata = ChordProMetadata(key = key), blocks = emptyList())
+        convertChordProNotation(transposeChordPro(keyOnly, song.transpose + transposition, spelling.accidentals), spelling).metadata.key
     }
 
     /**
@@ -797,8 +867,23 @@ class CampfireViewModel(
         }
     }
 
+    /** The file follows the title, so the setlist that comes back may be under a name this one has never seen. */
     fun renameSetlist(setlist: Setlist, title: String) = launchLibraryChange {
-        saveSetlist(setlist.copy(title = title.trim()))
+        renameSetlist.invoke(setlist = setlist, title = title)
+    }
+
+    /**
+     * A copy of the setlist under a title of its own, on top of the list the way a new setlist is: it goes through
+     * [CreateSetlistUseCase] rather than through a copied file name, so the copy gets its own name, its own priority
+     * and none of the original's archived state - a copy is made to be worked on.
+     */
+    fun duplicateSetlist(setlist: Setlist, title: String) = launchLibraryChange {
+        saveSetlist(createSetlist.invoke(title).copy(entries = setlist.entries))
+    }
+
+    /** Archiving is the way a setlist that has been played is put away without the songs in it being lost. */
+    fun setSetlistArchived(setlist: Setlist, isArchived: Boolean) = launchLibraryChange {
+        saveSetlist(setlist.copy(isArchived = isArchived))
     }
 
     fun deleteSetlist(setlistFileName: String) = launchLibraryChange {
@@ -812,15 +897,26 @@ class CampfireViewModel(
         }
     }
 
-    fun moveSongInSetlist(setlistFileName: String, fromSongFileName: String, toSongFileName: String) = launchLibraryChange {
+    /**
+     * Writes the order a drag ended on, as one write rather than one per row the finger crossed: every move used to
+     * be worked out from [setlists], which only catches up once the previous write has been round tripped through
+     * the repository, so a quick drag had each move recomputed from an order one or more moves out of date.
+     *
+     * [songFileNames] is what the screen was showing, which is not necessarily the whole setlist. The entries the
+     * filters hide cannot be dragged and must not be moved by a drag that could not see them, so the visible songs
+     * are dealt back into the slots visible songs already occupied and everything else stays exactly where it is.
+     */
+    fun reorderSetlist(setlistFileName: String, songFileNames: List<String>) = launchLibraryChange {
         setlists.value.firstOrNull { it.fileName == setlistFileName }?.let { setlist ->
+            val reordered = songFileNames.mapNotNull { songFileName ->
+                setlist.entries.firstOrNull { it.songFileName == songFileName }
+            }.iterator()
+            val movedSongFileNames = songFileNames.toSet()
             saveSetlist(
                 setlist.copy(
-                    entries = setlist.entries.toMutableList().apply {
-                        val toIndex = indexOfFirst { it.songFileName == toSongFileName }
-                        val fromIndex = indexOfFirst { it.songFileName == fromSongFileName }
-                        if (toIndex >= 0 && fromIndex >= 0) add(toIndex, removeAt(fromIndex))
-                    }
+                    entries = setlist.entries.map { entry ->
+                        if (entry.songFileName in movedSongFileNames && reordered.hasNext()) reordered.next() else entry
+                    },
                 )
             )
         }
@@ -829,6 +925,8 @@ class CampfireViewModel(
     // User preferences
 
     fun setShouldShowSongsWithoutChords(value: Boolean) = updateUserPreferences { copy(shouldShowSongsWithoutChords = value) }
+
+    fun setShouldShowArchivedSetlists(value: Boolean) = updateUserPreferences { copy(shouldShowArchivedSetlists = value) }
 
     fun setPerformanceModeEnabled(value: Boolean) = updateUserPreferences { copy(isPerformanceModeEnabled = value) }
 
@@ -850,6 +948,8 @@ class CampfireViewModel(
     }
 
     fun setSortingMode(value: UserPreferences.SortingMode) = updateUserPreferences { copy(sortingMode = value) }
+
+    fun setSetlistSortingMode(value: UserPreferences.SetlistSortingMode) = updateUserPreferences { copy(setlistSortingMode = value) }
 
     /** A selected tag is matched the way the filter itself matches it, without regard to case. */
     fun toggleTagFilter(tag: String) = updateUserPreferences {
@@ -1059,6 +1159,10 @@ class CampfireViewModel(
 
         /** The library has songs, but every one of them is filtered out. */
         ALL_SONGS_HIDDEN,
+
+        /** There are setlists, but every one of them is archived and the screen is not showing those. */
+        ALL_SETLISTS_HIDDEN,
+
         NO_SEARCH_RESULTS,
     }
 
@@ -1121,9 +1225,9 @@ class CampfireViewModel(
     }
 
     /**
-     * One setlist as a list shows it. An entry whose file is not in the library any more (deleted from outside the
-     * app) is kept as [Entry.Missing] rather than dropped, so that the user can see it and remove it; entries the
-     * filters hide are left out entirely.
+     * One setlist as a list shows it: every entry it has, since a setlist is read as the list somebody wrote down
+     * rather than as a view of the library. An entry whose file is not in the library any more (deleted from
+     * outside the app) is kept as [Entry.Missing] rather than dropped, so that the user can see it and remove it.
      */
     data class SetlistWithSongs(
         val setlist: Setlist,
@@ -1135,13 +1239,16 @@ class CampfireViewModel(
 
         sealed interface Entry {
 
+            /** The entry's place in the setlist, which is the number its row carries. */
+            val index: Int
+
             val songFileName: String
 
-            data class Present(val song: Song) : Entry {
+            data class Present(override val index: Int, val song: Song) : Entry {
                 override val songFileName get() = song.fileName
             }
 
-            data class Missing(override val songFileName: String) : Entry
+            data class Missing(override val index: Int, override val songFileName: String) : Entry
         }
     }
 
@@ -1150,16 +1257,24 @@ class CampfireViewModel(
         data object NewSong : DialogType
         data object SongsControls : DialogType
         data object SetlistsControls : DialogType
-        data class SetlistPicker(val songFileName: String, val currentSetlistFileName: String?) : DialogType
+        /**
+         * Every setlist with a box each, which is how a song is both put into one and taken out of another.
+         *
+         * @param lockedSetlistFileName The one setlist whose box cannot be touched, because the screen that
+         *   opened the sheet is showing the song as part of that setlist.
+         */
+        data class SetlistPicker(val song: Song, val lockedSetlistFileName: String?) : DialogType
         data class SongDisplayControls(val songFileName: String, val setlistFileName: String?) : DialogType
         data class DeleteSetlist(val setlist: Setlist) : DialogType
         data class RenameSetlist(val setlist: Setlist) : DialogType
+        data class DuplicateSetlist(val setlist: Setlist) : DialogType
         /** The actions of one song, shown as a bottom sheet where there is no room for a dropdown menu. */
         data class SongActions(
             val song: Song,
-            val setlistFileName: String?,
-            /** False where the screen that opened the sheet offers it already. */
-            val shouldIncludeAddToSetlist: Boolean = true,
+            /** Handed straight to [SetlistPicker] by the sheet, see its own documentation. */
+            val lockedSetlistFileName: String?,
+            /** False where the screen that opened the sheet offers them already. */
+            val shouldIncludeSetlistAssignments: Boolean = true,
         ) : DialogType
         data class DeleteSong(val song: Song) : DialogType
         /** Opened from the tag header of the song details screen; the suggestions come from [tags]. */

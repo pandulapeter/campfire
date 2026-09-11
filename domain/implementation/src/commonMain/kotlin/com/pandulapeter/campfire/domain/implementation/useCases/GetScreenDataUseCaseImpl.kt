@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.model.DataState
+import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
@@ -43,9 +44,10 @@ class GetScreenDataUseCaseImpl internal constructor(
         userPreferencesRepository.userPreferences.map { state -> state.mapData { it.toListPreferences() } }.distinctUntilChanged(),
     ) { setlistsDataState, songsDataState, listPreferencesDataState ->
 
-        fun createScreenData() = setlistsDataState.data?.sortedByDescending { it.priority }?.let { setlists ->
+        fun createScreenData() = setlistsDataState.data?.let { unsortedSetlists ->
             songsDataState.data?.let { songs ->
                 listPreferencesDataState.data?.let { listPreferences ->
+                    val setlists = unsortedSetlists.sortSetlists(listPreferences)
                     val filterableSongs = songs.filterHasChords(listPreferences)
                     // What the library holds, whatever is selected: the two filter groups are counted over the songs
                     // the other one leaves, but both of them decide what is still a tag and what is still a language
@@ -58,7 +60,7 @@ class GetScreenDataUseCaseImpl internal constructor(
                         setlists = setlists,
                         songs = songsByTag
                             .filterLanguages(listPreferences, availableLanguages)
-                            .sort(listPreferences),
+                            .sortSongs(listPreferences),
                         tags = songsByLanguage.toTags().withMissingSelected(
                             available = availableTags,
                             selected = listPreferences.selectedTags.mapTo(mutableSetOf()) { it.lowercase() },
@@ -71,7 +73,7 @@ class GetScreenDataUseCaseImpl internal constructor(
                             key = { it.code },
                             toEmpty = { it.copy(songCount = 0) },
                         ),
-                        songFileNames = songs.mapTo(mutableSetOf()) { it.fileName },
+                        unfilteredSongs = songs,
                     ).also {
                         cache = it
                     }
@@ -88,6 +90,18 @@ class GetScreenDataUseCaseImpl internal constructor(
             DataState.Idle(createScreenData() ?: cache ?: throw IllegalStateException("No data available while all data states are idle."))
         }
     }.distinctUntilChanged()
+
+    /**
+     * The setlists in the order the screen lists them. The archived ones come last whichever order that is: they are
+     * only on the screen at all because the user asked to see what has been put away, and mixing them in among the
+     * setlists still in use would undo the putting away.
+     */
+    private fun List<Setlist>.sortSetlists(listPreferences: ListPreferences) = sortedWith(
+        when (listPreferences.setlistSortingMode) {
+            UserPreferences.SetlistSortingMode.NEWEST_FIRST -> compareBy<Setlist> { it.isArchived }.thenByDescending { it.priority }
+            UserPreferences.SetlistSortingMode.BY_TITLE -> compareBy<Setlist> { it.isArchived }.thenBy { normalizeText(it.title) }
+        }
+    )
 
     private fun List<Song>.filterHasChords(listPreferences: ListPreferences) = if (listPreferences.shouldShowSongsWithoutChords) this else filter { it.hasChords }
 
@@ -172,7 +186,7 @@ class GetScreenDataUseCaseImpl internal constructor(
      * The selector of a comparator runs on every comparison, so sorting this way used to normalize each title and
      * artist a logarithmic number of times over. The keys are computed once per song here instead.
      */
-    private fun List<Song>.sort(listPreferences: ListPreferences): List<Song> {
+    private fun List<Song>.sortSongs(listPreferences: ListPreferences): List<Song> {
         val comparator = when (listPreferences.sortingMode) {
             UserPreferences.SortingMode.BY_ARTIST -> compareBy<SortableSong>({ it.artist }, { it.title })
             UserPreferences.SortingMode.BY_TITLE -> compareBy<SortableSong>({ it.title }, { it.artist })
@@ -192,6 +206,7 @@ class GetScreenDataUseCaseImpl internal constructor(
     private data class ListPreferences(
         val shouldShowSongsWithoutChords: Boolean,
         val sortingMode: UserPreferences.SortingMode,
+        val setlistSortingMode: UserPreferences.SetlistSortingMode,
         val selectedTags: Set<String>,
         val tagMatchMode: UserPreferences.TagMatchMode,
         val selectedLanguages: Set<String>,
@@ -200,6 +215,7 @@ class GetScreenDataUseCaseImpl internal constructor(
     private fun UserPreferences.toListPreferences() = ListPreferences(
         shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
         sortingMode = sortingMode,
+        setlistSortingMode = setlistSortingMode,
         selectedTags = selectedTags,
         tagMatchMode = tagMatchMode,
         selectedLanguages = selectedLanguages,

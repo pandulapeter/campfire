@@ -14,16 +14,24 @@ repositories. It exposes `:chordpro` as an `api` dependency, so the UI can rende
 the parser itself.
 
 Conventions: one interface per use case, a single `operator fun invoke(...)`, named `Get*` (observe a flow or read one
-value), `Load*` (trigger a read), `Save*` / `Create*` / `Delete*` (change something), `Import*` / `Export*` for the file
+value), `Load*` (trigger a read), `Save*` / `Create*` / `Rename*` / `Delete*` (change something), `Import*` / `Export*` for the file
 paths, or a verb for pure transforms (`NormalizeText`, `ParseChordPro`, `TransposeChordPro`, `TransposeChordProText`,
 `ConvertChordProNotation`).
 
-- `ScreenData` bundles what the song and setlist screens need in one object: the setlists, the songs filtered and sorted
-  the way the preferences ask for, `tags` (every label the library uses with how many songs carry it, most used first),
+- `ScreenData` bundles what the song and setlist screens need in one object: the setlists (every one of them, archived
+  included, in the order `UserPreferences.SetlistSortingMode` asks for), the songs filtered and sorted the way the
+  preferences ask for, `tags` (every label the library uses with how many songs carry it, most used first),
   `languages` (the same for the languages its songs declare, with the ones that declare none last) and
-  `songFileNames` — every song in the library including the ones a filter is hiding, so that a setlist entry can
-  tell "hidden" from "the file is gone". Each of the two filter groups is counted after every other filter but before
-  its own, so that selecting one value does not empty the list of the ones that could be selected next.
+  `unfilteredSongs` — the whole library, hidden songs included, which is what a setlist and the song details screen
+  are read from: a setlist shows what somebody wrote down rather than a view of the library, so the song filters
+  never reach into one, and an entry missing from there is a file that is really gone. Each of the two filter groups
+  is counted after every other filter but before its own, so that selecting one value does not empty the list of the
+  ones that could be selected next.
+- `RenameSetlistUseCase` / `RenameSongFileUseCase` are the two that move a file rather than write one. A setlist's
+  file follows its title on its own, since nothing in the library points at a setlist by name; a song's moves only
+  when the user asks (`Song.canUpdateFileName` is what offers it), and everything that named the old one — every
+  setlist entry holding the song, its saved transposition — moves with it, which is the same walk
+  `DeleteSongUseCase` makes to drop those references.
 - `GetUserPreferencesUseCase` is separate from `ScreenData` on purpose: the theme and the language must reach the UI
   before the library has been scanned, and folding them into the aggregate would make the whole app wait for the songs.
 - `TransposeChordProUseCase` transposes the parsed model (what the viewer shows), `TransposeChordProTextUseCase` the raw

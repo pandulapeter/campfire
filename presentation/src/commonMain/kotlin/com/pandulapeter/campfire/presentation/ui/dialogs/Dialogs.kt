@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.dialogs
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,6 +44,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -69,6 +73,8 @@ import com.pandulapeter.campfire.presentation.resources.import_conflicts_skip_de
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_skipped
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_summary
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist
+import com.pandulapeter.campfire.presentation.resources.setlists_duplicate
+import com.pandulapeter.campfire.presentation.resources.setlists_duplicate_title
 import com.pandulapeter.campfire.presentation.resources.setlists_delete_setlist_confirmation
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist
 import com.pandulapeter.campfire.presentation.resources.setlists_new_setlist_title
@@ -76,7 +82,7 @@ import com.pandulapeter.campfire.presentation.resources.setlists_rename
 import com.pandulapeter.campfire.presentation.resources.setlists_rename_title
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
-import com.pandulapeter.campfire.presentation.resources.song_details_add_to_setlist
+import com.pandulapeter.campfire.presentation.resources.songs_setlist_assignments
 import com.pandulapeter.campfire.presentation.resources.song_details_language
 import com.pandulapeter.campfire.presentation.resources.song_details_language_no_search_results
 import com.pandulapeter.campfire.presentation.resources.song_details_language_search
@@ -96,6 +102,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_new_song_artist
 import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
+import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
@@ -104,6 +111,7 @@ import com.pandulapeter.campfire.presentation.ui.components.PickableLanguage
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
+import com.pandulapeter.campfire.presentation.ui.components.SetlistsControls
 import com.pandulapeter.campfire.presentation.ui.components.SongsControls
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
@@ -148,6 +156,20 @@ internal fun CampfireDialogs(
             },
         )
 
+        // Named before it is made rather than after: two setlists can carry the same title (a setlist is identified
+        // by its file name), so a copy nobody named would sit under the original's title until somebody noticed.
+        is CampfireViewModel.DialogType.DuplicateSetlist -> TextInputDialog(
+            title = stringResource(Res.string.setlists_duplicate),
+            label = stringResource(Res.string.setlists_new_setlist_title),
+            initialValue = stringResource(Res.string.setlists_duplicate_title, dialog.setlist.title),
+            confirmLabel = stringResource(Res.string.setlists_duplicate),
+            onDismiss = viewModel::dismissDialog,
+            onConfirm = { title ->
+                viewModel.duplicateSetlist(setlist = dialog.setlist, title = title)
+                viewModel.dismissDialog()
+            },
+        )
+
         CampfireViewModel.DialogType.NewSong -> NewSongDialog(
             onDismiss = viewModel::dismissDialog,
             onCreate = { title, artist ->
@@ -157,20 +179,14 @@ internal fun CampfireDialogs(
         )
 
         CampfireViewModel.DialogType.SongsControls -> CampfireBottomSheet(onDismiss = viewModel::dismissDialog) {
-            SongsControls(
-                viewModel = viewModel,
-                shouldIncludeSorting = true,
-            )
+            SongsControls(viewModel = viewModel)
         }
 
         CampfireViewModel.DialogType.SetlistsControls -> CampfireBottomSheet(onDismiss = viewModel::dismissDialog) {
-            SongsControls(
-                viewModel = viewModel,
-                shouldIncludeSorting = false,
-            )
+            SetlistsControls(viewModel = viewModel)
         }
 
-        is CampfireViewModel.DialogType.SetlistPicker -> SetlistPickerSheet(
+        is CampfireViewModel.DialogType.SetlistPicker -> SetlistPicker(
             viewModel = viewModel,
             dialog = dialog,
         )
@@ -415,6 +431,19 @@ private fun ConfirmationDialog(
 )
 
 /**
+ * The [FocusRequester] of the field a dialog opens onto. A dialog that is there to be typed into puts the caret in
+ * its first field rather than asking for one more tap, which on a touch platform is also what brings the keyboard
+ * up with it - and every dialog here that holds a text field holds it as the first thing under the title, so there
+ * is only ever the one field to open on.
+ */
+@Composable
+private fun rememberFirstFieldFocusRequester(): FocusRequester {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    return focusRequester
+}
+
+/**
  * One required line of text and a confirm button that stays disabled until it has something in it. Creating and
  * renaming a setlist are the same dialog with different labels.
  */
@@ -427,11 +456,15 @@ private fun TextInputDialog(
     onDismiss: () -> Unit,
     onConfirm: (value: String) -> Unit,
 ) {
-    var value by rememberSaveable { mutableStateOf(initialValue) }
-    val isValid = value.isNotBlank()
-    val focusRequester = remember { FocusRequester() }
-    // The dialog exists to take one line of text, so the caret is put in it instead of asking for one more tap.
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    // A TextFieldValue rather than a String, for the selection: a dialog that opens on text the user is meant to
+    // replace ("Summer set (copy)", the title being renamed) has all of it selected, so the first key typed writes
+    // the new name instead of appending to the old one. Nothing is lost by it either, since a tap or an arrow key
+    // puts the caret where it was aimed.
+    var value by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(text = initialValue, selection = TextRange(0, initialValue.length)))
+    }
+    val isValid = value.text.isNotBlank()
+    val focusRequester = rememberFirstFieldFocusRequester()
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -439,17 +472,26 @@ private fun TextInputDialog(
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                 value = value,
-                onValueChange = { value = it.replace("\n", "").take(MAX_TITLE_LENGTH) },
+                onValueChange = { newValue ->
+                    val text = newValue.text.replace("\n", "").take(MAX_TITLE_LENGTH)
+                    // Rebuilt only where the text had to be cut, or every keystroke would throw away the selection
+                    // the field is reporting - which is the caret itself, and the run of text a drag is picking out.
+                    value = if (text == newValue.text) {
+                        newValue
+                    } else {
+                        TextFieldValue(text = text, selection = TextRange(newValue.selection.end.coerceAtMost(text.length)))
+                    }
+                },
                 label = { Text(label) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { if (isValid) onConfirm(value) }),
+                keyboardActions = KeyboardActions(onDone = { if (isValid) onConfirm(value.text) }),
             )
         },
         confirmButton = {
             TextButton(
                 enabled = isValid,
-                onClick = { onConfirm(value) },
+                onClick = { onConfirm(value.text) },
             ) { Text(confirmLabel) }
         },
         dismissButton = {
@@ -470,8 +512,7 @@ private fun NewSongDialog(
     var title by rememberSaveable { mutableStateOf("") }
     var artist by rememberSaveable { mutableStateOf("") }
     val isValid = title.isNotBlank()
-    val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    val focusRequester = rememberFirstFieldFocusRequester()
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.songs_new_song)) },
@@ -522,7 +563,7 @@ private fun AddSongTagDialog(
     val tags by viewModel.tags.collectAsStateWithLifecycle()
     var value by rememberSaveable { mutableStateOf("") }
     val isValid = value.isNotBlank()
-    val focusRequester = remember { FocusRequester() }
+    val focusRequester = rememberFirstFieldFocusRequester()
     val addTag = { tag: String ->
         viewModel.setSongTag(fileName = dialog.song.fileName, tag = tag, isSelected = true)
         viewModel.dismissDialog()
@@ -531,7 +572,6 @@ private fun AddSongTagDialog(
         val songTags = dialog.song.tags.mapTo(mutableSetOf()) { it.lowercase() }
         tags.filter { it.name.lowercase() !in songTags && it.name.contains(value.trim(), ignoreCase = true) }
     }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
     AlertDialog(
         onDismissRequest = viewModel::dismissDialog,
         title = { Text(stringResource(Res.string.song_details_tag_add)) },
@@ -611,6 +651,7 @@ private fun SongLanguagesDialog(
         // The song's own languages come first and stay there, in the order the file lists them.
         declared.mapNotNull { code -> pickable.firstOrNull { it.code == code } } + pickable.filterNot { it.code in declared }
     }
+    val focusRequester = rememberFirstFieldFocusRequester()
     val matches = remember(languages, query) {
         val normalizedQuery = viewModel.normalize(query)
         // What was typed may be a code, and not the one the library files the language under: `HUN`, `hu-HU` and
@@ -628,7 +669,7 @@ private fun SongLanguagesDialog(
         text = {
             Column {
                 OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                     value = query,
                     onValueChange = { query = it.replace("\n", "") },
                     label = { Text(stringResource(Res.string.song_details_language_search)) },
@@ -692,8 +733,8 @@ private fun SongActionsSheet(
     SongActions(
         viewModel = viewModel,
         song = dialog.song,
-        setlistFileName = dialog.setlistFileName,
-        shouldIncludeAddToSetlist = dialog.shouldIncludeAddToSetlist,
+        lockedSetlistFileName = dialog.lockedSetlistFileName,
+        shouldIncludeSetlistAssignments = dialog.shouldIncludeSetlistAssignments,
     ) { title, icon, isEnabled, onClick ->
         ActionListItem(
             title = title,
@@ -719,47 +760,95 @@ private fun SongActionsSheet(
  * The setlists one song can be put into, and the way to make a new one. Naming that new setlist happens in a dialog
  * on top of the sheet rather than instead of it: the setlist is only being created so that this song can go into it,
  * so the sheet staying where it is, with a ticked row appearing in it, is what says that it worked.
+ *
+ * A library that holds no setlists at all skips the sheet and asks for the name of the first one straight away,
+ * since a sheet offering nothing to tick is one tap in the way of the only thing that can be done there. Whether
+ * that is what happened is decided once, as the dialog opens ([isCreatingFirstSetlist]) rather than read from the
+ * list as it stands: creating the setlist fills the list, and the sheet must not slide in behind a dialog that is
+ * on its way out. It is also what the naming dialog is closed by, since there is nothing behind it to return to.
  */
 @Composable
-private fun SetlistPickerSheet(
+private fun SetlistPicker(
     viewModel: CampfireViewModel,
     dialog: CampfireViewModel.DialogType.SetlistPicker,
 ) {
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
-    var isNamingNewSetlist by rememberSaveable { mutableStateOf(false) }
-    CampfireBottomSheet(onDismiss = viewModel::dismissDialog) {
-        SettingsSectionTitle(text = stringResource(Res.string.song_details_add_to_setlist))
-        setlists.forEach { setlist ->
-            CheckboxListItem(
-                title = setlist.title,
-                isEnabled = dialog.currentSetlistFileName != setlist.fileName,
-                isChecked = setlist.entries.any { it.songFileName == dialog.songFileName },
-                onCheckedChange = { isChecked ->
-                    if (isChecked) {
-                        viewModel.addSongToSetlist(songFileName = dialog.songFileName, setlistFileName = setlist.fileName)
-                    } else {
-                        viewModel.removeSongFromSetlist(songFileName = dialog.songFileName, setlistFileName = setlist.fileName)
-                    }
-                },
+    // An archived setlist has been put away, so it is not offered here - unless the song is in it already, which is
+    // the only thing this sheet could still have to say about one.
+    val pickableSetlists = setlists.filter { setlist ->
+        !setlist.isArchived || setlist.entries.any { it.songFileName == dialog.song.fileName }
+    }
+    val isCreatingFirstSetlist = rememberSaveable { setlists.isEmpty() }
+    var isNamingNewSetlist by rememberSaveable { mutableStateOf(isCreatingFirstSetlist) }
+    val closeNamingDialog = { if (isCreatingFirstSetlist) viewModel.dismissDialog() else isNamingNewSetlist = false }
+    if (!isCreatingFirstSetlist) {
+        CampfireBottomSheet(onDismiss = viewModel::dismissDialog) {
+            SheetSongHeader(song = dialog.song)
+            SettingsSectionTitle(
+                text = stringResource(Res.string.songs_setlist_assignments),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
             )
+            pickableSetlists.forEach { setlist ->
+                CheckboxListItem(
+                    title = setlist.title,
+                    isEnabled = dialog.lockedSetlistFileName != setlist.fileName,
+                    isChecked = setlist.entries.any { it.songFileName == dialog.song.fileName },
+                    onCheckedChange = { isChecked ->
+                        if (isChecked) {
+                            viewModel.addSongToSetlist(songFileName = dialog.song.fileName, setlistFileName = setlist.fileName)
+                        } else {
+                            viewModel.removeSongFromSetlist(songFileName = dialog.song.fileName, setlistFileName = setlist.fileName)
+                        }
+                    },
+                )
+            }
+            ActionListItem(
+                title = stringResource(Res.string.setlists_new_setlist),
+                icon = painterResource(Res.drawable.ic_add),
+                onClick = { isNamingNewSetlist = true },
+            )
+            Spacer(modifier = Modifier.height(16.dp))
         }
-        ActionListItem(
-            title = stringResource(Res.string.setlists_new_setlist),
-            icon = painterResource(Res.drawable.ic_add),
-            onClick = { isNamingNewSetlist = true },
-        )
-        Spacer(modifier = Modifier.height(16.dp))
     }
     if (isNamingNewSetlist) {
         TextInputDialog(
             title = stringResource(Res.string.setlists_new_setlist),
             label = stringResource(Res.string.setlists_new_setlist_title),
             confirmLabel = stringResource(Res.string.create),
-            onDismiss = { isNamingNewSetlist = false },
+            onDismiss = closeNamingDialog,
             onConfirm = { title ->
-                viewModel.createSetlistWithSong(title = title, songFileName = dialog.songFileName)
-                isNamingNewSetlist = false
+                viewModel.createSetlistWithSong(title = title, songFileName = dialog.song.fileName)
+                closeNamingDialog()
             },
+        )
+    }
+}
+
+/**
+ * The song a sheet is about, named at the top of it. The assignments sheet is otherwise a list of setlists and
+ * nothing else, and it is opened from a row of one setlist as readily as from the song itself, so without this it
+ * never says which song the boxes are about.
+ */
+@Composable
+private fun SheetSongHeader(
+    song: Song,
+) = Column(
+    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 24.dp),
+) {
+    Text(
+        text = song.title,
+        style = MaterialTheme.typography.titleMedium,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+    // Songs written in the app need no artist, and an empty line would only make the header taller.
+    if (song.artist.isNotBlank()) {
+        Text(
+            text = song.artist,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

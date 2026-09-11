@@ -40,5 +40,11 @@ interface SongRepository {
      */
     suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song
 
+    /**
+     * See `SongLocalSource.renameSong`: moves the file to the name the song's own metadata gives it and returns it
+     * under that name, or null when nothing moved. The references to the old name are the caller's to follow.
+     */
+    suspend fun renameSong(song: Song): Song?
+
     suspend fun deleteSong(fileName: String)
 }

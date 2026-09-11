@@ -66,6 +66,8 @@
     <string name="songs_import">Import</string>
     <string name="songs_rescan">Rescan library</string>
     <string name="songs_actions">Song actions</string>
+    <string name="songs_setlist_assignments">Setlist assignments</string>
+    <string name="songs_update_file_name">Update file name</string>
     <string name="songs_delete_song">Delete song</string>
     <string name="songs_delete_song_confirmation">Delete \"%1$s\"? The file is removed from the library and from every setlist.</string>
     <string name="songs_all_hidden">Every song is hidden</string>
@@ -73,6 +75,7 @@
     <string name="songs_no_search_results">No matching songs</string>
     <string name="songs_no_search_results_hint">Nothing in your library matches this search.</string>
     <string name="songs_lyrics_only">Lyrics only</string>
+    <string name="songs_key">Key: %1$s</string>
     <string name="songs_tags">Tags</string>
     <string name="songs_tags_show_all">Show all %1$d</string>
     <string name="songs_tags_show_less">Show fewer</string>
@@ -90,14 +93,28 @@
     <string name="setlists_no_data_hint">Create a setlist, then add songs to it from the song details screen.</string>
     <string name="setlists_new_setlist">New setlist</string>
     <string name="setlists_new_setlist_title">Setlist title</string>
-    <string name="setlists_remove_song">Remove song</string>
+    <string name="setlists_remove_song">Remove from setlist</string>
+    <string name="setlists_reorder">Reorder</string>
+    <string name="setlists_actions">Setlist actions</string>
     <string name="setlists_rename">Rename</string>
+    <string name="setlists_duplicate">Duplicate</string>
+    <string name="setlists_duplicate_title">%1$s (copy)</string>
+    <string name="setlists_archive">Archive</string>
+    <string name="setlists_unarchive">Move out of the archive</string>
+    <string name="setlists_archived">Archived</string>
     <string name="setlists_export">Export setlist</string>
     <string name="setlists_rename_title">New title</string>
     <string name="setlists_missing_song">File not found</string>
-    <string name="setlists_reorder_hint">Long press a song to reorder, swipe to remove.</string>
+    <string name="setlists_reorder_hint">Drag a song by its handle to reorder it, or use its menu to take it out.</string>
     <string name="setlists_delete_setlist">Delete setlist</string>
     <string name="setlists_delete_setlist_confirmation">Delete the \"%1$s\" setlist? The songs stay in your library.</string>
+    <string name="setlists_sort_and_filter">Sort and filter</string>
+    <string name="setlists_sorting_mode">Sort by</string>
+    <string name="setlists_sorting_mode_newest_first">Newest</string>
+    <string name="setlists_sorting_mode_by_title">Title</string>
+    <string name="setlists_show_archived">Show archived setlists</string>
+    <string name="setlists_all_hidden">Every setlist is archived</string>
+    <string name="setlists_all_hidden_hint">Turn on \"Show archived setlists\" to see them.</string>
 
     <!-- Settings screen -->
     <string name="settings">Settings</string>
@@ -199,7 +216,6 @@
     <string name="song_details_previous_song">Previous song</string>
     <string name="song_details_next_song">Next song</string>
     <string name="song_details_song_position">%1$d / %2$d</string>
-    <string name="song_details_add_to_setlist">Add to setlist</string>
     <string name="song_details_transpose_up">Transpose up</string>
     <string name="song_details_transpose_down">Transpose down</string>
     <string name="song_details_transpose_reset">Reset transposition</string>

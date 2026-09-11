@@ -25,6 +25,12 @@ data class Song(
     val artist: String,
     /** `{key}` as written, null if the song does not declare one. */
     val key: String?,
+    /**
+     * `{transpose}`, the amount the file asks to be read at on top of whatever the reader picked, see
+     * `ChordProMetadata.transpose`. It travels with the metadata because [key] means nothing without it: a list
+     * naming the key of a song has to name the one it sounds in, and that is the only place the two are apart.
+     */
+    val transpose: Int,
     /** The labels the file is tagged with, in the order it lists them, see `ChordProMetadata.tags`. */
     val tags: List<String>,
     /**
@@ -33,5 +39,15 @@ data class Song(
      */
     val languages: List<String>,
     val hasChords: Boolean,
+    /**
+     * Whether the file is named something other than what its own metadata would name it, which is what puts the
+     * "Update file name" action in the song's menu. Worked out once per library scan, since every row of the song
+     * list asks it.
+     *
+     * False for a file that declares no `{title}`: its name is what titles it, so there is nothing better to rename
+     * it to. False as well for a name that only differs by the suffix a collision added, which is already as close
+     * as that song can get.
+     */
+    val canUpdateFileName: Boolean,
     val lastModified: Long,
 )

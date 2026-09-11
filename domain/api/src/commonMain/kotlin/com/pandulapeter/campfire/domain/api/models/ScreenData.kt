@@ -15,6 +15,11 @@ import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
 
 data class ScreenData(
+    /**
+     * Every setlist, in the order the preferences ask for and with the archived ones last. Unfiltered on purpose:
+     * the screen decides whether it shows the archived ones, while everything that writes to a setlist looks it up
+     * in this list and has to find one that is merely out of sight.
+     */
     val setlists: List<Setlist>,
     /** The library, filtered and sorted the way the user preferences ask for. */
     val songs: List<Song>,
@@ -32,8 +37,9 @@ data class ScreenData(
      */
     val languages: List<SongLanguage>,
     /**
-     * The file name of every song in the library, whether or not the filters hide it. Setlist entries are resolved
-     * against this: a song the "show songs without chords" filter is hiding is not a song whose file went missing.
+     * The whole library, whether or not the filters hide a song and in no particular order. The setlists are read
+     * from here rather than from [songs]: a setlist is the list somebody wrote down, so it shows what it holds
+     * whatever the song list is currently narrowed to, and an entry missing from here is a file that is really gone.
      */
-    val songFileNames: Set<String>,
+    val unfilteredSongs: List<Song>,
 )

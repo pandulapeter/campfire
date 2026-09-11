@@ -25,6 +25,7 @@ import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import com.pandulapeter.campfire.presentation.ui.components.isAnyOverflowMenuOpen
 import com.pandulapeter.campfire.presentation.ui.platform.DesktopFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.readAsImportedFiles
@@ -38,9 +39,10 @@ import java.io.File
 import java.net.URI
 
 /**
- * Desktop shell of the shared UI. Desktop has no back gesture, so the Escape key (see [handleKeyEvent]) dismisses the
- * visible modal, pops the back stack when there is none, clears the Songs search query on the root screen if it's
- * not already empty, and closes the application otherwise.
+ * Desktop shell of the shared UI. Desktop has no back gesture, so the Escape key (see [handleKeyEvent]) dismisses
+ * whatever is open on top of the app - a dialog, a bottom sheet or an overflow menu - pops the back stack when there
+ * is none, clears the Songs search query on the root screen if it's not already empty, and closes the application
+ * otherwise.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -88,9 +90,9 @@ fun CampfireDesktopApp(
 fun CampfireViewModel.handleKeyEvent(keyEvent: KeyEvent, onExit: () -> Unit): Boolean {
     if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Escape) {
         // Window key handlers run before Compose turns Escape into a back event, so consuming it here would pop the
-        // back stack behind an open dialog or bottom sheet. Those register their own back handlers: leaving the event
-        // unconsumed lets the top one dismiss itself (with its exit animation).
-        if (visibleDialog.value != null) return false
+        // back stack behind an open dialog, bottom sheet or overflow menu. Those register their own back handlers:
+        // leaving the event unconsumed lets the top one dismiss itself (with its exit animation).
+        if (visibleDialog.value != null || isAnyOverflowMenuOpen) return false
         when {
             backStack.size > 1 -> navigateBack()
             query.value.isNotEmpty() -> onQueryChanged("")

@@ -10,7 +10,8 @@
 package com.pandulapeter.campfire.presentation.ui.platform
 
 /**
- * True on platforms driven by a pointer rather than touch (no pull to refresh, the scrollbar is always shown).
+ * True on platforms driven by a pointer rather than touch, which is what decides how a song's actions are reached:
+ * a menu opened from the row and from the app bar, rather than a long press and a bottom sheet.
  */
 internal expect val isDesktopPlatform: Boolean
 

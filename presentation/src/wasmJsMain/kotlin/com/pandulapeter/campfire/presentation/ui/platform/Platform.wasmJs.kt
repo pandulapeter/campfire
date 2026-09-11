@@ -14,7 +14,7 @@ package com.pandulapeter.campfire.presentation.ui.platform
 import kotlin.js.ExperimentalWasmJsInterop
 
 // The page can be open on a phone just as well as on a computer, so the input method decides: with a touchscreen the
-// touch treatment is used (pull to refresh, an auto-hiding scrollbar), without one the desktop treatment is.
+// touch treatment is used (a long press and a bottom sheet), without one the desktop treatment is.
 internal actual val isDesktopPlatform = !hasTouchScreen()
 
 // The Origin Private File System is not reachable from outside the page.

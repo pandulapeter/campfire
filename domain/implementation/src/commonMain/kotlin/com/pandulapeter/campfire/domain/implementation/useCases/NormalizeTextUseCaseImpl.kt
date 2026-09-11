@@ -10,7 +10,7 @@
 package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
-import com.pandulapeter.campfire.domain.implementation.withoutAccent
+import com.pandulapeter.campfire.data.model.domain.withoutAccent
 
 class NormalizeTextUseCaseImpl internal constructor() : NormalizeTextUseCase {
 

@@ -36,8 +36,6 @@ import androidx.compose.foundation.text.input.delete
 import androidx.compose.foundation.text.input.insert
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ContainedLoadingIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -85,7 +83,6 @@ import com.pandulapeter.campfire.presentation.resources.edit
 import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_redo
 import com.pandulapeter.campfire.presentation.resources.ic_refresh
-import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_save
 import com.pandulapeter.campfire.presentation.resources.ic_undo
 import com.pandulapeter.campfire.presentation.resources.song_editor_preview
@@ -94,8 +91,9 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_save
 import com.pandulapeter.campfire.presentation.resources.song_editor_split
 import com.pandulapeter.campfire.presentation.resources.song_editor_undo
-import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
+import com.pandulapeter.campfire.presentation.ui.components.ActionsMenu
+import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
@@ -495,30 +493,16 @@ private fun SongPreview(
 private fun EditorMenu(
     canRevert: Boolean,
     onRevert: () -> Unit,
-) {
-    var isExpanded by remember { mutableStateOf(false) }
-    Box {
-        IconButton(onClick = { isExpanded = true }) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_more),
-                contentDescription = stringResource(Res.string.songs_actions),
-            )
-        }
-        DropdownMenu(
-            expanded = isExpanded,
-            onDismissRequest = { isExpanded = false },
-        ) {
-            DropdownMenuItem(
-                text = { Text(stringResource(Res.string.song_editor_revert)) },
-                leadingIcon = { Icon(painter = painterResource(Res.drawable.ic_refresh), contentDescription = null) },
-                enabled = canRevert,
-                onClick = {
-                    isExpanded = false
-                    onRevert()
-                },
-            )
-        }
-    }
+) = ActionsMenu { dismiss ->
+    ActionsMenuItem(
+        title = stringResource(Res.string.song_editor_revert),
+        icon = painterResource(Res.drawable.ic_refresh),
+        isEnabled = canRevert,
+        onClick = {
+            dismiss()
+            onRevert()
+        },
+    )
 }
 
 /**

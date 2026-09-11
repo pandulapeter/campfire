@@ -30,12 +30,16 @@ File-backed multiplatform implementation of `:data:source:local:api`, on all fou
     a library of unreadable songs.
   - iOS splits the two: the library goes to the documents directory, where the Files app can reach it, and the
     preferences to application support, where it cannot.
-- **`FileNames.kt`** owns everything about what a file is called: sanitising user text into a name every platform
-  accepts (Windows' forbidden characters, control characters, trailing dots, a length cap, `Untitled` for what is left
-  of an empty name), deriving `Artist - Title.cho`, and `uniqueName`, which suffixes ` (2)`, ` (3)`… until the name is
-  free. Nothing in the library is ever overwritten implicitly.
+- **`FileNames.kt`** owns everything about what a file is called. Every name the app writes itself is normalized
+  (`LibraryFiles.normalizedName`): `tukorfurogep-arviz.cho` for a song, each half of `artist - title` folded on its
+  own so the dash between them survives, and `summer_set.setlist.json` for a setlist. `uniqueName` suffixes until the
+  name is free — ` (2)`, ` (3)`… for an imported file that keeps the name it arrived with, `_2` for a normalized one,
+  which is the same rule written in the alphabet the name is already in. `isNamed` answers whether a file already
+  carries the name it would be given, that suffix included, which is what keeps "Update file name" from offering
+  itself to a song that has made way for another one. Nothing in the library is ever overwritten implicitly.
 - **`source/`** — the four local sources. `SongLocalSourceImpl` reads the whole ChordPro family
-  (`LibraryFiles.SONG_EXTENSIONS`) but writes only `.cho`, and gets a song's title, artist, key, tags and "has chords" from a single
+  (`LibraryFiles.SONG_EXTENSIONS`) but writes only `.cho`, and gets a song's title, artist, key, `{transpose}` (which
+  travels with the key, since the key a list names is the one the song sounds in), tags and "has chords" from a single
   `:chordpro` `summarize` call, so that neither the file nor the text is walked twice. The scan reads a batch of
   files at a time rather than all of them at once: that is what bounds the concurrency on a library of thousands,
   and each finished batch is handed to the caller, so the song list fills up while the rest is still being read. A file that cannot be read is skipped;

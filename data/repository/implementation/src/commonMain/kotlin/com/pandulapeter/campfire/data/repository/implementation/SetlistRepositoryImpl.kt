@@ -39,6 +39,14 @@ internal class SetlistRepositoryImpl(
         updateData { current -> current.orEmpty().filterNot { it.fileName == setlist.fileName } + setlist }
     }
 
+    override suspend fun renameSetlist(setlist: Setlist, title: String): Setlist {
+        val renamed = setlistLocalSource.renameSetlist(setlist, title)
+        updateData { current ->
+            current.orEmpty().filterNot { it.fileName == setlist.fileName || it.fileName == renamed.fileName } + renamed
+        }
+        return renamed
+    }
+
     override suspend fun parseSetlist(document: String) = setlistLocalSource.parseSetlist(document)
 
     override suspend fun importSetlist(setlist: Setlist, shouldReplace: Boolean) = setlistLocalSource.importSetlist(setlist, shouldReplace)

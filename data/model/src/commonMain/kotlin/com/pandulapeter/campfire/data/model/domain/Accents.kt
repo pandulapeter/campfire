@@ -7,12 +7,12 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
-package com.pandulapeter.campfire.domain.implementation
+package com.pandulapeter.campfire.data.model.domain
 
 /**
  * The lowercase Latin letter behind an accented one, or the character itself when there is none. Shared by the text
- * normalization behind sorting and searching and by the naming of exported files, which both need a song title to
- * come out as the plain letters someone would have typed looking for it.
+ * normalization behind sorting and searching (`:domain:implementation`) and by [LibraryFiles.normalizedName], which
+ * both need a song title to come out as the plain letters someone would have typed looking for it.
  *
  * A `when` over the characters rather than a map, so that the lookup doesn't box a Char per character of a song, and
  * the Hungarian and Romanian letters the app was written around come before the rest of the Latin accents a song
@@ -21,7 +21,7 @@ package com.pandulapeter.campfire.domain.implementation
  * Anything outside this table is left alone: Kotlin's common standard library has no Unicode normalizer, so this is
  * the whole of what the app knows about accents.
  */
-internal fun Char.withoutAccent() = when (this) {
+fun Char.withoutAccent() = when (this) {
     'á', 'à', 'â', 'ä', 'ã', 'å', 'ă', 'ā' -> 'a'
     'é', 'è', 'ê', 'ë', 'ě', 'ē' -> 'e'
     'í', 'ì', 'î', 'ï', 'ī' -> 'i'

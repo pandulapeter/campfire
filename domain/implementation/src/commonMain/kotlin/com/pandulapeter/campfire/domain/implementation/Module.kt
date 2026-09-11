@@ -32,6 +32,8 @@ import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
 import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
+import com.pandulapeter.campfire.domain.api.useCases.RenameSetlistUseCase
+import com.pandulapeter.campfire.domain.api.useCases.RenameSongFileUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
@@ -63,6 +65,8 @@ import com.pandulapeter.campfire.domain.implementation.useCases.NormalizeTextUse
 import com.pandulapeter.campfire.domain.implementation.useCases.ParseChordProUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.PrepareImportUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.RestoreSyncUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.RenameSetlistUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.RenameSongFileUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SaveSetlistUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SaveSongContentUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SaveUserPreferencesUseCaseImpl
@@ -97,6 +101,8 @@ val domainModule = module {
     factory<ParseChordProUseCase> { ParseChordProUseCaseImpl() }
     factory<PrepareImportUseCase> { PrepareImportUseCaseImpl(get(), get(), get(), get()) }
     factory<RestoreSyncUseCase> { RestoreSyncUseCaseImpl(get(), get()) }
+    factory<RenameSetlistUseCase> { RenameSetlistUseCaseImpl(get()) }
+    factory<RenameSongFileUseCase> { RenameSongFileUseCaseImpl(get(), get(), get()) }
     factory<SaveSetlistUseCase> { SaveSetlistUseCaseImpl(get()) }
     factory<SaveSongContentUseCase> { SaveSongContentUseCaseImpl(get()) }
     factory<SaveUserPreferencesUseCase> { SaveUserPreferencesUseCaseImpl(get()) }

@@ -81,6 +81,11 @@ preferences/sync-index.json          what the last successful sync run saw
 - Implementation classes are `internal` and named `<Interface>Impl`. Use cases are `operator fun invoke`.
 - Repositories extend `BaseLocalDataRepository`, which holds the cached `DataState` and the read-once logic.
 - Layer boundaries are crossed via mappers (`mapper/` packages), never by leaking document/entity types.
+- **A setlist shows every song it names**, whatever the Songs screen is filtered to: the filters narrow a view of the
+  library, while a setlist is the list somebody wrote down. What the Setlists screen's own controls ask is the order
+  the setlists come in and whether the archived ones are among them. Archiving is how a setlist that has been played
+  is put away without the songs in it being lost; it is a field of the `*.setlist.json` file rather than a
+  preference, so it travels through an export, an import or a sync run the way a tag does.
 - **Tags are part of the song file**, not a store of their own: ChordPro `{tag}` directives, read by `:chordpro`
   into `Song.tags` at scan time and written back into the text the same way, so a tag travels with the file through
   an export, an import or a sync run. The library's set of tags is whatever the songs carry; the Songs screen's
@@ -101,11 +106,22 @@ preferences/sync-index.json          what the last successful sync run saw
   exactly the same content is disregarded rather than copied, and the ones taken by something *different* are put to
   the user as one question about the whole batch — keep both, replace, skip, or cancel the import. Replacing is the
   only thing in the app that ever overwrites a library file, and it takes an answer to that dialog.
-- Inside the library a name is the user's own text, capitals, spaces and accents included; **a file handed to another
-  system leaves under a normalized name** — lowercase unaccented words joined with underscores (`ExportFileNames.kt`),
-  the dash between a song's artist and title kept (`LibraryFiles.ARTIST_TITLE_SEPARATOR`) — because on the way out it is
-  read by shells, services and file systems rather than by the app. The entries inside an exported archive are the
-  exception and keep their library names, since a setlist points at its songs by file name.
+- **Every name the app writes is normalized** — lowercase unaccented words joined with underscores
+  (`LibraryFiles.normalizedName`), a song's `artist` and `title` folded one at a time so the dash between them
+  survives as structure: `tukorfurogep-arviz.cho`, `summer_set_2026.setlist.json`, colliding as `_2`. It is the name a
+  file leaves under as well (`ExportFileNames.kt`), so exporting a song hands out the name it already has. Inside an
+  exported archive the entries keep their library names, since a setlist points at its songs by file name.
+- **A file is only ever renamed by the app when the user asks for it, or when nothing is lost by it.** A setlist's
+  file follows its title, because that title is written inside the document and the file name records nothing
+  (`RenameSetlistUseCase`). A song's does not: its name is what titles it wherever the file declares no `{title}`, it
+  is what a setlist points at, and on the platforms where the library is a folder the user may have chosen it. Where
+  a song's name and its metadata have drifted apart, `Song.canUpdateFileName` puts an **Update file name** entry in
+  its menu, and taking it moves the file and everything that named it — every setlist entry, the saved transposition,
+  the open screens (`RenameSongFileUseCase`). Files that were named before any of this keep their names until one of
+  those two things happens to them.
+- A rename reaches **sync** as a deletion and a new file, since `SyncPlanner` is keyed by name and knows no moves. The
+  "an edit beats a deletion" rule then applies: a device that edited the file under its old name since the last run
+  puts that file back, leaving both.
 - Only pure logic is tested: `commonTest` unit tests in `:chordpro`, `:data:source:local:implementation` (zip and the
   JVM file storage), `:data:source:remote:*` (hashing, encoders, the OAuth authorization URL) and
   `:data:repository:implementation` (`SyncPlanner`, which decides what happens to every file in a sync run), run on

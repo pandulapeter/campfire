@@ -9,12 +9,7 @@
  */
 package com.pandulapeter.campfire.presentation.ui.screens.songs
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -25,21 +20,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,20 +44,19 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
-import com.pandulapeter.campfire.presentation.resources.ic_refresh
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.songs_new_song
-import com.pandulapeter.campfire.presentation.resources.songs_rescan
 import com.pandulapeter.campfire.presentation.resources.songs_sort_and_filter
 import com.pandulapeter.campfire.presentation.resources.songs_unknown_artist
 import com.pandulapeter.campfire.presentation.resources.songs_unsorted_label
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireFloatingActionButton
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.FAB_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
@@ -80,7 +68,7 @@ import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.SongListItem
-import com.pandulapeter.campfire.presentation.ui.components.SongsControlsSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.SongsControls
 import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
@@ -91,11 +79,10 @@ import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.localization.stringResource
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SongsScreen(
     modifier: Modifier = Modifier,
@@ -126,12 +113,6 @@ internal fun SongsScreen(
         isSidePanelVisible = isSidePanelVisible,
     )
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
-    // While the list is empty its own placeholder is the loading indicator; two of them at once would only say the
-    // same thing twice.
-    val isRefreshIndicatorVisible = rememberIsRefreshIndicatorVisible(
-        isRefreshing = isLoading && placeholder == null,
-        hasLoadedLibrary = hasLoadedLibrary,
-    )
     KeepTopAppBarInSync(scrollBehavior, listState)
     Row(
         modifier = modifier.fillMaxSize()
@@ -149,12 +130,6 @@ internal fun SongsScreen(
                     )
                 },
                 actions = {
-                    if (isDesktopPlatform) {
-                        RescanAction(
-                            isLoading = isLoading,
-                            onClick = viewModel::refresh,
-                        )
-                    }
                     if (!isSidePanelVisible) {
                         IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) }) {
                             Icon(
@@ -174,7 +149,6 @@ internal fun SongsScreen(
                     viewModel = viewModel,
                     listState = listState,
                     placeholder = placeholder,
-                    isRefreshing = isRefreshIndicatorVisible,
                     columnCount = columnCount,
                     hasLoadedLibrary = hasLoadedLibrary,
                     contentPadding = listContentPadding,
@@ -190,49 +164,25 @@ internal fun SongsScreen(
                 )
             }
         }
-        SongsControlsSidePanel(
+        ControlsSidePanel(
             isVisible = isSidePanelVisible,
-            viewModel = viewModel,
-            shouldIncludeSorting = true,
             contentPadding = contentPadding,
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun RescanAction(
-    isLoading: Boolean,
-    onClick: () -> Unit,
-) = AnimatedContent(
-    targetState = isLoading,
-    transitionSpec = { fadeIn() togetherWith fadeOut() },
-) { loading ->
-    if (loading) {
-        Box(
-            modifier = Modifier.size(48.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            LoadingIndicator(modifier = Modifier.size(32.dp))
-        }
-    } else {
-        IconButton(onClick = onClick) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_refresh),
-                contentDescription = stringResource(Res.string.songs_rescan),
+        ) { panelModifier, panelContentPadding ->
+            SongsControls(
+                modifier = panelModifier,
+                viewModel = viewModel,
+                contentPadding = panelContentPadding,
             )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SongList(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     listState: LazyGridState,
     placeholder: CampfireViewModel.Placeholder?,
-    isRefreshing: Boolean,
     columnCount: Int,
     hasLoadedLibrary: Boolean,
     contentPadding: PaddingValues,
@@ -240,7 +190,11 @@ private fun SongList(
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    // Lyrics only mode takes the chords out of the viewer, and the key is the shortest way of writing them down.
+    val shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true
+    val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
     val filePicker = LocalFilePicker.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val layoutDirection = LocalLayoutDirection.current
@@ -267,10 +221,8 @@ private fun SongList(
         }
     }
 
-    RefreshableContainer(
-        modifier = modifier,
-        isRefreshing = isRefreshing,
-        onRefresh = viewModel::refresh,
+    Box(
+        modifier = modifier
     ) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
@@ -327,6 +279,10 @@ private fun SongList(
                     SongListItem(
                         modifier = listItemAnimation(listState, hasLoadedLibrary),
                         song = song,
+                        // A song opened from the library is transposed in the preferences, so that is the only
+                        // amount this list knows about: the setlists each hold their own.
+                        key = viewModel.renderKey(song, transpositions[song.fileName, null], chordSpelling),
+                        shouldShowChords = shouldShowChords,
                         onClick = {
                             keyboardController?.hide()
                             viewModel.openSong(song)
@@ -338,11 +294,11 @@ private fun SongList(
                         } else {
                             {
                                 keyboardController?.hide()
-                                viewModel.showDialog(CampfireViewModel.DialogType.SongActions(song = song, setlistFileName = null))
+                                viewModel.showDialog(CampfireViewModel.DialogType.SongActions(song = song, lockedSetlistFileName = null))
                             }
                         },
                         actions = if (isDesktopPlatform && !isPerformanceModeEnabled) {
-                            { SongActionsMenu(viewModel = viewModel, song = song, setlistFileName = null) }
+                            { SongActionsMenu(viewModel = viewModel, song = song, lockedSetlistFileName = null) }
                         } else {
                             null
                         },
@@ -369,66 +325,6 @@ private val CampfireViewModel.SongGroup.Header.fastScrollerLabel: String
     }
 
 /**
- * Whether the refresh indicator belongs on screen, which for the first read of the library is not the same thing as
- * whether that read is running.
- *
- * The first one usually finishes in a few milliseconds, which is just enough for the indicator to slide part of the
- * way in and disappear again - a flinch rather than an answer, and it reads as something going wrong rather than as
- * the library arriving. So it only counts once it has been going for [REFRESH_INDICATOR_DELAY_MILLIS], and a library
- * that really does take a while to read still says so. Every refresh after that one was asked for by the user, and
- * showing the answer to a pull late would be the glitch.
- */
-@Composable
-private fun rememberIsRefreshIndicatorVisible(
-    isRefreshing: Boolean,
-    hasLoadedLibrary: Boolean,
-): Boolean {
-    var isVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(isRefreshing, hasLoadedLibrary) {
-        isVisible = if (isRefreshing) {
-            if (!hasLoadedLibrary) delay(REFRESH_INDICATOR_DELAY_MILLIS)
-            true
-        } else {
-            false
-        }
-    }
-    return isVisible
-}
-
-/**
- * Pull to refresh only makes sense with touch input; on desktop the app bar has a refresh action instead.
- */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun RefreshableContainer(
-    modifier: Modifier = Modifier,
-    isRefreshing: Boolean,
-    onRefresh: () -> Unit,
-    content: @Composable BoxScope.() -> Unit,
-) = if (isDesktopPlatform) {
-    Box(
-        modifier = modifier,
-        content = content,
-    )
-} else {
-    val pullToRefreshState = rememberPullToRefreshState()
-    PullToRefreshBox(
-        modifier = modifier,
-        isRefreshing = isRefreshing,
-        onRefresh = onRefresh,
-        state = pullToRefreshState,
-        indicator = {
-            PullToRefreshDefaults.LoadingIndicator(
-                modifier = Modifier.align(Alignment.TopCenter),
-                state = pullToRefreshState,
-                isRefreshing = isRefreshing,
-            )
-        },
-        content = content,
-    )
-}
-
-/**
  * Whether the button that creates a song belongs on screen. It waits for the library to have been read rather than
  * appearing over the loading indicator and shrinking away again a moment later, and it stays away from the empty
  * state and the error, both of which offer their own action for the same thing.
@@ -442,8 +338,8 @@ private val CampfireViewModel.Placeholder?.allowsCreatingSongs
         CampfireViewModel.Placeholder.LOADING,
         CampfireViewModel.Placeholder.ERROR,
         CampfireViewModel.Placeholder.NO_SONGS,
-        CampfireViewModel.Placeholder.NO_SETLISTS -> false
+        CampfireViewModel.Placeholder.NO_SETLISTS,
+        CampfireViewModel.Placeholder.ALL_SETLISTS_HIDDEN -> false
     }
 
-private const val REFRESH_INDICATOR_DELAY_MILLIS = 500L
 private const val SYMBOLS_LABEL = "#"
