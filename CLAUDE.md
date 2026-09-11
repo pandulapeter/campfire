@@ -14,7 +14,8 @@ Compose UI is shared between all platforms. The app owns a library folder of pla
 [ChordPro](https://www.chordpro.org) files on every platform, which the user fills by writing songs in the built-in
 editor or by importing files and zip archives. **The only thing that ever reaches the network is sync**, which is off
 until the user connects a cloud folder of their own in Settings, and which still involves no server of Campfire's own
-— see the Sync section below.
+— see the Sync section below. (The Android build also asks Play whether a newer version of itself exists, but that
+question is answered over IPC by the Play Store app; Campfire's own process makes no request — see Updates below.)
 
 ## Architecture
 
@@ -169,6 +170,25 @@ the only possible one. The per-module `CLAUDE.md` files carry the detail; the sh
   as ` (2)`, exactly as a colliding import does.
 - Authorization is OAuth 2.0 with PKCE and no client secret, which is what lets this work with no backend. The four
   platforms get back from the consent page in four different ways, all behind `SyncAuthenticator`.
+
+## Updates
+
+Play's in-app updates, and only on Android: `:presentation`'s `ui/platform/AppUpdate.kt` is the contract and
+`ui/AppUpdateGate.kt` the UI, with the Play Core implementation in `androidMain` and a no-op actual on the other
+three. The gate wraps the whole app inside `CampfireApp`, so it speaks the theme and the language chosen in the app.
+
+- The **Play release's `updatePriority` is the entire policy** and it is set per release in the Play Console, not in
+  the code: 0–1 is left to Play's own schedule, 2–3 offers a dismissible flexible update that downloads in the
+  background, 4–5 covers the app with a screen that cannot be dismissed until the update is there. The thresholds
+  live in `AppUpdate.android.kt`.
+- The blocking screen is drawn **over** the app rather than in place of it, so a required update that turns out not
+  to install leaves the library exactly where the user was.
+- Nothing of this exists outside a Play-installed build: a debug APK, a sideloaded release or a device with no Play
+  answers every check with an error, which is why the flow can only be exercised from an internal testing track.
+- **iOS has no equivalent.** Apple ships no API that tells an app the store has a newer build; the only way to ask
+  is to poll their public lookup endpoint for the published version, which would make it the second thing in the app
+  that reaches the network. iOS updates apps on its own, so the iOS actual stays `NotAvailable`. Desktop and the web
+  answer to no store at all, and the web build is downloaded again every time it is opened.
 
 ## Web
 

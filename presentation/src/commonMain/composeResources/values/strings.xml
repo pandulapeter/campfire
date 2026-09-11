@@ -197,4 +197,15 @@
     <string name="settings_sync_notification_title">Syncing the library</string>
     <string name="settings_sync_redirect_page_title">Campfire is connected</string>
     <string name="settings_sync_redirect_page_message">You can close this tab and go back to the app.</string>
+
+    <!-- In-app updates, which only the Play build ever has anything to show -->
+    <string name="app_update_available">Update available</string>
+    <string name="app_update_available_hint">A newer version of Campfire is ready to download. It arrives in the background, so you can carry on in the meantime.</string>
+    <string name="app_update_update">Update</string>
+    <string name="app_update_later">Later</string>
+    <string name="app_update_downloaded">Update downloaded</string>
+    <string name="app_update_downloaded_hint">Campfire needs to restart to finish installing it.</string>
+    <string name="app_update_restart">Restart</string>
+    <string name="app_update_required">Update required</string>
+    <string name="app_update_required_hint">This version of Campfire can no longer be used. Your library stays exactly where it is.</string>
 </resources>

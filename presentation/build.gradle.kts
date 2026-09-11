@@ -53,6 +53,8 @@ kotlin {
                 implementation(libs.compose.reorderable)
                 implementation(libs.compose.runtime)
                 implementation(libs.compose.ui)
+                // Only the required-update screen needs one, to stop back navigating the app it is covering.
+                implementation(libs.compose.ui.backhandler)
                 implementation(libs.koin.compose)
                 implementation(libs.koin.compose.viewmodel)
                 implementation(libs.koin.core)
@@ -65,6 +67,8 @@ kotlin {
         androidMain.dependencies {
             // Edge-to-edge system bar styling, done by the Android shell in ui/CampfireAndroidApp.kt.
             implementation(libs.androidx.activity.compose)
+            // Play's in-app update flow, the one thing only the Android build has, see ui/platform/AppUpdate.kt.
+            implementation(libs.google.playAppUpdate)
         }
         wasmJsMain.dependencies {
             // Opening URLs in a new tab, done by the web shell in ui/CampfireWebApp.kt.

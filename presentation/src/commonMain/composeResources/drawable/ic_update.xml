@@ -1,0 +1,18 @@
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M12,1L5,1c-1.1,0 -2,0.9 -2,2v18c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2L21,3c0,-1.1 -0.9,-2 -2,-2zM19,19L5,19L5,5h14v14zM8,13h3L11,9h2v4h3l-4,4 -4,-4z"/>
+</vector>

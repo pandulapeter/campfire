@@ -197,4 +197,15 @@
     <string name="settings_sync_notification_title">A könyvtár szinkronizálása</string>
     <string name="settings_sync_redirect_page_title">A Campfire csatlakozott</string>
     <string name="settings_sync_redirect_page_message">Bezárhatod ezt a lapot, és visszatérhetsz az alkalmazásba.</string>
+
+    <!-- In-app updates, which only the Play build ever has anything to show -->
+    <string name="app_update_available">Elérhető frissítés</string>
+    <string name="app_update_available_hint">A Campfire újabb verziója letölthető. A háttérben érkezik, így addig is folytathatod.</string>
+    <string name="app_update_update">Frissítés</string>
+    <string name="app_update_later">Később</string>
+    <string name="app_update_downloaded">A frissítés letöltődött</string>
+    <string name="app_update_downloaded_hint">A telepítés befejezéséhez a Campfire újraindul.</string>
+    <string name="app_update_restart">Újraindítás</string>
+    <string name="app_update_required">Frissítés szükséges</string>
+    <string name="app_update_required_hint">A Campfire ezen verziója már nem használható. A könyvtárad pontosan ott marad, ahol van.</string>
 </resources>

@@ -141,10 +141,14 @@ fun CampfireApp(
     CampfireTheme(
         uiMode = userPreferences?.uiMode
     ) {
-        CampfireContent(
-            viewModel = viewModel,
-            urlOpener = urlOpener,
-        )
+        // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors the user
+        // chose, and above the language preference, so that it is in the language they chose too.
+        AppUpdateGate {
+            CampfireContent(
+                viewModel = viewModel,
+                urlOpener = urlOpener,
+            )
+        }
     }
 }
 

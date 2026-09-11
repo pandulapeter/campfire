@@ -16,6 +16,7 @@ androidx-lifecycle = "2.11.0" # https://github.com/JetBrains/compose-multiplatfo
 androidx-navigation3 = "1.1.1" # https://github.com/JetBrains/compose-multiplatform-core/releases (org.jetbrains.androidx.navigation3)
 compose-reorderable = "3.1.0" # https://github.com/Calvin-LL/Reorderable/releases
 google-material = "1.14.0" # https://github.com/material-components/material-components-android/releases
+google-playAppUpdate = "2.1.0" # https://developer.android.com/guide/playcore/in-app-updates
 gradle = "9.4.0" # https://developer.android.com/studio/releases/gradle-plugin
 hyperether-localization = "2.0.1" # https://github.com/hyperether/compose-multiplatform-localize/releases
 jetbrains-compose = "1.12.0" # https://github.com/JetBrains/compose-jb/releases
@@ -43,7 +44,9 @@ compose-material3 = { module = "org.jetbrains.compose.material3:material3", vers
 compose-reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "compose-reorderable" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "jetbrains-compose" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "jetbrains-compose" }
+compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.ref = "jetbrains-compose" }
 google-material = { module = "com.google.android.material:material", version.ref = "google-material" }
+google-playAppUpdate = { module = "com.google.android.play:app-update", version.ref = "google-playAppUpdate" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
