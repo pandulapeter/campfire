@@ -29,7 +29,7 @@ internal data class SyncCredentialsDocument(
     val accountId: String = "",
     val displayName: String = "",
     val email: String = "",
-    val pending: Pending? = null
+    val pending: Pending? = null,
 ) {
 
     @Serializable
@@ -37,6 +37,6 @@ internal data class SyncCredentialsDocument(
         val providerId: String = "",
         val state: String = "",
         val verifier: String = "",
-        val redirectUri: String = ""
+        val redirectUri: String = "",
     )
 }

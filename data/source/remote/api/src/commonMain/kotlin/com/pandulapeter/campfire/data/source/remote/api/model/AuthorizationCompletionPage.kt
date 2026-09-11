@@ -21,5 +21,5 @@ package com.pandulapeter.campfire.data.source.remote.api.model
  */
 data class AuthorizationCompletionPage(
     val title: String,
-    val message: String
+    val message: String,
 )

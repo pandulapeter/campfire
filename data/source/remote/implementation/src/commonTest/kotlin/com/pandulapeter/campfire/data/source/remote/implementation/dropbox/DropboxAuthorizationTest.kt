@@ -48,7 +48,7 @@ class DropboxAuthorizationTest {
         val challenge = redirectParameters(request.authorizationUrl)["code_challenge"]
         assertEquals(
             expected = Base64.UrlSafe.encode(Sha256.hash(request.verifier.encodeToByteArray())).trimEnd('='),
-            actual = challenge
+            actual = challenge,
         )
         assertTrue(request.authorizationUrl.contains(request.verifier).not())
     }
@@ -84,7 +84,7 @@ class DropboxAuthorizationTest {
     private fun provider() = DropboxSyncProvider(
         httpClient = createHttpClient(),
         credentialsStore = SyncCredentialsStore(NoStorage),
-        appKey = APP_KEY
+        appKey = APP_KEY,
     )
 
     /** Building the URL touches no storage, so the test does not need any. */

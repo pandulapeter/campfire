@@ -39,7 +39,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun SearchField(
     modifier: Modifier = Modifier,
     query: String,
-    onQueryChanged: (String) -> Unit
+    onQueryChanged: (String) -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     SearchBarDefaults.InputField(
@@ -56,27 +56,27 @@ internal fun SearchField(
             Icon(
                 modifier = Modifier.size(SEARCH_ICON_SIZE),
                 painter = painterResource(Res.drawable.ic_search),
-                contentDescription = null
+                contentDescription = null,
             )
         },
         trailingIcon = {
             AnimatedVisibility(
                 visible = query.isNotEmpty(),
                 enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut()
+                exit = fadeOut() + scaleOut(),
             ) {
                 // The text field would otherwise show the text cursor over the button on desktop.
                 IconButton(
                     modifier = Modifier.pointerHoverIcon(PointerIcon.Default, overrideDescendants = true),
-                    onClick = { onQueryChanged("") }
+                    onClick = { onQueryChanged("") },
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_clear),
-                        contentDescription = stringResource(Res.string.songs_clear)
+                        contentDescription = stringResource(Res.string.songs_clear),
                     )
                 }
             }
-        }
+        },
     )
 }
 

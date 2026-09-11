@@ -18,11 +18,11 @@ internal fun SetlistDocument.toModel(fileName: String) = Setlist(
     title = title,
     priority = priority,
     // A document that was edited by hand can name the same song twice or leave a blank entry behind.
-    entries = songs.filter { it.file.isNotBlank() }.map { Setlist.Entry(songFileName = it.file, transposition = it.transposition) }
+    entries = songs.filter { it.file.isNotBlank() }.map { Setlist.Entry(songFileName = it.file, transposition = it.transposition) },
 )
 
 internal fun Setlist.toDocument() = SetlistDocument(
     title = title,
     priority = priority,
-    songs = entries.map { SetlistSongDocument(file = it.songFileName, transposition = it.transposition) }
+    songs = entries.map { SetlistSongDocument(file = it.songFileName, transposition = it.transposition) },
 )

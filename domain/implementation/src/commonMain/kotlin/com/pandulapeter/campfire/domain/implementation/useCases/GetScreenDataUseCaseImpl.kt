@@ -26,7 +26,7 @@ class GetScreenDataUseCaseImpl internal constructor(
     private val normalizeText: NormalizeTextUseCase,
     setlistRepository: SetlistRepository,
     songRepository: SongRepository,
-    userPreferencesRepository: UserPreferencesRepository
+    userPreferencesRepository: UserPreferencesRepository,
 ) : GetScreenDataUseCase {
 
     override operator fun invoke() = screenDataFlow
@@ -38,7 +38,7 @@ class GetScreenDataUseCaseImpl internal constructor(
         // Only the two preferences the list is built from: a preference that changes on every step of a transposition
         // (or on every frame of a pinch, once the debounce lets it through) must not have the whole library filtered
         // and sorted again for it.
-        userPreferencesRepository.userPreferences.map { state -> state.mapData { it.toListPreferences() } }.distinctUntilChanged()
+        userPreferencesRepository.userPreferences.map { state -> state.mapData { it.toListPreferences() } }.distinctUntilChanged(),
     ) { setlistsDataState, songsDataState, listPreferencesDataState ->
 
         fun createScreenData() = setlistsDataState.data?.sortedByDescending { it.priority }?.let { setlists ->
@@ -49,7 +49,7 @@ class GetScreenDataUseCaseImpl internal constructor(
                         songs = songs
                             .filterHasChords(listPreferences)
                             .sort(listPreferences),
-                        songFileNames = songs.mapTo(mutableSetOf()) { it.fileName }
+                        songFileNames = songs.mapTo(mutableSetOf()) { it.fileName },
                     ).also {
                         cache = it
                     }
@@ -86,18 +86,18 @@ class GetScreenDataUseCaseImpl internal constructor(
     private class SortableSong(
         val song: Song,
         val artist: String,
-        val title: String
+        val title: String,
     )
 
     /** The part of the preferences the song list depends on. */
     private data class ListPreferences(
         val shouldShowSongsWithoutChords: Boolean,
-        val sortingMode: UserPreferences.SortingMode
+        val sortingMode: UserPreferences.SortingMode,
     )
 
     private fun UserPreferences.toListPreferences() = ListPreferences(
         shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
-        sortingMode = sortingMode
+        sortingMode = sortingMode,
     )
 
     private fun <T, R> DataState<T>.mapData(transform: (T) -> R): DataState<R> = when (this) {

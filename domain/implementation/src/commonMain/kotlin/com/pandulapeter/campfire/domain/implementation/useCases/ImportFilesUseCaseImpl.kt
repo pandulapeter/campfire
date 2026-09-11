@@ -22,7 +22,7 @@ import kotlinx.coroutines.CancellationException
 class ImportFilesUseCaseImpl internal constructor(
     private val archiveRepository: ArchiveRepository,
     private val songRepository: SongRepository,
-    private val setlistRepository: SetlistRepository
+    private val setlistRepository: SetlistRepository,
 ) : ImportFilesUseCase {
 
     /**
@@ -72,7 +72,7 @@ class ImportFilesUseCaseImpl internal constructor(
                     desiredFileName = if (parts.size == 1) file.name.substringBeforeLast('.') + LibraryFiles.SONG_EXTENSION else null,
                     // The splitter trims the blank lines between the songs of a collection; the newline a text file
                     // ends with is not one of those, and without it an exported library does not import back byte for byte.
-                    text = part + "\n"
+                    text = part + "\n",
                 )
                 importedSongFileNames += song.fileName
                 if (parts.size == 1) {
@@ -94,7 +94,7 @@ class ImportFilesUseCaseImpl internal constructor(
                     priority = priority++,
                     entries = setlist.entries.map { entry ->
                         entry.copy(songFileName = storedSongFileNames[entry.songFileName] ?: entry.songFileName)
-                    }
+                    },
                 )
             ).fileName
         }
@@ -110,7 +110,7 @@ class ImportFilesUseCaseImpl internal constructor(
         return ImportResult(
             importedSongFileNames = importedSongFileNames,
             importedSetlistFileNames = importedSetlistFileNames,
-            skippedFileNames = skippedFileNames
+            skippedFileNames = skippedFileNames,
         )
     }
 

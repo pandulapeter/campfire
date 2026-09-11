@@ -20,7 +20,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 
 internal class UserPreferencesLocalSourceImpl(
-    private val fileStorage: FileStorage
+    private val fileStorage: FileStorage,
 ) : UserPreferencesLocalSource {
 
     /** A document that cannot be parsed is treated as no document at all, so the app starts on its defaults. */
@@ -36,7 +36,7 @@ internal class UserPreferencesLocalSourceImpl(
     override suspend fun saveUserPreferences(userPreferences: UserPreferences) = fileStorage.writeText(
         directory = StorageDirectory.PREFERENCES,
         name = FILE_NAME,
-        text = json.encodeToString(userPreferences.toDocument())
+        text = json.encodeToString(userPreferences.toDocument()),
     )
 
     private companion object {

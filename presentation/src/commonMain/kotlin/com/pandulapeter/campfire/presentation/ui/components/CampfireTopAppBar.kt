@@ -46,17 +46,17 @@ internal fun CampfireTopAppBar(
     scrollBehavior: TopAppBarScrollBehavior,
     title: @Composable () -> Unit,
     navigationIcon: @Composable () -> Unit = {},
-    actions: @Composable RowScope.() -> Unit = {}
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     val isOverlapped = scrollBehavior.state.overlappedFraction > 0.01f
     val overlapProgress by animateFloatAsState(
         targetValue = if (isOverlapped) 1f else 0f,
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
     Surface(
         modifier = modifier.zIndex(1f), // Draw the shadow over the content that follows in the column.
         color = lerp(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceContainer, overlapProgress),
-        shadowElevation = OVERLAPPED_ELEVATION * overlapProgress
+        shadowElevation = OVERLAPPED_ELEVATION * overlapProgress,
     ) {
         TopAppBar(
             title = title,
@@ -64,9 +64,9 @@ internal fun CampfireTopAppBar(
             actions = actions,
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent,
-                scrolledContainerColor = Color.Transparent
+                scrolledContainerColor = Color.Transparent,
             ),
-            scrollBehavior = scrollBehavior
+            scrollBehavior = scrollBehavior,
         )
     }
 }
@@ -79,7 +79,7 @@ internal fun CampfireTopAppBar(
 @Composable
 internal fun KeepTopAppBarInSync(
     scrollBehavior: TopAppBarScrollBehavior,
-    scrollableState: ScrollableState
+    scrollableState: ScrollableState,
 ) = LaunchedEffect(scrollBehavior, scrollableState) {
     snapshotFlow { scrollableState.canScrollBackward }.collect { canScrollBackward ->
         if (!canScrollBackward) {

@@ -18,5 +18,5 @@ package com.pandulapeter.campfire.data.source.remote.api.model
  * was interrupted half way.
  */
 data class RemoteListing(
-    val files: List<RemoteFile>
+    val files: List<RemoteFile>,
 )

@@ -39,6 +39,10 @@ File-backed multiplatform implementation of `:data:source:local:api`, on all fou
   `:chordpro`'s `parseMetadata` / `hasChords` rather than reading the file twice. A file that cannot be read is skipped;
   a *directory* that cannot be listed throws, because "empty library" and "your library is unreachable" must not look
   the same to the user.
+- **`model/` + `mapper/`** — `SetlistDocument`, `UserPreferencesDocument` and the two-way mapping to the
+  `:data:model` types. Every field of a document is defaulted, so a file written by an older version — or edited by
+  hand, which on iOS and desktop the user can do — keeps whatever it does carry instead of failing to parse. No
+  document type ever leaves this module.
 - **`zip/`** — a dependency-free zip implementation: `ZipReader` (STORED + DEFLATE, ZIP64 and encryption rejected),
   `ZipWriter` (STORED only — song text compresses badly enough not to be worth it), `Inflater` (raw DEFLATE, RFC 1951,
   following `puff.c`) and `Crc32`. It exists because no multiplatform zip library covers wasmJs.

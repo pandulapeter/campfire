@@ -68,7 +68,7 @@ internal fun hasRoomForSidePanel(screenWidth: Dp) = columnCountForWidth(screenWi
 internal fun songListColumnCount(
     settledWidth: Dp,
     contentPadding: PaddingValues,
-    isSidePanelVisible: Boolean
+    isSidePanelVisible: Boolean,
 ): Int {
     val layoutDirection = LocalLayoutDirection.current
     // The panel covers the end inset while it is visible (see besideSidePanel), so either way the same width goes.
@@ -88,11 +88,11 @@ internal fun SongsControlsSidePanel(
     isVisible: Boolean,
     viewModel: CampfireViewModel,
     shouldIncludeSorting: Boolean,
-    contentPadding: PaddingValues
+    contentPadding: PaddingValues,
 ) = AnimatedVisibility(
     visible = isVisible,
     enter = expandHorizontally() + fadeIn(),
-    exit = shrinkHorizontally() + fadeOut()
+    exit = shrinkHorizontally() + fadeOut(),
 ) {
     val endPadding = contentPadding.calculateEndPadding(LocalLayoutDirection.current)
     Row {
@@ -105,8 +105,8 @@ internal fun SongsControlsSidePanel(
                 // The panel sits next to the app bar instead of below it, so it handles the top inset on its own.
                 top = TopAppBarDefaults.windowInsets.only(WindowInsetsSides.Top).asPaddingValues().calculateTopPadding(),
                 end = endPadding,
-                bottom = contentPadding.calculateBottomPadding()
-            )
+                bottom = contentPadding.calculateBottomPadding(),
+            ),
         )
     }
 }
@@ -122,7 +122,7 @@ internal fun PaddingValues.besideSidePanel(isSidePanelVisible: Boolean): Padding
     return PaddingValues(
         start = calculateStartPadding(layoutDirection),
         top = calculateTopPadding(),
-        bottom = calculateBottomPadding()
+        bottom = calculateBottomPadding(),
     )
 }
 
@@ -135,7 +135,7 @@ internal fun SongsControls(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     shouldIncludeSorting: Boolean,
-    contentPadding: PaddingValues = PaddingValues()
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     Column(
@@ -146,17 +146,17 @@ internal fun SongsControls(
             SegmentedChoice(
                 options = listOf(
                     UserPreferences.SortingMode.BY_ARTIST to stringResource(Res.string.songs_sorting_mode_by_artist),
-                    UserPreferences.SortingMode.BY_TITLE to stringResource(Res.string.songs_sorting_mode_by_title)
+                    UserPreferences.SortingMode.BY_TITLE to stringResource(Res.string.songs_sorting_mode_by_title),
                 ),
                 selected = userPreferences?.sortingMode,
-                onSelected = viewModel::setSortingMode
+                onSelected = viewModel::setSortingMode,
             )
         }
         SettingsSectionTitle(text = stringResource(Res.string.filters))
         CheckboxListItem(
             title = stringResource(Res.string.songs_show_without_chords),
             isChecked = userPreferences?.shouldShowSongsWithoutChords == true,
-            onCheckedChange = viewModel::setShouldShowSongsWithoutChords
+            onCheckedChange = viewModel::setShouldShowSongsWithoutChords,
         )
     }
 }

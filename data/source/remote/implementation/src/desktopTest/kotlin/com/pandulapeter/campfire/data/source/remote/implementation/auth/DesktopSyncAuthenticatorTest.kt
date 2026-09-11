@@ -83,7 +83,7 @@ class DesktopSyncAuthenticatorTest {
         val outcome = withTimeout(5_000) { authorization.await() }
         assertEquals(
             expected = SyncAuthenticator.AuthorizationOutcome.Received("http://127.0.0.1:53682/?code=abc123&state=deadbeef"),
-            actual = outcome
+            actual = outcome,
         )
         assertFalse(isPortOpen(), "The port should be released once the redirect has arrived.")
     }
@@ -112,7 +112,7 @@ class DesktopSyncAuthenticatorTest {
         /** In Hungarian on purpose: the page is rendered from what it is handed, not from anything built in. */
         val COMPLETION_PAGE = AuthorizationCompletionPage(
             title = "A Campfire csatlakozott",
-            message = "Bezárhatod ezt a lapot, és visszatérhetsz az alkalmazásba."
+            message = "Bezárhatod ezt a lapot, és visszatérhetsz az alkalmazásba.",
         )
     }
 }

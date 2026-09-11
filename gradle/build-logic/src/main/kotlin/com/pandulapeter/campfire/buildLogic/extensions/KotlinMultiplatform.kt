@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
  */
 @OptIn(ExperimentalWasmDsl::class)
 internal fun Project.configureKotlinMultiplatform(
-    extension: KotlinMultiplatformExtension
+    extension: KotlinMultiplatformExtension,
 ) {
     // A klib carries the name of the artifact it is built into, which is the name of the Gradle project by default -
     // and several modules here are called "api" or "implementation". Derived from the whole path instead, so that no

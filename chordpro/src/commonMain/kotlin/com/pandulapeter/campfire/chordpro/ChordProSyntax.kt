@@ -41,14 +41,14 @@ internal object ChordProSyntax {
         "sov" to "verse",
         "sob" to "bridge",
         "sot" to "tab",
-        "sog" to "grid"
+        "sog" to "grid",
     )
     private val endShortNames = mapOf(
         "eoc" to "chorus",
         "eov" to "verse",
         "eob" to "bridge",
         "eot" to "tab",
-        "eog" to "grid"
+        "eog" to "grid",
     )
 
     /** Every directive name the parser reacts to, used to detect (and drop) selector suffixes such as `title-guitar`. */
@@ -56,7 +56,7 @@ internal object ChordProSyntax {
         "title", "t", "subtitle", "st", "artist", "composer", "lyricist", "album", "year", "key", "capo", "tempo",
         "time", "duration", "transpose", "meta", "chorus", "comment", "c", "comment_italic", "ci", "comment_box", "cb",
         "new_page", "np", "new_physical_page", "npp", "column_break", "colb", "new_song", "ns", "define", "chord",
-        "image", "columns", "col", "highlight", "pagetype", "titles"
+        "image", "columns", "col", "highlight", "pagetype", "titles",
     )
 
     /** Splits into lines accepting both `\r\n` and `\n`; a trailing newline does not create an extra line. */

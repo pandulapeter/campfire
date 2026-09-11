@@ -15,7 +15,7 @@ import org.koin.core.scope.Scope
 enum class StorageDirectory {
     SONGS,
     SETLISTS,
-    PREFERENCES
+    PREFERENCES,
 }
 
 data class StoredFileInfo(
@@ -23,7 +23,7 @@ data class StoredFileInfo(
     val name: String,
     val size: Long,
     /** Milliseconds since the epoch, 0 if the platform cannot tell. */
-    val lastModified: Long
+    val lastModified: Long,
 )
 
 /**

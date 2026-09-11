@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDa
 import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 
 internal class SetlistRepositoryImpl(
-    private val setlistLocalSource: SetlistLocalSource
+    private val setlistLocalSource: SetlistLocalSource,
 ) : BaseLocalDataRepository<List<Setlist>>(
     loadDataFromLocalSource = setlistLocalSource::loadSetlists
 ), SetlistRepository {

@@ -97,13 +97,13 @@ internal fun SongListItem(
     isBeingDragged: Boolean = false,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
-    actions: (@Composable () -> Unit)? = null
+    actions: (@Composable () -> Unit)? = null,
 ) {
     // A progress value instead of an animated color, so that the row follows the color scheme immediately while it
     // is animating between the light and the dark theme (a color animation would chase it and trail behind).
     val dragProgress by animateFloatAsState(
         if (isBeingDragged) 1f else 0f,
-        MaterialTheme.motionScheme.defaultEffectsSpec()
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
     val containerColor = lerp(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceContainerHigh, dragProgress)
     ListItem(
@@ -118,18 +118,18 @@ internal fun SongListItem(
                     modifier = Modifier.weight(1f, fill = false),
                     text = song.title,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
                 if (!song.hasChords) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_dot),
-                        contentDescription = null
+                        contentDescription = null,
                     )
                     Text(
                         modifier = Modifier.padding(start = 8.dp),
                         text = stringResource(Res.string.songs_lyrics_only),
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -140,10 +140,10 @@ internal fun SongListItem(
                 Text(
                     text = artist,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
-        }
+        },
     )
 }
 
@@ -154,7 +154,7 @@ internal fun SongListItem(
 @Composable
 internal fun MissingSongListItem(
     modifier: Modifier = Modifier,
-    songFileName: String
+    songFileName: String,
 ) = ListItem(
     modifier = modifier.alpha(0.5f),
     colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
@@ -162,7 +162,7 @@ internal fun MissingSongListItem(
         Text(
             text = songFileName,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
     },
     supportingContent = {
@@ -170,9 +170,9 @@ internal fun MissingSongListItem(
             text = stringResource(Res.string.setlists_missing_song),
             fontStyle = FontStyle.Italic,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
-    }
+    },
 )
 
 /**
@@ -188,7 +188,7 @@ internal fun SectionHeader(
     modifier: Modifier = Modifier,
     text: String,
     onClick: () -> Unit,
-    action: (@Composable () -> Unit)? = null
+    action: (@Composable () -> Unit)? = null,
 ) = Box(
     modifier = modifier.fillMaxWidth().padding(horizontal = LIST_ITEM_KEYLINE - SECTION_HEADER_PADDING, vertical = SECTION_HEADER_GAP)
 ) {
@@ -199,7 +199,7 @@ internal fun SectionHeader(
             onClick = onClick,
             shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            shadowElevation = 2.dp
+            shadowElevation = 2.dp,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -209,11 +209,11 @@ internal fun SectionHeader(
                         start = SECTION_HEADER_PADDING,
                         end = if (action == null) SECTION_HEADER_PADDING else 4.dp,
                         top = 6.dp,
-                        bottom = 6.dp
+                        bottom = 6.dp,
                     ),
                     text = text,
                     style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
                 action?.invoke()
             }
@@ -242,16 +242,16 @@ internal suspend fun LazyGridState.animateScrollToKey(key: Any) {
 internal fun SectionHeaderAction(
     icon: Painter,
     contentDescription: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) = IconButton(
     modifier = Modifier.size(32.dp),
-    onClick = onClick
+    onClick = onClick,
 ) {
     Icon(
         modifier = Modifier.size(18.dp),
         painter = icon,
         contentDescription = contentDescription,
-        tint = MaterialTheme.colorScheme.onSurfaceVariant
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
 
@@ -266,12 +266,12 @@ internal fun SectionHeaderAction(
 internal fun SettingsSectionTitle(
     modifier: Modifier = Modifier,
     text: String,
-    contentPadding: PaddingValues = PaddingValues(start = LIST_ITEM_KEYLINE, end = LIST_ITEM_KEYLINE, top = 24.dp, bottom = 8.dp)
+    contentPadding: PaddingValues = PaddingValues(start = LIST_ITEM_KEYLINE, end = LIST_ITEM_KEYLINE, top = 24.dp, bottom = 8.dp),
 ) = Text(
     modifier = modifier.fillMaxWidth().padding(contentPadding),
     text = text,
     style = MaterialTheme.typography.titleSmall,
-    color = MaterialTheme.colorScheme.primary
+    color = MaterialTheme.colorScheme.primary,
 )
 
 @Composable
@@ -281,7 +281,7 @@ internal fun SwitchListItem(
     description: String? = null,
     isChecked: Boolean,
     isEnabled: Boolean = true,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
 ) = ListItem(
     modifier = modifier
         .toggleable(value = isChecked, enabled = isEnabled, role = Role.Switch, onValueChange = onCheckedChange)
@@ -289,7 +289,7 @@ internal fun SwitchListItem(
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
     supportingContent = description?.let { { Text(it) } },
-    trailingContent = { Switch(checked = isChecked, enabled = isEnabled, onCheckedChange = null) }
+    trailingContent = { Switch(checked = isChecked, enabled = isEnabled, onCheckedChange = null) },
 )
 
 @Composable
@@ -298,14 +298,14 @@ internal fun CheckboxListItem(
     title: String,
     isChecked: Boolean,
     isEnabled: Boolean = true,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
 ) = ListItem(
     modifier = modifier
         .toggleable(value = isChecked, enabled = isEnabled, role = Role.Checkbox, onValueChange = onCheckedChange)
         .alpha(if (isEnabled) 1f else 0.5f),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
-    leadingContent = { Checkbox(checked = isChecked, enabled = isEnabled, onCheckedChange = null) }
+    leadingContent = { Checkbox(checked = isChecked, enabled = isEnabled, onCheckedChange = null) },
 )
 
 @Composable
@@ -313,7 +313,7 @@ internal fun LinkListItem(
     modifier: Modifier = Modifier,
     title: String,
     icon: Painter,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) = ListItem(
     modifier = modifier.clickable(onClick = onClick),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
@@ -323,9 +323,9 @@ internal fun LinkListItem(
         Icon(
             painter = painterResource(Res.drawable.ic_open_in_new),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-    }
+    },
 )
 
 /**
@@ -339,20 +339,20 @@ internal fun ActionListItem(
     icon: Painter,
     isEnabled: Boolean = true,
     isEmphasized: Boolean = true,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) = ListItem(
     modifier = modifier.clickable(enabled = isEnabled, onClick = onClick).alpha(if (isEnabled) 1f else 0.5f),
     colors = if (isEmphasized) {
         ListItemDefaults.colors(
             containerColor = Color.Transparent,
             headlineColor = MaterialTheme.colorScheme.primary,
-            leadingIconColor = MaterialTheme.colorScheme.primary
+            leadingIconColor = MaterialTheme.colorScheme.primary,
         )
     } else {
         ListItemDefaults.colors(containerColor = Color.Transparent)
     },
     headlineContent = { Text(title) },
-    leadingContent = { Icon(painter = icon, contentDescription = null) }
+    leadingContent = { Icon(painter = icon, contentDescription = null) },
 )
 
 /**
@@ -373,16 +373,16 @@ internal fun ListPlaceholder(
     placeholder: CampfireViewModel.Placeholder,
     onRetry: () -> Unit,
     onNewSong: (() -> Unit)? = null,
-    onImport: (() -> Unit)? = null
+    onImport: (() -> Unit)? = null,
 ) = AnimatedContent(
     modifier = modifier,
     targetState = placeholder,
-    transitionSpec = { fadeIn() togetherWith fadeOut() }
+    transitionSpec = { fadeIn() togetherWith fadeOut() },
 ) { currentPlaceholder ->
     when (currentPlaceholder) {
         CampfireViewModel.Placeholder.LOADING -> Box(
             modifier = Modifier.fillMaxWidth().padding(32.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             ContainedLoadingIndicator()
         }
@@ -392,7 +392,7 @@ internal fun ListPlaceholder(
             title = stringResource(Res.string.error_no_data),
             hint = stringResource(Res.string.error_no_data_hint),
             actionText = stringResource(Res.string.retry),
-            onAction = onRetry
+            onAction = onRetry,
         )
 
         CampfireViewModel.Placeholder.NO_SONGS -> EmptyState(
@@ -402,25 +402,25 @@ internal fun ListPlaceholder(
             actionText = onNewSong?.let { stringResource(Res.string.songs_new_song) },
             onAction = onNewSong,
             secondaryActionText = onNewSong?.let { stringResource(Res.string.songs_import) },
-            onSecondaryAction = onImport
+            onSecondaryAction = onImport,
         )
 
         CampfireViewModel.Placeholder.NO_SETLISTS -> EmptyState(
             icon = painterResource(Res.drawable.ic_setlists),
             title = stringResource(Res.string.setlists_no_data),
-            hint = stringResource(Res.string.setlists_no_data_hint)
+            hint = stringResource(Res.string.setlists_no_data_hint),
         )
 
         CampfireViewModel.Placeholder.ALL_SONGS_HIDDEN -> EmptyState(
             icon = painterResource(Res.drawable.ic_tune),
             title = stringResource(Res.string.songs_all_hidden),
-            hint = stringResource(Res.string.songs_all_hidden_hint)
+            hint = stringResource(Res.string.songs_all_hidden_hint),
         )
 
         CampfireViewModel.Placeholder.NO_SEARCH_RESULTS -> EmptyState(
             icon = painterResource(Res.drawable.ic_search),
             title = stringResource(Res.string.songs_no_search_results),
-            hint = stringResource(Res.string.songs_no_search_results_hint)
+            hint = stringResource(Res.string.songs_no_search_results_hint),
         )
     }
 }
@@ -442,22 +442,22 @@ internal fun EmptyState(
     actionText: String? = null,
     onAction: (() -> Unit)? = null,
     secondaryActionText: String? = null,
-    onSecondaryAction: (() -> Unit)? = null
+    onSecondaryAction: (() -> Unit)? = null,
 ) = Column(
     // Always the full width, so that the text is centered on the list rather than on itself.
     modifier = modifier.fillMaxWidth().padding(32.dp),
-    horizontalAlignment = Alignment.CenterHorizontally
+    horizontalAlignment = Alignment.CenterHorizontally,
 ) {
     Icon(
         modifier = Modifier.padding(bottom = 16.dp).alpha(0.6f),
         painter = icon,
         contentDescription = null,
-        tint = MaterialTheme.colorScheme.primary
+        tint = MaterialTheme.colorScheme.primary,
     )
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium,
-        textAlign = TextAlign.Center
+        textAlign = TextAlign.Center,
     )
     if (hint != null) {
         Text(
@@ -465,18 +465,18 @@ internal fun EmptyState(
             text = hint,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
     if (actionText != null || secondaryActionText != null) {
         Row(
             modifier = Modifier.padding(top = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             if (actionText != null) {
                 Button(
                     enabled = onAction != null,
-                    onClick = { onAction?.invoke() }
+                    onClick = { onAction?.invoke() },
                 ) {
                     Text(actionText)
                 }
@@ -487,7 +487,7 @@ internal fun EmptyState(
             if (secondaryActionText != null) {
                 OutlinedButton(
                     enabled = onSecondaryAction != null,
-                    onClick = { onSecondaryAction?.invoke() }
+                    onClick = { onSecondaryAction?.invoke() },
                 ) {
                     Text(secondaryActionText)
                 }

@@ -16,5 +16,5 @@ package com.pandulapeter.campfire.data.model.domain
 data class ImportResult(
     val importedSongFileNames: List<String> = emptyList(),
     val importedSetlistFileNames: List<String> = emptyList(),
-    val skippedFileNames: List<String> = emptyList()
+    val skippedFileNames: List<String> = emptyList(),
 )

@@ -33,7 +33,7 @@ import kotlin.math.pow
  */
 internal fun Modifier.fontScaleGestures(
     fontScale: () -> Float,
-    onFontScaleChanged: (Float) -> Unit
+    onFontScaleChanged: (Float) -> Unit,
 ) = this
     .pointerInput(Unit) {
         awaitEachGesture {
@@ -83,7 +83,7 @@ internal fun Modifier.fontScaleGestures(
 /** The average distance of the fingers from their centroid and the font scale when the pinch began. */
 private data class PinchStart(
     val spread: Float,
-    val fontScale: Float
+    val fontScale: Float,
 )
 
 private const val PINCH_SENSITIVITY = 0.4f // Exponent applied to the spread ratio of the fingers.

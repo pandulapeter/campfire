@@ -45,7 +45,7 @@ object ChordProNotation {
     fun toGerman(song: ChordProSong) = ChordProTransposer.rewriteChords(
         song = song,
         rewriteTabLines = { lines -> ChordProTabTransposer.rewriteChordNames(lines) { name -> toGerman(name) } },
-        rename = { name -> toGerman(name) }
+        rename = { name -> toGerman(name) },
     )
 
     private fun noteToGerman(note: String): String {

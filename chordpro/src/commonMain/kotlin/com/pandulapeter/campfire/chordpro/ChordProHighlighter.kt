@@ -31,14 +31,14 @@ object ChordProHighlighter {
         ANNOTATION,
 
         /** A whole `#` line, which never reaches the rendered song. */
-        COMMENT
+        COMMENT,
     }
 
     /** [start] is inclusive and [end] exclusive, both offsets into the whole text. */
     data class Token(
         val type: TokenType,
         val start: Int,
-        val end: Int
+        val end: Int,
     )
 
     fun tokenize(text: String): List<Token> {
@@ -66,7 +66,7 @@ object ChordProHighlighter {
                     tokens += Token(
                         type = if (match.groupValues[1].startsWith(ANNOTATION_PREFIX)) TokenType.ANNOTATION else TokenType.CHORD,
                         start = lineStart + match.range.first,
-                        end = lineStart + match.range.last + 1
+                        end = lineStart + match.range.last + 1,
                     )
                 }
             }

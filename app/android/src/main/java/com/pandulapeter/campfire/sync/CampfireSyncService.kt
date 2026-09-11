@@ -63,7 +63,7 @@ class CampfireSyncService : Service() {
         val title: String,
         val preparingBody: String,
         val progressBodyFormat: String,
-        val stopLabel: String
+        val stopLabel: String,
     )
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -112,7 +112,7 @@ class CampfireSyncService : Service() {
                     this,
                     NOTIFICATION_ID,
                     notification,
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0,
                 )
                 isInForeground = true
                 // The run may have ended between the intent being sent and its arrival here.
@@ -163,7 +163,7 @@ class CampfireSyncService : Service() {
         title = getStringExtra(EXTRA_TITLE).orEmpty(),
         preparingBody = getStringExtra(EXTRA_PREPARING_BODY).orEmpty(),
         progressBodyFormat = getStringExtra(EXTRA_PROGRESS_BODY_FORMAT).orEmpty(),
-        stopLabel = getStringExtra(EXTRA_STOP_LABEL).orEmpty()
+        stopLabel = getStringExtra(EXTRA_STOP_LABEL).orEmpty(),
     )
 
     private fun buildNotification(): Notification? {
@@ -186,7 +186,7 @@ class CampfireSyncService : Service() {
                     this,
                     0,
                     Intent(this, CampfireActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
-                    PendingIntent.FLAG_IMMUTABLE
+                    PendingIntent.FLAG_IMMUTABLE,
                 )
             )
             .addAction(
@@ -197,8 +197,8 @@ class CampfireSyncService : Service() {
                         this,
                         1,
                         Intent(this, CampfireSyncService::class.java).setAction(ACTION_STOP),
-                        PendingIntent.FLAG_IMMUTABLE
-                    )
+                        PendingIntent.FLAG_IMMUTABLE,
+                    ),
                 ).build()
             )
             .setProgress(total, completed, total == 0)
@@ -236,7 +236,7 @@ class CampfireSyncService : Service() {
             progressBodyFormat: String,
             stopLabel: String,
             completed: Int,
-            total: Int
+            total: Int,
         ) = Intent(context, CampfireSyncService::class.java)
             .putExtra(EXTRA_CHANNEL_NAME, channelName)
             .putExtra(EXTRA_TITLE, title)

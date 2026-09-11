@@ -23,13 +23,13 @@ import org.koin.compose.viewmodel.koinViewModel
  */
 @Composable
 fun CampfireWebApp(
-    viewModel: CampfireViewModel = koinViewModel()
+    viewModel: CampfireViewModel = koinViewModel(),
 ) = CompositionLocalProvider(
     LocalFilePicker provides WebFilePicker
 ) {
     CampfireApp(
         viewModel = viewModel,
         urlOpener = { url -> window.open(url, "_blank") },
-        filesToImport = remember { droppedFiles() }
+        filesToImport = remember { droppedFiles() },
     )
 }

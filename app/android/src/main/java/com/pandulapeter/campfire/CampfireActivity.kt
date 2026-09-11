@@ -47,7 +47,7 @@ class CampfireActivity : AppCompatActivity() {
             CampfireAndroidApp(
                 urlOpener = ::openUrl,
                 filesToImport = filesToImport.receiveAsFlow(),
-                syncNotifier = ::onSyncNotificationChanged
+                syncNotifier = ::onSyncNotificationChanged,
             )
         }
         handle(intent)
@@ -91,8 +91,8 @@ class CampfireActivity : AppCompatActivity() {
                         progressBodyFormat = notification.progressBodyFormat,
                         stopLabel = notification.stopLabel,
                         completed = notification.progress.completed,
-                        total = notification.progress.total
-                    )
+                        total = notification.progress.total,
+                    ),
                 )
             }
         } catch (exception: Exception) {

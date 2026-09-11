@@ -58,7 +58,7 @@ sealed interface CampfireDestination : NavKey {
     data class SongDetails(
         val songFileNames: List<String>,
         val setlistFileName: String?,
-        val initialIndex: Int
+        val initialIndex: Int,
     ) : CampfireDestination {
 
         override val contentKey get() = "songDetails|$setlistFileName|$initialIndex|${songFileNames.joinToString(separator = ",")}"
@@ -72,7 +72,7 @@ sealed interface CampfireDestination : NavKey {
      */
     data class SongEditor(
         val fileName: String,
-        val shouldStartInsideFirstSection: Boolean = false
+        val shouldStartInsideFirstSection: Boolean = false,
     ) : CampfireDestination {
 
         // The flag is deliberately not part of this: it says how to open the editor, not which editor it is.

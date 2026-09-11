@@ -56,7 +56,7 @@ internal fun SongActions(
     song: Song,
     setlistFileName: String?,
     shouldIncludeAddToSetlist: Boolean = true,
-    item: @Composable (title: String, icon: Painter, isEnabled: Boolean, onClick: () -> Unit) -> Unit
+    item: @Composable (title: String, icon: Painter, isEnabled: Boolean, onClick: () -> Unit) -> Unit,
 ) {
     val filePicker = LocalFilePicker.current
     item(stringResource(Res.string.edit), painterResource(Res.drawable.ic_edit), true) {
@@ -66,7 +66,7 @@ internal fun SongActions(
         item(
             stringResource(Res.string.song_details_add_to_setlist),
             painterResource(Res.drawable.ic_playlist_add),
-            true
+            true,
         ) {
             viewModel.showDialog(
                 CampfireViewModel.DialogType.SetlistPicker(songFileName = song.fileName, currentSetlistFileName = setlistFileName)
@@ -96,25 +96,25 @@ internal fun SongActionsMenu(
     viewModel: CampfireViewModel,
     song: Song,
     setlistFileName: String?,
-    shouldIncludeAddToSetlist: Boolean = true
+    shouldIncludeAddToSetlist: Boolean = true,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { isExpanded = true }) {
             Icon(
                 painter = painterResource(Res.drawable.ic_more),
-                contentDescription = stringResource(Res.string.songs_actions)
+                contentDescription = stringResource(Res.string.songs_actions),
             )
         }
         DropdownMenu(
             expanded = isExpanded,
-            onDismissRequest = { isExpanded = false }
+            onDismissRequest = { isExpanded = false },
         ) {
             SongActions(
                 viewModel = viewModel,
                 song = song,
                 setlistFileName = setlistFileName,
-                shouldIncludeAddToSetlist = shouldIncludeAddToSetlist
+                shouldIncludeAddToSetlist = shouldIncludeAddToSetlist,
             ) { title, icon, isEnabled, onClick ->
                 DropdownMenuItem(
                     text = { Text(title) },
@@ -123,7 +123,7 @@ internal fun SongActionsMenu(
                     onClick = {
                         isExpanded = false
                         onClick()
-                    }
+                    },
                 )
             }
         }

@@ -95,5 +95,5 @@ include(
     ":data:source:remote:implementation",
     ":domain:api",
     ":domain:implementation",
-    ":presentation"
+    ":presentation",
 )

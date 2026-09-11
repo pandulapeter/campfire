@@ -60,7 +60,7 @@ import kotlinx.serialization.json.Json
 internal class DropboxSyncProvider(
     private val httpClient: HttpClient,
     private val credentialsStore: SyncCredentialsStore,
-    private val appKey: String
+    private val appKey: String,
 ) : SyncProvider {
 
     override val id = SyncProviderId.DROPBOX
@@ -90,7 +90,7 @@ internal class DropboxSyncProvider(
     override suspend fun completeAuthorization(
         response: RemoteAuthorizationResponse,
         verifier: String,
-        redirectUri: String?
+        redirectUri: String?,
     ): SyncAccount {
         val token = exchange(
             buildString {
@@ -111,7 +111,7 @@ internal class DropboxSyncProvider(
                 accessToken = token.accessToken,
                 refreshToken = refreshToken,
                 expiresAt = expiryOf(token.expiresInSeconds),
-                accountId = token.accountId
+                accountId = token.accountId,
             )
         )
         // Written a second time with the name on it, so that a failure to read the account still leaves a usable
@@ -140,13 +140,13 @@ internal class DropboxSyncProvider(
                 current?.copy(
                     accountId = account.accountId,
                     displayName = account.name.displayName,
-                    email = account.email
+                    email = account.email,
                 ) to Unit
             }
             SyncAccount(
                 providerId = id,
                 displayName = account.name.displayName.ifEmpty { account.email },
-                email = account.email.takeIf { it.isNotEmpty() }
+                email = account.email.takeIf { it.isNotEmpty() },
             )
         } catch (exception: CancellationException) {
             throw exception
@@ -196,7 +196,7 @@ internal class DropboxSyncProvider(
         kind: LibraryFileKind,
         name: String,
         bytes: ByteArray,
-        expectedRevision: String?
+        expectedRevision: String?,
     ): RemoteWriteResult {
         // "update" refuses the write if the file has moved on since the caller last saw it, and "add" refuses it if
         // the file exists at all. Autorename is off: a name Dropbox invented would be a song nobody asked for.
@@ -210,7 +210,7 @@ internal class DropboxSyncProvider(
                 header("Authorization", "Bearer ${accessToken()}")
                 header(
                     "Dropbox-API-Arg",
-                    """{"path":${remotePath(kind, name).toAsciiJsonString()},"mode":$mode,"autorename":false,"mute":true}"""
+                    """{"path":${remotePath(kind, name).toAsciiJsonString()},"mode":$mode,"autorename":false,"mute":true}""",
                 )
                 contentType(ContentType.Application.OctetStream)
                 setBody(bytes)
@@ -255,7 +255,7 @@ internal class DropboxSyncProvider(
             name = entry.name,
             revision = entry.rev,
             contentHash = entry.contentHash,
-            size = entry.size
+            size = entry.size,
         )
     }
 
@@ -357,7 +357,7 @@ internal class DropboxSyncProvider(
             accessToken = token.accessToken,
             expiresAt = expiryOf(token.expiresInSeconds),
             // Dropbox may hand out a new refresh token, and keeping the old one would end the connection silently.
-            refreshToken = token.refreshToken ?: credentials.refreshToken
+            refreshToken = token.refreshToken ?: credentials.refreshToken,
         ) to token.accessToken
     }
 

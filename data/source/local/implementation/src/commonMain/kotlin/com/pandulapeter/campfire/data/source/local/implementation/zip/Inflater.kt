@@ -26,7 +26,7 @@ internal object Inflater {
         source: ByteArray,
         offset: Int = 0,
         length: Int = source.size - offset,
-        expectedSize: Int = -1
+        expectedSize: Int = -1,
     ): ByteArray {
         if (offset < 0 || length < 0 || offset + length > source.size) {
             throw ZipException("Deflate input range $offset..${offset + length} is outside the ${source.size} byte input.")
@@ -44,7 +44,7 @@ internal object Inflater {
         private val source: ByteArray,
         offset: Int,
         length: Int,
-        expectedSize: Int
+        expectedSize: Int,
     ) {
         private val start = offset
         private val end = offset + length
@@ -280,22 +280,22 @@ internal object Inflater {
 
     private val LENGTH_BASE = intArrayOf(
         3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31,
-        35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258
+        35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258,
     )
 
     private val LENGTH_EXTRA = intArrayOf(
         0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2,
-        3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0
+        3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0,
     )
 
     private val DISTANCE_BASE = intArrayOf(
         1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193,
-        257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577
+        257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577,
     )
 
     private val DISTANCE_EXTRA = intArrayOf(
         0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6,
-        7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13
+        7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13,
     )
 
     /** Literal/length lengths of the fixed code: 0-143 are 8 bits, 144-255 are 9, 256-279 are 7 and 280-287 are 8. */
@@ -309,13 +309,13 @@ internal object Inflater {
             }
         },
         allowIncomplete = false,
-        what = "fixed literal/length"
+        what = "fixed literal/length",
     )
 
     /** The fixed distance code: 32 five bit codes, of which 30 and 31 never appear in a valid stream. */
     private val fixedDistanceCode = Huffman(
         lengths = IntArray(32) { 5 },
         allowIncomplete = false,
-        what = "fixed distance"
+        what = "fixed distance",
     )
 }

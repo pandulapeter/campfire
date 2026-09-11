@@ -89,14 +89,14 @@ internal fun SetlistsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     settledWidth: Dp,
-    contentPadding: PaddingValues
+    contentPadding: PaddingValues,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
     val columnCount = songListColumnCount(
         settledWidth = settledWidth,
         contentPadding = contentPadding,
-        isSidePanelVisible = isSidePanelVisible
+        isSidePanelVisible = isSidePanelVisible,
     )
     Row(
         modifier = modifier.fillMaxSize()
@@ -112,11 +112,11 @@ internal fun SetlistsScreen(
                         IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SetlistsControls) }) {
                             Icon(
                                 painter = painterResource(Res.drawable.ic_tune),
-                                contentDescription = stringResource(Res.string.filters)
+                                contentDescription = stringResource(Res.string.filters),
                             )
                         }
                     }
-                }
+                },
             )
             val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
             Box(
@@ -126,7 +126,7 @@ internal fun SetlistsScreen(
                     modifier = Modifier.fillMaxSize(),
                     viewModel = viewModel,
                     columnCount = columnCount,
-                    contentPadding = listContentPadding
+                    contentPadding = listContentPadding,
                 )
                 CampfireFloatingActionButton(
                     modifier = Modifier.align(Alignment.BottomEnd),
@@ -134,7 +134,7 @@ internal fun SetlistsScreen(
                     contentPadding = listContentPadding,
                     icon = painterResource(Res.drawable.ic_add),
                     label = stringResource(Res.string.setlists_new_setlist),
-                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) }
+                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist) },
                 )
             }
         }
@@ -142,7 +142,7 @@ internal fun SetlistsScreen(
             isVisible = isSidePanelVisible,
             viewModel = viewModel,
             shouldIncludeSorting = false,
-            contentPadding = contentPadding
+            contentPadding = contentPadding,
         )
     }
 }
@@ -152,7 +152,7 @@ private fun SetlistList(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     columnCount: Int,
-    contentPadding: PaddingValues
+    contentPadding: PaddingValues,
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
     // Read once each, so that the branches below and the placeholders they render can never disagree about them.
@@ -167,7 +167,7 @@ private fun SetlistList(
             viewModel.moveSongInSetlist(
                 setlistFileName = fromKey.setlistFileName,
                 fromSongFileName = fromKey.songFileName,
-                toSongFileName = toKey.songFileName
+                toSongFileName = toKey.songFileName,
             )
         }
     }
@@ -182,8 +182,8 @@ private fun SetlistList(
             start = contentPadding.calculateStartPadding(layoutDirection),
             top = SECTION_HEADER_GAP,
             end = contentPadding.calculateEndPadding(layoutDirection),
-            bottom = contentPadding.calculateBottomPadding() + FAB_CLEARANCE
-        )
+            bottom = contentPadding.calculateBottomPadding() + FAB_CLEARANCE,
+        ),
     ) {
         // The setlists come first: they are what this screen is about. The library only speaks up once there are
         // setlists to fill, since without it the rows of every setlist would be missing rather than the setlists
@@ -193,12 +193,12 @@ private fun SetlistList(
         when {
             placeholder != null -> item(
                 key = "placeholder",
-                span = { GridItemSpan(maxLineSpan) }
+                span = { GridItemSpan(maxLineSpan) },
             ) {
                 ListPlaceholder(
                     modifier = Modifier.fillMaxWidth().animateItem(),
                     placeholder = placeholder,
-                    onRetry = viewModel::refresh
+                    onRetry = viewModel::refresh,
                 )
             }
 
@@ -206,7 +206,7 @@ private fun SetlistList(
                 val headerKey = "setlist_${setlistWithSongs.setlist.fileName}"
                 item(
                     key = headerKey,
-                    span = { GridItemSpan(maxLineSpan) }
+                    span = { GridItemSpan(maxLineSpan) },
                 ) {
                     SectionHeader(
                         modifier = Modifier.animateItem(),
@@ -216,43 +216,43 @@ private fun SetlistList(
                             SectionHeaderAction(
                                 icon = painterResource(Res.drawable.ic_edit),
                                 contentDescription = stringResource(Res.string.setlists_rename),
-                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.RenameSetlist(setlistWithSongs.setlist)) }
+                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.RenameSetlist(setlistWithSongs.setlist)) },
                             )
                             SectionHeaderAction(
                                 icon = painterResource(Res.drawable.ic_export),
                                 contentDescription = stringResource(Res.string.setlists_export),
-                                onClick = { viewModel.exportSetlist(filePicker, setlistWithSongs.setlist.fileName) }
+                                onClick = { viewModel.exportSetlist(filePicker, setlistWithSongs.setlist.fileName) },
                             )
                             SectionHeaderAction(
                                 icon = painterResource(Res.drawable.ic_delete),
                                 contentDescription = stringResource(Res.string.setlists_delete_setlist),
-                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlistWithSongs.setlist)) }
+                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlistWithSongs.setlist)) },
                             )
-                        }
+                        },
                     )
                 }
                 if (setlistWithSongs.entries.isEmpty()) {
                     item(
                         key = "hint_${setlistWithSongs.setlist.fileName}",
-                        span = { GridItemSpan(maxLineSpan) }
+                        span = { GridItemSpan(maxLineSpan) },
                     ) {
                         Text(
                             modifier = Modifier.animateItem().padding(horizontal = 16.dp, vertical = 8.dp),
                             text = stringResource(Res.string.setlists_reorder_hint),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
                 items(
                     items = setlistWithSongs.entries,
-                    key = { entry -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = entry.songFileName).string.orEmpty() }
+                    key = { entry -> SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = entry.songFileName).string.orEmpty() },
                 ) { entry ->
                     val key = SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = entry.songFileName)
                     ReorderableItem(
                         modifier = Modifier.animateItem(),
                         state = reorderableState,
-                        key = key.string.orEmpty()
+                        key = key.string.orEmpty(),
                     ) { isBeingDragged ->
                         DismissibleSongItem(
                             onDismissed = { viewModel.removeSongFromSetlist(songFileName = entry.songFileName, setlistFileName = setlistWithSongs.setlist.fileName) }
@@ -266,13 +266,13 @@ private fun SetlistList(
                                         modifier = Modifier.longPressDraggableHandle(),
                                         song = entry.song,
                                         isBeingDragged = isBeingDragged,
-                                        onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) }
+                                        onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
                                     )
 
                                     // Nothing to open, but it still takes part in the reordering and the swipe.
                                     is CampfireViewModel.SetlistWithSongs.Entry.Missing -> MissingSongListItem(
                                         modifier = Modifier.longPressDraggableHandle(),
-                                        songFileName = entry.songFileName
+                                        songFileName = entry.songFileName,
                                     )
                                 }
                             }
@@ -288,7 +288,7 @@ private fun SetlistList(
 @Composable
 private fun DismissibleSongItem(
     onDismissed: () -> Unit,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val dismissState = rememberSwipeToDismissBoxState()
     // The list keeps the saved state of removed keys, so a re-added song must not start out dismissed.
@@ -300,15 +300,15 @@ private fun DismissibleSongItem(
         backgroundContent = {
             Box(
                 modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.errorContainer).padding(horizontal = 24.dp),
-                contentAlignment = Alignment.CenterStart
+                contentAlignment = Alignment.CenterStart,
             ) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_delete),
                     contentDescription = stringResource(Res.string.setlists_remove_song),
-                    tint = MaterialTheme.colorScheme.onErrorContainer
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
                 )
             }
-        }
+        },
     ) {
         content()
     }

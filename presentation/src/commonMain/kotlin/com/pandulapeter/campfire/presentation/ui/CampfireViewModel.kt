@@ -109,7 +109,7 @@ class CampfireViewModel(
     private val parseChordPro: ParseChordProUseCase,
     private val transposeChordPro: TransposeChordProUseCase,
     private val transposeChordProText: TransposeChordProTextUseCase,
-    private val convertChordProNotation: ConvertChordProNotationUseCase
+    private val convertChordProNotation: ConvertChordProNotationUseCase,
 ) : ViewModel() {
 
     /**
@@ -121,7 +121,7 @@ class CampfireViewModel(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
         // Loading, not Failure: nothing has been asked for yet, which is not something to show an error for.
-        initialValue = DataState.Loading(null)
+        initialValue = DataState.Loading(null),
     )
 
     // Navigation
@@ -200,7 +200,7 @@ class CampfireViewModel(
             library = userPreferences?.transpositions.orEmpty(),
             bySetlist = setlists.associate { setlist ->
                 setlist.fileName to setlist.entries.filter { it.transposition != 0 }.associate { it.songFileName to it.transposition }
-            }
+            },
         )
     }.asEagerState(Transpositions())
 
@@ -283,7 +283,7 @@ class CampfireViewModel(
                         entry.songFileName in songFileNames -> null
                         else -> SetlistWithSongs.Entry.Missing(entry.songFileName)
                     }
-                }
+                },
             )
         }
     }.asState(emptyList())
@@ -393,7 +393,7 @@ class CampfireViewModel(
         CampfireDestination.SongDetails(
             songFileNames = setlistWithSongs.songs.map { it.fileName },
             setlistFileName = setlistWithSongs.setlist.fileName,
-            initialIndex = setlistWithSongs.songs.indexOfFirst { it.fileName == song.fileName }.coerceAtLeast(0)
+            initialIndex = setlistWithSongs.songs.indexOfFirst { it.fileName == song.fileName }.coerceAtLeast(0),
         )
     )
 
@@ -766,14 +766,14 @@ class CampfireViewModel(
     private fun <T> Flow<T>.asState(initialValue: T) = distinctUntilChanged().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-        initialValue = initialValue
+        initialValue = initialValue,
     )
 
     /** Like [asState], but kept up to date from app start, so that the first subscriber never sees [initialValue]. */
     private fun <T> Flow<T>.asEagerState(initialValue: T) = distinctUntilChanged().stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
-        initialValue = initialValue
+        initialValue = initialValue,
     )
 
     /**
@@ -788,7 +788,7 @@ class CampfireViewModel(
                 MatchingSong(
                     song = song.song,
                     doesTitleStartWithQuery = song.title.startsWith(normalizedQuery),
-                    doesArtistStartWithQuery = song.artist.startsWith(normalizedQuery)
+                    doesArtistStartWithQuery = song.artist.startsWith(normalizedQuery),
                 )
             } else {
                 null
@@ -848,7 +848,7 @@ class CampfireViewModel(
 
         /** The library has songs, but every one of them is filtered out. */
         ALL_SONGS_HIDDEN,
-        NO_SEARCH_RESULTS
+        NO_SEARCH_RESULTS,
     }
 
     /**
@@ -865,25 +865,25 @@ class CampfireViewModel(
     /** The counts the settings screen shows for the library, only once there is a library to count. */
     data class LibrarySummary(
         val songCount: Int,
-        val setlistCount: Int
+        val setlistCount: Int,
     )
 
     private class MatchingSong(
         val song: Song,
         val doesTitleStartWithQuery: Boolean,
-        val doesArtistStartWithQuery: Boolean
+        val doesArtistStartWithQuery: Boolean,
     )
 
     /** A song with the normalized title and artist the search and the grouping compare. */
     private class SearchableSong(
         val song: Song,
         val title: String,
-        val artist: String
+        val artist: String,
     )
 
     data class SongGroup(
         val header: Header?,
-        val songs: List<Song>
+        val songs: List<Song>,
     ) {
         sealed interface Header {
             /** @param initial The first letter of the artist's name, null if the name starts with a symbol. */
@@ -899,7 +899,7 @@ class CampfireViewModel(
      */
     data class Transpositions(
         private val library: Map<String, Int> = emptyMap(),
-        private val bySetlist: Map<String, Map<String, Int>> = emptyMap()
+        private val bySetlist: Map<String, Map<String, Int>> = emptyMap(),
     ) {
 
         operator fun get(songFileName: String, setlistFileName: String?): Int = if (setlistFileName == null) {
@@ -916,7 +916,7 @@ class CampfireViewModel(
      */
     data class SetlistWithSongs(
         val setlist: Setlist,
-        val entries: List<Entry>
+        val entries: List<Entry>,
     ) {
 
         /** The songs that can actually be opened, which is what the pager of the song details screen gets. */
@@ -948,7 +948,7 @@ class CampfireViewModel(
             val song: Song,
             val setlistFileName: String?,
             /** False where the screen that opened the sheet offers it already. */
-            val shouldIncludeAddToSetlist: Boolean = true
+            val shouldIncludeAddToSetlist: Boolean = true,
         ) : DialogType
         data class DeleteSong(val song: Song) : DialogType
         /**

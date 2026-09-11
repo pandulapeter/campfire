@@ -28,7 +28,7 @@ internal class ZipReaderJvmTest {
         "songs/nested.cho" to "{title: Nested}\n".repeat(500).toByteArray(),
         "dalok/Árvíztűrő.cho" to "{artist: Tükörfúrógép}\nÁÉÍÓŐÚŰ\n".toByteArray(),
         "empty.cho" to ByteArray(0),
-        "random.bin" to Random(99).nextBytes(300 * 1024)
+        "random.bin" to Random(99).nextBytes(300 * 1024),
     )
 
     @Test

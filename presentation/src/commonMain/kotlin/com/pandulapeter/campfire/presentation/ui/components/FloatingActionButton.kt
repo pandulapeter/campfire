@@ -45,28 +45,28 @@ internal fun CampfireFloatingActionButton(
     contentPadding: PaddingValues,
     icon: Painter,
     label: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) = AnimatedVisibility(
     modifier = modifier.padding(
         end = contentPadding.calculateEndPadding(LocalLayoutDirection.current) + FAB_MARGIN,
-        bottom = contentPadding.calculateBottomPadding() + FAB_MARGIN
+        bottom = contentPadding.calculateBottomPadding() + FAB_MARGIN,
     ),
     visible = isVisible,
     enter = fadeIn() + scaleIn(),
-    exit = fadeOut() + scaleOut()
+    exit = fadeOut() + scaleOut(),
 ) {
     val isExtended = settledWidth >= EXTENDED_FAB_MIN_WIDTH
     val iconContent = @Composable {
         Icon(
             painter = icon,
-            contentDescription = if (isExtended) null else label
+            contentDescription = if (isExtended) null else label,
         )
     }
     if (isExtended) {
         ExtendedFloatingActionButton(
             onClick = onClick,
             icon = iconContent,
-            text = { Text(label) }
+            text = { Text(label) },
         )
     } else {
         FloatingActionButton(onClick = onClick) { iconContent() }

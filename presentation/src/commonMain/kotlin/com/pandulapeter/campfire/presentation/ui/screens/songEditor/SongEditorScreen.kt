@@ -134,7 +134,7 @@ internal fun SongEditorScreen(
     destination: CampfireDestination.SongEditor,
     windowSize: WindowSize,
     contentPadding: PaddingValues,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
     LaunchedEffect(destination.fileName) { viewModel.loadSongContent(destination.fileName) }
@@ -142,7 +142,7 @@ internal fun SongEditorScreen(
         modifier = modifier.fillMaxSize(),
         targetState = songTexts[destination.fileName],
         transitionSpec = { fadeIn() togetherWith fadeOut() },
-        contentKey = { it != null }
+        contentKey = { it != null },
     ) { initialText ->
         if (initialText == null) {
             LoadingPane(contentPadding = contentPadding)
@@ -153,7 +153,7 @@ internal fun SongEditorScreen(
                 initialText = initialText,
                 windowSize = windowSize,
                 contentPadding = contentPadding,
-                onBack = onBack
+                onBack = onBack,
             )
         }
     }
@@ -163,7 +163,7 @@ internal fun SongEditorScreen(
 @Composable
 private fun LoadingPane(contentPadding: PaddingValues) = Box(
     modifier = Modifier.fillMaxSize().padding(contentPadding),
-    contentAlignment = Alignment.Center
+    contentAlignment = Alignment.Center,
 ) {
     ContainedLoadingIndicator()
 }
@@ -176,7 +176,7 @@ private fun LoadedSongEditor(
     initialText: String,
     windowSize: WindowSize,
     contentPadding: PaddingValues,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     // Keyed on the file name so that opening another song starts a new field with its own undo history, and saved
     // so that a rotation or a trip through process death does not lose what has been typed.
@@ -187,7 +187,7 @@ private fun LoadedSongEditor(
                 TextRange(initialText.caretInsideFirstSection())
             } else {
                 TextRange.Zero
-            }
+            },
         )
     }
     ReportDraft(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState)
@@ -228,7 +228,7 @@ private fun LoadedSongEditor(
                 IconButton(onClick = onBack) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_back),
-                        contentDescription = stringResource(Res.string.back)
+                        contentDescription = stringResource(Res.string.back),
                     )
                 }
             },
@@ -238,7 +238,7 @@ private fun LoadedSongEditor(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                     SaveLabel(isSaving = isSaving, hasUnsavedChanges = hasUnsavedChanges)
                 }
@@ -246,29 +246,29 @@ private fun LoadedSongEditor(
             actions = {
                 IconButton(
                     enabled = textFieldState.undoState.canUndo,
-                    onClick = { textFieldState.undoState.undo() }
+                    onClick = { textFieldState.undoState.undo() },
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_undo),
-                        contentDescription = stringResource(Res.string.song_editor_undo)
+                        contentDescription = stringResource(Res.string.song_editor_undo),
                     )
                 }
                 IconButton(
                     enabled = textFieldState.undoState.canRedo,
-                    onClick = { textFieldState.undoState.redo() }
+                    onClick = { textFieldState.undoState.redo() },
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_redo),
-                        contentDescription = stringResource(Res.string.song_editor_redo)
+                        contentDescription = stringResource(Res.string.song_editor_redo),
                     )
                 }
                 IconButton(
                     enabled = hasUnsavedChanges && !isSaving,
-                    onClick = onSaveRequested
+                    onClick = onSaveRequested,
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_save),
-                        contentDescription = stringResource(Res.string.song_editor_save)
+                        contentDescription = stringResource(Res.string.song_editor_save),
                     )
                 }
                 EditorMenu(
@@ -276,19 +276,19 @@ private fun LoadedSongEditor(
                     fileName = destination.fileName,
                     textFieldState = textFieldState,
                     accidentals = chordSpelling.accidentals,
-                    onExport = { viewModel.exportSong(filePicker, destination.fileName) }
+                    onExport = { viewModel.exportSong(filePicker, destination.fileName) },
                 )
-            }
+            },
         )
         if (!hasSideBySidePreview) {
             SegmentedChoice(
                 modifier = Modifier.padding(bottom = 8.dp),
                 options = listOf(
                     false to stringResource(Res.string.edit),
-                    true to stringResource(Res.string.song_editor_preview)
+                    true to stringResource(Res.string.song_editor_preview),
                 ),
                 selected = isPreviewVisible,
-                onSelected = { isPreviewVisible = it }
+                onSelected = { isPreviewVisible = it },
             )
         }
         val layoutDirection = LocalLayoutDirection.current
@@ -302,8 +302,8 @@ private fun LoadedSongEditor(
                     start = contentPadding.calculateStartPadding(layoutDirection),
                     // Next to the preview the divider is the end of this pane, not the window.
                     end = if (hasSideBySidePreview) 0.dp else contentPadding.calculateEndPadding(layoutDirection),
-                    bottom = contentPadding.calculateBottomPadding()
-                )
+                    bottom = contentPadding.calculateBottomPadding(),
+                ),
             )
         }
         val preview: @Composable (Modifier) -> Unit = { paneModifier ->
@@ -319,8 +319,8 @@ private fun LoadedSongEditor(
                 contentPadding = PaddingValues(
                     start = if (hasSideBySidePreview) 0.dp else contentPadding.calculateStartPadding(layoutDirection),
                     end = contentPadding.calculateEndPadding(layoutDirection),
-                    bottom = contentPadding.calculateBottomPadding()
-                )
+                    bottom = contentPadding.calculateBottomPadding(),
+                ),
             )
         }
         if (hasSideBySidePreview) {
@@ -333,7 +333,7 @@ private fun LoadedSongEditor(
             AnimatedContent(
                 modifier = Modifier.fillMaxSize(),
                 targetState = isPreviewVisible,
-                transitionSpec = { fadeIn() togetherWith fadeOut() }
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
             ) { showPreview ->
                 if (showPreview) preview(Modifier.fillMaxSize()) else editor(Modifier.fillMaxSize())
             }
@@ -351,14 +351,14 @@ private fun ChordProTextField(
     textFieldState: TextFieldState,
     fontScale: Float,
     onSaveRequested: () -> Unit,
-    contentPadding: PaddingValues
+    contentPadding: PaddingValues,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val outputTransformation = remember(colorScheme) {
         ChordProOutputTransformation.of(
             primaryColor = colorScheme.primary,
             secondaryColor = colorScheme.onSurfaceVariant,
-            outlineColor = colorScheme.outline
+            outlineColor = colorScheme.outline,
         )
     }
     val bodyLarge = MaterialTheme.typography.bodyLarge
@@ -381,14 +381,14 @@ private fun ChordProTextField(
                 start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
                 end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
                 top = 8.dp,
-                bottom = contentPadding.calculateBottomPadding() + 32.dp
+                bottom = contentPadding.calculateBottomPadding() + 32.dp,
             ),
         state = textFieldState,
         textStyle = bodyLarge.copy(
             fontFamily = FontFamily.Monospace,
             fontSize = bodyLarge.fontSize * fontScale,
             lineHeight = bodyLarge.lineHeight * fontScale,
-            color = colorScheme.onSurface
+            color = colorScheme.onSurface,
         ),
         // Autocorrect and automatic capitalization fight with a format whose words are "[Am]" and "{start_of_verse}".
         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
@@ -397,7 +397,7 @@ private fun ChordProTextField(
         cursorBrush = SolidColor(colorScheme.primary),
         // The field does its own scrolling when it is allowed more than one line; wrapping it in a scrollable
         // swallows the press that should have put the caret in it, and nothing can be typed at all.
-        scrollState = rememberScrollState()
+        scrollState = rememberScrollState(),
     )
 }
 
@@ -413,7 +413,7 @@ private fun SongPreview(
     fontScale: Float,
     isHorizontalFlow: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
-    contentPadding: PaddingValues
+    contentPadding: PaddingValues,
 ) {
     var previewedText by remember(textFieldState) { mutableStateOf(textFieldState.text.toString()) }
     LaunchedEffect(textFieldState) {
@@ -436,14 +436,14 @@ private fun SongPreview(
                     start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
                     end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
                     top = topPadding,
-                    bottom = bottomPadding
+                    bottom = bottomPadding,
                 ),
             song = song,
             availableHeight = maxHeight - topPadding - bottomPadding,
             shouldShowChords = shouldShowChords,
             fontScale = fontScale,
             isHorizontalFlow = isHorizontalFlow,
-            scrollState = scrollState
+            scrollState = scrollState,
         )
     }
 }
@@ -461,7 +461,7 @@ private fun EditorMenu(
     fileName: String,
     textFieldState: TextFieldState,
     accidentals: UserPreferences.Accidentals,
-    onExport: () -> Unit
+    onExport: () -> Unit,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     var isSectionMenuExpanded by remember { mutableStateOf(false) }
@@ -470,63 +470,63 @@ private fun EditorMenu(
         "chorus" to stringResource(Res.string.song_editor_section_chorus),
         "bridge" to stringResource(Res.string.song_editor_section_bridge),
         "tab" to stringResource(Res.string.song_editor_section_tab),
-        "grid" to stringResource(Res.string.song_editor_section_grid)
+        "grid" to stringResource(Res.string.song_editor_section_grid),
     )
     Box {
         IconButton(onClick = { isExpanded = true }) {
             Icon(
                 painter = painterResource(Res.drawable.ic_more),
-                contentDescription = stringResource(Res.string.songs_actions)
+                contentDescription = stringResource(Res.string.songs_actions),
             )
         }
         DropdownMenu(
             expanded = isExpanded,
-            onDismissRequest = { isExpanded = false }
+            onDismissRequest = { isExpanded = false },
         ) {
             EditorMenuItem(
                 title = stringResource(Res.string.song_editor_insert_chord),
-                icon = Res.drawable.ic_add
+                icon = Res.drawable.ic_add,
             ) {
                 isExpanded = false
                 textFieldState.wrapSelection(prefix = "[", suffix = "]")
             }
             EditorMenuItem(
                 title = stringResource(Res.string.song_editor_insert_comment),
-                icon = Res.drawable.ic_add
+                icon = Res.drawable.ic_add,
             ) {
                 isExpanded = false
                 textFieldState.wrapSelection(prefix = "{comment: ", suffix = "}")
             }
             EditorMenuItem(
                 title = stringResource(Res.string.song_editor_insert_section),
-                icon = Res.drawable.ic_add
+                icon = Res.drawable.ic_add,
             ) {
                 isSectionMenuExpanded = true
             }
             EditorMenuItem(
                 title = stringResource(Res.string.song_editor_transpose_text_up),
-                icon = Res.drawable.ic_add
+                icon = Res.drawable.ic_add,
             ) {
                 isExpanded = false
                 textFieldState.replaceAll(viewModel.transposeText(textFieldState.text.toString(), 1, accidentals))
             }
             EditorMenuItem(
                 title = stringResource(Res.string.song_editor_transpose_text_down),
-                icon = Res.drawable.ic_subtract
+                icon = Res.drawable.ic_subtract,
             ) {
                 isExpanded = false
                 textFieldState.replaceAll(viewModel.transposeText(textFieldState.text.toString(), -1, accidentals))
             }
             EditorMenuItem(
                 title = stringResource(Res.string.export),
-                icon = Res.drawable.ic_export
+                icon = Res.drawable.ic_export,
             ) {
                 isExpanded = false
                 onExport()
             }
             EditorMenuItem(
                 title = stringResource(Res.string.delete),
-                icon = Res.drawable.ic_delete
+                icon = Res.drawable.ic_delete,
             ) {
                 isExpanded = false
                 viewModel.allSongs.value.firstOrNull { it.fileName == fileName }
@@ -535,7 +535,7 @@ private fun EditorMenu(
         }
         DropdownMenu(
             expanded = isSectionMenuExpanded,
-            onDismissRequest = { isSectionMenuExpanded = false }
+            onDismissRequest = { isSectionMenuExpanded = false },
         ) {
             sections.forEach { (name, label) ->
                 DropdownMenuItem(
@@ -546,9 +546,9 @@ private fun EditorMenu(
                         textFieldState.wrapSelection(
                             prefix = "{start_of_$name}\n",
                             suffix = "\n{end_of_$name}",
-                            shouldStartOnItsOwnLine = true
+                            shouldStartOnItsOwnLine = true,
                         )
-                    }
+                    },
                 )
             }
         }
@@ -559,18 +559,18 @@ private fun EditorMenu(
 private fun EditorMenuItem(
     title: String,
     icon: org.jetbrains.compose.resources.DrawableResource,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) = DropdownMenuItem(
     text = { Text(title) },
     leadingIcon = { Icon(painter = painterResource(icon), contentDescription = null) },
-    onClick = onClick
+    onClick = onClick,
 )
 
 /** "Saved" only once the text on screen is the text on disk, "Saving…" only while it is actually being written. */
 @Composable
 private fun SaveLabel(
     isSaving: Boolean,
-    hasUnsavedChanges: Boolean
+    hasUnsavedChanges: Boolean,
 ) {
     val saving = stringResource(Res.string.song_editor_saving)
     val saved = stringResource(Res.string.song_editor_saved)
@@ -582,14 +582,14 @@ private fun SaveLabel(
             hasUnsavedChanges -> unsaved
             else -> saved
         },
-        transitionSpec = { fadeIn() togetherWith fadeOut() }
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
     ) { label ->
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -603,7 +603,7 @@ private fun SaveLabel(
 private fun ReportDraft(
     viewModel: CampfireViewModel,
     fileName: String,
-    textFieldState: TextFieldState
+    textFieldState: TextFieldState,
 ) {
     LaunchedEffect(textFieldState, fileName) {
         snapshotFlow { textFieldState.text.toString() }.collect { viewModel.onEditorTextChanged(fileName, it) }
@@ -620,7 +620,7 @@ private fun ReportDraft(
 private fun TextFieldState.wrapSelection(
     prefix: String,
     suffix: String,
-    shouldStartOnItsOwnLine: Boolean = false
+    shouldStartOnItsOwnLine: Boolean = false,
 ) = edit {
     val start = minOf(selection.start, selection.end)
     val end = maxOf(selection.start, selection.end)

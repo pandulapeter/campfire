@@ -43,7 +43,7 @@ internal class DesktopSyncAuthenticator(
      * Injected so that the socket half of this can be tested without a browser window opening on whoever runs the
      * tests. Cancelling a blocked `accept` is subtle enough to be worth a test of its own.
      */
-    private val openInBrowser: (String) -> Unit = ::openInSystemBrowser
+    private val openInBrowser: (String) -> Unit = ::openInSystemBrowser,
 ) : SyncAuthenticator {
 
     private var serverSocket: ServerSocket? = null
@@ -57,7 +57,7 @@ internal class DesktopSyncAuthenticator(
 
     override suspend fun authorize(
         authorizationUrl: String,
-        completionPage: AuthorizationCompletionPage
+        completionPage: AuthorizationCompletionPage,
     ): SyncAuthenticator.AuthorizationOutcome = coroutineScope {
         val socket = serverSocket ?: return@coroutineScope SyncAuthenticator.AuthorizationOutcome.Cancelled(
             "The authorization was not prepared."

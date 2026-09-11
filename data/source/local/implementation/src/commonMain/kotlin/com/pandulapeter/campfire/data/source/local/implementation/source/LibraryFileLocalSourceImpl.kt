@@ -22,7 +22,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 
 internal class LibraryFileLocalSourceImpl(
-    private val fileStorage: FileStorage
+    private val fileStorage: FileStorage,
 ) : LibraryFileLocalSource {
 
     override suspend fun loadLibraryFiles(): List<LibraryFile> = coroutineScope {

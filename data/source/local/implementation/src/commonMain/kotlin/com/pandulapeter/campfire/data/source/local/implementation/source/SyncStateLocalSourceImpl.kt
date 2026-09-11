@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.source.local.implementation.storage.file.S
 import kotlinx.coroutines.CancellationException
 
 internal class SyncStateLocalSourceImpl(
-    private val fileStorage: FileStorage
+    private val fileStorage: FileStorage,
 ) : SyncStateLocalSource {
 
     override suspend fun loadSyncCredentials() = read(CREDENTIALS_FILE_NAME)

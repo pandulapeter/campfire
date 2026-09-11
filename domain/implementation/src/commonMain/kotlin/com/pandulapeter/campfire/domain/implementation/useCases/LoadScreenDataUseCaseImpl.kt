@@ -20,7 +20,7 @@ import kotlinx.coroutines.coroutineScope
 class LoadScreenDataUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
     private val songRepository: SongRepository,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
 ) : LoadScreenDataUseCase {
 
     /**
@@ -34,7 +34,7 @@ class LoadScreenDataUseCaseImpl internal constructor(
             listOf(
                 async { if (isRescan) songRepository.rescan() else songRepository.loadSongsIfNeeded() },
                 async { if (isRescan) setlistRepository.rescan() else setlistRepository.loadSetlistsIfNeeded() },
-                async { userPreferencesRepository.loadUserPreferencesIfNeeded() }
+                async { userPreferencesRepository.loadUserPreferencesIfNeeded() },
             ).awaitAll()
         }
     }

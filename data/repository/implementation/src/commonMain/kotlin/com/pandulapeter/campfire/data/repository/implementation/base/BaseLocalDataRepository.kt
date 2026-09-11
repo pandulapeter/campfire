@@ -24,7 +24,7 @@ import kotlinx.coroutines.sync.withLock
  * the cached list, rather than persisting the list. Only the preferences are saved as a whole, through [writeData].
  */
 internal abstract class BaseLocalDataRepository<T>(
-    private val loadDataFromLocalSource: suspend () -> T
+    private val loadDataFromLocalSource: suspend () -> T,
 ) {
     // Loading rather than Failure, so that "nothing has been read yet" is not reported to the UI as an error.
     private val _dataState = MutableStateFlow<DataState<T>>(DataState.Loading(null))

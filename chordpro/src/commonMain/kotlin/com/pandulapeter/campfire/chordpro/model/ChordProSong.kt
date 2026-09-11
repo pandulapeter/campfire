@@ -14,7 +14,7 @@ package com.pandulapeter.campfire.chordpro.model
  */
 data class ChordProSong(
     val metadata: ChordProMetadata,
-    val blocks: List<ChordProBlock>
+    val blocks: List<ChordProBlock>,
 ) {
 
     /** True if any lyrics or grid line contains at least one real chord (annotations don't count). */

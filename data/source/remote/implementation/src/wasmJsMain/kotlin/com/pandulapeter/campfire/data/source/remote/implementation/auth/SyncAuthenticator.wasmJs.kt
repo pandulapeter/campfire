@@ -32,7 +32,7 @@ internal class WebSyncAuthenticator : SyncAuthenticator {
     /** The page is ignored: the service redirects back to the app itself, which is the page. */
     override suspend fun authorize(
         authorizationUrl: String,
-        completionPage: AuthorizationCompletionPage
+        completionPage: AuthorizationCompletionPage,
     ): SyncAuthenticator.AuthorizationOutcome {
         navigateTo(authorizationUrl)
         return SyncAuthenticator.AuthorizationOutcome.Redirected

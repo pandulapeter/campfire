@@ -50,7 +50,7 @@ fun main(args: Array<String>) = application {
         title = "Campfire",
         onCloseRequest = ::exitApplication,
         icon = painterResource(Res.drawable.app_icon),
-        onKeyEvent = { keyEvent -> viewModel.value?.handleKeyEvent(keyEvent, onExit = ::exitApplication) == true }
+        onKeyEvent = { keyEvent -> viewModel.value?.handleKeyEvent(keyEvent, onExit = ::exitApplication) == true },
     ) {
         window.minimumSize = Dimension(400, 400)
         KoinApplication(
@@ -63,7 +63,7 @@ fun main(args: Array<String>) = application {
                 SideEffect { viewModel.value = currentViewModel }
                 CampfireDesktopApp(
                     viewModel = currentViewModel,
-                    filesToImport = filesToImport
+                    filesToImport = filesToImport,
                 )
             }
         }

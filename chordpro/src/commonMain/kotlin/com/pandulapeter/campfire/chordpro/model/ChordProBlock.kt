@@ -18,7 +18,7 @@ sealed interface ChordProBlock {
     data class Section(
         val type: SectionType,
         val label: String?, // "Verse 1" from {start_of_verse: Verse 1} or {sov: label="Verse 1"}
-        val lines: List<ChordProLine>
+        val lines: List<ChordProLine>,
     ) : ChordProBlock
 
     /** {chorus} / {chorus: label}: repeat the most recent chorus. The renderer decides how to show it. */

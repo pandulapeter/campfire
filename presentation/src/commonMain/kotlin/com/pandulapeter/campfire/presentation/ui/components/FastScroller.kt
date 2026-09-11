@@ -77,7 +77,7 @@ import kotlin.math.roundToInt
 internal fun BoxScope.FastScroller(
     modifier: Modifier = Modifier,
     gridState: LazyGridState,
-    labelForItem: (index: Int) -> String?
+    labelForItem: (index: Int) -> String?,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val minThumbHeight = with(LocalDensity.current) { MIN_THUMB_HEIGHT.toPx() }
@@ -87,22 +87,22 @@ internal fun BoxScope.FastScroller(
     val isVisible = state.isScrollable
     val alpha by animateFloatAsState(
         targetValue = if (isVisible) 1f else 0f,
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
     // Progress values instead of animated colors, so that the thumb follows the color scheme immediately while it is
     // animating between the light and the dark theme (a color animation would chase it and trail behind).
     val hoverProgress by animateFloatAsState(
         targetValue = if (isHovered || state.isDragging) 1f else 0f,
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
     val dragProgress by animateFloatAsState(
         targetValue = if (state.isDragging) 1f else 0f,
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
     val thumbColor = lerp(
         start = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = lerp(IDLE_THUMB_ALPHA, 1f, hoverProgress)),
         stop = MaterialTheme.colorScheme.primary,
-        fraction = dragProgress
+        fraction = dragProgress,
     )
     val label = labelForItem(gridState.firstVisibleItemIndex)
 
@@ -126,7 +126,7 @@ internal fun BoxScope.FastScroller(
                         color = thumbColor,
                         topLeft = Offset(x = size.width - thumbWidth - THUMB_END_PADDING.toPx(), y = state.thumbTop),
                         size = Size(width = thumbWidth, height = state.thumbHeight),
-                        cornerRadius = CornerRadius(thumbWidth / 2)
+                        cornerRadius = CornerRadius(thumbWidth / 2),
                     )
                 }
         )
@@ -139,7 +139,7 @@ internal fun BoxScope.FastScroller(
             enter = scaleIn(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(), transformOrigin = BUBBLE_TRANSFORM_ORIGIN) +
                     fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
             exit = scaleOut(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(), transformOrigin = BUBBLE_TRANSFORM_ORIGIN) +
-                    fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec())
+                    fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
         ) {
             var lastLabel by remember { mutableStateOf(label.orEmpty()) }
             label?.let { lastLabel = it }
@@ -148,12 +148,12 @@ internal fun BoxScope.FastScroller(
                     .size(BUBBLE_SIZE)
                     .shadow(elevation = BUBBLE_ELEVATION, shape = CircleShape)
                     .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = lastLabel,
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimary
+                    color = MaterialTheme.colorScheme.onPrimary,
                 )
             }
         }
@@ -191,7 +191,7 @@ internal fun BoxScope.FastScroller(
 
 private class FastScrollerState(
     private val gridState: LazyGridState,
-    private val minThumbHeight: Float
+    private val minThumbHeight: Float,
 ) {
     var trackHeight by mutableIntStateOf(0)
     var isDragging by mutableStateOf(false)
@@ -268,7 +268,7 @@ private fun LazyGridState.scrollMetrics(): ScrollMetrics? {
         viewportFraction = (info.viewportSize.height / contentHeight).coerceIn(0f, 1f),
         averageItemSize = averageItemSize,
         totalItemsCount = info.totalItemsCount,
-        maxScrollOffset = maxScrollOffset
+        maxScrollOffset = maxScrollOffset,
     )
 }
 
@@ -277,7 +277,7 @@ private class ScrollMetrics(
     val viewportFraction: Float,
     val averageItemSize: Float,
     val totalItemsCount: Int,
-    val maxScrollOffset: Float
+    val maxScrollOffset: Float,
 )
 
 private val TOUCH_TARGET_WIDTH = 48.dp

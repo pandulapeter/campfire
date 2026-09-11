@@ -41,7 +41,7 @@ internal actual fun Scope.createSyncAuthenticator(): SyncAuthenticator = Android
  * forward again, which is what [awaitAbandoned] watches for.
  */
 internal class AndroidSyncAuthenticator(
-    private val context: Context
+    private val context: Context,
 ) : SyncAuthenticator {
 
     override suspend fun prepareRedirectUri() = "$REDIRECT_SCHEME://$REDIRECT_HOST"

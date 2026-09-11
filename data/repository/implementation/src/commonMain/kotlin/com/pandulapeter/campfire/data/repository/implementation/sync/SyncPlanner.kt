@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.data.model.domain.LibraryFileKind
  */
 internal data class SyncKey(
     val kind: LibraryFileKind,
-    val name: String
+    val name: String,
 ) {
 
     /** How the key is written in `sync-index.json`, and the shape of a remote path: `songs/Artist - Title.cho`. */
@@ -35,20 +35,20 @@ internal data class SyncKey(
 /** A local file, identified by the hash of its content - never by its modification time, see `localContentHash`. */
 internal data class LocalFileState(
     val key: SyncKey,
-    val hash: String
+    val hash: String,
 )
 
 /** A remote file, identified by whatever the provider calls a revision. Opaque here: only ever compared for equality. */
 internal data class RemoteFileState(
     val key: SyncKey,
     val revision: String,
-    val contentHash: String?
+    val contentHash: String?,
 )
 
 /** What the last successful run left behind for one file: the pair that was in step at that moment. */
 internal data class SyncIndexEntry(
     val localHash: String,
-    val remoteRevision: String
+    val remoteRevision: String,
 )
 
 /**
@@ -97,7 +97,7 @@ internal object SyncPlanner {
     fun plan(
         local: List<LocalFileState>,
         remote: List<RemoteFileState>,
-        index: Map<SyncKey, SyncIndexEntry>
+        index: Map<SyncKey, SyncIndexEntry>,
     ): List<SyncOperation> {
         val localByKey = local.associateBy { it.key }
         val remoteByKey = remote.associateBy { it.key }
@@ -110,7 +110,7 @@ internal object SyncPlanner {
         key: SyncKey,
         local: LocalFileState?,
         remote: RemoteFileState?,
-        indexEntry: SyncIndexEntry?
+        indexEntry: SyncIndexEntry?,
     ): SyncOperation? = when {
         local != null && remote != null -> {
             val hasChangedLocally = indexEntry == null || indexEntry.localHash != local.hash

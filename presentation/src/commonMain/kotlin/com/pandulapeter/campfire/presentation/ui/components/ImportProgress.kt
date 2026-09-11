@@ -26,12 +26,12 @@ import androidx.compose.ui.Modifier
 @Composable
 internal fun ImportProgress(
     modifier: Modifier = Modifier,
-    isImporting: Boolean
+    isImporting: Boolean,
 ) = AnimatedVisibility(
     modifier = modifier,
     visible = isImporting,
     enter = fadeIn() + expandVertically(),
-    exit = fadeOut() + shrinkVertically()
+    exit = fadeOut() + shrinkVertically(),
 ) {
     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 }

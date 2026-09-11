@@ -44,7 +44,7 @@ val presentationModule = module {
             parseChordPro = get(),
             transposeChordPro = get(),
             transposeChordProText = get(),
-            convertChordProNotation = get()
+            convertChordProNotation = get(),
         )
     }
 }

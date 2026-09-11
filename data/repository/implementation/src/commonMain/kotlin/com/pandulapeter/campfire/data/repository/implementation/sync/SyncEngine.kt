@@ -38,14 +38,14 @@ import kotlinx.coroutines.sync.withPermit
  * and the service being unreachable - stop it.
  */
 internal class SyncEngine(
-    private val libraryFileLocalSource: LibraryFileLocalSource
+    private val libraryFileLocalSource: LibraryFileLocalSource,
 ) {
 
     suspend fun synchronize(
         provider: SyncProvider,
         document: SyncIndexDocument,
         accountId: String,
-        onProgress: (SyncProgress) -> Unit
+        onProgress: (SyncProgress) -> Unit,
     ): Result {
         // An index written for a different account describes a different remote folder, and acting on it would read
         // that folder's absent files as deletions of this one's songs.
@@ -68,10 +68,10 @@ internal class SyncEngine(
                     RemoteFileState(
                         key = SyncKey(kind = it.kind, name = it.name),
                         revision = it.revision,
-                        contentHash = it.contentHash
+                        contentHash = it.contentHash,
                     )
                 },
-                index = index
+                index = index,
             )
             // Which is what most runs find, so nothing below this costs anything on an ordinary launch.
             if (plan.isEmpty()) break
@@ -80,7 +80,7 @@ internal class SyncEngine(
                 plan = plan,
                 index = index,
                 contentHashes = files.associate { SyncKey(kind = it.kind, name = it.name) to it.contentHash },
-                onProgress = onProgress
+                onProgress = onProgress,
             )
             index = outcome.index
             summary = summary.plus(outcome.summary)
@@ -94,8 +94,8 @@ internal class SyncEngine(
                 providerId = provider.id.id,
                 accountId = accountId,
                 lastSyncedAt = document.lastSyncedAt,
-                index = index
-            )
+                index = index,
+            ),
         )
     }
 
@@ -128,7 +128,7 @@ internal class SyncEngine(
         plan: List<SyncOperation>,
         index: Map<SyncKey, SyncIndexEntry>,
         contentHashes: Map<SyncKey, String?>,
-        onProgress: (SyncProgress) -> Unit
+        onProgress: (SyncProgress) -> Unit,
     ): PassOutcome = coroutineScope {
         val updated = index.toMutableMap()
         var summary = SyncSummary()
@@ -160,7 +160,7 @@ internal class SyncEngine(
     private suspend fun runOperation(
         provider: SyncProvider,
         operation: SyncOperation,
-        contentHashes: Map<SyncKey, String?>
+        contentHashes: Map<SyncKey, String?>,
     ): OperationOutcome = try {
         when (operation) {
             is SyncOperation.Download -> download(provider, operation, contentHashes)
@@ -196,7 +196,7 @@ internal class SyncEngine(
     private suspend fun download(
         provider: SyncProvider,
         operation: SyncOperation.Download,
-        contentHashes: Map<SyncKey, String?>
+        contentHashes: Map<SyncKey, String?>,
     ): OperationOutcome {
         val key = operation.key
         // The two sides may already hold the same bytes - two devices given the same file, or a library that was
@@ -209,7 +209,7 @@ internal class SyncEngine(
         libraryFileLocalSource.writeLibraryFile(key.kind, key.name, bytes)
         return OperationOutcome(
             entries = mapOf(key to SyncIndexEntry(localContentHash(bytes), operation.revision)),
-            summary = SyncSummary(downloaded = 1)
+            summary = SyncSummary(downloaded = 1),
         )
     }
 
@@ -220,7 +220,7 @@ internal class SyncEngine(
         return when (val result = provider.upload(key.kind, key.name, bytes, operation.expectedRevision)) {
             is RemoteWriteResult.Written -> OperationOutcome(
                 entries = mapOf(key to SyncIndexEntry(localContentHash(bytes), result.revision)),
-                summary = SyncSummary(uploaded = 1)
+                summary = SyncSummary(uploaded = 1),
             )
 
             // The remote file moved under the write, which asks for another pass over a fresh listing.
@@ -236,7 +236,7 @@ internal class SyncEngine(
     private suspend fun resolve(
         provider: SyncProvider,
         operation: SyncOperation.Resolve,
-        contentHashes: Map<SyncKey, String?>
+        contentHashes: Map<SyncKey, String?>,
     ): OperationOutcome {
         val key = operation.key
         val local = libraryFileLocalSource.readLibraryFile(key.kind, key.name) ?: return OperationOutcome()
@@ -263,7 +263,7 @@ internal class SyncEngine(
         // in two states, and that both of them survived under the name in the summary.
         return OperationOutcome(
             entries = entries,
-            summary = SyncSummary(uploaded = 1, downloaded = 1, conflicts = listOf(copyName))
+            summary = SyncSummary(uploaded = 1, downloaded = 1, conflicts = listOf(copyName)),
         )
     }
 
@@ -285,12 +285,12 @@ internal class SyncEngine(
         uploaded = uploaded + other.uploaded,
         deletedLocally = deletedLocally + other.deletedLocally,
         deletedRemotely = deletedRemotely + other.deletedRemotely,
-        conflicts = conflicts + other.conflicts
+        conflicts = conflicts + other.conflicts,
     )
 
     data class Result(
         val summary: SyncSummary,
-        val index: SyncIndexDocument
+        val index: SyncIndexDocument,
     )
 
     /** What one operation changed, merged into the pass by whoever finishes first. */
@@ -298,13 +298,13 @@ internal class SyncEngine(
         val entries: Map<SyncKey, SyncIndexEntry> = emptyMap(),
         val removals: Set<SyncKey> = emptySet(),
         val summary: SyncSummary = SyncSummary(),
-        val hasUnresolvedConflict: Boolean = false
+        val hasUnresolvedConflict: Boolean = false,
     )
 
     private data class PassOutcome(
         val summary: SyncSummary,
         val index: Map<SyncKey, SyncIndexEntry>,
-        val hasUnresolvedConflicts: Boolean
+        val hasUnresolvedConflicts: Boolean,
     )
 
     private companion object {

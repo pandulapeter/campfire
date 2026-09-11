@@ -110,7 +110,7 @@ internal object ChordProTabTransposer {
             replacements = fretRanges(line).mapNotNull { range ->
                 line.substring(range).toIntOrNull()?.let { fret -> range to (fret + shift).toString() }
             },
-            filler = DASH
+            filler = DASH,
         )
     }
 

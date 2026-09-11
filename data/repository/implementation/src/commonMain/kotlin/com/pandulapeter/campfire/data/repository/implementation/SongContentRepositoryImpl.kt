@@ -17,7 +17,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 internal class SongContentRepositoryImpl(
-    private val songLocalSource: SongLocalSource
+    private val songLocalSource: SongLocalSource,
 ) : SongContentRepository {
 
     private val cache = mutableMapOf<String, SongContent>()

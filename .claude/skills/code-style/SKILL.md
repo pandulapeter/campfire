@@ -1,6 +1,6 @@
 ---
 name: code-style
-description: Code style, commenting, and documentation conventions for the Campfire codebase. MANDATORY — invoke this skill BEFORE writing or editing ANY source in this repo (every Write or Edit to a `.kt`/`.kts`/`strings.xml` file, new file or change to an existing one), with NO exceptions, even for a "trivial" one-line edit. It governs the MPL-2.0 header on new files, the KDoc-for-declarations / `//`-for-statements split, the "why, not what" comment voice, the NO trailing commas rule (Campfire's is the opposite of the sibling repos'), `modifier` as the first parameter, string resources, and keeping the per-module `CLAUDE.md` files in sync. Get these right while writing, not after.
+description: Code style, commenting, and documentation conventions for the Campfire codebase. MANDATORY — invoke this skill BEFORE writing or editing ANY source in this repo (every Write or Edit to a `.kt`/`.kts`/`strings.xml` file, new file or change to an existing one), with NO exceptions, even for a "trivial" one-line edit. It governs the MPL-2.0 header on new files, the KDoc-for-declarations / `//`-for-statements split, the "why, not what" comment voice, the trailing comma rule, `modifier` as the first parameter, string resources, and keeping the per-module `CLAUDE.md` files in sync. Get these right while writing, not after.
 ---
 
 # Campfire code style
@@ -54,13 +54,18 @@ wrong or undo it".
 - **Always use trailing commas** on the last element of any multi-line comma-separated list — function
   parameters and arguments, constructor parameters, collection literals, `enum` entries, `when` with
   multiple guards. This keeps diffs minimal and reordering clean.
-- Much of the existing code predates that and has no trailing commas. Add them to the lists you write
-  or edit; leave the ones you are not touching alone. This is not a reformatting project.
+- The whole codebase has them, so a list without one is an oversight rather than an older style. The
+  closing bracket decides: a `)` or `]` that starts a line of its own ends a list that wants a trailing
+  comma; one that sits at the end of the last element's line does not. A parameter list broken across
+  lines counts even with a single parameter in it, since a second one is the expected next edit — but a
+  single-argument *call* written that way does not, and neither does a `js("""…""")` block.
+- `enum` entries follow the same rule, except where the list ends in a `;` because members come after it.
+  A `when` branch with several conditions keeps the last one on the arrow's line, so there is nothing
+  to put a comma after.
 - **Expression bodies wherever the function is one expression**, including Composables that are a single
   layout call (`private fun ScreenSurface(...) = Surface(...)`) and one-line overrides that just delegate.
 - Match the surrounding file's indentation, import order and idiom rather than reformatting to a
-  personal preference — the trailing comma above is the one deliberate exception. Don't reorder imports
-  of files you touch.
+  personal preference. Don't reorder imports of files you touch.
 - Named arguments for anything where the call site would otherwise be a row of positional values —
   Koin wiring, use case invocations, multi-parameter Composables.
 

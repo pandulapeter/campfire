@@ -26,5 +26,5 @@ data class RemoteFile(
     val name: String,
     val revision: String,
     val contentHash: String?,
-    val size: Long
+    val size: Long,
 )

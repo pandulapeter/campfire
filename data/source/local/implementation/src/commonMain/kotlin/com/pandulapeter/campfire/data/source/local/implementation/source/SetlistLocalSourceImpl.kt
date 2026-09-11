@@ -23,7 +23,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 
 internal class SetlistLocalSourceImpl(
-    private val fileStorage: FileStorage
+    private val fileStorage: FileStorage,
 ) : SetlistLocalSource {
 
     override suspend fun loadSetlists(): List<Setlist> = fileStorage.list(StorageDirectory.SETLISTS)
@@ -51,7 +51,7 @@ internal class SetlistLocalSourceImpl(
     override suspend fun saveSetlist(setlist: Setlist) = fileStorage.writeText(
         directory = StorageDirectory.SETLISTS,
         name = setlist.fileName,
-        text = json.encodeToString(setlist.toDocument())
+        text = json.encodeToString(setlist.toDocument()),
     )
 
     /** The file name is derived from the title rather than kept, so that an exported setlist keeps its identity. */

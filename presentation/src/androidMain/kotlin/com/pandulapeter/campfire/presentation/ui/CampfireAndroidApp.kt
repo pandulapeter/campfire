@@ -45,7 +45,7 @@ fun CampfireAndroidApp(
     viewModel: CampfireViewModel = koinViewModel(),
     urlOpener: (url: String, isDarkTheme: Boolean) -> Unit,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
-    syncNotifier: SyncNotifier = SyncNotifier { }
+    syncNotifier: SyncNotifier = SyncNotifier { },
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
@@ -57,17 +57,17 @@ fun CampfireAndroidApp(
     LaunchedEffect(activity, isDarkTheme) {
         activity?.enableEdgeToEdge(
             statusBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-            navigationBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+            navigationBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
     }
     CompositionLocalProvider(
         LocalFilePicker provides rememberAndroidFilePicker(),
-        LocalSyncNotifier provides syncNotifier
+        LocalSyncNotifier provides syncNotifier,
     ) {
         CampfireApp(
             viewModel = viewModel,
             urlOpener = { urlOpener(it, isDarkTheme) },
-            filesToImport = filesToImport
+            filesToImport = filesToImport,
         )
     }
 }

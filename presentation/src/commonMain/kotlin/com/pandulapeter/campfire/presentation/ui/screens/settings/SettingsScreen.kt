@@ -115,7 +115,7 @@ internal fun SettingsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     contentPadding: PaddingValues,
-    urlOpener: (String) -> Unit
+    urlOpener: (String) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
@@ -125,7 +125,7 @@ internal fun SettingsScreen(
     ) {
         CampfireTopAppBar(
             scrollBehavior = scrollBehavior,
-            title = { Text(stringResource(Res.string.settings)) }
+            title = { Text(stringResource(Res.string.settings)) },
         )
         ImportProgress(isImporting = isImporting)
         val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -139,7 +139,7 @@ internal fun SettingsScreen(
         // the user picked, and out of the list because a lazy list's scope is not a composable one.
         val completionPage = AuthorizationCompletionPage(
             title = stringResource(Res.string.settings_sync_redirect_page_title),
-            message = stringResource(Res.string.settings_sync_redirect_page_message)
+            message = stringResource(Res.string.settings_sync_redirect_page_message),
         )
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -148,20 +148,20 @@ internal fun SettingsScreen(
                 start = contentPadding.calculateStartPadding(layoutDirection),
                 top = SECTION_HEADER_GAP,
                 end = contentPadding.calculateEndPadding(layoutDirection),
-                bottom = contentPadding.calculateBottomPadding() + 16.dp
-            )
+                bottom = contentPadding.calculateBottomPadding() + 16.dp,
+            ),
         ) {
             sectionHeader(
                 key = "header_library",
                 listState = listState,
-                coroutineScope = coroutineScope
+                coroutineScope = coroutineScope,
             ) { stringResource(Res.string.settings_library) }
             librarySummary?.let { summary ->
                 item(key = "library_summary") {
                     ListItem(
                         modifier = Modifier.animateItem(),
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                        headlineContent = { Text(stringResource(Res.string.settings_library_summary, summary.songCount, summary.setlistCount)) }
+                        headlineContent = { Text(stringResource(Res.string.settings_library_summary, summary.songCount, summary.setlistCount)) },
                     )
                 }
             }
@@ -178,7 +178,7 @@ internal fun SettingsScreen(
                                     LibraryLocation.FilesApp -> stringResource(Res.string.settings_library_location_files_app)
                                 }
                             )
-                        }
+                        },
                     )
                 }
             }
@@ -189,7 +189,7 @@ internal fun SettingsScreen(
                     icon = painterResource(Res.drawable.ic_import),
                     isEnabled = !isImporting,
                     isEmphasized = false,
-                    onClick = { viewModel.importFiles(filePicker) }
+                    onClick = { viewModel.importFiles(filePicker) },
                 )
             }
             item(key = "library_export") {
@@ -198,7 +198,7 @@ internal fun SettingsScreen(
                     title = stringResource(Res.string.settings_export_all),
                     icon = painterResource(Res.drawable.ic_export),
                     isEmphasized = false,
-                    onClick = { viewModel.exportLibrary(filePicker) }
+                    onClick = { viewModel.exportLibrary(filePicker) },
                 )
             }
             item(key = "library_rescan") {
@@ -207,23 +207,23 @@ internal fun SettingsScreen(
                     title = stringResource(Res.string.songs_rescan),
                     icon = painterResource(Res.drawable.ic_refresh),
                     isEmphasized = false,
-                    onClick = viewModel::refresh
+                    onClick = viewModel::refresh,
                 )
             }
             sectionHeader(
                 key = "header_sync",
                 listState = listState,
-                coroutineScope = coroutineScope
+                coroutineScope = coroutineScope,
             ) { stringResource(Res.string.settings_sync) }
             syncSettings(
                 viewModel = viewModel,
                 syncState = syncState,
-                completionPage = completionPage
+                completionPage = completionPage,
             )
             sectionHeader(
                 key = "header_song_display",
                 listState = listState,
-                coroutineScope = coroutineScope
+                coroutineScope = coroutineScope,
             ) { stringResource(Res.string.settings_song_display) }
             item(key = "lyrics_only_mode") {
                 SwitchListItem(
@@ -231,7 +231,7 @@ internal fun SettingsScreen(
                     title = stringResource(Res.string.settings_lyrics_only_mode),
                     description = stringResource(Res.string.settings_lyrics_only_mode_description),
                     isChecked = userPreferences?.isLyricsOnlyModeEnabled == true,
-                    onCheckedChange = viewModel::setLyricsOnlyModeEnabled
+                    onCheckedChange = viewModel::setLyricsOnlyModeEnabled,
                 )
             }
             item(key = "horizontal_section_flow") {
@@ -240,7 +240,7 @@ internal fun SettingsScreen(
                     title = stringResource(Res.string.settings_horizontal_section_flow),
                     description = stringResource(Res.string.settings_horizontal_section_flow_description),
                     isChecked = userPreferences?.isHorizontalSectionFlowEnabled == true,
-                    onCheckedChange = viewModel::setHorizontalSectionFlowEnabled
+                    onCheckedChange = viewModel::setHorizontalSectionFlowEnabled,
                 )
             }
             // Both of these only decide how a chord is written, so lyrics only mode leaves them with nothing to
@@ -254,7 +254,7 @@ internal fun SettingsScreen(
                     description = stringResource(Res.string.settings_german_notation_description),
                     isChecked = userPreferences?.chordSpelling?.isGermanNotationEnabled == true,
                     isEnabled = isChordSpellingEnabled,
-                    onCheckedChange = viewModel::setGermanNotationEnabled
+                    onCheckedChange = viewModel::setGermanNotationEnabled,
                 )
             }
             item(key = "accidentals") {
@@ -262,41 +262,41 @@ internal fun SettingsScreen(
                     modifier = Modifier.animateItem().padding(vertical = SUBSECTION_GAP),
                     title = stringResource(Res.string.settings_accidentals),
                     description = stringResource(Res.string.settings_accidentals_description),
-                    isEnabled = isChordSpellingEnabled
+                    isEnabled = isChordSpellingEnabled,
                 ) {
                     SegmentedChoice(
                         options = listOf(
                             UserPreferences.Accidentals.ORIGINAL to stringResource(Res.string.settings_accidentals_original),
                             UserPreferences.Accidentals.FLATS to stringResource(Res.string.settings_accidentals_flats),
-                            UserPreferences.Accidentals.SHARPS to stringResource(Res.string.settings_accidentals_sharps)
+                            UserPreferences.Accidentals.SHARPS to stringResource(Res.string.settings_accidentals_sharps),
                         ),
                         selected = userPreferences?.chordSpelling?.accidentals,
                         isEnabled = isChordSpellingEnabled,
-                        onSelected = viewModel::setAccidentals
+                        onSelected = viewModel::setAccidentals,
                     )
                 }
             }
             sectionHeader(
                 key = "header_user_interface",
                 listState = listState,
-                coroutineScope = coroutineScope
+                coroutineScope = coroutineScope,
             ) { stringResource(Res.string.settings_user_interface) }
             // One item, so that the gaps between the subsections are set once, next to each other, rather than by
             // each subsection padding itself and every pair of them then adding up to twice the gap.
             item(key = "user_interface") {
                 Column(
                     modifier = Modifier.animateItem().padding(vertical = SUBSECTION_GAP),
-                    verticalArrangement = Arrangement.spacedBy(SUBSECTION_GAP)
+                    verticalArrangement = Arrangement.spacedBy(SUBSECTION_GAP),
                 ) {
                     Subsection(title = stringResource(Res.string.settings_user_interface_theme)) {
                         SegmentedChoice(
                             options = listOf(
                                 UserPreferences.UiMode.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_theme_system_default),
                                 UserPreferences.UiMode.LIGHT to stringResource(Res.string.settings_user_interface_theme_light),
-                                UserPreferences.UiMode.DARK to stringResource(Res.string.settings_user_interface_theme_dark)
+                                UserPreferences.UiMode.DARK to stringResource(Res.string.settings_user_interface_theme_dark),
                             ),
                             selected = userPreferences?.uiMode,
-                            onSelected = viewModel::setUiMode
+                            onSelected = viewModel::setUiMode,
                         )
                     }
                     Subsection(title = stringResource(Res.string.settings_user_interface_language)) {
@@ -304,10 +304,10 @@ internal fun SettingsScreen(
                             options = listOf(
                                 UserPreferences.Language.SYSTEM_DEFAULT to stringResource(Res.string.settings_user_interface_language_system_default),
                                 UserPreferences.Language.ENGLISH to stringResource(Res.string.settings_user_interface_language_english),
-                                UserPreferences.Language.HUNGARIAN to stringResource(Res.string.settings_user_interface_language_hungarian)
+                                UserPreferences.Language.HUNGARIAN to stringResource(Res.string.settings_user_interface_language_hungarian),
                             ),
                             selected = userPreferences?.language,
-                            onSelected = viewModel::setLanguage
+                            onSelected = viewModel::setLanguage,
                         )
                     }
                 }
@@ -315,14 +315,14 @@ internal fun SettingsScreen(
             sectionHeader(
                 key = "header_about",
                 listState = listState,
-                coroutineScope = coroutineScope
+                coroutineScope = coroutineScope,
             ) { stringResource(Res.string.settings_about) }
             item(key = "website") {
                 LinkListItem(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_website),
                     icon = painterResource(Res.drawable.ic_website),
-                    onClick = { urlOpener("https://pandulapeter.com/") }
+                    onClick = { urlOpener("https:,//pandulapeter.com/") }
                 )
             }
             item(key = "github") {
@@ -330,7 +330,7 @@ internal fun SettingsScreen(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_git_hub),
                     icon = painterResource(Res.drawable.ic_git_hub),
-                    onClick = { urlOpener("https://github.com/pandulapeter") }
+                    onClick = { urlOpener("https:,//github.com/pandulapeter") }
                 )
             }
             item(key = "privacy_policy") {
@@ -338,7 +338,7 @@ internal fun SettingsScreen(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_privacy_policy),
                     icon = painterResource(Res.drawable.ic_privacy_policy),
-                    onClick = { urlOpener("https://pandulapeter.com/legal/privacy_policy-campfire.html") }
+                    onClick = { urlOpener("https:,//pandulapeter.com/legal/privacy_policy-campfire.html") }
                 )
             }
             if (canAskForDonations) {
@@ -347,27 +347,27 @@ internal fun SettingsScreen(
                         modifier = Modifier.animateItem(),
                         title = stringResource(Res.string.settings_support),
                         icon = painterResource(Res.drawable.ic_coffee),
-                        onClick = { urlOpener("https://buymeacoffee.com/pandulapeter") }
+                        onClick = { urlOpener("https:,//buymeacoffee.com/pandulapeter") }
                     )
                 }
             }
             item(key = "footer") {
                 Column(
                     modifier = Modifier.animateItem().fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
                         text = stringResource(Res.string.settings_created_by),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                     Text(
                         modifier = Modifier.padding(top = 4.dp),
                         text = stringResource(Res.string.settings_version, CAMPFIRE_VERSION_NAME),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
@@ -383,12 +383,12 @@ private fun LazyListScope.sectionHeader(
     key: String,
     listState: LazyListState,
     coroutineScope: CoroutineScope,
-    text: @Composable () -> String
+    text: @Composable () -> String,
 ) = item(key = key) {
     SectionHeader(
         modifier = Modifier.animateItem(),
         text = text(),
-        onClick = { coroutineScope.launch { listState.animateScrollToKey(key) } }
+        onClick = { coroutineScope.launch { listState.animateScrollToKey(key) } },
     )
 }
 
@@ -408,20 +408,20 @@ private fun Subsection(
     title: String,
     description: String? = null,
     isEnabled: Boolean = true,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) = Column(modifier = modifier) {
     val labelAlpha = if (isEnabled) 1f else 0.5f
     SettingsSectionTitle(
         modifier = Modifier.alpha(labelAlpha),
         text = title,
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = SUBSECTION_TITLE_GAP)
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = SUBSECTION_TITLE_GAP),
     )
     description?.let {
         Text(
             modifier = Modifier.alpha(labelAlpha).padding(start = 16.dp, end = 16.dp, bottom = SUBSECTION_DESCRIPTION_GAP),
             text = it,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
     content()

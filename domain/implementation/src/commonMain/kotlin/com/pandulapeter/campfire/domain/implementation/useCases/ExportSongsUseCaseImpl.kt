@@ -16,7 +16,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ExportSongsUseCase
 
 class ExportSongsUseCaseImpl internal constructor(
     private val songContentRepository: SongContentRepository,
-    private val archiveRepository: ArchiveRepository
+    private val archiveRepository: ArchiveRepository,
 ) : ExportSongsUseCase {
 
     override suspend operator fun invoke(fileNames: List<String>): ExportedFile? {
@@ -31,7 +31,7 @@ class ExportSongsUseCaseImpl internal constructor(
             else -> ExportedFile(
                 name = ARCHIVE_NAME,
                 mimeType = ExportedFile.ZIP_MIME_TYPE,
-                bytes = archiveRepository.pack(contents.associate { it.fileName to it.text.encodeToByteArray() })
+                bytes = archiveRepository.pack(contents.associate { it.fileName to it.text.encodeToByteArray() }),
             )
         }
     }

@@ -22,9 +22,9 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     language = UserPreferences.Language.entries.firstOrNull { it.id == language } ?: UserPreferences.Language.SYSTEM_DEFAULT,
     chordSpelling = UserPreferences.ChordSpelling(
         accidentals = UserPreferences.Accidentals.entries.firstOrNull { it.id == accidentals } ?: UserPreferences.Accidentals.ORIGINAL,
-        isGermanNotationEnabled = isGermanNotationEnabled
+        isGermanNotationEnabled = isGermanNotationEnabled,
     ),
-    transpositions = transpositions
+    transpositions = transpositions,
 )
 
 internal fun UserPreferences.toDocument() = UserPreferencesDocument(
@@ -37,5 +37,5 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     language = language.id,
     accidentals = chordSpelling.accidentals.id,
     isGermanNotationEnabled = chordSpelling.isGermanNotationEnabled,
-    transpositions = transpositions
+    transpositions = transpositions,
 )

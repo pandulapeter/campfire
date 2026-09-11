@@ -26,7 +26,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 
 internal class SongLocalSourceImpl(
-    private val fileStorage: FileStorage
+    private val fileStorage: FileStorage,
 ) : SongLocalSource {
 
     /**

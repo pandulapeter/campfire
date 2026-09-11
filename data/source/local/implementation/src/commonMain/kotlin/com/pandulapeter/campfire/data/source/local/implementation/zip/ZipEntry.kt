@@ -15,7 +15,7 @@ package com.pandulapeter.campfire.data.source.local.implementation.zip
  */
 internal data class ZipEntry(
     val name: String,
-    val bytes: ByteArray
+    val bytes: ByteArray,
 ) {
 
     override fun equals(other: Any?) = this === other || (other is ZipEntry && name == other.name && bytes.contentEquals(other.bytes))

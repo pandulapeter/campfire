@@ -17,7 +17,7 @@ package com.pandulapeter.campfire.data.model.domain
 data class ExportedFile(
     val name: String,
     val mimeType: String,
-    val bytes: ByteArray
+    val bytes: ByteArray,
 ) {
 
     override fun equals(other: Any?) = this === other ||

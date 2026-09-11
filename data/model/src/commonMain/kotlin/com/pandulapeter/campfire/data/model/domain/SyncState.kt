@@ -22,7 +22,7 @@ enum class SyncProviderId(val id: String) {
 data class SyncAccount(
     val providerId: SyncProviderId,
     val displayName: String,
-    val email: String?
+    val email: String?,
 )
 
 /**
@@ -42,7 +42,7 @@ sealed interface SyncState {
         val progress: SyncProgress?,
         /** Milliseconds since the epoch of the last run that *finished*, null until one has. */
         val lastSyncedAt: Long?,
-        val lastOutcome: SyncOutcome?
+        val lastOutcome: SyncOutcome?,
     ) : SyncState {
 
         val isSyncing get() = progress != null
@@ -55,7 +55,7 @@ sealed interface SyncState {
  */
 data class SyncProgress(
     val completed: Int = 0,
-    val total: Int = 0
+    val total: Int = 0,
 ) {
 
     val isPreparing get() = total == 0
@@ -87,7 +87,7 @@ data class SyncSummary(
     val uploaded: Int = 0,
     val deletedLocally: Int = 0,
     val deletedRemotely: Int = 0,
-    val conflicts: List<String> = emptyList()
+    val conflicts: List<String> = emptyList(),
 ) {
 
     val hasChanges get() = downloaded > 0 || uploaded > 0 || deletedLocally > 0 || deletedRemotely > 0
@@ -103,5 +103,5 @@ enum class SyncFailureReason {
 
     /** The library could not be read or written. */
     STORAGE,
-    UNKNOWN
+    UNKNOWN,
 }

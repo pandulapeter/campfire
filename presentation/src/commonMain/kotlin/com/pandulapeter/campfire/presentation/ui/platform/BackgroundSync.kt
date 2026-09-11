@@ -52,7 +52,7 @@ data class SyncNotification(
     val preparingBody: String,
     val progressBodyFormat: String,
     val stopLabel: String,
-    val progress: SyncProgress
+    val progress: SyncProgress,
 )
 
 /**

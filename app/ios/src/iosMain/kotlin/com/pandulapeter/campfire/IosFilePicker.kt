@@ -41,7 +41,7 @@ import kotlin.coroutines.resume
  * @param viewController The controller to present the picker from, which is the one hosting the Compose UI.
  */
 internal class IosFilePicker(
-    private val viewController: () -> UIViewController
+    private val viewController: () -> UIViewController,
 ) : FilePicker {
 
     // UIKit keeps only a weak reference to a delegate, so the one that is in flight is held here.
@@ -114,7 +114,7 @@ internal fun NSURL.readImportedFile(): ImportedFile? {
 }
 
 private class DocumentPickerDelegate(
-    private val onFinished: (List<NSURL>) -> Unit
+    private val onFinished: (List<NSURL>) -> Unit,
 ) : NSObject(), UIDocumentPickerDelegateProtocol {
 
     override fun documentPicker(controller: UIDocumentPickerViewController, didPickDocumentsAtURLs: List<*>) =

@@ -20,7 +20,7 @@ sealed interface ChordProLine {
         data class Chord(
             val position: Int, // offset into text where the chord sits
             val name: String, // "Am7", "N.C.", ...
-            val isAnnotation: Boolean // [*text] annotations: shown like a chord, never transposed
+            val isAnnotation: Boolean, // [*text] annotations: shown like a chord, never transposed
         )
     }
 

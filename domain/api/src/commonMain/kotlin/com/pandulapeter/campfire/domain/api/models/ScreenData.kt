@@ -20,5 +20,5 @@ data class ScreenData(
      * The file name of every song in the library, whether or not the filters hide it. Setlist entries are resolved
      * against this: a song the "show songs without chords" filter is hiding is not a song whose file went missing.
      */
-    val songFileNames: Set<String>
+    val songFileNames: Set<String>,
 )

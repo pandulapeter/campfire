@@ -43,11 +43,11 @@ internal fun rememberAndroidFilePicker(): FilePicker {
     // The contract bakes the type in, so there is one launcher per type the app can hand out.
     picker.createTextLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument(ExportedFile.TEXT_MIME_TYPE),
-        picker::onSaveLocationPicked
+        picker::onSaveLocationPicked,
     )
     picker.createArchiveLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument(ExportedFile.ZIP_MIME_TYPE),
-        picker::onSaveLocationPicked
+        picker::onSaveLocationPicked,
     )
     return picker
 }

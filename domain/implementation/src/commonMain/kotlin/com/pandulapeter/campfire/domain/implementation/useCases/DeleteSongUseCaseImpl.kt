@@ -17,7 +17,7 @@ import com.pandulapeter.campfire.domain.api.useCases.DeleteSongUseCase
 class DeleteSongUseCaseImpl internal constructor(
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
 ) : DeleteSongUseCase {
 
     /**

@@ -36,14 +36,14 @@ fun CampfireIosApp(
     urlOpener: (String) -> Unit,
     filePicker: FilePicker,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
-    syncNotifier: SyncNotifier = SyncNotifier { }
+    syncNotifier: SyncNotifier = SyncNotifier { },
 ) = CompositionLocalProvider(
     LocalFilePicker provides filePicker,
-    LocalSyncNotifier provides syncNotifier
+    LocalSyncNotifier provides syncNotifier,
 ) {
     CampfireApp(
         viewModel = viewModel,
         urlOpener = urlOpener,
-        filesToImport = filesToImport
+        filesToImport = filesToImport,
     )
 }

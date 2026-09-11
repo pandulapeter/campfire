@@ -20,7 +20,7 @@ import kotlinx.serialization.json.Json
  * a refresh and have the loser overwrite the winner's tokens.
  */
 internal class SyncCredentialsStore(
-    private val syncStateLocalSource: SyncStateLocalSource
+    private val syncStateLocalSource: SyncStateLocalSource,
 ) {
 
     private val mutex = Mutex()

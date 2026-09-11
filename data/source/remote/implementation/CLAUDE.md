@@ -66,3 +66,4 @@ redirect URIs character for character, which is why the desktop port is fixed.
 
 Tested in `commonTest`, run on the desktop target: the hashing, the encoders, and the authorization URL — get a
 parameter wrong there and the user meets an error page on the service's own site with nothing in the app to say why.
+`desktopTest` adds the one platform piece worth testing, the loopback server's cancellation.

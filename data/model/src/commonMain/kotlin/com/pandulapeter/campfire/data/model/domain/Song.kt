@@ -23,5 +23,5 @@ data class Song(
     /** `{key}` as written, null if the song does not declare one. */
     val key: String?,
     val hasChords: Boolean,
-    val lastModified: Long
+    val lastModified: Long,
 )

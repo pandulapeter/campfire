@@ -18,7 +18,7 @@ import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 
 internal class SongRepositoryImpl(
     private val songLocalSource: SongLocalSource,
-    private val songContentRepository: SongContentRepository
+    private val songContentRepository: SongContentRepository,
 ) : BaseLocalDataRepository<List<Song>>(
     loadDataFromLocalSource = songLocalSource::loadSongs
 ), SongRepository {

@@ -17,7 +17,7 @@ class JsonTest {
     @Test
     fun `quotes a plain string`() = assertEquals(
         expected = "\"/songs/Artist - Title.cho\"",
-        actual = "/songs/Artist - Title.cho".toAsciiJsonString()
+        actual = "/songs/Artist - Title.cho".toAsciiJsonString(),
     )
 
     /**
@@ -27,19 +27,19 @@ class JsonTest {
     @Test
     fun `escapes everything above ascii, so that a header can carry it`() = assertEquals(
         expected = "\"/songs/\\u00c1rv\\u00edzt\\u0171r\\u0151.cho\"",
-        actual = "/songs/Árvíztűrő.cho".toAsciiJsonString()
+        actual = "/songs/Árvíztűrő.cho".toAsciiJsonString(),
     )
 
     @Test
     fun `escapes quotes and backslashes`() = assertEquals(
         expected = "\"a\\\"b\\\\c\"",
-        actual = "a\"b\\c".toAsciiJsonString()
+        actual = "a\"b\\c".toAsciiJsonString(),
     )
 
     @Test
     fun `escapes control characters`() = assertEquals(
         expected = "\"a\\nb\\tc\"",
-        actual = "a\nb\tc".toAsciiJsonString()
+        actual = "a\nb\tc".toAsciiJsonString(),
     )
 
     @Test

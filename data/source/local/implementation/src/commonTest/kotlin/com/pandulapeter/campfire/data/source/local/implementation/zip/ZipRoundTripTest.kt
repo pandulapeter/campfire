@@ -23,7 +23,7 @@ internal class ZipRoundTripTest {
             ZipEntry("empty.cho", ByteArray(0)),
             ZipEntry("songs/Plain ASCII.cho", "{title: Plain}\n[Am]Hello [C]world\n".encodeToByteArray()),
             ZipEntry("dalok/Árvíztűrő tükörfúrógép.cho", "{title: Árvíztűrő}\n{artist: Tükörfúrógép}\nÁÉÍÓŐÚŰ öüó\n".encodeToByteArray()),
-            ZipEntry("random.bin", Random(1234).nextBytes(100 * 1024))
+            ZipEntry("random.bin", Random(1234).nextBytes(100 * 1024)),
         )
 
         val read = ZipReader.read(ZipWriter.write(entries))

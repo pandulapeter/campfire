@@ -23,14 +23,14 @@ import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
 
 class GetSyncStateUseCaseImpl internal constructor(
-    private val syncRepository: SyncRepository
+    private val syncRepository: SyncRepository,
 ) : GetSyncStateUseCase {
 
     override operator fun invoke() = syncRepository.syncState
 }
 
 class GetSyncProvidersUseCaseImpl internal constructor(
-    private val syncRepository: SyncRepository
+    private val syncRepository: SyncRepository,
 ) : GetSyncProvidersUseCase {
 
     override operator fun invoke() = syncRepository.availableProviders
@@ -38,7 +38,7 @@ class GetSyncProvidersUseCaseImpl internal constructor(
 
 class ConnectSyncProviderUseCaseImpl internal constructor(
     private val syncRepository: SyncRepository,
-    private val synchronizeLibrary: SynchronizeLibraryUseCase
+    private val synchronizeLibrary: SynchronizeLibraryUseCase,
 ) : ConnectSyncProviderUseCase {
 
     /**
@@ -53,7 +53,7 @@ class ConnectSyncProviderUseCaseImpl internal constructor(
 }
 
 class DisconnectSyncProviderUseCaseImpl internal constructor(
-    private val syncRepository: SyncRepository
+    private val syncRepository: SyncRepository,
 ) : DisconnectSyncProviderUseCase {
 
     override suspend operator fun invoke() = syncRepository.disconnect()
@@ -61,7 +61,7 @@ class DisconnectSyncProviderUseCaseImpl internal constructor(
 
 class RestoreSyncUseCaseImpl internal constructor(
     private val syncRepository: SyncRepository,
-    private val synchronizeLibrary: SynchronizeLibraryUseCase
+    private val synchronizeLibrary: SynchronizeLibraryUseCase,
 ) : RestoreSyncUseCase {
 
     override suspend operator fun invoke(): Boolean {
@@ -74,14 +74,14 @@ class RestoreSyncUseCaseImpl internal constructor(
 }
 
 class SynchronizeLibraryUseCaseImpl internal constructor(
-    private val syncRepository: SyncRepository
+    private val syncRepository: SyncRepository,
 ) : SynchronizeLibraryUseCase {
 
     override operator fun invoke() = syncRepository.synchronize()
 }
 
 class CancelSynchronizationUseCaseImpl internal constructor(
-    private val syncRepository: SyncRepository
+    private val syncRepository: SyncRepository,
 ) : CancelSynchronizationUseCase {
 
     override operator fun invoke() = syncRepository.cancelSynchronization()

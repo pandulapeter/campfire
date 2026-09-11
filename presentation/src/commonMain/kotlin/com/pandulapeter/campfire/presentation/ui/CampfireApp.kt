@@ -120,7 +120,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun CampfireApp(
     viewModel: CampfireViewModel = koinViewModel(),
     urlOpener: (String) -> Unit,
-    filesToImport: Flow<List<ImportedFile>> = emptyFlow()
+    filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
 ) {
     LaunchedEffect(filesToImport) { filesToImport.collect(viewModel::importFiles) }
     SyncNotificationEffect(viewModel)
@@ -143,7 +143,7 @@ fun CampfireApp(
     ) {
         CampfireContent(
             viewModel = viewModel,
-            urlOpener = urlOpener
+            urlOpener = urlOpener,
         )
     }
 }
@@ -152,7 +152,7 @@ fun CampfireApp(
 @Composable
 private fun CampfireContent(
     viewModel: CampfireViewModel,
-    urlOpener: (String) -> Unit
+    urlOpener: (String) -> Unit,
 ) = BoxWithConstraints(
     // Painted here as well as on every screen, so that the two screens of a cross fading tab transition blend into
     // the same color they are painted in and the fade stays invisible.
@@ -193,13 +193,13 @@ private fun CampfireContent(
         bottom = maxOf(
             if (windowSize.usesNavigationRail) systemBars.calculateBottomPadding() else 0.dp,
             // The keyboard covers the navigation bar instead of pushing it away, so only what is left of it counts.
-            (imeHeight - navigationBarHeight).coerceAtLeast(0.dp)
-        )
+            (imeHeight - navigationBarHeight).coerceAtLeast(0.dp),
+        ),
     )
     val songDetailsContentPadding = PaddingValues(
         start = systemBars.calculateStartPadding(layoutDirection),
         end = systemBars.calculateEndPadding(layoutDirection),
-        bottom = maxOf(systemBars.calculateBottomPadding(), imeHeight)
+        bottom = maxOf(systemBars.calculateBottomPadding(), imeHeight),
     )
 
     Box(
@@ -209,7 +209,7 @@ private fun CampfireContent(
             windowSize = windowSize,
             currentTopLevelDestination = currentTopLevelDestination,
             onDestinationSelected = viewModel::selectTopLevelDestination,
-            onThicknessChanged = { chromeThickness = it }
+            onThicknessChanged = { chromeThickness = it },
         )
         NavDisplay(
             modifier = Modifier.fillMaxSize(),
@@ -227,7 +227,7 @@ private fun CampfireContent(
                         SongsScreen(
                             viewModel = viewModel,
                             settledWidth = settledListWidth,
-                            contentPadding = shellContentPadding
+                            contentPadding = shellContentPadding,
                         )
                     }
                 }
@@ -237,7 +237,7 @@ private fun CampfireContent(
                         SetlistsScreen(
                             viewModel = viewModel,
                             settledWidth = settledListWidth,
-                            contentPadding = shellContentPadding
+                            contentPadding = shellContentPadding,
                         )
                     }
                 }
@@ -247,7 +247,7 @@ private fun CampfireContent(
                         SettingsScreen(
                             viewModel = viewModel,
                             contentPadding = shellContentPadding,
-                            urlOpener = urlOpener
+                            urlOpener = urlOpener,
                         )
                     }
                 }
@@ -260,7 +260,7 @@ private fun CampfireContent(
                             destination = destination,
                             windowSize = windowSize,
                             contentPadding = songDetailsContentPadding,
-                            onBack = viewModel::navigateBack
+                            onBack = viewModel::navigateBack,
                         )
                     }
                 }
@@ -273,22 +273,22 @@ private fun CampfireContent(
                             windowSize = windowSize,
                             settledWidth = settledSongDetailsWidth,
                             contentPadding = songDetailsContentPadding,
-                            onBack = viewModel::navigateBack
+                            onBack = viewModel::navigateBack,
                         )
                     }
                 }
-            }
+            },
         )
     }
     CampfireDialogs(
         viewModel = viewModel,
-        urlOpener = urlOpener
+        urlOpener = urlOpener,
     )
     Messages(
         modifier = Modifier
             .align(Alignment.BottomCenter)
             .padding(bottom = navigationBarHeight + systemBars.calculateBottomPadding()),
-        viewModel = viewModel
+        viewModel = viewModel,
     )
 }
 
@@ -300,7 +300,7 @@ private fun CampfireContent(
 @Composable
 private fun Messages(
     modifier: Modifier = Modifier,
-    viewModel: CampfireViewModel
+    viewModel: CampfireViewModel,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     // Queued rather than collected straight into the snackbar: the text of a message can only be built in a
@@ -319,7 +319,7 @@ private fun Messages(
             Res.string.import_result,
             current.result.importedSongFileNames.size,
             current.result.importedSetlistFileNames.size,
-            current.result.skippedFileNames.size
+            current.result.skippedFileNames.size,
         )
 
         CampfireViewModel.Message.ImportFailed -> stringResource(Res.string.import_failed)
@@ -336,7 +336,7 @@ private fun Messages(
     }
     SnackbarHost(
         modifier = modifier,
-        hostState = snackbarHostState
+        hostState = snackbarHostState,
     ) { data ->
         Snackbar(snackbarData = data)
     }
@@ -355,7 +355,7 @@ private fun BoxScope.NavigationChrome(
     windowSize: WindowSize,
     currentTopLevelDestination: CampfireDestination.TopLevel?,
     onDestinationSelected: (CampfireDestination.TopLevel) -> Unit,
-    onThicknessChanged: (Dp) -> Unit
+    onThicknessChanged: (Dp) -> Unit,
 ) {
     val density = LocalDensity.current
     if (windowSize.usesNavigationRail) {
@@ -369,7 +369,7 @@ private fun BoxScope.NavigationChrome(
                     selected = destination == currentTopLevelDestination,
                     onClick = { onDestinationSelected(destination) },
                     icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
-                    label = { Text(stringResource(destination.label)) }
+                    label = { Text(stringResource(destination.label)) },
                 )
             }
         }
@@ -384,7 +384,7 @@ private fun BoxScope.NavigationChrome(
                     selected = destination == currentTopLevelDestination,
                     onClick = { onDestinationSelected(destination) },
                     icon = { Icon(painter = painterResource(destination.icon), contentDescription = null) },
-                    label = { Text(stringResource(destination.label)) }
+                    label = { Text(stringResource(destination.label)) },
                 )
             }
         }
@@ -405,14 +405,14 @@ private fun BoxScope.NavigationChrome(
 private fun ScreenSurface(
     railWidth: Dp = 0.dp,
     navigationBarHeight: Dp = 0.dp,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) = Surface(
     modifier = Modifier
         .fillMaxSize()
         .padding(start = railWidth, bottom = navigationBarHeight)
         // The chrome covers the insets on its own edge, so nothing inside should apply them a second time.
         .consumeWindowInsets(PaddingValues(start = railWidth, bottom = navigationBarHeight)),
-    color = MaterialTheme.colorScheme.background
+    color = MaterialTheme.colorScheme.background,
 ) {
     content()
 }
@@ -437,7 +437,7 @@ private fun ScreenSurface(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigationTransition(
     motionScheme: MotionScheme,
-    usesNavigationRail: Boolean
+    usesNavigationRail: Boolean,
 ): ContentTransform {
     val from = CampfireDestination.TopLevel.fromContentKey(initialState.entries.lastOrNull()?.contentKey)
     val to = CampfireDestination.TopLevel.fromContentKey(targetState.entries.lastOrNull()?.contentKey)
@@ -463,7 +463,7 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigatio
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTransition(motionScheme: MotionScheme) = ContentTransform(
     targetContentEnter = slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, motionScheme.defaultSpatialSpec()),
     initialContentExit = ExitTransition.KeepUntilTransitionsFinished,
-    targetContentZIndex = targetState.zIndex
+    targetContentZIndex = targetState.zIndex,
 )
 
 /**
@@ -474,7 +474,7 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTrans
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.popTransition(motionScheme: MotionScheme) = ContentTransform(
     targetContentEnter = EnterTransition.None,
     initialContentExit = slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, motionScheme.defaultSpatialSpec()),
-    targetContentZIndex = targetState.zIndex
+    targetContentZIndex = targetState.zIndex,
 )
 
 /**
@@ -488,7 +488,7 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictiv
     return ContentTransform(
         targetContentEnter = EnterTransition.None,
         initialContentExit = slideOutOfContainer(towards, tween(PREDICTIVE_BACK_DURATION, easing = LinearEasing)),
-        targetContentZIndex = targetState.zIndex
+        targetContentZIndex = targetState.zIndex,
     )
 }
 
@@ -500,7 +500,7 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictiv
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.tabTransition(towards: AnimatedContentTransitionScope.SlideDirection) = ContentTransform(
     targetContentEnter = fadeIn(tween(TAB_TRANSITION_DURATION)) + slideIntoContainer(towards, tween(TAB_TRANSITION_DURATION)) { it / TAB_SLIDE_FRACTION },
     initialContentExit = fadeOut(tween(TAB_TRANSITION_DURATION)) + slideOutOfContainer(towards, tween(TAB_TRANSITION_DURATION)) { it / TAB_SLIDE_FRACTION },
-    targetContentZIndex = targetState.zIndex
+    targetContentZIndex = targetState.zIndex,
 )
 
 /**
@@ -571,7 +571,7 @@ private fun SyncNotificationEffect(viewModel: CampfireViewModel) {
             preparingBody = preparing,
             progressBodyFormat = progressBodyFormat,
             stopLabel = stopLabel,
-            progress = it
+            progress = it,
         )
     }
     // "Nothing to show" is only ever said after something was shown from here. Said on the first frame of every

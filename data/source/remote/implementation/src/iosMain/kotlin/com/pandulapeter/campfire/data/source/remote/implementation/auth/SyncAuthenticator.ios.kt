@@ -64,7 +64,7 @@ internal class IosSyncAuthenticator : SyncAuthenticator {
                 var hasFinished = false
                 val session = ASWebAuthenticationSession(
                     uRL = url,
-                    callbackURLScheme = REDIRECT_SCHEME
+                    callbackURLScheme = REDIRECT_SCHEME,
                 ) { callbackUrl, error ->
                     if (!hasFinished) {
                         hasFinished = true

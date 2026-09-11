@@ -19,7 +19,7 @@ Repository interfaces only. Consumed by `:domain:implementation`; implemented by
   setlist does not re-read the same files. Deliberately not a `DataState` flow: it is a lookup, not a screen's state.
 - `UserPreferencesRepository` — one document, read once and written whole.
 - `SyncRepository` — the state machine around sync: `syncState: Flow<SyncState>`, the providers the build has, and
-  `restore` / `connect` / `disconnect` / `synchronize`. Unlike the others it caches no list — the library keeps
+  `restore` / `connect` / `disconnect` / `synchronize` / `cancelSynchronization`. Unlike the others it caches no list — the library keeps
   living in `SongRepository` and `SetlistRepository`, which is why a run that changed files has to be followed by a
   `rescan()`, done by `SynchronizeLibraryUseCase`. It is also the only thing above the data layer that knows a
   service is involved: the screens see a `SyncState` and never learn which provider produced it.

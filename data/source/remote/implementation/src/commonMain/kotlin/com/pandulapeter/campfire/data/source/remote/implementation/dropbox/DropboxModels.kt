@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
 internal data class DropboxListFolderResponse(
     val entries: List<DropboxEntry> = emptyList(),
     val cursor: String = "",
-    @SerialName("has_more") val hasMore: Boolean = false
+    @SerialName("has_more") val hasMore: Boolean = false,
 )
 
 @Serializable
@@ -30,7 +30,7 @@ internal data class DropboxEntry(
     @SerialName("path_lower") val pathLower: String = "",
     val rev: String = "",
     val size: Long = 0,
-    @SerialName("content_hash") val contentHash: String? = null
+    @SerialName("content_hash") val contentHash: String? = null,
 )
 
 @Serializable
@@ -39,19 +39,19 @@ internal data class DropboxFileMetadata(
     @SerialName("path_lower") val pathLower: String = "",
     val rev: String = "",
     val size: Long = 0,
-    @SerialName("content_hash") val contentHash: String? = null
+    @SerialName("content_hash") val contentHash: String? = null,
 )
 
 @Serializable
 internal data class DropboxAccountResponse(
     @SerialName("account_id") val accountId: String = "",
     val name: DropboxName = DropboxName(),
-    val email: String = ""
+    val email: String = "",
 )
 
 @Serializable
 internal data class DropboxName(
-    @SerialName("display_name") val displayName: String = ""
+    @SerialName("display_name") val displayName: String = "",
 )
 
 @Serializable
@@ -59,7 +59,7 @@ internal data class DropboxTokenResponse(
     @SerialName("access_token") val accessToken: String = "",
     @SerialName("refresh_token") val refreshToken: String? = null,
     @SerialName("expires_in") val expiresInSeconds: Long = 0,
-    @SerialName("account_id") val accountId: String = ""
+    @SerialName("account_id") val accountId: String = "",
 )
 
 /**
@@ -68,5 +68,5 @@ internal data class DropboxTokenResponse(
  */
 @Serializable
 internal data class DropboxErrorResponse(
-    @SerialName("error_summary") val errorSummary: String = ""
+    @SerialName("error_summary") val errorSummary: String = "",
 )

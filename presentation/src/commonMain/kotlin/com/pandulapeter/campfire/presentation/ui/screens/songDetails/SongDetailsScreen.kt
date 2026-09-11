@@ -117,7 +117,7 @@ internal fun SongDetailsScreen(
     windowSize: WindowSize,
     settledWidth: Dp,
     contentPadding: PaddingValues,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     val allSongs by viewModel.allSongs.collectAsStateWithLifecycle()
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
@@ -177,28 +177,28 @@ internal fun SongDetailsScreen(
                 IconButton(onClick = onBack) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_back),
-                        contentDescription = stringResource(Res.string.back)
+                        contentDescription = stringResource(Res.string.back),
                     )
                 }
             },
             title = {
                 AnimatedContent(
                     targetState = currentSong,
-                    transitionSpec = { fadeIn() togetherWith fadeOut() }
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
                 ) { song ->
                     Column {
                         Text(
                             text = song?.title.orEmpty(),
                             style = MaterialTheme.typography.titleMedium,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
                         )
                         Text(
                             text = song?.artist.orEmpty(),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
@@ -208,7 +208,7 @@ internal fun SongDetailsScreen(
                     AnimatedVisibility(
                         visible = shouldShowChords && currentSong?.hasChords == true && currentSong.fileName in songTexts,
                         enter = fadeIn() + scaleIn(),
-                        exit = fadeOut() + scaleOut()
+                        exit = fadeOut() + scaleOut(),
                     ) {
                         TranspositionControls(
                             modifier = Modifier.padding(end = INLINE_CONTROL_SPACING),
@@ -217,7 +217,7 @@ internal fun SongDetailsScreen(
                             key = currentKey,
                             onTranspositionChanged = { transposition ->
                                 currentSong?.let { viewModel.setTransposition(it.fileName, destination.setlistFileName, transposition) }
-                            }
+                            },
                         )
                     }
                     FontScaleControls(
@@ -225,7 +225,7 @@ internal fun SongDetailsScreen(
                         isCompact = true,
                         fontScale = fontScale,
                         onFontScaleAdjusted = viewModel::adjustFontScale,
-                        onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) }
+                        onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) },
                     )
                 }
                 IconButton(
@@ -237,7 +237,7 @@ internal fun SongDetailsScreen(
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_playlist_add),
-                        contentDescription = stringResource(Res.string.song_details_add_to_setlist)
+                        contentDescription = stringResource(Res.string.song_details_add_to_setlist),
                     )
                 }
                 if (!windowSize.usesInlineSongControls) {
@@ -250,7 +250,7 @@ internal fun SongDetailsScreen(
                     ) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_tune),
-                            contentDescription = stringResource(Res.string.song_details_display_options)
+                            contentDescription = stringResource(Res.string.song_details_display_options),
                         )
                     }
                 }
@@ -261,7 +261,7 @@ internal fun SongDetailsScreen(
                             viewModel = viewModel,
                             song = song,
                             setlistFileName = destination.setlistFileName,
-                            shouldIncludeAddToSetlist = false
+                            shouldIncludeAddToSetlist = false,
                         )
                     } else {
                         IconButton(
@@ -270,19 +270,19 @@ internal fun SongDetailsScreen(
                                     CampfireViewModel.DialogType.SongActions(
                                         song = song,
                                         setlistFileName = destination.setlistFileName,
-                                        shouldIncludeAddToSetlist = false
+                                        shouldIncludeAddToSetlist = false,
                                     )
                                 )
                             }
                         ) {
                             Icon(
                                 painter = painterResource(Res.drawable.ic_more),
-                                contentDescription = stringResource(Res.string.songs_actions)
+                                contentDescription = stringResource(Res.string.songs_actions),
                             )
                         }
                     }
                 }
-            }
+            },
         )
         val currentFontScale by rememberUpdatedState(fontScale)
         // The paging bar sits below the pager and covers the bottom inset for it, so the pages only keep the
@@ -291,7 +291,7 @@ internal fun SongDetailsScreen(
         val pageContentPadding = if (canPage) {
             PaddingValues(
                 start = contentPadding.calculateStartPadding(layoutDirection),
-                end = contentPadding.calculateEndPadding(layoutDirection)
+                end = contentPadding.calculateEndPadding(layoutDirection),
             )
         } else {
             contentPadding
@@ -301,7 +301,7 @@ internal fun SongDetailsScreen(
             // leave the screen blank under an app bar with no title in it.
             Box(
                 modifier = Modifier.weight(1f).fillMaxWidth().padding(contentPadding),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 ContainedLoadingIndicator()
             }
@@ -312,11 +312,11 @@ internal fun SongDetailsScreen(
                     .fillMaxWidth()
                     .fontScaleGestures(
                         fontScale = { currentFontScale },
-                        onFontScaleChanged = viewModel::setFontScale
+                        onFontScaleChanged = viewModel::setFontScale,
                     ),
                 state = pagerState,
                 key = { songs[it].fileName },
-                beyondViewportPageCount = 1
+                beyondViewportPageCount = 1,
             ) { page ->
                 val song = songs[page]
                 SongDetailsPage(
@@ -331,7 +331,7 @@ internal fun SongDetailsScreen(
                     settledWidth = settledWidth,
                     contentPadding = pageContentPadding,
                     renderSong = viewModel::renderSong,
-                    onRetry = { viewModel.loadSongContent(song.fileName) }
+                    onRetry = { viewModel.loadSongContent(song.fileName) },
                 )
             }
         }
@@ -341,7 +341,7 @@ internal fun SongDetailsScreen(
                 currentPage = pagerState.currentPage,
                 pageCount = songs.size,
                 contentPadding = contentPadding,
-                onPageSelected = { page -> coroutineScope.launch { pagerState.animateScrollToPage(page) } }
+                onPageSelected = { page -> coroutineScope.launch { pagerState.animateScrollToPage(page) } },
             )
         }
     }
@@ -357,7 +357,7 @@ private fun SongPagerControls(
     currentPage: Int,
     pageCount: Int,
     contentPadding: PaddingValues,
-    onPageSelected: (Int) -> Unit
+    onPageSelected: (Int) -> Unit,
 ) = Surface(
     color = MaterialTheme.colorScheme.surfaceContainer
 ) {
@@ -368,18 +368,18 @@ private fun SongPagerControls(
             .padding(
                 start = contentPadding.calculateStartPadding(layoutDirection) + 4.dp,
                 end = contentPadding.calculateEndPadding(layoutDirection) + 4.dp,
-                bottom = contentPadding.calculateBottomPadding()
+                bottom = contentPadding.calculateBottomPadding(),
             )
             .height(PAGER_CONTROLS_HEIGHT),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(
             enabled = currentPage > 0,
-            onClick = { onPageSelected(currentPage - 1) }
+            onClick = { onPageSelected(currentPage - 1) },
         ) {
             Icon(
                 painter = painterResource(Res.drawable.ic_previous),
-                contentDescription = stringResource(Res.string.song_details_previous_song)
+                contentDescription = stringResource(Res.string.song_details_previous_song),
             )
         }
         // The label takes whatever the two buttons leave. Only the setlist name gives way when that is not enough:
@@ -387,7 +387,7 @@ private fun SongPagerControls(
         Row(
             modifier = Modifier.weight(1f),
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             if (setlistTitle != null) {
                 Text(
@@ -396,34 +396,34 @@ private fun SongPagerControls(
                     style = MaterialTheme.typography.labelLarge,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     modifier = Modifier.padding(horizontal = 8.dp),
                     text = LABEL_SEPARATOR,
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             AnimatedContent(
                 targetState = currentPage,
-                transitionSpec = { fadeIn() togetherWith fadeOut() }
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
             ) { page ->
                 Text(
                     text = stringResource(Res.string.song_details_song_position, page + 1, pageCount),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
         }
         IconButton(
             enabled = currentPage < pageCount - 1,
-            onClick = { onPageSelected(currentPage + 1) }
+            onClick = { onPageSelected(currentPage + 1) },
         ) {
             Icon(
                 painter = painterResource(Res.drawable.ic_next),
-                contentDescription = stringResource(Res.string.song_details_next_song)
+                contentDescription = stringResource(Res.string.song_details_next_song),
             )
         }
     }
@@ -448,17 +448,17 @@ private fun SongDetailsPage(
     settledWidth: Dp,
     contentPadding: PaddingValues,
     renderSong: (text: String, transposition: Int, spelling: UserPreferences.ChordSpelling) -> ChordProSong,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
     targetState = text,
     transitionSpec = { fadeIn() togetherWith fadeOut() },
-    contentKey = { it != null }
+    contentKey = { it != null },
 ) { songText ->
     if (songText == null) {
         Box(
             modifier = Modifier.fillMaxSize().padding(contentPadding),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             if (hasFailed) {
                 EmptyState(
@@ -466,7 +466,7 @@ private fun SongDetailsPage(
                     title = stringResource(Res.string.song_details_no_data),
                     hint = stringResource(Res.string.song_details_no_data_hint),
                     actionText = stringResource(Res.string.retry),
-                    onAction = onRetry
+                    onAction = onRetry,
                 )
             } else {
                 ContainedLoadingIndicator()
@@ -480,11 +480,11 @@ private fun SongDetailsPage(
             // The file exists and could be read, it just has nothing in it yet - a newly created song, typically.
             Box(
                 modifier = Modifier.fillMaxSize().padding(contentPadding),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 EmptyState(
                     icon = painterResource(Res.drawable.ic_songs),
-                    title = stringResource(Res.string.song_details_empty)
+                    title = stringResource(Res.string.song_details_empty),
                 )
             }
             return@AnimatedContent
@@ -506,7 +506,7 @@ private fun SongDetailsPage(
                         start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
                         end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
                         top = topPadding,
-                        bottom = bottomPadding
+                        bottom = bottomPadding,
                     ),
                 song = renderedSong,
                 availableHeight = maxHeight - topPadding - bottomPadding,
@@ -515,7 +515,7 @@ private fun SongDetailsPage(
                 shouldShowChords = shouldShowChords,
                 fontScale = fontScale,
                 isHorizontalFlow = isHorizontalFlow,
-                scrollState = scrollState
+                scrollState = scrollState,
             )
         }
     }

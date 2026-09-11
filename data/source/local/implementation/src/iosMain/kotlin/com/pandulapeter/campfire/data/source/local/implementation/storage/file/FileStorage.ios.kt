@@ -77,7 +77,7 @@ private class IosFileStorage : FileStorage {
         return StoredFileInfo(
             name = name,
             size = (attributes[NSFileSize] as? NSNumber)?.longLongValue ?: 0L,
-            lastModified = ((attributes[NSFileModificationDate] as? NSDate)?.timeIntervalSince1970 ?: 0.0).times(1000).toLong()
+            lastModified = ((attributes[NSFileModificationDate] as? NSDate)?.timeIntervalSince1970 ?: 0.0).times(1000).toLong(),
         )
     }
 
@@ -126,7 +126,7 @@ private class IosFileStorage : FileStorage {
                 appropriateForURL = null,
                 // Unlike the documents directory, application support doesn't exist until something creates it.
                 create = isPreferences,
-                error = null
+                error = null,
             )?.path
         ) { "Could not resolve the data directory." }
     }

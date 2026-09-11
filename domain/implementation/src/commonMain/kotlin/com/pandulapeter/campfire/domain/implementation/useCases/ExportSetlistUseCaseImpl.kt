@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.domain.api.useCases.ExportSetlistUseCase
 class ExportSetlistUseCaseImpl internal constructor(
     private val setlistRepository: SetlistRepository,
     private val songContentRepository: SongContentRepository,
-    private val archiveRepository: ArchiveRepository
+    private val archiveRepository: ArchiveRepository,
 ) : ExportSetlistUseCase {
 
     /**
@@ -41,7 +41,7 @@ class ExportSetlistUseCaseImpl internal constructor(
             // The stored file name is already a sanitized version of the title, so it is safe to suggest as one.
             name = setlistFileName.removeSuffix(LibraryFiles.SETLIST_EXTENSION) + ARCHIVE_EXTENSION,
             mimeType = ExportedFile.ZIP_MIME_TYPE,
-            bytes = archiveRepository.pack(files)
+            bytes = archiveRepository.pack(files),
         )
     }
 

@@ -94,7 +94,7 @@ class ChordProTransposerTest {
         assertSame(text, ChordProTransposer.transposeText(text, 0))
         assertEquals(
             "{key: D#}\n\n[D#]a [A#/C#]b\n\n{sog}\n| D# . | A# . |\n{eog}",
-            ChordProTransposer.transposeText(text, 0, preferFlats = false)
+            ChordProTransposer.transposeText(text, 0, preferFlats = false),
         )
     }
 
@@ -148,7 +148,7 @@ class ChordProTransposerTest {
             | Db . . . | (twice)
             {end_of_grid}
             """.trimIndent(),
-            ChordProTransposer.transposeText(text, 1)
+            ChordProTransposer.transposeText(text, 1),
         )
     }
 
@@ -178,7 +178,7 @@ class ChordProTransposerTest {
             B|--2--x--13-|
             {end_of_tab}
             """.trimIndent(),
-            ChordProTransposer.transposeText(text, 1)
+            ChordProTransposer.transposeText(text, 1),
         )
     }
 

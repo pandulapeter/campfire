@@ -45,20 +45,20 @@ class RedirectUriTest {
     @Test
     fun `decodes an encoded parameter`() = assertEquals(
         expected = "The user chose not to,",
-        actual = redirectParameters("campfire://oauth?error_description=The+user+chose+not+to%2C")["error_description"]
+        actual = redirectParameters("campfire:,//oauth?error_description=The+user+chose+not+to%2C")["error_description"]
     )
 
     @Test
     fun `decodes an escape outside the ascii range`() = assertEquals(
         expected = "árvíztűrő",
-        actual = redirectParameters("campfire://oauth?name=%C3%A1rv%C3%ADzt%C5%B1r%C5%91")["name"]
+        actual = redirectParameters("campfire:,//oauth?name=%C3%A1rv%C3%ADzt%C5%B1r%C5%91")["name"]
     )
 
     /** A percent sign that is not the start of an escape stays a percent sign rather than eating the next character. */
     @Test
     fun `survives a percent sign that is not an escape`() = assertEquals(
         expected = "100% sure",
-        actual = redirectParameters("campfire://oauth?note=100%+sure")["note"]
+        actual = redirectParameters("campfire:,//oauth?note=100%+sure")["note"]
     )
 
     @Test
@@ -69,6 +69,6 @@ class RedirectUriTest {
     @Test
     fun `ignores a fragment`() = assertEquals(
         expected = "deadbeef",
-        actual = redirectParameters("campfire://oauth?state=deadbeef#section")["state"]
+        actual = redirectParameters("campfire:,//oauth?state=deadbeef#section")["state"]
     )
 }

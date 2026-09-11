@@ -40,7 +40,7 @@ object ChordProTransposer {
     private fun transpose(song: ChordProSong, semitones: Int, preferFlats: Boolean) = rewriteChords(
         song = song,
         rewriteTabLines = { lines -> ChordProTabTransposer.transpose(lines, semitones, preferFlats) },
-        rename = { name -> transposeChord(name, semitones, preferFlats) }
+        rename = { name -> transposeChord(name, semitones, preferFlats) },
     )
 
     /**
@@ -54,7 +54,7 @@ object ChordProTransposer {
     internal fun rewriteChords(
         song: ChordProSong,
         rewriteTabLines: (List<String>) -> List<String>,
-        rename: (String) -> String
+        rename: (String) -> String,
     ): ChordProSong = song.copy(
         metadata = song.metadata.copy(key = song.metadata.key?.let(rename)),
         blocks = song.blocks.map { block ->
@@ -63,7 +63,7 @@ object ChordProTransposer {
                 block.type == SectionType.Tab -> block.copy(lines = rewriteTab(block.lines, rewriteTabLines))
                 else -> block.copy(lines = block.lines.map { line -> rewriteLine(line, rename) })
             }
-        }
+        },
     )
 
     /**
@@ -220,7 +220,7 @@ object ChordProTransposer {
         trimmedLine: String,
         value: String?,
         semitones: Int,
-        preferFlats: Boolean
+        preferFlats: Boolean,
     ): String {
         val key = value?.trim().orEmpty()
         if (key.isEmpty()) return rawLine
@@ -256,12 +256,12 @@ object ChordProTransposer {
         'G' to 7,
         'A' to 9,
         'B' to 11,
-        'H' to 11 // German notation.
+        'H' to 11, // German notation.
     )
     private val accidentals = mapOf(
         '#' to 1,
         'b' to -1,
         '♯' to 1, // ♯
-        '♭' to -1 // ♭
+        '♭' to -1, // ♭
     )
 }

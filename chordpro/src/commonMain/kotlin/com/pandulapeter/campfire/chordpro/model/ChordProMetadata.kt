@@ -27,5 +27,5 @@ data class ChordProMetadata(
     val time: String? = null, // {time}, e.g. "3/4"
     val duration: String? = null,
     val transpose: Int = 0, // {transpose: N}, applied by the renderer on top of the user's transposition
-    val custom: Map<String, List<String>> = emptyMap() // {meta: name value} and unknown x_* directives, in order
+    val custom: Map<String, List<String>> = emptyMap(), // {meta: name value} and unknown x_* directives, in order
 )

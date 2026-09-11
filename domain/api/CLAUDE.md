@@ -32,6 +32,11 @@ paths, or a verb for pure transforms (`NormalizeText`, `ParseChordPro`, `Transpo
   notation, which is why the two halves of `ChordSpelling` do not travel together everywhere.
 
 Sync adds `GetSyncStateUseCase`, `GetSyncProvidersUseCase`, `ConnectSyncProviderUseCase`,
-`DisconnectSyncProviderUseCase`, `RestoreSyncUseCase` and `SynchronizeLibraryUseCase`. `GetSyncStateUseCase` is
-separate from `GetScreenDataUseCase` for the same reason the preferences are: a settings screen must not wait for a
-scan of the whole library to say whether an account is connected.
+`DisconnectSyncProviderUseCase`, `RestoreSyncUseCase`, `SynchronizeLibraryUseCase` and
+`CancelSynchronizationUseCase` — the only ones that share a file with each other (two of them), since they are one
+feature and each is a single line over `SyncRepository`. `GetSyncStateUseCase` is separate from
+`GetScreenDataUseCase` for the same reason the preferences are: a settings screen must not wait for a scan of the
+whole library to say whether an account is connected. `ConnectSyncProviderUseCase` takes an
+`AuthorizationCompletionPage` along with the provider, because the page the desktop's browser lands on after consent
+is the one piece of Campfire's text rendered outside the app and the data layer can see neither the translations nor
+the chosen language — so the words travel down from the UI like any other string the user reads.

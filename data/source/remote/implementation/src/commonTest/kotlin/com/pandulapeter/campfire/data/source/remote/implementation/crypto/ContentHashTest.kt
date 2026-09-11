@@ -21,7 +21,7 @@ class ContentHashTest {
         val bytes = "abc".encodeToByteArray()
         assertEquals(
             expected = Sha256.hashToHex(Sha256.hash(bytes)),
-            actual = dropboxContentHash(bytes)
+            actual = dropboxContentHash(bytes),
         )
     }
 
@@ -29,7 +29,7 @@ class ContentHashTest {
     @Test
     fun `computes the Dropbox content hash of an empty file`() = assertEquals(
         expected = Sha256.hashToHex(ByteArray(0)),
-        actual = dropboxContentHash(ByteArray(0))
+        actual = dropboxContentHash(ByteArray(0)),
     )
 
     @Test
@@ -39,7 +39,7 @@ class ContentHashTest {
         val blockHashes = Sha256.hash(bytes.copyOfRange(0, blockSize)) + Sha256.hash(bytes.copyOfRange(blockSize, bytes.size))
         assertEquals(
             expected = Sha256.hashToHex(blockHashes),
-            actual = dropboxContentHash(bytes)
+            actual = dropboxContentHash(bytes),
         )
     }
 }

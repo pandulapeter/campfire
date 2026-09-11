@@ -22,7 +22,7 @@ class ChordProHighlighterTest {
     fun `directive is split into its name and its value`() {
         assertEquals(
             listOf(TokenType.DIRECTIVE_NAME to "{title:", TokenType.DIRECTIVE_VALUE to " Song"),
-            spans("{title: Song}")
+            spans("{title: Song}"),
         )
     }
 
@@ -41,7 +41,7 @@ class ChordProHighlighterTest {
     fun `chords and annotations are told apart`() {
         assertEquals(
             listOf(TokenType.CHORD to "[Am]", TokenType.ANNOTATION to "[*softly]", TokenType.CHORD to "[G/B]"),
-            spans("[Am]word [*softly] more [G/B]end")
+            spans("[Am]word [*softly] more [G/B]end"),
         )
     }
 
@@ -57,9 +57,9 @@ class ChordProHighlighterTest {
             listOf(
                 TokenType.DIRECTIVE_NAME to "{start_of_tab}",
                 TokenType.DIRECTIVE_NAME to "{end_of_tab}",
-                TokenType.CHORD to "[Am]"
+                TokenType.CHORD to "[Am]",
             ),
-            spans(text)
+            spans(text),
         )
     }
 
@@ -79,7 +79,7 @@ class ChordProHighlighterTest {
     fun `windows line endings do not shift the offsets`() {
         assertEquals(
             listOf(TokenType.DIRECTIVE_NAME to "{title:", TokenType.DIRECTIVE_VALUE to " Song", TokenType.CHORD to "[Am]"),
-            spans("{title: Song}\r\n[Am]word")
+            spans("{title: Song}\r\n[Am]word"),
         )
     }
 

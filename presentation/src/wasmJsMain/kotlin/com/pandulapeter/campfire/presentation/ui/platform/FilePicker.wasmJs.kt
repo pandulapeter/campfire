@@ -117,7 +117,7 @@ private suspend fun JsArray<JsAny>.toImportedFiles() = (0 until length).mapNotNu
     get(index)?.let { file ->
         ImportedFile(
             name = fileName(file).toString(),
-            bytes = fileBytes(file).await<Int8Array?>()?.toByteArray() ?: ByteArray(0)
+            bytes = fileBytes(file).await<Int8Array?>()?.toByteArray() ?: ByteArray(0),
         )
     }
 }

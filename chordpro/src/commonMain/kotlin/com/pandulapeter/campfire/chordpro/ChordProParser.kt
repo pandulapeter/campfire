@@ -30,7 +30,7 @@ object ChordProParser {
         "chorus" to SectionType.Chorus,
         "bridge" to SectionType.Bridge,
         "solo" to SectionType.Custom("solo"),
-        "outro" to SectionType.Custom("outro")
+        "outro" to SectionType.Custom("outro"),
     )
 
     fun parse(text: String): ChordProSong {
@@ -90,7 +90,7 @@ object ChordProParser {
         directive: ChordProSyntax.Directive,
         metadata: MetadataBuilder,
         blocks: MutableList<ChordProBlock>,
-        section: SectionBuilder
+        section: SectionBuilder,
     ) {
         val name = directive.name
         if (ChordProSyntax.hasSelectorSuffix(name)) return
@@ -122,7 +122,7 @@ object ChordProParser {
         text: String,
         style: CommentStyle,
         blocks: MutableList<ChordProBlock>,
-        section: SectionBuilder
+        section: SectionBuilder,
     ) {
         if (style == CommentStyle.PLAIN && !section.isExplicit) {
             legacyHeading(text)?.let { type ->
@@ -160,7 +160,7 @@ object ChordProParser {
                 chords += ChordProLine.Lyrics.Chord(
                     position = text.length,
                     name = if (isAnnotation) content.substring(1) else content,
-                    isAnnotation = isAnnotation
+                    isAnnotation = isAnnotation,
                 )
             }
             consumedUntil = match.range.last + 1
@@ -297,7 +297,7 @@ object ChordProParser {
             time = time,
             duration = duration,
             transpose = transpose,
-            custom = custom.mapValues { it.value.toList() }
+            custom = custom.mapValues { it.value.toList() },
         )
     }
 

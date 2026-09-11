@@ -46,7 +46,7 @@ private class OpfsFileStorage : FileStorage {
                     StoredFileInfo(
                         name = fields[0],
                         size = fields[1].toDoubleOrNull()?.toLong() ?: 0L,
-                        lastModified = fields[2].toDoubleOrNull()?.toLong() ?: 0L
+                        lastModified = fields[2].toDoubleOrNull()?.toLong() ?: 0L,
                     )
                 }
             }
@@ -59,7 +59,7 @@ private class OpfsFileStorage : FileStorage {
                 StoredFileInfo(
                     name = name,
                     size = fields[0].toDoubleOrNull()?.toLong() ?: 0L,
-                    lastModified = fields[1].toDoubleOrNull()?.toLong() ?: 0L
+                    lastModified = fields[1].toDoubleOrNull()?.toLong() ?: 0L,
                 )
             }
         }

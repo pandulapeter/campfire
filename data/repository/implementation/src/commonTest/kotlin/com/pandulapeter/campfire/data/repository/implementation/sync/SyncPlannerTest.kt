@@ -23,13 +23,13 @@ class SyncPlannerTest {
     @Test
     fun `a file that is new locally goes up`() = assertEquals(
         expected = listOf(SyncOperation.Upload(SONG, expectedRevision = null)),
-        actual = SyncPlanner.plan(local = listOf(local(SONG, "a")), remote = emptyList(), index = emptyMap())
+        actual = SyncPlanner.plan(local = listOf(local(SONG, "a")), remote = emptyList(), index = emptyMap()),
     )
 
     @Test
     fun `a file that is new remotely comes down`() = assertEquals(
         expected = listOf(SyncOperation.Download(SONG, revision = "r1")),
-        actual = SyncPlanner.plan(local = emptyList(), remote = listOf(remote(SONG, "r1")), index = emptyMap())
+        actual = SyncPlanner.plan(local = emptyList(), remote = listOf(remote(SONG, "r1")), index = emptyMap()),
     )
 
     @Test
@@ -38,8 +38,8 @@ class SyncPlannerTest {
         actual = SyncPlanner.plan(
             local = listOf(local(SONG, "a")),
             remote = listOf(remote(SONG, "r1")),
-            index = mapOf(SONG to entry(hash = "a", revision = "r1"))
-        )
+            index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+        ),
     )
 
     @Test
@@ -48,8 +48,8 @@ class SyncPlannerTest {
         actual = SyncPlanner.plan(
             local = listOf(local(SONG, "b")),
             remote = listOf(remote(SONG, "r1")),
-            index = mapOf(SONG to entry(hash = "a", revision = "r1"))
-        )
+            index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+        ),
     )
 
     @Test
@@ -58,8 +58,8 @@ class SyncPlannerTest {
         actual = SyncPlanner.plan(
             local = listOf(local(SONG, "a")),
             remote = listOf(remote(SONG, "r2")),
-            index = mapOf(SONG to entry(hash = "a", revision = "r1"))
-        )
+            index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+        ),
     )
 
     @Test
@@ -68,8 +68,8 @@ class SyncPlannerTest {
         actual = SyncPlanner.plan(
             local = listOf(local(SONG, "b")),
             remote = listOf(remote(SONG, "r2")),
-            index = mapOf(SONG to entry(hash = "a", revision = "r1"))
-        )
+            index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+        ),
     )
 
     /** Both sides hold a file the other has never heard of, which is what connecting a second device looks like. */
@@ -79,8 +79,8 @@ class SyncPlannerTest {
         actual = SyncPlanner.plan(
             local = listOf(local(SONG, "a")),
             remote = listOf(remote(SONG, "r1")),
-            index = emptyMap()
-        )
+            index = emptyMap(),
+        ),
     )
 
     @Test
@@ -89,8 +89,8 @@ class SyncPlannerTest {
         actual = SyncPlanner.plan(
             local = listOf(local(SONG, "a")),
             remote = emptyList(),
-            index = mapOf(SONG to entry(hash = "a", revision = "r1"))
-        )
+            index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+        ),
     )
 
     @Test
@@ -99,8 +99,8 @@ class SyncPlannerTest {
         actual = SyncPlanner.plan(
             local = emptyList(),
             remote = listOf(remote(SONG, "r1")),
-            index = mapOf(SONG to entry(hash = "a", revision = "r1"))
-        )
+            index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+        ),
     )
 
     /**
@@ -113,8 +113,8 @@ class SyncPlannerTest {
         actual = SyncPlanner.plan(
             local = listOf(local(SONG, "b")),
             remote = emptyList(),
-            index = mapOf(SONG to entry(hash = "a", revision = "r1"))
-        )
+            index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+        ),
     )
 
     @Test
@@ -123,8 +123,8 @@ class SyncPlannerTest {
         actual = SyncPlanner.plan(
             local = emptyList(),
             remote = listOf(remote(SONG, "r2")),
-            index = mapOf(SONG to entry(hash = "a", revision = "r1"))
-        )
+            index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+        ),
     )
 
     @Test
@@ -133,8 +133,8 @@ class SyncPlannerTest {
         actual = SyncPlanner.plan(
             local = emptyList(),
             remote = emptyList(),
-            index = mapOf(SONG to entry(hash = "a", revision = "r1"))
-        )
+            index = mapOf(SONG to entry(hash = "a", revision = "r1")),
+        ),
     )
 
     /** Songs and setlists are separate folders, so the same name in each is two different files. */
@@ -145,7 +145,7 @@ class SyncPlannerTest {
         val operations = SyncPlanner.plan(
             local = listOf(LocalFileState(songKey, "a")),
             remote = listOf(RemoteFileState(setlistKey, "r1", contentHash = null)),
-            index = emptyMap()
+            index = emptyMap(),
         )
         assertEquals(expected = 2, actual = operations.size)
         assertTrue(operations.contains(SyncOperation.Upload(songKey, expectedRevision = null)))
@@ -155,7 +155,7 @@ class SyncPlannerTest {
     @Test
     fun `an empty library on both sides has nothing to do`() = assertEquals(
         expected = emptyList(),
-        actual = SyncPlanner.plan(local = emptyList(), remote = emptyList(), index = emptyMap())
+        actual = SyncPlanner.plan(local = emptyList(), remote = emptyList(), index = emptyMap()),
     )
 
     /** The index is keyed by a path, and a key has to survive the round trip through it unchanged. */

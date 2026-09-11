@@ -98,7 +98,7 @@ internal fun SongsScreen(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
     settledWidth: Dp,
-    contentPadding: PaddingValues
+    contentPadding: PaddingValues,
 ) {
     val query by viewModel.query.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
@@ -119,7 +119,7 @@ internal fun SongsScreen(
     val columnCount = songListColumnCount(
         settledWidth = settledWidth,
         contentPadding = contentPadding,
-        isSidePanelVisible = isSidePanelVisible
+        isSidePanelVisible = isSidePanelVisible,
     )
     KeepTopAppBarInSync(scrollBehavior, listState)
     Row(
@@ -134,25 +134,25 @@ internal fun SongsScreen(
                     SearchField(
                         modifier = Modifier.fillMaxWidth(),
                         query = query,
-                        onQueryChanged = viewModel::onQueryChanged
+                        onQueryChanged = viewModel::onQueryChanged,
                     )
                 },
                 actions = {
                     if (isDesktopPlatform) {
                         RescanAction(
                             isLoading = isLoading,
-                            onClick = viewModel::refresh
+                            onClick = viewModel::refresh,
                         )
                     }
                     if (!isSidePanelVisible) {
                         IconButton(onClick = { viewModel.showDialog(CampfireViewModel.DialogType.SongsControls) }) {
                             Icon(
                                 painter = painterResource(Res.drawable.ic_tune),
-                                contentDescription = stringResource(Res.string.songs_sort_and_filter)
+                                contentDescription = stringResource(Res.string.songs_sort_and_filter),
                             )
                         }
                     }
-                }
+                },
             )
             ImportProgress(isImporting = isImporting)
             Box(
@@ -167,7 +167,7 @@ internal fun SongsScreen(
                     // only say the same thing twice.
                     isRefreshing = isLoading && placeholder == null,
                     columnCount = columnCount,
-                    contentPadding = listContentPadding
+                    contentPadding = listContentPadding,
                 )
                 CampfireFloatingActionButton(
                     modifier = Modifier.align(Alignment.BottomEnd),
@@ -176,7 +176,7 @@ internal fun SongsScreen(
                     contentPadding = listContentPadding,
                     icon = painterResource(Res.drawable.ic_add),
                     label = stringResource(Res.string.songs_new_song),
-                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) }
+                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) },
                 )
             }
         }
@@ -184,7 +184,7 @@ internal fun SongsScreen(
             isVisible = isSidePanelVisible,
             viewModel = viewModel,
             shouldIncludeSorting = true,
-            contentPadding = contentPadding
+            contentPadding = contentPadding,
         )
     }
 }
@@ -193,15 +193,15 @@ internal fun SongsScreen(
 @Composable
 private fun RescanAction(
     isLoading: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) = AnimatedContent(
     targetState = isLoading,
-    transitionSpec = { fadeIn() togetherWith fadeOut() }
+    transitionSpec = { fadeIn() togetherWith fadeOut() },
 ) { loading ->
     if (loading) {
         Box(
             modifier = Modifier.size(48.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             LoadingIndicator(modifier = Modifier.size(32.dp))
         }
@@ -209,7 +209,7 @@ private fun RescanAction(
         IconButton(onClick = onClick) {
             Icon(
                 painter = painterResource(Res.drawable.ic_refresh),
-                contentDescription = stringResource(Res.string.songs_rescan)
+                contentDescription = stringResource(Res.string.songs_rescan),
             )
         }
     }
@@ -224,7 +224,7 @@ private fun SongList(
     placeholder: CampfireViewModel.Placeholder?,
     isRefreshing: Boolean,
     columnCount: Int,
-    contentPadding: PaddingValues
+    contentPadding: PaddingValues,
 ) {
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
@@ -256,7 +256,7 @@ private fun SongList(
     RefreshableContainer(
         modifier = modifier,
         isRefreshing = isRefreshing,
-        onRefresh = viewModel::refresh
+        onRefresh = viewModel::refresh,
     ) {
         LazyVerticalGrid(
             columns = ListColumns(columnCount),
@@ -266,20 +266,20 @@ private fun SongList(
                 start = contentPadding.calculateStartPadding(layoutDirection),
                 top = SECTION_HEADER_GAP,
                 end = contentPadding.calculateEndPadding(layoutDirection),
-                bottom = contentPadding.calculateBottomPadding() + FAB_CLEARANCE
-            )
+                bottom = contentPadding.calculateBottomPadding() + FAB_CLEARANCE,
+            ),
         ) {
             placeholder?.let {
                 item(
                     key = "placeholder",
-                    span = { GridItemSpan(maxLineSpan) }
+                    span = { GridItemSpan(maxLineSpan) },
                 ) {
                     ListPlaceholder(
                         modifier = Modifier.fillMaxWidth().animateItem(),
                         placeholder = it,
                         onRetry = viewModel::refresh,
                         onNewSong = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) },
-                        onImport = { viewModel.importFiles(filePicker) }
+                        onImport = { viewModel.importFiles(filePicker) },
                     )
                 }
             }
@@ -288,7 +288,7 @@ private fun SongList(
                     val key = "header_$header"
                     item(
                         key = key,
-                        span = { GridItemSpan(maxLineSpan) }
+                        span = { GridItemSpan(maxLineSpan) },
                     ) {
                         SectionHeader(
                             modifier = Modifier.animateItem(),
@@ -298,13 +298,13 @@ private fun SongList(
                                 is CampfireViewModel.SongGroup.Header.Letter -> header.letter.toString()
                                 CampfireViewModel.SongGroup.Header.Symbols -> stringResource(Res.string.songs_unsorted_label)
                             },
-                            onClick = { coroutineScope.launch { listState.animateScrollToKey(key) } }
+                            onClick = { coroutineScope.launch { listState.animateScrollToKey(key) } },
                         )
                     }
                 }
                 items(
                     items = group.songs,
-                    key = { "song_${it.fileName}" }
+                    key = { "song_${it.fileName}" },
                 ) { song ->
                     SongListItem(
                         modifier = Modifier.animateItem(),
@@ -326,7 +326,7 @@ private fun SongList(
                             { SongActionsMenu(viewModel = viewModel, song = song, setlistFileName = null) }
                         } else {
                             null
-                        }
+                        },
                     )
                 }
             }
@@ -334,7 +334,7 @@ private fun SongList(
         FastScroller(
             modifier = Modifier.padding(contentPadding),
             gridState = listState,
-            labelForItem = { sectionLabels.getOrNull(it) }
+            labelForItem = { sectionLabels.getOrNull(it) },
         )
     }
 }
@@ -358,11 +358,11 @@ private fun RefreshableContainer(
     modifier: Modifier = Modifier,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) = if (isDesktopPlatform) {
     Box(
         modifier = modifier,
-        content = content
+        content = content,
     )
 } else {
     val pullToRefreshState = rememberPullToRefreshState()
@@ -375,10 +375,10 @@ private fun RefreshableContainer(
             PullToRefreshDefaults.LoadingIndicator(
                 modifier = Modifier.align(Alignment.TopCenter),
                 state = pullToRefreshState,
-                isRefreshing = isRefreshing
+                isRefreshing = isRefreshing,
             )
         },
-        content = content
+        content = content,
     )
 }
 

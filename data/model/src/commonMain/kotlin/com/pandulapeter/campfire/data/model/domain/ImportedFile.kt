@@ -15,7 +15,7 @@ package com.pandulapeter.campfire.data.model.domain
  */
 data class ImportedFile(
     val name: String,
-    val bytes: ByteArray
+    val bytes: ByteArray,
 ) {
 
     override fun equals(other: Any?) = this === other || (other is ImportedFile && name == other.name && bytes.contentEquals(other.bytes))

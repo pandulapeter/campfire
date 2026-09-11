@@ -32,7 +32,7 @@ internal fun <T> SegmentedChoice(
     options: List<Pair<T, String>>,
     selected: T?,
     isEnabled: Boolean = true,
-    onSelected: (T) -> Unit
+    onSelected: (T) -> Unit,
 ) = SingleChoiceSegmentedButtonRow(
     modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)
 ) {
@@ -46,9 +46,9 @@ internal fun <T> SegmentedChoice(
                 Text(
                     text = label,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
-            }
+            },
         )
     }
 }

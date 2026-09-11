@@ -20,7 +20,7 @@ class ExportLibraryUseCaseImpl internal constructor(
     private val songRepository: SongRepository,
     private val songContentRepository: SongContentRepository,
     private val setlistRepository: SetlistRepository,
-    private val archiveRepository: ArchiveRepository
+    private val archiveRepository: ArchiveRepository,
 ) : ExportLibraryUseCase {
 
     /**

@@ -62,8 +62,8 @@ internal object ZipReader {
                         crc = crc,
                         compressedSize = compressedSize.toInt(),
                         uncompressedSize = uncompressedSize.toInt(),
-                        localHeaderOffset = localHeaderOffset.toInt()
-                    )
+                        localHeaderOffset = localHeaderOffset.toInt(),
+                    ),
                 )
             }
             position += 46 + nameLength + extraLength + commentLength
@@ -78,7 +78,7 @@ internal object ZipReader {
         crc: Long,
         compressedSize: Int,
         uncompressedSize: Int,
-        localHeaderOffset: Int
+        localHeaderOffset: Int,
     ): ByteArray {
         if (archive.u32(localHeaderOffset) != LOCAL_HEADER_SIGNATURE) {
             throw ZipException("Missing local header for \"$name\" at offset $localHeaderOffset.")

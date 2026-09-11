@@ -73,7 +73,7 @@ class ChordProParserTest {
     fun `meta directives end up in custom`() {
         assertEquals(
             mapOf("tuning" to listOf("DADGAD")),
-            ChordProParser.parse("{meta: tuning DADGAD}").metadata.custom
+            ChordProParser.parse("{meta: tuning DADGAD}").metadata.custom,
         )
     }
 
@@ -224,9 +224,9 @@ class ChordProParserTest {
                 GridToken.Beat,
                 GridToken.Beat,
                 GridToken.Beat,
-                GridToken.Bar("|")
+                GridToken.Bar("|"),
             ),
-            (section.lines.single() as ChordProLine.Grid).tokens
+            (section.lines.single() as ChordProLine.Grid).tokens,
         )
     }
 
@@ -246,9 +246,9 @@ class ChordProParserTest {
         assertEquals(
             listOf(
                 ChordProLine.Lyrics.Chord(position = 0, name = "Am", isAnnotation = false),
-                ChordProLine.Lyrics.Chord(position = 4, name = "hold", isAnnotation = true)
+                ChordProLine.Lyrics.Chord(position = 4, name = "hold", isAnnotation = true),
             ),
-            line.chords
+            line.chords,
         )
     }
 
@@ -297,7 +297,7 @@ class ChordProParserTest {
     fun `x prefixed directives are kept as custom metadata`() {
         assertEquals(
             mapOf("x_custom" to listOf("kept")),
-            ChordProParser.parse("{x_custom: kept}").metadata.custom
+            ChordProParser.parse("{x_custom: kept}").metadata.custom,
         )
     }
 

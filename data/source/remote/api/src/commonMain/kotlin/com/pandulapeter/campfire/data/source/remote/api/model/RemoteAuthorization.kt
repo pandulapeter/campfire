@@ -21,11 +21,11 @@ data class RemoteAuthorizationRequest(
     val authorizationUrl: String,
     val redirectUri: String?,
     val state: String,
-    val verifier: String
+    val verifier: String,
 )
 
 /** What comes back from the browser, already picked apart. */
 data class RemoteAuthorizationResponse(
     val code: String,
-    val state: String?
+    val state: String?,
 )

@@ -47,7 +47,7 @@ interface SyncRepository {
      */
     data class RestoreResult(
         val isConnected: Boolean,
-        val didReturnFromAuthorization: Boolean
+        val didReturnFromAuthorization: Boolean,
     )
 
     /**

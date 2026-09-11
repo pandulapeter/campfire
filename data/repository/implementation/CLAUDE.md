@@ -36,8 +36,9 @@ whole (`writeData`). A cancelled read is not a failed one: it is rethrown and le
   `SyncPlanner` is a **pure function** of (local hashes, remote listing, the index of what the last run saw) and is
   the one part of sync worth testing — `commonTest` covers every way a file can differ between two devices,
   including the ones that would otherwise only show up as a song someone lost. `SyncEngine` carries the plan out and
-  is written so that an interrupted run leaves the library usable: the index is only told about a file once that
-  file has actually moved, so anything half done simply looks unsynced next time. A failure on one file does not end
+  is written so that an interrupted run leaves the library usable: the index (`SyncIndexDocument`, the on-disk shape
+  of `sync-index.json`) is only told about a file once that file has actually moved, so anything half done simply
+  looks unsynced next time. A failure on one file does not end
   a run; only the two failures that make every further call pointless (the credentials refused, the service
   unreachable) do — and a `CancellationException` is caught *first* and rethrown, since a stopped run is not a few
   hundred files that failed. Operations run `CONCURRENT_TRANSFERS` at a time within each ordering group rather than

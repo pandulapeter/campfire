@@ -75,7 +75,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun SongDisplayControls(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.SongDisplayControls
+    dialog: CampfireViewModel.DialogType.SongDisplayControls,
 ) {
     val allSongs by viewModel.allSongs.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
@@ -100,9 +100,9 @@ internal fun SongDisplayControls(
                     TranspositionControls(
                         transposition = songTransposition,
                         key = transposedKey,
-                        onTranspositionChanged = { viewModel.setTransposition(song.fileName, dialog.setlistFileName, it) }
+                        onTranspositionChanged = { viewModel.setTransposition(song.fileName, dialog.setlistFileName, it) },
                     )
-                }
+                },
             )
         }
         ListItem(
@@ -112,9 +112,9 @@ internal fun SongDisplayControls(
                 FontScaleControls(
                     fontScale = fontScale,
                     onFontScaleAdjusted = viewModel::adjustFontScale,
-                    onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) }
+                    onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) },
                 )
-            }
+            },
         )
         Spacer(modifier = Modifier.height(16.dp))
     }
@@ -127,7 +127,7 @@ internal fun TranspositionControls(
     transposition: Int,
     /** The key the song sounds in after transposing, shown next to the amount when the file declares one. */
     key: String? = null,
-    onTranspositionChanged: (Int) -> Unit
+    onTranspositionChanged: (Int) -> Unit,
 ) = Stepper(
     modifier = modifier,
     isCompact = isCompact,
@@ -143,7 +143,7 @@ internal fun TranspositionControls(
     canIncrease = transposition < CampfireViewModel.MAX_TRANSPOSITION,
     onIncrease = { onTranspositionChanged(transposition + 1) },
     resetLabel = stringResource(Res.string.song_details_transpose_reset),
-    onReset = { onTranspositionChanged(0) }
+    onReset = { onTranspositionChanged(0) },
 )
 
 @Composable
@@ -152,7 +152,7 @@ internal fun FontScaleControls(
     isCompact: Boolean = false,
     fontScale: Float,
     onFontScaleAdjusted: (steps: Int) -> Unit,
-    onFontScaleReset: () -> Unit
+    onFontScaleReset: () -> Unit,
 ) {
     val percentage = (fontScale * 100).roundToInt()
     Stepper(
@@ -169,7 +169,7 @@ internal fun FontScaleControls(
         canIncrease = fontScale < CampfireViewModel.MAX_FONT_SCALE,
         onIncrease = { onFontScaleAdjusted(1) },
         resetLabel = stringResource(Res.string.song_details_text_size_reset),
-        onReset = onFontScaleReset
+        onReset = onFontScaleReset,
     )
 }
 
@@ -197,7 +197,7 @@ private fun Stepper(
     canIncrease: Boolean,
     onIncrease: () -> Unit,
     resetLabel: String,
-    onReset: () -> Unit
+    onReset: () -> Unit,
 ) {
     val height = if (isCompact) COMPACT_HEIGHT else DEFAULT_HEIGHT
     val buttonWidth = if (isCompact) COMPACT_BUTTON_WIDTH else DEFAULT_BUTTON_WIDTH
@@ -205,7 +205,7 @@ private fun Stepper(
     Surface(
         modifier = modifier.height(height),
         shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
     ) {
         // The buttons are laid out at the size of the pill, so the touch target enforcement of the icon buttons has
         // to be lowered to match, or it would grow them back to 48dp and the pill would no longer fit them.
@@ -218,13 +218,13 @@ private fun Stepper(
                     icon = decreaseIcon,
                     label = decreaseLabel,
                     isEnabled = canDecrease,
-                    onClick = onDecrease
+                    onClick = onDecrease,
                 )
                 StepperValue(
                     value = value,
                     isDefault = isDefault,
                     resetLabel = resetLabel,
-                    onReset = onReset
+                    onReset = onReset,
                 )
                 StepperButton(
                     width = buttonWidth,
@@ -233,7 +233,7 @@ private fun Stepper(
                     icon = increaseIcon,
                     label = increaseLabel,
                     isEnabled = canIncrease,
-                    onClick = onIncrease
+                    onClick = onIncrease,
                 )
             }
         }
@@ -248,16 +248,16 @@ private fun StepperButton(
     icon: Painter,
     label: String,
     isEnabled: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) = IconButton(
     modifier = Modifier.size(width = width, height = height),
     enabled = isEnabled,
-    onClick = onClick
+    onClick = onClick,
 ) {
     Icon(
         modifier = Modifier.size(iconSize),
         painter = icon,
-        contentDescription = label
+        contentDescription = label,
     )
 }
 
@@ -267,19 +267,19 @@ private fun StepperValue(
     value: String,
     isDefault: Boolean,
     resetLabel: String,
-    onReset: () -> Unit
+    onReset: () -> Unit,
 ) {
     // A progress value instead of an animated color, so that the label follows the color scheme immediately while it
     // is animating between the light and the dark theme (a color animation would chase it and trail behind).
     val changedProgress by animateFloatAsState(
         if (isDefault) 0f else 1f,
-        MaterialTheme.motionScheme.defaultEffectsSpec()
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
     )
     val color = lerp(MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.primary, changedProgress)
     AnimatedContent(
         modifier = Modifier.fillMaxHeight(),
         targetState = value,
-        transitionSpec = { fadeIn() togetherWith fadeOut() }
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
     ) { currentValue ->
         Text(
             modifier = Modifier
@@ -291,7 +291,7 @@ private fun StepperValue(
             style = MaterialTheme.typography.labelLarge,
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Bold,
-            color = color
+            color = color,
         )
     }
 }

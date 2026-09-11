@@ -19,7 +19,7 @@ import com.pandulapeter.campfire.data.source.remote.api.model.RemoteAuthorizatio
  * lifetime, and one file means one place where an interrupted authorization can be left behind.
  */
 internal class PendingAuthorizationStoreImpl(
-    private val credentialsStore: SyncCredentialsStore
+    private val credentialsStore: SyncCredentialsStore,
 ) : PendingAuthorizationStore {
 
     override suspend fun savePendingAuthorization(providerId: SyncProviderId, request: RemoteAuthorizationRequest) =
@@ -29,7 +29,7 @@ internal class PendingAuthorizationStoreImpl(
                     providerId = providerId.id,
                     state = request.state,
                     verifier = request.verifier,
-                    redirectUri = request.redirectUri.orEmpty()
+                    redirectUri = request.redirectUri.orEmpty(),
                 )
             ) to Unit
         }
@@ -40,7 +40,7 @@ internal class PendingAuthorizationStoreImpl(
                 providerId = providerId,
                 state = pending.state,
                 verifier = pending.verifier,
-                redirectUri = pending.redirectUri.takeIf { it.isNotEmpty() }
+                redirectUri = pending.redirectUri.takeIf { it.isNotEmpty() },
             )
         }
     }

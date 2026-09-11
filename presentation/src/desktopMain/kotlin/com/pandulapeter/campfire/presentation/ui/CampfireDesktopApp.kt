@@ -46,7 +46,7 @@ import java.net.URI
 @Composable
 fun CampfireDesktopApp(
     viewModel: CampfireViewModel = koinViewModel(),
-    filesToImport: Flow<List<ImportedFile>> = emptyFlow()
+    filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
 ) = CompositionLocalProvider(
     LocalFilePicker provides DesktopFilePicker
 ) {
@@ -68,13 +68,13 @@ fun CampfireDesktopApp(
                             return true
                         }
                     }
-                }
+                },
             )
     ) {
         CampfireApp(
             viewModel = viewModel,
             urlOpener = ::openUrl,
-            filesToImport = filesToImport
+            filesToImport = filesToImport,
         )
     }
 }

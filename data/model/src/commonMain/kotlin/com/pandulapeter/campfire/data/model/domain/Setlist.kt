@@ -19,11 +19,11 @@ data class Setlist(
     val title: String,
     /** Higher first, so that the newest setlist is on top. */
     val priority: Int,
-    val entries: List<Entry>
+    val entries: List<Entry>,
 ) {
 
     data class Entry(
         val songFileName: String,
-        val transposition: Int = 0
+        val transposition: Int = 0,
     )
 }

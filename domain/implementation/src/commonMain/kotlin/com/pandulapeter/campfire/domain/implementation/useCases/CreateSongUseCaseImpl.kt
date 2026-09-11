@@ -13,7 +13,7 @@ import com.pandulapeter.campfire.data.repository.api.SongRepository
 import com.pandulapeter.campfire.domain.api.useCases.CreateSongUseCase
 
 class CreateSongUseCaseImpl internal constructor(
-    private val songRepository: SongRepository
+    private val songRepository: SongRepository,
 ) : CreateSongUseCase {
 
     /**
@@ -32,6 +32,6 @@ class CreateSongUseCaseImpl internal constructor(
             // The blank line the editor puts the caret on.
             append("\n")
             append("{end_of_verse}\n")
-        }
+        },
     )
 }

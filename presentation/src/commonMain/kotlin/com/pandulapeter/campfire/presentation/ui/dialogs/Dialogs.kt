@@ -81,7 +81,7 @@ import com.pandulapeter.campfire.presentation.localization.stringResource
 @Composable
 internal fun CampfireDialogs(
     viewModel: CampfireViewModel,
-    urlOpener: (String) -> Unit
+    urlOpener: (String) -> Unit,
 ) {
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
     when (val dialog = visibleDialog) {
@@ -93,7 +93,7 @@ internal fun CampfireDialogs(
             onConfirm = { title ->
                 viewModel.createSetlist(title)
                 viewModel.dismissDialog()
-            }
+            },
         )
 
         is CampfireViewModel.DialogType.RenameSetlist -> TextInputDialog(
@@ -105,7 +105,7 @@ internal fun CampfireDialogs(
             onConfirm = { title ->
                 viewModel.renameSetlist(dialog.setlist, title)
                 viewModel.dismissDialog()
-            }
+            },
         )
 
         CampfireViewModel.DialogType.NewSong -> NewSongDialog(
@@ -113,38 +113,38 @@ internal fun CampfireDialogs(
             onCreate = { title, artist ->
                 viewModel.createSong(title = title, artist = artist)
                 viewModel.dismissDialog()
-            }
+            },
         )
 
         CampfireViewModel.DialogType.SongsControls -> CampfireBottomSheet(onDismiss = viewModel::dismissDialog) {
             SongsControls(
                 viewModel = viewModel,
-                shouldIncludeSorting = true
+                shouldIncludeSorting = true,
             )
         }
 
         CampfireViewModel.DialogType.SetlistsControls -> CampfireBottomSheet(onDismiss = viewModel::dismissDialog) {
             SongsControls(
                 viewModel = viewModel,
-                shouldIncludeSorting = false
+                shouldIncludeSorting = false,
             )
         }
 
         is CampfireViewModel.DialogType.SetlistPicker -> SetlistPickerSheet(
             viewModel = viewModel,
-            dialog = dialog
+            dialog = dialog,
         )
 
         is CampfireViewModel.DialogType.SongDisplayControls -> CampfireBottomSheet(onDismiss = viewModel::dismissDialog) {
             SongDisplayControls(
                 viewModel = viewModel,
-                dialog = dialog
+                dialog = dialog,
             )
         }
 
         is CampfireViewModel.DialogType.SongActions -> SongActionsSheet(
             viewModel = viewModel,
-            dialog = dialog
+            dialog = dialog,
         )
 
         is CampfireViewModel.DialogType.DeleteSong -> ConfirmationDialog(
@@ -155,7 +155,7 @@ internal fun CampfireDialogs(
             onConfirm = {
                 viewModel.deleteSong(dialog.song.fileName)
                 viewModel.dismissDialog()
-            }
+            },
         )
 
         is CampfireViewModel.DialogType.DeleteSetlist -> ConfirmationDialog(
@@ -166,7 +166,7 @@ internal fun CampfireDialogs(
             onConfirm = {
                 viewModel.deleteSetlist(dialog.setlist.fileName)
                 viewModel.dismissDialog()
-            }
+            },
         )
 
         is CampfireViewModel.DialogType.DisconnectSync -> ConfirmationDialog(
@@ -177,13 +177,13 @@ internal fun CampfireDialogs(
             onConfirm = {
                 viewModel.disconnectSyncProvider()
                 viewModel.dismissDialog()
-            }
+            },
         )
 
         CampfireViewModel.DialogType.UnsavedChanges -> UnsavedChangesDialog(
             onCancel = viewModel::dismissDialog,
             onDiscard = viewModel::leaveEditorWithoutSaving,
-            onSave = viewModel::saveEditorChangesAndLeave
+            onSave = viewModel::saveEditorChangesAndLeave,
         )
 
         null -> Unit
@@ -199,7 +199,7 @@ internal fun CampfireDialogs(
 private fun UnsavedChangesDialog(
     onCancel: () -> Unit,
     onDiscard: () -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
 ) = AlertDialog(
     onDismissRequest = onCancel,
     title = { Text(stringResource(Res.string.song_editor_unsaved_changes)) },
@@ -212,10 +212,10 @@ private fun UnsavedChangesDialog(
             TextButton(onClick = onCancel) { Text(stringResource(Res.string.cancel)) }
             TextButton(
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                onClick = onDiscard
+                onClick = onDiscard,
             ) { Text(stringResource(Res.string.song_editor_discard)) }
         }
-    }
+    },
 )
 
 @Composable
@@ -224,7 +224,7 @@ private fun ConfirmationDialog(
     text: String,
     confirmLabel: String,
     onDismiss: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
 ) = AlertDialog(
     onDismissRequest = onDismiss,
     title = { Text(title) },
@@ -232,12 +232,12 @@ private fun ConfirmationDialog(
     confirmButton = {
         TextButton(
             colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            onClick = onConfirm
+            onClick = onConfirm,
         ) { Text(confirmLabel) }
     },
     dismissButton = {
         TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
-    }
+    },
 )
 
 /**
@@ -251,7 +251,7 @@ private fun TextInputDialog(
     initialValue: String = "",
     confirmLabel: String,
     onDismiss: () -> Unit,
-    onConfirm: (value: String) -> Unit
+    onConfirm: (value: String) -> Unit,
 ) {
     var value by rememberSaveable { mutableStateOf(initialValue) }
     val isValid = value.isNotBlank()
@@ -269,18 +269,18 @@ private fun TextInputDialog(
                 label = { Text(label) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { if (isValid) onConfirm(value) })
+                keyboardActions = KeyboardActions(onDone = { if (isValid) onConfirm(value) }),
             )
         },
         confirmButton = {
             TextButton(
                 enabled = isValid,
-                onClick = { onConfirm(value) }
+                onClick = { onConfirm(value) },
             ) { Text(confirmLabel) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
-        }
+        },
     )
 }
 
@@ -291,7 +291,7 @@ private fun TextInputDialog(
 @Composable
 private fun NewSongDialog(
     onDismiss: () -> Unit,
-    onCreate: (title: String, artist: String) -> Unit
+    onCreate: (title: String, artist: String) -> Unit,
 ) {
     var title by rememberSaveable { mutableStateOf("") }
     var artist by rememberSaveable { mutableStateOf("") }
@@ -309,7 +309,7 @@ private fun NewSongDialog(
                     onValueChange = { title = it.replace("\n", "").take(MAX_TITLE_LENGTH) },
                     label = { Text(stringResource(Res.string.songs_new_song_title)) },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
@@ -319,19 +319,19 @@ private fun NewSongDialog(
                     label = { Text(stringResource(Res.string.songs_new_song_artist)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { if (isValid) onCreate(title, artist) })
+                    keyboardActions = KeyboardActions(onDone = { if (isValid) onCreate(title, artist) }),
                 )
             }
         },
         confirmButton = {
             TextButton(
                 enabled = isValid,
-                onClick = { onCreate(title, artist) }
+                onClick = { onCreate(title, artist) },
             ) { Text(stringResource(Res.string.create)) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
-        }
+        },
     )
 }
 
@@ -342,7 +342,7 @@ private fun NewSongDialog(
 @Composable
 private fun SongActionsSheet(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.SongActions
+    dialog: CampfireViewModel.DialogType.SongActions,
 ) = CampfireBottomSheet(onDismiss = viewModel::dismissDialog) { sheetState, _ ->
     val coroutineScope = rememberCoroutineScope()
     SettingsSectionTitle(text = dialog.song.title)
@@ -350,7 +350,7 @@ private fun SongActionsSheet(
         viewModel = viewModel,
         song = dialog.song,
         setlistFileName = dialog.setlistFileName,
-        shouldIncludeAddToSetlist = dialog.shouldIncludeAddToSetlist
+        shouldIncludeAddToSetlist = dialog.shouldIncludeAddToSetlist,
     ) { title, icon, isEnabled, onClick ->
         ActionListItem(
             title = title,
@@ -366,7 +366,7 @@ private fun SongActionsSheet(
                     viewModel.dismissDialog()
                     onClick()
                 }
-            }
+            },
         )
     }
     Spacer(modifier = Modifier.height(16.dp))
@@ -376,7 +376,7 @@ private fun SongActionsSheet(
 @Composable
 private fun SetlistPickerSheet(
     viewModel: CampfireViewModel,
-    dialog: CampfireViewModel.DialogType.SetlistPicker
+    dialog: CampfireViewModel.DialogType.SetlistPicker,
 ) {
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
     CampfireBottomSheet(onDismiss = viewModel::dismissDialog) { sheetState, dismiss ->
@@ -393,7 +393,7 @@ private fun SetlistPickerSheet(
                     } else {
                         viewModel.removeSongFromSetlist(songFileName = dialog.songFileName, setlistFileName = setlist.fileName)
                     }
-                }
+                },
             )
         }
         ActionListItem(
@@ -404,7 +404,7 @@ private fun SetlistPickerSheet(
                     sheetState.hide()
                     viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist)
                 }
-            }
+            },
         )
         Spacer(modifier = Modifier.height(16.dp))
     }
@@ -414,18 +414,18 @@ private fun SetlistPickerSheet(
 @Composable
 private fun CampfireBottomSheet(
     onDismiss: () -> Unit,
-    content: @Composable (sheetState: SheetState, dismiss: () -> Unit) -> Unit
+    content: @Composable (sheetState: SheetState, dismiss: () -> Unit) -> Unit,
 ) {
     // No partially expanded state: these sheets are short, and they open at their full height.
     val sheetState = rememberBottomSheetState(
         initialValue = SheetValue.Hidden,
-        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
     )
     val coroutineScope = rememberCoroutineScope()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        dragHandle = null
+        dragHandle = null,
     ) {
         content(sheetState) {
             coroutineScope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
@@ -437,7 +437,7 @@ private fun CampfireBottomSheet(
 @Composable
 private fun CampfireBottomSheet(
     onDismiss: () -> Unit,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) = CampfireBottomSheet(onDismiss) { _, _ -> content() }
 
 private const val MAX_TITLE_LENGTH = 60

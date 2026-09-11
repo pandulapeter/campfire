@@ -32,5 +32,5 @@ data class PendingAuthorization(
     val providerId: SyncProviderId,
     val state: String,
     val verifier: String,
-    val redirectUri: String?
+    val redirectUri: String?,
 )

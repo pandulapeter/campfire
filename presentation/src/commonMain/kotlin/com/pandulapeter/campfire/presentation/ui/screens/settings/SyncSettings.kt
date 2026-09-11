@@ -79,7 +79,7 @@ import org.jetbrains.compose.resources.painterResource
 internal fun LazyListScope.syncSettings(
     viewModel: CampfireViewModel,
     syncState: SyncState,
-    completionPage: AuthorizationCompletionPage
+    completionPage: AuthorizationCompletionPage,
 ) {
     if (viewModel.syncProviders.isEmpty()) {
         item(key = "sync_unavailable") {
@@ -97,7 +97,7 @@ internal fun LazyListScope.syncSettings(
                 title = stringResource(Res.string.settings_sync_connect_dropbox),
                 icon = painterResource(Res.drawable.ic_cloud),
                 isEnabled = viewModel.syncProviders.contains(SyncProviderId.DROPBOX),
-                onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) }
+                onClick = { viewModel.connectSyncProvider(SyncProviderId.DROPBOX, completionPage) },
             )
         }
 
@@ -106,7 +106,7 @@ internal fun LazyListScope.syncSettings(
                 ListItem(
                     modifier = Modifier.animateItem(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                    headlineContent = { Text(stringResource(Res.string.settings_sync_connecting)) }
+                    headlineContent = { Text(stringResource(Res.string.settings_sync_connecting)) },
                 )
             }
             // The way out. Each platform does try to notice that the browser was closed, but a consent page is
@@ -117,7 +117,7 @@ internal fun LazyListScope.syncSettings(
                     title = stringResource(Res.string.cancel),
                     icon = painterResource(Res.drawable.ic_clear),
                     isEmphasized = false,
-                    onClick = viewModel::cancelSyncConnection
+                    onClick = viewModel::cancelSyncConnection,
                 )
             }
         }
@@ -128,7 +128,7 @@ internal fun LazyListScope.syncSettings(
                     modifier = Modifier.animateItem(),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(Res.string.settings_sync_connected_as, syncState.account.displayName)) },
-                    supportingContent = { Text(syncState.statusText()) }
+                    supportingContent = { Text(syncState.statusText()) },
                 )
             }
             syncState.progress?.let { progress ->
@@ -143,7 +143,7 @@ internal fun LazyListScope.syncSettings(
                         title = stringResource(Res.string.settings_sync_cancel),
                         icon = painterResource(Res.drawable.ic_clear),
                         isEmphasized = false,
-                        onClick = viewModel::cancelSynchronization
+                        onClick = viewModel::cancelSynchronization,
                     )
                 } else {
                     ActionListItem(
@@ -151,7 +151,7 @@ internal fun LazyListScope.syncSettings(
                         title = stringResource(Res.string.settings_sync_now),
                         icon = painterResource(Res.drawable.ic_sync),
                         isEmphasized = false,
-                        onClick = viewModel::synchronizeLibrary
+                        onClick = viewModel::synchronizeLibrary,
                     )
                 }
             }
@@ -161,7 +161,7 @@ internal fun LazyListScope.syncSettings(
                     title = stringResource(Res.string.settings_sync_disconnect),
                     icon = painterResource(Res.drawable.ic_cloud_off),
                     isEmphasized = false,
-                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DisconnectSync(syncState.account.displayName)) }
+                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DisconnectSync(syncState.account.displayName)) },
                 )
             }
         }
@@ -209,12 +209,12 @@ private fun SyncState.Connected.statusText(): String = when (val current = progr
 @Composable
 private fun SyncProgressIndicator(
     modifier: Modifier = Modifier,
-    progress: SyncProgress
+    progress: SyncProgress,
 ) = Column(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
     Text(
         text = progress.text(),
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     val fraction = progress.fraction
     if (fraction == null) {
@@ -224,7 +224,7 @@ private fun SyncProgressIndicator(
         val animatedFraction by animateFloatAsState(targetValue = fraction, label = "syncProgress")
         LinearProgressIndicator(
             progress = { animatedFraction },
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         )
     }
 }
@@ -253,8 +253,8 @@ private fun lastSyncedText(lastSyncedAt: Long?): String {
             (local.month.ordinal + 1).padded(),
             local.day.padded(),
             local.hour.padded(),
-            local.minute.padded()
-        )
+            local.minute.padded(),
+        ),
     )
 }
 
@@ -263,12 +263,12 @@ private fun Int.padded() = toString().padStart(length = 2, padChar = '0')
 @Composable
 private fun SyncMessage(
     modifier: Modifier = Modifier,
-    text: String
+    text: String,
 ) = Column(modifier = modifier.fillMaxWidth()) {
     Text(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         text = text,
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }

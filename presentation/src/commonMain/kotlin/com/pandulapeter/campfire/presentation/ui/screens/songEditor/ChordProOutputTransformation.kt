@@ -29,7 +29,7 @@ internal class ChordProOutputTransformation(
     private val directiveValue: SpanStyle,
     private val chord: SpanStyle,
     private val annotation: SpanStyle,
-    private val comment: SpanStyle
+    private val comment: SpanStyle,
 ) : OutputTransformation {
 
     override fun TextFieldBuffer.transformOutput() {
@@ -43,7 +43,7 @@ internal class ChordProOutputTransformation(
                     ChordProHighlighter.TokenType.COMMENT -> comment
                 },
                 token.start,
-                token.end
+                token.end,
             )
         }
     }
@@ -54,13 +54,13 @@ internal class ChordProOutputTransformation(
         fun of(
             primaryColor: Color,
             secondaryColor: Color,
-            outlineColor: Color
+            outlineColor: Color,
         ) = ChordProOutputTransformation(
             directiveName = SpanStyle(color = primaryColor, fontWeight = FontWeight.Bold),
             directiveValue = SpanStyle(color = secondaryColor),
             chord = SpanStyle(color = primaryColor, fontWeight = FontWeight.Bold),
             annotation = SpanStyle(fontStyle = FontStyle.Italic),
-            comment = SpanStyle(color = outlineColor, fontStyle = FontStyle.Italic)
+            comment = SpanStyle(color = outlineColor, fontStyle = FontStyle.Italic),
         )
     }
 }

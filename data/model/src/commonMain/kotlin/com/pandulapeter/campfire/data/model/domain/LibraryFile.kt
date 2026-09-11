@@ -31,5 +31,5 @@ data class LibraryFile(
     val kind: LibraryFileKind,
     val name: String,
     val size: Long,
-    val lastModified: Long
+    val lastModified: Long,
 )

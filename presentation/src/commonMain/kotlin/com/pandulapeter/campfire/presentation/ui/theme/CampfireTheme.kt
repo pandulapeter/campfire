@@ -37,7 +37,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 @Composable
 fun CampfireTheme(
     uiMode: UserPreferences.UiMode?,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     // Until the stored preferences are loaded the theme is only a guess based on the system setting. Correcting that
     // guess is not a theme change the user made, so it must not be animated - otherwise every launch that starts
@@ -47,7 +47,7 @@ fun CampfireTheme(
     LaunchedEffect(arePreferencesLoaded) { isAnimated = arePreferencesLoaded }
     val progress by animateFloatAsState(
         targetValue = if (uiMode.isDarkTheme()) 1f else 0f,
-        animationSpec = if (isAnimated) MOTION_SCHEME.defaultEffectsSpec() else snap()
+        animationSpec = if (isAnimated) MOTION_SCHEME.defaultEffectsSpec() else snap(),
     )
     MaterialExpressiveTheme(
         // At rest the schemes are handed over as they are, so that the composables reading them are not invalidated
@@ -58,7 +58,7 @@ fun CampfireTheme(
             else -> lerp(CampfireColorSchemes.light, CampfireColorSchemes.dark, progress)
         },
         motionScheme = MOTION_SCHEME,
-        content = content
+        content = content,
     )
 }
 

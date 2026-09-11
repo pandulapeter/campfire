@@ -54,7 +54,7 @@ internal object CampfireColorSchemes {
         surfaceContainerLow = Color(0xFFFFF1E8),
         surfaceContainer = Color(0xFFFAEBE1),
         surfaceContainerHigh = Color(0xFFF4E5DB),
-        surfaceContainerHighest = Color(0xFFEEE0D6)
+        surfaceContainerHighest = Color(0xFFEEE0D6),
     )
 
     val dark = darkColorScheme(
@@ -93,6 +93,6 @@ internal object CampfireColorSchemes {
         surfaceContainerLow = Color(0xFF211A15),
         surfaceContainer = Color(0xFF261E19),
         surfaceContainerHigh = Color(0xFF312823),
-        surfaceContainerHighest = Color(0xFF3C332D)
+        surfaceContainerHighest = Color(0xFF3C332D),
     )
 }

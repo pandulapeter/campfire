@@ -19,18 +19,18 @@ data class UserPreferences(
     val language: Language,
     val chordSpelling: ChordSpelling, // How the chords of a song are written when it is displayed.
     /** Song file name to semitones, for songs opened from the library rather than from a setlist. */
-    val transpositions: Map<String, Int>
+    val transpositions: Map<String, Int>,
 ) {
 
     enum class SortingMode(val id: String) {
         BY_TITLE("by_title"),
-        BY_ARTIST("by_artist")
+        BY_ARTIST("by_artist"),
     }
 
     enum class UiMode(val id: String) {
         LIGHT("light"),
         DARK("dark"),
-        SYSTEM_DEFAULT("system_default")
+        SYSTEM_DEFAULT("system_default"),
     }
 
     /**
@@ -47,7 +47,7 @@ data class UserPreferences(
          * `B`. It is what a reader in Central Europe or Scandinavia grew up with, and it is applied after the
          * accidentals, on the result they produce.
          */
-        val isGermanNotationEnabled: Boolean
+        val isGermanNotationEnabled: Boolean,
     ) {
 
         companion object {
@@ -63,12 +63,12 @@ data class UserPreferences(
     enum class Accidentals(val id: String) {
         ORIGINAL("original"),
         FLATS("flats"),
-        SHARPS("sharps")
+        SHARPS("sharps"),
     }
 
     enum class Language(val id: String) {
         ENGLISH("en"),
         HUNGARIAN("hu"),
-        SYSTEM_DEFAULT("system_default")
+        SYSTEM_DEFAULT("system_default"),
     }
 }

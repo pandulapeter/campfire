@@ -24,5 +24,5 @@ internal fun StoredFileInfo.toSong(metadata: ChordProMetadata, hasChords: Boolea
     artist = metadata.artist?.takeIf { it.isNotBlank() } ?: metadata.subtitle?.takeIf { it.isNotBlank() }.orEmpty(),
     key = metadata.key?.takeIf { it.isNotBlank() },
     hasChords = hasChords,
-    lastModified = lastModified
+    lastModified = lastModified,
 )

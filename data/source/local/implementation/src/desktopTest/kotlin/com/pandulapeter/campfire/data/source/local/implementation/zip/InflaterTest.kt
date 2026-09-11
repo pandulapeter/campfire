@@ -34,7 +34,7 @@ internal class InflaterTest {
                 append('\n')
             }
         }.toByteArray(),
-        "incompressible then compressible" to (Random(7).nextBytes(64 * 1024) + ByteArray(64 * 1024))
+        "incompressible then compressible" to (Random(7).nextBytes(64 * 1024) + ByteArray(64 * 1024)),
     )
 
     @Test

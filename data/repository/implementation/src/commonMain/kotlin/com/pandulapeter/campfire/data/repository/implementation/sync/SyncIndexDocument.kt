@@ -30,13 +30,13 @@ internal data class SyncIndexDocument(
      */
     val isRunInProgress: Boolean = false,
     /** Keyed by `songs/Artist - Title.cho`, see [SyncKey.path]. */
-    val entries: Map<String, Entry> = emptyMap()
+    val entries: Map<String, Entry> = emptyMap(),
 ) {
 
     @Serializable
     data class Entry(
         val localHash: String = "",
-        val remoteRevision: String = ""
+        val remoteRevision: String = "",
     )
 
     fun toIndex(): Map<SyncKey, SyncIndexEntry> = entries.mapNotNull { (path, entry) ->
@@ -49,7 +49,7 @@ internal data class SyncIndexDocument(
             providerId: String,
             accountId: String,
             lastSyncedAt: Long,
-            index: Map<SyncKey, SyncIndexEntry>
+            index: Map<SyncKey, SyncIndexEntry>,
         ) = SyncIndexDocument(
             providerId = providerId,
             accountId = accountId,
@@ -57,7 +57,7 @@ internal data class SyncIndexDocument(
             isRunInProgress = false,
             entries = index.entries.associate { (key, entry) ->
                 key.path to Entry(localHash = entry.localHash, remoteRevision = entry.remoteRevision)
-            }
+            },
         )
     }
 }

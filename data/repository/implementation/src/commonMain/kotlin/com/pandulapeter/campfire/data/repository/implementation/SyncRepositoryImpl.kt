@@ -70,7 +70,7 @@ internal class SyncRepositoryImpl(
      */
     private val songRepository: SongRepository,
     private val setlistRepository: SetlistRepository,
-    libraryFileLocalSource: LibraryFileLocalSource
+    libraryFileLocalSource: LibraryFileLocalSource,
 ) : SyncRepository {
 
     private val engine = SyncEngine(libraryFileLocalSource)
@@ -98,7 +98,7 @@ internal class SyncRepositoryImpl(
         authenticator.consumePendingRedirect()?.let { redirectUri ->
             return SyncRepository.RestoreResult(
                 isConnected = completePendingAuthorization(redirectUri),
-                didReturnFromAuthorization = true
+                didReturnFromAuthorization = true,
             )
         }
         val connected = providers.firstOrNull { it.isConnected() }
@@ -129,7 +129,7 @@ internal class SyncRepositoryImpl(
                 progress = null,
                 lastSyncedAt = document.lastSyncedAt.takeIf { at -> at > 0 },
                 // A run that was still marked as going when the app started is one the app never came back from.
-                lastOutcome = if (document.isRunInProgress) SyncOutcome.Interrupted else null
+                lastOutcome = if (document.isRunInProgress) SyncOutcome.Interrupted else null,
             )
         }
         if (document.isRunInProgress) {
@@ -233,7 +233,7 @@ internal class SyncRepositoryImpl(
                     onProgress = { progress ->
                         updateConnected { it.copy(progress = progress) }
                         scheduleLiveRescan()
-                    }
+                    },
                 )
                 val syncedAt = Clock.System.now().toEpochMilliseconds()
                 saveIndex(result.index.copy(lastSyncedAt = syncedAt))
@@ -246,7 +246,7 @@ internal class SyncRepositoryImpl(
                     it.copy(
                         progress = null,
                         lastSyncedAt = syncedAt,
-                        lastOutcome = SyncOutcome.Success(result.summary)
+                        lastOutcome = SyncOutcome.Success(result.summary),
                     )
                 }
             } catch (exception: CancellationException) {
@@ -328,7 +328,7 @@ internal class SyncRepositoryImpl(
                 val account = provider.completeAuthorization(
                     response = RemoteAuthorizationResponse(code = code, state = state),
                     verifier = pending.verifier,
-                    redirectUri = pending.redirectUri
+                    redirectUri = pending.redirectUri,
                 )
                 // The account decides which remote folder the index describes, so one written for a different
                 // account is worthless rather than merely stale.

@@ -19,11 +19,11 @@ import kotlinx.serialization.Serializable
 internal data class SetlistDocument(
     val title: String = "",
     val priority: Int = 0,
-    val songs: List<SetlistSongDocument> = emptyList()
+    val songs: List<SetlistSongDocument> = emptyList(),
 )
 
 @Serializable
 internal data class SetlistSongDocument(
     val file: String = "",
-    val transposition: Int = 0
+    val transposition: Int = 0,
 )

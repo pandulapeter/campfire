@@ -15,7 +15,7 @@ import com.pandulapeter.campfire.data.repository.implementation.base.BaseLocalDa
 import com.pandulapeter.campfire.data.source.local.api.UserPreferencesLocalSource
 
 internal class UserPreferencesRepositoryImpl(
-    private val userPreferencesLocalSource: UserPreferencesLocalSource
+    private val userPreferencesLocalSource: UserPreferencesLocalSource,
 ) : BaseLocalDataRepository<UserPreferences>(
     loadDataFromLocalSource = userPreferencesLocalSource::loadUserPreferences
 ), UserPreferencesRepository {

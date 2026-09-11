@@ -51,7 +51,7 @@ interface SyncProvider {
     suspend fun completeAuthorization(
         response: RemoteAuthorizationResponse,
         verifier: String,
-        redirectUri: String?
+        redirectUri: String?,
     ): SyncAccount
 
     /** Forgets the stored credentials, and tells the service to drop them too where that is possible. */
@@ -91,7 +91,7 @@ interface SyncProvider {
         kind: LibraryFileKind,
         name: String,
         bytes: ByteArray,
-        expectedRevision: String?
+        expectedRevision: String?,
     ): RemoteWriteResult
 
     /** Does nothing if the file is already gone, which is the outcome the caller wanted anyway. */

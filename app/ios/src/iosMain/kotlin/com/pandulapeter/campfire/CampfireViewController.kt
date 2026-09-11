@@ -43,7 +43,7 @@ fun CampfireViewController(): UIViewController {
             urlOpener = ::openUrl,
             filePicker = filePicker,
             filesToImport = filesToImport,
-            syncNotifier = syncNotifier
+            syncNotifier = syncNotifier,
         )
     }.also { controller = it }
 }
