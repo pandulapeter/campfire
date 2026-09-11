@@ -65,10 +65,12 @@ import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_clear
+import com.pandulapeter.campfire.presentation.resources.ic_language
 import com.pandulapeter.campfire.presentation.resources.song_details_album
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
 import com.pandulapeter.campfire.presentation.resources.song_details_composer
 import com.pandulapeter.campfire.presentation.resources.song_details_duration
+import com.pandulapeter.campfire.presentation.resources.song_details_language
 import com.pandulapeter.campfire.presentation.resources.song_details_lyricist
 import com.pandulapeter.campfire.presentation.resources.song_details_section_bridge
 import com.pandulapeter.campfire.presentation.resources.song_details_section_chorus
@@ -81,6 +83,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_time
 import com.pandulapeter.campfire.presentation.resources.song_details_year
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
+import com.pandulapeter.campfire.presentation.ui.components.languageLabel
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -124,6 +127,7 @@ internal fun SongLyrics(
     scrollState: ScrollState,
     onAddTag: (() -> Unit)? = null,
     onRemoveTag: ((String) -> Unit)? = null,
+    onEditLanguages: (() -> Unit)? = null,
 ) {
     // The fallback labels of the environments that have one; everything else is named by the file itself.
     val defaultLabels = DefaultSectionLabels(
@@ -165,6 +169,7 @@ internal fun SongLyrics(
             fontScale = fontScale,
             onAddTag = onAddTag,
             onRemoveTag = onRemoveTag,
+            onEditLanguages = onEditLanguages,
         )
         LookaheadScope {
             SongSectionsLayout(
@@ -240,6 +245,8 @@ internal fun SongLyrics(
  *
  * @param onAddTag Null where the tags are only read, which is the editor's preview: there the file itself is under
  *   the caret, and a chip writing into it from the side would be editing the text the editor has not saved yet.
+ * @param onEditLanguages Null wherever [onAddTag] is, and for the same reason. The chip is then shown only by a song
+ *   that declares a language, since there is nothing to say about one that does not and nothing to tap to change it.
  */
 @Composable
 private fun SongMetadataHeader(
@@ -248,12 +255,23 @@ private fun SongMetadataHeader(
     fontScale: Float,
     onAddTag: (() -> Unit)?,
     onRemoveTag: ((String) -> Unit)?,
+    onEditLanguages: (() -> Unit)?,
 ) = Column(modifier = modifier.padding(bottom = SECTION_GAP)) {
     val metadata = song.metadata
-    if (metadata.tags.isNotEmpty() || onAddTag != null) {
+    if (metadata.tags.isNotEmpty() || metadata.languages.isNotEmpty() || onAddTag != null) {
         TagFlowRow(
             modifier = Modifier.padding(bottom = 4.dp)
         ) {
+            // The language comes before the tags because it is the one label of a song that is not the user's own
+            // word for it: it is a single chip however many languages it names, and it is where they are edited.
+            if (metadata.languages.isNotEmpty() || onEditLanguages != null) {
+                TagPill(
+                    text = metadata.languages.map { languageLabel(it) }.joinToString(separator = ", ")
+                        .ifEmpty { stringResource(Res.string.song_details_language) },
+                    onClick = onEditLanguages,
+                    leadingIcon = painterResource(Res.drawable.ic_language),
+                )
+            }
             metadata.tags.forEach { tag ->
                 TagPill(
                     text = tag,

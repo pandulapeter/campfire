@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
@@ -49,6 +51,7 @@ import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.cancel
 import com.pandulapeter.campfire.presentation.resources.create
 import com.pandulapeter.campfire.presentation.resources.delete
+import com.pandulapeter.campfire.presentation.resources.done
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.import_conflicts
 import com.pandulapeter.campfire.presentation.resources.import_conflicts_confirm
@@ -74,6 +77,9 @@ import com.pandulapeter.campfire.presentation.resources.setlists_rename_title
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
 import com.pandulapeter.campfire.presentation.resources.song_details_add_to_setlist
+import com.pandulapeter.campfire.presentation.resources.song_details_language
+import com.pandulapeter.campfire.presentation.resources.song_details_language_no_search_results
+import com.pandulapeter.campfire.presentation.resources.song_details_language_search
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_add
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_name
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_suggestions
@@ -90,18 +96,23 @@ import com.pandulapeter.campfire.presentation.resources.songs_new_song_artist
 import com.pandulapeter.campfire.presentation.resources.songs_new_song_title
 import com.pandulapeter.campfire.data.model.domain.ImportConflictResolution
 import com.pandulapeter.campfire.data.model.domain.ImportPlan
+import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
+import com.pandulapeter.campfire.presentation.ui.components.PickableLanguage
 import com.pandulapeter.campfire.presentation.ui.components.RadioListItem
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.SongsControls
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
+import com.pandulapeter.campfire.presentation.ui.components.languageName
+import com.pandulapeter.campfire.presentation.ui.components.pickableLanguages
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDisplayControls
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
+import com.pandulapeter.campfire.presentation.localization.currentLanguage
 import com.pandulapeter.campfire.presentation.localization.stringResource
 
 /**
@@ -188,6 +199,11 @@ internal fun CampfireDialogs(
         )
 
         is CampfireViewModel.DialogType.AddSongTag -> AddSongTagDialog(
+            viewModel = viewModel,
+            dialog = dialog,
+        )
+
+        is CampfireViewModel.DialogType.SongLanguages -> SongLanguagesDialog(
             viewModel = viewModel,
             dialog = dialog,
         )
@@ -565,6 +581,104 @@ private fun AddSongTagDialog(
 }
 
 /**
+ * The languages of one song, asked about all at once: the whole set is written when the dialog is confirmed, so a
+ * file the user owns is rewritten once rather than once per checkbox.
+ *
+ * The list is ordered by the name the platform gives each language in the language the app is set to (see
+ * [languageName]), with the ones the song already declares held at the top for as long as the dialog is open: a row
+ * that reordered itself under the finger that has just ticked it would be worse than a list that has to be scrolled.
+ *
+ * What is listed before anything is typed is what can be named, plus the languages the song and the library already
+ * use — and those come first, since the next song to be filed is far likelier to be in one of them than in any of
+ * the six hundred the library has never held. Everything else — on the web that is most languages, see
+ * [pickableLanguages] — is found by typing its code, which is also what such a row is labelled with. A language
+ * nobody can name is still a language the file can be filed under, and the code is the one thing the app always
+ * knows about it.
+ */
+@Composable
+private fun SongLanguagesDialog(
+    viewModel: CampfireViewModel,
+    dialog: CampfireViewModel.DialogType.SongLanguages,
+) {
+    val appLanguageCode = currentLanguage.value.code
+    val libraryLanguages by viewModel.languages.collectAsStateWithLifecycle()
+    var query by rememberSaveable { mutableStateOf("") }
+    var selectedCodes by remember(dialog.song.fileName) { mutableStateOf(dialog.song.languages.toSet()) }
+    val languages = remember(dialog.song, libraryLanguages, appLanguageCode) {
+        val declared = dialog.song.languages
+        val alsoOffer = declared + libraryLanguages.map { it.code }.filterNot { it == SongLanguage.UNKNOWN }
+        val pickable = pickableLanguages(appLanguageCode = appLanguageCode, alsoOffer = alsoOffer, normalize = viewModel::normalize)
+        // The song's own languages come first and stay there, in the order the file lists them.
+        declared.mapNotNull { code -> pickable.firstOrNull { it.code == code } } + pickable.filterNot { it.code in declared }
+    }
+    val matches = remember(languages, query) {
+        val normalizedQuery = viewModel.normalize(query)
+        // What was typed may be a code, and not the one the library files the language under: `HUN`, `hu-HU` and
+        // `hu` all name Hungarian, and whichever of them a reader knows has to find the single row that is.
+        val queryCode = viewModel.languageCode(query)
+        if (normalizedQuery.isEmpty()) {
+            languages.filter { it.isListed }
+        } else {
+            languages.filter { it.code == queryCode || normalizedQuery in it.sortKey || it.code.startsWith(normalizedQuery) }
+        }
+    }
+    AlertDialog(
+        onDismissRequest = viewModel::dismissDialog,
+        title = { Text(stringResource(Res.string.song_details_language)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = query,
+                    onValueChange = { query = it.replace("\n", "") },
+                    label = { Text(stringResource(Res.string.song_details_language_search)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                )
+                if (matches.isEmpty()) {
+                    Text(
+                        modifier = Modifier.padding(top = 16.dp),
+                        text = stringResource(Res.string.song_details_language_no_search_results),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.padding(top = 8.dp).heightIn(max = MAX_LANGUAGES_HEIGHT)
+                    ) {
+                        items(
+                            items = matches,
+                            key = { it.code },
+                        ) { language ->
+                            CheckboxListItem(
+                                title = language.label,
+                                // The code is under the name, and is the name itself where there is none to put above it.
+                                description = language.name?.let { language.code.uppercase() },
+                                isChecked = language.code in selectedCodes,
+                                onCheckedChange = { isChecked ->
+                                    selectedCodes = if (isChecked) selectedCodes + language.code else selectedCodes - language.code
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    viewModel.setSongLanguages(fileName = dialog.song.fileName, codes = selectedCodes.toList())
+                    viewModel.dismissDialog()
+                },
+            ) { Text(stringResource(Res.string.done)) }
+        },
+        dismissButton = {
+            TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) }
+        },
+    )
+}
+
+/**
  * The actions of one song where there is no pointer to open a dropdown menu with, reached by long pressing the row.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -683,3 +797,4 @@ private fun CampfireBottomSheet(
 private const val MAX_TITLE_LENGTH = 60
 private const val MAX_TAG_LENGTH = 40
 private val MAX_SUGGESTIONS_HEIGHT = 160.dp
+private val MAX_LANGUAGES_HEIGHT = 320.dp

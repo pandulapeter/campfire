@@ -27,7 +27,7 @@ object ChordProTags {
         val trimmedTag = tag.trim()
         if (trimmedTag.isEmpty() || ChordProParser.parseMetadata(text).tags.any { it.equals(trimmedTag, ignoreCase = true) }) return text
         val lines = ChordProSyntax.splitLines(text).toMutableList()
-        lines.add(insertionIndex(lines), "{${ChordProSyntax.TAG_NAME}: $trimmedTag}")
+        lines.add(ChordProSyntax.metadataInsertionIndex(lines, ChordProSyntax.TAG_NAME), "{${ChordProSyntax.TAG_NAME}: $trimmedTag}")
         return lines.joinToString("\n")
     }
 
@@ -43,36 +43,6 @@ object ChordProTags {
             .joinToString("\n")
     }
 
-    /**
-     * Where a new tag directive goes: right after the last one the file has, wherever that is, so that the tags of a
-     * song stay together. A file with no tags yet gets it at the end of the block of directives it opens with, which
-     * is where its metadata is; one that opens with content rather than directives gets it on a line of its own above
-     * everything.
-     */
-    private fun insertionIndex(lines: List<String>): Int {
-        lines.indexOfLast { it.tag() != null }.takeIf { it >= 0 }?.let { return it + 1 }
-        var lastMetadataIndex = -1
-        for ((index, line) in lines.withIndex()) {
-            val trimmedLine = line.trim()
-            if (trimmedLine.isEmpty() || trimmedLine.startsWith(SOURCE_COMMENT)) continue
-            val directive = ChordProSyntax.matchDirective(trimmedLine) ?: break
-            if (!directive.isMetadata) break
-            lastMetadataIndex = index
-        }
-        return lastMetadataIndex + 1
-    }
-
     /** The tag of a line that is a tag directive, null for every other line. */
     private fun String.tag() = ChordProSyntax.matchDirective(trim())?.let { ChordProSyntax.tag(it) }
-
-    /** True for the directives a song is described by, as opposed to the ones that make up its body. */
-    private val ChordProSyntax.Directive.isMetadata
-        get() = ChordProSyntax.startOfEnvironment(name) == null && ChordProSyntax.endOfEnvironment(name) == null && name !in bodyNames
-
-    private val bodyNames = setOf(
-        "chorus", "comment", "c", "comment_italic", "ci", "comment_box", "cb", "new_page", "np", "new_physical_page",
-        "npp", "column_break", "colb", "new_song", "ns",
-    )
-
-    private const val SOURCE_COMMENT = "#"
 }

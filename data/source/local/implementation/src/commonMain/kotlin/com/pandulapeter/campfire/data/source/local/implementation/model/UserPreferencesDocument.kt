@@ -35,4 +35,5 @@ internal data class UserPreferencesDocument(
     val transpositions: Map<String, Int> = emptyMap(),
     val selectedTags: List<String> = emptyList(),
     val tagMatchMode: String = "",
+    val selectedLanguages: List<String> = emptyList(),
 )

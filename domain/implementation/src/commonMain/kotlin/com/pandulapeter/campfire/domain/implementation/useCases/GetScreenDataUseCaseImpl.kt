@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.domain.implementation.useCases
 
 import com.pandulapeter.campfire.data.model.DataState
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.repository.api.SetlistRepository
@@ -45,14 +46,31 @@ class GetScreenDataUseCaseImpl internal constructor(
         fun createScreenData() = setlistsDataState.data?.sortedByDescending { it.priority }?.let { setlists ->
             songsDataState.data?.let { songs ->
                 listPreferencesDataState.data?.let { listPreferences ->
-                    val taggableSongs = songs.filterHasChords(listPreferences)
-                    val tags = taggableSongs.toTags()
+                    val filterableSongs = songs.filterHasChords(listPreferences)
+                    // What the library holds, whatever is selected: the two filter groups are counted over the songs
+                    // the other one leaves, but both of them decide what is still a tag and what is still a language
+                    // from here, or narrowing by one would quietly switch the other one off.
+                    val availableTags = filterableSongs.toTags()
+                    val availableLanguages = filterableSongs.toLanguages()
+                    val songsByTag = filterableSongs.filterTags(listPreferences, availableTags)
+                    val songsByLanguage = filterableSongs.filterLanguages(listPreferences, availableLanguages)
                     ScreenData(
                         setlists = setlists,
-                        songs = taggableSongs
-                            .filterTags(listPreferences, tags)
+                        songs = songsByTag
+                            .filterLanguages(listPreferences, availableLanguages)
                             .sort(listPreferences),
-                        tags = tags,
+                        tags = songsByLanguage.toTags().withMissingSelected(
+                            available = availableTags,
+                            selected = listPreferences.selectedTags.mapTo(mutableSetOf()) { it.lowercase() },
+                            key = { it.name.lowercase() },
+                            toEmpty = { it.copy(songCount = 0) },
+                        ),
+                        languages = songsByTag.toLanguages().withMissingSelected(
+                            available = availableLanguages,
+                            selected = listPreferences.selectedLanguages,
+                            key = { it.code },
+                            toEmpty = { it.copy(songCount = 0) },
+                        ),
                         songFileNames = songs.mapTo(mutableSetOf()) { it.fileName },
                     ).also {
                         cache = it
@@ -89,6 +107,50 @@ class GetScreenDataUseCaseImpl internal constructor(
                 UserPreferences.TagMatchMode.ALL -> selected.all { it in songTags }
             }
         }
+    }
+
+    /**
+     * The songs left by the language filter. A song carries its languages the way it carries its tags, so several
+     * selected languages mean a song sung in any one of them; [SongLanguage.UNKNOWN] selects the songs that declare
+     * none, which no song can name itself, see [SongLanguage.Companion.UNKNOWN].
+     */
+    private fun List<Song>.filterLanguages(listPreferences: ListPreferences, languages: List<SongLanguage>): List<Song> {
+        val available = languages.mapTo(mutableSetOf()) { it.code }
+        val selected = listPreferences.selectedLanguages.filter { it in available }
+        if (selected.isEmpty()) return this
+        return filter { song ->
+            if (song.languages.isEmpty()) SongLanguage.UNKNOWN in selected else selected.any { it in song.languages }
+        }
+    }
+
+    /**
+     * A filter group as its controls show it, put back together after the other group has narrowed the songs it was
+     * counted over: whatever the user has selected and the narrowing counted down to nothing is appended with a
+     * count of zero. A filter that is on has to stay visible to be turned off, and a zero says exactly what it
+     * means — this combination of the two groups selects nothing.
+     */
+    private fun <T> List<T>.withMissingSelected(available: List<T>, selected: Set<String>, key: (T) -> String, toEmpty: (T) -> T): List<T> {
+        val counted = mapTo(mutableSetOf(), key)
+        return this + available.filter { key(it) in selected && key(it) !in counted }.map(toEmpty)
+    }
+
+    /**
+     * The languages of the library with the number of songs singing in each, most used first, and the songs that
+     * declare none after them however many they are: "unknown" is where the work that is still to be done sits,
+     * not a language competing with the rest for the top of the list.
+     */
+    private fun List<Song>.toLanguages(): List<SongLanguage> {
+        val countsByCode = linkedMapOf<String, Int>()
+        forEach { song ->
+            if (song.languages.isEmpty()) {
+                countsByCode[SongLanguage.UNKNOWN] = (countsByCode[SongLanguage.UNKNOWN] ?: 0) + 1
+            } else {
+                song.languages.forEach { code -> countsByCode[code] = (countsByCode[code] ?: 0) + 1 }
+            }
+        }
+        return countsByCode
+            .map { (code, songCount) -> SongLanguage(code = code, songCount = songCount) }
+            .sortedWith(compareBy<SongLanguage> { it.code == SongLanguage.UNKNOWN }.thenByDescending { it.songCount }.thenBy { it.code })
     }
 
     /**
@@ -132,6 +194,7 @@ class GetScreenDataUseCaseImpl internal constructor(
         val sortingMode: UserPreferences.SortingMode,
         val selectedTags: Set<String>,
         val tagMatchMode: UserPreferences.TagMatchMode,
+        val selectedLanguages: Set<String>,
     )
 
     private fun UserPreferences.toListPreferences() = ListPreferences(
@@ -139,6 +202,7 @@ class GetScreenDataUseCaseImpl internal constructor(
         sortingMode = sortingMode,
         selectedTags = selectedTags,
         tagMatchMode = tagMatchMode,
+        selectedLanguages = selectedLanguages,
     )
 
     private fun <T, R> DataState<T>.mapData(transform: (T) -> R): DataState<R> = when (this) {

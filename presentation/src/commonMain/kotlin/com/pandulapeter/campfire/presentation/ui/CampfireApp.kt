@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.padding
@@ -52,6 +53,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.SubcomposeLayout
@@ -75,6 +77,7 @@ import com.pandulapeter.campfire.presentation.resources.export_failed
 import com.pandulapeter.campfire.presentation.resources.import_failed
 import com.pandulapeter.campfire.presentation.resources.import_result
 import com.pandulapeter.campfire.presentation.resources.song_editor_save_failed
+import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_settings
 import com.pandulapeter.campfire.presentation.resources.ic_songs
@@ -114,12 +117,17 @@ import org.koin.compose.viewmodel.koinViewModel
  *
  * @param urlOpener Opens the given URL in the platform's browser.
  * @param filesToImport Files the host handed over - opened with Campfire, shared to it, or dropped onto its window.
+ * @param onAppReady Called once the app itself is on screen, for the shells that open on a startup screen of their
+ *   own and are able to hold it there: Android's system splash and the loading screen of the web build. Every one of
+ *   those is otherwise taken away by the first frame the app draws, and that frame is [LaunchScreen] rather than the
+ *   app - so without this they would hand over to it and the user would watch two startup screens in a row.
  */
 @Composable
 fun CampfireApp(
     viewModel: CampfireViewModel = koinViewModel(),
     urlOpener: (String) -> Unit,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
+    onAppReady: () -> Unit = {},
 ) {
     LaunchedEffect(filesToImport) { filesToImport.collect(viewModel::importFiles) }
     // Asked for as early as there is anything to ask from, and never insisted on: on the web this is what stops the
@@ -151,6 +159,12 @@ fun CampfireApp(
         // one frame it takes to read a small file, and even that frame is not empty: the window is already painted
         // in the theme's background, which is the one color the palettes agree on within a light or a dark scheme.
         if (arePreferencesLoaded) {
+            // Two frames rather than one, because withFrameNanos resumes while the frame it belongs to is still
+            // being assembled: the frame after it is the first one that is certainly drawn.
+            LaunchedEffect(Unit) {
+                repeat(2) { withFrameNanos { } }
+                onAppReady()
+            }
             // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors the
             // user chose, and above the language preference, so that it is in the language they chose too.
             AppUpdateGate {
@@ -160,9 +174,30 @@ fun CampfireApp(
                 )
             }
         } else {
-            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
+            LaunchScreen()
         }
     }
+}
+
+/**
+ * What the window holds until there is an app to draw in it: the mark, still, on the theme's own background.
+ *
+ * It is what the first frame of every platform paints, and on the desktop it is what stays there for as long as the
+ * first composition of the whole app takes - a third of a second on a cold start, which is a long time for a window
+ * to sit empty. Nothing here says anything the preferences have not answered yet: the mark carries no text, and it
+ * is drawn in a neutral rather than in the accent color, which is the one thing still being waited for.
+ */
+@Composable
+private fun LaunchScreen() = Box(
+    modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+    contentAlignment = Alignment.Center,
+) {
+    Icon(
+        modifier = Modifier.size(LAUNCH_MARK_SIZE),
+        painter = painterResource(Res.drawable.ic_campfire),
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -610,6 +645,7 @@ private fun ReportNavigationTransition(viewModel: CampfireViewModel) {
     SideEffect { viewModel.setNavigationTransitionRunning(isRunning) }
 }
 
+private val LAUNCH_MARK_SIZE = 72.dp
 private const val NAVIGATION_GENERATION_METADATA_KEY = "navigationGeneration"
 private const val TAB_TRANSITION_DURATION = 300
 private const val TAB_SLIDE_FRACTION = 12

@@ -21,9 +21,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -66,6 +66,7 @@ import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.FAB_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
 import com.pandulapeter.campfire.presentation.ui.components.ListPlaceholder
+import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.MissingSongListItem
@@ -77,6 +78,7 @@ import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
+import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -94,6 +96,7 @@ internal fun SetlistsScreen(
     contentPadding: PaddingValues,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val listState = rememberRetainedLazyGridState(viewModel.setlistsScrollPosition)
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
     val columnCount = songListColumnCount(
@@ -101,6 +104,7 @@ internal fun SetlistsScreen(
         contentPadding = contentPadding,
         isSidePanelVisible = isSidePanelVisible,
     )
+    KeepTopAppBarInSync(scrollBehavior, listState)
     Row(
         modifier = modifier.fillMaxSize()
     ) {
@@ -128,6 +132,7 @@ internal fun SetlistsScreen(
                 SetlistList(
                     modifier = Modifier.fillMaxSize(),
                     viewModel = viewModel,
+                    listState = listState,
                     columnCount = columnCount,
                     contentPadding = listContentPadding,
                 )
@@ -155,6 +160,7 @@ internal fun SetlistsScreen(
 private fun SetlistList(
     modifier: Modifier = Modifier,
     viewModel: CampfireViewModel,
+    listState: LazyGridState,
     columnCount: Int,
     contentPadding: PaddingValues,
 ) {
@@ -165,7 +171,6 @@ private fun SetlistList(
     // Read once each, so that the branches below and the placeholders they render can never disagree about them.
     val setlistsPlaceholder = viewModel.setlistsPlaceholder.collectAsStateWithLifecycle().value
     val libraryPlaceholder = viewModel.libraryPlaceholder.collectAsStateWithLifecycle().value
-    val listState = rememberLazyGridState()
     val reorderableState = rememberReorderableLazyGridState(listState) { from, to ->
         val fromKey = SetlistItemKey(from.key as? String)
         val toKey = SetlistItemKey(to.key as? String)
@@ -203,7 +208,7 @@ private fun SetlistList(
                 span = { GridItemSpan(maxLineSpan) },
             ) {
                 ListPlaceholder(
-                    modifier = listItemAnimation(hasLoadedLibrary).fillMaxWidth(),
+                    modifier = listItemAnimation(listState, hasLoadedLibrary).fillMaxWidth(),
                     placeholder = placeholder,
                     onRetry = viewModel::refresh,
                 )
@@ -216,7 +221,7 @@ private fun SetlistList(
                     span = { GridItemSpan(maxLineSpan) },
                 ) {
                     SectionHeader(
-                        modifier = listItemAnimation(hasLoadedLibrary),
+                        modifier = listItemAnimation(listState, hasLoadedLibrary),
                         text = setlistWithSongs.setlist.title,
                         onClick = { coroutineScope.launch { listState.animateScrollToKey(headerKey) } },
                         action = if (isPerformanceModeEnabled) null else {
@@ -246,7 +251,7 @@ private fun SetlistList(
                         span = { GridItemSpan(maxLineSpan) },
                     ) {
                         Text(
-                            modifier = listItemAnimation(hasLoadedLibrary).padding(horizontal = 16.dp, vertical = 8.dp),
+                            modifier = listItemAnimation(listState, hasLoadedLibrary).padding(horizontal = 16.dp, vertical = 8.dp),
                             text = stringResource(Res.string.setlists_reorder_hint),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -259,7 +264,7 @@ private fun SetlistList(
                 ) { entry ->
                     val key = SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = entry.songFileName)
                     ReorderableItem(
-                        modifier = listItemAnimation(hasLoadedLibrary),
+                        modifier = listItemAnimation(listState, hasLoadedLibrary),
                         state = reorderableState,
                         key = key.string.orEmpty(),
                     ) { isBeingDragged ->

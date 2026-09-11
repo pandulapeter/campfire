@@ -33,6 +33,12 @@ data class ChordProMetadata(
      * written file may hold: two spellings of the same word are the same tag, and the first one wins.
      */
     val tags: List<String> = emptyList(),
+    /**
+     * The languages the song is sung in, one per `{meta: language en}` directive, as ISO codes folded to lower case
+     * and cut down to their primary subtag (see `ChordProSyntax.languageCode`). Usually one, and empty for a file
+     * that says nothing about its language, which is most of them.
+     */
+    val languages: List<String> = emptyList(),
     val custom: Map<String, List<String>> = emptyMap(), // {meta: name value} and unknown x_* directives, in order
 )
 

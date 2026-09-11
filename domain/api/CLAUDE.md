@@ -19,10 +19,11 @@ paths, or a verb for pure transforms (`NormalizeText`, `ParseChordPro`, `Transpo
 `ConvertChordProNotation`).
 
 - `ScreenData` bundles what the song and setlist screens need in one object: the setlists, the songs filtered and sorted
-  the way the preferences ask for, `tags` (every label the library uses with how many songs carry it, most used first)
-  and `songFileNames` — every song in the library including the ones a filter is hiding, so that a setlist entry can
-  tell "hidden" from "the file is gone". The tags are counted after every other filter but before the tag filter
-  itself, so that selecting one does not empty the list of the ones that could be selected next.
+  the way the preferences ask for, `tags` (every label the library uses with how many songs carry it, most used first),
+  `languages` (the same for the languages its songs declare, with the ones that declare none last) and
+  `songFileNames` — every song in the library including the ones a filter is hiding, so that a setlist entry can
+  tell "hidden" from "the file is gone". Each of the two filter groups is counted after every other filter but before
+  its own, so that selecting one value does not empty the list of the ones that could be selected next.
 - `GetUserPreferencesUseCase` is separate from `ScreenData` on purpose: the theme and the language must reach the UI
   before the library has been scanned, and folding them into the aggregate would make the whole app wait for the songs.
 - `TransposeChordProUseCase` transposes the parsed model (what the viewer shows), `TransposeChordProTextUseCase` the raw
@@ -31,6 +32,13 @@ paths, or a verb for pure transforms (`NormalizeText`, `ParseChordPro`, `Transpo
 - `SetChordProTagUseCase` puts one tag into a document or takes it out of it, leaving the rest of the text byte for
   byte — the text-level half of tagging, like `TransposeChordProTextUseCase`, because the result is written back to
   the user's own file. Which songs a tag then matches is decided in `GetScreenDataUseCase`, without regard to case.
+- `SetChordProLanguagesUseCase` is the same for the languages of a song, except that it takes the whole set rather
+  than one value at a time: the picker asks about every language before it is closed, and the file is better rewritten
+  once than once per checkbox. The codes are normalized by `:chordpro` on the way in, so `en-US`, `EN` and `eng` all
+  name the language `en` does.
+- `NormalizeLanguageCodeUseCase` answers what language a piece of text names, under the code the library files it by:
+  the same normalization `SetChordProLanguagesUseCase` puts a code through on its way into a file, offered to the UI so
+  that a search field can be typed into with a code rather than a name.
 - `ConvertChordProNotationUseCase` is the last step of rendering: it writes the transposed model in German notation
   when `UserPreferences.ChordSpelling` asks for it, and hands the song back untouched when it does not. There is no
   text-level counterpart on purpose — that one rewrites the file, and a file is always written in the app's own

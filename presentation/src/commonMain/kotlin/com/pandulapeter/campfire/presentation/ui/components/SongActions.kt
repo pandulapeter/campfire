@@ -31,7 +31,7 @@ import com.pandulapeter.campfire.presentation.resources.ic_delete
 import com.pandulapeter.campfire.presentation.resources.ic_edit
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_more
-import com.pandulapeter.campfire.presentation.resources.ic_playlist_add
+import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_share
 import com.pandulapeter.campfire.presentation.resources.share
 import com.pandulapeter.campfire.presentation.resources.song_details_add_to_setlist
@@ -65,7 +65,7 @@ internal fun SongActions(
     if (shouldIncludeAddToSetlist) {
         item(
             stringResource(Res.string.song_details_add_to_setlist),
-            painterResource(Res.drawable.ic_playlist_add),
+            painterResource(Res.drawable.ic_setlists),
             true,
         ) {
             viewModel.showDialog(

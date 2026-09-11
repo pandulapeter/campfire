@@ -50,6 +50,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
+import com.pandulapeter.campfire.domain.api.useCases.NormalizeLanguageCodeUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
@@ -57,10 +58,12 @@ import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
+import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
 import com.pandulapeter.campfire.presentation.ui.platform.FilePicker
 import kotlinx.coroutines.CancellationException
@@ -81,6 +84,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -108,12 +112,14 @@ class CampfireViewModel(
     private val deleteSetlist: DeleteSetlistUseCase,
     private val saveSongContent: SaveSongContentUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
+    private val setChordProLanguages: SetChordProLanguagesUseCase,
     private val setChordProTag: SetChordProTagUseCase,
     private val connectSyncProvider: ConnectSyncProviderUseCase,
     private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
     private val cancelSynchronization: CancelSynchronizationUseCase,
     private val restoreSync: RestoreSyncUseCase,
     private val synchronizeLibrary: SynchronizeLibraryUseCase,
+    private val normalizeLanguageCode: NormalizeLanguageCodeUseCase,
     private val normalizeText: NormalizeTextUseCase,
     private val parseChordPro: ParseChordProUseCase,
     private val transposeChordPro: TransposeChordProUseCase,
@@ -146,6 +152,14 @@ class CampfireViewModel(
         private set
     private var isNavigationTransitionRunning = false
 
+    /**
+     * Where each of the three top level screens is scrolled to, kept here because a tab that is left is taken off
+     * the back stack and loses everything it remembered with it, see [ScrollPosition].
+     */
+    internal val songsScrollPosition = ScrollPosition()
+    internal val setlistsScrollPosition = ScrollPosition()
+    internal val settingsScrollPosition = ScrollPosition()
+
     // Data
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
@@ -173,8 +187,15 @@ class CampfireViewModel(
      *
      * Read rather than read *successfully*: a read that failed has no answer left to wait for, and the app has to
      * open in the defaults rather than not at all.
+     *
+     * It only ever turns on, because what it gates is the whole of `CampfireContent`: every remembered thing under
+     * it — the scroll position of each list, the state Navigation 3 saved for each entry, the text being edited —
+     * is gone the moment this goes false, and the app comes back with the user somewhere they never navigated to.
+     * Nothing that happens after the first read is a reason to put the launch screen back up.
      */
-    val arePreferencesLoaded = userPreferencesState.map { it !is DataState.Loading }.asEagerState(false)
+    val arePreferencesLoaded = userPreferencesState
+        .runningFold(false) { hasBeenRead, state -> hasBeenRead || state !is DataState.Loading }
+        .asEagerState(false)
 
     /**
      * The one preference enough screens ask about to be worth a state of its own: every list, menu, sheet and app
@@ -251,6 +272,12 @@ class CampfireViewModel(
      * dialog offer them.
      */
     val tags = screenData.map { it.data?.tags.orEmpty() }.asState(emptyList())
+
+    /**
+     * Every language the library sings in, most used first and the songs that declare none last, as the filter
+     * controls offer them. Empty, or a single entry, is a library with nothing to filter by.
+     */
+    val languages = screenData.map { it.data?.languages.orEmpty() }.asState(emptyList())
 
     /**
      * Every song with its title and artist normalized for searching and grouping, done once per library rather than
@@ -504,6 +531,17 @@ class CampfireViewModel(
     fun setSongTag(fileName: String, tag: String, isSelected: Boolean) = launchLibraryChange {
         val text = songTexts.value[fileName] ?: getSongContent(fileName)?.text ?: return@launchLibraryChange
         val edited = setChordProTag(text = text, tag = tag, isSelected = isSelected)
+        if (edited != text) saveSongContent(fileName = fileName, text = edited)
+    }
+
+    /**
+     * Declares the languages of a song, from the header of the screen that is playing it. The whole set arrives at
+     * once rather than one language at a time, because the picker asks for all of them before it is closed and a
+     * file the user owns is better rewritten once than once per checkbox.
+     */
+    fun setSongLanguages(fileName: String, codes: List<String>) = launchLibraryChange {
+        val text = songTexts.value[fileName] ?: getSongContent(fileName)?.text ?: return@launchLibraryChange
+        val edited = setChordProLanguages(text = text, codes = codes)
         if (edited != text) saveSongContent(fileName = fileName, text = edited)
     }
 
@@ -827,6 +865,31 @@ class CampfireViewModel(
 
     fun setTagMatchMode(value: UserPreferences.TagMatchMode) = updateUserPreferences { copy(tagMatchMode = value) }
 
+    /**
+     * Accent and case insensitive text, for a screen that has to sort or search through something the library did
+     * not put in order for it - the picker of every language there is, which is ordered by a name that depends on
+     * the language the app is set to and so cannot be ordered anywhere below the UI.
+     */
+    fun normalize(text: String) = normalizeText(text)
+
+    /**
+     * The language a piece of text names, for the picker's search field: a reader who knows a song is in Hungarian
+     * may well type `hun` or `HU` rather than the word the app would show them, and either has to find the one row
+     * the library files that language under.
+     */
+    fun languageCode(value: String) = normalizeLanguageCode(value)
+
+    /** The codes are normalized by the parser, so a selected language is the string the filter chip carries. */
+    fun toggleLanguageFilter(code: String) = updateUserPreferences {
+        copy(selectedLanguages = if (code in selectedLanguages) selectedLanguages - code else selectedLanguages + code)
+    }
+
+    /** Only the languages the library still has are cleared, for the same reason [clearTagFilter] is careful. */
+    fun clearLanguageFilter() = updateUserPreferences {
+        val libraryLanguages = languages.value.mapTo(mutableSetOf()) { it.code }
+        copy(selectedLanguages = selectedLanguages.filterNotTo(mutableSetOf()) { it in libraryLanguages })
+    }
+
     fun setUiMode(value: UserPreferences.UiMode) = updateUserPreferences { copy(uiMode = value) }
 
     fun setThemeColor(value: UserPreferences.ThemeColor) = updateUserPreferences { copy(themeColor = value) }
@@ -1101,6 +1164,8 @@ class CampfireViewModel(
         data class DeleteSong(val song: Song) : DialogType
         /** Opened from the tag header of the song details screen; the suggestions come from [tags]. */
         data class AddSongTag(val song: Song) : DialogType
+        /** Opened from the same header, and asking about every language at once rather than one at a time. */
+        data class SongLanguages(val song: Song) : DialogType
         /**
          * Asked before the connected account is forgotten. Nothing is deleted either way, but reconnecting means
          * going through the consent page again, which is not something to end up in by mistapping a list row.

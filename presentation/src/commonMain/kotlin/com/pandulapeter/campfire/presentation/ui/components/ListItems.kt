@@ -137,9 +137,9 @@ internal fun SongListItem(
             }
         },
         // Songs created in the app need no artist, and an empty second line would just make the row taller. The
-        // tags sit under the artist rather than next to the title, because a row of them is as long as somebody
-        // chose to make it and the title is the one thing on the row that must never be pushed out of sight.
-        supportingContent = if (song.artist.isBlank() && song.tags.isEmpty()) {
+        // languages and tags sit under the artist rather than next to the title, because a row of them is as long as
+        // somebody chose to make it and the title is the one thing on the row that must never be pushed out of sight.
+        supportingContent = if (song.artist.isBlank() && song.languages.isEmpty() && song.tags.isEmpty()) {
             null
         } else {
             {
@@ -151,9 +151,10 @@ internal fun SongListItem(
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
-                    if (song.tags.isNotEmpty()) {
-                        SongTags(
+                    if (song.languages.isNotEmpty() || song.tags.isNotEmpty()) {
+                        SongLabels(
                             modifier = Modifier.padding(top = if (song.artist.isBlank()) 0.dp else 4.dp),
+                            languages = song.languages,
                             tags = song.tags,
                         )
                     }
@@ -312,6 +313,7 @@ internal fun SwitchListItem(
 internal fun CheckboxListItem(
     modifier: Modifier = Modifier,
     title: String,
+    description: String? = null,
     isChecked: Boolean,
     isEnabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit,
@@ -321,6 +323,7 @@ internal fun CheckboxListItem(
         .alpha(if (isEnabled) 1f else 0.5f),
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) },
+    supportingContent = description?.let { { Text(it) } },
     leadingContent = { Checkbox(checked = isChecked, enabled = isEnabled, onCheckedChange = null) },
 )
 

@@ -9,6 +9,8 @@
  */
 package com.pandulapeter.campfire.presentation.ui.components
 
+import androidx.compose.foundation.gestures.ScrollableState
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,10 +42,30 @@ internal fun rememberHasLoadedLibrary(isLoading: Boolean): Boolean {
 }
 
 /**
- * The placement animation of an item of the song or setlist list, which it only has once the library is whole (see
- * [rememberHasLoadedLibrary]).
+ * The placement animation of a lazy list's item.
  *
  * An item sliding into its new slot says that the list the user is looking at has changed: a song was renamed,
- * deleted, filtered out, or a different sorting order moved it. The library arriving is not that kind of change.
+ * deleted, filtered out, or a different sorting order moved it. The library arriving is not that kind of change
+ * ([isEnabled], which the song and setlist lists answer with [rememberHasLoadedLibrary]), and neither is a scroll —
+ * hence [listState], which turns the animations off for as long as the list is moving.
+ *
+ * A lazy list keeps the animation state of the items it has on screen and moves each of them by the distance the
+ * list itself was scrolled, so that scrolling is not mistaken for the list rearranging itself. The two numbers come
+ * apart at the ends of the list, where a fast scroll asks for more than there is left to give: an item that was on
+ * screen for both of the last two frames is moved by the distance that was *asked* for rather than the shorter one
+ * that was actually scrolled, lands far outside the list, and is then animated back to where it belongs. What that
+ * looks like is a single row sliding in from off screen while every other row is already still, most visibly the
+ * first row of a list that was flung back to the top.
+ *
+ * Nothing is lost by leaving the animations off while the list moves, since they are there to narrate a change of
+ * its *contents* and the contents do not change under a finger. Whatever does change mid-scroll simply takes its
+ * place, and the next change with the list at rest animates as it always did.
  */
-internal fun LazyGridItemScope.listItemAnimation(hasLoadedLibrary: Boolean) = if (hasLoadedLibrary) Modifier.animateItem() else Modifier
+@Composable
+internal fun LazyItemScope.listItemAnimation(listState: ScrollableState, isEnabled: Boolean = true) =
+    if (isEnabled && !listState.isScrollInProgress) Modifier.animateItem() else Modifier
+
+/** The [listItemAnimation] of an item of the song or setlist grid. */
+@Composable
+internal fun LazyGridItemScope.listItemAnimation(listState: ScrollableState, isEnabled: Boolean = true) =
+    if (isEnabled && !listState.isScrollInProgress) Modifier.animateItem() else Modifier

@@ -32,21 +32,35 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_language
+import org.jetbrains.compose.resources.painterResource
 
 /**
- * The tags of a song wherever they are only read: under its title in a song list, and in the header of the song
- * being played. They wrap onto at most [maxLines] rows and whatever is left over is clipped, so that a row of a list
- * cannot grow taller because somebody filed one song under a dozen labels.
+ * What a song is filed under, wherever those are only read: under its title in a song list. They wrap onto at most
+ * [maxLines] rows and whatever is left over is clipped, so that a row of a list cannot grow taller because somebody
+ * filed one song under a dozen labels — which is also why the languages come first, being the ones a reader scanning
+ * a mixed library is looking for.
  */
 @Composable
-internal fun SongTags(
+internal fun SongLabels(
     modifier: Modifier = Modifier,
+    languages: List<String>,
     tags: List<String>,
     maxLines: Int = 1,
 ) = TagFlowRow(
     modifier = modifier,
     maxLines = maxLines,
 ) {
+    // A language carries the mark the song details header gives it, since it is the one label here that is not the
+    // user's own word for the song: without it a pill reading "Magyar" is a tag somebody typed, and there is no
+    // telling the two apart in a list.
+    languages.forEach { code ->
+        TagPill(
+            text = languageLabel(code),
+            leadingIcon = painterResource(Res.drawable.ic_language),
+        )
+    }
     tags.forEach { tag -> TagPill(text = tag) }
 }
 

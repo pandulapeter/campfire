@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.domain.api.useCases.GetSyncStateUseCase
 import com.pandulapeter.campfire.domain.api.useCases.GetUserPreferencesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ImportFilesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.LoadScreenDataUseCase
+import com.pandulapeter.campfire.domain.api.useCases.NormalizeLanguageCodeUseCase
 import com.pandulapeter.campfire.domain.api.useCases.NormalizeTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.ParseChordProUseCase
 import com.pandulapeter.campfire.domain.api.useCases.PrepareImportUseCase
@@ -34,6 +35,7 @@ import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SetChordProLanguagesUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
@@ -56,6 +58,7 @@ import com.pandulapeter.campfire.domain.implementation.useCases.GetSyncStateUseC
 import com.pandulapeter.campfire.domain.implementation.useCases.GetUserPreferencesUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.ImportFilesUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.LoadScreenDataUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.NormalizeLanguageCodeUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.NormalizeTextUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.ParseChordProUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.PrepareImportUseCaseImpl
@@ -63,6 +66,7 @@ import com.pandulapeter.campfire.domain.implementation.useCases.RestoreSyncUseCa
 import com.pandulapeter.campfire.domain.implementation.useCases.SaveSetlistUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SaveSongContentUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SaveUserPreferencesUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.SetChordProLanguagesUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SetChordProTagUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SynchronizeLibraryUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.TransposeChordProTextUseCaseImpl
@@ -88,6 +92,7 @@ val domainModule = module {
     factory<GetUserPreferencesUseCase> { GetUserPreferencesUseCaseImpl(get()) }
     factory<ImportFilesUseCase> { ImportFilesUseCaseImpl(get(), get()) }
     factory<LoadScreenDataUseCase> { LoadScreenDataUseCaseImpl(get(), get(), get()) }
+    factory<NormalizeLanguageCodeUseCase> { NormalizeLanguageCodeUseCaseImpl() }
     factory<NormalizeTextUseCase> { NormalizeTextUseCaseImpl() }
     factory<ParseChordProUseCase> { ParseChordProUseCaseImpl() }
     factory<PrepareImportUseCase> { PrepareImportUseCaseImpl(get(), get(), get(), get()) }
@@ -95,6 +100,7 @@ val domainModule = module {
     factory<SaveSetlistUseCase> { SaveSetlistUseCaseImpl(get()) }
     factory<SaveSongContentUseCase> { SaveSongContentUseCaseImpl(get()) }
     factory<SaveUserPreferencesUseCase> { SaveUserPreferencesUseCaseImpl(get()) }
+    factory<SetChordProLanguagesUseCase> { SetChordProLanguagesUseCaseImpl() }
     factory<SetChordProTagUseCase> { SetChordProTagUseCaseImpl() }
     factory<SynchronizeLibraryUseCase> { SynchronizeLibraryUseCaseImpl(get()) }
     factory<TransposeChordProTextUseCase> { TransposeChordProTextUseCaseImpl() }

@@ -11,6 +11,7 @@ package com.pandulapeter.campfire.domain.api.models
 
 import com.pandulapeter.campfire.data.model.domain.Setlist
 import com.pandulapeter.campfire.data.model.domain.Song
+import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
 
 data class ScreenData(
@@ -20,9 +21,16 @@ data class ScreenData(
     /**
      * Every tag the library uses, the most used one first, as the filter controls offer them. Counted before the tag
      * filter is applied and after every other one, so that selecting a tag does not empty the list of tags one could
-     * select next.
+     * select next. A tag that is selected stays on the list even where the language filter has counted it down to
+     * nothing, since a filter that is on has to be visible to be turned off.
      */
     val tags: List<Tag>,
+    /**
+     * Every language the library sings in, the most used one first and the songs that declare none
+     * ([SongLanguage.UNKNOWN]) last, whatever their number. Counted the way [tags] are, and with the tag filter
+     * applied, so that the two filter groups narrow each other rather than emptying each other.
+     */
+    val languages: List<SongLanguage>,
     /**
      * The file name of every song in the library, whether or not the filters hide it. Setlist entries are resolved
      * against this: a song the "show songs without chords" filter is hiding is not a song whose file went missing.

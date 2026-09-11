@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -62,6 +63,7 @@ import com.pandulapeter.campfire.presentation.resources.settings_sync_unavailabl
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
+import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -79,21 +81,22 @@ import org.jetbrains.compose.resources.painterResource
 internal fun LazyListScope.syncSettings(
     viewModel: CampfireViewModel,
     syncState: SyncState,
+    listState: LazyListState,
     completionPage: AuthorizationCompletionPage,
 ) {
     if (viewModel.syncProviders.isEmpty()) {
         item(key = "sync_unavailable") {
-            SyncMessage(modifier = Modifier.animateItem(), text = stringResource(Res.string.settings_sync_unavailable))
+            SyncMessage(modifier = listItemAnimation(listState), text = stringResource(Res.string.settings_sync_unavailable))
         }
         return
     }
     item(key = "sync_description") {
-        SyncMessage(modifier = Modifier.animateItem(), text = stringResource(Res.string.settings_sync_description))
+        SyncMessage(modifier = listItemAnimation(listState), text = stringResource(Res.string.settings_sync_description))
     }
     when (syncState) {
         SyncState.Disconnected -> item(key = "sync_connect") {
             ActionListItem(
-                modifier = Modifier.animateItem(),
+                modifier = listItemAnimation(listState),
                 title = stringResource(Res.string.settings_sync_connect_dropbox),
                 icon = painterResource(Res.drawable.ic_cloud),
                 isEnabled = viewModel.syncProviders.contains(SyncProviderId.DROPBOX),
@@ -104,7 +107,7 @@ internal fun LazyListScope.syncSettings(
         is SyncState.Connecting -> {
             item(key = "sync_connecting") {
                 ListItem(
-                    modifier = Modifier.animateItem(),
+                    modifier = listItemAnimation(listState),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(Res.string.settings_sync_connecting)) },
                 )
@@ -113,7 +116,7 @@ internal fun LazyListScope.syncSettings(
             // somewhere the app cannot see, so this state must never be one the user has to restart the app to leave.
             item(key = "sync_cancel_connecting") {
                 ActionListItem(
-                    modifier = Modifier.animateItem(),
+                    modifier = listItemAnimation(listState),
                     title = stringResource(Res.string.cancel),
                     icon = painterResource(Res.drawable.ic_clear),
                     isEmphasized = false,
@@ -125,7 +128,7 @@ internal fun LazyListScope.syncSettings(
         is SyncState.Connected -> {
             item(key = "sync_account") {
                 ListItem(
-                    modifier = Modifier.animateItem(),
+                    modifier = listItemAnimation(listState),
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(stringResource(Res.string.settings_sync_connected_as, syncState.account.displayName)) },
                     supportingContent = { Text(syncState.statusText()) },
@@ -133,13 +136,13 @@ internal fun LazyListScope.syncSettings(
             }
             syncState.progress?.let { progress ->
                 item(key = "sync_progress") {
-                    SyncProgressIndicator(modifier = Modifier.animateItem(), progress = progress)
+                    SyncProgressIndicator(modifier = listItemAnimation(listState), progress = progress)
                 }
             }
             item(key = "sync_now") {
                 if (syncState.isSyncing) {
                     ActionListItem(
-                        modifier = Modifier.animateItem(),
+                        modifier = listItemAnimation(listState),
                         title = stringResource(Res.string.settings_sync_cancel),
                         icon = painterResource(Res.drawable.ic_clear),
                         isEmphasized = false,
@@ -147,7 +150,7 @@ internal fun LazyListScope.syncSettings(
                     )
                 } else {
                     ActionListItem(
-                        modifier = Modifier.animateItem(),
+                        modifier = listItemAnimation(listState),
                         title = stringResource(Res.string.settings_sync_now),
                         icon = painterResource(Res.drawable.ic_sync),
                         isEmphasized = false,
@@ -157,7 +160,7 @@ internal fun LazyListScope.syncSettings(
             }
             item(key = "sync_disconnect") {
                 ActionListItem(
-                    modifier = Modifier.animateItem(),
+                    modifier = listItemAnimation(listState),
                     title = stringResource(Res.string.settings_sync_disconnect),
                     icon = painterResource(Res.drawable.ic_cloud_off),
                     isEmphasized = false,

@@ -30,13 +30,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.pandulapeter.campfire.chordpro.ChordProHeader
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_album
@@ -51,13 +56,13 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_comme
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_composer
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_duration
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_key
+import com.pandulapeter.campfire.presentation.resources.song_editor_insert_language
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_lyricist
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_subtitle
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tag
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_tempo
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_time
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_title
-import com.pandulapeter.campfire.presentation.resources.song_editor_insert_transpose
 import com.pandulapeter.campfire.presentation.resources.song_editor_insert_year
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_bridge
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_chorus
@@ -89,27 +94,41 @@ internal fun EditorToolbar(
     modifier: Modifier = Modifier,
     textFieldState: TextFieldState,
     contentPadding: PaddingValues,
-) = Column(
-    modifier = modifier.padding(bottom = TOOLBAR_PADDING),
-    verticalArrangement = Arrangement.spacedBy(TOOLBAR_GAP),
 ) {
-    EditorToolbarRow(
-        groups = metadataInsertions(),
-        textFieldState = textFieldState,
-        contentPadding = contentPadding,
-    )
-    EditorToolbarRow(
-        groups = contentInsertions(),
-        textFieldState = textFieldState,
-        contentPadding = contentPadding,
-    )
+    // What the song already says about itself follows the text rather than being read once, so that a directive
+    // typed by hand takes its button out of reach exactly as one inserted from the toolbar does. The derived state
+    // is what keeps that off the keystroke path: the set only changes when a directive is added or removed.
+    val declaredMetadata by remember(textFieldState) {
+        derivedStateOf { ChordProHeader.declaredMetadata(textFieldState.text.toString()) }
+    }
+    Column(
+        modifier = modifier.padding(bottom = TOOLBAR_PADDING),
+        verticalArrangement = Arrangement.spacedBy(TOOLBAR_GAP),
+    ) {
+        EditorToolbarRow(
+            groups = metadataInsertions(),
+            declaredMetadata = declaredMetadata,
+            textFieldState = textFieldState,
+            contentPadding = contentPadding,
+        )
+        EditorToolbarRow(
+            groups = contentInsertions(),
+            declaredMetadata = declaredMetadata,
+            textFieldState = textFieldState,
+            contentPadding = contentPadding,
+        )
+    }
 }
 
-/** @param groups Rendered in order with a divider between them, which is the only thing that tells them apart. */
+/**
+ * @param groups Rendered in order with a divider between them, which is the only thing that tells them apart.
+ * @param declaredMetadata What the song already declares, which decides what is left for a button to write.
+ */
 @Composable
 private fun EditorToolbarRow(
     modifier: Modifier = Modifier,
     groups: List<List<EditorInsertion>>,
+    declaredMetadata: Set<String>,
     textFieldState: TextFieldState,
     contentPadding: PaddingValues,
 ) {
@@ -130,6 +149,7 @@ private fun EditorToolbarRow(
             group.forEach { insertion ->
                 EditorToolbarButton(
                     label = insertion.label,
+                    isEnabled = insertion.isEnabled(declaredMetadata),
                     onClick = { textFieldState.insert(insertion) },
                 )
             }
@@ -180,26 +200,33 @@ private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
  * What the song says about itself: every metadata directive the parser reads and the app then shows somewhere, in
  * the order the header of a file tends to list them.
  *
- * `{new_song}` is the one that is left out, since it splits an imported file into several songs and the editor is
- * only ever looking at one of them.
+ * This is also the order they are written in, since none of these goes to the caret: they belong to the header and
+ * are put there, see [insertIntoHeader]. A directive that can only be true once — a song has one title and came out
+ * in one year — is offered until the file carries it and then no longer, which leaves the tags and the languages of
+ * a song as the two that can be added again and again.
+ *
+ * `{new_song}` is left out, since it splits an imported file into several songs and the editor is only ever looking
+ * at one of them. `{transpose}` is left out on purpose too: the renderer does honor it, but transposition here is
+ * something the reader picks on the details screen or writes into the chords with the editor's own transpose action,
+ * and a directive that silently shifts every chord away from what the file says is not worth offering a shortcut to.
  */
 @Composable
 private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
     listOf(
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_title), name = "title"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_subtitle), name = "subtitle"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_artist), name = "artist"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_composer), name = "composer"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_lyricist), name = "lyricist"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_album), name = "album"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_year), name = "year"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_key), name = "key"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_capo), name = "capo"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_tempo), name = "tempo"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_time), name = "time"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_duration), name = "duration"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_transpose), name = "transpose"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_tag), name = "tag"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_title), name = "title"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_subtitle), name = "subtitle"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_artist), name = "artist"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_composer), name = "composer"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_lyricist), name = "lyricist"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_album), name = "album"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_year), name = "year"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_key), name = "key"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_capo), name = "capo"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_tempo), name = "tempo"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_time), name = "time"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_duration), name = "duration"),
+        EditorInsertion.metadata(stringResource(Res.string.song_editor_insert_tag), name = "tag"),
+        EditorInsertion.meta(stringResource(Res.string.song_editor_insert_language), key = "language"),
     ),
 )
 
@@ -208,12 +235,15 @@ private fun metadataInsertions(): List<List<EditorInsertion>> = listOf(
  *
  * @param isOwnLine True for everything in braces, since ChordPro only reads a directive as one when it is alone on
  *   its line; the two bracketed insertions belong inside a line of lyrics instead.
+ * @param metadataName The kind of metadata this describes the song with, for the insertions that go into the header
+ *   instead of to the caret, under the name `:chordpro` knows it by. Null for everything that is part of the song.
  */
 private data class EditorInsertion(
     val label: String,
     val prefix: String,
     val suffix: String,
     val isOwnLine: Boolean,
+    val metadataName: String? = null,
 ) {
 
     companion object {
@@ -236,18 +266,50 @@ private data class EditorInsertion(
             suffix = if (hasValue) "}" else "",
             isOwnLine = true,
         )
+
+        /** A directive that says what the song *is*, and so belongs in its header rather than at the caret. */
+        fun metadata(label: String, name: String) = EditorInsertion(
+            label = label,
+            prefix = "{$name: ",
+            suffix = "}",
+            isOwnLine = true,
+            metadataName = name,
+        )
+
+        /**
+         * A custom metadata item, which is how ChordPro carries what it has no directive of its own for — the
+         * language of a song being the one Campfire reads, see `ChordProSyntax.language`. Part of the header like
+         * every other [metadata] item, whatever it is spelled as.
+         */
+        fun meta(label: String, key: String) = EditorInsertion(
+            label = label,
+            prefix = "{meta: $key ",
+            suffix = "}",
+            isOwnLine = true,
+            metadataName = key,
+        )
     }
 }
+
+/**
+ * Whether an insertion still has anything to write: a song is only ever in one key and only came out in one year,
+ * so the button that says so is offered until the file says it, and then no longer. The ones a song may repeat
+ * ([ChordProHeader.repeatableMetadata]) and everything that is part of the song rather than about it stay.
+ */
+private fun EditorInsertion.isEnabled(declaredMetadata: Set<String>) =
+    metadataName == null || metadataName in ChordProHeader.repeatableMetadata || metadataName !in declaredMetadata
 
 @Composable
 private fun EditorToolbarButton(
     modifier: Modifier = Modifier,
     label: String,
+    isEnabled: Boolean,
     onClick: () -> Unit,
 ) = CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
     Surface(
-        modifier = modifier.focusProperties { canFocus = false },
+        modifier = modifier.focusProperties { canFocus = false }.alpha(if (isEnabled) 1f else DISABLED_ALPHA),
         onClick = onClick,
+        enabled = isEnabled,
         shape = MaterialTheme.shapes.small,
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
         contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -264,13 +326,39 @@ private fun EditorToolbarButton(
 @Composable
 private fun EditorToolbarDivider() = VerticalDivider(modifier = Modifier.height(DIVIDER_HEIGHT).padding(horizontal = TOOLBAR_GAP))
 
+/** Writes [insertion] where it belongs: into the song's header when it describes the song, at the caret otherwise. */
+private fun TextFieldState.insert(insertion: EditorInsertion) {
+    val metadataName = insertion.metadataName
+    if (metadataName == null) insertAtSelection(insertion) else insertIntoHeader(insertion, metadataName)
+}
+
+/**
+ * Writes a directive that describes the song into its header, wherever the caret happens to be at the time.
+ *
+ * ChordPro reads a `{title}` as the title of the song from anywhere in the file, so the one thing the caret cannot
+ * decide here is where the directive goes: a title written into the middle of a verse is valid, invisible in the
+ * rendered song, and nowhere near the rest of what the file says about itself. `:chordpro` picks the line, keeping
+ * the header in the order it lists metadata in and leaving one the user has arranged otherwise alone; the caret
+ * follows it there, since a directive inserted from the toolbar is one the value is about to be typed into.
+ */
+private fun TextFieldState.insertIntoHeader(insertion: EditorInsertion, metadataName: String) = edit {
+    val header = ChordProHeader.insert(
+        text = originalText.toString(),
+        name = metadataName,
+        prefix = insertion.prefix,
+        suffix = insertion.suffix,
+    )
+    insert(header.offset, header.text)
+    selection = TextRange(header.caretOffset)
+}
+
 /**
  * Puts the two halves of [insertion] around the selection, or around the caret when there is none.
  *
  * A directive only counts as one when nothing shares its line, so the halves grow a line break of their own where
  * the text on either side would otherwise run into them.
  */
-private fun TextFieldState.insert(insertion: EditorInsertion) = edit {
+private fun TextFieldState.insertAtSelection(insertion: EditorInsertion) = edit {
     val start = minOf(selection.start, selection.end)
     val end = maxOf(selection.start, selection.end)
     val selected = originalText.substring(start, end)
@@ -286,6 +374,7 @@ private fun TextFieldState.insert(insertion: EditorInsertion) = edit {
     }
 }
 
+private const val DISABLED_ALPHA = 0.5f
 private val TOOLBAR_PADDING = 16.dp
 private val TOOLBAR_GAP = 4.dp
 private val DIVIDER_HEIGHT = 24.dp

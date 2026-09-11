@@ -13,6 +13,8 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -40,17 +42,41 @@ class CampfireActivity : AppCompatActivity() {
     // than at a new instance; both ends up here.
     private val filesToImport = Channel<List<ImportedFile>>(Channel.BUFFERED)
 
+    private var isAppReady = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        keepStartupScreenUntilAppIsReady()
         setContent {
             CampfireAndroidApp(
                 urlOpener = ::openUrl,
                 filesToImport = filesToImport.receiveAsFlow(),
                 syncNotifier = ::onSyncNotificationChanged,
+                onAppReady = { isAppReady = true },
             )
         }
         handle(intent)
+    }
+
+    /**
+     * Holds whatever the system is showing while the app starts - the splash screen on Android 12 and above, the
+     * window background below it - until there is an app behind it to uncover.
+     *
+     * The system takes it away as soon as the first frame is drawn, and that frame is not the app: the preferences
+     * that decide the palette and the language have not been read yet, so it is Campfire's own launch screen. Left
+     * alone, the splash would hand over to that and the user would watch two startup screens in a row. Refusing to
+     * draw is what postpones the first frame, and with it the handover.
+     */
+    private fun keepStartupScreenUntilAppIsReady() {
+        val content = findViewById<View>(android.R.id.content)
+        content.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                if (!isAppReady) return false
+                content.viewTreeObserver.removeOnPreDrawListener(this)
+                return true
+            }
+        })
     }
 
     override fun onNewIntent(intent: Intent) {

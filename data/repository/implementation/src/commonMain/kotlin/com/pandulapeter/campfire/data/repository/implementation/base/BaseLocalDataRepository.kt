@@ -66,9 +66,16 @@ internal abstract class BaseLocalDataRepository<T> {
         if (isPublishingPartialData) _dataState.value = DataState.Loading(data)
     }
 
-    /** Publishes [data], then persists it as a whole. */
+    /**
+     * Publishes [data], then persists it as a whole.
+     *
+     * It is published as [DataState.Idle] right away rather than as a [DataState.Loading] that the write then
+     * resolves: what is being written is already what every reader should be showing, and it stays that way even
+     * when the write fails. A [DataState.Loading] here would say "nothing has been read yet" to whoever reads this
+     * state for that — and a write is a suspending call, so it would say it for as long as the storage takes.
+     */
     protected suspend fun writeData(data: T, persist: suspend (T) -> Unit) = _dataState.run {
-        value = DataState.Loading(data)
+        value = DataState.Idle(data)
         value = try {
             persist(data)
             DataState.Idle(data)

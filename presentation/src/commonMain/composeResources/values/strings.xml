@@ -13,6 +13,7 @@
     <string name="back">Back</string>
     <string name="close">Close</string>
     <string name="cancel">Cancel</string>
+    <string name="done">Done</string>
     <string name="delete">Delete</string>
     <string name="create">Create</string>
     <string name="export">Export</string>
@@ -79,6 +80,9 @@
     <string name="songs_tags_match_mode">A song has to carry</string>
     <string name="songs_tags_match_mode_any">Any tag</string>
     <string name="songs_tags_match_mode_all">Every tag</string>
+    <string name="songs_languages">Languages</string>
+    <string name="songs_languages_unknown">Unknown</string>
+    <string name="songs_languages_clear">Clear selection</string>
 
     <!-- Setlists screen -->
     <string name="setlists">Setlists</string>
@@ -179,8 +183,8 @@
     <string name="song_editor_insert_tempo">Tempo</string>
     <string name="song_editor_insert_time">Time signature</string>
     <string name="song_editor_insert_duration">Duration</string>
-    <string name="song_editor_insert_transpose">Transpose</string>
     <string name="song_editor_insert_tag">Tag</string>
+    <string name="song_editor_insert_language">Language</string>
     <string name="song_editor_transpose_text_up">Transpose text up</string>
     <string name="song_editor_transpose_text_down">Transpose text down</string>
     <string name="song_editor_save">Save</string>
@@ -213,6 +217,9 @@
     <string name="song_details_tag_remove">Remove the \"%1$s\" tag</string>
     <string name="song_details_tag_name">Tag</string>
     <string name="song_details_tag_suggestions">Already in your library</string>
+    <string name="song_details_language">Language</string>
+    <string name="song_details_language_search">Search for a language</string>
+    <string name="song_details_language_no_search_results">No language matches this search. Its two or three letter code will find it even where there is no name for it.</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>

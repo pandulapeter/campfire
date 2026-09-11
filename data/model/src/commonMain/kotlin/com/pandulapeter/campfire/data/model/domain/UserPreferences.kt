@@ -35,6 +35,13 @@ data class UserPreferences(
      */
     val selectedTags: Set<String>,
     val tagMatchMode: TagMatchMode,
+    /**
+     * The languages the song lists are narrowed to, empty when every song is shown, including
+     * [SongLanguage.UNKNOWN] for the songs that declare none. Kept rather than pruned like [selectedTags] is, and
+     * matched the same way [TagMatchMode.ANY] matches tags: a song is in one language or another, never in all of
+     * the selected ones at once, so there is nothing to ask the user here.
+     */
+    val selectedLanguages: Set<String>,
 ) {
 
     /** What several selected tags mean together: a song that carries any one of them, or one that carries all. */

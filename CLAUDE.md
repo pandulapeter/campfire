@@ -85,6 +85,16 @@ preferences/sync-index.json          what the last successful sync run saw
   into `Song.tags` at scan time and written back into the text the same way, so a tag travels with the file through
   an export, an import or a sync run. The library's set of tags is whatever the songs carry; the Songs screen's
   filter offers them counted and most used first, and the song details header is where one is put on or taken off.
+- **The language of a song is carried the same way, and is its own category rather than one more tag**: a
+  `{meta: language en}` directive per language, read into `Song.languages` as a lowercase ISO code — 639-2's three
+  letter codes included, folded to their 639-1 equivalent where the standard has one (`eng` is `en`) and kept as
+  they are where it does not (`rom`, Romani), so one language is one code however the file spells it. It gets its own
+  filter group on the Songs screen — but only once the library holds more than one language, with an "Unknown" chip
+  for the songs that declare none — and it is shown wherever a tag is: next to them under a song in the lists, and as
+  a chip in the song details header, which is also what opens the picker. The **names are never shipped**: the app
+  carries a list of codes and nothing else, and asks the platform what each is called in the language the app is set
+  to (`java.util.Locale`, `NSLocale`, `Intl.DisplayNames` behind `:presentation`'s `languageDisplayName`), falling
+  back to the code in capitals where it cannot say.
 - The file name is a song's (and a setlist's) identity. Nothing is ever overwritten implicitly: a new or imported file
   that collides gets a ` (2)`, ` (3)`… suffix (`FileNames.kt`). An **import decides before it writes**: every incoming
   file is held against the name it wants (`PrepareImportUseCase` -> `ImportPlan`), a name taken by something with

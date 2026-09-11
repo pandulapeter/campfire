@@ -7,6 +7,8 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at
  * https://mozilla.org/MPL/2.0/.
  */
+@file:OptIn(ExperimentalWasmJsInterop::class)
+
 package com.pandulapeter.campfire.presentation.ui
 
 import androidx.compose.runtime.Composable
@@ -16,6 +18,7 @@ import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.WebFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.droppedFiles
 import kotlinx.browser.window
+import kotlin.js.ExperimentalWasmJsInterop
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -31,5 +34,15 @@ fun CampfireWebApp(
         viewModel = viewModel,
         urlOpener = { url -> window.open(url, "_blank") },
         filesToImport = remember { droppedFiles() },
+        onAppReady = ::dismissLoadingScreen,
     )
+}
+
+/**
+ * Tells index.html that the app is on the canvas, which is what fades its loading screen out and finishes its
+ * progress bar. The page is the only one of the four startup screens that is not the platform's own, and it is the
+ * only one that can be held for as long as it takes without asking anything of the system.
+ */
+private fun dismissLoadingScreen() {
+    js("window.campfireReady && window.campfireReady()")
 }

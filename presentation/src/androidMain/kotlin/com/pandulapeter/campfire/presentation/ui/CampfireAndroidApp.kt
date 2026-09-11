@@ -39,6 +39,8 @@ import org.koin.compose.viewmodel.koinViewModel
  * @param filesToImport Files from an "open with" or a share, read by the activity that received the intent.
  * @param syncNotifier Starts and stops the foreground service a running sync needs, which lives in the application
  *   module because that is where the manifest is.
+ * @param onAppReady Released when the app itself is on screen, which is what the activity holds the system splash
+ *   screen until: the frame that would otherwise take it away is the launch screen rather than the app.
  */
 @Composable
 fun CampfireAndroidApp(
@@ -46,6 +48,7 @@ fun CampfireAndroidApp(
     urlOpener: (url: String, isDarkTheme: Boolean) -> Unit,
     filesToImport: Flow<List<ImportedFile>> = emptyFlow(),
     syncNotifier: SyncNotifier = SyncNotifier { },
+    onAppReady: () -> Unit = {},
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
@@ -68,6 +71,7 @@ fun CampfireAndroidApp(
             viewModel = viewModel,
             urlOpener = { urlOpener(it, isDarkTheme) },
             filesToImport = filesToImport,
+            onAppReady = onAppReady,
         )
     }
 }

@@ -30,7 +30,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -87,10 +86,12 @@ import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
+import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyGridState
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.localization.stringResource
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
@@ -116,7 +117,7 @@ internal fun SongsScreen(
     // nobody's way, so that one leaves it alone - as it already does on the setlists screen.
     val isKeyboardCoveringTheList = visibleDialog == null && WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val listState = rememberLazyGridState()
+    val listState = rememberRetainedLazyGridState(viewModel.songsScrollPosition)
     val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
     val listContentPadding = contentPadding.besideSidePanel(isSidePanelVisible)
     val columnCount = songListColumnCount(
@@ -125,6 +126,12 @@ internal fun SongsScreen(
         isSidePanelVisible = isSidePanelVisible,
     )
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
+    // While the list is empty its own placeholder is the loading indicator; two of them at once would only say the
+    // same thing twice.
+    val isRefreshIndicatorVisible = rememberIsRefreshIndicatorVisible(
+        isRefreshing = isLoading && placeholder == null,
+        hasLoadedLibrary = hasLoadedLibrary,
+    )
     KeepTopAppBarInSync(scrollBehavior, listState)
     Row(
         modifier = modifier.fillMaxSize()
@@ -167,9 +174,7 @@ internal fun SongsScreen(
                     viewModel = viewModel,
                     listState = listState,
                     placeholder = placeholder,
-                    // While the list is empty its own placeholder is the loading indicator; two of them at once would
-                    // only say the same thing twice.
-                    isRefreshing = isLoading && placeholder == null,
+                    isRefreshing = isRefreshIndicatorVisible,
                     columnCount = columnCount,
                     hasLoadedLibrary = hasLoadedLibrary,
                     contentPadding = listContentPadding,
@@ -252,7 +257,8 @@ private fun SongList(
     // arrive. The combination that was last scrolled to the top is remembered across recompositions and state
     // restoration, so that coming back from the song details keeps the restored scroll position instead of jumping
     // to the top.
-    val scrollToTopKey = "$query|${userPreferences?.sortingMode?.name}|${userPreferences?.selectedTags?.sorted()}|${userPreferences?.tagMatchMode?.name}"
+    val scrollToTopKey =
+        "$query|${userPreferences?.sortingMode?.name}|${userPreferences?.selectedTags?.sorted()}|${userPreferences?.tagMatchMode?.name}|${userPreferences?.selectedLanguages?.sorted()}"
     var lastScrollToTopKey by rememberSaveable { mutableStateOf(scrollToTopKey) }
     LaunchedEffect(scrollToTopKey) {
         if (scrollToTopKey != lastScrollToTopKey) {
@@ -283,7 +289,7 @@ private fun SongList(
                     span = { GridItemSpan(maxLineSpan) },
                 ) {
                     ListPlaceholder(
-                        modifier = listItemAnimation(hasLoadedLibrary).fillMaxWidth(),
+                        modifier = listItemAnimation(listState, hasLoadedLibrary).fillMaxWidth(),
                         placeholder = it,
                         onRetry = viewModel::refresh,
                         onNewSong = if (isPerformanceModeEnabled) null else {
@@ -303,7 +309,7 @@ private fun SongList(
                         span = { GridItemSpan(maxLineSpan) },
                     ) {
                         SectionHeader(
-                            modifier = listItemAnimation(hasLoadedLibrary),
+                            modifier = listItemAnimation(listState, hasLoadedLibrary),
                             text = when (header) {
                                 // A song can be created without an artist, and an empty pill would look broken.
                                 is CampfireViewModel.SongGroup.Header.Artist -> header.name.ifBlank { stringResource(Res.string.songs_unknown_artist) }
@@ -319,7 +325,7 @@ private fun SongList(
                     key = { "song_${it.fileName}" },
                 ) { song ->
                     SongListItem(
-                        modifier = listItemAnimation(hasLoadedLibrary),
+                        modifier = listItemAnimation(listState, hasLoadedLibrary),
                         song = song,
                         onClick = {
                             keyboardController?.hide()
@@ -361,6 +367,33 @@ private val CampfireViewModel.SongGroup.Header.fastScrollerLabel: String
         is CampfireViewModel.SongGroup.Header.Letter -> letter.toString()
         CampfireViewModel.SongGroup.Header.Symbols -> SYMBOLS_LABEL
     }
+
+/**
+ * Whether the refresh indicator belongs on screen, which for the first read of the library is not the same thing as
+ * whether that read is running.
+ *
+ * The first one usually finishes in a few milliseconds, which is just enough for the indicator to slide part of the
+ * way in and disappear again - a flinch rather than an answer, and it reads as something going wrong rather than as
+ * the library arriving. So it only counts once it has been going for [REFRESH_INDICATOR_DELAY_MILLIS], and a library
+ * that really does take a while to read still says so. Every refresh after that one was asked for by the user, and
+ * showing the answer to a pull late would be the glitch.
+ */
+@Composable
+private fun rememberIsRefreshIndicatorVisible(
+    isRefreshing: Boolean,
+    hasLoadedLibrary: Boolean,
+): Boolean {
+    var isVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(isRefreshing, hasLoadedLibrary) {
+        isVisible = if (isRefreshing) {
+            if (!hasLoadedLibrary) delay(REFRESH_INDICATOR_DELAY_MILLIS)
+            true
+        } else {
+            false
+        }
+    }
+    return isVisible
+}
 
 /**
  * Pull to refresh only makes sense with touch input; on desktop the app bar has a refresh action instead.
@@ -412,4 +445,5 @@ private val CampfireViewModel.Placeholder?.allowsCreatingSongs
         CampfireViewModel.Placeholder.NO_SETLISTS -> false
     }
 
+private const val REFRESH_INDICATOR_DELAY_MILLIS = 500L
 private const val SYMBOLS_LABEL = "#"

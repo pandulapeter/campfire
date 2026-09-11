@@ -13,6 +13,7 @@
     <string name="back">Vissza</string>
     <string name="close">Bezárás</string>
     <string name="cancel">Mégse</string>
+    <string name="done">Kész</string>
     <string name="delete">Törlés</string>
     <string name="create">Létrehozás</string>
     <string name="export">Exportálás</string>
@@ -79,6 +80,9 @@
     <string name="songs_tags_match_mode">A dalon legyen rajta</string>
     <string name="songs_tags_match_mode_any">Bármelyik címke</string>
     <string name="songs_tags_match_mode_all">Mindegyik címke</string>
+    <string name="songs_languages">Nyelvek</string>
+    <string name="songs_languages_unknown">Ismeretlen</string>
+    <string name="songs_languages_clear">Kijelölés törlése</string>
 
     <!-- Setlists screen -->
     <string name="setlists">Listák</string>
@@ -179,8 +183,8 @@
     <string name="song_editor_insert_tempo">Tempó</string>
     <string name="song_editor_insert_time">Ütemmutató</string>
     <string name="song_editor_insert_duration">Hossz</string>
-    <string name="song_editor_insert_transpose">Transzponálás</string>
     <string name="song_editor_insert_tag">Címke</string>
+    <string name="song_editor_insert_language">Nyelv</string>
     <string name="song_editor_transpose_text_up">Szöveg transzponálása fel</string>
     <string name="song_editor_transpose_text_down">Szöveg transzponálása le</string>
     <string name="song_editor_save">Mentés</string>
@@ -213,6 +217,9 @@
     <string name="song_details_tag_remove">A(z) „%1$s” címke eltávolítása</string>
     <string name="song_details_tag_name">Címke</string>
     <string name="song_details_tag_suggestions">Már szerepel a könyvtáradban</string>
+    <string name="song_details_language">Nyelv</string>
+    <string name="song_details_language_search">Nyelv keresése</string>
+    <string name="song_details_language_no_search_results">Egyetlen nyelv sem felel meg a keresésnek. A két- vagy hárombetűs kódjával akkor is megtalálod, ha nincs neve.</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>

@@ -291,6 +291,7 @@ object ChordProParser {
         private var duration: String? = null
         private var transpose = 0
         private val tags = mutableListOf<String>()
+        private val languages = mutableListOf<String>()
         private val custom = mutableMapOf<String, MutableList<String>>()
 
         fun consume(directive: ChordProSyntax.Directive) {
@@ -310,10 +311,15 @@ object ChordProParser {
                 "duration" -> duration = value
                 "transpose" -> value.removePrefix("+").toIntOrNull()?.let { transpose = it }
                 "tag" -> ChordProSyntax.tag(directive)?.let(::addTag)
+                "language", "lang" -> ChordProSyntax.language(directive)?.let(::addLanguage)
                 "meta" -> {
                     val name = value.substringBefore(' ').trim()
                     when {
                         name.equals(ChordProSyntax.TAG_NAME, ignoreCase = true) -> ChordProSyntax.tag(directive)?.let(::addTag)
+                        // The language is read as its own thing rather than as one more custom item, so that it is
+                        // not carried twice; an unusable value drops out here instead of coming back as a filter
+                        // group nothing can be named.
+                        ChordProSyntax.isLanguageMeta(directive) -> ChordProSyntax.language(directive)?.let(::addLanguage)
                         name.isNotEmpty() -> custom.getOrPut(name) { mutableListOf() } += value.substringAfter(' ', missingDelimiterValue = "").trim()
                     }
                 }
@@ -327,6 +333,11 @@ object ChordProParser {
         /** A tag the song already carries in another spelling is not a second tag, see [ChordProMetadata.tags]. */
         private fun addTag(value: String) {
             if (tags.none { it.equals(value, ignoreCase = true) }) tags += value
+        }
+
+        /** The codes are normalized before they get here, so a repeated language is a repeated string. */
+        private fun addLanguage(value: String) {
+            if (value !in languages) languages += value
         }
 
         fun build() = ChordProMetadata(
@@ -344,6 +355,7 @@ object ChordProParser {
             duration = duration,
             transpose = transpose,
             tags = tags.toList(),
+            languages = languages.toList(),
             custom = custom.mapValues { it.value.toList() },
         )
     }

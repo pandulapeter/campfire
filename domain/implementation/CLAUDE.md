@@ -18,9 +18,15 @@ The ones that carry real logic:
   Applies the "songs without chords" filter, the tag filter and the sorting (by title or artist, through
   `NormalizeTextUseCase`, so accents are ignored), and keeps a `cache` so that a `Loading` or `Failure` state can still
   carry the last good data. The unfiltered file names travel alongside the filtered list — see
-  `ScreenData.songFileNames`. Tags are counted from the chord-filtered library and are what the tag filter then
-  narrows, so the set of tags on offer does not shrink as they are picked; a selected tag no song carries any more is
-  ignored rather than emptying the list, which is what lets the preference keep it (see `UserPreferences.selectedTags`).
+  `ScreenData.songFileNames`. There are two filter groups over the same library, the tags and the languages
+  (`SongLanguage`, with `UNKNOWN` standing for the songs that declare none), and each is counted over the songs the
+  *other* one leaves, so the numbers on a chip say what picking it would actually do. Neither can empty the other:
+  what still counts as a tag and what still counts as a language are both decided from the chord-filtered library
+  before either filter runs, a selected value no song carries any more is ignored rather than emptying the list
+  (which is what lets the preference keep it, see `UserPreferences.selectedTags`), and one the *other* group has
+  narrowed down to nothing stays on the list with a count of zero, since a filter that is on has to be visible to be
+  turned off. Several selected languages always mean "any of them" — a song is sung in one language or another, never
+  in all of them at once, which is why there is no counterpart to `TagMatchMode` here.
 - `LoadScreenDataUseCaseImpl` — fans the initial load (or a rescan) out across the repositories in parallel and waits
   for all of them, failures included: one unreadable part of the screen must not keep the rest empty.
 - `PrepareImportUseCaseImpl` / `ImportFilesUseCaseImpl` — the import policy, split the way sync's is: one works out

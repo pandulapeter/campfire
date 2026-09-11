@@ -55,11 +55,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.filters
 import com.pandulapeter.campfire.presentation.resources.ic_check
+import com.pandulapeter.campfire.presentation.resources.songs_languages
+import com.pandulapeter.campfire.presentation.resources.songs_languages_clear
 import com.pandulapeter.campfire.presentation.resources.songs_show_without_chords
 import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode
 import com.pandulapeter.campfire.presentation.resources.songs_sorting_mode_by_artist
@@ -164,6 +167,7 @@ internal fun SongsControls(
 ) {
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val tags by viewModel.tags.collectAsStateWithLifecycle()
+    val languages by viewModel.languages.collectAsStateWithLifecycle()
     Column(
         modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(contentPadding)
     ) {
@@ -200,6 +204,20 @@ internal fun SongsControls(
                 onMatchModeSelected = viewModel::setTagMatchMode,
             )
         }
+        // A library that sings in one language has nothing to choose between, and the one group it would offer
+        // ("Unknown", against the single language) is a question about a library nobody has filled in yet.
+        AnimatedVisibility(
+            visible = languages.size > 1,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut(),
+        ) {
+            LanguageFilters(
+                languages = languages,
+                selectedLanguages = userPreferences?.selectedLanguages.orEmpty(),
+                onLanguageClicked = viewModel::toggleLanguageFilter,
+                onClear = viewModel::clearLanguageFilter,
+            )
+        }
     }
 }
 
@@ -231,39 +249,11 @@ private fun TagFilters(
         modifier = Modifier.padding(horizontal = CONTROLS_PADDING)
     ) {
         visibleTags.forEach { tag ->
-            val isSelected = tag.name.lowercase() in selected
-            FilterChip(
-                selected = isSelected,
+            CountedFilterChip(
+                label = tag.name,
+                songCount = tag.songCount,
+                isSelected = tag.name.lowercase() in selected,
                 onClick = { onTagClicked(tag.name) },
-                leadingIcon = if (isSelected) {
-                    {
-                        Icon(
-                            modifier = Modifier.size(FilterChipDefaults.IconSize),
-                            painter = painterResource(Res.drawable.ic_check),
-                            contentDescription = null,
-                        )
-                    }
-                } else {
-                    null
-                },
-                label = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            modifier = Modifier.widthIn(max = MAX_TAG_WIDTH),
-                            text = tag.name,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            modifier = Modifier.padding(start = TAG_GAP),
-                            text = tag.songCount.toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                },
             )
         }
     }
@@ -311,6 +301,91 @@ private fun TagFilters(
         }
     }
 }
+
+/**
+ * The languages of the library as a filter, under the tags and deliberately simpler than they are: a library sings
+ * in a handful of languages rather than in a hundred, so there is nothing to hide behind a "show all", and a song is
+ * never sung in every selected language at once, so there is no "any / every" to ask about either.
+ */
+@Composable
+private fun LanguageFilters(
+    modifier: Modifier = Modifier,
+    languages: List<SongLanguage>,
+    selectedLanguages: Set<String>,
+    onLanguageClicked: (String) -> Unit,
+    onClear: () -> Unit,
+) = Column(modifier = modifier) {
+    SettingsSectionTitle(text = stringResource(Res.string.songs_languages))
+    TagFlowRow(
+        modifier = Modifier.padding(horizontal = CONTROLS_PADDING)
+    ) {
+        languages.forEach { language ->
+            CountedFilterChip(
+                label = languageLabel(language.code),
+                songCount = language.songCount,
+                isSelected = language.code in selectedLanguages,
+                onClick = { onLanguageClicked(language.code) },
+            )
+        }
+    }
+    AnimatedVisibility(
+        modifier = Modifier.padding(horizontal = CONTROLS_PADDING - BUTTON_INSET),
+        visible = selectedLanguages.isNotEmpty(),
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        TextButton(onClick = onClear) {
+            Text(stringResource(Res.string.songs_languages_clear))
+        }
+    }
+}
+
+/**
+ * One value of a filter group: what it is called, how many songs it still leaves, and whether it is on. The count is
+ * part of the chip rather than a line under the group, since the number is what tells a tag worth picking from one
+ * that would leave a single song on screen.
+ */
+@Composable
+private fun CountedFilterChip(
+    modifier: Modifier = Modifier,
+    label: String,
+    songCount: Int,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) = FilterChip(
+    modifier = modifier,
+    selected = isSelected,
+    onClick = onClick,
+    leadingIcon = if (isSelected) {
+        {
+            Icon(
+                modifier = Modifier.size(FilterChipDefaults.IconSize),
+                painter = painterResource(Res.drawable.ic_check),
+                contentDescription = null,
+            )
+        }
+    } else {
+        null
+    },
+    label = {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                modifier = Modifier.widthIn(max = MAX_TAG_WIDTH),
+                text = label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                modifier = Modifier.padding(start = TAG_GAP),
+                text = songCount.toString(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    },
+)
 
 private val SIDE_PANEL_WIDTH = 320.dp
 private const val SIDE_PANEL_MIN_COLUMN_COUNT = 3

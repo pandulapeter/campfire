@@ -25,6 +25,7 @@ internal fun StoredFileInfo.toSong(summary: ChordProSummary) = Song(
     artist = summary.metadata.artist?.takeIf { it.isNotBlank() }.orEmpty(),
     key = summary.metadata.key?.takeIf { it.isNotBlank() },
     tags = summary.metadata.tags,
+    languages = summary.metadata.languages,
     hasChords = summary.hasChords,
     lastModified = lastModified,
 )

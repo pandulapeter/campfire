@@ -70,8 +70,8 @@ import com.pandulapeter.campfire.presentation.resources.ic_error
 import com.pandulapeter.campfire.presentation.resources.ic_songs
 import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_next
-import com.pandulapeter.campfire.presentation.resources.ic_playlist_add
 import com.pandulapeter.campfire.presentation.resources.ic_previous
+import com.pandulapeter.campfire.presentation.resources.ic_setlists
 import com.pandulapeter.campfire.presentation.resources.ic_tune
 import com.pandulapeter.campfire.presentation.resources.retry
 import com.pandulapeter.campfire.presentation.resources.song_details_add_to_setlist
@@ -238,7 +238,7 @@ internal fun SongDetailsScreen(
                         }
                     ) {
                         Icon(
-                            painter = painterResource(Res.drawable.ic_playlist_add),
+                            painter = painterResource(Res.drawable.ic_setlists),
                             contentDescription = stringResource(Res.string.song_details_add_to_setlist),
                         )
                     }
@@ -342,6 +342,9 @@ internal fun SongDetailsScreen(
                     },
                     onRemoveTag = if (isPerformanceModeEnabled) null else {
                         { tag -> viewModel.setSongTag(fileName = song.fileName, tag = tag, isSelected = false) }
+                    },
+                    onEditLanguages = if (isPerformanceModeEnabled) null else {
+                        { viewModel.showDialog(CampfireViewModel.DialogType.SongLanguages(song)) }
                     },
                 )
             }
@@ -462,6 +465,7 @@ private fun SongDetailsPage(
     onRetry: () -> Unit,
     onAddTag: (() -> Unit)?,
     onRemoveTag: ((String) -> Unit)?,
+    onEditLanguages: (() -> Unit)?,
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
     targetState = text,
@@ -531,6 +535,7 @@ private fun SongDetailsPage(
                 scrollState = scrollState,
                 onAddTag = onAddTag,
                 onRemoveTag = onRemoveTag,
+                onEditLanguages = onEditLanguages,
             )
         }
     }

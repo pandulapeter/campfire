@@ -28,7 +28,11 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   viewer draws each run as one sideways scrolling block with the lyrics around it.
 - `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, `chordNameRegex` for "is this whole
   word a chord and not a word that starts with a letter", long/short directive names, the `start_of_` / `end_of_`
-  prefixes, `label="…"` attributes, and what counts as a tag directive). Every other object here goes through it, so
+  prefixes, `label="…"` attributes, what counts as a tag or a language directive, `metadataKind` for the one name a
+  directive is known by whichever of its spellings a file uses, and where a new one goes in a file the user wrote).
+  `metadataInsertionIndex` is that last rule: after the last directive of the same kind, and otherwise into the
+  header in `metadataOrder`, the order the app lists metadata in — which leaves a header arranged some other way
+  exactly as it is, since it only ever decides where a line is *added*. Every other object here goes through it, so
   the dialect is defined once.
 - `ChordProParser` — `parse` (the whole song), `summarize` (the directives plus "does it have chords", from one walk,
   which is what the library scan calls for every file at startup) and `parseMetadata` (directive lines only, for a
@@ -46,6 +50,31 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   reason `ChordProTransposer.transposeText` does — the result is written straight back to the user's file, so their
   own formatting has to survive a chip being tapped in the viewer. A new tag lands after the last one the file
   already has, or at the end of the directives it opens with.
+- `ChordProLanguages` — the languages a song is sung in, which ChordPro has no directive for at all: what Campfire
+  writes is `{meta: language en}`, a custom metadata item, and what it reads is that plus `{meta: lang en}` and the
+  bare `{language: en}` / `{lang: en}` a hand written file may carry. A value is normalized on the way in
+  (`ChordProSyntax.languageCode`): trimmed, cut down to its primary subtag, folded to lower case and, where the
+  standard has a two letter code for the same language, to that — so `EN-us`, `eng` and `ger` are `en`, `en` and
+  `de`. A region would make a filter group of its own for what is the same language to a song book, and the
+  platforms disagree about what to call one anyway; a three letter code would make a *second* group for a language
+  that already has one, and is besides the spelling a JVM refuses to translate, answering "English" for `eng` in
+  every language it is asked in. The table that does the folding is `ChordProLanguageCodes`, the only data in this
+  module that is not about the format; the three letter codes it does not list (`rom`, Romani — most of what ISO
+  639-2 adds) are kept exactly as the file wrote them, since nothing else can name those languages at all. `und` and `zxx` are read as *no* language, since that is
+  what they mean and it leaves `und` free to stand for "declares none" above this module. `setLanguages` rewrites the
+  set in one pass, editing the text rather than the model for the same reason `ChordProTags` does; a language that is
+  kept stays on the line and in the spelling it was written in. `code` is that same normalization offered on its own,
+  for a caller holding a piece of text rather than a file — the picker's search field, where somebody may well type
+  `HUN` or `en-US` and has to find the row the library files that language under.
+- `ChordProHeader` — the block of directives a song opens with, for the editor, which writes into it while the caret
+  is somewhere else entirely. ChordPro reads a `{title}` as the title from anywhere in the file, so a directive
+  inserted at the caret is valid in the middle of a verse, invisible in the rendered song and nowhere near the rest
+  of what the file says about itself; `insert` answers with the one offset it belongs at instead, the line to write
+  there and where the caret then goes, so that nothing already written is moved or reformatted. `declaredMetadata`
+  is the other half of that: what the song already declares, counted by directive and not by value, so that a
+  `{title: }` waiting to be typed into is a title. `repeatableMetadata` is the pair a song may say twice — its tags
+  and its languages — and everything else is a thing a song can only be one of, which is what lets an editor stop
+  offering it.
 - `ChordProSplitter` — splits a file that holds several songs at `{new_song}` / `{ns}`.
 - `ChordProTransposer` — moves chords by semitones, on the model (the viewer) or directly on the text keeping every
   byte of formatting (the editor's transpose action). Chooses sharps or flats from the song's key, follows the bass

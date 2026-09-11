@@ -27,6 +27,11 @@ data class Song(
     val key: String?,
     /** The labels the file is tagged with, in the order it lists them, see `ChordProMetadata.tags`. */
     val tags: List<String>,
+    /**
+     * The languages the song is sung in as lowercase ISO codes, in the order the file lists them, see
+     * `ChordProMetadata.languages`. Empty for a file that says nothing about its language.
+     */
+    val languages: List<String>,
     val hasChords: Boolean,
     val lastModified: Long,
 )

@@ -29,6 +29,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     transpositions = transpositions,
     selectedTags = selectedTags.toSet(),
     tagMatchMode = UserPreferences.TagMatchMode.entries.firstOrNull { it.id == tagMatchMode } ?: UserPreferences.TagMatchMode.ANY,
+    selectedLanguages = selectedLanguages.toSet(),
 )
 
 internal fun UserPreferences.toDocument() = UserPreferencesDocument(
@@ -46,4 +47,5 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     transpositions = transpositions,
     selectedTags = selectedTags.toList(),
     tagMatchMode = tagMatchMode.id,
+    selectedLanguages = selectedLanguages.toList(),
 )
