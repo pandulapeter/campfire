@@ -437,6 +437,11 @@ private fun ScreenSurface(
  * subtle slide in the direction of the tab order: horizontal next to a navigation bar, whose tabs sit next to each
  * other, vertical next to a navigation rail, whose tabs sit above each other.
  *
+ * The editor is the one screen that is not a card of the deck but a modal put in front of it, so it always comes up
+ * from the bottom edge and leaves the same way, in every direction the gesture that dismisses it may have come
+ * from. It is the vertical movement, and not only its Close button, that says the editor is something the song
+ * being read is still waiting behind.
+ *
  * Whether a transition is a push or a pop is decided here from the depth of the scenes instead of relying on
  * Navigation 3's own detection: when a back stack change interrupts a running transition, Navigation 3 records the
  * already updated back stack as the transition's starting point and animates a pop with the push spec. That leaves
@@ -458,10 +463,18 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigatio
                 if (usesNavigationRail) AnimatedContentTransitionScope.SlideDirection.Down else AnimatedContentTransitionScope.SlideDirection.End
             }
         )
-        targetState.zIndex < initialState.zIndex -> popTransition(motionScheme)
-        else -> pushTransition(motionScheme)
+        targetState.zIndex < initialState.zIndex -> popTransition(motionScheme, isModal = isSongEditorTransition)
+        else -> pushTransition(motionScheme, isModal = isSongEditorTransition)
     }
 }
+
+/**
+ * Whether the screen being dealt or taken is the editor, which is the one screen that moves vertically. Either
+ * scene can be the one holding it: it is the target of a push and the initial state of a pop.
+ */
+private val AnimatedContentTransitionScope<Scene<CampfireDestination>>.isSongEditorTransition: Boolean
+    get() = CampfireDestination.SongEditor.isContentKey(initialState.entries.lastOrNull()?.contentKey) ||
+            CampfireDestination.SongEditor.isContentKey(targetState.entries.lastOrNull()?.contentKey)
 
 /**
  * The card being dealt slides in over the deck. The screen underneath does not animate at all;
@@ -469,8 +482,14 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.navigatio
  * the card has landed, instead of it being disposed the moment the back stack changes.
  */
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3ExpressiveApi::class)
-private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTransition(motionScheme: MotionScheme) = ContentTransform(
-    targetContentEnter = slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, motionScheme.defaultSpatialSpec()),
+private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTransition(
+    motionScheme: MotionScheme,
+    isModal: Boolean,
+) = ContentTransform(
+    targetContentEnter = slideIntoContainer(
+        towards = if (isModal) AnimatedContentTransitionScope.SlideDirection.Up else AnimatedContentTransitionScope.SlideDirection.Start,
+        animationSpec = motionScheme.defaultSpatialSpec(),
+    ),
     initialContentExit = ExitTransition.KeepUntilTransitionsFinished,
     targetContentZIndex = targetState.zIndex,
 )
@@ -480,20 +499,31 @@ private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.pushTrans
  * right away ([EnterTransition.None]) and the z indices keep the card that is leaving above it.
  */
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3ExpressiveApi::class)
-private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.popTransition(motionScheme: MotionScheme) = ContentTransform(
+private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.popTransition(
+    motionScheme: MotionScheme,
+    isModal: Boolean,
+) = ContentTransform(
     targetContentEnter = EnterTransition.None,
-    initialContentExit = slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, motionScheme.defaultSpatialSpec()),
+    initialContentExit = slideOutOfContainer(
+        towards = if (isModal) AnimatedContentTransitionScope.SlideDirection.Down else AnimatedContentTransitionScope.SlideDirection.End,
+        animationSpec = motionScheme.defaultSpatialSpec(),
+    ),
     targetContentZIndex = targetState.zIndex,
 )
 
 /**
  * The pop driven by the predictive back gesture (Android) or the edge swipe (iOS): the same uncovering as
  * [popTransition], except that the card follows the finger, so the spec is linear and the direction depends on the
- * edge the gesture started from.
+ * edge the gesture started from. The modal goes down whichever edge the finger came from, since that is the one
+ * way it ever leaves.
  */
 @OptIn(ExperimentalAnimationApi::class)
 private fun AnimatedContentTransitionScope<Scene<CampfireDestination>>.predictivePopTransition(@NavigationEvent.SwipeEdge swipeEdge: Int): ContentTransform {
-    val towards = if (swipeEdge == NavigationEvent.EDGE_RIGHT) AnimatedContentTransitionScope.SlideDirection.Left else AnimatedContentTransitionScope.SlideDirection.Right
+    val towards = when {
+        isSongEditorTransition -> AnimatedContentTransitionScope.SlideDirection.Down
+        swipeEdge == NavigationEvent.EDGE_RIGHT -> AnimatedContentTransitionScope.SlideDirection.Left
+        else -> AnimatedContentTransitionScope.SlideDirection.Right
+    }
     return ContentTransform(
         targetContentEnter = EnterTransition.None,
         initialContentExit = slideOutOfContainer(towards, tween(PREDICTIVE_BACK_DURATION, easing = LinearEasing)),

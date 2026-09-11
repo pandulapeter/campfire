@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.presentation.ui.screens.songEditor
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -21,8 +22,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -49,6 +53,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -70,48 +75,33 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
-import com.pandulapeter.campfire.presentation.resources.back
-import com.pandulapeter.campfire.presentation.resources.delete
+import com.pandulapeter.campfire.presentation.resources.close
 import com.pandulapeter.campfire.presentation.resources.edit
-import com.pandulapeter.campfire.presentation.resources.export
-import com.pandulapeter.campfire.presentation.resources.ic_add
-import com.pandulapeter.campfire.presentation.resources.ic_back
-import com.pandulapeter.campfire.presentation.resources.ic_delete
-import com.pandulapeter.campfire.presentation.resources.ic_export
-import com.pandulapeter.campfire.presentation.resources.ic_more
+import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.ic_redo
+import com.pandulapeter.campfire.presentation.resources.ic_refresh
+import com.pandulapeter.campfire.presentation.resources.ic_more
 import com.pandulapeter.campfire.presentation.resources.ic_save
-import com.pandulapeter.campfire.presentation.resources.ic_subtract
 import com.pandulapeter.campfire.presentation.resources.ic_undo
-import com.pandulapeter.campfire.presentation.resources.song_editor_insert_chord
-import com.pandulapeter.campfire.presentation.resources.song_editor_insert_comment
-import com.pandulapeter.campfire.presentation.resources.song_editor_insert_section
 import com.pandulapeter.campfire.presentation.resources.song_editor_preview
 import com.pandulapeter.campfire.presentation.resources.song_editor_redo
+import com.pandulapeter.campfire.presentation.resources.song_editor_revert
 import com.pandulapeter.campfire.presentation.resources.song_editor_save
-import com.pandulapeter.campfire.presentation.resources.song_editor_saved
-import com.pandulapeter.campfire.presentation.resources.song_editor_saving
-import com.pandulapeter.campfire.presentation.resources.song_editor_section_bridge
-import com.pandulapeter.campfire.presentation.resources.song_editor_section_chorus
-import com.pandulapeter.campfire.presentation.resources.song_editor_section_grid
-import com.pandulapeter.campfire.presentation.resources.song_editor_section_tab
-import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
-import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_down
-import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_up
+import com.pandulapeter.campfire.presentation.resources.song_editor_split
 import com.pandulapeter.campfire.presentation.resources.song_editor_undo
-import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved
 import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.navigation.CampfireDestination
-import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongLyrics
+import com.pandulapeter.campfire.presentation.ui.screens.songDetails.TextTranspositionControls
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -195,18 +185,16 @@ private fun LoadedSongEditor(
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val isSaving by viewModel.isSavingSong.collectAsStateWithLifecycle()
-    val filePicker = LocalFilePicker.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    // Both follow the text as it is typed, so retitling a song shows in the bar above it right away. The title
-    // comes from the parser rather than from a regex of this screen's own, so that it is the same title the song
-    // list will show once the file is written - fallback to the file name included.
-    val title by remember(textFieldState, destination.fileName) {
-        derivedStateOf {
-            ChordProParser.parseMetadata(textFieldState.text.toString()).title?.takeIf { it.isNotBlank() }
-                ?: destination.fileName.removeSuffix(LibraryFiles.SONG_EXTENSION)
-        }
+    // The bar above the text follows the text as it is typed, so retitling a song shows up there right away. It
+    // comes from the parser rather than from a regex of this screen's own, so that it is the same title, artist and
+    // key the rest of the app will show once the file is written - the fallback to the file name included. One
+    // summary rather than a parse per field: it also answers whether there is anything left to transpose.
+    val summary by remember(textFieldState) {
+        derivedStateOf { ChordProParser.summarize(textFieldState.text.toString()) }
     }
     val hasUnsavedChanges by viewModel.hasUnsavedEditorChanges.collectAsStateWithLifecycle()
+    RevertOnRequest(viewModel = viewModel, fileName = destination.fileName, textFieldState = textFieldState)
     // The one way the file is ever written, reached from the app bar's button and from Ctrl / Cmd + S alike.
     val onSaveRequested = {
         if (hasUnsavedChanges) {
@@ -214,8 +202,12 @@ private fun LoadedSongEditor(
         }
         Unit
     }
-    var isPreviewVisible by rememberSaveable { mutableStateOf(false) }
-    val hasSideBySidePreview = windowSize == WindowSize.EXPANDED
+    // Split is only offered where two panes fit, but the choice survives a window that narrows and widens again
+    // rather than being forgotten the moment it cannot be honored.
+    val hasRoomForSplitPanes = windowSize == WindowSize.EXPANDED
+    var selectedPanes by rememberSaveable(stateSaver = EditorPanes.Saver) { mutableStateOf(EditorPanes.SPLIT) }
+    val panes = if (selectedPanes == EditorPanes.SPLIT && !hasRoomForSplitPanes) EditorPanes.EDIT else selectedPanes
+    val hasSideBySidePreview = panes == EditorPanes.SPLIT
     val fontScale = userPreferences?.fontScale ?: CampfireViewModel.DEFAULT_FONT_SCALE
     val chordSpelling = userPreferences?.chordSpelling ?: UserPreferences.ChordSpelling.Default
 
@@ -227,20 +219,26 @@ private fun LoadedSongEditor(
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(
-                        painter = painterResource(Res.drawable.ic_back),
-                        contentDescription = stringResource(Res.string.back),
+                        painter = painterResource(Res.drawable.ic_clear),
+                        contentDescription = stringResource(Res.string.close),
                     )
                 }
             },
             title = {
                 Column {
                     Text(
-                        text = title,
+                        text = summary.metadata.displayTitle(destination.fileName.removeSuffix(LibraryFiles.SONG_EXTENSION)),
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    SaveLabel(isSaving = isSaving, hasUnsavedChanges = hasUnsavedChanges)
+                    Text(
+                        text = summary.metadata.artist.orEmpty(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
             },
             actions = {
@@ -272,31 +270,54 @@ private fun LoadedSongEditor(
                     )
                 }
                 EditorMenu(
-                    viewModel = viewModel,
-                    fileName = destination.fileName,
-                    textFieldState = textFieldState,
-                    accidentals = chordSpelling.accidentals,
-                    onExport = { viewModel.exportSong(filePicker, destination.fileName) },
+                    canRevert = hasUnsavedChanges && !isSaving,
+                    onRevert = { viewModel.showDialog(CampfireViewModel.DialogType.RevertChanges) },
                 )
             },
+            bottomContent = {
+                // Transposing and switching pane are the two things here that do not write at the caret, so they
+                // are the two that stay when the insertions leave.
+                Row(
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextTranspositionControls(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        key = summary.metadata.key,
+                        // A key is enough on its own: it says what the song is in, and moving it is a transposition
+                        // even before a chord has been written under it.
+                        isEnabled = summary.hasChords || !summary.metadata.key.isNullOrBlank(),
+                        onTransposed = { semitones ->
+                            textFieldState.replaceAll(viewModel.transposeText(textFieldState.text.toString(), semitones, chordSpelling.accidentals))
+                        },
+                    )
+                    SegmentedChoice(
+                        // Not the whole of a desktop window's width: the row is a pair of controls rather than a
+                        // tab bar, and the stepper next to it would be lost at the end of a metre of segments.
+                        modifier = Modifier.weight(1f, fill = false).widthIn(max = PANE_CHOICE_MAX_WIDTH),
+                        options = listOfNotNull(
+                            EditorPanes.EDIT to stringResource(Res.string.edit),
+                            EditorPanes.PREVIEW to stringResource(Res.string.song_editor_preview),
+                            if (hasRoomForSplitPanes) EditorPanes.SPLIT to stringResource(Res.string.song_editor_split) else null,
+                        ),
+                        selected = panes,
+                        onSelected = { selectedPanes = it },
+                    )
+                }
+                // Nothing below can act on a preview, so the insertions leave with the field they write into.
+                AnimatedVisibility(visible = panes != EditorPanes.PREVIEW) {
+                    EditorToolbar(
+                        textFieldState = textFieldState,
+                        contentPadding = contentPadding,
+                    )
+                }
+            },
         )
-        if (!hasSideBySidePreview) {
-            SegmentedChoice(
-                modifier = Modifier.padding(bottom = 8.dp),
-                options = listOf(
-                    false to stringResource(Res.string.edit),
-                    true to stringResource(Res.string.song_editor_preview),
-                ),
-                selected = isPreviewVisible,
-                onSelected = { isPreviewVisible = it },
-            )
-        }
         val layoutDirection = LocalLayoutDirection.current
         val editor: @Composable (Modifier) -> Unit = { paneModifier ->
             ChordProTextField(
                 modifier = paneModifier,
                 textFieldState = textFieldState,
-                fontScale = fontScale,
                 onSaveRequested = onSaveRequested,
                 contentPadding = PaddingValues(
                     start = contentPadding.calculateStartPadding(layoutDirection),
@@ -312,7 +333,6 @@ private fun LoadedSongEditor(
                 viewModel = viewModel,
                 textFieldState = textFieldState,
                 transposition = transpositions[destination.fileName, null],
-                shouldShowChords = userPreferences?.isLyricsOnlyModeEnabled != true,
                 fontScale = fontScale,
                 isHorizontalFlow = userPreferences?.isHorizontalSectionFlowEnabled == true,
                 chordSpelling = chordSpelling,
@@ -323,16 +343,19 @@ private fun LoadedSongEditor(
                 ),
             )
         }
+        // The panes take what the app bar and the toggle above them leave, rather than the whole window: a Column
+        // measures a child that does not weigh anything against an unbounded height, and a song longer than the
+        // screen then lays the field out past the bottom edge of it instead of scrolling inside it.
         if (hasSideBySidePreview) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                editor(Modifier.weight(1f).fillMaxSize())
+            Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                editor(Modifier.weight(1f).fillMaxHeight())
                 VerticalDivider()
-                preview(Modifier.weight(1f).fillMaxSize())
+                preview(Modifier.weight(1f).fillMaxHeight())
             }
         } else {
             AnimatedContent(
-                modifier = Modifier.fillMaxSize(),
-                targetState = isPreviewVisible,
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                targetState = panes == EditorPanes.PREVIEW,
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
             ) { showPreview ->
                 if (showPreview) preview(Modifier.fillMaxSize()) else editor(Modifier.fillMaxSize())
@@ -342,14 +365,30 @@ private fun LoadedSongEditor(
 }
 
 /**
+ * Which of the two panes the editor shows. [SPLIT] needs a window wide enough for both and is the choice a window
+ * that has the room opens with, since seeing the song take shape is the reason the preview exists at all.
+ */
+private enum class EditorPanes {
+    EDIT, PREVIEW, SPLIT;
+
+    companion object {
+        /** Saved by name rather than left to the automatic saver, which only stores what a platform can serialize. */
+        val Saver = Saver<EditorPanes, String>(save = { it.name }, restore = ::valueOf)
+    }
+}
+
+/**
  * The text itself. Monospaced, because a tab or a grid only lines up in one and because a ChordPro document is
  * source rather than prose.
+ *
+ * The text size preference deliberately does not reach here: it is how large the lyrics are read from across a
+ * room, and this is the source of the file rather than the song. Scaling it would also move the columns of a tab
+ * away from the width the monospaced font is keeping them at.
  */
 @Composable
 private fun ChordProTextField(
     modifier: Modifier = Modifier,
     textFieldState: TextFieldState,
-    fontScale: Float,
     onSaveRequested: () -> Unit,
     contentPadding: PaddingValues,
 ) {
@@ -386,8 +425,6 @@ private fun ChordProTextField(
         state = textFieldState,
         textStyle = bodyLarge.copy(
             fontFamily = FontFamily.Monospace,
-            fontSize = bodyLarge.fontSize * fontScale,
-            lineHeight = bodyLarge.lineHeight * fontScale,
             color = colorScheme.onSurface,
         ),
         // Autocorrect and automatic capitalization fight with a format whose words are "[Am]" and "{start_of_verse}".
@@ -409,7 +446,6 @@ private fun SongPreview(
     viewModel: CampfireViewModel,
     textFieldState: TextFieldState,
     transposition: Int,
-    shouldShowChords: Boolean,
     fontScale: Float,
     isHorizontalFlow: Boolean,
     chordSpelling: UserPreferences.ChordSpelling,
@@ -440,7 +476,9 @@ private fun SongPreview(
                 ),
             song = song,
             availableHeight = maxHeight - topPadding - bottomPadding,
-            shouldShowChords = shouldShowChords,
+            // Lyrics only mode is about how a song is read, and this preview is here to show what is being written:
+            // chords typed into the field opposite it have to appear, or the editor would answer an edit with nothing.
+            shouldShowChords = true,
             fontScale = fontScale,
             isHorizontalFlow = isHorizontalFlow,
             scrollState = scrollState,
@@ -449,29 +487,16 @@ private fun SongPreview(
 }
 
 /**
- * Everything that rewrites the text or acts on the song, behind one overflow button.
- *
- * @param accidentals The spelling the transposition writes. Only the accidentals, and not the whole
- *   [UserPreferences.ChordSpelling]: this one rewrites the file, and a file is always written in the app's own
- *   notation, whatever the viewer prefers to read.
+ * The one action of the editor that is neither writing the file nor undoing a keystroke, behind the same overflow
+ * button the song details screen uses. It is a menu of one rather than a button of its own, because throwing away
+ * everything typed since the last save is not something to end up in by mistapping the button next to Save.
  */
 @Composable
 private fun EditorMenu(
-    viewModel: CampfireViewModel,
-    fileName: String,
-    textFieldState: TextFieldState,
-    accidentals: UserPreferences.Accidentals,
-    onExport: () -> Unit,
+    canRevert: Boolean,
+    onRevert: () -> Unit,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-    var isSectionMenuExpanded by remember { mutableStateOf(false) }
-    val sections = listOf(
-        "verse" to stringResource(Res.string.song_editor_section_verse),
-        "chorus" to stringResource(Res.string.song_editor_section_chorus),
-        "bridge" to stringResource(Res.string.song_editor_section_bridge),
-        "tab" to stringResource(Res.string.song_editor_section_tab),
-        "grid" to stringResource(Res.string.song_editor_section_grid),
-    )
     Box {
         IconButton(onClick = { isExpanded = true }) {
             Icon(
@@ -483,114 +508,16 @@ private fun EditorMenu(
             expanded = isExpanded,
             onDismissRequest = { isExpanded = false },
         ) {
-            EditorMenuItem(
-                title = stringResource(Res.string.song_editor_insert_chord),
-                icon = Res.drawable.ic_add,
-            ) {
-                isExpanded = false
-                textFieldState.wrapSelection(prefix = "[", suffix = "]")
-            }
-            EditorMenuItem(
-                title = stringResource(Res.string.song_editor_insert_comment),
-                icon = Res.drawable.ic_add,
-            ) {
-                isExpanded = false
-                textFieldState.wrapSelection(prefix = "{comment: ", suffix = "}")
-            }
-            EditorMenuItem(
-                title = stringResource(Res.string.song_editor_insert_section),
-                icon = Res.drawable.ic_add,
-            ) {
-                isSectionMenuExpanded = true
-            }
-            EditorMenuItem(
-                title = stringResource(Res.string.song_editor_transpose_text_up),
-                icon = Res.drawable.ic_add,
-            ) {
-                isExpanded = false
-                textFieldState.replaceAll(viewModel.transposeText(textFieldState.text.toString(), 1, accidentals))
-            }
-            EditorMenuItem(
-                title = stringResource(Res.string.song_editor_transpose_text_down),
-                icon = Res.drawable.ic_subtract,
-            ) {
-                isExpanded = false
-                textFieldState.replaceAll(viewModel.transposeText(textFieldState.text.toString(), -1, accidentals))
-            }
-            EditorMenuItem(
-                title = stringResource(Res.string.export),
-                icon = Res.drawable.ic_export,
-            ) {
-                isExpanded = false
-                onExport()
-            }
-            EditorMenuItem(
-                title = stringResource(Res.string.delete),
-                icon = Res.drawable.ic_delete,
-            ) {
-                isExpanded = false
-                viewModel.allSongs.value.firstOrNull { it.fileName == fileName }
-                    ?.let { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSong(it)) }
-            }
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.song_editor_revert)) },
+                leadingIcon = { Icon(painter = painterResource(Res.drawable.ic_refresh), contentDescription = null) },
+                enabled = canRevert,
+                onClick = {
+                    isExpanded = false
+                    onRevert()
+                },
+            )
         }
-        DropdownMenu(
-            expanded = isSectionMenuExpanded,
-            onDismissRequest = { isSectionMenuExpanded = false },
-        ) {
-            sections.forEach { (name, label) ->
-                DropdownMenuItem(
-                    text = { Text(label) },
-                    onClick = {
-                        isSectionMenuExpanded = false
-                        isExpanded = false
-                        textFieldState.wrapSelection(
-                            prefix = "{start_of_$name}\n",
-                            suffix = "\n{end_of_$name}",
-                            shouldStartOnItsOwnLine = true,
-                        )
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun EditorMenuItem(
-    title: String,
-    icon: org.jetbrains.compose.resources.DrawableResource,
-    onClick: () -> Unit,
-) = DropdownMenuItem(
-    text = { Text(title) },
-    leadingIcon = { Icon(painter = painterResource(icon), contentDescription = null) },
-    onClick = onClick,
-)
-
-/** "Saved" only once the text on screen is the text on disk, "Saving…" only while it is actually being written. */
-@Composable
-private fun SaveLabel(
-    isSaving: Boolean,
-    hasUnsavedChanges: Boolean,
-) {
-    val saving = stringResource(Res.string.song_editor_saving)
-    val saved = stringResource(Res.string.song_editor_saved)
-    // Its own short label rather than the dialog's "Unsaved changes": there is very little room next to a song title.
-    val unsaved = stringResource(Res.string.song_editor_unsaved)
-    AnimatedContent(
-        targetState = when {
-            isSaving -> saving
-            hasUnsavedChanges -> unsaved
-            else -> saved
-        },
-        transitionSpec = { fadeIn() togetherWith fadeOut() },
-    ) { label ->
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
@@ -613,27 +540,18 @@ private fun ReportDraft(
 }
 
 /**
- * Puts [prefix] and [suffix] around the selection, or around the caret when there is none.
- *
- * @param shouldStartOnItsOwnLine For the block directives, which are only directives when they are alone on a line.
+ * Puts the file back into the field once the user has confirmed that is what they want. It goes through the field's
+ * own editing rather than through a new [TextFieldState], so that a revert is one more step of the undo history and
+ * not the end of it.
  */
-private fun TextFieldState.wrapSelection(
-    prefix: String,
-    suffix: String,
-    shouldStartOnItsOwnLine: Boolean = false,
-) = edit {
-    val start = minOf(selection.start, selection.end)
-    val end = maxOf(selection.start, selection.end)
-    val selected = originalText.substring(start, end)
-    val opening = if (shouldStartOnItsOwnLine && start > 0 && originalText[start - 1] != '\n') "\n$prefix" else prefix
-    val closing = if (shouldStartOnItsOwnLine && end < originalText.length && originalText[end] != '\n') "$suffix\n" else suffix
-    delete(start, end)
-    insert(start, opening + selected + closing)
-    // With nothing selected the caret lands between the two halves, which is where the next thing typed belongs.
-    selection = if (selected.isEmpty()) {
-        TextRange(start + opening.length)
-    } else {
-        TextRange(start + opening.length, start + opening.length + selected.length)
+@Composable
+private fun RevertOnRequest(
+    viewModel: CampfireViewModel,
+    fileName: String,
+    textFieldState: TextFieldState,
+) = LaunchedEffect(textFieldState, fileName) {
+    viewModel.editorRevertRequests.collect {
+        viewModel.songTexts.value[fileName]?.let(textFieldState::replaceAll)
     }
 }
 
@@ -656,5 +574,6 @@ private fun String.caretInsideFirstSection(): Int {
     return if (lineBreak == -1) length else lineBreak + 1
 }
 
+private val PANE_CHOICE_MAX_WIDTH = 400.dp
 private const val SECTION_START = "{start_of_"
 private const val PREVIEW_DELAY_MILLIS = 150L

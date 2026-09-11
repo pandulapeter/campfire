@@ -11,6 +11,8 @@ package com.pandulapeter.campfire.presentation.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.ScrollableState
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -34,6 +36,10 @@ import androidx.compose.ui.zIndex
  * visually separated from the list. The screen's scrollable content must be hooked up with
  * `Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)`.
  *
+ * A screen that needs more than one row of controls puts the rest in [bottomContent], which is drawn inside the same
+ * surface and under the same shadow: the editor's toolbar is part of the bar rather than a strip floating under it,
+ * so the whole thing tints and lifts together as the text scrolls beneath it.
+ *
  * The background is drawn by the wrapping [Surface] and the bar itself is transparent, because [TopAppBar] cross
  * fades its own container color with a spring of its own. That spring would chase the color scheme while it is
  * animating between the light and the dark theme, leaving the bar visibly trailing behind the rest of the screen.
@@ -47,6 +53,7 @@ internal fun CampfireTopAppBar(
     title: @Composable () -> Unit,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
+    bottomContent: @Composable ColumnScope.() -> Unit = {},
 ) {
     val isOverlapped = scrollBehavior.state.overlappedFraction > 0.01f
     val overlapProgress by animateFloatAsState(
@@ -58,16 +65,19 @@ internal fun CampfireTopAppBar(
         color = lerp(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceContainer, overlapProgress),
         shadowElevation = OVERLAPPED_ELEVATION * overlapProgress,
     ) {
-        TopAppBar(
-            title = title,
-            navigationIcon = navigationIcon,
-            actions = actions,
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent,
-                scrolledContainerColor = Color.Transparent,
-            ),
-            scrollBehavior = scrollBehavior,
-        )
+        Column {
+            TopAppBar(
+                title = title,
+                navigationIcon = navigationIcon,
+                actions = actions,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent,
+                ),
+                scrollBehavior = scrollBehavior,
+            )
+            bottomContent()
+        }
     }
 }
 

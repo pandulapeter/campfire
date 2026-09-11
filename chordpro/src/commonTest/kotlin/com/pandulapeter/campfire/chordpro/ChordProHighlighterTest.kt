@@ -21,8 +21,22 @@ class ChordProHighlighterTest {
     @Test
     fun `directive is split into its name and its value`() {
         assertEquals(
-            listOf(TokenType.DIRECTIVE_NAME to "{title:", TokenType.DIRECTIVE_VALUE to " Song"),
+            listOf(TokenType.DIRECTIVE_NAME to "{title:", TokenType.DIRECTIVE_VALUE to " Song", TokenType.DIRECTIVE_NAME to "}"),
             spans("{title: Song}"),
+        )
+    }
+
+    @Test
+    fun `the closing brace of a directive with a value is coloured like the opening one`() {
+        // The value is the only part of the line that is not the directive itself, so the brace that ends it belongs
+        // with the brace that starts it.
+        assertEquals(
+            listOf(
+                TokenType.DIRECTIVE_NAME to "{start_of_prechorus:",
+                TokenType.DIRECTIVE_VALUE to " Pre-Chorus",
+                TokenType.DIRECTIVE_NAME to "}",
+            ),
+            spans("{start_of_prechorus: Pre-Chorus}"),
         )
     }
 
@@ -78,7 +92,12 @@ class ChordProHighlighterTest {
     @Test
     fun `windows line endings do not shift the offsets`() {
         assertEquals(
-            listOf(TokenType.DIRECTIVE_NAME to "{title:", TokenType.DIRECTIVE_VALUE to " Song", TokenType.CHORD to "[Am]"),
+            listOf(
+                TokenType.DIRECTIVE_NAME to "{title:",
+                TokenType.DIRECTIVE_VALUE to " Song",
+                TokenType.DIRECTIVE_NAME to "}",
+                TokenType.CHORD to "[Am]",
+            ),
             spans("{title: Song}\r\n[Am]word"),
         )
     }

@@ -16,9 +16,12 @@ package com.pandulapeter.campfire.data.model.domain
 data class Song(
     /** The file name inside the songs directory, extension included. Unique, and the identity of the song. */
     val fileName: String,
-    /** `{title}`, falling back to the file name without its extension. */
+    /**
+     * `{title}` (falling back to the file name without its extension) with `{subtitle}` after it in parentheses,
+     * which is how a song is named everywhere in the app, see `ChordProMetadata.displayTitle`.
+     */
     val title: String,
-    /** `{artist}`, falling back to `{subtitle}`, then to an empty string. */
+    /** `{artist}`, or an empty string. */
     val artist: String,
     /** `{key}` as written, null if the song does not declare one. */
     val key: String?,

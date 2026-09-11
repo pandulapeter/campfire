@@ -63,6 +63,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_transpose_d
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_reset
 import com.pandulapeter.campfire.presentation.resources.song_details_transpose_up
 import com.pandulapeter.campfire.presentation.resources.song_details_transposition
+import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_down
+import com.pandulapeter.campfire.presentation.resources.song_editor_transpose_text_up
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import kotlin.math.roundToInt
@@ -146,6 +148,36 @@ internal fun TranspositionControls(
     onReset = { onTranspositionChanged(0) },
 )
 
+/**
+ * The same stepper for the editor, where transposing rewrites the file instead of changing how it is read. There is
+ * no amount to show and nothing to reset to, so the value is the key the song is in - or a question mark, since a
+ * file that declares no `{key}` still has chords that move.
+ *
+ * @param isEnabled False for a song with no chords, where both buttons would rewrite nothing.
+ */
+@Composable
+internal fun TextTranspositionControls(
+    modifier: Modifier = Modifier,
+    key: String?,
+    isEnabled: Boolean,
+    onTransposed: (semitones: Int) -> Unit,
+) = Stepper(
+    modifier = modifier,
+    isCompact = true,
+    value = key?.takeIf { it.isNotBlank() } ?: UNKNOWN_KEY,
+    isDefault = true,
+    decreaseIcon = painterResource(Res.drawable.ic_subtract),
+    decreaseLabel = stringResource(Res.string.song_editor_transpose_text_down),
+    canDecrease = isEnabled,
+    onDecrease = { onTransposed(-1) },
+    increaseIcon = painterResource(Res.drawable.ic_add),
+    increaseLabel = stringResource(Res.string.song_editor_transpose_text_up),
+    canIncrease = isEnabled,
+    onIncrease = { onTransposed(1) },
+    resetLabel = null,
+    onReset = null,
+)
+
 @Composable
 internal fun FontScaleControls(
     modifier: Modifier = Modifier,
@@ -196,8 +228,8 @@ private fun Stepper(
     increaseLabel: String,
     canIncrease: Boolean,
     onIncrease: () -> Unit,
-    resetLabel: String,
-    onReset: () -> Unit,
+    resetLabel: String?,
+    onReset: (() -> Unit)?,
 ) {
     val height = if (isCompact) COMPACT_HEIGHT else DEFAULT_HEIGHT
     val buttonWidth = if (isCompact) COMPACT_BUTTON_WIDTH else DEFAULT_BUTTON_WIDTH
@@ -266,8 +298,8 @@ private fun StepperButton(
 private fun StepperValue(
     value: String,
     isDefault: Boolean,
-    resetLabel: String,
-    onReset: () -> Unit,
+    resetLabel: String?,
+    onReset: (() -> Unit)?,
 ) {
     // A progress value instead of an animated color, so that the label follows the color scheme immediately while it
     // is animating between the light and the dark theme (a color animation would chase it and trail behind).
@@ -284,7 +316,7 @@ private fun StepperValue(
         Text(
             modifier = Modifier
                 .fillMaxHeight()
-                .clickable(enabled = !isDefault, onClickLabel = resetLabel, onClick = onReset)
+                .clickable(enabled = !isDefault && onReset != null, onClickLabel = resetLabel) { onReset?.invoke() }
                 .widthIn(min = VALUE_MIN_WIDTH)
                 .wrapContentHeight(),
             text = currentValue,
@@ -305,3 +337,6 @@ private val DEFAULT_ICON_SIZE = 24.dp
 private val COMPACT_ICON_SIZE = 20.dp
 
 private const val KEY_SEPARATOR = "\u00B7"
+
+/** What the editor's stepper shows for a song whose file names no key. */
+private const val UNKNOWN_KEY = "?"

@@ -14,7 +14,9 @@ all** — not even Koin: everything in it is a stateless `object`, reached from 
 in `:domain:*`. `:data:source:local:implementation` uses it directly for the metadata of the song list.
 
 - `model/` — `ChordProSong` (metadata + blocks), `ChordProBlock` (`Section`, `ChorusRecall`, `Comment`, `Break`),
-  `ChordProLine` (`Lyrics` with positioned chords and annotations, `Tab`, `Grid`, `Blank`) and `ChordProMetadata`.
+  `ChordProLine` (`Lyrics` with positioned chords and annotations, `Tab`, `Grid`, `Blank`) and `ChordProMetadata`,
+  whose `displayTitle(fallback)` is the one rule for naming a song: `{title}` with `{subtitle}` after it in
+  parentheses, which is what the library scan writes into `Song.title` and what the editor's app bar shows.
   Nothing here knows about Compose, colours or measurements: the model says what a thing *is*, the viewer decides what
   it looks like.
 - `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, `chordNameRegex` for "is this whole

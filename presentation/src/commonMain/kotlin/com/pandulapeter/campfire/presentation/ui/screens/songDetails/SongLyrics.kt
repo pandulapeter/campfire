@@ -46,6 +46,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
@@ -64,7 +65,11 @@ import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_add
 import com.pandulapeter.campfire.presentation.resources.ic_clear
+import com.pandulapeter.campfire.presentation.resources.song_details_album
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
+import com.pandulapeter.campfire.presentation.resources.song_details_composer
+import com.pandulapeter.campfire.presentation.resources.song_details_duration
+import com.pandulapeter.campfire.presentation.resources.song_details_lyricist
 import com.pandulapeter.campfire.presentation.resources.song_details_section_bridge
 import com.pandulapeter.campfire.presentation.resources.song_details_section_chorus
 import com.pandulapeter.campfire.presentation.resources.song_details_section_grid
@@ -73,6 +78,7 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tag_add
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
+import com.pandulapeter.campfire.presentation.resources.song_details_year
 import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
 import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -226,9 +232,11 @@ internal fun SongLyrics(
 }
 
 /**
- * The tags of the song and the rest of the metadata worth seeing while playing, above the lyrics and scrolling with
- * them. The title, the artist and the key are not repeated here: the app bar carries all three, the key inside the
- * transposition control that is the only thing one would look at it for.
+ * The tags of the song and everything else its directives say, above the lyrics and scrolling with them. Every
+ * directive the editor can insert has to be visible somewhere, and this is where the ones that are neither lyrics
+ * nor chords end up - so what is missing here is only what the app bar already carries: the title, the subtitle
+ * that is drawn in parentheses after it, the artist, and the key, which lives inside the transposition control that
+ * is the only reason to look at it.
  *
  * @param onAddTag Null where the tags are only read, which is the editor's preview: there the file itself is under
  *   the caret, and a chip writing into it from the side would be editing the text the editor has not saved yet.
@@ -263,28 +271,45 @@ private fun SongMetadataHeader(
             }
         }
     }
-    // Only when it says something the artist line of the app bar does not already say: a song with no artist has
-    // its subtitle shown up there instead, see `Song.artist`.
-    metadata.subtitle?.takeIf { it.isNotBlank() && !metadata.artist.isNullOrBlank() && it != metadata.artist }?.let { subtitle ->
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyLarge.scaled(fontScale),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-    val chips = listOfNotNull(
-        metadata.capo?.takeIf { it != 0 }?.let { stringResource(Res.string.song_details_capo, it) },
-        metadata.tempo?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_tempo, it) },
-        metadata.time?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_time, it) },
+    // What is played, in the accent colour, above who wrote it: one is read off the page while playing and the
+    // other is only ever looked up.
+    MetadataLine(
+        values = listOfNotNull(
+            metadata.capo?.takeIf { it != 0 }?.let { stringResource(Res.string.song_details_capo, it) },
+            metadata.tempo?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_tempo, it) },
+            metadata.time?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_time, it) },
+        ),
+        style = MaterialTheme.typography.labelLarge.scaled(fontScale),
+        color = MaterialTheme.colorScheme.primary,
     )
-    if (chips.isNotEmpty()) {
-        Text(
-            modifier = Modifier.padding(top = 4.dp),
-            text = chips.joinToString("  $CHIP_SEPARATOR  "),
-            style = MaterialTheme.typography.labelLarge.scaled(fontScale),
-            color = MaterialTheme.colorScheme.primary,
-        )
-    }
+    MetadataLine(
+        values = listOfNotNull(
+            metadata.composer?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_composer, it) },
+            metadata.lyricist?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_lyricist, it) },
+            metadata.album?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_album, it) },
+            metadata.year?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_year, it) },
+            metadata.duration?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_duration, it) },
+        ),
+        style = MaterialTheme.typography.bodyMedium.scaled(fontScale),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+/** One line of the header's metadata, or nothing at all where the song declares none of it. */
+@Composable
+private fun MetadataLine(
+    modifier: Modifier = Modifier,
+    values: List<String>,
+    style: TextStyle,
+    color: Color,
+) {
+    if (values.isEmpty()) return
+    Text(
+        modifier = modifier.padding(top = 4.dp),
+        text = values.joinToString("  $CHIP_SEPARATOR  "),
+        style = style,
+        color = color,
+    )
 }
 
 /** A `{comment}` line. Its own layout section, so that it can sit between two columns freely. */

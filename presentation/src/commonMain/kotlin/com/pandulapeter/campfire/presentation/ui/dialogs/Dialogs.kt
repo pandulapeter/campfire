@@ -63,6 +63,8 @@ import com.pandulapeter.campfire.presentation.resources.song_details_tag_add
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_name
 import com.pandulapeter.campfire.presentation.resources.song_details_tag_suggestions
 import com.pandulapeter.campfire.presentation.resources.song_editor_discard
+import com.pandulapeter.campfire.presentation.resources.song_editor_revert
+import com.pandulapeter.campfire.presentation.resources.song_editor_revert_confirmation
 import com.pandulapeter.campfire.presentation.resources.song_editor_save
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes_confirmation
@@ -192,6 +194,14 @@ internal fun CampfireDialogs(
                 viewModel.disconnectSyncProvider()
                 viewModel.dismissDialog()
             },
+        )
+
+        CampfireViewModel.DialogType.RevertChanges -> ConfirmationDialog(
+            title = stringResource(Res.string.song_editor_revert),
+            text = stringResource(Res.string.song_editor_revert_confirmation),
+            confirmLabel = stringResource(Res.string.song_editor_revert),
+            onDismiss = viewModel::dismissDialog,
+            onConfirm = viewModel::revertEditorChanges,
         )
 
         CampfireViewModel.DialogType.UnsavedChanges -> UnsavedChangesDialog(

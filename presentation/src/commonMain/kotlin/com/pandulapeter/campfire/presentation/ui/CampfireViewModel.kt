@@ -66,9 +66,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -185,6 +187,10 @@ class CampfireViewModel(
      * that holds the field being there any more. Null whenever no editor is open.
      */
     private val _editorDraft = MutableStateFlow<SongContent?>(null)
+
+    /** Asked for by the confirmation dialog and answered by the editor screen, see [revertEditorChanges]. */
+    private val _editorRevertRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val editorRevertRequests = _editorRevertRequests.asSharedFlow()
 
     /**
      * True while the editor's text differs from what is on disk. Eager, like [setlists] and for the same reason:
@@ -489,6 +495,16 @@ class CampfireViewModel(
 
     /** The "Discard" answer of the unsaved changes dialog, and the only way typed text is ever thrown away. */
     fun leaveEditorWithoutSaving() = leaveEditor()
+
+    /**
+     * The confirmed "Revert" action of the editor. Answered by the screen rather than here, because the text field
+     * belongs to it and putting the saved text back has to go through the field's own editing (and its undo
+     * history); what the text goes back to is [songTexts], which is the file as it was last read or written.
+     */
+    fun revertEditorChanges() {
+        dismissDialog()
+        _editorRevertRequests.tryEmit(Unit)
+    }
 
     private fun leaveEditor() {
         // The draft goes first: with it still there, popping the editor would only ask the same question again.
@@ -808,9 +824,19 @@ class CampfireViewModel(
         }
     }
 
+    /**
+     * A state that only runs while a screen is looking at it, and that forgets what it last said as soon as it
+     * stops: [initialValue] is what each of these means by "nothing has been worked out yet", and that is the only
+     * honest answer a state which has not been recomputed since can give.
+     *
+     * Kept, the answer goes stale as soon as the library changes while its screen is away - which is exactly what a
+     * first sync does, since it fills the library from the settings screen. The song list would then be entered on
+     * the answer worked out before the sync ("Your library is empty"), with the settings screen next to it already
+     * counting the songs, and the real list only arriving a frame later.
+     */
     private fun <T> Flow<T>.asState(initialValue: T) = distinctUntilChanged().stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = STOP_TIMEOUT_MILLIS, replayExpirationMillis = 0),
         initialValue = initialValue,
     )
 
@@ -1005,6 +1031,8 @@ class CampfireViewModel(
         data class DisconnectSync(val accountName: String) : DialogType
         /** Asked before the editor is left with something in it that has not been written yet, see [navigateBack]. */
         data object UnsavedChanges : DialogType
+        /** Asked before the editor throws away everything typed since the last save, see [revertEditorChanges]. */
+        data object RevertChanges : DialogType
     }
 
     companion object {

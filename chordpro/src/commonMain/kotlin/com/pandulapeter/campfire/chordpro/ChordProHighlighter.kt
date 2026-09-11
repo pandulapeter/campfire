@@ -20,7 +20,7 @@ package com.pandulapeter.campfire.chordpro
 object ChordProHighlighter {
 
     enum class TokenType {
-        /** `{title` and the colon after it: the part that says what the directive is. */
+        /** `{title` and the colon after it, plus the `}` that closes the directive: everything that is not the value. */
         DIRECTIVE_NAME,
 
         /** What the directive is set to, without the closing brace. */
@@ -78,7 +78,9 @@ object ChordProHighlighter {
 
     /**
      * The name half runs from the opening brace to the colon (or to the closing brace when the directive has no
-     * value), and the value half is whatever is left before the closing brace.
+     * value), and the value half is whatever is left before the closing brace. The two braces are a pair and are
+     * coloured as one: a directive only matches when both of them are there, so the closing one is as much a sign of
+     * what the line is as the opening one, and leaving it plain made a directive look unfinished after its value.
      */
     private fun ChordProSyntax.Directive.tokens(line: String, lineStart: Int): List<Token> {
         val open = line.indexOf('{')
@@ -86,12 +88,16 @@ object ChordProHighlighter {
         if (open == -1 || close <= open) return emptyList()
         val colon = line.indexOf(':', startIndex = open)
         val hasValue = colon in (open + 1) until close && !value.isNullOrEmpty()
-        // Without a value the whole thing is the name, closing brace included; with one the brace belongs to
-        // neither half, so that the value ends where the text does.
+        // Without a value the whole thing is one token, closing brace included; with one the value splits the name
+        // in two and the closing brace becomes a token of its own.
         val nameEnd = if (hasValue) colon + 1 else close + 1
         val name = Token(TokenType.DIRECTIVE_NAME, lineStart + open, lineStart + nameEnd)
         return if (hasValue) {
-            listOf(name, Token(TokenType.DIRECTIVE_VALUE, lineStart + nameEnd, lineStart + close))
+            listOf(
+                name,
+                Token(TokenType.DIRECTIVE_VALUE, lineStart + nameEnd, lineStart + close),
+                Token(TokenType.DIRECTIVE_NAME, lineStart + close, lineStart + close + 1),
+            )
         } else {
             listOf(name)
         }

@@ -11,6 +11,7 @@
 
     <!-- Shared -->
     <string name="back">Back</string>
+    <string name="close">Close</string>
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="create">Create</string>
@@ -131,22 +132,39 @@
 
     <!-- Song editor screen -->
     <string name="song_editor_preview">Preview</string>
+    <string name="song_editor_split">Split</string>
     <string name="song_editor_undo">Undo</string>
     <string name="song_editor_redo">Redo</string>
-    <string name="song_editor_insert_chord">Insert chord</string>
-    <string name="song_editor_insert_section">Insert section</string>
-    <string name="song_editor_insert_comment">Insert comment</string>
+    <string name="song_editor_insert_chord">Chord</string>
+    <string name="song_editor_insert_annotation">Annotation</string>
     <string name="song_editor_section_verse">Verse</string>
     <string name="song_editor_section_chorus">Chorus</string>
     <string name="song_editor_section_bridge">Bridge</string>
     <string name="song_editor_section_tab">Tab</string>
     <string name="song_editor_section_grid">Grid</string>
+    <string name="song_editor_insert_chorus_recall">Repeat chorus</string>
+    <string name="song_editor_insert_comment">Comment</string>
+    <string name="song_editor_insert_comment_italic">Italic comment</string>
+    <string name="song_editor_insert_comment_box">Boxed comment</string>
+    <string name="song_editor_insert_title">Title</string>
+    <string name="song_editor_insert_subtitle">Subtitle</string>
+    <string name="song_editor_insert_artist">Artist</string>
+    <string name="song_editor_insert_composer">Composer</string>
+    <string name="song_editor_insert_lyricist">Lyricist</string>
+    <string name="song_editor_insert_album">Album</string>
+    <string name="song_editor_insert_year">Year</string>
+    <string name="song_editor_insert_key">Key</string>
+    <string name="song_editor_insert_capo">Capo</string>
+    <string name="song_editor_insert_tempo">Tempo</string>
+    <string name="song_editor_insert_time">Time signature</string>
+    <string name="song_editor_insert_duration">Duration</string>
+    <string name="song_editor_insert_transpose">Transpose</string>
+    <string name="song_editor_insert_tag">Tag</string>
     <string name="song_editor_transpose_text_up">Transpose text up</string>
     <string name="song_editor_transpose_text_down">Transpose text down</string>
     <string name="song_editor_save">Save</string>
-    <string name="song_editor_saved">Saved</string>
-    <string name="song_editor_saving">Saving…</string>
-    <string name="song_editor_unsaved">Unsaved</string>
+    <string name="song_editor_revert">Revert</string>
+    <string name="song_editor_revert_confirmation">Would you like to go back to the last saved version of this song? Everything you have written since will be lost.</string>
     <string name="song_editor_unsaved_changes">Unsaved changes</string>
     <string name="song_editor_unsaved_changes_confirmation">Would you like to save what you have written before leaving the editor?</string>
     <string name="song_editor_discard">Discard</string>
@@ -177,6 +195,11 @@
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
+    <string name="song_details_composer">Composer: %1$s</string>
+    <string name="song_details_lyricist">Lyricist: %1$s</string>
+    <string name="song_details_album">Album: %1$s</string>
+    <string name="song_details_year">Year: %1$s</string>
+    <string name="song_details_duration">Duration: %1$s</string>
     <string name="song_details_empty">This file has no content yet.</string>
     <string name="song_details_no_data">This song could not be loaded</string>
     <string name="song_details_no_data_hint">The file could not be read.</string>

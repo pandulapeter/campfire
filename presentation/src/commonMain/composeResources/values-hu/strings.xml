@@ -11,6 +11,7 @@
 
     <!-- Shared -->
     <string name="back">Vissza</string>
+    <string name="close">Bezárás</string>
     <string name="cancel">Mégse</string>
     <string name="delete">Törlés</string>
     <string name="create">Létrehozás</string>
@@ -131,22 +132,39 @@
 
     <!-- Song editor screen -->
     <string name="song_editor_preview">Előnézet</string>
+    <string name="song_editor_split">Osztott</string>
     <string name="song_editor_undo">Visszavonás</string>
     <string name="song_editor_redo">Újra</string>
-    <string name="song_editor_insert_chord">Akkord beszúrása</string>
-    <string name="song_editor_insert_section">Szakasz beszúrása</string>
-    <string name="song_editor_insert_comment">Megjegyzés beszúrása</string>
+    <string name="song_editor_insert_chord">Akkord</string>
+    <string name="song_editor_insert_annotation">Annotáció</string>
     <string name="song_editor_section_verse">Versszak</string>
     <string name="song_editor_section_chorus">Refrén</string>
     <string name="song_editor_section_bridge">Bridge</string>
     <string name="song_editor_section_tab">Tab</string>
     <string name="song_editor_section_grid">Rács</string>
+    <string name="song_editor_insert_chorus_recall">Refrén ismétlése</string>
+    <string name="song_editor_insert_comment">Megjegyzés</string>
+    <string name="song_editor_insert_comment_italic">Dőlt megjegyzés</string>
+    <string name="song_editor_insert_comment_box">Keretes megjegyzés</string>
+    <string name="song_editor_insert_title">Cím</string>
+    <string name="song_editor_insert_subtitle">Alcím</string>
+    <string name="song_editor_insert_artist">Előadó</string>
+    <string name="song_editor_insert_composer">Zeneszerző</string>
+    <string name="song_editor_insert_lyricist">Szövegíró</string>
+    <string name="song_editor_insert_album">Album</string>
+    <string name="song_editor_insert_year">Év</string>
+    <string name="song_editor_insert_key">Hangnem</string>
+    <string name="song_editor_insert_capo">Capo</string>
+    <string name="song_editor_insert_tempo">Tempó</string>
+    <string name="song_editor_insert_time">Ütemmutató</string>
+    <string name="song_editor_insert_duration">Hossz</string>
+    <string name="song_editor_insert_transpose">Transzponálás</string>
+    <string name="song_editor_insert_tag">Címke</string>
     <string name="song_editor_transpose_text_up">Szöveg transzponálása fel</string>
     <string name="song_editor_transpose_text_down">Szöveg transzponálása le</string>
     <string name="song_editor_save">Mentés</string>
-    <string name="song_editor_saved">Mentve</string>
-    <string name="song_editor_saving">Mentés…</string>
-    <string name="song_editor_unsaved">Mentetlen</string>
+    <string name="song_editor_revert">Visszaállítás</string>
+    <string name="song_editor_revert_confirmation">Szeretnél visszatérni a dal utoljára mentett változatához? Minden, amit azóta írtál, elveszik.</string>
     <string name="song_editor_unsaved_changes">Nem mentett módosítások</string>
     <string name="song_editor_unsaved_changes_confirmation">Szeretnéd menteni, amit írtál, mielőtt kilépsz a szerkesztőből?</string>
     <string name="song_editor_discard">Elvetés</string>
@@ -177,6 +195,11 @@
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>
+    <string name="song_details_composer">Zeneszerző: %1$s</string>
+    <string name="song_details_lyricist">Szövegíró: %1$s</string>
+    <string name="song_details_album">Album: %1$s</string>
+    <string name="song_details_year">Év: %1$s</string>
+    <string name="song_details_duration">Hossz: %1$s</string>
     <string name="song_details_empty">Ez a fájl még üres.</string>
     <string name="song_details_no_data">Ezt a dalt nem sikerült betölteni</string>
     <string name="song_details_no_data_hint">A fájlt nem sikerült beolvasni.</string>

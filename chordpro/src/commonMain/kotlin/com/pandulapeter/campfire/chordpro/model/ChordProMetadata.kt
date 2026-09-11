@@ -35,3 +35,17 @@ data class ChordProMetadata(
     val tags: List<String> = emptyList(),
     val custom: Map<String, List<String>> = emptyMap(), // {meta: name value} and unknown x_* directives, in order
 )
+
+/**
+ * The title as the app shows it, wherever a song is named: `{title}`, or [fallback] where the file declares none,
+ * with `{subtitle}` after it in parentheses.
+ *
+ * The subtitle belongs to the title rather than next to it: a song is told from the other recording of the same
+ * song by it, so a list, an app bar and a dialog all have to carry it. A subtitle that only repeats the title is
+ * dropped, since half the files in the wild spell the same name into both.
+ */
+fun ChordProMetadata.displayTitle(fallback: String): String {
+    val name = title?.takeIf { it.isNotBlank() } ?: fallback
+    val suffix = subtitle?.takeIf { it.isNotBlank() && !it.equals(name, ignoreCase = true) } ?: return name
+    return "$name ($suffix)"
+}

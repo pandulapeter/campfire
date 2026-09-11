@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.mapper
 
 import com.pandulapeter.campfire.chordpro.model.ChordProSummary
+import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StoredFileInfo
 import com.pandulapeter.campfire.data.source.local.implementation.withoutExtension
@@ -20,8 +21,8 @@ import com.pandulapeter.campfire.data.source.local.implementation.withoutExtensi
  */
 internal fun StoredFileInfo.toSong(summary: ChordProSummary) = Song(
     fileName = name,
-    title = summary.metadata.title?.takeIf { it.isNotBlank() } ?: name.withoutExtension(),
-    artist = summary.metadata.artist?.takeIf { it.isNotBlank() } ?: summary.metadata.subtitle?.takeIf { it.isNotBlank() }.orEmpty(),
+    title = summary.metadata.displayTitle(fallback = name.withoutExtension()),
+    artist = summary.metadata.artist?.takeIf { it.isNotBlank() }.orEmpty(),
     key = summary.metadata.key?.takeIf { it.isNotBlank() },
     tags = summary.metadata.tags,
     hasChords = summary.hasChords,
