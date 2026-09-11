@@ -14,11 +14,12 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 /**
- * Tonal palettes generated from the Campfire orange (#F57C00) seed color.
+ * The app's own palette, and the one every build starts out with: Material's tonal mapping of the Campfire orange
+ * (#F57C00) seed color, with the primary roles carrying more of the seed's chroma than that mapping would leave
+ * them - an app named after a fire is worth an orange rather than the brown the tones alone come out as.
  */
-internal object CampfireColorSchemes {
-
-    val light = lightColorScheme(
+internal val CampfireColorScheme = ColorSchemePair(
+    light = lightColorScheme(
         primary = Color(0xFF8B5000),
         onPrimary = Color(0xFFFFFFFF),
         primaryContainer = Color(0xFFFFB068),
@@ -55,9 +56,8 @@ internal object CampfireColorSchemes {
         surfaceContainer = Color(0xFFFAEBE1),
         surfaceContainerHigh = Color(0xFFF4E5DB),
         surfaceContainerHighest = Color(0xFFEEE0D6),
-    )
-
-    val dark = darkColorScheme(
+    ),
+    dark = darkColorScheme(
         primary = Color(0xFFFFB77C),
         onPrimary = Color(0xFF4A2800),
         primaryContainer = Color(0xFFDB8A2E),
@@ -94,5 +94,5 @@ internal object CampfireColorSchemes {
         surfaceContainer = Color(0xFF261E19),
         surfaceContainerHigh = Color(0xFF312823),
         surfaceContainerHighest = Color(0xFF3C332D),
-    )
-}
+    ),
+)

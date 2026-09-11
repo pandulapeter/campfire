@@ -19,6 +19,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
     fontScale = fontScale,
     sortingMode = UserPreferences.SortingMode.entries.firstOrNull { it.id == sortingMode } ?: UserPreferences.SortingMode.BY_ARTIST,
     uiMode = UserPreferences.UiMode.entries.firstOrNull { it.id == uiMode } ?: UserPreferences.UiMode.SYSTEM_DEFAULT,
+    themeColor = UserPreferences.ThemeColor.entries.firstOrNull { it.id == themeColor } ?: UserPreferences.ThemeColor.CAMPFIRE,
     language = UserPreferences.Language.entries.firstOrNull { it.id == language } ?: UserPreferences.Language.SYSTEM_DEFAULT,
     chordSpelling = UserPreferences.ChordSpelling(
         accidentals = UserPreferences.Accidentals.entries.firstOrNull { it.id == accidentals } ?: UserPreferences.Accidentals.ORIGINAL,
@@ -36,6 +37,7 @@ internal fun UserPreferences.toDocument() = UserPreferencesDocument(
     fontScale = fontScale,
     sortingMode = sortingMode.id,
     uiMode = uiMode.id,
+    themeColor = themeColor.id,
     language = language.id,
     accidentals = chordSpelling.accidentals.id,
     isGermanNotationEnabled = chordSpelling.isGermanNotationEnabled,

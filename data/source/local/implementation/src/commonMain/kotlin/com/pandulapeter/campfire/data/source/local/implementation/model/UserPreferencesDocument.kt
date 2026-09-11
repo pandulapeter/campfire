@@ -27,6 +27,7 @@ internal data class UserPreferencesDocument(
     val fontScale: Float = 1f,
     val sortingMode: String = "",
     val uiMode: String = "",
+    val themeColor: String = "",
     val language: String = "",
     val accidentals: String = "",
     val isGermanNotationEnabled: Boolean = false,

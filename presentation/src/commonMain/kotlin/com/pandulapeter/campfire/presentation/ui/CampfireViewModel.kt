@@ -736,6 +736,8 @@ class CampfireViewModel(
 
     fun setUiMode(value: UserPreferences.UiMode) = updateUserPreferences { copy(uiMode = value) }
 
+    fun setThemeColor(value: UserPreferences.ThemeColor) = updateUserPreferences { copy(themeColor = value) }
+
     fun setLanguage(value: UserPreferences.Language) = updateUserPreferences { copy(language = value) }
 
     fun setAccidentals(value: UserPreferences.Accidentals) = updateUserPreferences { copy(chordSpelling = chordSpelling.copy(accidentals = value)) }

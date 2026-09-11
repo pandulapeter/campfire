@@ -16,6 +16,7 @@ data class UserPreferences(
     val fontScale: Float, // Multiplier applied to the text size of the song details screen, 1 being the default.
     val sortingMode: SortingMode,
     val uiMode: UiMode,
+    val themeColor: ThemeColor,
     val language: Language,
     val chordSpelling: ChordSpelling, // How the chords of a song are written when it is displayed.
     /** Song file name to semitones, for songs opened from the library rather than from a setlist. */
@@ -44,6 +45,26 @@ data class UserPreferences(
         LIGHT("light"),
         DARK("dark"),
         SYSTEM_DEFAULT("system_default"),
+    }
+
+    /**
+     * Which set of colors the app is painted in, which is a separate question from [UiMode]: every one of these has a
+     * light and a dark scheme, and the two choices are combined rather than ranked.
+     *
+     * [SYSTEM] is the scheme the operating system derives from the user's wallpaper and only exists on Android 12 and
+     * above, so it is stored like any other value but offered only where it can be honored; anywhere else it falls
+     * back to [CAMPFIRE], the app's own orange.
+     */
+    enum class ThemeColor(val id: String) {
+        CAMPFIRE("campfire"),
+        SYSTEM("system"),
+        RED("red"),
+        YELLOW("yellow"),
+        GREEN("green"),
+        TEAL("teal"),
+        BLUE("blue"),
+        PURPLE("purple"),
+        PINK("pink"),
     }
 
     /**

@@ -1,0 +1,18 @@
+<!--
+ This file is part of Campfire.
+ Copyright (c) Pandula Péter 2017-2026.
+ https://github.com/pandulapeter/campfire
+
+ This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+ If a copy of the MPL was not distributed with this file, You can obtain one at
+ https://mozilla.org/MPL/2.0/.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M5,19.9C5.9,20.7 7,21.2 8.2,21.5C8.5,21.6 10.4,22 11.8,22C11.8,22 11.9,22 12,22C12,22 12.1,22 12.2,22C13.6,22 15.6,21.6 15.9,21.5C17,21.2 18.1,20.7 19,19.9C21,18.1 21,15.3 20,13C19,10.5 17.9,8.3 16.4,6.1C15.2,4.4 13.9,2 12,2C10.1,2 8.8,4.4 7.5,6.1C6,8.2 4.9,10.5 3.9,13C3,15.3 3,18.1 5,19.9M5.8,13.8C6.9,11.1 7.9,9.1 9.2,7.3C9.4,7.1 9.5,6.8 9.7,6.6C10.2,5.8 11.4,4 12,4C12,4 12,4 12,4C12.7,4 13.8,5.7 14.4,6.6C14.6,6.8 14.7,7.1 14.9,7.3C16.1,9.1 17.2,11.1 18.3,13.8C18.5,14.5 19.3,17 17.7,18.5C17.2,19 16.4,19.3 15.4,19.6C15,19.6 13.3,20 12.2,20C12.2,20 11.9,20 11.9,20C10.8,20 9.1,19.7 8.7,19.6C7.7,19.3 6.9,19 6.4,18.5C4.7,17 5.5,14.5 5.8,13.8Z"/>
+</vector>

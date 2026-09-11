@@ -107,6 +107,16 @@
     <string name="settings_user_interface_theme_system_default">System</string>
     <string name="settings_user_interface_theme_dark">Dark</string>
     <string name="settings_user_interface_theme_light">Light</string>
+    <string name="settings_user_interface_theme_color">Color</string>
+    <string name="settings_user_interface_theme_color_campfire">Campfire</string>
+    <string name="settings_user_interface_theme_color_system">System</string>
+    <string name="settings_user_interface_theme_color_red">Red</string>
+    <string name="settings_user_interface_theme_color_yellow">Yellow</string>
+    <string name="settings_user_interface_theme_color_green">Green</string>
+    <string name="settings_user_interface_theme_color_teal">Teal</string>
+    <string name="settings_user_interface_theme_color_blue">Blue</string>
+    <string name="settings_user_interface_theme_color_purple">Purple</string>
+    <string name="settings_user_interface_theme_color_pink">Pink</string>
     <string name="settings_user_interface_language">Language</string>
     <string name="settings_user_interface_language_system_default">System</string>
     <string name="settings_user_interface_language_english">English</string>

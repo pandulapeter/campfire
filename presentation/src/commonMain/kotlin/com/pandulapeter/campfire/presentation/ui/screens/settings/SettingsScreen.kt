@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
@@ -44,10 +45,12 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_coffee
 import com.pandulapeter.campfire.presentation.resources.ic_export
 import com.pandulapeter.campfire.presentation.resources.ic_git_hub
 import com.pandulapeter.campfire.presentation.resources.ic_import
+import com.pandulapeter.campfire.presentation.resources.ic_phone
 import com.pandulapeter.campfire.presentation.resources.ic_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.ic_refresh
 import com.pandulapeter.campfire.presentation.resources.ic_website
@@ -87,6 +90,16 @@ import com.pandulapeter.campfire.presentation.resources.settings_user_interface_
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_hungarian
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_language_system_default
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_blue
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_campfire
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_green
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_pink
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_purple
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_red
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_system
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_teal
+import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_color_yellow
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_dark
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_light
 import com.pandulapeter.campfire.presentation.resources.settings_user_interface_theme_system_default
@@ -96,6 +109,8 @@ import com.pandulapeter.campfire.presentation.resources.songs_rescan
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.ActionListItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
+import com.pandulapeter.campfire.presentation.ui.components.ColorChoice
+import com.pandulapeter.campfire.presentation.ui.components.ColorChoiceOption
 import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
@@ -110,6 +125,8 @@ import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
+import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
+import com.pandulapeter.campfire.presentation.ui.theme.themeColorOptions
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -327,6 +344,26 @@ internal fun SettingsScreen(
                             onSelected = viewModel::setUiMode,
                         )
                     }
+                    Subsection(title = stringResource(Res.string.settings_user_interface_theme_color)) {
+                        // Each disc is painted in the half of its palette that is on screen, so that they all change
+                        // with the light and dark switch above them instead of advertising colors nothing would
+                        // actually be drawn in.
+                        val isDarkTheme = userPreferences?.uiMode.isDarkTheme()
+                        ColorChoice(
+                            options = themeColorOptions().map { (themeColor, colorSchemePair) ->
+                                val colorScheme = if (isDarkTheme) colorSchemePair.dark else colorSchemePair.light
+                                ColorChoiceOption(
+                                    value = themeColor,
+                                    color = colorScheme.primary,
+                                    contentColor = colorScheme.onPrimary,
+                                    label = themeColor.label(),
+                                    icon = themeColor.icon(),
+                                )
+                            },
+                            selected = userPreferences?.themeColor,
+                            onSelected = viewModel::setThemeColor,
+                        )
+                    }
                     Subsection(title = stringResource(Res.string.settings_user_interface_language)) {
                         SegmentedChoice(
                             options = listOf(
@@ -401,6 +438,37 @@ internal fun SettingsScreen(
             }
         }
     }
+}
+
+/**
+ * What a color offered by the theme is called. It is only ever read out by an accessibility service, since the
+ * settings screen shows each color as itself.
+ */
+@Composable
+private fun UserPreferences.ThemeColor.label() = stringResource(
+    when (this) {
+        UserPreferences.ThemeColor.CAMPFIRE -> Res.string.settings_user_interface_theme_color_campfire
+        UserPreferences.ThemeColor.SYSTEM -> Res.string.settings_user_interface_theme_color_system
+        UserPreferences.ThemeColor.RED -> Res.string.settings_user_interface_theme_color_red
+        UserPreferences.ThemeColor.YELLOW -> Res.string.settings_user_interface_theme_color_yellow
+        UserPreferences.ThemeColor.GREEN -> Res.string.settings_user_interface_theme_color_green
+        UserPreferences.ThemeColor.TEAL -> Res.string.settings_user_interface_theme_color_teal
+        UserPreferences.ThemeColor.BLUE -> Res.string.settings_user_interface_theme_color_blue
+        UserPreferences.ThemeColor.PURPLE -> Res.string.settings_user_interface_theme_color_purple
+        UserPreferences.ThemeColor.PINK -> Res.string.settings_user_interface_theme_color_pink
+    }
+)
+
+/**
+ * The icon a color offered by the theme carries while it is not selected, for the two whose color is not what picks
+ * them out: the app's own palette, and the one the operating system hands over. The rest are only a color, and a
+ * glyph on each of them would say nothing the disc does not.
+ */
+@Composable
+private fun UserPreferences.ThemeColor.icon(): Painter? = when (this) {
+    UserPreferences.ThemeColor.CAMPFIRE -> painterResource(Res.drawable.ic_campfire)
+    UserPreferences.ThemeColor.SYSTEM -> painterResource(Res.drawable.ic_phone)
+    else -> null
 }
 
 /**

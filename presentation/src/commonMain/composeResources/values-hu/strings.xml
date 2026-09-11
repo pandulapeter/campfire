@@ -107,6 +107,16 @@
     <string name="settings_user_interface_theme_system_default">Rendszer</string>
     <string name="settings_user_interface_theme_dark">Sötét</string>
     <string name="settings_user_interface_theme_light">Világos</string>
+    <string name="settings_user_interface_theme_color">Szín</string>
+    <string name="settings_user_interface_theme_color_campfire">Campfire</string>
+    <string name="settings_user_interface_theme_color_system">Rendszer</string>
+    <string name="settings_user_interface_theme_color_red">Piros</string>
+    <string name="settings_user_interface_theme_color_yellow">Sárga</string>
+    <string name="settings_user_interface_theme_color_green">Zöld</string>
+    <string name="settings_user_interface_theme_color_teal">Türkiz</string>
+    <string name="settings_user_interface_theme_color_blue">Kék</string>
+    <string name="settings_user_interface_theme_color_purple">Lila</string>
+    <string name="settings_user_interface_theme_color_pink">Rózsaszín</string>
     <string name="settings_user_interface_language">Nyelv</string>
     <string name="settings_user_interface_language_system_default">Rendszer</string>
     <string name="settings_user_interface_language_english">Angol</string>
