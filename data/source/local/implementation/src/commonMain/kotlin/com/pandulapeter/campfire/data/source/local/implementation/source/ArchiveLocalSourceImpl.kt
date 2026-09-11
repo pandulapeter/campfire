@@ -31,26 +31,37 @@ internal class ArchiveLocalSourceImpl : ArchiveLocalSource {
         ZipWriter.write(files.map { (name, bytes) -> ZipEntry(name = name, bytes = bytes) })
     }
 
-    private fun unpack(archive: ByteArray, depth: Int): List<ImportedFile> = ZipReader.read(archive).flatMap { entry ->
-        // The path is dropped here rather than by the caller: the library is flat, so "songs/x.cho" and "x.cho" are
-        // the same file as far as an import is concerned.
-        val file = ImportedFile(name = entry.name.substringAfterLast('/'), bytes = entry.bytes)
-        if (depth < MAX_DEPTH && file.name.endsWith(ZIP_EXTENSION, ignoreCase = true)) {
-            // A nested archive that cannot be read is skipped rather than failing the whole import: the files next
-            // to it are still perfectly good.
-            try {
-                unpack(archive = file.bytes, depth = depth + 1)
-            } catch (exception: Exception) {
-                println("Could not unpack \"${file.name}\": ${exception.message}")
-                emptyList()
+    private fun unpack(archive: ByteArray, depth: Int): List<ImportedFile> = ZipReader.read(archive)
+        // What the archiving tool wrote for itself is not part of what anybody chose to import. macOS packs an
+        // AppleDouble "._name.cho" next to every entry and a ".DS_Store" into every directory, and the first of
+        // those carries the extension of the file it belongs to: an archive of three hundred songs arrives as six
+        // hundred entries, half of them binary, and an import that took them at their word would offer to import
+        // as many unreadable files as there are songs. A file somebody means to import is never a hidden one, so
+        // these are dropped here instead of being carried through the plan and reported as unsupported.
+        .filterNot { entry -> entry.name.substringAfterLast('/').startsWith(HIDDEN_NAME_PREFIX) }
+        .flatMap { entry ->
+            // The path is dropped here rather than by the caller: the library is flat, so "songs/x.cho" and "x.cho"
+            // are the same file as far as an import is concerned.
+            val file = ImportedFile(name = entry.name.substringAfterLast('/'), bytes = entry.bytes)
+            if (depth < MAX_DEPTH && file.name.endsWith(ZIP_EXTENSION, ignoreCase = true)) {
+                // A nested archive that cannot be read is skipped rather than failing the whole import: the files
+                // next to it are still perfectly good.
+                try {
+                    unpack(archive = file.bytes, depth = depth + 1)
+                } catch (exception: Exception) {
+                    println("Could not unpack \"${file.name}\": ${exception.message}")
+                    emptyList()
+                }
+            } else {
+                listOf(file)
             }
-        } else {
-            listOf(file)
         }
-    }
 
     private companion object {
         const val MAX_DEPTH = 3
         const val ZIP_EXTENSION = ".zip"
+
+        /** What every hidden file starts with, whichever system wrote it: "._name.cho", ".DS_Store", ".gitignore". */
+        const val HIDDEN_NAME_PREFIX = "."
     }
 }

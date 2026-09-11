@@ -31,7 +31,7 @@ interface SongRepository {
     suspend fun createSong(title: String, artist: String, text: String): Song
 
     /** See `SongLocalSource.importFileName`: the name an imported song wants, before anything is written. */
-    fun importFileName(desiredFileName: String?, text: String): String
+    fun importFileName(fallbackTitle: String, text: String): String
 
     /**
      * Writes an imported song under [fileName] and returns it, suffixing the name until it is free unless

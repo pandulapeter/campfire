@@ -16,7 +16,6 @@ import com.pandulapeter.campfire.data.source.local.implementation.mapper.toDocum
 import com.pandulapeter.campfire.data.source.local.implementation.mapper.toModel
 import com.pandulapeter.campfire.data.source.local.implementation.model.SetlistDocument
 import com.pandulapeter.campfire.data.source.local.implementation.isNamed
-import com.pandulapeter.campfire.data.source.local.implementation.setlistCollisionSuffix
 import com.pandulapeter.campfire.data.source.local.implementation.setlistFileName
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
@@ -44,7 +43,7 @@ internal class SetlistLocalSourceImpl(
         }
 
     override suspend fun createSetlist(title: String, priority: Int): Setlist {
-        val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, setlistFileName(title), ::setlistCollisionSuffix)
+        val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, setlistFileName(title))
         val setlist = Setlist(fileName = fileName, title = title, priority = priority, isArchived = false, entries = emptyList())
         saveSetlist(setlist)
         return setlist
@@ -65,7 +64,7 @@ internal class SetlistLocalSourceImpl(
             saveSetlist(renamed)
             return renamed
         }
-        val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, desired, ::setlistCollisionSuffix)
+        val fileName = fileStorage.uniqueName(StorageDirectory.SETLISTS, desired)
         // Written before the old one is removed, as a song's rename is, and for the same reason.
         val moved = renamed.copy(fileName = fileName)
         saveSetlist(moved)
@@ -88,7 +87,7 @@ internal class SetlistLocalSourceImpl(
             fileName = if (shouldReplace) {
                 setlist.fileName
             } else {
-                fileStorage.uniqueName(StorageDirectory.SETLISTS, setlist.fileName, ::setlistCollisionSuffix)
+                fileStorage.uniqueName(StorageDirectory.SETLISTS, setlist.fileName)
             },
         )
         .also { saveSetlist(it) }

@@ -38,17 +38,18 @@ internal fun songFileName(title: String, artist: String, extension: String = SON
 internal fun setlistFileName(title: String) = LibraryFiles.normalizedName(title) + SETLIST_EXTENSION
 
 /**
- * The first free variant of [desired], suffixed " (2)", " (3)"… before the extension. Nothing in the library is ever
- * overwritten implicitly, so imports and new songs land next to a name they collide with rather than replacing it.
+ * The first free variant of [desired], numbered before the extension. Nothing in the library is ever overwritten
+ * implicitly, so imports and new songs land next to a name they collide with rather than replacing it.
  *
- * @param collisionSuffix How the number is written, for the one kind of file whose name is normalized: a setlist
- *   that has to make way for another one becomes `summer_set_2` rather than growing the space and the brackets its
- *   name was built without.
+ * @param collisionSuffix How the number is written. Every name Campfire gives a file is normalized, so the default is
+ *   the underscore that name is already built out of: `tukorfurogep-arviz_2`, rather than a space and a pair of
+ *   brackets in a name that has neither. [arrivingCollisionSuffix] is for the one caller that writes a file under a
+ *   name it did not invent.
  */
 internal suspend fun FileStorage.uniqueName(
     directory: StorageDirectory,
     desired: String,
-    collisionSuffix: (index: Int) -> String = { " ($it)" },
+    collisionSuffix: (index: Int) -> String = ::normalizedCollisionSuffix,
 ): String {
     if (!exists(directory, desired)) return desired
     val extension = desired.knownExtension()
@@ -61,8 +62,16 @@ internal suspend fun FileStorage.uniqueName(
     }
 }
 
-/** The collision suffix of a setlist, whose name is normalized, see [setlistFileName]. */
-internal fun setlistCollisionSuffix(index: Int) = LibraryFiles.NAME_SEPARATOR + index
+/** The collision suffix of a name the app derived itself, which is every name it writes into the library. */
+internal fun normalizedCollisionSuffix(index: Int) = LibraryFiles.NAME_SEPARATOR + index
+
+/**
+ * The collision suffix of a file arriving under a name of someone else's making: a copy that sync brings down of a
+ * file changed on both sides. Its name is whatever the other device called it - Campfire may not even be able to
+ * parse the file - so the number is added the way it would be to any document, without pretending the name it is
+ * joined to was built out of underscores.
+ */
+internal fun arrivingCollisionSuffix(index: Int) = " ($index)"
 
 /**
  * Whether this file is already named [desired], the number a collision may have added included: a file that had to

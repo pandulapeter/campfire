@@ -92,6 +92,7 @@ import com.pandulapeter.campfire.presentation.resources.songs_actions
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.EmptyState
+import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.SongActionsMenu
 import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
@@ -180,6 +181,10 @@ internal fun SongDetailsScreen(
     }
     // Every page scrolls on its own, so the app bar's notion of "content scrolled underneath" restarts per page.
     LaunchedEffect(pagerState.currentPage) { scrollBehavior.state.contentOffset = 0f }
+    // The arrow keys and the page turner pedal scroll the page's ScrollState directly (see songKeyboardShortcuts),
+    // which bypasses nested scroll the same way the fast scroller's drag does, so the bar's overlap state is
+    // corrected from the current page's scroll position here instead of waiting for a gesture that never arrives.
+    currentPageScrollState?.let { KeepTopAppBarInSync(scrollBehavior, it) }
 
     Column(
         modifier = modifier

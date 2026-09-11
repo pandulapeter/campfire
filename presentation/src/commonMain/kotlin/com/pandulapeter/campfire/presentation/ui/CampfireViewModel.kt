@@ -163,7 +163,6 @@ class CampfireViewModel(
      */
     internal val songsScrollPosition = ScrollPosition()
     internal val setlistsScrollPosition = ScrollPosition()
-    internal val settingsScrollPosition = ScrollPosition()
 
     // Data
     private val _query = MutableStateFlow("")

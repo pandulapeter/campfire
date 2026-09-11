@@ -27,10 +27,16 @@
     <string name="import_failed">Import failed</string>
     <string name="export_failed">Export failed</string>
     <string name="import_conflicts">Some names are taken</string>
-    <string name="import_conflicts_summary">%1$d of the files you are importing have the name of a different file already in your library.</string>
+    <plurals name="import_conflicts_summary">
+        <item quantity="one">One of the files you are importing has the name of a different file already in your library.</item>
+        <item quantity="other">%1$d of the files you are importing have the name of a different file already in your library.</item>
+    </plurals>
     <string name="import_conflicts_new">%1$d songs and %2$d setlists are new and will be imported either way.</string>
     <string name="import_conflicts_duplicates">%1$d are already in your library, unchanged, and will be left alone.</string>
-    <string name="import_conflicts_skipped">%1$d files are neither songs nor setlists and cannot be imported.</string>
+    <plurals name="import_conflicts_skipped">
+        <item quantity="one">One file is neither a song nor a setlist and cannot be imported.</item>
+        <item quantity="other">%1$d files are neither songs nor setlists and cannot be imported.</item>
+    </plurals>
     <string name="import_conflicts_files">The names that are taken</string>
     <string name="import_conflicts_more">and %1$d more</string>
     <string name="import_conflicts_question">What should happen to those?</string>

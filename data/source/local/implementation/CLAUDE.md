@@ -33,12 +33,15 @@ File-backed multiplatform implementation of `:data:source:local:api`, on all fou
 - **`FileNames.kt`** owns everything about what a file is called. Every name the app writes itself is normalized
   (`LibraryFiles.normalizedName`): `tukorfurogep-arviz.cho` for a song, each half of `artist - title` folded on its
   own so the dash between them survives, and `summer_set.setlist.json` for a setlist. `uniqueName` suffixes until the
-  name is free — ` (2)`, ` (3)`… for an imported file that keeps the name it arrived with, `_2` for a normalized one,
-  which is the same rule written in the alphabet the name is already in. `isNamed` answers whether a file already
-  carries the name it would be given, that suffix included, which is what keeps "Update file name" from offering
-  itself to a song that has made way for another one. Nothing in the library is ever overwritten implicitly.
+  name is free, `_2` by default — the same rule written in the alphabet every name it numbers is already in. The
+  bracketed ` (2)` is left to `arrivingCollisionSuffix` and the one caller that writes a file under a name it did not
+  invent: the copy sync brings down of a file changed on both sides, whose name is whatever the other device called
+  it. `isNamed` answers whether a file already carries the name it would be given, that suffix included, which is
+  what keeps "Update file name" from offering itself to a song that has made way for another one. Nothing in the
+  library is ever overwritten implicitly.
 - **`source/`** — the four local sources. `SongLocalSourceImpl` reads the whole ChordPro family
-  (`LibraryFiles.SONG_EXTENSIONS`) but writes only `.cho`, and gets a song's title, artist, key, `{transpose}` (which
+  (`LibraryFiles.SONG_EXTENSIONS`) but writes only `.cho` — `importFileName` included, so a `.crd` that is imported
+  is stored as the `.cho` it is written back as — and gets a song's title, artist, key, `{transpose}` (which
   travels with the key, since the key a list names is the one the song sounds in), tags and "has chords" from a single
   `:chordpro` `summarize` call, so that neither the file nor the text is walked twice. The scan reads a batch of
   files at a time rather than all of them at once: that is what bounds the concurrency on a library of thousands,
@@ -53,5 +56,6 @@ File-backed multiplatform implementation of `:data:source:local:api`, on all fou
   `ZipWriter` (STORED only — song text compresses badly enough not to be worth it), `Inflater` (raw DEFLATE, RFC 1951,
   following `puff.c`) and `Crc32`. It exists because no multiplatform zip library covers wasmJs.
 
-Tested with `commonTest` (zip round trips, reader rejections) and `desktopTest` (the JVM storage, and the inflater
-against archives the JVM produced), run with `./gradlew :data:source:local:implementation:desktopTest`.
+Tested with `commonTest` (zip round trips, reader rejections) and `desktopTest` (the JVM storage, what unpacking an
+archive keeps, and the inflater against archives the JVM produced), run with
+`./gradlew :data:source:local:implementation:desktopTest`.

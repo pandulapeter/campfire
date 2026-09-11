@@ -40,11 +40,19 @@ interface SongLocalSource {
     suspend fun createSong(title: String, artist: String, text: String): Song
 
     /**
-     * The name [text] wants in the library: [desiredFileName] when the import has an original name worth keeping,
-     * otherwise one derived from the title and artist in the text itself. Nothing is read or written, and a name
-     * that is already taken is returned as it is - deciding what to do about that is the caller's business.
+     * The name [text] wants in the library: the one its own title and artist give it, normalized the way every other
+     * name the app writes is. Where an incoming file declares no title of its own there is nothing in it to be named
+     * after, and [fallbackTitle] - the name it arrived under, for a file that held a single song - stands in as the
+     * title, since that is what would title the song in the library anyway.
+     *
+     * An import is named by what is in the file rather than by what the file was called, so that a song arrives under
+     * the same name whether it was written in the app, exported from another copy of it or downloaded from a site
+     * that names its downloads after the page they came from.
+     *
+     * Nothing is read or written, and a name that is already taken is returned as it is - deciding what to do about
+     * that is the caller's business.
      */
-    fun importFileName(desiredFileName: String?, text: String): String
+    fun importFileName(fallbackTitle: String, text: String): String
 
     /**
      * Writes [text] under [fileName] and returns the song it became. The name is suffixed until it is free unless

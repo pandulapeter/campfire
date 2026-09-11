@@ -30,8 +30,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
@@ -43,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.presentation.CAMPFIRE_VERSION_NAME
+import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.ic_campfire
 import com.pandulapeter.campfire.presentation.resources.ic_coffee
@@ -60,11 +61,13 @@ import com.pandulapeter.campfire.presentation.resources.settings_accidentals_des
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_flats
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_original
 import com.pandulapeter.campfire.presentation.resources.settings_accidentals_sharps
-import com.pandulapeter.campfire.presentation.resources.settings_german_notation
-import com.pandulapeter.campfire.presentation.resources.settings_german_notation_description
 import com.pandulapeter.campfire.presentation.resources.settings_created_by
 import com.pandulapeter.campfire.presentation.resources.settings_export_all
+import com.pandulapeter.campfire.presentation.resources.settings_german_notation
+import com.pandulapeter.campfire.presentation.resources.settings_german_notation_description
 import com.pandulapeter.campfire.presentation.resources.settings_git_hub
+import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow
+import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow_description
 import com.pandulapeter.campfire.presentation.resources.settings_import
 import com.pandulapeter.campfire.presentation.resources.settings_library
 import com.pandulapeter.campfire.presentation.resources.settings_library_location
@@ -75,8 +78,6 @@ import com.pandulapeter.campfire.presentation.resources.settings_library_storage
 import com.pandulapeter.campfire.presentation.resources.settings_library_summary
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode_description
-import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow
-import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow_description
 import com.pandulapeter.campfire.presentation.resources.settings_performance_mode
 import com.pandulapeter.campfire.presentation.resources.settings_performance_mode_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
@@ -116,6 +117,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ImportProgress
 import com.pandulapeter.campfire.presentation.ui.components.KeepTopAppBarInSync
 import com.pandulapeter.campfire.presentation.ui.components.LinkListItem
 import com.pandulapeter.campfire.presentation.ui.components.SECTION_HEADER_GAP
+import com.pandulapeter.campfire.presentation.ui.components.ScrollPosition
 import com.pandulapeter.campfire.presentation.ui.components.SectionHeader
 import com.pandulapeter.campfire.presentation.ui.components.SegmentedChoice
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
@@ -123,15 +125,14 @@ import com.pandulapeter.campfire.presentation.ui.components.SwitchListItem
 import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
 import com.pandulapeter.campfire.presentation.ui.components.rememberRetainedLazyListState
-import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
-import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
+import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
+import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.theme.isDarkTheme
 import com.pandulapeter.campfire.presentation.ui.theme.themeColorOptions
-import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -145,7 +146,7 @@ internal fun SettingsScreen(
     urlOpener: (String) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val listState = rememberRetainedLazyListState(viewModel.settingsScrollPosition)
+    val listState = rememberRetainedLazyListState(ScrollPosition())
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
@@ -410,7 +411,7 @@ internal fun SettingsScreen(
                     modifier = listItemAnimation(listState),
                     title = stringResource(Res.string.settings_website),
                     icon = painterResource(Res.drawable.ic_website),
-                    onClick = { urlOpener("https:,//pandulapeter.com/") }
+                    onClick = { urlOpener("https://pandulapeter.com/") }
                 )
             }
             item(key = "github") {
@@ -418,7 +419,7 @@ internal fun SettingsScreen(
                     modifier = listItemAnimation(listState),
                     title = stringResource(Res.string.settings_git_hub),
                     icon = painterResource(Res.drawable.ic_git_hub),
-                    onClick = { urlOpener("https:,//github.com/pandulapeter") }
+                    onClick = { urlOpener("https://github.com/pandulapeter") }
                 )
             }
             item(key = "privacy_policy") {
@@ -426,7 +427,7 @@ internal fun SettingsScreen(
                     modifier = listItemAnimation(listState),
                     title = stringResource(Res.string.settings_privacy_policy),
                     icon = painterResource(Res.drawable.ic_privacy_policy),
-                    onClick = { urlOpener("https:,//pandulapeter.com/legal/privacy_policy-campfire.html") }
+                    onClick = { urlOpener("https://pandulapeter.com/legal/privacy_policy-campfire.html") }
                 )
             }
             if (canAskForDonations) {
@@ -435,7 +436,7 @@ internal fun SettingsScreen(
                         modifier = listItemAnimation(listState),
                         title = stringResource(Res.string.settings_support),
                         icon = painterResource(Res.drawable.ic_coffee),
-                        onClick = { urlOpener("https:,//buymeacoffee.com/pandulapeter") }
+                        onClick = { urlOpener("https://buymeacoffee.com/pandulapeter") }
                     )
                 }
             }

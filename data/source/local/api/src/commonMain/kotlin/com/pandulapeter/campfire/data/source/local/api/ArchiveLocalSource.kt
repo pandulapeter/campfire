@@ -17,6 +17,10 @@ interface ArchiveLocalSource {
      * Every file in a zip archive, with the paths of the entries stripped and archives inside it unpacked too (up to
      * a few levels deep, so that a zip of zips of zips cannot be used to make the app work forever). Throws when the
      * bytes are not a readable archive.
+     *
+     * Hidden files are not among them: an AppleDouble "._name.cho" or a ".DS_Store" is the archiving tool's own
+     * bookkeeping rather than anything the user put in, so the caller never learns of them and never has to account
+     * for them. Everything else is returned as it is, unread.
      */
     suspend fun unpack(archive: ByteArray): List<ImportedFile>
 

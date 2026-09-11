@@ -16,6 +16,7 @@ import com.pandulapeter.campfire.data.source.local.api.LibraryFileLocalSource
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.FileStorage
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StorageDirectory
 import com.pandulapeter.campfire.data.source.local.implementation.storage.file.StoredFileInfo
+import com.pandulapeter.campfire.data.source.local.implementation.arrivingCollisionSuffix
 import com.pandulapeter.campfire.data.source.local.implementation.uniqueName
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -38,7 +39,7 @@ internal class LibraryFileLocalSourceImpl(
         fileStorage.writeBytes(kind.directory, name, bytes)
 
     override suspend fun writeLibraryFileToFreeName(kind: LibraryFileKind, desiredName: String, bytes: ByteArray): String {
-        val name = fileStorage.uniqueName(kind.directory, desiredName)
+        val name = fileStorage.uniqueName(kind.directory, desiredName, ::arrivingCollisionSuffix)
         fileStorage.writeBytes(kind.directory, name, bytes)
         return name
     }

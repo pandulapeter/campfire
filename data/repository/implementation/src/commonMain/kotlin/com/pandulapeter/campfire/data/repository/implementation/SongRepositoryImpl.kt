@@ -50,7 +50,7 @@ internal class SongRepositoryImpl(
         return song
     }
 
-    override fun importFileName(desiredFileName: String?, text: String) = songLocalSource.importFileName(desiredFileName, text)
+    override fun importFileName(fallbackTitle: String, text: String) = songLocalSource.importFileName(fallbackTitle, text)
 
     override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean) =
         songLocalSource.importSong(fileName = fileName, text = text, shouldReplace = shouldReplace)

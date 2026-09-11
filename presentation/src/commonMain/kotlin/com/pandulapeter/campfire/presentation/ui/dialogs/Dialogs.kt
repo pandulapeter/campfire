@@ -121,6 +121,7 @@ import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDisplay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import com.pandulapeter.campfire.presentation.localization.currentLanguage
+import com.pandulapeter.campfire.presentation.localization.pluralStringResource
 import com.pandulapeter.campfire.presentation.localization.stringResource
 
 /**
@@ -322,7 +323,13 @@ private fun ImportConflictsDialog(
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                Text(stringResource(Res.string.import_conflicts_summary, summary.conflictingFileNames.size))
+                Text(
+                    pluralStringResource(
+                        Res.plurals.import_conflicts_summary,
+                        summary.conflictingFileNames.size,
+                        summary.conflictingFileNames.size,
+                    ),
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 ImportConflictsFileNames(fileNames = summary.conflictingFileNames)
                 if (summary.newSongCount > 0 || summary.newSetlistCount > 0) {
@@ -332,7 +339,7 @@ private fun ImportConflictsDialog(
                     ImportConflictsNote(stringResource(Res.string.import_conflicts_duplicates, summary.duplicateCount))
                 }
                 if (summary.skippedCount > 0) {
-                    ImportConflictsNote(stringResource(Res.string.import_conflicts_skipped, summary.skippedCount))
+                    ImportConflictsNote(pluralStringResource(Res.plurals.import_conflicts_skipped, summary.skippedCount, summary.skippedCount))
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(

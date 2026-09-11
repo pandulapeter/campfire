@@ -66,27 +66,38 @@ object LibraryFiles {
      * [base] reduced to what every file system, shell and cloud service agrees about: lowercase unaccented words
      * joined with underscores, capped at [MAX_NAME_LENGTH] and never empty. The extension is the caller's to add.
      *
-     * Two names are built this way, which is why the rule is vocabulary rather than either caller's own business.
-     * One is the name a file leaves the app under, where whatever is on the other side reads it instead of Campfire
-     * — a shell that needs every space escaped, a service that lowercases a name behind one's back, a file system
-     * that cannot store an "ő". The other is the file name of a setlist: a song is titled by its file name wherever
-     * the file itself does not say (which is why a song keeps the user's own text, accents and capitals included),
-     * while a setlist carries its title inside the document and is free to be named for the systems it travels
-     * through instead.
+     * Every name the app writes is built this way, which is why the rule is vocabulary rather than any one caller's
+     * own business. It is the name a file leaves the app under, where whatever is on the other side reads it instead
+     * of Campfire — a shell that needs every space escaped, a service that lowercases a name behind one's back, a
+     * file system that cannot store an "ő" — and it is equally the name a song is stored under, so that a library
+     * assembled out of imports, hand written files and songs written in the app reads as one set rather than as the
+     * spelling habits of everywhere its files have been.
+     *
+     * Three of the rules are about the same thing: the same song, written down by two people, has to arrive at one
+     * name. A title is as readily typed "&" as "and" and a credit "feat." as "ft", and neither difference is one the
+     * library should file under two names.
      */
     fun normalizedName(base: String): String {
-        // A character no accent table knows (a Cyrillic or CJK title) becomes a separator like punctuation does,
-        // which is the one case where nothing is left of the name and the fallback has to stand in for it.
-        val words = base.lowercase().map { character ->
-            when (val folded = character.withoutAccent()) {
-                // The three letters that are two letters once they are spelled out, which is the one thing the
-                // accent table cannot say: everything in it folds to a single character.
-                'ß' -> "ss"
-                'æ' -> "ae"
-                'œ' -> "oe"
-                else -> if (folded in 'a'..'z' || folded in '0'..'9') folded.toString() else NAME_SEPARATOR
-            }
-        }.joinToString(separator = "").split(NAME_SEPARATOR).filter { it.isNotEmpty() }
+        val words = base.lowercase()
+            // The one piece of punctuation that binds rather than separates, and so is dropped instead of folded to
+            // an underscore: "don't" is one word, in whichever of its spellings a keyboard produced it.
+            .filterNot { it in APOSTROPHES }
+            // Turned into the word it is read as rather than into a separator, so that the two ways of writing the
+            // same title meet here instead of naming two files.
+            .replace(AND_SIGN, " and ")
+            // A character no accent table knows (a Cyrillic or CJK title) becomes a separator like punctuation does,
+            // which is the one case where nothing is left of the name and the fallback has to stand in for it.
+            .map { character ->
+                when (val folded = character.withoutAccent()) {
+                    // The three letters that are two letters once they are spelled out, which is the one thing the
+                    // accent table cannot say: everything in it folds to a single character.
+                    'ß' -> "ss"
+                    'æ' -> "ae"
+                    'œ' -> "oe"
+                    else -> if (folded in 'a'..'z' || folded in '0'..'9') folded.toString() else NAME_SEPARATOR
+                }
+            }.joinToString(separator = "").split(NAME_SEPARATOR).filter { it.isNotEmpty() }
+            .map { word -> ABBREVIATIONS[word] ?: word }
         // Trimmed after the cap rather than before it, since cutting mid-word leaves a trailing separator behind.
         return words.joinToString(NAME_SEPARATOR).take(MAX_NAME_LENGTH).trim(NAME_SEPARATOR_CHARACTER).ifEmpty { FALLBACK_NAME }
     }
@@ -96,4 +107,20 @@ object LibraryFiles {
 
     private const val NAME_SEPARATOR_CHARACTER = '_'
     private const val FALLBACK_NAME = "untitled"
+
+    /** Straight, curly and the modifier letter, since all three reach a title as the same key on somebody's keyboard. */
+    private const val APOSTROPHES = "'’ʼ"
+
+    /** Both signs a title writes "and" with. */
+    private val AND_SIGN = Regex("[&+]")
+
+    /**
+     * Spellings that are one word once the name is filed. Applied per word and after the folding, so what is matched
+     * is the bare `feat` a "feat." has already become, and a name that has been through here once is left alone by a
+     * second pass — which it has to be, since an exported name is normalized again on its way back in.
+     */
+    private val ABBREVIATIONS = mapOf(
+        "feat" to "ft",
+        "featuring" to "ft",
+    )
 }

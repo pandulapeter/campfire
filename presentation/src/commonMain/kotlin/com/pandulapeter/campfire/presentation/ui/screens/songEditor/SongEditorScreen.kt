@@ -66,6 +66,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
@@ -400,6 +401,27 @@ private fun ChordProTextField(
     }
     val bodyLarge = MaterialTheme.typography.bodyLarge
     val layoutDirection = LocalLayoutDirection.current
+    val density = LocalDensity.current
+    // The field does its own scrolling when it is allowed more than one line; wrapping it in a scrollable
+    // swallows the press that should have put the caret in it, and nothing can be typed at all.
+    val scrollState = rememberScrollState()
+    val insetBottomPadding = contentPadding.calculateBottomPadding() + 32.dp
+    val insetBottomPaddingPx = with(density) { insetBottomPadding.roundToPx() }
+    // Unlike SongPreview's bottom padding, which sits inside its own verticalScroll and is therefore only ever
+    // spent once scrolled past the last line, this field's padding is outside the scrolling BasicTextField manages
+    // internally - there is no way to hand it a padding that only counts once the content runs out. Applying it
+    // unconditionally reserved that space at all times, edge-to-edge or not. Toggling it off is not simply a matter
+    // of asking whether the field is scrolled to its end, either: the padding being decided is also what the field
+    // measures its own scrollable height against, so removing it right at the end immediately makes the field think
+    // there is further to scroll, which puts the padding straight back - the two states chase each other forever.
+    // Requiring the field to have scrolled back up by at least the padding's own height before giving it up is what
+    // breaks that loop.
+    var respectsBottomInset by remember { mutableStateOf(false) }
+    LaunchedEffect(scrollState, insetBottomPaddingPx) {
+        snapshotFlow { scrollState.value to scrollState.maxValue }.collect { (value, maxValue) ->
+            respectsBottomInset = if (respectsBottomInset) value >= maxValue - insetBottomPaddingPx else value >= maxValue
+        }
+    }
     BasicTextField(
         modifier = modifier
             // The same save as the app bar's button, for the hand that reaches for the keyboard instead. It lives on
@@ -418,7 +440,7 @@ private fun ChordProTextField(
                 start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
                 end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
                 top = 8.dp,
-                bottom = contentPadding.calculateBottomPadding() + 32.dp,
+                bottom = if (respectsBottomInset) insetBottomPadding else 0.dp,
             ),
         state = textFieldState,
         textStyle = bodyLarge.copy(
@@ -430,9 +452,7 @@ private fun ChordProTextField(
         lineLimits = TextFieldLineLimits.MultiLine(),
         outputTransformation = outputTransformation,
         cursorBrush = SolidColor(colorScheme.primary),
-        // The field does its own scrolling when it is allowed more than one line; wrapping it in a scrollable
-        // swallows the press that should have put the caret in it, and nothing can be typed at all.
-        scrollState = rememberScrollState(),
+        scrollState = scrollState,
     )
 }
 

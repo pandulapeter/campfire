@@ -76,13 +76,14 @@ class PrepareImportUseCaseImpl internal constructor(
                 return@flatMap emptyList()
             }
             parts.map { part ->
-                // A file that held a single song keeps the name it arrived with; the parts of a collection are named
-                // after what is in them, since the file they came from named none of them.
-                val desiredFileName = if (parts.size == 1) file.name.substringBeforeLast('.') + LibraryFiles.SONG_EXTENSION else null
+                // Every song is named by its own header, whichever file it arrived in. The name a file came under is
+                // only worth anything where the song inside it declares no title: then it is what titles the song,
+                // and a collection's parts do not even have that, since the file they came from named none of them.
+                val fallbackTitle = if (parts.size == 1) file.name.substringBeforeLast('.') else ""
                 // The splitter trims the blank lines between the songs of a collection; the newline a text file ends
                 // with is not one of those, and without it an exported library does not import back byte for byte.
                 val text = part + "\n"
-                val fileName = songRepository.importFileName(desiredFileName = desiredFileName, text = text)
+                val fileName = songRepository.importFileName(fallbackTitle = fallbackTitle, text = text)
                 // Not cached: an import walks files the library has no other reason to hold on to.
                 val existingText = plannedTexts[fileName] ?: songContentRepository.loadSongContent(fileName, shouldCache = false)?.text
                 val status = when {

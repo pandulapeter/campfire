@@ -19,7 +19,10 @@ platform types.
   the title it has just been given.
 - `UserPreferencesLocalSource` — one document; `loadUserPreferences()` never returns null, because a missing or
   unreadable document means the defaults, which are defined once next to the document itself.
-- `ArchiveLocalSource` — zip pack and unpack, over bytes.
+- `ArchiveLocalSource` — zip pack and unpack, over bytes. Unpacking hands back only files somebody put in the
+  archive: the hidden ones an archiving tool writes for itself (macOS packs an AppleDouble `._name.cho` beside
+  every entry, under the extension of the file it belongs to) are dropped where they are read, so no caller has
+  to count them, decode them or report them.
 - `LibraryFileLocalSource` — the library as *bytes*, which is what sync moves around. Deliberately does not look
   inside the files at all, so a song Campfire cannot parse still travels between devices unchanged.
   `writeLibraryFileToFreeName` is how an incoming copy of a file that changed on both sides lands next to the local
@@ -32,7 +35,7 @@ platform types.
 **File naming is the storage layer's business.** Callers hand over a title, an artist and some text; the source decides
 what the file is called, normalizes it to what every file system, shell and service agrees about and suffixes it until
 the name is free. That is why
-`createSong` and `importSong` return the `Song` they became rather than taking a file name. `importFileName` is the naming rule on its own, with nothing read or written, so that an import can work out what it would collide with before it collides with it; `importSong` and `importSetlist` take `shouldReplace`, which is the one way either of them writes over a name that is taken.
+`createSong` and `importSong` return the `Song` they became rather than taking a file name. `importFileName` is the naming rule on its own, with nothing read or written, so that an import can work out what it would collide with before it collides with it — and it names an incoming song by its own header rather than by what its file was called, the arriving name standing in as the title only where the song declares none; `importSong` and `importSetlist` take `shouldReplace`, which is the one way either of them writes over a name that is taken.
 
 There is one implementation (`:implementation`), multiplatform, with the platform difference pushed down into
 `FileStorage`.

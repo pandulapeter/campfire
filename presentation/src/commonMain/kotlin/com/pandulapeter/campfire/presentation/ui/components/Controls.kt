@@ -17,6 +17,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -26,23 +29,29 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,7 +59,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -58,6 +69,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pandulapeter.campfire.data.model.domain.SongLanguage
 import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
+import com.pandulapeter.campfire.presentation.localization.stringResource
 import com.pandulapeter.campfire.presentation.resources.Res
 import com.pandulapeter.campfire.presentation.resources.filters
 import com.pandulapeter.campfire.presentation.resources.ic_check
@@ -79,7 +91,6 @@ import com.pandulapeter.campfire.presentation.resources.songs_tags_match_mode_an
 import com.pandulapeter.campfire.presentation.resources.songs_tags_show_all
 import com.pandulapeter.campfire.presentation.resources.songs_tags_show_less
 import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
-import com.pandulapeter.campfire.presentation.localization.stringResource
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -88,6 +99,19 @@ import org.jetbrains.compose.resources.painterResource
  * same controls are shown in a bottom sheet instead.
  */
 internal fun hasRoomForSidePanel(screenWidth: Dp) = columnCountForWidth(screenWidth - SIDE_PANEL_WIDTH) >= SIDE_PANEL_MIN_COLUMN_COUNT
+
+/**
+ * The panel and the sheet are the same controls shown two different ways, so a window resize that grows the panel
+ * into view has to close whichever sheet was covering the screen instead of leaving both on screen at once.
+ */
+@Composable
+internal fun DismissSheetWhenSidePanelAppears(
+    isSidePanelVisible: Boolean,
+    isSheetVisible: Boolean,
+    onDismiss: () -> Unit,
+) = LaunchedEffect(isSidePanelVisible) {
+    if (isSidePanelVisible && isSheetVisible) onDismiss()
+}
 
 /**
  * The number of columns the song lists lay their items out in, measured from the width the screen settles at rather
@@ -207,7 +231,11 @@ internal fun SongsControls(
     val tags by viewModel.tags.collectAsStateWithLifecycle()
     val languages by viewModel.languages.collectAsStateWithLifecycle()
     Column(
-        modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(contentPadding)
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(contentPadding)
+            .padding(bottom = 16.dp)
     ) {
         SettingsSectionTitle(text = stringResource(Res.string.songs_sorting_mode))
         SegmentedChoice(
@@ -280,7 +308,12 @@ private fun TagFilters(
     val visibleTags = remember(tags, selected, isExpanded) {
         if (isExpanded) tags else tags.filterIndexed { index, tag -> index < MAX_COLLAPSED_TAG_COUNT || tag.name.lowercase() in selected }
     }
-    SettingsSectionTitle(text = stringResource(Res.string.songs_tags))
+    FilterSectionTitle(
+        title = stringResource(Res.string.songs_tags),
+        isClearVisible = selected.isNotEmpty(),
+        clearText = stringResource(Res.string.songs_tags_clear),
+        onClearClicked = onClear,
+    )
     TagFlowRow(
         modifier = Modifier.padding(horizontal = CONTROLS_PADDING)
     ) {
@@ -293,29 +326,20 @@ private fun TagFilters(
             )
         }
     }
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = CONTROLS_PADDING - BUTTON_INSET),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (tags.size > MAX_COLLAPSED_TAG_COUNT) {
-            TextButton(onClick = { isExpanded = !isExpanded }) {
-                Text(
-                    text = if (isExpanded) {
-                        stringResource(Res.string.songs_tags_show_less)
-                    } else {
-                        stringResource(Res.string.songs_tags_show_all, tags.size)
-                    }
-                )
-            }
-        }
-        AnimatedVisibility(
-            visible = selected.isNotEmpty(),
-            enter = fadeIn(),
-            exit = fadeOut(),
+    // This one stays under the chips, since what it asks about is the list it is at the end of - and unlike the
+    // clearing of the filter it comes and goes with the size of the library rather than with what is selected.
+    if (tags.size > MAX_COLLAPSED_TAG_COUNT) {
+        TextButton(
+            modifier = Modifier.padding(horizontal = CONTROLS_PADDING - BUTTON_INSET),
+            onClick = { isExpanded = !isExpanded },
         ) {
-            TextButton(onClick = onClear) {
-                Text(stringResource(Res.string.songs_tags_clear))
-            }
+            Text(
+                text = if (isExpanded) {
+                    stringResource(Res.string.songs_tags_show_less)
+                } else {
+                    stringResource(Res.string.songs_tags_show_all, tags.size)
+                }
+            )
         }
     }
     // Only worth asking about once two tags are on: one tag means the same thing either way.
@@ -351,7 +375,12 @@ private fun LanguageFilters(
     onLanguageClicked: (String) -> Unit,
     onClear: () -> Unit,
 ) = Column(modifier = modifier) {
-    SettingsSectionTitle(text = stringResource(Res.string.songs_languages))
+    FilterSectionTitle(
+        title = stringResource(Res.string.songs_languages),
+        isClearVisible = selectedLanguages.isNotEmpty(),
+        clearText = stringResource(Res.string.songs_languages_clear),
+        onClearClicked = onClear,
+    )
     TagFlowRow(
         modifier = Modifier.padding(horizontal = CONTROLS_PADDING)
     ) {
@@ -364,14 +393,56 @@ private fun LanguageFilters(
             )
         }
     }
+}
+
+/**
+ * The title of a filter group, with the action that empties it at the other end of the same row.
+ *
+ * It is up here rather than under the chips because it comes and goes with the selection, and a button of its own
+ * would grow and shrink everything below it - in a bottom sheet, the sheet itself - every time a filter was turned on
+ * or off. The row is laid out so that it cannot: it keeps the height a plain [SettingsSectionTitle] has, the title's
+ * own padding split around a content box tall enough to hold the action ([SECTION_ACTION_HEIGHT]), so the title reads
+ * exactly where it would have and the action never decides anything.
+ */
+@Composable
+private fun FilterSectionTitle(
+    modifier: Modifier = Modifier,
+    title: String,
+    isClearVisible: Boolean,
+    clearText: String,
+    onClearClicked: () -> Unit,
+) = Row(
+    modifier = modifier
+        .fillMaxWidth()
+        .padding(
+            start = CONTROLS_PADDING,
+            end = CONTROLS_PADDING - BUTTON_INSET,
+            top = SECTION_TITLE_TOP_PADDING,
+            bottom = SECTION_TITLE_BOTTOM_PADDING,
+        )
+        .height(SECTION_ACTION_HEIGHT),
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    SettingsSectionTitle(
+        modifier = Modifier.weight(1f),
+        text = title,
+        contentPadding = PaddingValues(),
+    )
     AnimatedVisibility(
-        modifier = Modifier.padding(horizontal = CONTROLS_PADDING - BUTTON_INSET),
-        visible = selectedLanguages.isNotEmpty(),
+        visible = isClearVisible,
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
-        TextButton(onClick = onClear) {
-            Text(stringResource(Res.string.songs_languages_clear))
+        // A button that reserved the 48dp touch target would be the tallest thing in the row and would decide its
+        // height, which is the one thing this row must not let it do.
+        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+            TextButton(
+                modifier = Modifier.height(SECTION_ACTION_HEIGHT),
+                onClick = onClearClicked,
+                contentPadding = PaddingValues(horizontal = BUTTON_INSET),
+            ) {
+                Text(text = clearText)
+            }
         }
     }
 }
@@ -380,6 +451,16 @@ private fun LanguageFilters(
  * One value of a filter group: what it is called, how many songs it still leaves, and whether it is on. The count is
  * part of the chip rather than a line under the group, since the number is what tells a tag worth picking from one
  * that would leave a single song on screen.
+ *
+ * It is a Material filter chip drawn by hand rather than [androidx.compose.material3.FilterChip] itself, for the one
+ * thing the chip gets wrong: its press and hover state layer is drawn around the label instead of around the chip, so
+ * only a band hugging the text lights up while the rest of what can be clicked stays dark. Everything the chip would
+ * decide is still asked of `FilterChipDefaults`, so the colors, the border, the shape and the height are the ones
+ * Material would have used; what is ours is the order of the modifiers. The indication is a node of its own
+ * ([androidx.compose.foundation.indication]) sitting outside the padding and driven by the same interaction source as
+ * the click, which is what puts the state layer on the chip's own bounds, and the clip above it is what rounds it -
+ * the state layer is drawn as a plain rectangle and is bound by nothing else, which is what used to let it spill past
+ * the rounded corners on the web.
  */
 @Composable
 private fun CountedFilterChip(
@@ -388,46 +469,76 @@ private fun CountedFilterChip(
     songCount: Int,
     isSelected: Boolean,
     onClick: () -> Unit,
-) = FilterChip(
-    modifier = modifier,
-    selected = isSelected,
-    onClick = onClick,
-    leadingIcon = if (isSelected) {
-        {
+) {
+    val colors = FilterChipDefaults.filterChipColors()
+    val contentColor = if (isSelected) colors.selectedLabelColor else colors.labelColor
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier = modifier
+            .minimumInteractiveComponentSize()
+            .clip(FilterChipDefaults.shape)
+            .background(if (isSelected) colors.selectedContainerColor else colors.containerColor)
+            .border(FilterChipDefaults.filterChipBorder(enabled = true, selected = isSelected), FilterChipDefaults.shape)
+            .indication(interactionSource, ripple(color = contentColor))
+            .selectable(
+                selected = isSelected,
+                interactionSource = interactionSource,
+                indication = null,
+                role = Role.Checkbox,
+                onClick = onClick,
+            )
+            .height(FilterChipDefaults.Height)
+            .padding(horizontal = CHIP_PADDING),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // The check grows into the chip the way the Material one does, so that turning a filter on is a movement
+        // rather than a chip that changes width between two frames.
+        AnimatedVisibility(
+            visible = isSelected,
+            enter = expandHorizontally() + fadeIn(),
+            exit = shrinkHorizontally() + fadeOut(),
+        ) {
             Icon(
-                modifier = Modifier.size(FilterChipDefaults.IconSize),
+                modifier = Modifier.padding(end = CHIP_ICON_GAP).size(FilterChipDefaults.IconSize),
                 painter = painterResource(Res.drawable.ic_check),
                 contentDescription = null,
+                tint = if (isSelected) colors.selectedLeadingIconColor else colors.leadingIconColor,
             )
         }
-    } else {
-        null
-    },
-    label = {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                modifier = Modifier.widthIn(max = MAX_TAG_WIDTH),
-                text = label,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                modifier = Modifier.padding(start = TAG_GAP),
-                text = songCount.toString(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    },
-)
+        Text(
+            modifier = Modifier.widthIn(max = MAX_TAG_WIDTH),
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = contentColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            modifier = Modifier.padding(start = TAG_GAP),
+            text = songCount.toString(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
 
 private val SIDE_PANEL_WIDTH = 320.dp
 private const val SIDE_PANEL_MIN_COLUMN_COUNT = 3
 private const val MAX_COLLAPSED_TAG_COUNT = 12
 private val MAX_TAG_WIDTH = 160.dp
 private val CONTROLS_PADDING = 16.dp
+
+/** What a Material filter chip keeps between its border and its label, and between the check and the label. */
+private val CHIP_PADDING = 16.dp
+private val CHIP_ICON_GAP = 8.dp
+
+/**
+ * The three that make a [FilterSectionTitle] exactly as tall as the [SettingsSectionTitle] it stands in for: its 24dp
+ * and 8dp of padding, less the 6dp the content box grows past the line of text it would otherwise be.
+ */
+private val SECTION_ACTION_HEIGHT = 32.dp
+private val SECTION_TITLE_TOP_PADDING = 18.dp
+private val SECTION_TITLE_BOTTOM_PADDING = 2.dp
 
 /** The padding a text button keeps inside its own bounds, taken off so that its label lines up with the titles. */
 private val BUTTON_INSET = 12.dp

@@ -57,6 +57,7 @@ import com.pandulapeter.campfire.presentation.ui.CampfireViewModel
 import com.pandulapeter.campfire.presentation.ui.components.CampfireFloatingActionButton
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.FAB_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.FAST_SCROLLER_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.FastScroller
@@ -115,6 +116,11 @@ internal fun SongsScreen(
     )
     val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
     KeepTopAppBarInSync(scrollBehavior, listState)
+    DismissSheetWhenSidePanelAppears(
+        isSidePanelVisible = isSidePanelVisible,
+        isSheetVisible = visibleDialog == CampfireViewModel.DialogType.SongsControls,
+        onDismiss = viewModel::dismissDialog,
+    )
     Row(
         modifier = modifier.fillMaxSize()
     ) {

@@ -10,6 +10,7 @@
 package com.pandulapeter.campfire.data.source.local.implementation.source
 
 import com.pandulapeter.campfire.chordpro.ChordProParser
+import com.pandulapeter.campfire.chordpro.model.displayTitle
 import com.pandulapeter.campfire.data.model.domain.LibraryFiles
 import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SongContent
@@ -70,8 +71,11 @@ internal class SongLocalSourceImpl(
         return loadSong(fileName) ?: throw IllegalStateException("The song \"$fileName\" disappeared right after it was written.")
     }
 
-    override fun importFileName(desiredFileName: String?, text: String) = desiredFileName
-        ?: ChordProParser.parseMetadata(text).let { songFileName(title = it.title.orEmpty(), artist = it.artist.orEmpty()) }
+    override fun importFileName(fallbackTitle: String, text: String) = ChordProParser.parseMetadata(text).let {
+        // The subtitle is part of the title everywhere else in the app, which is what tells two arrangements of one
+        // song apart - and two files that differ only by it would otherwise be a collision rather than two songs.
+        songFileName(title = it.displayTitle(fallback = fallbackTitle), artist = it.artist.orEmpty())
+    }
 
     override suspend fun importSong(fileName: String, text: String, shouldReplace: Boolean): Song {
         val name = if (shouldReplace) fileName else fileStorage.uniqueName(StorageDirectory.SONGS, fileName)

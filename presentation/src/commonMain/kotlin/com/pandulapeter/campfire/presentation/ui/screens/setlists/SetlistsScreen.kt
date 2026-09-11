@@ -62,6 +62,7 @@ import com.pandulapeter.campfire.presentation.ui.components.ActionsMenuItem
 import com.pandulapeter.campfire.presentation.ui.components.CampfireFloatingActionButton
 import com.pandulapeter.campfire.presentation.ui.components.CampfireTopAppBar
 import com.pandulapeter.campfire.presentation.ui.components.ControlsSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.DismissSheetWhenSidePanelAppears
 import com.pandulapeter.campfire.presentation.ui.components.DragHandle
 import com.pandulapeter.campfire.presentation.ui.components.FAB_CLEARANCE
 import com.pandulapeter.campfire.presentation.ui.components.ListColumns
@@ -98,6 +99,7 @@ internal fun SetlistsScreen(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberRetainedLazyGridState(viewModel.setlistsScrollPosition)
     val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
+    val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
     val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
     val columnCount = songListColumnCount(
         settledWidth = settledWidth,
@@ -105,6 +107,11 @@ internal fun SetlistsScreen(
         isSidePanelVisible = isSidePanelVisible,
     )
     KeepTopAppBarInSync(scrollBehavior, listState)
+    DismissSheetWhenSidePanelAppears(
+        isSidePanelVisible = isSidePanelVisible,
+        isSheetVisible = visibleDialog == CampfireViewModel.DialogType.SetlistsControls,
+        onDismiss = viewModel::dismissDialog,
+    )
     Row(
         modifier = modifier.fillMaxSize()
     ) {
