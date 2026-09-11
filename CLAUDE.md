@@ -129,11 +129,19 @@ preferences/sync-index.json          what the last successful sync run saw
   then `xcrun simctl install/launch`.
 - `./gradlew :app:web:wasmJsBrowserDevelopmentRun` — web app on a dev server; `:app:web:wasmJsBrowserDistribution` writes
   the deployable site to `app/web/build/dist/wasmJs/productionExecutable`.
-- `.github/workflows/web-publish.yml` is that last command run by hand: a manually dispatched workflow that builds the
-  distribution with the Dropbox key from the `DROPBOX_APP_KEY` secret (without it the published app would quietly have
-  no sync provider), then copies it over `campfire/` in the `pandulapeter.github.io` repository, which it reaches with
-  the deploy key in `WEBSITE_DEPLOY_KEY`. The copy is an `rsync --delete`, so the folder holds nothing but the
-  distribution — the privacy policy and the rest of the site live elsewhere in that repository.
+- Releases go out through two manually dispatched workflows in `.github/workflows`, both of them the local build
+  command plus the secrets a checkout does not have. Every build passes `campfire.dropbox.appKey` from the
+  `DROPBOX_APP_KEY` secret, because a published app built without it would quietly have no sync provider at all.
+  - `web-publish.yml` builds the distribution and copies it over `campfire/` in the `pandulapeter.github.io`
+    repository, which it reaches with the deploy key in `WEBSITE_DEPLOY_KEY`. The copy is an `rsync --delete`, so the
+    folder holds nothing but the distribution — the privacy policy and the rest of the site live elsewhere there.
+  - `android-publish.yml` writes the keystore out of `ANDROID_KEYSTORE_BASE64`, builds `assembleRelease` signed with
+    the other three `ANDROID_*` secrets, and uploads the APK and its mapping file to the production track with
+    `PLAY_SERVICE_ACCOUNT_JSON`. It is an **APK** and not an app bundle because the Play listing predates the bundle
+    requirement and was never migrated; a `bundleRelease` would be rejected on upload. The "what's new" text comes
+    from the workflow's two inputs, one per listing language: the English one falls back to the commit log since the
+    last successful run, and the Hungarian one to the English text, since nothing can translate a commit log and a
+    listing saying something true in the wrong language beats one saying nothing.
 
 ## Sync
 

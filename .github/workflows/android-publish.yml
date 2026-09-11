@@ -1,0 +1,114 @@
+# This file is part of Campfire.
+# Copyright (c) Pandula Péter 2017-2026.
+# https://github.com/pandulapeter/campfire
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# https://mozilla.org/MPL/2.0/.
+
+name: 'Publish Android'
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: 'Release notes override, use \n for line breaks (leave empty to generate them from the commit log)'
+        type: string
+        required: false
+      release_notes_hu:
+        description: 'Hungarian release notes, use \n for line breaks (leave empty to show the English ones there too)'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build:
+    name: Build and Publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 21
+          cache: 'gradle'
+      - name: Read version information
+        id: version
+        run: |
+          VERSION_NAME=$(sed -n 's/^campfire\.versionName=//p' gradle.properties)
+          VERSION_CODE=$(sed -n 's/^campfire\.android\.versionCode=//p' gradle.properties)
+          if [ -z "$VERSION_NAME" ] || [ -z "$VERSION_CODE" ]; then
+            echo "Could not read campfire.versionName / campfire.android.versionCode from gradle.properties" >&2
+            exit 1
+          fi
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "Releasing version $VERSION_NAME ($VERSION_CODE)"
+      - name: Generate release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_NOTES_OVERRIDE: ${{ inputs.release_notes }}
+          RELEASE_NOTES_OVERRIDE_HU: ${{ inputs.release_notes_hu }}
+        run: |
+          mkdir -p whatsnew
+          if [ -n "$RELEASE_NOTES_OVERRIDE" ]; then
+            printf '%b\n' "$RELEASE_NOTES_OVERRIDE" > release_notes.txt
+          else
+            WORKFLOW_FILE=$(basename "${GITHUB_WORKFLOW_REF%%@*}")
+            LAST_SHA=$(gh run list --workflow "$WORKFLOW_FILE" --branch "${{ github.ref_name }}" --status success --limit 1 --json headSha --jq '.[0].headSha // empty' || true)
+            if [ -n "$LAST_SHA" ]; then
+              RANGE="$LAST_SHA..HEAD"
+            else
+              RANGE="-n 20"
+            fi
+            git log $RANGE --pretty=format:'- %s' > release_notes.txt
+          fi
+          if [ ! -s release_notes.txt ]; then
+            printf -- '- Version %s\n' "${{ steps.version.outputs.name }}" > release_notes.txt
+          fi
+          # The Play Store counts every locale against the same 500 character limit, and rejects the whole release
+          # when one of them is over it, so each one is cut at a line boundary rather than mid-sentence.
+          trim() { awk '{ total += length($0) + 1; if (total > 500) exit; print }' "$1" > "$2"; }
+          trim release_notes.txt whatsnew/whatsnew-en-US
+          # The Hungarian text is written by hand or not at all - nothing can translate the commit log. Falling back
+          # to the English notes leaves the Hungarian listing saying something true, which an empty entry would not.
+          if [ -n "$RELEASE_NOTES_OVERRIDE_HU" ]; then
+            printf '%b\n' "$RELEASE_NOTES_OVERRIDE_HU" > release_notes_hu.txt
+          else
+            echo "No Hungarian release notes were given, falling back to the English ones."
+            cp release_notes.txt release_notes_hu.txt
+          fi
+          trim release_notes_hu.txt whatsnew/whatsnew-hu-HU
+          for LOCALE in whatsnew/*; do
+            echo "Generated release notes ($(basename "$LOCALE")):"
+            cat "$LOCALE"
+          done
+      - name: Decode release keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > app/android/release.keystore
+      - name: Build release APK
+        run: |
+          ./gradlew :app:android:assembleRelease \
+            -Pcampfire.dropbox.appKey="${{ secrets.DROPBOX_APP_KEY }}" \
+            -Pcampfire.android.keyAlias="${{ secrets.ANDROID_KEY_ALIAS }}" \
+            -Pcampfire.android.keyPassword="${{ secrets.ANDROID_KEY_PASSWORD }}" \
+            -Pcampfire.android.keystoreFile=release.keystore \
+            -Pcampfire.android.keystorePassword="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+      - name: Upload the APK to the Play Console
+        uses: r0adkll/upload-google-play@v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.pandulapeter.campfire
+          releaseFiles: app/android/build/outputs/apk/release/*.apk
+          mappingFile: app/android/build/outputs/mapping/release/mapping.txt
+          releaseName: ${{ steps.version.outputs.name }} (${{ steps.version.outputs.code }})
+          tracks: production
+          status: completed
+          changesNotSentForReview: false
+          whatsNewDirectory: whatsnew
