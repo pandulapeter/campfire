@@ -59,6 +59,12 @@ internal interface AppUpdateController {
 
     /** Restarts the app into the update that has already been downloaded. */
     fun installUpdate()
+
+    /**
+     * Leaves the app, which is what back means on the screen a [AppUpdateState.Required] update puts in the way:
+     * the app is still composed behind it, so a back gesture allowed through would navigate one the user cannot see.
+     */
+    fun closeApp()
 }
 
 /** The whole of the answer on the three platforms with no store to ask. */
@@ -71,6 +77,8 @@ internal object NoAppUpdates : AppUpdateController {
     override fun postponeUpdate() = Unit
 
     override fun installUpdate() = Unit
+
+    override fun closeApp() = Unit
 }
 
 /**

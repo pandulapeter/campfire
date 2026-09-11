@@ -85,6 +85,9 @@
     <string name="settings_library_summary">Songs: %1$d · Setlists: %2$d</string>
     <string name="settings_library_location">Location</string>
     <string name="settings_library_location_files_app">Visible in the Files app under Campfire</string>
+    <string name="settings_library_storage">Storage</string>
+    <string name="settings_library_storage_granted">Your browser has agreed to keep the library until you clear this site\'s data.</string>
+    <string name="settings_library_storage_best_effort">Your browser has not promised to keep the library, and may remove it if the device runs low on space. Export it or connect sync to have a copy elsewhere.</string>
     <string name="settings_import">Import songs or zip archives…</string>
     <string name="settings_export_all">Export library as zip</string>
     <string name="settings_song_display">Song display</string>

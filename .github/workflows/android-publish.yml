@@ -11,6 +11,11 @@ name: 'Publish Android'
 on:
   workflow_dispatch:
     inputs:
+      update_priority:
+        description: 'In-app update priority: 0-1 nothing, 2-3 offer it, 4-5 the app is unusable until it is installed'
+        type: choice
+        options: ['0', '1', '2', '3', '4', '5']
+        default: '0'
       release_notes:
         description: 'Release notes override, use \n for line breaks (leave empty to generate them from the commit log)'
         type: string
@@ -110,5 +115,8 @@ jobs:
           releaseName: ${{ steps.version.outputs.name }} (${{ steps.version.outputs.code }})
           tracks: production
           status: completed
+          # What the in-app update gate in :presentation reads; see the Updates section of CLAUDE.md for the
+          # thresholds. Left at 0 a release is simply one Play installs on its own schedule, and the app says nothing.
+          inAppUpdatePriority: ${{ inputs.update_priority }}
           changesNotSentForReview: false
           whatsNewDirectory: whatsnew

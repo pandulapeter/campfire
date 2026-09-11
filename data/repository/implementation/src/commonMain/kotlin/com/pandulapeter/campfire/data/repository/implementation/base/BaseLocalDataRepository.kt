@@ -23,9 +23,8 @@ import kotlinx.coroutines.sync.withLock
  * Writing is *not* part of the shape: songs and setlists are one file each, so a change writes that file and updates
  * the cached list, rather than persisting the list. Only the preferences are saved as a whole, through [writeData].
  */
-internal abstract class BaseLocalDataRepository<T>(
-    private val loadDataFromLocalSource: suspend () -> T,
-) {
+internal abstract class BaseLocalDataRepository<T> {
+
     // Loading rather than Failure, so that "nothing has been read yet" is not reported to the UI as an error.
     private val _dataState = MutableStateFlow<DataState<T>>(DataState.Loading(null))
     protected val dataState: Flow<DataState<T>> = _dataState
@@ -33,6 +32,10 @@ internal abstract class BaseLocalDataRepository<T>(
     // The repositories are asked for their data in parallel (see LoadScreenDataUseCase), so a second caller has to
     // wait for the first one's read instead of finding a load in progress and coming away with nothing.
     private val mutex = Mutex()
+    private var isPublishingPartialData = false
+
+    /** Reads everything this repository caches, from its own local source. */
+    protected abstract suspend fun loadDataFromLocalSource(): T
 
     /**
      * The data, read from the local source the first time it is asked for. Null if that read failed: storage that
@@ -50,6 +53,18 @@ internal abstract class BaseLocalDataRepository<T>(
      * earlier. [DataState.data] is null while nothing has been read yet.
      */
     protected fun updateData(transform: (T?) -> T) = _dataState.update { DataState.Idle(transform(it.data)) }
+
+    /**
+     * Publishes what a read has put together so far, so that a slow one fills the screen as it goes. It is still a
+     * [DataState.Loading], since none of it is the whole answer yet.
+     *
+     * Only ever published while there is nothing on screen: a re-read has the previous data up, and replacing that
+     * with a partial one would make the list shrink and fill up again under the user. Half a library beats an empty
+     * screen; it does not beat the library.
+     */
+    protected fun publishPartialData(data: T) {
+        if (isPublishingPartialData) _dataState.value = DataState.Loading(data)
+    }
 
     /** Publishes [data], then persists it as a whole. */
     protected suspend fun writeData(data: T, persist: suspend (T) -> Unit) = _dataState.run {
@@ -69,18 +84,23 @@ internal abstract class BaseLocalDataRepository<T>(
 
     private suspend fun read(): T? = _dataState.run {
         // The data that is already on screen stays there while the re-read runs, so a refresh does not blank the list.
-        value = DataState.Loading(value.data)
+        val previousData = value.data
+        isPublishingPartialData = previousData == null
+        value = DataState.Loading(previousData)
         try {
             loadDataFromLocalSource().also { value = DataState.Idle(it) }
         } catch (exception: CancellationException) {
             // A read the caller gave up on is not a read that failed: the data on screen stays what it was, and the
-            // next caller reads again.
-            value = DataState.Idle(value.data ?: throw exception)
+            // next caller reads again. Whatever a partial publish put up is dropped rather than kept, or half a
+            // library would sit there as the finished one and nothing would ever read the rest of it.
+            value = DataState.Idle(previousData ?: throw exception)
             throw exception
         } catch (exception: Exception) {
             println(exception.message)
-            value = DataState.Failure(value.data)
+            value = DataState.Failure(previousData)
             null
+        } finally {
+            isPublishingPartialData = false
         }
     }
 }

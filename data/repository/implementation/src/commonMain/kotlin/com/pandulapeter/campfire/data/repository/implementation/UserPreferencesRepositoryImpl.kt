@@ -16,11 +16,11 @@ import com.pandulapeter.campfire.data.source.local.api.UserPreferencesLocalSourc
 
 internal class UserPreferencesRepositoryImpl(
     private val userPreferencesLocalSource: UserPreferencesLocalSource,
-) : BaseLocalDataRepository<UserPreferences>(
-    loadDataFromLocalSource = userPreferencesLocalSource::loadUserPreferences
-), UserPreferencesRepository {
+) : BaseLocalDataRepository<UserPreferences>(), UserPreferencesRepository {
 
     override val userPreferences = dataState
+
+    override suspend fun loadDataFromLocalSource() = userPreferencesLocalSource.loadUserPreferences()
 
     override suspend fun loadUserPreferencesIfNeeded() = loadDataIfNeeded()
 

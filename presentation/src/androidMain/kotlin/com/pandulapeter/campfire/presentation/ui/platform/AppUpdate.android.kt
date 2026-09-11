@@ -69,7 +69,7 @@ internal actual fun rememberAppUpdateController(): AppUpdateController {
 
 @Stable
 private class AndroidAppUpdateController(
-    activity: ComponentActivity,
+    private val activity: ComponentActivity,
     isPostponed: MutableState<Boolean>,
 ) : AppUpdateController {
 
@@ -147,6 +147,10 @@ private class AndroidAppUpdateController(
 
     override fun installUpdate() {
         appUpdateManager.completeUpdate()
+    }
+
+    override fun closeApp() {
+        activity.finish()
     }
 
     private fun onAppUpdateInfoReceived(appUpdateInfo: AppUpdateInfo) {

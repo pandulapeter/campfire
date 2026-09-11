@@ -19,11 +19,12 @@ import com.pandulapeter.campfire.data.source.local.api.SongLocalSource
 internal class SongRepositoryImpl(
     private val songLocalSource: SongLocalSource,
     private val songContentRepository: SongContentRepository,
-) : BaseLocalDataRepository<List<Song>>(
-    loadDataFromLocalSource = songLocalSource::loadSongs
-), SongRepository {
+) : BaseLocalDataRepository<List<Song>>(), SongRepository {
 
     override val songs = dataState
+
+    /** The scan hands its batches straight on, so the song list fills up while the rest of the library is read. */
+    override suspend fun loadDataFromLocalSource() = songLocalSource.loadSongs(onProgress = ::publishPartialData)
 
     override suspend fun loadSongsIfNeeded() = loadDataIfNeeded()
 

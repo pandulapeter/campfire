@@ -142,7 +142,8 @@ preferences/sync-index.json          what the last successful sync run saw
     requirement and was never migrated; a `bundleRelease` would be rejected on upload. The "what's new" text comes
     from the workflow's two inputs, one per listing language: the English one falls back to the commit log since the
     last successful run, and the Hungarian one to the English text, since nothing can translate a commit log and a
-    listing saying something true in the wrong language beats one saying nothing.
+    listing saying something true in the wrong language beats one saying nothing. Its `update_priority` input is what
+    decides whether the new version says anything about itself inside the old one — see Updates below.
 
 ## Sync
 
@@ -177,10 +178,13 @@ Play's in-app updates, and only on Android: `:presentation`'s `ui/platform/AppUp
 `ui/AppUpdateGate.kt` the UI, with the Play Core implementation in `androidMain` and a no-op actual on the other
 three. The gate wraps the whole app inside `CampfireApp`, so it speaks the theme and the language chosen in the app.
 
-- The **Play release's `updatePriority` is the entire policy** and it is set per release in the Play Console, not in
-  the code: 0–1 is left to Play's own schedule, 2–3 offers a dismissible flexible update that downloads in the
-  background, 4–5 covers the app with a screen that cannot be dismissed until the update is there. The thresholds
-  live in `AppUpdate.android.kt`.
+- The **Play release's `updatePriority` is the entire policy** and it is chosen per release rather than in the code:
+  0–1 is left to Play's own schedule, 2–3 offers a dismissible flexible update that downloads in the background,
+  4–5 covers the app with a screen that cannot be dismissed until the update is there. The thresholds live in
+  `AppUpdate.android.kt`, and `android-publish.yml` asks for the number as its `update_priority` input, defaulting
+  to 0 — the number belongs to the release being published, not to the code being published.
+- Back on the blocking screen closes the app. The app it covers is still composed behind it, so the gesture has to
+  be taken rather than allowed through, and leaving is the only thing it can honestly mean there.
 - The blocking screen is drawn **over** the app rather than in place of it, so a required update that turns out not
   to install leaves the library exactly where the user was.
 - Nothing of this exists outside a Play-installed build: a debug APK, a sideloaded release or a device with no Play
@@ -197,6 +201,11 @@ the **Origin Private File System**, so the library is a real directory tree in t
 the origin and invisible in the user's downloads. It is also the only build that has to be downloaded before it can
 start, which is what the rest of `app/web` is about — see its `CLAUDE.md`.
 
+- The library is the only copy of the user's own work, and the browser's storage for an origin is evictable until it
+  is asked not to be, so `requestLibraryPersistence()` (in `:presentation`) asks for persistence as the app starts.
+  Whether it is granted is the browser's business — engagement, a bookmark, an install — so the answer is reported in
+  Settings rather than insisted on: a refusal says so there, next to the export that is the way to keep a copy
+  elsewhere. Clearing the site's data still removes the library, as it does for anything a page stores.
 - The loading screen has a determinate progress bar, fed by a `fetch` wrapper that counts the bytes of the binaries
   against the total the build wrote into the page. It is a page and not an installable app on purpose: there is no
   web app manifest and no service worker, because every platform that should have an installable Campfire has a

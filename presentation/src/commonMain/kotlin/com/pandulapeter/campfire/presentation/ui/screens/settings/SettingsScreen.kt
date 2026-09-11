@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -66,6 +67,9 @@ import com.pandulapeter.campfire.presentation.resources.settings_import
 import com.pandulapeter.campfire.presentation.resources.settings_library
 import com.pandulapeter.campfire.presentation.resources.settings_library_location
 import com.pandulapeter.campfire.presentation.resources.settings_library_location_files_app
+import com.pandulapeter.campfire.presentation.resources.settings_library_storage
+import com.pandulapeter.campfire.presentation.resources.settings_library_storage_best_effort
+import com.pandulapeter.campfire.presentation.resources.settings_library_storage_granted
 import com.pandulapeter.campfire.presentation.resources.settings_library_summary
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode_description
@@ -103,7 +107,9 @@ import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.canAskForDonations
 import com.pandulapeter.campfire.presentation.ui.platform.LibraryLocation
+import com.pandulapeter.campfire.presentation.ui.platform.LibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
+import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -132,6 +138,8 @@ internal fun SettingsScreen(
         val syncState by viewModel.syncState.collectAsStateWithLifecycle()
         // Null until the library has been read, so that the row fades in with real counts instead of showing zeroes.
         val librarySummary by viewModel.librarySummary.collectAsStateWithLifecycle()
+        // The app asked for this as it started; asking again only reads back the answer, see requestLibraryPersistence.
+        val libraryPersistence by produceState<LibraryPersistence?>(null) { value = requestLibraryPersistence() }
         val layoutDirection = LocalLayoutDirection.current
         val listState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
@@ -177,6 +185,26 @@ internal fun SettingsScreen(
                                     is LibraryLocation.Folder -> location.path
                                     LibraryLocation.FilesApp -> stringResource(Res.string.settings_library_location_files_app)
                                 }
+                            )
+                        },
+                    )
+                }
+            }
+            // Only where the answer is not a foregone conclusion, which is the web: the other three platforms keep
+            // the library in a file system of their own and have the location row above instead.
+            if (libraryPersistence != null && libraryPersistence != LibraryPersistence.GUARANTEED) {
+                item(key = "library_storage") {
+                    ListItem(
+                        modifier = Modifier.animateItem(),
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        headlineContent = { Text(stringResource(Res.string.settings_library_storage)) },
+                        supportingContent = {
+                            Text(
+                                text = when (libraryPersistence) {
+                                    LibraryPersistence.GRANTED -> stringResource(Res.string.settings_library_storage_granted)
+                                    else -> stringResource(Res.string.settings_library_storage_best_effort)
+                                },
+                                color = if (libraryPersistence == LibraryPersistence.GRANTED) Color.Unspecified else MaterialTheme.colorScheme.error,
                             )
                         },
                     )

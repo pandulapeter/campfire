@@ -253,25 +253,25 @@ class ChordProParserTest {
     }
 
     @Test
-    fun `hasChords is false for a lyrics only song and for annotations only`() {
+    fun `summarize reports no chords for a lyrics only song and for annotations only`() {
         val lyricsOnly = "{title: T}\n\njust some words\nand some more"
         val annotationsOnly = "{title: T}\n\n[*softly]just some words"
 
-        assertFalse(ChordProParser.hasChords(lyricsOnly))
+        assertFalse(ChordProParser.summarize(lyricsOnly).hasChords)
         assertFalse(ChordProParser.parse(lyricsOnly).hasChords)
-        assertFalse(ChordProParser.hasChords(annotationsOnly))
+        assertFalse(ChordProParser.summarize(annotationsOnly).hasChords)
         assertFalse(ChordProParser.parse(annotationsOnly).hasChords)
     }
 
     @Test
-    fun `hasChords is true for chords in lyrics and in grids but not in tabs`() {
+    fun `summarize reports chords in lyrics and in grids but not in tabs`() {
         val inTab = "{start_of_tab}\ne|--[Am]--|\n{end_of_tab}"
 
-        assertTrue(ChordProParser.hasChords("[Am]a"))
+        assertTrue(ChordProParser.summarize("[Am]a").hasChords)
         assertTrue(ChordProParser.parse("[Am]a").hasChords)
-        assertTrue(ChordProParser.hasChords("{sog}\n| Am . . . |\n{eog}"))
+        assertTrue(ChordProParser.summarize("{sog}\n| Am . . . |\n{eog}").hasChords)
         assertTrue(ChordProParser.parse("{sog}\n| Am . . . |\n{eog}").hasChords)
-        assertFalse(ChordProParser.hasChords(inTab))
+        assertFalse(ChordProParser.summarize(inTab).hasChords)
         assertFalse(ChordProParser.parse(inTab).hasChords)
     }
 
@@ -299,6 +299,15 @@ class ChordProParserTest {
             mapOf("x_custom" to listOf("kept")),
             ChordProParser.parse("{x_custom: kept}").metadata.custom,
         )
+    }
+
+    @Test
+    fun `summarize reads the metadata of a song whose chords come before the last directive`() {
+        val summary = ChordProParser.summarize("{title: T}\n\n[Am]a\n\n{tag: campfire}")
+
+        assertTrue(summary.hasChords)
+        assertEquals("T", summary.metadata.title)
+        assertEquals(listOf("campfire"), summary.metadata.tags)
     }
 
     @Test

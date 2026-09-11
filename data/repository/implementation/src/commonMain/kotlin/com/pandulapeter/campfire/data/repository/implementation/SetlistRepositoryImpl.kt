@@ -16,11 +16,11 @@ import com.pandulapeter.campfire.data.source.local.api.SetlistLocalSource
 
 internal class SetlistRepositoryImpl(
     private val setlistLocalSource: SetlistLocalSource,
-) : BaseLocalDataRepository<List<Setlist>>(
-    loadDataFromLocalSource = setlistLocalSource::loadSetlists
-), SetlistRepository {
+) : BaseLocalDataRepository<List<Setlist>>(), SetlistRepository {
 
     override val setlists = dataState
+
+    override suspend fun loadDataFromLocalSource() = setlistLocalSource.loadSetlists()
 
     override suspend fun loadSetlistsIfNeeded() = loadDataIfNeeded()
 

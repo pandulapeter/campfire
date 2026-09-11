@@ -66,7 +66,10 @@ internal fun AppUpdateGate(
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            AppUpdateRequiredScreen(onUpdate = controller::startUpdate)
+            AppUpdateRequiredScreen(
+                onUpdate = controller::startUpdate,
+                onClose = controller::closeApp,
+            )
         }
     }
     when (state) {
@@ -97,18 +100,20 @@ internal fun AppUpdateGate(
  * `Surface` is what does the covering rather than a `Box` with a background: a non-interactive one swallows every
  * pointer event that reaches it, which is the only thing standing between a tap and the app still composed behind
  * it. The back gesture is the other way through and is taken here, composed after the app so that this handler is
- * the one the dispatcher reaches first; the update and leaving Campfire altogether are the only two ways out.
+ * the one the dispatcher reaches first. It closes the app rather than doing nothing: back on a screen with nothing
+ * behind it means leaving, and letting it through instead would navigate an app the user cannot see.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun AppUpdateRequiredScreen(
     modifier: Modifier = Modifier,
     onUpdate: () -> Unit,
+    onClose: () -> Unit,
 ) = Surface(
     modifier = modifier.fillMaxSize(),
     color = MaterialTheme.colorScheme.background,
 ) {
-    BackHandler { }
+    BackHandler(onBack = onClose)
     Box(
         modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing),
         contentAlignment = Alignment.Center,

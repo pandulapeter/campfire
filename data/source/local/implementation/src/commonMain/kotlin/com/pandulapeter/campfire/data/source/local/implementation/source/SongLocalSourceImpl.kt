@@ -30,15 +30,23 @@ internal class SongLocalSourceImpl(
 ) : SongLocalSource {
 
     /**
-     * Reading and parsing every file is the slowest thing the app does at start, so the files are read in parallel.
+     * Reading and parsing every file is the slowest thing the app does at start, so the files are read in parallel,
+     * [BATCH_SIZE] of them at a time. The batching is what bounds the concurrency - a library of thousands of songs
+     * would otherwise have every one of its files open at once - and it is also what the screen is fed with, so that
+     * a long scan fills the list as it goes instead of showing nothing until the last file is parsed.
+     *
      * One unreadable file must not empty the whole list, so a failure skips that song instead of propagating.
      */
-    override suspend fun loadSongs(): List<Song> = coroutineScope {
-        fileStorage.list(StorageDirectory.SONGS)
-            .filter { it.name.isSongFileName() }
-            .map { async { it.readSong() } }
-            .awaitAll()
-            .filterNotNull()
+    override suspend fun loadSongs(onProgress: (List<Song>) -> Unit): List<Song> = coroutineScope {
+        val songs = mutableListOf<Song>()
+        val batches = fileStorage.list(StorageDirectory.SONGS).filter { it.name.isSongFileName() }.chunked(BATCH_SIZE)
+        batches.forEachIndexed { index, batch ->
+            songs += batch.map { async { it.readSong() } }.awaitAll().filterNotNull()
+            // The last batch is what the return value already says, and publishing it would only have everything
+            // downstream sort and group the same list a second time.
+            if (index < batches.lastIndex) onProgress(songs.toList())
+        }
+        songs
     }
 
     override suspend fun loadSong(fileName: String): Song? = fileStorage.info(StorageDirectory.SONGS, fileName)?.readSong()
@@ -73,7 +81,7 @@ internal class SongLocalSourceImpl(
 
     private suspend fun StoredFileInfo.readSong(): Song? = try {
         fileStorage.readText(StorageDirectory.SONGS, name)?.let { text ->
-            toSong(metadata = ChordProParser.parseMetadata(text), hasChords = ChordProParser.hasChords(text))
+            toSong(ChordProParser.summarize(text))
         }
     } catch (exception: CancellationException) {
         // A library scan that was cancelled is not a library of unreadable songs.
@@ -81,5 +89,9 @@ internal class SongLocalSourceImpl(
     } catch (exception: Exception) {
         println("Could not read the song \"$name\": ${exception.message}")
         null
+    }
+
+    private companion object {
+        const val BATCH_SIZE = 64
     }
 }

@@ -85,6 +85,9 @@
     <string name="settings_library_summary">Dalok: %1$d · Listák: %2$d</string>
     <string name="settings_library_location">Hely</string>
     <string name="settings_library_location_files_app">A Fájlok alkalmazásban a Campfire mappa alatt található</string>
+    <string name="settings_library_storage">Tárhely</string>
+    <string name="settings_library_storage_granted">A böngésző vállalta, hogy megőrzi a könyvtárat, amíg nem törlöd az oldal adatait.</string>
+    <string name="settings_library_storage_best_effort">A böngésző nem vállalta a könyvtár megőrzését, és törölheti, ha kevés a szabad hely az eszközön. Exportáld, vagy kapcsold be a szinkronizálást, hogy máshol is legyen egy másolat.</string>
     <string name="settings_import">Dalok vagy zip archívumok importálása…</string>
     <string name="settings_export_all">Könyvtár exportálása zipként</string>
     <string name="settings_song_display">Dalok megjelenítése</string>

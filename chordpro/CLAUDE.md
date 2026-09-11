@@ -21,8 +21,9 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   word a chord and not a word that starts with a letter", long/short directive names, the `start_of_` / `end_of_`
   prefixes, `label="…"` attributes, and what counts as a tag directive). Every other object here goes through it, so
   the dialect is defined once.
-- `ChordProParser` — `parse` (the whole song), `parseMetadata` (directive lines only, cheap enough to run over every
-  file in the library at startup) and `hasChords`. Total: it never throws and never rejects a document, because the
+- `ChordProParser` — `parse` (the whole song), `summarize` (the directives plus "does it have chords", from one walk,
+  which is what the library scan calls for every file at startup) and `parseMetadata` (directive lines only, for a
+  caller with no interest in the body). Total: it never throws and never rejects a document, because the
   file on disk is the user's and half of it may be under the caret. Unknown directives are ignored; `{define}`, fonts,
   colours, images and page directives are parsed and dropped. It also understands the Campfire 3 dialect, where
   `{comment: Verse 1}` outside an environment was a section heading.

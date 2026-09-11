@@ -19,6 +19,14 @@ read yet is not an error), reads the local source on the first `loadDataIfNeeded
 data already on screen in the `Loading` state, so a refresh never blanks the list, and a failed read becomes
 `Failure(previous data)` rather than an empty list.
 
+A load that arrives in pieces can publish them with `publishPartialData`, which is what the song scan does with each
+batch of files it has parsed — a library of thousands then fills the list as it is read instead of showing nothing
+until the last file. Partial data is only ever published while there is nothing on screen: during a re-read the
+previous library is up, and replacing it with a partial one would make the list shrink and fill again under the user.
+A read that fails or is cancelled falls back on the data from *before* it started rather than on whatever it had
+published, or half a library would sit there looking like the whole of it and nothing would ever read the rest.
+`commonTest` covers those rules, since none of them can be seen once a load has finished.
+
 Writing is deliberately **not** part of that shape. Songs and setlists are one file each, so a change writes that file
 and updates the one cached entry (`updateData`, which takes a transform of the current list and applies it atomically,
 so a save landing during a rescan cannot overwrite what the rescan found); only the preferences are persisted as a

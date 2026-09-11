@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProMetadata
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
+import com.pandulapeter.campfire.chordpro.model.ChordProSummary
 import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
@@ -51,39 +52,44 @@ object ChordProParser {
         return ChordProSong(metadata = metadata.build(), blocks = blocks)
     }
 
-    /** Only scans directive lines, so that the song list can afford to call it for every file in the library. */
-    fun parseMetadata(text: String): ChordProMetadata {
-        val metadata = MetadataBuilder()
-        ChordProSyntax.splitLines(text).forEach { rawLine ->
-            val trimmedLine = rawLine.trim()
-            if (trimmedLine.startsWith(SOURCE_COMMENT) || !trimmedLine.startsWith("{")) return@forEach
-            val directive = ChordProSyntax.matchDirective(trimmedLine) ?: return@forEach
-            if (!ChordProSyntax.hasSelectorSuffix(directive.name)) {
-                metadata.consume(directive)
-            }
-        }
-        return metadata.build()
-    }
+    /** Only scans directive lines, so that it is cheap enough for a caller that has no interest in the body. */
+    fun parseMetadata(text: String) = scan(text, shouldDetectChords = false).metadata
 
-    /** True as soon as a real chord (not an `[*annotation]`, not an empty `[]`) shows up outside a tab environment. */
-    fun hasChords(text: String): Boolean {
+    /**
+     * The directives of a song and whether it has any chords, from a single walk over the text. The library scan
+     * wants both for every file it reads, and asking for them separately walks each file twice.
+     */
+    fun summarize(text: String) = scan(text, shouldDetectChords = true)
+
+    /**
+     * @param shouldDetectChords Whether the lines that are not directives are looked at as well. A real chord (not an
+     *   `[*annotation]`, not an empty `[]`) outside a tab environment is what counts as one; once one has been found
+     *   the rest of the body is skipped, since nothing later in the file can change the answer.
+     */
+    private fun scan(text: String, shouldDetectChords: Boolean): ChordProSummary {
+        val metadata = MetadataBuilder()
+        var hasChords = false
         var environment: String? = null
         ChordProSyntax.splitLines(text).forEach { rawLine ->
             val trimmedLine = rawLine.trim()
             if (trimmedLine.startsWith(SOURCE_COMMENT)) return@forEach
-            val directive = ChordProSyntax.matchDirective(trimmedLine)
-            when {
-                directive != null -> if (!ChordProSyntax.hasSelectorSuffix(directive.name)) {
+            val directive = if (trimmedLine.startsWith(DIRECTIVE_START)) ChordProSyntax.matchDirective(trimmedLine) else null
+            if (directive != null) {
+                if (!ChordProSyntax.hasSelectorSuffix(directive.name)) {
                     ChordProSyntax.startOfEnvironment(directive.name)?.let { environment = it.lowercase() }
                     ChordProSyntax.endOfEnvironment(directive.name)?.let { environment = null }
+                    metadata.consume(directive)
                 }
-
-                environment == TAB -> Unit
-                environment == GRID -> if (ChordProSyntax.parseGridTokens(trimmedLine).any { it is GridToken.Chord }) return true
-                else -> if (parseLyrics(rawLine).chords.any { !it.isAnnotation }) return true
+                return@forEach
+            }
+            if (!shouldDetectChords || hasChords) return@forEach
+            hasChords = when (environment) {
+                TAB -> false
+                GRID -> ChordProSyntax.parseGridTokens(trimmedLine).any { it is GridToken.Chord }
+                else -> parseLyrics(rawLine).chords.any { !it.isAnnotation }
             }
         }
-        return false
+        return ChordProSummary(metadata = metadata.build(), hasChords = hasChords)
     }
 
     private fun handleDirective(
@@ -311,6 +317,7 @@ object ChordProParser {
     }
 
     private const val SOURCE_COMMENT = "#"
+    private const val DIRECTIVE_START = "{"
     private const val ANNOTATION_MARKER = "*"
     private const val CUSTOM_PREFIX = "x_"
     private const val VERSE = "verse"
