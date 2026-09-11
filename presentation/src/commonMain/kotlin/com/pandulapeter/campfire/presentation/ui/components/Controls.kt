@@ -308,9 +308,14 @@ private fun TagFilters(
     val visibleTags = remember(tags, selected, isExpanded) {
         if (isExpanded) tags else tags.filterIndexed { index, tag -> index < MAX_COLLAPSED_TAG_COUNT || tag.name.lowercase() in selected }
     }
+    // A tag the library no longer has stays selected, and clearing deliberately leaves it alone
+    // (CampfireViewModel.clearTagFilter), so what the action is offered for is a selection among the chips rather than
+    // whatever the preferences still hold - a button that cleared nothing visible would be answering a question the
+    // screen never asked.
+    val hasClearableSelection = remember(tags, selected) { tags.any { it.name.lowercase() in selected } }
     FilterSectionTitle(
         title = stringResource(Res.string.songs_tags),
-        isClearVisible = selected.isNotEmpty(),
+        isClearVisible = hasClearableSelection,
         clearText = stringResource(Res.string.songs_tags_clear),
         onClearClicked = onClear,
     )
@@ -375,9 +380,11 @@ private fun LanguageFilters(
     onLanguageClicked: (String) -> Unit,
     onClear: () -> Unit,
 ) = Column(modifier = modifier) {
+    // The chips rather than the preferences, for the same reason [TagFilters] counts them that way.
+    val hasClearableSelection = remember(languages, selectedLanguages) { languages.any { it.code in selectedLanguages } }
     FilterSectionTitle(
         title = stringResource(Res.string.songs_languages),
-        isClearVisible = selectedLanguages.isNotEmpty(),
+        isClearVisible = hasClearableSelection,
         clearText = stringResource(Res.string.songs_languages_clear),
         onClearClicked = onClear,
     )
