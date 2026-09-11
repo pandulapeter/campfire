@@ -95,6 +95,7 @@ import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
+import com.pandulapeter.campfire.presentation.ui.platform.areDrawablesLoaded
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
@@ -205,8 +206,14 @@ fun CampfireApp(
                 )
                 val motionScheme = MaterialTheme.motionScheme
                 val fadeSpec = if (isDesktopPlatform) motionScheme.slowEffectsSpec<Float>() else motionScheme.defaultEffectsSpec<Float>()
-                LaunchedEffect(arePreferencesLoaded, hasLibraryToShow, isThemeSettled) {
-                    if (arePreferencesLoaded && hasLibraryToShow && isThemeSettled) {
+                // The icons have to be in as well, or the app would be uncovered while it is still fetching them one
+                // by one and every list row, button and chip holding one would resize around it as it lands. Asking
+                // for them here rather than anywhere earlier is what pays for the wait out of time the launch screen
+                // was up for anyway, and on the three platforms that read a drawable without suspending this is
+                // constantly true and costs nothing.
+                val areDrawablesLoaded = areDrawablesLoaded()
+                LaunchedEffect(arePreferencesLoaded, hasLibraryToShow, isThemeSettled, areDrawablesLoaded) {
+                    if (arePreferencesLoaded && hasLibraryToShow && isThemeSettled && areDrawablesLoaded) {
                         // Two frames rather than one, because withFrameNanos resumes while the frame it belongs to
                         // is still being assembled: the frame after it is the first one that is certainly drawn.
                         repeat(2) { withFrameNanos { } }
