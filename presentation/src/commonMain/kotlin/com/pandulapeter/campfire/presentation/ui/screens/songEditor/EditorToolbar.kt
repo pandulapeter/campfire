@@ -62,6 +62,10 @@ import com.pandulapeter.campfire.presentation.resources.song_editor_insert_year
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_bridge
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_chorus
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_grid
+import com.pandulapeter.campfire.presentation.resources.song_editor_section_intro
+import com.pandulapeter.campfire.presentation.resources.song_editor_section_outro
+import com.pandulapeter.campfire.presentation.resources.song_editor_section_pre_chorus
+import com.pandulapeter.campfire.presentation.resources.song_editor_section_solo
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_tab
 import com.pandulapeter.campfire.presentation.resources.song_editor_section_verse
 
@@ -134,8 +138,12 @@ private fun EditorToolbarRow(
 }
 
 /**
- * What goes into the song itself: what is written inside a line, the environments a song is built out of, and the
- * three kinds of comment.
+ * What goes into the song itself: what is written inside a line, every section the app has a name for, the two ways
+ * of writing lines down, and the three kinds of comment.
+ *
+ * Tablature and grids are a group of their own rather than two more sections, because that is what they are: a
+ * `{start_of_tab}` says how the next few lines are written and can open inside a solo or a verse without breaking
+ * it in two, see [SectionType][com.pandulapeter.campfire.chordpro.model.SectionType].
  *
  * `{new_page}` and `{column_break}` would belong here and are deliberately missing, though the parser still reads
  * them without complaint: they belong to a renderer that paginates, and Campfire flows the sections into columns
@@ -148,12 +156,18 @@ private fun contentInsertions(): List<List<EditorInsertion>> = listOf(
         EditorInsertion(stringResource(Res.string.song_editor_insert_annotation), prefix = "[*", suffix = "]", isOwnLine = false),
     ),
     listOf(
+        EditorInsertion.section(stringResource(Res.string.song_editor_section_intro), name = "intro"),
         EditorInsertion.section(stringResource(Res.string.song_editor_section_verse), name = "verse"),
+        EditorInsertion.section(stringResource(Res.string.song_editor_section_pre_chorus), name = "pre-chorus"),
         EditorInsertion.section(stringResource(Res.string.song_editor_section_chorus), name = "chorus"),
         EditorInsertion.section(stringResource(Res.string.song_editor_section_bridge), name = "bridge"),
+        EditorInsertion.section(stringResource(Res.string.song_editor_section_solo), name = "solo"),
+        EditorInsertion.section(stringResource(Res.string.song_editor_section_outro), name = "outro"),
+        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_chorus_recall), name = "chorus", hasValue = false),
+    ),
+    listOf(
         EditorInsertion.section(stringResource(Res.string.song_editor_section_tab), name = "tab"),
         EditorInsertion.section(stringResource(Res.string.song_editor_section_grid), name = "grid"),
-        EditorInsertion.directive(stringResource(Res.string.song_editor_insert_chorus_recall), name = "chorus", hasValue = false),
     ),
     listOf(
         EditorInsertion.directive(stringResource(Res.string.song_editor_insert_comment), name = "comment"),

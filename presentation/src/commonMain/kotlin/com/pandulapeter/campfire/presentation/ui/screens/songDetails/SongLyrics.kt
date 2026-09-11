@@ -398,20 +398,25 @@ private fun SongSectionContent(
             }
         }
     }
-    if (section.isTab) {
-        // Tablature only makes sense with its columns intact, so it never wraps and scrolls sideways instead.
-        Column(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
-            section.lines.forEach { line ->
-                Text(
-                    text = (line as? ChordProLine.Tab)?.text.orEmpty(),
-                    style = lyricsStyle.copy(fontFamily = FontFamily.Monospace),
-                    softWrap = false,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+    // Tablature is a run of lines inside a section rather than a section of its own, so the lines are grouped:
+    // each run is one sideways scrolling block (its columns only line up while they are measured together), and
+    // everything else is laid out line by line around it.
+    section.lines.groupConsecutiveTabs().forEach { group ->
+        if (group.first() is ChordProLine.Tab) {
+            // Tablature only makes sense with its columns intact, so it never wraps and scrolls sideways instead.
+            Column(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+                group.forEach { line ->
+                    Text(
+                        text = (line as? ChordProLine.Tab)?.text.orEmpty(),
+                        style = lyricsStyle.copy(fontFamily = FontFamily.Monospace),
+                        softWrap = false,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
             }
+            return@forEach
         }
-    } else {
-        section.lines.forEach { line ->
+        group.forEach { line ->
             when (line) {
                 is ChordProLine.Lyrics -> if (line.chords.isEmpty()) {
                     Text(
@@ -435,13 +440,8 @@ private fun SongSectionContent(
                     chordStyle = chordStyle,
                 )
 
-                // Only reachable through a malformed section; tabs are rendered by the branch above.
-                is ChordProLine.Tab -> Text(
-                    text = line.text,
-                    style = lyricsStyle.copy(fontFamily = FontFamily.Monospace),
-                    softWrap = false,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
+                // Never reached: a tab line is always part of a group the branch above has taken.
+                is ChordProLine.Tab -> Unit
 
                 ChordProLine.Blank -> Text(
                     text = "",
@@ -450,6 +450,24 @@ private fun SongSectionContent(
             }
         }
     }
+}
+
+/**
+ * Splits lines into runs of tablature and runs of everything else, keeping their order. Tablature is measured and
+ * scrolled as a block, so the lines of one have to reach the layout together.
+ */
+private fun List<ChordProLine>.groupConsecutiveTabs(): List<List<ChordProLine>> {
+    val groups = mutableListOf<List<ChordProLine>>()
+    var group = mutableListOf<ChordProLine>()
+    forEach { line ->
+        if (group.isNotEmpty() && (group.first() is ChordProLine.Tab) != (line is ChordProLine.Tab)) {
+            groups += group
+            group = mutableListOf()
+        }
+        group += line
+    }
+    if (group.isNotEmpty()) groups += group
+    return groups
 }
 
 /** One `{start_of_grid}` line: bars, chords, beats and repeats laid out in a row, as a chord chart. */
@@ -753,7 +771,6 @@ private sealed interface RenderSection {
         val lines: List<ChordProLine>,
         /** Choruses (and their recalls) are drawn on a raised card so that they stand out. */
         val isOnCard: Boolean,
-        val isTab: Boolean,
     ) : RenderSection
 
     data class Comment(
@@ -787,13 +804,15 @@ private fun ChordProSong.toRenderSections(
                     header = block.label ?: chorus?.label ?: defaultLabels.chorus,
                     lines = chorus?.lines?.prepareForDisplay(shouldShowChords).orEmpty(),
                     isOnCard = true,
-                    isTab = false,
                 )
             }
 
             is ChordProBlock.Section -> {
                 if (block.type == SectionType.Chorus) lastChorus = block
-                if (!shouldShowChords && (block.type == SectionType.Tab || block.type == SectionType.Grid)) return@forEach
+                // A section that is nothing but tablature or a grid goes away entirely in lyrics-only mode, its
+                // heading with it: neither says anything without the chords, and a heading over nothing is worse
+                // than no heading at all.
+                if (!shouldShowChords && block.lines.all { it.needsChords() || it.isBlank() }) return@forEach
                 val lines = block.lines.prepareForDisplay(shouldShowChords)
                 val header = block.header(defaultLabels)
                 // A section that ended up with nothing to show is dropped, unless its header still says something.
@@ -802,7 +821,6 @@ private fun ChordProSong.toRenderSections(
                         header = header,
                         lines = lines,
                         isOnCard = block.type == SectionType.Chorus,
-                        isTab = block.type == SectionType.Tab,
                     )
                 }
             }
@@ -814,26 +832,41 @@ private fun ChordProSong.toRenderSections(
 private fun ChordProBlock.Section.header(defaultLabels: DefaultSectionLabels): String? = label ?: when (val sectionType = type) {
     SectionType.Chorus -> defaultLabels.chorus
     SectionType.Bridge -> defaultLabels.bridge
-    SectionType.Tab -> defaultLabels.tab
-    SectionType.Grid -> defaultLabels.grid
     // "pre-chorus" reads as "Pre-chorus": the file's own wording, only capitalised.
     is SectionType.Custom -> sectionType.name.replaceFirstChar { it.uppercaseChar() }
     SectionType.Verse -> null
-    SectionType.Paragraph -> null
+    // A paragraph that is nothing but tablature or a grid is a bare `{start_of_tab}` / `{start_of_grid}` standing
+    // on its own, and those name themselves even where the file gave them no label. One with lyrics around the run
+    // is an ordinary paragraph that happens to hold some, and heading that "Tab" would be a lie.
+    SectionType.Paragraph -> when {
+        lines.areAll<ChordProLine.Tab>() -> defaultLabels.tab
+        lines.areAll<ChordProLine.Grid>() -> defaultLabels.grid
+        else -> null
+    }
 }
+
+/** True when every line that says anything is of the given kind, blank lines inside the run notwithstanding. */
+private inline fun <reified T : ChordProLine> List<ChordProLine>.areAll() =
+    any { it is T } && all { it is T || it == ChordProLine.Blank }
 
 /**
  * Drops the chords when they are not wanted, along with the lines that were nothing but chords, and trims the blank
  * lines off the end so that a section does not carry empty space into the column layout.
+ *
+ * Tablature and grids go with the chords: both say nothing at all without them, and now that they are runs inside a
+ * section rather than sections of their own, the lines are what has to be dropped.
  */
 private fun List<ChordProLine>.prepareForDisplay(shouldShowChords: Boolean): List<ChordProLine> = let { lines ->
     if (shouldShowChords) lines else lines.mapNotNull { line ->
         when (line) {
             is ChordProLine.Lyrics -> if (line.text.isBlank()) null else line.copy(chords = emptyList())
-            else -> line
+            else -> if (line.needsChords()) null else line
         }
     }
 }.dropLastWhile { it.isBlank() }
+
+/** Whether a line says nothing at all once the chords are hidden: tablature and a grid are chords and little else. */
+private fun ChordProLine.needsChords() = this is ChordProLine.Tab || this is ChordProLine.Grid
 
 private fun ChordProLine.isBlank() = when (this) {
     ChordProLine.Blank -> true

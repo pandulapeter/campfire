@@ -10,6 +10,13 @@
 package com.pandulapeter.campfire.data.model.domain
 
 data class UserPreferences(
+    /**
+     * Read only mode, for the app while it is being played from rather than worked in: everything that would change
+     * a song, a setlist or the way either is read is taken out of the UI, so that nothing can be edited, exported,
+     * deleted or transposed by a tap that was meant to turn a page. It reaches every screen but the settings one,
+     * which is where the mode is switched back off and therefore keeps working.
+     */
+    val isPerformanceModeEnabled: Boolean,
     val shouldShowSongsWithoutChords: Boolean,
     val isLyricsOnlyModeEnabled: Boolean,
     val isHorizontalSectionFlowEnabled: Boolean, // Whether the song sections are read across the columns (then downwards) instead of column by column.

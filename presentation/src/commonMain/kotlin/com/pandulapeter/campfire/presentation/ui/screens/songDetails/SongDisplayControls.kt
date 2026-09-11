@@ -72,7 +72,8 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * The transposition and text size steppers of the song details screen in a bottom sheet, for windows whose app bar
- * has no room for them.
+ * has no room for them. In performance mode only the text size is left, which is a way of reading rather than a
+ * change to the song: the sheet is still worth opening, and the action that opens it still belongs in the bar.
  */
 @Composable
 internal fun SongDisplayControls(
@@ -81,6 +82,7 @@ internal fun SongDisplayControls(
 ) {
     val allSongs by viewModel.allSongs.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
     val songTexts by viewModel.songTexts.collectAsStateWithLifecycle()
@@ -94,7 +96,7 @@ internal fun SongDisplayControls(
     }
     Column {
         SettingsSectionTitle(text = stringResource(Res.string.song_details_display_options))
-        if (song?.hasChords == true && userPreferences?.isLyricsOnlyModeEnabled != true) {
+        if (song?.hasChords == true && userPreferences?.isLyricsOnlyModeEnabled != true && !isPerformanceModeEnabled) {
             ListItem(
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 headlineContent = { Text(stringResource(Res.string.song_details_transposition)) },

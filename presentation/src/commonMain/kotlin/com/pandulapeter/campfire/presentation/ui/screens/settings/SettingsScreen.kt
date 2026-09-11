@@ -78,6 +78,8 @@ import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mod
 import com.pandulapeter.campfire.presentation.resources.settings_lyrics_only_mode_description
 import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow
 import com.pandulapeter.campfire.presentation.resources.settings_horizontal_section_flow_description
+import com.pandulapeter.campfire.presentation.resources.settings_performance_mode
+import com.pandulapeter.campfire.presentation.resources.settings_performance_mode_description
 import com.pandulapeter.campfire.presentation.resources.settings_privacy_policy
 import com.pandulapeter.campfire.presentation.resources.settings_song_display
 import com.pandulapeter.campfire.presentation.resources.settings_support
@@ -142,6 +144,7 @@ internal fun SettingsScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
     Column(
         modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection)
@@ -176,6 +179,18 @@ internal fun SettingsScreen(
                 bottom = contentPadding.calculateBottomPadding() + 16.dp,
             ),
         ) {
+            // Above the first section rather than inside one: it is the switch that decides what the rest of this
+            // list, and the rest of the app, is still allowed to do, and filed under a heading it would read as
+            // belonging to that heading alone.
+            item(key = "performance_mode") {
+                SwitchListItem(
+                    modifier = Modifier.animateItem(),
+                    title = stringResource(Res.string.settings_performance_mode),
+                    description = stringResource(Res.string.settings_performance_mode_description),
+                    isChecked = isPerformanceModeEnabled,
+                    onCheckedChange = viewModel::setPerformanceModeEnabled,
+                )
+            }
             sectionHeader(
                 key = "header_library",
                 listState = listState,
@@ -227,12 +242,15 @@ internal fun SettingsScreen(
                     )
                 }
             }
+            // Disabled rather than hidden by performance mode, like the chord spelling under lyrics only mode below:
+            // this screen is the one place the mode can be switched back off, and a settings list whose rows come and
+            // go with a switch further down it is a list nobody can find their way around.
             item(key = "library_import") {
                 ActionListItem(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_import),
                     icon = painterResource(Res.drawable.ic_import),
-                    isEnabled = !isImporting,
+                    isEnabled = !isImporting && !isPerformanceModeEnabled,
                     isEmphasized = false,
                     onClick = { viewModel.importFiles(filePicker) },
                 )
@@ -242,6 +260,7 @@ internal fun SettingsScreen(
                     modifier = Modifier.animateItem(),
                     title = stringResource(Res.string.settings_export_all),
                     icon = painterResource(Res.drawable.ic_export),
+                    isEnabled = !isPerformanceModeEnabled,
                     isEmphasized = false,
                     onClick = { viewModel.exportLibrary(filePicker) },
                 )

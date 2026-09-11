@@ -76,6 +76,10 @@ class ChordProSerializerTest {
 
             {start_of_solo: Guitar solo}
             [Am] [F] [C] [G]
+            {start_of_tab}
+            e|-------5-------|
+            {end_of_tab}
+            back to [C]lyrics
             {end_of_solo}
 
             {chorus}

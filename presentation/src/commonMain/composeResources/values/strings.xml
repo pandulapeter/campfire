@@ -92,6 +92,8 @@
     <string name="settings_import">Import songs or zip archives…</string>
     <string name="settings_export_all">Export library as zip</string>
     <string name="settings_song_display">Song display</string>
+    <string name="settings_performance_mode">Performance mode</string>
+    <string name="settings_performance_mode_description">Takes everything that changes the library out of the app, so that nothing can be edited, exported, deleted, reordered or transposed while you are playing from it</string>
     <string name="settings_lyrics_only_mode">Lyrics only</string>
     <string name="settings_lyrics_only_mode_description">Hide every chord and show the words on their own</string>
     <string name="settings_horizontal_section_flow">Read across the columns</string>
@@ -137,9 +139,13 @@
     <string name="song_editor_redo">Redo</string>
     <string name="song_editor_insert_chord">Chord</string>
     <string name="song_editor_insert_annotation">Annotation</string>
+    <string name="song_editor_section_intro">Intro</string>
     <string name="song_editor_section_verse">Verse</string>
+    <string name="song_editor_section_pre_chorus">Pre-chorus</string>
     <string name="song_editor_section_chorus">Chorus</string>
     <string name="song_editor_section_bridge">Bridge</string>
+    <string name="song_editor_section_solo">Solo</string>
+    <string name="song_editor_section_outro">Outro</string>
     <string name="song_editor_section_tab">Tab</string>
     <string name="song_editor_section_grid">Grid</string>
     <string name="song_editor_insert_chorus_recall">Repeat chorus</string>

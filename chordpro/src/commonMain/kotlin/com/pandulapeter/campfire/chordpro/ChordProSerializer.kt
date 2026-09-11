@@ -63,19 +63,49 @@ object ChordProSerializer {
     }
 
     private fun serializeSection(section: ChordProBlock.Section): String {
-        val body = section.lines.joinToString("\n") { serializeLine(it) }
-        if (section.type == SectionType.Paragraph) return body
+        // A paragraph has no environment of its own, so a label it carries came from the tablature or grid inside
+        // it and has to go back onto that; see `SectionBuilder.openLineMode`.
+        if (section.type == SectionType.Paragraph) return serializeLines(section.lines, section.label)
+        val body = serializeLines(section.lines)
         val name = environmentName(section.type)
         val header = section.label?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}"
         return if (body.isEmpty()) "$header\n{end_of_$name}" else "$header\n$body\n{end_of_$name}"
+    }
+
+    /**
+     * The lines of a section, with each run of tablature or grid lines wrapped in the environment that says how it
+     * is written. They are runs rather than sections of their own, so a solo written as a line of chords over a tab
+     * comes back out as one section with a `{start_of_tab}` in the middle of it.
+     */
+    private fun serializeLines(lines: List<ChordProLine>, environmentLabel: String? = null) = buildList {
+        var openEnvironment: String? = null
+        var label = environmentLabel
+        lines.forEach { line ->
+            val environment = lineEnvironmentName(line)
+            if (environment != openEnvironment) {
+                openEnvironment?.let { add("{end_of_$it}") }
+                environment?.let { name ->
+                    add(label?.let { "{start_of_$name: $it}" } ?: "{start_of_$name}")
+                    label = null
+                }
+                openEnvironment = environment
+            }
+            add(serializeLine(line))
+        }
+        openEnvironment?.let { add("{end_of_$it}") }
+    }.joinToString("\n")
+
+    /** The environment a line has to be written inside, or null for the lines that need none. */
+    private fun lineEnvironmentName(line: ChordProLine) = when (line) {
+        is ChordProLine.Tab -> "tab"
+        is ChordProLine.Grid -> "grid"
+        else -> null
     }
 
     private fun environmentName(type: SectionType) = when (type) {
         SectionType.Verse -> "verse"
         SectionType.Chorus -> "chorus"
         SectionType.Bridge -> "bridge"
-        SectionType.Tab -> "tab"
-        SectionType.Grid -> "grid"
         is SectionType.Custom -> type.name
         SectionType.Paragraph -> "verse"
     }

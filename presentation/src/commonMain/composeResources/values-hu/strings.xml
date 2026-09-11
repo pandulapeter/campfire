@@ -92,6 +92,8 @@
     <string name="settings_import">Dalok vagy zip archívumok importálása…</string>
     <string name="settings_export_all">Könyvtár exportálása zipként</string>
     <string name="settings_song_display">Dalok megjelenítése</string>
+    <string name="settings_performance_mode">Előadás mód</string>
+    <string name="settings_performance_mode_description">Eltünteti az alkalmazásból mindazt, ami a könyvtárat megváltoztatná, így játék közben semmit sem lehet szerkeszteni, exportálni, törölni, átrendezni vagy transzponálni</string>
     <string name="settings_lyrics_only_mode">Csak dalszöveg</string>
     <string name="settings_lyrics_only_mode_description">Az akkordok elrejtése, hogy csak a szöveg maradjon</string>
     <string name="settings_horizontal_section_flow">Olvasás az oszlopokon át</string>
@@ -137,9 +139,13 @@
     <string name="song_editor_redo">Újra</string>
     <string name="song_editor_insert_chord">Akkord</string>
     <string name="song_editor_insert_annotation">Annotáció</string>
+    <string name="song_editor_section_intro">Intro</string>
     <string name="song_editor_section_verse">Versszak</string>
+    <string name="song_editor_section_pre_chorus">Pre-refrén</string>
     <string name="song_editor_section_chorus">Refrén</string>
     <string name="song_editor_section_bridge">Bridge</string>
+    <string name="song_editor_section_solo">Szóló</string>
+    <string name="song_editor_section_outro">Outro</string>
     <string name="song_editor_section_tab">Tab</string>
     <string name="song_editor_section_grid">Rács</string>
     <string name="song_editor_insert_chorus_recall">Refrén ismétlése</string>

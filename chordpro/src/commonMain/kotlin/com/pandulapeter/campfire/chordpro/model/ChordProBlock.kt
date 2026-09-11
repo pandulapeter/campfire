@@ -14,7 +14,10 @@ package com.pandulapeter.campfire.chordpro.model
  */
 sealed interface ChordProBlock {
 
-    /** An environment or an implicit paragraph. */
+    /**
+     * An environment or an implicit paragraph. Its [lines] may switch between lyrics, tablature and grids as the
+     * song does, since those are ways of writing a line down rather than sections of their own.
+     */
     data class Section(
         val type: SectionType,
         val label: String?, // "Verse 1" from {start_of_verse: Verse 1} or {sov: label="Verse 1"}
@@ -30,6 +33,12 @@ sealed interface ChordProBlock {
     data object Break : ChordProBlock
 }
 
+/**
+ * What a section of a song *is*. Deliberately not how its lines are written down: `{start_of_tab}` and
+ * `{start_of_grid}` say that the lines inside them are tablature or a chord grid, which is a display mode rather
+ * than a part of the song, and they are carried by [ChordProLine.Tab] and [ChordProLine.Grid] instead. A solo can
+ * then be one section holding a line of chords and the tablature under it, rather than three sections in a row.
+ */
 sealed interface SectionType {
 
     data object Verse : SectionType
@@ -37,10 +46,6 @@ sealed interface SectionType {
     data object Chorus : SectionType
 
     data object Bridge : SectionType
-
-    data object Tab : SectionType
-
-    data object Grid : SectionType
 
     /** {start_of_<name>} for any other name, e.g. "intro", "solo", "outro", "pre-chorus". */
     data class Custom(val name: String) : SectionType

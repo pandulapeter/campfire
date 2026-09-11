@@ -125,6 +125,7 @@ internal fun SongDetailsScreen(
     val failedSongFileNames by viewModel.failedSongFileNames.collectAsStateWithLifecycle()
     val transpositions by viewModel.transpositions.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val fontScale by viewModel.fontScale.collectAsStateWithLifecycle()
     val songs = remember(destination, allSongs) {
         val songsByFileName = allSongs.associateBy { it.fileName }
@@ -206,7 +207,7 @@ internal fun SongDetailsScreen(
             actions = {
                 if (windowSize.usesInlineSongControls) {
                     AnimatedVisibility(
-                        visible = shouldShowChords && currentSong?.hasChords == true && currentSong.fileName in songTexts,
+                        visible = !isPerformanceModeEnabled && shouldShowChords && currentSong?.hasChords == true && currentSong.fileName in songTexts,
                         enter = fadeIn() + scaleIn(),
                         exit = fadeOut() + scaleOut(),
                     ) {
@@ -228,17 +229,19 @@ internal fun SongDetailsScreen(
                         onFontScaleReset = { viewModel.setFontScale(CampfireViewModel.DEFAULT_FONT_SCALE) },
                     )
                 }
-                IconButton(
-                    onClick = {
-                        currentSong?.let {
-                            viewModel.showDialog(CampfireViewModel.DialogType.SetlistPicker(songFileName = it.fileName, currentSetlistFileName = destination.setlistFileName))
+                if (!isPerformanceModeEnabled) {
+                    IconButton(
+                        onClick = {
+                            currentSong?.let {
+                                viewModel.showDialog(CampfireViewModel.DialogType.SetlistPicker(songFileName = it.fileName, currentSetlistFileName = destination.setlistFileName))
+                            }
                         }
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_playlist_add),
+                            contentDescription = stringResource(Res.string.song_details_add_to_setlist),
+                        )
                     }
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_playlist_add),
-                        contentDescription = stringResource(Res.string.song_details_add_to_setlist),
-                    )
                 }
                 if (!windowSize.usesInlineSongControls) {
                     IconButton(
@@ -255,7 +258,7 @@ internal fun SongDetailsScreen(
                     }
                 }
                 // The same actions as the song list's context menu, minus the one the bar next to it already offers.
-                currentSong?.let { song ->
+                currentSong?.takeIf { !isPerformanceModeEnabled }?.let { song ->
                     if (isDesktopPlatform) {
                         SongActionsMenu(
                             viewModel = viewModel,
@@ -332,8 +335,14 @@ internal fun SongDetailsScreen(
                     contentPadding = pageContentPadding,
                     renderSong = viewModel::renderSong,
                     onRetry = { viewModel.loadSongContent(song.fileName) },
-                    onAddTag = { viewModel.showDialog(CampfireViewModel.DialogType.AddSongTag(song)) },
-                    onRemoveTag = { tag -> viewModel.setSongTag(fileName = song.fileName, tag = tag, isSelected = false) },
+                    // Tagging writes the song's own file, so in performance mode the header's chips are read the way
+                    // the editor's preview reads them.
+                    onAddTag = if (isPerformanceModeEnabled) null else {
+                        { viewModel.showDialog(CampfireViewModel.DialogType.AddSongTag(song)) }
+                    },
+                    onRemoveTag = if (isPerformanceModeEnabled) null else {
+                        { tag -> viewModel.setSongTag(fileName = song.fileName, tag = tag, isSelected = false) }
+                    },
                 )
             }
         }
@@ -451,8 +460,8 @@ private fun SongDetailsPage(
     contentPadding: PaddingValues,
     renderSong: (text: String, transposition: Int, spelling: UserPreferences.ChordSpelling) -> ChordProSong,
     onRetry: () -> Unit,
-    onAddTag: () -> Unit,
-    onRemoveTag: (String) -> Unit,
+    onAddTag: (() -> Unit)?,
+    onRemoveTag: ((String) -> Unit)?,
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
     targetState = text,

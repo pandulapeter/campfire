@@ -13,7 +13,6 @@ import com.pandulapeter.campfire.chordpro.model.ChordProBlock
 import com.pandulapeter.campfire.chordpro.model.ChordProLine
 import com.pandulapeter.campfire.chordpro.model.ChordProSong
 import com.pandulapeter.campfire.chordpro.model.GridToken
-import com.pandulapeter.campfire.chordpro.model.SectionType
 
 /**
  * Moves chords up or down by a number of semitones, either on the model or directly on the raw text.
@@ -45,7 +44,9 @@ object ChordProTransposer {
 
     /**
      * Applies [rename] to every chord of a song — its key, the chords over its lyrics and the chords of its grids,
-     * never an annotation — and hands the raw lines of each tab environment to [rewriteTabLines].
+     * never an annotation — and hands the raw lines of each run of tablature to [rewriteTabLines]. A run and not a
+     * section: tablature is a way of writing lines down, so a single section may hold several of them with lyrics
+     * in between, and each one is a fingerboard of its own to move.
      *
      * Both the transposition and [ChordProNotation] are written in terms of it, and they differ in exactly one thing:
      * what a tab is. To the transposition it is a fingerboard, so the frets move; to a notation it is a page, so only
@@ -58,13 +59,35 @@ object ChordProTransposer {
     ): ChordProSong = song.copy(
         metadata = song.metadata.copy(key = song.metadata.key?.let(rename)),
         blocks = song.blocks.map { block ->
-            when {
-                block !is ChordProBlock.Section -> block
-                block.type == SectionType.Tab -> block.copy(lines = rewriteTab(block.lines, rewriteTabLines))
-                else -> block.copy(lines = block.lines.map { line -> rewriteLine(line, rename) })
-            }
+            if (block is ChordProBlock.Section) block.copy(lines = rewriteLines(block.lines, rewriteTabLines, rename)) else block
         },
     )
+
+    /** Splits the lines into runs of tablature and everything else, and rewrites each the way it has to be. */
+    private fun rewriteLines(
+        lines: List<ChordProLine>,
+        rewriteTabLines: (List<String>) -> List<String>,
+        rename: (String) -> String,
+    ): List<ChordProLine> {
+        if (lines.none { it is ChordProLine.Tab }) return lines.map { line -> rewriteLine(line, rename) }
+        val rewritten = mutableListOf<ChordProLine>()
+        var run = mutableListOf<ChordProLine.Tab>()
+        fun flushRun() {
+            if (run.isEmpty()) return
+            rewritten += rewriteTabLines(run.map { it.text }).map { ChordProLine.Tab(it) }
+            run = mutableListOf()
+        }
+        lines.forEach { line ->
+            if (line is ChordProLine.Tab) {
+                run += line
+            } else {
+                flushRun()
+                rewritten += rewriteLine(line, rename)
+            }
+        }
+        flushRun()
+        return rewritten
+    }
 
     /**
      * Transposes raw ChordPro text in place, keeping all formatting. Used by the editor's transpose action.
@@ -144,12 +167,6 @@ object ChordProTransposer {
                 else -> emptySequence()
             }
         }
-
-    /** The lines of a tab section: [ChordProLine.Tab] holds them raw, so they are rewritten as raw text. */
-    private fun rewriteTab(lines: List<ChordProLine>, rewriteTabLines: (List<String>) -> List<String>): List<ChordProLine> {
-        val rewritten = rewriteTabLines(lines.map { line -> (line as? ChordProLine.Tab)?.text.orEmpty() })
-        return lines.mapIndexed { index, line -> if (line is ChordProLine.Tab) ChordProLine.Tab(rewritten[index]) else line }
-    }
 
     /** Transposes the collected lines of one tab environment in place and starts collecting the next one. */
     private fun MutableList<String>.transposeTab(indices: MutableList<Int>, semitones: Int, preferFlats: Boolean) {

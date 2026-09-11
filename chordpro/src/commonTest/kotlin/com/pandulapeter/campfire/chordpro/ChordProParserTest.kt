@@ -203,9 +203,51 @@ class ChordProParserTest {
     fun `tab lines keep their indentation`() {
         val section = ChordProParser.parse("{start_of_tab: Riff}\n  e|---0---|\n{end_of_tab}").blocks.single() as ChordProBlock.Section
 
-        assertEquals(SectionType.Tab, section.type)
+        assertEquals(SectionType.Paragraph, section.type)
         assertEquals("Riff", section.label)
         assertEquals(ChordProLine.Tab("  e|---0---|"), section.lines.single())
+    }
+
+    @Test
+    fun `a tab environment inside a section is a run of lines rather than a section of its own`() {
+        val blocks = ChordProParser.parse(
+            """
+            {start_of_verse: Solo}
+            [Am]over the solo
+            {start_of_tab}
+            e|---0---|
+            {end_of_tab}
+            back to [C]lyrics
+            {end_of_verse}
+            """.trimIndent()
+        ).blocks
+
+        val section = blocks.single() as ChordProBlock.Section
+        assertEquals(SectionType.Verse, section.type)
+        assertEquals("Solo", section.label)
+        assertEquals(3, section.lines.size)
+        assertTrue(section.lines[0] is ChordProLine.Lyrics)
+        assertEquals(ChordProLine.Tab("e|---0---|"), section.lines[1])
+        assertTrue(section.lines[2] is ChordProLine.Lyrics)
+    }
+
+    @Test
+    fun `a grid environment inside a section does not break it up either`() {
+        val section = ChordProParser.parse(
+            """
+            {start_of_chorus}
+            {start_of_grid}
+            | Am | C |
+            {end_of_grid}
+            [G]and on
+            {end_of_chorus}
+            """.trimIndent()
+        ).blocks.single() as ChordProBlock.Section
+
+        assertEquals(SectionType.Chorus, section.type)
+        assertEquals(2, section.lines.size)
+        assertTrue(section.lines[0] is ChordProLine.Grid)
+        assertTrue(section.lines[1] is ChordProLine.Lyrics)
     }
 
     @Test

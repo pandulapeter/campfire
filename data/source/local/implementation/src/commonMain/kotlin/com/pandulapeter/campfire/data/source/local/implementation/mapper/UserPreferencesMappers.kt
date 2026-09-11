@@ -13,6 +13,7 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.data.source.local.implementation.model.UserPreferencesDocument
 
 internal fun UserPreferencesDocument.toModel() = UserPreferences(
+    isPerformanceModeEnabled = isPerformanceModeEnabled,
     shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
     isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled,
     isHorizontalSectionFlowEnabled = isHorizontalSectionFlowEnabled,
@@ -31,6 +32,7 @@ internal fun UserPreferencesDocument.toModel() = UserPreferences(
 )
 
 internal fun UserPreferences.toDocument() = UserPreferencesDocument(
+    isPerformanceModeEnabled = isPerformanceModeEnabled,
     shouldShowSongsWithoutChords = shouldShowSongsWithoutChords,
     isLyricsOnlyModeEnabled = isLyricsOnlyModeEnabled,
     isHorizontalSectionFlowEnabled = isHorizontalSectionFlowEnabled,

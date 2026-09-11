@@ -146,6 +146,7 @@ class CampfireViewModel(
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
     val isLoading = screenData.map { it is DataState.Loading }.asState(true)
+
     /**
      * Read straight from its own repository rather than out of [screenData], which only has anything once every
      * source has been read: the theme and the language come from here, and waiting for a scan of the whole song
@@ -156,6 +157,14 @@ class CampfireViewModel(
      * drop the change.
      */
     val userPreferences = getUserPreferences().map { it.data }.asEagerState(null)
+
+    /**
+     * The one preference enough screens ask about to be worth a state of its own: every list, menu, sheet and app
+     * bar in the app has something it takes away. Eager for the reason [allSongs] is: a state that only starts
+     * collecting once a screen subscribes hands that screen its initial value for one frame first, and here that
+     * frame would be an app that can still be edited.
+     */
+    val isPerformanceModeEnabled = userPreferences.map { it?.isPerformanceModeEnabled == true }.asEagerState(false)
 
     /**
      * Read straight from its own repository, like the preferences and for the same reason: sync runs on its own
@@ -716,6 +725,8 @@ class CampfireViewModel(
     // User preferences
 
     fun setShouldShowSongsWithoutChords(value: Boolean) = updateUserPreferences { copy(shouldShowSongsWithoutChords = value) }
+
+    fun setPerformanceModeEnabled(value: Boolean) = updateUserPreferences { copy(isPerformanceModeEnabled = value) }
 
     fun setLyricsOnlyModeEnabled(value: Boolean) = updateUserPreferences { copy(isLyricsOnlyModeEnabled = value) }
 

@@ -115,6 +115,25 @@ class ChordProTransposerTest {
     }
 
     @Test
+    fun `a tab inside a section moves its frets while the lyrics around it move their chords`() {
+        val song = ChordProParser.parse(
+            """
+            {start_of_verse: Solo}
+            [Am]over the solo
+            {start_of_tab}
+            e|---0---|
+            {end_of_tab}
+            back to [C]lyrics
+            {end_of_verse}
+            """.trimIndent()
+        ).let { ChordProTransposer.transpose(it, semitones = 2) }
+
+        val lines = (song.blocks.single() as ChordProBlock.Section).lines
+        assertEquals(listOf("Bm", "D"), song.chordNames())
+        assertEquals("e|---2---|", (lines[1] as ChordProLine.Tab).text)
+    }
+
+    @Test
     fun `transposing text leaves comments and annotations alone and updates the key`() {
         val text = """
             # a note with [Am] inside

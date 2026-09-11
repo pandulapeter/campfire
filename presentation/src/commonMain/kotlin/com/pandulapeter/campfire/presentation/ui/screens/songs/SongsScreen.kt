@@ -85,6 +85,8 @@ import com.pandulapeter.campfire.presentation.ui.components.SongsControlsSidePan
 import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
+import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
@@ -104,6 +106,7 @@ internal fun SongsScreen(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val placeholder by viewModel.songsPlaceholder.collectAsStateWithLifecycle()
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val visibleDialog by viewModel.visibleDialog.collectAsStateWithLifecycle()
     // The button would sit right where the suggestions and the keyboard go, and searching is not the moment to
     // start writing a new song anyway. What hides it is the keyboard itself rather than the search field's focus:
@@ -121,6 +124,7 @@ internal fun SongsScreen(
         contentPadding = contentPadding,
         isSidePanelVisible = isSidePanelVisible,
     )
+    val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
     KeepTopAppBarInSync(scrollBehavior, listState)
     Row(
         modifier = modifier.fillMaxSize()
@@ -167,11 +171,12 @@ internal fun SongsScreen(
                     // only say the same thing twice.
                     isRefreshing = isLoading && placeholder == null,
                     columnCount = columnCount,
+                    hasLoadedLibrary = hasLoadedLibrary,
                     contentPadding = listContentPadding,
                 )
                 CampfireFloatingActionButton(
                     modifier = Modifier.align(Alignment.BottomEnd),
-                    isVisible = !isKeyboardCoveringTheList && placeholder.allowsCreatingSongs,
+                    isVisible = !isKeyboardCoveringTheList && !isPerformanceModeEnabled && placeholder.allowsCreatingSongs,
                     settledWidth = settledWidth,
                     contentPadding = listContentPadding,
                     icon = painterResource(Res.drawable.ic_add),
@@ -224,11 +229,13 @@ private fun SongList(
     placeholder: CampfireViewModel.Placeholder?,
     isRefreshing: Boolean,
     columnCount: Int,
+    hasLoadedLibrary: Boolean,
     contentPadding: PaddingValues,
 ) {
     val songGroups by viewModel.songGroups.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
+    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val filePicker = LocalFilePicker.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val layoutDirection = LocalLayoutDirection.current
@@ -276,11 +283,15 @@ private fun SongList(
                     span = { GridItemSpan(maxLineSpan) },
                 ) {
                     ListPlaceholder(
-                        modifier = Modifier.fillMaxWidth().animateItem(),
+                        modifier = listItemAnimation(hasLoadedLibrary).fillMaxWidth(),
                         placeholder = it,
                         onRetry = viewModel::refresh,
-                        onNewSong = { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) },
-                        onImport = { viewModel.importFiles(filePicker) },
+                        onNewSong = if (isPerformanceModeEnabled) null else {
+                            { viewModel.showDialog(CampfireViewModel.DialogType.NewSong) }
+                        },
+                        onImport = if (isPerformanceModeEnabled) null else {
+                            { viewModel.importFiles(filePicker) }
+                        },
                     )
                 }
             }
@@ -292,7 +303,7 @@ private fun SongList(
                         span = { GridItemSpan(maxLineSpan) },
                     ) {
                         SectionHeader(
-                            modifier = Modifier.animateItem(),
+                            modifier = listItemAnimation(hasLoadedLibrary),
                             text = when (header) {
                                 // A song can be created without an artist, and an empty pill would look broken.
                                 is CampfireViewModel.SongGroup.Header.Artist -> header.name.ifBlank { stringResource(Res.string.songs_unknown_artist) }
@@ -308,14 +319,15 @@ private fun SongList(
                     key = { "song_${it.fileName}" },
                 ) { song ->
                     SongListItem(
-                        modifier = Modifier.animateItem(),
+                        modifier = listItemAnimation(hasLoadedLibrary),
                         song = song,
                         onClick = {
                             keyboardController?.hide()
                             viewModel.openSong(song)
                         },
-                        // A pointer opens the menu from the row's own button; touch has the long press instead.
-                        onLongClick = if (isDesktopPlatform) {
+                        // A pointer opens the menu from the row's own button; touch has the long press instead. In
+                        // performance mode there is no menu to open either way, so a row does nothing but open a song.
+                        onLongClick = if (isDesktopPlatform || isPerformanceModeEnabled) {
                             null
                         } else {
                             {
@@ -323,7 +335,7 @@ private fun SongList(
                                 viewModel.showDialog(CampfireViewModel.DialogType.SongActions(song = song, setlistFileName = null))
                             }
                         },
-                        actions = if (isDesktopPlatform) {
+                        actions = if (isDesktopPlatform && !isPerformanceModeEnabled) {
                             { SongActionsMenu(viewModel = viewModel, song = song, setlistFileName = null) }
                         } else {
                             null

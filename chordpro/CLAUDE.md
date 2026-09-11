@@ -18,7 +18,14 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   whose `displayTitle(fallback)` is the one rule for naming a song: `{title}` with `{subtitle}` after it in
   parentheses, which is what the library scan writes into `Song.title` and what the editor's app bar shows.
   Nothing here knows about Compose, colours or measurements: the model says what a thing *is*, the viewer decides what
-  it looks like.
+  it looks like. `SectionType` is the clearest case of that line: it has no `Tab` or `Grid`, because tablature and a
+  chord grid are ways of **writing lines down** rather than parts of a song. `{start_of_tab}` and `{start_of_grid}`
+  switch the kind of `ChordProLine` that is read until they close, inside whatever section is running, so a solo
+  written as a line of chords with tablature under it is one section and not three. Outside every environment they
+  open the same implicit paragraph a bare line of lyrics would, carrying their own label, which is the only place
+  `{start_of_tab: Riff}` can still say "Riff". Everything downstream follows: the serializer wraps each *run* of tab
+  or grid lines back in its environment, the transposer moves each run of frets as its own fingerboard, and the
+  viewer draws each run as one sideways scrolling block with the lyrics around it.
 - `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, `chordNameRegex` for "is this whole
   word a chord and not a word that starts with a letter", long/short directive names, the `start_of_` / `end_of_`
   prefixes, `label="…"` attributes, and what counts as a tag directive). Every other object here goes through it, so

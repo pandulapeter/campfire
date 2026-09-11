@@ -101,12 +101,19 @@ object ChordProParser {
         val name = directive.name
         if (ChordProSyntax.hasSelectorSuffix(name)) return
         ChordProSyntax.startOfEnvironment(name)?.let { environment ->
+            // Tablature and grids are how the next few lines are written, not a section of their own: they open
+            // inside whatever section is running, and a song with a solo written as a line of chords over a tab is
+            // one section rather than three.
+            lineMode(environment)?.let { mode ->
+                section.openLineMode(mode, ChordProSyntax.label(directive.value))
+                return
+            }
             section.close()
             section.open(sectionType(environment), ChordProSyntax.label(directive.value), isExplicit = true)
             return
         }
-        if (ChordProSyntax.endOfEnvironment(name) != null) {
-            section.close()
+        ChordProSyntax.endOfEnvironment(name)?.let { environment ->
+            if (lineMode(environment) == null) section.close() else section.closeLineMode()
             return
         }
         when (name) {
@@ -149,10 +156,17 @@ object ChordProParser {
         VERSE -> SectionType.Verse
         CHORUS -> SectionType.Chorus
         BRIDGE -> SectionType.Bridge
-        TAB -> SectionType.Tab
-        GRID -> SectionType.Grid
         else -> SectionType.Custom(name)
     }
+
+    /** The way an environment says its lines are written, or null for the environments that are sections. */
+    private fun lineMode(environment: String) = when (environment.lowercase()) {
+        TAB -> LineMode.TAB
+        GRID -> LineMode.GRID
+        else -> null
+    }
+
+    private enum class LineMode { TAB, GRID }
 
     internal fun parseLyrics(rawLine: String): ChordProLine.Lyrics {
         val text = StringBuilder()
@@ -183,6 +197,7 @@ object ChordProParser {
 
         private var type: SectionType? = null
         private var label: String? = null
+        private var lineMode: LineMode? = null
         private val lines = mutableListOf<ChordProLine>()
 
         var isExplicit = false
@@ -195,12 +210,29 @@ object ChordProParser {
             lines.clear()
         }
 
+        /**
+         * A tab or grid environment starts. It never opens a section of its own, but it does need one to live in,
+         * so a file that puts tablature outside every environment gets the same implicit paragraph a bare line of
+         * lyrics would get - carrying the environment's own label, which is the only place `{start_of_tab: Riff}`
+         * can still say "Riff". Inside a section that is already running there is nowhere for a second label to go,
+         * and the section's own wins.
+         */
+        fun openLineMode(mode: LineMode, label: String?) {
+            if (type == null) open(SectionType.Paragraph, label = label, isExplicit = false)
+            lineMode = mode
+        }
+
+        fun closeLineMode() {
+            lineMode = null
+        }
+
         fun close() {
+            lineMode = null
             val type = type ?: return
             while (lines.isNotEmpty() && lines.last() == ChordProLine.Blank) {
                 lines.removeAt(lines.lastIndex)
             }
-            if (lines.isNotEmpty() || type == SectionType.Tab || type == SectionType.Grid) {
+            if (lines.isNotEmpty()) {
                 blocks += ChordProBlock.Section(type = type, label = label, lines = lines.toList())
             }
             this.type = null
@@ -227,7 +259,7 @@ object ChordProParser {
             if (trimmedLine.isEmpty()) {
                 when {
                     type == null -> Unit
-                    isExplicit -> lines += ChordProLine.Blank
+                    isExplicit || lineMode != null -> lines += ChordProLine.Blank
                     else -> close() // A blank line ends an implicit paragraph or a legacy heading section.
                 }
                 return
@@ -235,10 +267,10 @@ object ChordProParser {
             if (type == null) {
                 open(SectionType.Paragraph, label = null, isExplicit = false)
             }
-            lines += when (type) {
-                SectionType.Tab -> ChordProLine.Tab(rawLine)
-                SectionType.Grid -> ChordProLine.Grid(ChordProSyntax.parseGridTokens(trimmedLine))
-                else -> parseLyrics(rawLine)
+            lines += when (lineMode) {
+                LineMode.TAB -> ChordProLine.Tab(rawLine)
+                LineMode.GRID -> ChordProLine.Grid(ChordProSyntax.parseGridTokens(trimmedLine))
+                null -> parseLyrics(rawLine)
             }
         }
     }

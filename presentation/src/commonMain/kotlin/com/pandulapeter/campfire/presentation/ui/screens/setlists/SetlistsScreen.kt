@@ -75,6 +75,8 @@ import com.pandulapeter.campfire.presentation.ui.components.SongsControlsSidePan
 import com.pandulapeter.campfire.presentation.ui.components.animateScrollToKey
 import com.pandulapeter.campfire.presentation.ui.components.besideSidePanel
 import com.pandulapeter.campfire.presentation.ui.components.hasRoomForSidePanel
+import com.pandulapeter.campfire.presentation.ui.components.listItemAnimation
+import com.pandulapeter.campfire.presentation.ui.components.rememberHasLoadedLibrary
 import com.pandulapeter.campfire.presentation.ui.components.songListColumnCount
 import com.pandulapeter.campfire.presentation.ui.platform.LocalFilePicker
 import com.pandulapeter.campfire.presentation.localization.stringResource
@@ -92,6 +94,7 @@ internal fun SetlistsScreen(
     contentPadding: PaddingValues,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     val isSidePanelVisible = hasRoomForSidePanel(settledWidth)
     val columnCount = songListColumnCount(
         settledWidth = settledWidth,
@@ -130,6 +133,7 @@ internal fun SetlistsScreen(
                 )
                 CampfireFloatingActionButton(
                     modifier = Modifier.align(Alignment.BottomEnd),
+                    isVisible = !isPerformanceModeEnabled,
                     settledWidth = settledWidth,
                     contentPadding = listContentPadding,
                     icon = painterResource(Res.drawable.ic_add),
@@ -155,6 +159,9 @@ private fun SetlistList(
     contentPadding: PaddingValues,
 ) {
     val setlistsWithSongs by viewModel.setlistsWithSongs.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val hasLoadedLibrary = rememberHasLoadedLibrary(isLoading)
+    val isPerformanceModeEnabled by viewModel.isPerformanceModeEnabled.collectAsStateWithLifecycle()
     // Read once each, so that the branches below and the placeholders they render can never disagree about them.
     val setlistsPlaceholder = viewModel.setlistsPlaceholder.collectAsStateWithLifecycle().value
     val libraryPlaceholder = viewModel.libraryPlaceholder.collectAsStateWithLifecycle().value
@@ -196,7 +203,7 @@ private fun SetlistList(
                 span = { GridItemSpan(maxLineSpan) },
             ) {
                 ListPlaceholder(
-                    modifier = Modifier.fillMaxWidth().animateItem(),
+                    modifier = listItemAnimation(hasLoadedLibrary).fillMaxWidth(),
                     placeholder = placeholder,
                     onRetry = viewModel::refresh,
                 )
@@ -209,35 +216,37 @@ private fun SetlistList(
                     span = { GridItemSpan(maxLineSpan) },
                 ) {
                     SectionHeader(
-                        modifier = Modifier.animateItem(),
+                        modifier = listItemAnimation(hasLoadedLibrary),
                         text = setlistWithSongs.setlist.title,
                         onClick = { coroutineScope.launch { listState.animateScrollToKey(headerKey) } },
-                        action = {
-                            SectionHeaderAction(
-                                icon = painterResource(Res.drawable.ic_edit),
-                                contentDescription = stringResource(Res.string.setlists_rename),
-                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.RenameSetlist(setlistWithSongs.setlist)) },
-                            )
-                            SectionHeaderAction(
-                                icon = painterResource(Res.drawable.ic_export),
-                                contentDescription = stringResource(Res.string.setlists_export),
-                                onClick = { viewModel.exportSetlist(filePicker, setlistWithSongs.setlist.fileName) },
-                            )
-                            SectionHeaderAction(
-                                icon = painterResource(Res.drawable.ic_delete),
-                                contentDescription = stringResource(Res.string.setlists_delete_setlist),
-                                onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlistWithSongs.setlist)) },
-                            )
+                        action = if (isPerformanceModeEnabled) null else {
+                            {
+                                SectionHeaderAction(
+                                    icon = painterResource(Res.drawable.ic_edit),
+                                    contentDescription = stringResource(Res.string.setlists_rename),
+                                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.RenameSetlist(setlistWithSongs.setlist)) },
+                                )
+                                SectionHeaderAction(
+                                    icon = painterResource(Res.drawable.ic_export),
+                                    contentDescription = stringResource(Res.string.setlists_export),
+                                    onClick = { viewModel.exportSetlist(filePicker, setlistWithSongs.setlist.fileName) },
+                                )
+                                SectionHeaderAction(
+                                    icon = painterResource(Res.drawable.ic_delete),
+                                    contentDescription = stringResource(Res.string.setlists_delete_setlist),
+                                    onClick = { viewModel.showDialog(CampfireViewModel.DialogType.DeleteSetlist(setlistWithSongs.setlist)) },
+                                )
+                            }
                         },
                     )
                 }
-                if (setlistWithSongs.entries.isEmpty()) {
+                if (setlistWithSongs.entries.isEmpty() && !isPerformanceModeEnabled) {
                     item(
                         key = "hint_${setlistWithSongs.setlist.fileName}",
                         span = { GridItemSpan(maxLineSpan) },
                     ) {
                         Text(
-                            modifier = Modifier.animateItem().padding(horizontal = 16.dp, vertical = 8.dp),
+                            modifier = listItemAnimation(hasLoadedLibrary).padding(horizontal = 16.dp, vertical = 8.dp),
                             text = stringResource(Res.string.setlists_reorder_hint),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -250,12 +259,13 @@ private fun SetlistList(
                 ) { entry ->
                     val key = SetlistItemKey(setlistFileName = setlistWithSongs.setlist.fileName, songFileName = entry.songFileName)
                     ReorderableItem(
-                        modifier = Modifier.animateItem(),
+                        modifier = listItemAnimation(hasLoadedLibrary),
                         state = reorderableState,
                         key = key.string.orEmpty(),
                     ) { isBeingDragged ->
                         DismissibleSongItem(
-                            onDismissed = { viewModel.removeSongFromSetlist(songFileName = entry.songFileName, setlistFileName = setlistWithSongs.setlist.fileName) }
+                            isEnabled = !isPerformanceModeEnabled,
+                            onDismissed = { viewModel.removeSongFromSetlist(songFileName = entry.songFileName, setlistFileName = setlistWithSongs.setlist.fileName) },
                         ) {
                             val elevation by animateDpAsState(if (isBeingDragged) 8.dp else 0.dp)
                             Surface(
@@ -263,7 +273,7 @@ private fun SetlistList(
                             ) {
                                 when (entry) {
                                     is CampfireViewModel.SetlistWithSongs.Entry.Present -> SongListItem(
-                                        modifier = Modifier.longPressDraggableHandle(),
+                                        modifier = Modifier.longPressDraggableHandle(enabled = !isPerformanceModeEnabled),
                                         song = entry.song,
                                         isBeingDragged = isBeingDragged,
                                         onClick = { viewModel.openSongInSetlist(setlistWithSongs, entry.song) },
@@ -271,7 +281,7 @@ private fun SetlistList(
 
                                     // Nothing to open, but it still takes part in the reordering and the swipe.
                                     is CampfireViewModel.SetlistWithSongs.Entry.Missing -> MissingSongListItem(
-                                        modifier = Modifier.longPressDraggableHandle(),
+                                        modifier = Modifier.longPressDraggableHandle(enabled = !isPerformanceModeEnabled),
                                         songFileName = entry.songFileName,
                                     )
                                 }
@@ -284,9 +294,14 @@ private fun SetlistList(
     }
 }
 
+/**
+ * @param isEnabled False in performance mode, where the swipe is taken away rather than the row: a setlist still
+ *   reads and scrolls exactly as it did, it simply cannot lose a song to a gesture meant for the page.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun DismissibleSongItem(
+    isEnabled: Boolean,
     onDismissed: () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -295,6 +310,7 @@ private fun DismissibleSongItem(
     LaunchedEffect(Unit) { dismissState.reset() }
     SwipeToDismissBox(
         state = dismissState,
+        enableDismissFromStartToEnd = isEnabled,
         enableDismissFromEndToStart = false,
         onDismiss = { if (it == SwipeToDismissBoxValue.StartToEnd) onDismissed() },
         backgroundContent = {
