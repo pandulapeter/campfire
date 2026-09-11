@@ -8,127 +8,80 @@
  * https://mozilla.org/MPL/2.0/.
 -->
 # Campfire
-*A lightweight ChordPro viewer and editor.*
+*Your songbook, on every screen you own.*
 
-Campfire is an app for musicians and people who like to sing. It keeps a library of plain
-[ChordPro](https://www.chordpro.org) files (the same text files everyone else's chord tools read and write) and shows
-them the way you want to read them while playing: chords above the syllables they belong to, sections flowed into as
-few, as wide columns as the screen allows, and the text as large as you need it.
+Campfire keeps your lyrics and chords in plain [ChordPro](https://www.chordpro.org) files and shows them the way you
+want to read them while playing: chords above the syllables they belong to, as few and as wide columns as the screen
+allows, and the text as large as you need it. Write songs in the built-in editor, transpose them into your key, put
+them into setlists, and read them on your phone, your tablet, your laptop or in a browser.
 
-It works **offline**, and there is no account to make and no server of mine anywhere: the songs are files on your
-device, and they are yours. The one thing that ever touches the network is sync, and only after you have connected a
-cloud folder **you** own — see below.
+It works **offline**, there is no account to make, and there is no server of mine anywhere. It is free, and there are
+no ads.
 
-- **Write and edit** songs in a built-in editor with ChordPro syntax highlighting and a live preview. Nothing is written until
-  you save it, and leaving with unsaved changes asks first.
-- **Import** `.cho` files (and `.chopro`, `.chordpro`, `.crd`, `.chord`, `.pro`, `.txt`) or whole `.zip` archives of
-  them; **export** a single song, a setlist, or the entire library as a zip. An import decides before it writes: an
-  incoming file whose name the library has already given to something else is put to you as one question about the
-  whole batch — keep both (the newcomer becomes `…_2`), replace, skip, or cancel. Replacing is the only thing in the
-  app that ever overwrites a file.
-- **Open with**: a ChordPro file opened from a file manager, an email or a browser download lands straight in Campfire.
-- **Setlists** with their own per-song transposition, stored next to the songs so they travel with an export. One
-  that has been played can be **archived** rather than deleted, and that too is written in the file.
-- **Tags and languages** are part of the song file — `{tag: …}` and `{meta: language …}` directives — so they survive
-  an export, an import or a sync run. The Songs screen filters by both (tags matched as any or all), and a language
-  is named in whatever language the app is set to rather than by its code.
-- **Sync** the library between your devices through your own Dropbox, if you want to. Off until you turn it on.
-- **Transpose** by ear or by key (the app picks sharps or flats to match), or read every song in the spelling you
-  are used to: sharps, flats, and German notation (`H`) if that is what you grew up with.
-- **Lyrics-only mode**, adjustable text size (pinch, or Ctrl/Cmd + scroll), and a **performance mode** that takes
-  everything which could change the library out of the app while you are playing from it.
-- The **arrow keys** scroll the song and step through the setlist — which is what a page turner pedal sends, so one
-  paired with a phone or a tablet works as it is; Ctrl/Cmd + S saves in the editor.
-- Light / dark / system theme in eight colour schemes (plus the one Android 12+ takes from your wallpaper), English
-  and Hungarian.
-- Android, iOS, macOS / Windows / Linux desktop and the web, from one Compose Multiplatform codebase.
+[<img src="documentation/images/badge_android.png" alt="Download for Android" height="32px" />](https://play.google.com/store/apps/details?id=com.pandulapeter.campfire)
+[<img src="documentation/images/badge_web.png" alt="Open in browser" height="32px" />](https://pandulapeter.com/campfire)
 
-Campfire is completely free, without any ads.
-
-[<img src="images/badge_android.png" alt="Download for Android" height="32px" />](https://play.google.com/store/apps/details?id=com.pandulapeter.campfire)
-[<img src="images/badge_web.png" alt="Open in browser" height="32px" />](https://pandulapeter.com/campfire)
-
-### File format
-
-Songs are [ChordPro](https://www.chordpro.org/chordpro/chordpro-directives/) text files:
-
-```
-{title: Wonderwall}
-{artist: Oasis}
-{key: F#m}
-
-{start_of_verse: Verse 1}
-[F#m]Today is [A]gonna be the day
-{end_of_verse}
-```
-
-Campfire understands the core of the format:
-
-- **Metadata**: `title` / `t`, `subtitle` / `st`, `artist`, `composer`, `lyricist`, `album`, `year`, `key`, `capo`,
-  `tempo`, `time`, `duration`, `transpose`, `tag` for each of a song's tags, `language` / `lang` for each of the
-  languages it is in (`{meta: language en}` is how they are written back), and `meta` for anything else.
-- **Environments**: `start_of_verse` / `sov`, `start_of_chorus` / `soc`, `start_of_bridge` / `sob`,
-  `start_of_tab` / `sot`, `start_of_grid` / `sog` and any other `start_of_<name>`, each with the matching `end_of_…`,
-  an optional label (`{sov: Verse 1}` or `{sov: label="Verse 1"}`), and `{chorus}` to repeat the last chorus.
-- **Content**: `[Chord]` markers anchored to the syllable that follows them, `[*annotations]`, tab lines kept exactly
-  as written, grid rows, `#` source comments, and `comment` / `comment_italic` / `comment_box` for shown ones.
-- **Page directives** (`new_page`, `column_break`, …) are treated as layout hints; chord diagrams (`define`), fonts,
-  colours and images are parsed and ignored.
-- `{new_song}` / `{ns}` splits one imported file into several songs.
-
-Setlists are small JSON files (`<name>.setlist.json`) stored next to the songs, so an exported library is a zip of
-`songs/` and `setlists/` that any other tool can read:
-
-```json
-{ "title": "Friday gig", "priority": 3, "songs": [ { "file": "oasis_wonderwall.cho", "transposition": 2 } ] }
-```
-
-An archived setlist carries `"isArchived": true` as well; every field is defaulted, so a hand-written file can leave
-out anything it has nothing to say about.
-
-### Sync
-
-Campfire can keep the library the same on all of your devices, and it does that without a service of its own. You
-connect **your** Dropbox in Settings, and from then on the songs and setlists go straight between your devices and
-your own storage. Until you do, nothing on the network is touched at all.
-
-- Campfire asks Dropbox for the **app folder** permission, so it only ever sees `Apps/Campfire` and the rest of your
-  Dropbox stays invisible to it. Inside that folder the files sit in `songs/` and `setlists/`, exactly as they do in
-  an exported zip — plain ChordPro text you can open, edit or back up with anything else.
-- Only the library is synced. Your settings, your text size and your transpositions stay on the device they were
-  made on.
-- A run compares **content**, never modification times: the four platforms disagree about those and the web build has
-  none. An edit always wins over a deletion, and a song that changed on two devices at once is never merged — the
-  local one keeps its name and the incoming one lands next to it as ` (2)`, a copy for you to look at and delete.
-- Sync runs when the app starts and whenever you press **Sync now**, it carries on while you use the rest of the app
-  (or leave it), and it can be stopped at any time. A run that is interrupted leaves the library usable and says so
-  the next time.
-- Signing in uses OAuth 2.0 with PKCE and no client secret, which is what makes a backend unnecessary. The page you
-  type your password on is Dropbox's own, opened in your browser. Disconnecting revokes the token and deletes it
-  from the device; the files stay where they are on both sides.
-
-Sync needs a Dropbox app key at build time. A build made without one simply does not offer it, and Settings says so
-— see the Build section of [CLAUDE.md](CLAUDE.md).
-
-### Notes
-
-- Version 4.0 is a rewrite: the online song library is gone and there is **no migration**. The first launch starts with
-  an empty library.
-- Campfire collects nothing and has no analytics. What the app does with your data is written out in the
-  [privacy policy](https://pandulapeter.com/legal/privacy_policy-campfire.html) linked from the app's settings.
+The iOS and the macOS / Windows / Linux desktop builds are part of the same codebase and run from source, but they
+are not deployed yet.
 
 ### Screenshots
 
-**Outdated** — these show Campfire 1.x, which had a built-in online song library. New ones are needed for 4.0.
+<img src="documentation/screenshots/01.png" width="20%" /> <img src="documentation/screenshots/02.png" width="20%" />
+<img src="documentation/screenshots/03.png" width="20%" /> <img src="documentation/screenshots/04.png" width="20%" />
+<img src="documentation/screenshots/05.png" width="20%" /> <img src="documentation/screenshots/06.png" width="20%" />
+<img src="documentation/screenshots/07.png" width="20%" /> <img src="documentation/screenshots/08.png" width="20%" />
 
-<img src="screenshots/01.png" width="20%" /> <img src="screenshots/02.png" width="20%" />
-<img src="screenshots/03.png" width="20%" /> <img src="screenshots/04.png" width="20%" />
-<img src="screenshots/05.png" width="20%" /> <img src="screenshots/06.png" width="20%" />
-<img src="screenshots/07.png" width="20%" /> <img src="screenshots/08.png" width="20%" />
+*These are from Campfire 1.x, which had a built-in online song library. Version 4 is a rewrite and looks nothing like
+them any more — new screenshots are on the way.*
 
-### Building
+### What it does
 
-See [CLAUDE.md](CLAUDE.md) for the architecture and the per-platform build commands.
+- **Read** with adjustable text size, a lyrics-only mode, and a performance mode that puts everything which could
+  change your library out of the way while you are playing.
+- **Transpose** by ear or by key, in sharps, flats or German notation.
+- **Write and edit** in a ChordPro editor with syntax highlighting and a live preview.
+- **Organize** into setlists, each song with its own transposition, and filter the library by tag or by language.
+- **Import and export** single songs, setlists or the whole library as zip archives of plain text — and open a
+  ChordPro file straight from a file manager, an email or a browser download.
+- **Sync** between your devices through your own Dropbox, if you want to. Off until you turn it on.
+- **Fits your setup**: light and dark in eight colour schemes, English and Hungarian, and arrow key control, which is
+  what a page turner pedal sends.
+
+More detail in [documentation/features.md](documentation/features.md).
+
+### Your songs are yours
+
+The library is a folder of ordinary text files in Campfire's own storage on your device. Nothing is uploaded, nothing
+is analyzed, and the app collects nothing at all — what it does with your data is written out in the
+[privacy policy](https://pandulapeter.com/legal/privacy_policy-campfire.html) linked from Settings.
+
+The one thing that ever touches the network is sync, and only after you have connected a cloud folder **you** own,
+which Campfire reaches directly with no service of mine in between. Everything can be exported at any time as a zip
+any other ChordPro tool can read, so leaving is as easy as arriving.
+
+### Documentation
+
+- [Features](documentation/features.md) — everything the app does, at length.
+- [File format](documentation/file-format.md) — the ChordPro directives Campfire understands, the setlist JSON, and
+  how files are named.
+- [Sync](documentation/sync.md) — what it sees, how a run decides, and why it needs no backend.
+- [CLAUDE.md](CLAUDE.md) — the architecture, the module graph and the per-platform build commands.
+
+### Notes
+
+Version 4.0 is a rewrite: the online song library is gone and there is **no migration**. The first launch starts with
+an empty library.
+
+### To do
+- Fix web Settings screen animation glitches caused by async data
+- Improve the appearance and UI scalability of the Settings screen
+- Add a database of copyright free starter songs
+- Update the screenshots in the Readme
+- Create new screenshots for iOS, Android and desktop
+- Create iOS store listing
+- Create GitHub action for TestFlight releases
+- Create App Store and Windows Store Store listings + GitHub actions
+- Add links to each build type referencing the other build types
 
 ### License
 
