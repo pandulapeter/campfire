@@ -33,6 +33,7 @@ import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
@@ -60,6 +61,7 @@ import com.pandulapeter.campfire.domain.implementation.useCases.RestoreSyncUseCa
 import com.pandulapeter.campfire.domain.implementation.useCases.SaveSetlistUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SaveSongContentUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SaveUserPreferencesUseCaseImpl
+import com.pandulapeter.campfire.domain.implementation.useCases.SetChordProTagUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.SynchronizeLibraryUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.TransposeChordProTextUseCaseImpl
 import com.pandulapeter.campfire.domain.implementation.useCases.TransposeChordProUseCaseImpl
@@ -90,6 +92,7 @@ val domainModule = module {
     factory<SaveSetlistUseCase> { SaveSetlistUseCaseImpl(get()) }
     factory<SaveSongContentUseCase> { SaveSongContentUseCaseImpl(get()) }
     factory<SaveUserPreferencesUseCase> { SaveUserPreferencesUseCaseImpl(get()) }
+    factory<SetChordProTagUseCase> { SetChordProTagUseCaseImpl() }
     factory<SynchronizeLibraryUseCase> { SynchronizeLibraryUseCaseImpl(get()) }
     factory<TransposeChordProTextUseCase> { TransposeChordProTextUseCaseImpl() }
     factory<TransposeChordProUseCase> { TransposeChordProUseCaseImpl() }

@@ -44,6 +44,7 @@ object ChordProSerializer {
         metadata.time?.let { add("{time: $it}") }
         metadata.duration?.let { add("{duration: $it}") }
         metadata.transpose.takeIf { it != 0 }?.let { add("{transpose: $it}") }
+        metadata.tags.forEach { add("{${ChordProSyntax.TAG_NAME}: $it}") }
         metadata.custom.forEach { (name, values) ->
             values.forEach { value -> add(if (value.isEmpty()) "{meta: $name}" else "{meta: $name $value}") }
         }

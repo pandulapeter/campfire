@@ -56,6 +56,13 @@
     <string name="songs_no_search_results">Nincs találat</string>
     <string name="songs_no_search_results_hint">Egyetlen dal sem felel meg a keresésnek.</string>
     <string name="songs_lyrics_only">Csak dalszöveg</string>
+    <string name="songs_tags">Címkék</string>
+    <string name="songs_tags_show_all">Mind a(z) %1$d megjelenítése</string>
+    <string name="songs_tags_show_less">Kevesebb</string>
+    <string name="songs_tags_clear">Kijelölés törlése</string>
+    <string name="songs_tags_match_mode">A dalon legyen rajta</string>
+    <string name="songs_tags_match_mode_any">Bármelyik címke</string>
+    <string name="songs_tags_match_mode_all">Mindegyik címke</string>
 
     <!-- Setlists screen -->
     <string name="setlists">Listák</string>
@@ -150,7 +157,10 @@
     <string name="song_details_section_bridge">Átvezetés</string>
     <string name="song_details_section_tab">Tab</string>
     <string name="song_details_section_grid">Rács</string>
-    <string name="song_details_key">Hangnem: %1$s</string>
+    <string name="song_details_tag_add">Címke hozzáadása</string>
+    <string name="song_details_tag_remove">A(z) „%1$s” címke eltávolítása</string>
+    <string name="song_details_tag_name">Címke</string>
+    <string name="song_details_tag_suggestions">Már szerepel a könyvtáradban</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>

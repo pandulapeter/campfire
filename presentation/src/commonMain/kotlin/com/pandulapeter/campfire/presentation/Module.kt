@@ -35,6 +35,7 @@ val presentationModule = module {
             deleteSetlist = get(),
             saveSongContent = get(),
             saveUserPreferences = get(),
+            setChordProTag = get(),
             connectSyncProvider = get(),
             disconnectSyncProvider = get(),
             cancelSynchronization = get(),

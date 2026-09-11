@@ -36,6 +36,10 @@ internal object ChordProSyntax {
     const val START_OF_PREFIX = "start_of_"
     const val END_OF_PREFIX = "end_of_"
 
+    /** The name of the `{tag}` directive, which is also the `{meta}` key that spells the same thing. */
+    const val TAG_NAME = "tag"
+    private const val META = "meta"
+
     private val startShortNames = mapOf(
         "soc" to "chorus",
         "sov" to "verse",
@@ -54,7 +58,7 @@ internal object ChordProSyntax {
     /** Every directive name the parser reacts to, used to detect (and drop) selector suffixes such as `title-guitar`. */
     private val knownNames = setOf(
         "title", "t", "subtitle", "st", "artist", "composer", "lyricist", "album", "year", "key", "capo", "tempo",
-        "time", "duration", "transpose", "meta", "chorus", "comment", "c", "comment_italic", "ci", "comment_box", "cb",
+        "time", "duration", "transpose", "tag", "meta", "chorus", "comment", "c", "comment_italic", "ci", "comment_box", "cb",
         "new_page", "np", "new_physical_page", "npp", "column_break", "colb", "new_song", "ns", "define", "chord",
         "image", "columns", "col", "highlight", "pagetype", "titles",
     )
@@ -73,6 +77,21 @@ internal object ChordProSyntax {
         val value = if (match.groupValues.size > 2) match.groups[2]?.value else null
         return Directive(name = name, value = value)
     }
+
+    /**
+     * The tag a directive carries, or null if it is not a tag directive. ChordPro documents `{tag: Needs study}` and
+     * `{meta: tag Needs study}` as the same thing, and both are read here; one tag per directive, repeated as many
+     * times as the song has tags. The value is taken whole, since the spec calls a tag arbitrary text.
+     */
+    fun tag(directive: Directive): String? = when (directive.name) {
+        TAG_NAME -> directive.value?.trim()
+        META -> directive.value?.trim()
+            ?.takeIf { it.substringBefore(' ').trim().equals(TAG_NAME, ignoreCase = true) }
+            ?.substringAfter(' ', missingDelimiterValue = "")
+            ?.trim()
+
+        else -> null
+    }?.takeIf { it.isNotEmpty() }
 
     /** `label="Verse 1"` wins over the raw value; an empty value becomes null. */
     fun label(value: String?): String? {

@@ -252,6 +252,7 @@ object ChordProParser {
         private var time: String? = null
         private var duration: String? = null
         private var transpose = 0
+        private val tags = mutableListOf<String>()
         private val custom = mutableMapOf<String, MutableList<String>>()
 
         fun consume(directive: ChordProSyntax.Directive) {
@@ -270,10 +271,12 @@ object ChordProParser {
                 "time" -> time = value
                 "duration" -> duration = value
                 "transpose" -> value.removePrefix("+").toIntOrNull()?.let { transpose = it }
+                "tag" -> ChordProSyntax.tag(directive)?.let(::addTag)
                 "meta" -> {
                     val name = value.substringBefore(' ').trim()
-                    if (name.isNotEmpty()) {
-                        custom.getOrPut(name) { mutableListOf() } += value.substringAfter(' ', missingDelimiterValue = "").trim()
+                    when {
+                        name.equals(ChordProSyntax.TAG_NAME, ignoreCase = true) -> ChordProSyntax.tag(directive)?.let(::addTag)
+                        name.isNotEmpty() -> custom.getOrPut(name) { mutableListOf() } += value.substringAfter(' ', missingDelimiterValue = "").trim()
                     }
                 }
 
@@ -281,6 +284,11 @@ object ChordProParser {
                     custom.getOrPut(directive.name) { mutableListOf() } += value
                 }
             }
+        }
+
+        /** A tag the song already carries in another spelling is not a second tag, see [ChordProMetadata.tags]. */
+        private fun addTag(value: String) {
+            if (tags.none { it.equals(value, ignoreCase = true) }) tags += value
         }
 
         fun build() = ChordProMetadata(
@@ -297,6 +305,7 @@ object ChordProParser {
             time = time,
             duration = duration,
             transpose = transpose,
+            tags = tags.toList(),
             custom = custom.mapValues { it.value.toList() },
         )
     }

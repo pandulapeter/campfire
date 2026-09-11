@@ -35,7 +35,7 @@ File-backed multiplatform implementation of `:data:source:local:api`, on all fou
   of an empty name), deriving `Artist - Title.cho`, and `uniqueName`, which suffixes ` (2)`, ` (3)`… until the name is
   free. Nothing in the library is ever overwritten implicitly.
 - **`source/`** — the four local sources. `SongLocalSourceImpl` reads the whole ChordPro family
-  (`LibraryFiles.SONG_EXTENSIONS`) but writes only `.cho`, and gets a song's title, artist, key and "has chords" from
+  (`LibraryFiles.SONG_EXTENSIONS`) but writes only `.cho`, and gets a song's title, artist, key, tags and "has chords" from
   `:chordpro`'s `parseMetadata` / `hasChords` rather than reading the file twice. A file that cannot be read is skipped;
   a *directory* that cannot be listed throws, because "empty library" and "your library is unreachable" must not look
   the same to the user.

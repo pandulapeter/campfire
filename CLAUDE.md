@@ -35,9 +35,10 @@ app:android / app:desktop / app:ios / app:web   entry points, Koin startup, plat
       data:source:remote:api -> :implementation   the sync contracts and the Dropbox provider; the only module in
                                                   the project that makes a network call (see Sync below)
         data:model                           domain models, shared by everything
-  chordpro                                   dependency-free ChordPro model, parser, serializer, transposer and
-                                             highlighter. Depends on nothing; used by :data:source:local:implementation
-                                             (metadata for the song list), :domain:api and :presentation
+  chordpro                                   dependency-free ChordPro model, parser, serializer, transposer, tag
+                                             editor and highlighter. Depends on nothing; used by
+                                             :data:source:local:implementation (metadata for the song list),
+                                             :domain:api and :presentation
 ```
 
 Data flow: `FileStorage` (one flat directory per kind of file) -> `LocalSource` (files in, models out) -> `Repository`
@@ -79,6 +80,10 @@ preferences/sync-index.json          what the last successful sync run saw
 - Implementation classes are `internal` and named `<Interface>Impl`. Use cases are `operator fun invoke`.
 - Repositories extend `BaseLocalDataRepository`, which holds the cached `DataState` and the read-once logic.
 - Layer boundaries are crossed via mappers (`mapper/` packages), never by leaking document/entity types.
+- **Tags are part of the song file**, not a store of their own: ChordPro `{tag}` directives, read by `:chordpro`
+  into `Song.tags` at scan time and written back into the text the same way, so a tag travels with the file through
+  an export, an import or a sync run. The library's set of tags is whatever the songs carry; the Songs screen's
+  filter offers them counted and most used first, and the song details header is where one is put on or taken off.
 - The file name is a song's (and a setlist's) identity. Nothing is ever overwritten implicitly: a new or imported file
   that collides gets a ` (2)`, ` (3)`… suffix (`FileNames.kt`).
 - Only pure logic is tested: `commonTest` unit tests in `:chordpro`, `:data:source:local:implementation` (zip and the
@@ -124,6 +129,11 @@ preferences/sync-index.json          what the last successful sync run saw
   then `xcrun simctl install/launch`.
 - `./gradlew :app:web:wasmJsBrowserDevelopmentRun` — web app on a dev server; `:app:web:wasmJsBrowserDistribution` writes
   the deployable site to `app/web/build/dist/wasmJs/productionExecutable`.
+- `.github/workflows/web-publish.yml` is that last command run by hand: a manually dispatched workflow that builds the
+  distribution with the Dropbox key from the `DROPBOX_APP_KEY` secret (without it the published app would quietly have
+  no sync provider), then copies it over `campfire/` in the `pandulapeter.github.io` repository, which it reaches with
+  the deploy key in `WEBSITE_DEPLOY_KEY`. The copy is an `rsync --delete`, so the folder holds nothing but the
+  distribution — the privacy policy and the rest of the site live elsewhere in that repository.
 
 ## Sync
 

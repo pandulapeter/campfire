@@ -22,6 +22,8 @@ data class Song(
     val artist: String,
     /** `{key}` as written, null if the song does not declare one. */
     val key: String?,
+    /** The labels the file is tagged with, in the order it lists them, see `ChordProMetadata.tags`. */
+    val tags: List<String>,
     val hasChords: Boolean,
     val lastModified: Long,
 )

@@ -14,6 +14,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
@@ -55,6 +59,9 @@ import com.pandulapeter.campfire.presentation.resources.setlists_rename_title
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect
 import com.pandulapeter.campfire.presentation.resources.settings_sync_disconnect_confirmation
 import com.pandulapeter.campfire.presentation.resources.song_details_add_to_setlist
+import com.pandulapeter.campfire.presentation.resources.song_details_tag_add
+import com.pandulapeter.campfire.presentation.resources.song_details_tag_name
+import com.pandulapeter.campfire.presentation.resources.song_details_tag_suggestions
 import com.pandulapeter.campfire.presentation.resources.song_editor_discard
 import com.pandulapeter.campfire.presentation.resources.song_editor_save
 import com.pandulapeter.campfire.presentation.resources.song_editor_unsaved_changes
@@ -70,6 +77,8 @@ import com.pandulapeter.campfire.presentation.ui.components.CheckboxListItem
 import com.pandulapeter.campfire.presentation.ui.components.SettingsSectionTitle
 import com.pandulapeter.campfire.presentation.ui.components.SongActions
 import com.pandulapeter.campfire.presentation.ui.components.SongsControls
+import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
+import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.ui.screens.songDetails.SongDisplayControls
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -156,6 +165,11 @@ internal fun CampfireDialogs(
                 viewModel.deleteSong(dialog.song.fileName)
                 viewModel.dismissDialog()
             },
+        )
+
+        is CampfireViewModel.DialogType.AddSongTag -> AddSongTagDialog(
+            viewModel = viewModel,
+            dialog = dialog,
         )
 
         is CampfireViewModel.DialogType.DeleteSetlist -> ConfirmationDialog(
@@ -336,6 +350,77 @@ private fun NewSongDialog(
 }
 
 /**
+ * One tag to put on a song, typed or picked. The suggestions are the tags the rest of the library already uses,
+ * narrowed by whatever has been typed so far, because a library where the same idea is filed under "christmas",
+ * "Christmas" and "xmas" is a library whose tags filter nothing.
+ */
+@Composable
+private fun AddSongTagDialog(
+    viewModel: CampfireViewModel,
+    dialog: CampfireViewModel.DialogType.AddSongTag,
+) {
+    val tags by viewModel.tags.collectAsStateWithLifecycle()
+    var value by rememberSaveable { mutableStateOf("") }
+    val isValid = value.isNotBlank()
+    val focusRequester = remember { FocusRequester() }
+    val addTag = { tag: String ->
+        viewModel.setSongTag(fileName = dialog.song.fileName, tag = tag, isSelected = true)
+        viewModel.dismissDialog()
+    }
+    val suggestions = remember(tags, dialog.song, value) {
+        val songTags = dialog.song.tags.mapTo(mutableSetOf()) { it.lowercase() }
+        tags.filter { it.name.lowercase() !in songTags && it.name.contains(value.trim(), ignoreCase = true) }
+    }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    AlertDialog(
+        onDismissRequest = viewModel::dismissDialog,
+        title = { Text(stringResource(Res.string.song_details_tag_add)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                    value = value,
+                    onValueChange = { value = it.replace("\n", "").take(MAX_TAG_LENGTH) },
+                    label = { Text(stringResource(Res.string.song_details_tag_name)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { if (isValid) addTag(value) }),
+                )
+                // However many tags a library has grown to, the ones that match what is being typed are the only
+                // ones worth offering, and the list is scrolled rather than allowed to push the buttons off screen.
+                if (suggestions.isNotEmpty()) {
+                    Text(
+                        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+                        text = stringResource(Res.string.song_details_tag_suggestions),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    TagFlowRow(
+                        modifier = Modifier.heightIn(max = MAX_SUGGESTIONS_HEIGHT).verticalScroll(rememberScrollState())
+                    ) {
+                        suggestions.forEach { tag ->
+                            TagPill(
+                                text = tag.name,
+                                onClick = { addTag(tag.name) },
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = isValid,
+                onClick = { addTag(value) },
+            ) { Text(stringResource(Res.string.song_details_tag_add)) }
+        },
+        dismissButton = {
+            TextButton(onClick = viewModel::dismissDialog) { Text(stringResource(Res.string.cancel)) }
+        },
+    )
+}
+
+/**
  * The actions of one song where there is no pointer to open a dropdown menu with, reached by long pressing the row.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -372,15 +457,19 @@ private fun SongActionsSheet(
     Spacer(modifier = Modifier.height(16.dp))
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * The setlists one song can be put into, and the way to make a new one. Naming that new setlist happens in a dialog
+ * on top of the sheet rather than instead of it: the setlist is only being created so that this song can go into it,
+ * so the sheet staying where it is, with a ticked row appearing in it, is what says that it worked.
+ */
 @Composable
 private fun SetlistPickerSheet(
     viewModel: CampfireViewModel,
     dialog: CampfireViewModel.DialogType.SetlistPicker,
 ) {
     val setlists by viewModel.setlists.collectAsStateWithLifecycle()
-    CampfireBottomSheet(onDismiss = viewModel::dismissDialog) { sheetState, dismiss ->
-        val coroutineScope = rememberCoroutineScope()
+    var isNamingNewSetlist by rememberSaveable { mutableStateOf(false) }
+    CampfireBottomSheet(onDismiss = viewModel::dismissDialog) {
         SettingsSectionTitle(text = stringResource(Res.string.song_details_add_to_setlist))
         setlists.forEach { setlist ->
             CheckboxListItem(
@@ -399,14 +488,21 @@ private fun SetlistPickerSheet(
         ActionListItem(
             title = stringResource(Res.string.setlists_new_setlist),
             icon = painterResource(Res.drawable.ic_add),
-            onClick = {
-                coroutineScope.launch {
-                    sheetState.hide()
-                    viewModel.showDialog(CampfireViewModel.DialogType.NewSetlist)
-                }
-            },
+            onClick = { isNamingNewSetlist = true },
         )
         Spacer(modifier = Modifier.height(16.dp))
+    }
+    if (isNamingNewSetlist) {
+        TextInputDialog(
+            title = stringResource(Res.string.setlists_new_setlist),
+            label = stringResource(Res.string.setlists_new_setlist_title),
+            confirmLabel = stringResource(Res.string.create),
+            onDismiss = { isNamingNewSetlist = false },
+            onConfirm = { title ->
+                viewModel.createSetlistWithSong(title = title, songFileName = dialog.songFileName)
+                isNamingNewSetlist = false
+            },
+        )
     }
 }
 
@@ -441,3 +537,5 @@ private fun CampfireBottomSheet(
 ) = CampfireBottomSheet(onDismiss) { _, _ -> content() }
 
 private const val MAX_TITLE_LENGTH = 60
+private const val MAX_TAG_LENGTH = 40
+private val MAX_SUGGESTIONS_HEIGHT = 160.dp

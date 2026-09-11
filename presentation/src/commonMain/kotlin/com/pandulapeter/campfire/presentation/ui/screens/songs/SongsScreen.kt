@@ -241,10 +241,11 @@ private fun SongList(
         }
     }
 
-    // Scroll back to the top whenever the search query or the sorting changes, before the new items arrive. The
-    // combination that was last scrolled to the top is remembered across recompositions and state restoration, so
-    // that coming back from the song details keeps the restored scroll position instead of jumping to the top.
-    val scrollToTopKey = "$query|${userPreferences?.sortingMode?.name}"
+    // Scroll back to the top whenever the search query, the sorting or the tag filter changes, before the new items
+    // arrive. The combination that was last scrolled to the top is remembered across recompositions and state
+    // restoration, so that coming back from the song details keeps the restored scroll position instead of jumping
+    // to the top.
+    val scrollToTopKey = "$query|${userPreferences?.sortingMode?.name}|${userPreferences?.selectedTags?.sorted()}|${userPreferences?.tagMatchMode?.name}"
     var lastScrollToTopKey by rememberSaveable { mutableStateOf(scrollToTopKey) }
     LaunchedEffect(scrollToTopKey) {
         if (scrollToTopKey != lastScrollToTopKey) {

@@ -27,6 +27,7 @@ import com.pandulapeter.campfire.data.model.domain.Song
 import com.pandulapeter.campfire.data.model.domain.SyncProviderId
 import com.pandulapeter.campfire.data.source.remote.api.model.AuthorizationCompletionPage
 import com.pandulapeter.campfire.data.model.domain.SyncState
+import com.pandulapeter.campfire.data.model.domain.Tag
 import com.pandulapeter.campfire.data.model.domain.UserPreferences
 import com.pandulapeter.campfire.domain.api.models.ScreenData
 import com.pandulapeter.campfire.domain.api.useCases.CancelSynchronizationUseCase
@@ -53,6 +54,7 @@ import com.pandulapeter.campfire.domain.api.useCases.RestoreSyncUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSetlistUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveSongContentUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SaveUserPreferencesUseCase
+import com.pandulapeter.campfire.domain.api.useCases.SetChordProTagUseCase
 import com.pandulapeter.campfire.domain.api.useCases.SynchronizeLibraryUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProTextUseCase
 import com.pandulapeter.campfire.domain.api.useCases.TransposeChordProUseCase
@@ -100,6 +102,7 @@ class CampfireViewModel(
     private val deleteSetlist: DeleteSetlistUseCase,
     private val saveSongContent: SaveSongContentUseCase,
     private val saveUserPreferences: SaveUserPreferencesUseCase,
+    private val setChordProTag: SetChordProTagUseCase,
     private val connectSyncProvider: ConnectSyncProviderUseCase,
     private val disconnectSyncProvider: DisconnectSyncProviderUseCase,
     private val cancelSynchronization: CancelSynchronizationUseCase,
@@ -209,6 +212,12 @@ class CampfireViewModel(
      * still empty on its first frame would open every setlist on its first song.
      */
     val allSongs = screenData.map { it.data?.songs.orEmpty() }.asEagerState(emptyList())
+
+    /**
+     * Every tag the library uses, most used first, as both the filter controls and the suggestions of the tag
+     * dialog offer them.
+     */
+    val tags = screenData.map { it.data?.tags.orEmpty() }.asState(emptyList())
 
     /**
      * Every song with its title and artist normalized for searching and grouping, done once per library rather than
@@ -447,6 +456,17 @@ class CampfireViewModel(
         _songTexts.update { it - fileName }
     }
 
+    /**
+     * Puts a tag on a song or takes it off, from the header of the screen that is playing it. The file is rewritten
+     * rather than the list entry changed: tags live in the song's own text, which is what makes them travel with the
+     * file when it is exported, synced or opened anywhere else.
+     */
+    fun setSongTag(fileName: String, tag: String, isSelected: Boolean) = launchLibraryChange {
+        val text = songTexts.value[fileName] ?: getSongContent(fileName)?.text ?: return@launchLibraryChange
+        val edited = setChordProTag(text = text, tag = tag, isSelected = isSelected)
+        if (edited != text) saveSongContent(fileName = fileName, text = edited)
+    }
+
     // The editor
 
     fun openEditor(fileName: String, shouldStartInsideFirstSection: Boolean = false) {
@@ -631,6 +651,15 @@ class CampfireViewModel(
         createSetlist.invoke(title)
     }
 
+    /**
+     * Creating a setlist from the setlist picker of one song, where the only reason it is being created at that
+     * moment is that the song should go into it. Both happen in the same library change, so the picker's tick is
+     * already there when the new setlist appears in it.
+     */
+    fun createSetlistWithSong(title: String, songFileName: String) = launchLibraryChange {
+        saveSetlist(createSetlist.invoke(title).copy(entries = listOf(Setlist.Entry(songFileName = songFileName))))
+    }
+
     fun addSongToSetlist(songFileName: String, setlistFileName: String) = launchLibraryChange {
         setlists.value.firstOrNull { it.fileName == setlistFileName }?.let { setlist ->
             if (setlist.entries.none { it.songFileName == songFileName }) {
@@ -690,6 +719,20 @@ class CampfireViewModel(
     }
 
     fun setSortingMode(value: UserPreferences.SortingMode) = updateUserPreferences { copy(sortingMode = value) }
+
+    /** A selected tag is matched the way the filter itself matches it, without regard to case. */
+    fun toggleTagFilter(tag: String) = updateUserPreferences {
+        val without = selectedTags.filterNotTo(mutableSetOf()) { it.equals(tag, ignoreCase = true) }
+        copy(selectedTags = if (without.size == selectedTags.size) selectedTags + tag else without)
+    }
+
+    /** Only the tags the library still has are cleared: a selection this screen never showed is not a tap's to lose. */
+    fun clearTagFilter() = updateUserPreferences {
+        val libraryTags = tags.value.mapTo(mutableSetOf()) { it.name.lowercase() }
+        copy(selectedTags = selectedTags.filterNotTo(mutableSetOf()) { it.lowercase() in libraryTags })
+    }
+
+    fun setTagMatchMode(value: UserPreferences.TagMatchMode) = updateUserPreferences { copy(tagMatchMode = value) }
 
     fun setUiMode(value: UserPreferences.UiMode) = updateUserPreferences { copy(uiMode = value) }
 
@@ -951,6 +994,8 @@ class CampfireViewModel(
             val shouldIncludeAddToSetlist: Boolean = true,
         ) : DialogType
         data class DeleteSong(val song: Song) : DialogType
+        /** Opened from the tag header of the song details screen; the suggestions come from [tags]. */
+        data class AddSongTag(val song: Song) : DialogType
         /**
          * Asked before the connected account is forgotten. Nothing is deleted either way, but reconnecting means
          * going through the consent page again, which is not something to end up in by mistapping a list row.

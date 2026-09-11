@@ -134,14 +134,28 @@ internal fun SongListItem(
                 }
             }
         },
-        // Songs created in the app need no artist, and an empty second line would just make the row taller.
-        supportingContent = song.artist.takeIf { it.isNotBlank() }?.let { artist ->
+        // Songs created in the app need no artist, and an empty second line would just make the row taller. The
+        // tags sit under the artist rather than next to the title, because a row of them is as long as somebody
+        // chose to make it and the title is the one thing on the row that must never be pushed out of sight.
+        supportingContent = if (song.artist.isBlank() && song.tags.isEmpty()) {
+            null
+        } else {
             {
-                Text(
-                    text = artist,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Column {
+                    if (song.artist.isNotBlank()) {
+                        Text(
+                            text = song.artist,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    if (song.tags.isNotEmpty()) {
+                        SongTags(
+                            modifier = Modifier.padding(top = if (song.artist.isBlank()) 0.dp else 4.dp),
+                            tags = song.tags,
+                        )
+                    }
+                }
             }
         },
     )

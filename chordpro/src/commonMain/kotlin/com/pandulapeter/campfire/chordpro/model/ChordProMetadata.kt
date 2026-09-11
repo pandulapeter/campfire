@@ -27,5 +27,11 @@ data class ChordProMetadata(
     val time: String? = null, // {time}, e.g. "3/4"
     val duration: String? = null,
     val transpose: Int = 0, // {transpose: N}, applied by the renderer on top of the user's transposition
+    /**
+     * The labels the song was filed under, one per `{tag}` directive (or per `{meta: tag ...}`, which ChordPro
+     * documents as the same thing). They are kept in the order the file lists them, without the duplicates a hand
+     * written file may hold: two spellings of the same word are the same tag, and the first one wins.
+     */
+    val tags: List<String> = emptyList(),
     val custom: Map<String, List<String>> = emptyMap(), // {meta: name value} and unknown x_* directives, in order
 )

@@ -62,16 +62,22 @@ import com.pandulapeter.campfire.chordpro.model.CommentStyle
 import com.pandulapeter.campfire.chordpro.model.GridToken
 import com.pandulapeter.campfire.chordpro.model.SectionType
 import com.pandulapeter.campfire.presentation.resources.Res
+import com.pandulapeter.campfire.presentation.resources.ic_add
+import com.pandulapeter.campfire.presentation.resources.ic_clear
 import com.pandulapeter.campfire.presentation.resources.song_details_capo
-import com.pandulapeter.campfire.presentation.resources.song_details_key
 import com.pandulapeter.campfire.presentation.resources.song_details_section_bridge
 import com.pandulapeter.campfire.presentation.resources.song_details_section_chorus
 import com.pandulapeter.campfire.presentation.resources.song_details_section_grid
 import com.pandulapeter.campfire.presentation.resources.song_details_section_tab
+import com.pandulapeter.campfire.presentation.resources.song_details_tag_add
+import com.pandulapeter.campfire.presentation.resources.song_details_tag_remove
 import com.pandulapeter.campfire.presentation.resources.song_details_tempo
 import com.pandulapeter.campfire.presentation.resources.song_details_time
+import com.pandulapeter.campfire.presentation.ui.components.TagFlowRow
+import com.pandulapeter.campfire.presentation.ui.components.TagPill
 import com.pandulapeter.campfire.presentation.localization.stringResource
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
 import kotlin.math.ceil
 import kotlin.math.max
 
@@ -110,6 +116,8 @@ internal fun SongLyrics(
     fontScale: Float = 1f,
     isHorizontalFlow: Boolean = false,
     scrollState: ScrollState,
+    onAddTag: (() -> Unit)? = null,
+    onRemoveTag: ((String) -> Unit)? = null,
 ) {
     // The fallback labels of the environments that have one; everything else is named by the file itself.
     val defaultLabels = DefaultSectionLabels(
@@ -149,6 +157,8 @@ internal fun SongLyrics(
                 },
             song = song,
             fontScale = fontScale,
+            onAddTag = onAddTag,
+            onRemoveTag = onRemoveTag,
         )
         LookaheadScope {
             SongSectionsLayout(
@@ -216,32 +226,46 @@ internal fun SongLyrics(
 }
 
 /**
- * The title, artist and the metadata worth seeing while playing, above the song and scrolling with it. The app bar
- * shows the title too, but it is the only thing there, and the key and capo belong next to the chords.
+ * The tags of the song and the rest of the metadata worth seeing while playing, above the lyrics and scrolling with
+ * them. The title, the artist and the key are not repeated here: the app bar carries all three, the key inside the
+ * transposition control that is the only thing one would look at it for.
+ *
+ * @param onAddTag Null where the tags are only read, which is the editor's preview: there the file itself is under
+ *   the caret, and a chip writing into it from the side would be editing the text the editor has not saved yet.
  */
 @Composable
 private fun SongMetadataHeader(
     modifier: Modifier = Modifier,
     song: ChordProSong,
     fontScale: Float,
+    onAddTag: (() -> Unit)?,
+    onRemoveTag: ((String) -> Unit)?,
 ) = Column(modifier = modifier.padding(bottom = SECTION_GAP)) {
     val metadata = song.metadata
-    metadata.title?.takeIf { it.isNotBlank() }?.let { title ->
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall.scaled(fontScale),
-            color = MaterialTheme.colorScheme.onSurface,
-        )
+    if (metadata.tags.isNotEmpty() || onAddTag != null) {
+        TagFlowRow(
+            modifier = Modifier.padding(bottom = 4.dp)
+        ) {
+            metadata.tags.forEach { tag ->
+                TagPill(
+                    text = tag,
+                    trailingIcon = if (onRemoveTag == null) null else painterResource(Res.drawable.ic_clear),
+                    trailingIconContentDescription = onRemoveTag?.let { stringResource(Res.string.song_details_tag_remove, tag) },
+                    onTrailingIconClick = onRemoveTag?.let { { it(tag) } },
+                )
+            }
+            onAddTag?.let { onClick ->
+                TagPill(
+                    text = stringResource(Res.string.song_details_tag_add),
+                    onClick = onClick,
+                    leadingIcon = painterResource(Res.drawable.ic_add),
+                )
+            }
+        }
     }
-    metadata.artist?.takeIf { it.isNotBlank() }?.let { artist ->
-        Text(
-            text = artist,
-            style = MaterialTheme.typography.bodyLarge.scaled(fontScale),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-    // Only when it says something the artist line does not already say.
-    metadata.subtitle?.takeIf { it.isNotBlank() && it != metadata.artist }?.let { subtitle ->
+    // Only when it says something the artist line of the app bar does not already say: a song with no artist has
+    // its subtitle shown up there instead, see `Song.artist`.
+    metadata.subtitle?.takeIf { it.isNotBlank() && !metadata.artist.isNullOrBlank() && it != metadata.artist }?.let { subtitle ->
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodyLarge.scaled(fontScale),
@@ -249,7 +273,6 @@ private fun SongMetadataHeader(
         )
     }
     val chips = listOfNotNull(
-        metadata.key?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_key, it) },
         metadata.capo?.takeIf { it != 0 }?.let { stringResource(Res.string.song_details_capo, it) },
         metadata.tempo?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_tempo, it) },
         metadata.time?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.song_details_time, it) },

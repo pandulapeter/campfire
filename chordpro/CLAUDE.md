@@ -19,7 +19,8 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   it looks like.
 - `ChordProSyntax` — the shared low-level rules (the directive and chord regexes, `chordNameRegex` for "is this whole
   word a chord and not a word that starts with a letter", long/short directive names, the `start_of_` / `end_of_`
-  prefixes, `label="…"` attributes). Every other object here goes through it, so the dialect is defined once.
+  prefixes, `label="…"` attributes, and what counts as a tag directive). Every other object here goes through it, so
+  the dialect is defined once.
 - `ChordProParser` — `parse` (the whole song), `parseMetadata` (directive lines only, cheap enough to run over every
   file in the library at startup) and `hasChords`. Total: it never throws and never rejects a document, because the
   file on disk is the user's and half of it may be under the caret. Unknown directives are ignored; `{define}`, fonts,
@@ -27,6 +28,14 @@ in `:domain:*`. `:data:source:local:implementation` uses it directly for the met
   `{comment: Verse 1}` outside an environment was a section heading.
 - `ChordProSerializer` — writes the model back as canonical ChordPro. The editor works on raw text, so the user's own
   formatting does not have to survive this; `parse(serialize(parse(x))) == parse(x)` does.
+- `ChordProTags` — the tags of a song. ChordPro's own `{tag: Needs study}` directive, one tag per directive and as
+  many of them as the song has; `{meta: tag Needs study}`, which the spec documents as the same thing, is read as
+  well but never written. The value is taken whole, commas included, because the spec calls a tag arbitrary text.
+  Two spellings of the same word are one tag everywhere: matching ignores case, and the library shows the spelling
+  of the first song that carries it. `addTag` and `removeTag` edit the text rather than the model, for the same
+  reason `ChordProTransposer.transposeText` does — the result is written straight back to the user's file, so their
+  own formatting has to survive a chip being tapped in the viewer. A new tag lands after the last one the file
+  already has, or at the end of the directives it opens with.
 - `ChordProSplitter` — splits a file that holds several songs at `{new_song}` / `{ns}`.
 - `ChordProTransposer` — moves chords by semitones, on the model (the viewer) or directly on the text keeping every
   byte of formatting (the editor's transpose action). Chooses sharps or flats from the song's key, follows the bass

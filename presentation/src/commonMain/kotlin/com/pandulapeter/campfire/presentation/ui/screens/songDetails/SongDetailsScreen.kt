@@ -332,6 +332,8 @@ internal fun SongDetailsScreen(
                     contentPadding = pageContentPadding,
                     renderSong = viewModel::renderSong,
                     onRetry = { viewModel.loadSongContent(song.fileName) },
+                    onAddTag = { viewModel.showDialog(CampfireViewModel.DialogType.AddSongTag(song)) },
+                    onRemoveTag = { tag -> viewModel.setSongTag(fileName = song.fileName, tag = tag, isSelected = false) },
                 )
             }
         }
@@ -449,6 +451,8 @@ private fun SongDetailsPage(
     contentPadding: PaddingValues,
     renderSong: (text: String, transposition: Int, spelling: UserPreferences.ChordSpelling) -> ChordProSong,
     onRetry: () -> Unit,
+    onAddTag: () -> Unit,
+    onRemoveTag: (String) -> Unit,
 ) = AnimatedContent(
     modifier = Modifier.fillMaxSize(),
     targetState = text,
@@ -516,6 +520,8 @@ private fun SongDetailsPage(
                 fontScale = fontScale,
                 isHorizontalFlow = isHorizontalFlow,
                 scrollState = scrollState,
+                onAddTag = onAddTag,
+                onRemoveTag = onRemoveTag,
             )
         }
     }

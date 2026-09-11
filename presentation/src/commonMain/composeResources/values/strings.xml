@@ -56,6 +56,13 @@
     <string name="songs_no_search_results">No matching songs</string>
     <string name="songs_no_search_results_hint">Nothing in your library matches this search.</string>
     <string name="songs_lyrics_only">Lyrics only</string>
+    <string name="songs_tags">Tags</string>
+    <string name="songs_tags_show_all">Show all %1$d</string>
+    <string name="songs_tags_show_less">Show fewer</string>
+    <string name="songs_tags_clear">Clear selection</string>
+    <string name="songs_tags_match_mode">A song has to carry</string>
+    <string name="songs_tags_match_mode_any">Any tag</string>
+    <string name="songs_tags_match_mode_all">Every tag</string>
 
     <!-- Setlists screen -->
     <string name="setlists">Setlists</string>
@@ -150,7 +157,10 @@
     <string name="song_details_section_bridge">Bridge</string>
     <string name="song_details_section_tab">Tab</string>
     <string name="song_details_section_grid">Grid</string>
-    <string name="song_details_key">Key: %1$s</string>
+    <string name="song_details_tag_add">Add tag</string>
+    <string name="song_details_tag_remove">Remove the \"%1$s\" tag</string>
+    <string name="song_details_tag_name">Tag</string>
+    <string name="song_details_tag_suggestions">Already in your library</string>
     <string name="song_details_capo">Capo %1$d</string>
     <string name="song_details_tempo">%1$s BPM</string>
     <string name="song_details_time">%1$s</string>

@@ -20,7 +20,20 @@ data class UserPreferences(
     val chordSpelling: ChordSpelling, // How the chords of a song are written when it is displayed.
     /** Song file name to semitones, for songs opened from the library rather than from a setlist. */
     val transpositions: Map<String, Int>,
+    /**
+     * The tags the song lists are narrowed to, empty when every song is shown. A tag no song carries any more is
+     * kept rather than pruned, exactly like a transposition of a song that was deleted: the filter ignores it, and
+     * it starts working again the moment a song is tagged that way.
+     */
+    val selectedTags: Set<String>,
+    val tagMatchMode: TagMatchMode,
 ) {
+
+    /** What several selected tags mean together: a song that carries any one of them, or one that carries all. */
+    enum class TagMatchMode(val id: String) {
+        ANY("any"),
+        ALL("all"),
+    }
 
     enum class SortingMode(val id: String) {
         BY_TITLE("by_title"),
