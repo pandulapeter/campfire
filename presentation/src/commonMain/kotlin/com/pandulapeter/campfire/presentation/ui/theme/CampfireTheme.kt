@@ -10,7 +10,6 @@
 package com.pandulapeter.campfire.presentation.ui.theme
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.snap
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -33,33 +32,54 @@ import com.pandulapeter.campfire.data.model.domain.UserPreferences
  * a spring reaches its visibility threshold sooner the shorter the distance it has to cover, so the roles that
  * barely differ between the two schemes would snap over immediately while the rest were still on their way, and the
  * screen would appear to change in pieces.
+ *
+ * The very first change is the app correcting the guess it opened on - the system's setting, until the stored
+ * preferences have been read - and it is cross faded like any other, because on a launch screen that is nothing but
+ * a mark on the background, every color in the window flipping at once between two frames is the whole picture
+ * blinking. It costs nothing when there is nothing to correct: a preference that resolves to the palette already on
+ * screen is not a change and does not animate.
+ *
+ * @param content Told whether the scheme it is drawn in is the final one, which is what holds the launch screen in
+ *   front of the app until the colors underneath have stopped moving.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CampfireTheme(
     uiMode: UserPreferences.UiMode?,
     themeColor: UserPreferences.ThemeColor?,
-    content: @Composable () -> Unit,
+    content: @Composable (isThemeSettled: Boolean) -> Unit,
 ) {
-    // Until the stored preferences are loaded the theme is only a guess based on the system setting. Correcting that
-    // guess is not a theme change the user made, so it must not be animated - otherwise every launch that starts
-    // with the theme unset (or with a preference that differs from the system one) cross fades the whole UI.
-    val arePreferencesLoaded = uiMode != null && themeColor != null
-    var isAnimated by remember { mutableStateOf(false) }
-    LaunchedEffect(arePreferencesLoaded) { isAnimated = arePreferencesLoaded }
     val isDarkTheme = uiMode.isDarkTheme()
     val colorSchemePair = colorSchemePair(themeColor)
     val targetColorScheme = if (isDarkTheme) colorSchemePair.dark else colorSchemePair.light
+    val progress = remember { Animatable(1f) }
+    var start by remember { mutableStateOf(targetColorScheme) }
+    var stop by remember { mutableStateOf(targetColorScheme) }
+    // The preferences rather than the scheme itself, which has no equality of its own to key an animation on.
+    LaunchedEffect(isDarkTheme to themeColor) {
+        // Two preferences can ask for the same palette - an unread one and the app's own color, a color the device
+        // cannot honor and the orange it falls back to - and arriving at the scheme that is already on screen is
+        // not a change to animate. The schemes are the constants of ColorSchemes.kt, so this is identity.
+        if (targetColorScheme === stop) return@LaunchedEffect
+        // The fade starts from the scheme being shown and not from the one the last change aimed at, so a second
+        // change made while the first is still running continues from what the eye can see instead of jumping back
+        // to where that one began - a switch away from the system palette right after switching to it, or a tap on
+        // the dark theme while the color is still arriving.
+        start = lerp(start, stop, progress.value)
+        stop = targetColorScheme
+        progress.snapTo(0f)
+        progress.animateTo(1f, MOTION_SCHEME.defaultEffectsSpec())
+    }
     MaterialExpressiveTheme(
-        colorScheme = animatedColorScheme(
-            targetColorScheme = targetColorScheme,
-            // The preferences rather than the scheme itself, which has no equality of its own to key an animation on.
-            key = isDarkTheme to themeColor,
-            isAnimated = isAnimated,
-        ),
+        colorScheme = lerp(start, stop, progress.value),
         motionScheme = MOTION_SCHEME,
-        content = content,
-    )
+    ) {
+        // The scheme asked for is not the one being shown from the composition the preferences arrive in until the
+        // fade that follows has ended, and the effect above starts that fade one frame after that composition - so
+        // the target being reached is read from the schemes rather than from the animation alone, which is not
+        // running yet in that one frame.
+        content(targetColorScheme === stop && !progress.isRunning)
+    }
 }
 
 /**
@@ -70,40 +90,6 @@ fun UserPreferences.UiMode?.isDarkTheme() = when (this) {
     UserPreferences.UiMode.LIGHT -> false
     UserPreferences.UiMode.DARK -> true
     UserPreferences.UiMode.SYSTEM_DEFAULT, null -> isSystemInDarkTheme()
-}
-
-/**
- * Cross fades from whatever is on screen to [targetColorScheme] whenever [key] changes.
- *
- * The scheme the fade starts from is the one being shown and not the one the last change aimed at, so a second
- * change made while the first is still running continues from what the eye can see instead of jumping back to
- * where that one began - which is a switch away from the system palette right after switching to it, or a tap on
- * the dark theme while the color is still arriving.
- *
- * @param isAnimated False while the change is a correction rather than a choice, in which case the new scheme is
- *   taken as it is. It is read during composition, so that the change that arrives with the loaded preferences is
- *   the one that snaps: the effect that turns animation on runs after this composition, not during it.
- */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun animatedColorScheme(
-    targetColorScheme: ColorScheme,
-    key: Any,
-    isAnimated: Boolean,
-): ColorScheme {
-    val progress = remember { Animatable(1f) }
-    var start by remember { mutableStateOf(targetColorScheme) }
-    var stop by remember { mutableStateOf(targetColorScheme) }
-    val animationSpec = if (isAnimated) MOTION_SCHEME.defaultEffectsSpec<Float>() else snap()
-    LaunchedEffect(key) {
-        start = lerp(start, stop, progress.value)
-        stop = targetColorScheme
-        progress.snapTo(0f)
-        progress.animateTo(1f, animationSpec)
-    }
-    // Until the preferences are in, the effect above has not run for the scheme they ask for yet, and a frame drawn
-    // from the interpolation would be a frame of the guess the app started with.
-    return if (!isAnimated) targetColorScheme else lerp(start, stop, progress.value)
 }
 
 /**

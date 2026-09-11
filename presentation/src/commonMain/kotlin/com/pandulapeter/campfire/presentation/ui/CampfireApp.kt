@@ -14,6 +14,7 @@ import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -56,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -93,6 +95,7 @@ import com.pandulapeter.campfire.presentation.ui.components.WindowSize
 import com.pandulapeter.campfire.presentation.ui.platform.LocalSyncNotifier
 import com.pandulapeter.campfire.presentation.ui.platform.withSyncCounts
 import com.pandulapeter.campfire.presentation.ui.platform.SyncNotification
+import com.pandulapeter.campfire.presentation.ui.platform.isDesktopPlatform
 import com.pandulapeter.campfire.presentation.ui.platform.libraryLocation
 import com.pandulapeter.campfire.presentation.ui.platform.requestLibraryPersistence
 import com.pandulapeter.campfire.presentation.ui.dialogs.CampfireDialogs
@@ -117,11 +120,13 @@ import org.koin.compose.viewmodel.koinViewModel
  *
  * @param urlOpener Opens the given URL in the platform's browser.
  * @param filesToImport Files the host handed over - opened with Campfire, shared to it, or dropped onto its window.
- * @param onAppReady Called once the app itself is on screen, for the shells that open on a startup screen of their
- *   own and are able to hold it there: Android's system splash and the loading screen of the web build. Every one of
- *   those is otherwise taken away by the first frame the app draws, and that frame is [LaunchScreen] rather than the
- *   app - so without this they would hand over to it and the user would watch two startup screens in a row.
+ * @param onAppReady Called once the app itself is on screen - the same moment [LaunchScreen] is taken away - for the
+ *   shells that open on a startup screen of their own and are able to hold it there: Android's system splash and the
+ *   loading screen of the web build. Every one of those is otherwise taken away by the first frame the app draws,
+ *   and that frame is [LaunchScreen] rather than the app - so without this they would hand over to it and the user
+ *   would watch two startup screens in a row.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CampfireApp(
     viewModel: CampfireViewModel = koinViewModel(),
@@ -148,56 +153,114 @@ fun CampfireApp(
     }
     val userPreferences by viewModel.userPreferences.collectAsStateWithLifecycle()
     val arePreferencesLoaded by viewModel.arePreferencesLoaded.collectAsStateWithLifecycle()
+    val hasLibraryToShow by viewModel.hasLibraryToShow.collectAsStateWithLifecycle()
     ApplyLanguagePreference(userPreferences?.language)
     CampfireTheme(
         uiMode = userPreferences?.uiMode,
         themeColor = userPreferences?.themeColor,
-    ) {
-        // Nothing is drawn until the preferences have been read: they decide the palette and the language, and the
-        // app would otherwise open on the system's guess at both and correct itself a frame later - in an accent
-        // color the user did not choose, with labels in a language they did not choose either. Waiting costs the
-        // one frame it takes to read a small file, and even that frame is not empty: the window is already painted
-        // in the theme's background, which is the one color the palettes agree on within a light or a dark scheme.
-        if (arePreferencesLoaded) {
-            // Two frames rather than one, because withFrameNanos resumes while the frame it belongs to is still
-            // being assembled: the frame after it is the first one that is certainly drawn.
-            LaunchedEffect(Unit) {
-                repeat(2) { withFrameNanos { } }
-                onAppReady()
+    ) { isThemeSettled ->
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Nothing is composed until the preferences have been read: they decide the palette and the language,
+            // and the app would otherwise open on the system's guess at both and correct itself a frame later - in
+            // an accent color the user did not choose, with labels in a language they did not choose either.
+            // Waiting costs the one frame it takes to read a small file, and even that frame is not empty: the
+            // window is already painted in the theme's background, which is the one color the palettes agree on
+            // within a light or a dark scheme.
+            if (arePreferencesLoaded) {
+                // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors
+                // the user chose, and above the language preference, so that it is in the language they chose too.
+                AppUpdateGate {
+                    CampfireContent(
+                        viewModel = viewModel,
+                        urlOpener = urlOpener,
+                    )
+                }
             }
-            // Inside the theme, so that the one screen it can put in the way of the app is drawn in the colors the
-            // user chose, and above the language preference, so that it is in the language they chose too.
-            AppUpdateGate {
-                CampfireContent(
-                    viewModel = viewModel,
-                    urlOpener = urlOpener,
+            // The launch screen covers the app rather than standing in for it, and it fades away once there is
+            // something to look at underneath: the app composes, lays out and draws behind it in the meantime, so
+            // holding it through the first read of the library costs none of the time that read was going to take
+            // anyway. What it covers is the handful of frames the song list would otherwise open on its loading
+            // indicator for, and a startup screen handing over to a spinner is two startup screens in a row - the
+            // very thing onAppReady exists to keep the other shells from doing.
+            //
+            // The colors have to have stopped moving as well, or the app would be uncovered halfway through the
+            // cross fade that corrects the theme the window opened on, which is the one thing the launch screen is
+            // there to take instead of it.
+            var isAppReady by remember { mutableStateOf(false) }
+            if (!isAppReady) {
+                val opacity = remember { Animatable(1f) }
+                // On the desktop the mark grows as it goes, over the slower of the two effect springs so that the
+                // movement has the time to be read as one: this is the one platform where the launch screen is the
+                // whole of the startup - the first frame the window paints and the last one before the app - so it
+                // is worth leaving by opening into the app rather than by merely thinning out. The other three
+                // open on a startup screen of their own and never watch this one go: Android's splash and the web's
+                // loading page cover the fade entirely, and on iOS the mark is already the second thing shown - so
+                // there it stays the plain, quicker dissolve, and the extra frames are not spent.
+                val markGrowth = if (isDesktopPlatform) LAUNCH_MARK_EXIT_GROWTH else 0f
+                LaunchScreen(
+                    modifier = Modifier.graphicsLayer { alpha = opacity.value.coerceIn(0f, 1f) },
+                    markScale = { 1f + (1f - opacity.value.coerceIn(0f, 1f)) * markGrowth },
                 )
+                val motionScheme = MaterialTheme.motionScheme
+                val fadeSpec = if (isDesktopPlatform) motionScheme.slowEffectsSpec<Float>() else motionScheme.defaultEffectsSpec<Float>()
+                LaunchedEffect(arePreferencesLoaded, hasLibraryToShow, isThemeSettled) {
+                    if (arePreferencesLoaded && hasLibraryToShow && isThemeSettled) {
+                        // Two frames rather than one, because withFrameNanos resumes while the frame it belongs to
+                        // is still being assembled: the frame after it is the first one that is certainly drawn.
+                        repeat(2) { withFrameNanos { } }
+                        opacity.animateTo(0f, fadeSpec)
+                        isAppReady = true
+                        // Only now, so that the shells holding a startup screen of their own hand over to the app
+                        // itself rather than to the last frames of a mark fading off it.
+                        onAppReady()
+                    }
+                }
             }
-        } else {
-            LaunchScreen()
         }
     }
 }
 
 /**
- * What the window holds until there is an app to draw in it: the mark, still, on the theme's own background.
+ * What the window holds until there is an app to look at in it: the mark, still, on the theme's own background.
  *
  * It is what the first frame of every platform paints, and on the desktop it is what stays there for as long as the
  * first composition of the whole app takes - a third of a second on a cold start, which is a long time for a window
  * to sit empty. Nothing here says anything the preferences have not answered yet: the mark carries no text, and it
  * is drawn in a neutral rather than in the accent color, which is the one thing still being waited for.
+ *
+ * A [Surface] rather than a plain box, because the app is composed and drawn underneath it: without one, a click
+ * landing on the mark would reach whatever of the app happens to be under that point - which stays true while it is
+ * fading, when the app can already be seen through it but is still nobody's to touch.
+ *
+ * @param markScale How large the mark is drawn, read in the layer rather than in the composition so that animating
+ *   it is a redraw instead of a recomposition of the whole screen.
  */
 @Composable
-private fun LaunchScreen() = Box(
-    modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
-    contentAlignment = Alignment.Center,
+private fun LaunchScreen(
+    modifier: Modifier = Modifier,
+    markScale: () -> Float = { 1f },
+) = Surface(
+    modifier = modifier.fillMaxSize(),
+    color = MaterialTheme.colorScheme.background,
 ) {
-    Icon(
-        modifier = Modifier.size(LAUNCH_MARK_SIZE),
-        painter = painterResource(Res.drawable.ic_campfire),
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            modifier = Modifier
+                .size(LAUNCH_MARK_SIZE)
+                .graphicsLayer {
+                    scaleX = markScale()
+                    scaleY = markScale()
+                },
+            painter = painterResource(Res.drawable.ic_campfire),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -646,6 +709,13 @@ private fun ReportNavigationTransition(viewModel: CampfireViewModel) {
 }
 
 private val LAUNCH_MARK_SIZE = 72.dp
+
+/**
+ * How much the mark has grown by the time it has faded away, on the platform that watches it leave: half as large
+ * again, which is enough of a movement to be seen for what it is over the length of the fade rather than read as
+ * the picture drifting.
+ */
+private const val LAUNCH_MARK_EXIT_GROWTH = 0.5f
 private const val NAVIGATION_GENERATION_METADATA_KEY = "navigationGeneration"
 private const val TAB_TRANSITION_DURATION = 300
 private const val TAB_SLIDE_FRACTION = 12

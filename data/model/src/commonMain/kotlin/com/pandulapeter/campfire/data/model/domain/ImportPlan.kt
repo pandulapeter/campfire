@@ -86,7 +86,10 @@ data class ImportPlan(
 /** What an import does with the entries whose name the library has given to something else. */
 enum class ImportConflictResolution {
 
-    /** The incoming file lands next to the one it collides with, suffixed " (2)", as every other collision is. */
+    /**
+     * The incoming file lands next to the one it collides with, numbered the way every name the app writes itself is:
+     * `tukorfurogep-arviz_2`, rather than the " (2)" a file arriving under a name of someone else's making gets.
+     */
     KEEP_BOTH,
 
     /** The incoming file is written over the one the library has. The only way anything is ever overwritten. */

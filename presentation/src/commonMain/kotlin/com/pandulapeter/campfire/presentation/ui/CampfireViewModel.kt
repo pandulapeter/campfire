@@ -170,6 +170,21 @@ class CampfireViewModel(
     val isLoading = screenData.map { it is DataState.Loading }.asState(true)
 
     /**
+     * False for as long as the song list would have nothing on it but a loading indicator, which is what the launch
+     * screen stays up in place of. Either the read has put songs together - the first batch of one that publishes as
+     * it goes counts, so a slow read still fills the list in front of the user rather than behind the launch screen -
+     * or it has finished with none, which is an answer to show as much as a library is.
+     *
+     * Latched like [arePreferencesLoaded]: a rescan reads the library again and says so, and none of that is a reason
+     * to put the launch screen back up over an app the user is already using.
+     */
+    val hasLibraryToShow = screenData
+        .runningFold(false) { hasHadSomethingToShow, state ->
+            hasHadSomethingToShow || state !is DataState.Loading || state.data?.songs?.isNotEmpty() == true
+        }
+        .asEagerState(false)
+
+    /**
      * Read straight from its own repository rather than out of [screenData], which only has anything once every
      * source has been read: the theme and the language come from here, and waiting for a scan of the whole song
      * library would leave the app in the system's theme and language for as long as that takes. Both states below

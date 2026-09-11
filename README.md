@@ -22,18 +22,31 @@ cloud folder **you** own — see below.
 - **Write and edit** songs in a built-in editor with ChordPro syntax highlighting and a live preview. Nothing is written until
   you save it, and leaving with unsaved changes asks first.
 - **Import** `.cho` files (and `.chopro`, `.chordpro`, `.crd`, `.chord`, `.pro`, `.txt`) or whole `.zip` archives of
-  them; **export** a single song, a setlist, or the entire library as a zip. Nothing is ever overwritten: a name that
-  collides gets a ` (2)` suffix.
+  them; **export** a single song, a setlist, or the entire library as a zip. An import decides before it writes: an
+  incoming file whose name the library has already given to something else is put to you as one question about the
+  whole batch — keep both (the newcomer becomes `…_2`), replace, skip, or cancel. Replacing is the only thing in the
+  app that ever overwrites a file.
 - **Open with**: a ChordPro file opened from a file manager, an email or a browser download lands straight in Campfire.
-- **Setlists** with their own per-song transposition, stored next to the songs so they travel with an export.
+- **Setlists** with their own per-song transposition, stored next to the songs so they travel with an export. One
+  that has been played can be **archived** rather than deleted, and that too is written in the file.
+- **Tags and languages** are part of the song file — `{tag: …}` and `{meta: language …}` directives — so they survive
+  an export, an import or a sync run. The Songs screen filters by both (tags matched as any or all), and a language
+  is named in whatever language the app is set to rather than by its code.
 - **Sync** the library between your devices through your own Dropbox, if you want to. Off until you turn it on.
-- **Transpose** by ear or by key (the app picks sharps or flats to match), **lyrics-only mode**, adjustable text size
-  (pinch, or Ctrl/Cmd + scroll), light / dark / system theme, English and Hungarian.
+- **Transpose** by ear or by key (the app picks sharps or flats to match), or read every song in the spelling you
+  are used to: sharps, flats, and German notation (`H`) if that is what you grew up with.
+- **Lyrics-only mode**, adjustable text size (pinch, or Ctrl/Cmd + scroll), and a **performance mode** that takes
+  everything which could change the library out of the app while you are playing from it.
+- The **arrow keys** scroll the song and step through the setlist — which is what a page turner pedal sends, so one
+  paired with a phone or a tablet works as it is; Ctrl/Cmd + S saves in the editor.
+- Light / dark / system theme in eight colour schemes (plus the one Android 12+ takes from your wallpaper), English
+  and Hungarian.
 - Android, iOS, macOS / Windows / Linux desktop and the web, from one Compose Multiplatform codebase.
 
 Campfire is completely free, without any ads.
 
-[<img src="https://play.google.com/intl/en_us/badges/images/badge_new.png" />](https://play.google.com/store/apps/details?id=com.pandulapeter.campfire)
+[<img src="images/badge_android.png" alt="Download for Android" height="32px" />](https://play.google.com/store/apps/details?id=com.pandulapeter.campfire)
+[<img src="images/badge_web.png" alt="Open in browser" height="32px" />](https://pandulapeter.com/campfire)
 
 ### File format
 
@@ -52,7 +65,8 @@ Songs are [ChordPro](https://www.chordpro.org/chordpro/chordpro-directives/) tex
 Campfire understands the core of the format:
 
 - **Metadata**: `title` / `t`, `subtitle` / `st`, `artist`, `composer`, `lyricist`, `album`, `year`, `key`, `capo`,
-  `tempo`, `time`, `duration`, `transpose`, and `meta` for anything else.
+  `tempo`, `time`, `duration`, `transpose`, `tag` for each of a song's tags, `language` / `lang` for each of the
+  languages it is in (`{meta: language en}` is how they are written back), and `meta` for anything else.
 - **Environments**: `start_of_verse` / `sov`, `start_of_chorus` / `soc`, `start_of_bridge` / `sob`,
   `start_of_tab` / `sot`, `start_of_grid` / `sog` and any other `start_of_<name>`, each with the matching `end_of_…`,
   an optional label (`{sov: Verse 1}` or `{sov: label="Verse 1"}`), and `{chorus}` to repeat the last chorus.
@@ -69,6 +83,9 @@ Setlists are small JSON files (`<name>.setlist.json`) stored next to the songs, 
 { "title": "Friday gig", "priority": 3, "songs": [ { "file": "oasis_wonderwall.cho", "transposition": 2 } ] }
 ```
 
+An archived setlist carries `"isArchived": true` as well; every field is defaulted, so a hand-written file can leave
+out anything it has nothing to say about.
+
 ### Sync
 
 Campfire can keep the library the same on all of your devices, and it does that without a service of its own. You
@@ -82,7 +99,7 @@ your own storage. Until you do, nothing on the network is touched at all.
   made on.
 - A run compares **content**, never modification times: the four platforms disagree about those and the web build has
   none. An edit always wins over a deletion, and a song that changed on two devices at once is never merged — the
-  local one keeps its name and the incoming one lands next to it as ` (2)`, just like a colliding import.
+  local one keeps its name and the incoming one lands next to it as ` (2)`, a copy for you to look at and delete.
 - Sync runs when the app starts and whenever you press **Sync now**, it carries on while you use the rest of the app
   (or leave it), and it can be stopped at any time. A run that is interrupted leaves the library usable and says so
   the next time.

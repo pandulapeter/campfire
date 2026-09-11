@@ -419,7 +419,7 @@ internal fun SettingsScreen(
                     modifier = listItemAnimation(listState),
                     title = stringResource(Res.string.settings_git_hub),
                     icon = painterResource(Res.drawable.ic_git_hub),
-                    onClick = { urlOpener("https://github.com/pandulapeter") }
+                    onClick = { urlOpener("https://github.com/pandulapeter/campfire/") }
                 )
             }
             item(key = "privacy_policy") {

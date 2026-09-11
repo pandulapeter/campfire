@@ -105,7 +105,7 @@ class ImportFilesUseCaseImpl internal constructor(
         ImportPlan.Status.NEW -> Action.WRITE
         ImportPlan.Status.IDENTICAL -> Action.DISREGARD
         ImportPlan.Status.CONFLICTING -> when (resolution) {
-            // The name is taken, so writing under it is what produces the " (2)" the storage layer suffixes.
+            // The name is taken, so writing under it is what produces the "_2" the storage layer suffixes.
             ImportConflictResolution.KEEP_BOTH -> Action.WRITE
             ImportConflictResolution.REPLACE -> Action.REPLACE
             ImportConflictResolution.SKIP -> Action.LEAVE_ALONE
